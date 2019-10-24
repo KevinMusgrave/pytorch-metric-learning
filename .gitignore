@@ -1,0 +1,6 @@
+__pycache__/
+*.py[cod]
+.nfs*
+build/
+dist/
+pytorch_metric_learning.egg-info/

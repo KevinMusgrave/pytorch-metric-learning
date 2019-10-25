@@ -1,7 +1,5 @@
 #! /usr/bin/env python3
 
-from utils import common_functions as c_f
-
 from . import metric_loss_only as mlo
 
 

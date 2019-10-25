@@ -1,9 +1,41 @@
 # pytorch_metric_learning
 
-Installation:
+## Coming soon: a highly configurable and easy-to-use benchmarking tool 
+
+## Loss functions implemented:
+- angular
+- contrastive
+- lifted structure
+- margin
+- multi similarity
+- n pairs
+- nca
+- proxy nca
+- triplet margin
+- **more to be added**
+
+## Mining functions implemented:
+- distance weighted sampling
+- hard aware cascaded mining
+- maximum loss miner
+- multi similarity miner
+- pair margin miner
+- **more to be added**
+
+## Training methods implemented:
+- metric loss only
+- training with classifier
+- cascaded embeddings
+- deep adversarial metric learning
+- **more to be added**
+
+## Installation:
 ```
 pip install pytorch_metric_learning
 ```
+
+
+## Overview
 
 Use a loss function by itself
 ```

@@ -1,6 +1,6 @@
 # pytorch_metric_learning
 
-## Coming soon: a highly configurable and easy-to-use benchmarking tool 
+## Coming soon in a separate repo: a highly configurable and easy-to-use benchmarking tool.
 
 ## Loss functions implemented:
 - angular

@@ -55,7 +55,7 @@ class RecordKeeper:
     def maybe_add_custom_figures_to_tensorboard(self, global_iteration):
         if self.pickler_and_csver is not None:
             for group_name, dict_of_lists in self.pickler_and_csver.records.items():
-                for series_name, v in dict_of_lists.data.items():
+                for series_name, v in dict_of_lists.items():
                     if isinstance(v[0], list):
                         tag_name = '%s/%s' % (group_name, series_name)
                         figure = self.multi_line_plot(v)
@@ -70,36 +70,31 @@ class RecordKeeper:
             plt.plot(np.arange(numpified.shape[1]), sublist)
         return fig
 
-
-class DictOfLists:
-    def __init__(self):
-        self.data = collections.defaultdict(list)
-
-    def append(self, series_name, input_val):
-        if c_f.is_list_and_has_more_than_one_element(input_val):
-            self.data[series_name].append(c_f.convert_to_list(input_val))
-        else:
-            self.data[series_name].append(c_f.convert_to_scalar(input_val))
+    def get_record(self, group_name):
+        return self.pickler_and_csver.records[group_name]
 
 
 class PicklerAndCSVer:
     def __init__(self, folder):
-        self.records = collections.defaultdict(DictOfLists)
+        self.records = collections.defaultdict(lambda: collections.defaultdict(list))
         self.folder = folder
 
     def append(self, group_name, series_name, input_val):
-        self.records[group_name].append(series_name, input_val)
+        if c_f.is_list_and_has_more_than_one_element(input_val):
+            self.records[group_name][series_name].append(c_f.convert_to_list(input_val))
+        else:
+            self.records[group_name][series_name].append(c_f.convert_to_scalar(input_val))
 
     def save_records(self):
         for k, v in self.records.items():
             base_filename = "%s/%s" % (self.folder, k)
-            c_f.save_pkl(v.data, base_filename+".pkl")
-            c_f.write_dict_of_lists_to_csv(v.data, base_filename+".csv")
+            c_f.save_pkl(v, base_filename+".pkl")
+            c_f.write_dict_of_lists_to_csv(v, base_filename+".csv")
 
     def load_records(self, num_records_to_load=None):
         for k, _ in self.records.items():
             filename = "%s/%s.pkl"%(self.folder,k)
-            self.records[k].data = c_f.load_pkl(filename)
+            self.records[k] = c_f.load_pkl(filename)
             if num_records_to_load is not None:
-                for zzz, _ in self.records[k].data.items():
-                    self.records[k].data[zzz] = self.records[k].data[zzz][:num_records_to_load]
+                for zzz, _ in self.records[k].items():
+                    self.records[k][zzz] = self.records[k][zzz][:num_records_to_load]

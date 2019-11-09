@@ -4,10 +4,10 @@ from .. import miners
 import torch
 from ..utils import common_functions as c_f, loss_and_miner_utils as lmu
 
-from . import train_with_classifier as twc
+from .train_with_classifier import TrainWithClassifier
 import copy
 
-class DeepAdversarialMetricLearning(twc.TrainWithClassifier):
+class DeepAdversarialMetricLearning(TrainWithClassifier):
     def __init__(
         self,
         metric_alone_epochs=0,
@@ -18,7 +18,7 @@ class DeepAdversarialMetricLearning(twc.TrainWithClassifier):
         self.original_loss_weights = copy.deepcopy(self.loss_weights)
         self.metric_alone_epochs = metric_alone_epochs
         self.g_alone_epochs = g_alone_epochs
-        self.loss_funcs["G_neg_adv"].maybe_modify_loss = lambda x: x * -1
+        self.loss_funcs["g_adv_loss"].maybe_modify_loss = lambda x: x * -1
 
     def custom_setup(self):
         synth_packaged_as_triplets = miners.EmbeddingsAlreadyPackagedAsTriplets(
@@ -43,7 +43,7 @@ class DeepAdversarialMetricLearning(twc.TrainWithClassifier):
             self.calculate_synth_loss(penultimate_embeddings, labels)
 
     def loss_names(self):
-        return ["metric_loss", "classifier_loss", "synth_loss", "G_neg_hard", "G_neg_reg", "G_neg_adv"]
+        return ["metric_loss", "classifier_loss", "synth_loss", "g_hard_loss", "g_reg_loss", "g_adv_loss"]
 
     def update_loss_weights(self):
         self.do_metric_alone = self.epoch <= self.metric_alone_epochs
@@ -54,7 +54,7 @@ class DeepAdversarialMetricLearning(twc.TrainWithClassifier):
 
         non_zero_weight_list = []
         if self.do_adv:
-            non_zero_weight_list += ["G_neg_hard", "G_neg_reg", "G_neg_adv"]
+            non_zero_weight_list += ["g_hard_loss", "g_reg_loss", "g_adv_loss"]
         if self.do_metric:
             non_zero_weight_list += ["metric_loss", "classifier_loss"]
         if self.do_both:
@@ -74,7 +74,7 @@ class DeepAdversarialMetricLearning(twc.TrainWithClassifier):
         if self.do_adv_alone:
             no_grad_list = ["trunk", "classifier"]
         elif self.do_metric_alone:
-            no_grad_list = ["G_neg_model"]
+            no_grad_list = ["generator"]
         else:
             no_grad_list = []
         for k in self.models.keys():
@@ -90,7 +90,7 @@ class DeepAdversarialMetricLearning(twc.TrainWithClassifier):
         if self.do_metric:
             step_list += ["trunk_optimizer", "embedder_optimizer", "classifier_optimizer"]
         if self.do_adv:
-            step_list += ["G_neg_model_optimizer"]
+            step_list += ["generator_optimizer"]
         for k in self.optimizers.keys():
             if k in step_list:
                 self.optimizers[k].step()
@@ -102,7 +102,7 @@ class DeepAdversarialMetricLearning(twc.TrainWithClassifier):
         real_negatives = penultimate_embeddings[n_indices]
         penultimate_embeddings_cat = torch.cat([real_anchors, real_positives, real_negatives], dim=1)
         synthetic_negatives = c_f.pass_data_to_model(
-            self.models["G_neg_model"], penultimate_embeddings_cat, self.data_device
+            self.models["generator"], penultimate_embeddings_cat, self.data_device
         )
         penultimate_embeddings_with_negative_synth = c_f.unslice_by_n(
             [real_anchors, real_positives, synthetic_negatives]
@@ -128,14 +128,14 @@ class DeepAdversarialMetricLearning(twc.TrainWithClassifier):
                 final_embeddings, labels, indices_tuple
             )
 
-        self.losses["G_neg_adv"] = self.loss_funcs["G_neg_adv"](
+        self.losses["g_adv_loss"] = self.loss_funcs["g_adv_loss"](
             final_embeddings, labels, indices_tuple
         )
-        self.losses["G_neg_hard"] = torch.nn.functional.mse_loss(
+        self.losses["g_hard_loss"] = torch.nn.functional.mse_loss(
             torch.nn.functional.normalize(synthetic_negatives, p=2, dim=1),
             torch.nn.functional.normalize(real_anchors, p=2, dim=1),
         )
-        self.losses["G_neg_reg"] = torch.nn.functional.mse_loss(
+        self.losses["g_reg_loss"] = torch.nn.functional.mse_loss(
             torch.nn.functional.normalize(synthetic_negatives, p=2, dim=1),
             torch.nn.functional.normalize(real_negatives, p=2, dim=1),
         )

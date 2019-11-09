@@ -1,12 +1,12 @@
 #! /usr/bin/env python3
 
-from . import base_metric_loss_function as bmlf
+from .base_metric_loss_function import BaseMetricLossFunction
 import torch
 import torch.nn.functional as F
 from ..utils import loss_and_miner_utils as lmu
 
 
-class TripletMarginLoss(bmlf.BaseMetricLossFunction):
+class TripletMarginLoss(BaseMetricLossFunction):
     """
     Args:
         margin: The desired difference between the anchor-positive distance and the

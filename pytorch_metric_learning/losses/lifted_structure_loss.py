@@ -2,10 +2,10 @@
 
 import torch
 
-from . import generic_pair_loss as gpl
+from .generic_pair_loss import GenericPairLoss
 
 
-class GeneralizedLiftedStructureLoss(gpl.GenericPairLoss):
+class GeneralizedLiftedStructureLoss(GenericPairLoss):
     # The 'generalized' lifted structure loss shown on page 4
     # of the "in defense of triplet loss" paper
     # https://arxiv.org/pdf/1703.07737.pdf

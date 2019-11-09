@@ -1,10 +1,10 @@
 #! /usr/bin/env python3
 
 
-from . import train_with_classifier as twc
+from .train_with_classifier import TrainWithClassifier
 
 
-class CascadedEmbeddings(twc.TrainWithClassifier):
+class CascadedEmbeddings(TrainWithClassifier):
     def __init__(self, embedding_sizes, logit_sizes=None, **kwargs):
         super(CascadedEmbeddings, self).__init__(**kwargs)
         self.embedding_sizes = embedding_sizes

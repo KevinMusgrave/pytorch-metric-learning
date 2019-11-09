@@ -2,10 +2,10 @@
 from ..utils import calculate_accuracies
 from ..utils import common_functions as c_f
 
-from . import base_tester as b_t
+from .base_tester import BaseTester
 
 
-class GlobalEmbeddingSpaceTester(b_t.BaseTester):
+class GlobalEmbeddingSpaceTester(BaseTester):
 
     def do_knn_and_accuracies(
         self, embeddings_and_labels, epoch, split_keys

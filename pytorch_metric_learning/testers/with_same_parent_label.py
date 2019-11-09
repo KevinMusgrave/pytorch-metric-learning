@@ -5,10 +5,10 @@ import numpy as np
 from ..utils import calculate_accuracies
 from ..utils import common_functions as c_f
 
-from . import base_tester as b_t
+from .base_tester import BaseTester
 
 
-class WithSameParentLabelTester(b_t.BaseTester):
+class WithSameParentLabelTester(BaseTester):
     def do_knn_and_accuracies(
         self, embeddings_and_labels, accuracies, epoch, split_keys
     ):

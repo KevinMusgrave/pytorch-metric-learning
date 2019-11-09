@@ -1,11 +1,11 @@
 #! /usr/bin/env python3
 
-from . import base_metric_loss_function as bmlf
+from .base_metric_loss_function import BaseMetricLossFunction
 import torch
 from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
 
 
-class MarginLoss(bmlf.BaseMetricLossFunction):
+class MarginLoss(BaseMetricLossFunction):
 
     def __init__(self, margin, nu, beta, **kwargs):
         self.margin = margin

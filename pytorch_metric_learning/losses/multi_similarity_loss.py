@@ -2,10 +2,10 @@
 
 import torch
 
-from . import generic_pair_loss as gpl
+from .generic_pair_loss import GenericPairLoss
 from ..utils import common_functions as c_f
 
-class MultiSimilarityLoss(gpl.GenericPairLoss):
+class MultiSimilarityLoss(GenericPairLoss):
     """
     modified from https://github.com/MalongTech/research-ms-loss/
     Args:

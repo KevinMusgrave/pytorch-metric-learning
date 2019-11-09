@@ -2,10 +2,10 @@
 
 import torch
 
-from . import generic_pair_loss as gpl
+from .generic_pair_loss import GenericPairLoss
 
 
-class ContrastiveLoss(gpl.GenericPairLoss):
+class ContrastiveLoss(GenericPairLoss):
     """
     Contrastive loss using either distance or similarity.
     Args:

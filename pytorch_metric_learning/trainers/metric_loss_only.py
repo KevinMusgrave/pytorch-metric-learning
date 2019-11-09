@@ -1,10 +1,10 @@
 #! /usr/bin/env python3
 
 
-from . import base_trainer as b_t
+from .base_trainer import BaseTrainer
 
 
-class MetricLossOnly(b_t.BaseTrainer):
+class MetricLossOnly(BaseTrainer):
     def loss_names(self):
         return ["metric_loss"]
 

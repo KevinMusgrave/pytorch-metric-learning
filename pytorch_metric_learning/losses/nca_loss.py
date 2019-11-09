@@ -1,11 +1,11 @@
 #! /usr/bin/env python3
 
-from . import base_metric_loss_function as bmlf
+from .base_metric_loss_function import BaseMetricLossFunction
 from ..utils import loss_and_miner_utils as lmu
 import torch
 
 
-class NCALoss(bmlf.BaseMetricLossFunction):
+class NCALoss(BaseMetricLossFunction):
     # modified from https://github.com/microsoft/snca.pytorch/blob/master/lib/NCA.py
     # https://www.cs.toronto.edu/~hinton/absps/nca.pdf
     def compute_loss(self, embeddings, labels, *_):

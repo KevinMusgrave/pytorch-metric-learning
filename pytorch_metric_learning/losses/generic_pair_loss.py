@@ -3,10 +3,10 @@
 
 import torch
 from ..utils import loss_and_miner_utils as lmu
-from . import base_metric_loss_function as bmlf
+from .base_metric_loss_function import BaseMetricLossFunction
 
 
-class GenericPairLoss(bmlf.BaseMetricLossFunction):
+class GenericPairLoss(BaseMetricLossFunction):
     """
     The function pair_based_loss has to be implemented by the child class.
     By default, this class extracts every positive and negative pair within a

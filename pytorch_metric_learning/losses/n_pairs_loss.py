@@ -1,11 +1,11 @@
 #! /usr/bin/env python3
 
-from . import base_metric_loss_function as bmlf
+from .base_metric_loss_function import BaseMetricLossFunction
 import torch
 from ..utils import loss_and_miner_utils as lmu
 
 
-class NPairsLoss(bmlf.BaseMetricLossFunction):
+class NPairsLoss(BaseMetricLossFunction):
     """
     Implementation of https://arxiv.org/abs/1708.01682
     Args:

@@ -1,9 +1,9 @@
 #! /usr/bin/env python3
 
-from . import metric_loss_only as mlo
+from .metric_loss_only import MetricLossOnly
 
 
-class TrainWithClassifier(mlo.MetricLossOnly):
+class TrainWithClassifier(MetricLossOnly):
     def loss_names(self):
         return ["metric_loss", "classifier_loss"]
 

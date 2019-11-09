@@ -1,11 +1,11 @@
 #! /usr/bin/env python3
 
-from . import base_miner as b_m
+from .base_miner import BasePostGradientMiner
 from ..utils import loss_and_miner_utils as lmu
 import torch
 
 
-class MultiSimilarityMiner(b_m.BasePostGradientMiner):
+class MultiSimilarityMiner(BasePostGradientMiner):
     def __init__(self, epsilon, **kwargs):
         super().__init__(**kwargs)
         self.epsilon = epsilon

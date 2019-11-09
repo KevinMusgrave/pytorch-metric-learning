@@ -1,12 +1,12 @@
 #! /usr/bin/env python3
-from . import base_miner as b_m
+from .base_miner import BasePostGradientMiner
 import torch
 from ..utils import loss_and_miner_utils as lmu
 
 
 # mining method used in Hard Aware Deeply Cascaded Embeddings
 # https://arxiv.org/abs/1611.05720
-class HDCMiner(b_m.BasePostGradientMiner):
+class HDCMiner(BasePostGradientMiner):
     def __init__(self, filter_amounts, use_sim_mat=False, **kwargs):
         super().__init__(**kwargs)
         self.num_pos_pairs_per_round = torch.zeros(len(filter_amounts))

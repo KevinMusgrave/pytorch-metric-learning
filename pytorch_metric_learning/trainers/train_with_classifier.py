@@ -21,7 +21,7 @@ class TrainWithClassifier(MetricLossOnly):
         return 0
 
     def maybe_get_logits(self, embeddings):
-        if self.loss_weights.get("classifier_loss",0) > 0:
+        if self.models.get("classifier", None) and self.loss_weights.get("classifier_loss", 0) > 0:
             return self.models["classifier"](embeddings)
         return None
 

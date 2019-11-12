@@ -10,10 +10,9 @@ from ..utils import common_functions as c_f
 
 
 class BaseTester:
-    def __init__(self, k=8, reference_set="query_set", normalize_embeddings=True, use_trunk_output=False, 
+    def __init__(self, reference_set="query_set", normalize_embeddings=True, use_trunk_output=False, 
                     batch_size=32, dataloader_num_workers=32, split_for_best_epoch="val", 
-                    metric_for_best_epoch="recall_at_1", data_device=None, record_keeper=None):
-        self.k = int(k)
+                    metric_for_best_epoch="ordered_r_precision", data_device=None, record_keeper=None):
         self.reference_set = reference_set
         self.normalize_embeddings = normalize_embeddings
         self.use_trunk_output = use_trunk_output

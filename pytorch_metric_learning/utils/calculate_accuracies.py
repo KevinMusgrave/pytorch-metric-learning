@@ -7,6 +7,35 @@ import warnings
 from . import stat_utils
 
 
+
+def get_relevance_mask(shape, gt_labels, embeddings_come_from_same_source=False, label_counts=None):
+    # This assumes that k was set to at least the max number of relevant items 
+    if label_counts is None:
+        label_counts = {k:v for k,v in zip(*np.unique(gt_labels, return_counts=True))}
+    relevance_mask = np.zeros(shape=shape, dtype=np.int)
+    for k,v in label_counts.items():
+        matching_rows = np.where(gt_labels==k)[0]
+        max_column = v-1 if embeddings_come_from_same_source else v
+        relevance_mask[matching_rows, :max_column] = 1
+    return relevance_mask
+
+def r_precision(knn_labels, gt_labels, embeddings_come_from_same_source=False, label_counts=None):
+    relevance_mask = get_relevance_mask(knn_labels.shape, gt_labels, embeddings_come_from_same_source, label_counts)
+    matches_per_row = np.sum((knn_labels == gt_labels) * relevance_mask.astype(bool), axis=1) 
+    max_possible_matches_per_row = np.sum(relevance_mask, axis=1)
+    return np.mean(matches_per_row / max_possible_matches_per_row)
+
+def ordered_r_precision(knn_labels, gt_labels, embeddings_come_from_same_source=False, label_counts=None):
+    relevance_mask = get_relevance_mask(knn_labels.shape, gt_labels, embeddings_come_from_same_source, label_counts)
+    num_samples, num_k = knn_labels.shape
+    equality = (knn_labels == gt_labels) * relevance_mask.astype(bool)
+    cumulative_correct = np.cumsum(equality, axis=1)
+    k_idx = np.tile(np.arange(1, num_k + 1), (num_samples, 1))
+    precision_at_ks = cumulative_correct / k_idx
+    summed_precision_per_row = np.sum(precision_at_ks * relevance_mask, axis=1)
+    max_possible_matches_per_row = np.sum(relevance_mask, axis=1)
+    return np.mean(summed_precision_per_row / max_possible_matches_per_row)
+
 def precision_at_k(knn_labels, gt_labels, k):
     """
     Precision at k is the percentage of k nearest neighbors that have the correct
@@ -18,7 +47,6 @@ def precision_at_k(knn_labels, gt_labels, k):
     curr_knn_labels = knn_labels[:, :k]
     precision = np.mean(np.sum(curr_knn_labels == gt_labels, axis=1) / k)
     return precision
-
 
 def mean_average_precision(knn_labels, gt_labels):
     """
@@ -61,7 +89,7 @@ def NMI(input_embeddings, gt_labels):
     return nmi, pred_labels
 
 
-def compute_accuracies(query_embeddings, knn_labels, query_labels, k):
+def compute_accuracies(query_embeddings, knn_labels, query_labels, embeddings_come_from_same_source, label_counts):
     """
     Computes clustering quality of query_embeddings.
     Computes various retrieval scores given knn_labels (labels of nearest neighbors)
@@ -69,10 +97,10 @@ def compute_accuracies(query_embeddings, knn_labels, query_labels, k):
     Returns the results in a dictionary.
     """
     accuracies = {}
-    accuracies["mean_average_precision_at_%d"%(k)] = mean_average_precision(knn_labels, query_labels[:, None])
     accuracies["NMI"] = NMI(query_embeddings, query_labels)[0]
-    accuracies["precision_at_%d"%(k)] = precision_at_k(knn_labels, query_labels[:, None], k)
     accuracies["recall_at_1"] = recall_at_k(knn_labels, query_labels[:, None], 1)
+    accuracies["r_precision"] = r_precision(knn_labels, query_labels[:, None], embeddings_come_from_same_source, label_counts)
+    accuracies["ordered_r_precision"] = ordered_r_precision(knn_labels, query_labels[:, None], embeddings_come_from_same_source, label_counts)
     return accuracies
 
 
@@ -81,21 +109,23 @@ def calculate_accuracy(
     reference,
     query_labels,
     reference_labels,
-    k,
     embeddings_come_from_same_source,
 ):
     """
     Gets k nearest reference embeddings for each element of query.
     Then computes various accuracy metrics.
     """
-    embeddings_come_from_same_source = embeddings_come_from_same_source or (
-        query is reference
-    )
+    embeddings_come_from_same_source = embeddings_come_from_same_source or (query is reference)
+
+    unique_labels, label_counts = np.unique(reference_labels, return_counts=True)
+    num_k = int(np.max(label_counts))
+    label_counts = {k:v for k,v in zip(unique_labels, label_counts)}
+
     knn_indices = stat_utils.get_knn(
         reference,
         query,
-        k,
-        embeddings_come_from_same_source=embeddings_come_from_same_source,
+        num_k,
+        embeddings_come_from_same_source
     )
     knn_labels = reference_labels[knn_indices]
-    return compute_accuracies(query, knn_labels, query_labels, k)
+    return compute_accuracies(query, knn_labels, query_labels, embeddings_come_from_same_source, label_counts)

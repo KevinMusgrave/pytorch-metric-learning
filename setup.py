@@ -5,13 +5,13 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="pytorch_metric_learning",
-    version="0.9.16",
+    version="0.9.17",
     author="Kevin Musgrave",
     author_email="tkm45@cornell.edu",
     description="A flexible and extensible metric learning library, written in PyTorch.",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/TakeshiMusgrave/pytorch_metric_learning",
+    url="https://github.com/KevinMusgrave/pytorch_metric_learning",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",

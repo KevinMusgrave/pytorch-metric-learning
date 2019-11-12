@@ -18,6 +18,7 @@ def get_knn(
                                          each element (which is actually itself)
                                          will be ignored.
     """
+    print("running k-nn with k=%d"%k)
     d = reference_embeddings.shape[1]
     res = faiss.StandardGpuResources()
     flat_config = faiss.GpuIndexFlatConfig()

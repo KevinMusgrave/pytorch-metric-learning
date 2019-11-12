@@ -32,7 +32,6 @@ class WithSameParentLabelTester(BaseTester):
                         curr_reference_embeddings,
                         curr_query_labels,
                         curr_reference_labels,
-                        self.k,
                         self.embeddings_come_from_same_source(embeddings_and_labels),
                     )
                     for measure_name, v in a.items():

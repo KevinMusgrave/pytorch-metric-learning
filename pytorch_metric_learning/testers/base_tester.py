@@ -10,30 +10,23 @@ from ..utils import common_functions as c_f
 
 
 class BaseTester:
-    def __init__(self, reference_set="query_set", normalize_embeddings=True, use_trunk_output=False, 
-                    batch_size=32, dataloader_num_workers=32, split_for_best_epoch="val", 
-                    metric_for_best_epoch="ordered_r_precision", data_device=None, record_keeper=None):
+    def __init__(self, reference_set="compared_to_self", normalize_embeddings=True, use_trunk_output=False, 
+                    batch_size=32, dataloader_num_workers=32, metric_for_best_epoch="ordered_r_precision", 
+                    data_device=None, record_keeper=None):
         self.reference_set = reference_set
         self.normalize_embeddings = normalize_embeddings
         self.use_trunk_output = use_trunk_output
         self.batch_size = int(batch_size)
-        self.split_for_best_epoch = split_for_best_epoch
-        self.metric_for_best_epoch = metric_for_best_epoch
+        self.key_for_best_epoch = self.accuracies_keyname(metric_for_best_epoch, 0)
         self.data_device = torch.device("cuda" if torch.cuda.is_available() else "cpu") if data_device is None else data_device
         self.num_workers = dataloader_num_workers
         self.record_keeper = record_keeper
+        self.base_record_group_name = self.suffixes("%s_%s"%("accuracies", self.__class__.__name__))
 
-    def calculate_best_epoch(self, all_accuracies):
-        if len(all_accuracies) == 0:
-            self.accuracies["best_epoch"] = self.accuracies["epoch"]
-        else:
-            for k, v in all_accuracies.items():
-                if self.split_for_best_epoch in k and self.metric_for_best_epoch in k:
-                    if self.accuracies[k] > np.max(v):
-                        self.accuracies["best_epoch"] = self.accuracies["epoch"]
-                    else:
-                        self.accuracies["best_epoch"] = all_accuracies["epoch"][np.argmax(v)]
-                    break
+    def get_best_epoch_and_accuracy(self, split_name):
+        records = self.record_keeper.get_record(self.record_group_name(split_name))
+        accuracies = records[self.key_for_best_epoch]
+        return records["epoch"][np.argmax(accuracies)], np.max(accuracies)
 
     def maybe_normalize(self, embeddings):
         if self.normalize_embeddings:
@@ -92,10 +85,9 @@ class BaseTester:
         base_name += "_"+self.reference_set
         return base_name
 
-    def accuracies_keyname(self, measure_name, curr_split, label_level):
-        measure_name += "_%s" % curr_split
+    def accuracies_keyname(self, measure_name, label_level):
         measure_name += "_level%d" % label_level
-        return self.suffixes(measure_name)
+        return measure_name
 
     def all_splits_combined(self, embeddings_and_labels):
         eee, lll = list(zip(*list(embeddings_and_labels.values())))
@@ -118,23 +110,30 @@ class BaseTester:
     def embeddings_come_from_same_source(self, embeddings_and_labels):
         return self.reference_set in ["compared_to_self", "compared_to_sets_combined"]
 
+    def record_group_name(self, split_name):
+        return "%s_%s"%(self.base_record_group_name, split_name.upper())
+
     def do_knn_and_accuracies(self, embeddings_and_labels, accuracies, epoch, split_keys):
         raise NotImplementedError
 
-    def test(self, dataset_dict, epoch, trunk_model, embedder_model, post_processor=None, collate_fn=None):
+    def test(self, dataset_dict, epoch, trunk_model, embedder_model, splits_to_eval=None, post_processor=None, collate_fn=None):
         print("Evaluating epoch %d" % epoch)
         trunk_model = trunk_model.eval()
         embedder_model = embedder_model.eval()
         split_keys = list(dataset_dict.keys())
         embeddings_and_labels = {k: None for k in split_keys}
         for split_name, dataset in dataset_dict.items():
-            print('Getting embeddings')
+            print('Getting embeddings for the %s split'%split_name)
             embeddings_and_labels[split_name] = self.get_all_embeddings(dataset, trunk_model, embedder_model, post_processor, collate_fn)
-        self.accuracies = {"epoch":epoch}
-        self.do_knn_and_accuracies(embeddings_and_labels, epoch, split_keys)
-        if self.record_keeper is not None:
-            record_group_name = self.suffixes("%s_%s"%("accuracies", self.__class__.__name__))
-            self.calculate_best_epoch(self.record_keeper.get_record(record_group_name))
-            self.record_keeper.update_records(self.accuracies, epoch, input_group_name_for_non_objects=record_group_name)
-        else:
-            print(self.accuracies)
+        splits_to_eval = split_keys if splits_to_eval is None else splits_to_eval
+        for split_name in splits_to_eval:
+            print('Computing accuracy for the %s split'%split_name)
+            accuracies = {"epoch":epoch}
+            self.do_knn_and_accuracies(accuracies, embeddings_and_labels, epoch, split_name)
+            if self.record_keeper is not None:
+                self.record_keeper.update_records(accuracies, epoch, input_group_name_for_non_objects=self.record_group_name(split_name))
+                best_epoch, best_accuracy = self.get_best_epoch_and_accuracy(split_name)
+                accuracies = {"best_epoch":best_epoch, "best_accuracy":best_accuracy}
+                self.record_keeper.update_records(accuracies, epoch, input_group_name_for_non_objects=self.record_group_name(split_name))
+            else:
+                print(accuracies)

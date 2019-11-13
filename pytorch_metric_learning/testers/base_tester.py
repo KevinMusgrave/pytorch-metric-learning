@@ -6,6 +6,7 @@ import torch
 import numpy as np
 from ..utils import stat_utils
 from ..utils import common_functions as c_f
+import logging
 
 
 
@@ -117,17 +118,17 @@ class BaseTester:
         raise NotImplementedError
 
     def test(self, dataset_dict, epoch, trunk_model, embedder_model, splits_to_eval=None, post_processor=None, collate_fn=None):
-        print("Evaluating epoch %d" % epoch)
+        logging.info("Evaluating epoch %d" % epoch)
         trunk_model = trunk_model.eval()
         embedder_model = embedder_model.eval()
         split_keys = list(dataset_dict.keys())
         embeddings_and_labels = {k: None for k in split_keys}
         for split_name, dataset in dataset_dict.items():
-            print('Getting embeddings for the %s split'%split_name)
+            logging.info('Getting embeddings for the %s split'%split_name)
             embeddings_and_labels[split_name] = self.get_all_embeddings(dataset, trunk_model, embedder_model, post_processor, collate_fn)
         splits_to_eval = split_keys if splits_to_eval is None else splits_to_eval
         for split_name in splits_to_eval:
-            print('Computing accuracy for the %s split'%split_name)
+            logging.info('Computing accuracy for the %s split'%split_name)
             accuracies = {"epoch":epoch}
             self.do_knn_and_accuracies(accuracies, embeddings_and_labels, epoch, split_name)
             if self.record_keeper is not None:
@@ -136,4 +137,4 @@ class BaseTester:
                 accuracies = {"best_epoch":best_epoch, "best_accuracy":best_accuracy}
                 self.record_keeper.update_records(accuracies, epoch, input_group_name_for_non_objects=self.record_group_name(split_name))
             else:
-                print(accuracies)
+                logging.info(accuracies)

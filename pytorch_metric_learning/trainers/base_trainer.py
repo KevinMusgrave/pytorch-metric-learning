@@ -3,6 +3,7 @@
 import torch
 from ..utils import common_functions as c_f, loss_tracker as l_t
 import tqdm
+import logging
 
 class BaseTrainer:
     def __init__(
@@ -73,7 +74,7 @@ class BaseTrainer:
     def train(self):
         self.set_to_train()
         while self.epoch <= self.num_epochs:
-            print("TRAINING EPOCH %d" % self.epoch)
+            logging.info("TRAINING EPOCH %d" % self.epoch)
             pbar = tqdm.tqdm(range(self.iterations_per_epoch))
             for self.iteration in pbar:
                 self.forward_and_backward()

@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="pytorch_metric_learning",
-    version="0.9.18",
+    version="0.9.19",
     author="Kevin Musgrave",
     author_email="tkm45@cornell.edu",
     description="A flexible and extensible metric learning library, written in PyTorch.",

@@ -60,24 +60,24 @@ from pytorch_metric_learning import trainers
 # Set up your models, optimizers, loss functions etc.
 models = {"trunk": your_trunk_model, 
           "embedder": your_embedder_model,
-          "G_neg_model": your_negative_generator}
+          "generator": your_negative_generator}
 
 optimizers = {"trunk_optimizer": your_trunk_optimizer, 
               "embedder_optimizer": your_embedder_optimizer,
-              "G_neg_model_optimizer": your_negative_generator_optimizer}
+              "generator_optimizer": your_negative_generator_optimizer}
               
 loss_funcs = {"metric_loss": losses.AngularNPairs(alpha=35),
               "synth_loss": losses.Angular(alpha=35), 
-              "G_neg_adv": losses.Angular(alpha=35)}
+              "g_adv_loss": losses.Angular(alpha=35)}
 
 mining_funcs = {}
 
 loss_weights = {"metric_loss": 1, 
                 "classifier_loss": 0,
                 "synth_loss": 0.1,
-                "G_neg_adv": 0.1,
-                "G_neg_hard": 0.1,
-                "G_neg_reg": 0.1}
+                "g_adv_loss": 0.1,
+                "g_hard_loss": 0.1,
+                "g_reg_loss": 0.1}
 
 # Create trainer object
 trainer = trainers.DeepAdversarialMetricLearning(

@@ -12,7 +12,7 @@ import logging
 
 class BaseTester:
     def __init__(self, reference_set="compared_to_self", normalize_embeddings=True, use_trunk_output=False, 
-                    batch_size=32, dataloader_num_workers=32, metric_for_best_epoch="ordered_r_precision", 
+                    batch_size=32, dataloader_num_workers=32, metric_for_best_epoch="mean_average_r_precision", 
                     data_device=None, record_keeper=None):
         self.reference_set = reference_set
         self.normalize_embeddings = normalize_embeddings

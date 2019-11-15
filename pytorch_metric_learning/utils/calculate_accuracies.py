@@ -25,13 +25,13 @@ def r_precision(knn_labels, gt_labels, embeddings_come_from_same_source=False, l
     max_possible_matches_per_row = np.sum(relevance_mask, axis=1)
     return np.mean(matches_per_row / max_possible_matches_per_row)
 
-def ordered_r_precision(knn_labels, gt_labels, embeddings_come_from_same_source=False, label_counts=None):
+def mean_average_r_precision(knn_labels, gt_labels, embeddings_come_from_same_source=False, label_counts=None):
     relevance_mask = get_relevance_mask(knn_labels.shape, gt_labels, embeddings_come_from_same_source, label_counts)
     num_samples, num_k = knn_labels.shape
     equality = (knn_labels == gt_labels) * relevance_mask.astype(bool)
     cumulative_correct = np.cumsum(equality, axis=1)
     k_idx = np.tile(np.arange(1, num_k + 1), (num_samples, 1))
-    precision_at_ks = cumulative_correct / k_idx
+    precision_at_ks = (cumulative_correct * equality) / k_idx
     summed_precision_per_row = np.sum(precision_at_ks * relevance_mask, axis=1)
     max_possible_matches_per_row = np.sum(relevance_mask, axis=1)
     return np.mean(summed_precision_per_row / max_possible_matches_per_row)
@@ -100,7 +100,7 @@ def compute_accuracies(query_embeddings, knn_labels, query_labels, embeddings_co
     accuracies["NMI"] = NMI(query_embeddings, query_labels)[0]
     accuracies["recall_at_1"] = recall_at_k(knn_labels, query_labels[:, None], 1)
     accuracies["r_precision"] = r_precision(knn_labels, query_labels[:, None], embeddings_come_from_same_source, label_counts)
-    accuracies["ordered_r_precision"] = ordered_r_precision(knn_labels, query_labels[:, None], embeddings_come_from_same_source, label_counts)
+    accuracies["mean_average_r_precision"] = mean_average_r_precision(knn_labels, query_labels[:, None], embeddings_come_from_same_source, label_counts)
     return accuracies
 
 

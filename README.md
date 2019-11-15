@@ -38,14 +38,14 @@ pip install pytorch_metric_learning
 ## Overview
 
 Use a loss function by itself
-```
+```python
 from pytorch_metric_learning import losses
 loss_func = losses.TripletMarginLoss(normalize_embeddings=False, margin=0.1)
 loss = loss_func(embeddings, labels)
 ```
 
 Or combine miners and loss functions, regardless of whether they mine or compute loss using pairs or triplets. Pairs are converted to triplets when necessary, and vice versa.
-```
+```python
 from pytorch_metric_learning import miners, losses
 miner = miners.MultiSimilarityMiner(epsilon=0.1)
 loss_func = losses.TripletMarginLoss(normalize_embeddings=False, margin=0.1)
@@ -54,7 +54,7 @@ loss = loss_func(embeddings, labels, hard_pairs)
 ```
 
 Train using more advanced approaches, like deep adversarial metric learning. For example:
-```
+```python
 from pytorch_metric_learning import trainers
 
 # Set up your models, optimizers, loss functions etc.
@@ -92,6 +92,5 @@ trainer = trainers.DeepAdversarialMetricLearning(
   loss_weights=loss_weights
 )
   
-# Train!
 trainer.train()
 ```

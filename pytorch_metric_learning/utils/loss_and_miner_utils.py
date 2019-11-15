@@ -91,6 +91,7 @@ def get_random_triplet_indices(labels, t_per_anchor=None, weights=None):
     labels = labels.cpu().numpy()
     label_count = dict(zip(*np.unique(labels, return_counts=True)))
     indices = np.arange(batch_size)
+    np_random = np.random.RandomState()
     for i, label in enumerate(labels):
         curr_label_count = label_count[label]
         if curr_label_count == 1:
@@ -98,10 +99,10 @@ def get_random_triplet_indices(labels, t_per_anchor=None, weights=None):
         k = curr_label_count - 1 if t_per_anchor is None else t_per_anchor
 
         if weights is not None and not np.any(np.isnan(weights[i])):
-            n_idx += np.random.choice(batch_size, k, p=weights[i]).tolist()
+            n_idx += np_random.choice(batch_size, k, p=weights[i]).tolist()
         else:
             possible_n_idx = list(np.where(labels != label)[0])
-            n_idx += np.random.choice(possible_n_idx, k).tolist()
+            n_idx += np_random.choice(possible_n_idx, k).tolist()
 
         a_idx.extend([i] * k)
         curr_p_idx = c_f.safe_random_choice(np.where((labels == label) & (indices != i))[0], k)

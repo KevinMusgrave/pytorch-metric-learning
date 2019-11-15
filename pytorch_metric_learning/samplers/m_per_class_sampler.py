@@ -33,7 +33,7 @@ class MPerClassSampler(Sampler):
     def __iter__(self):
         ret = []
         for _ in range(1000):
-            np.random.shuffle(self.labels)
+            np.random.RandomState().shuffle(self.labels)
             for label in self.labels:
                 t = self.curr_labels_to_indices[label]
                 t = c_f.safe_random_choice(t, size=self.m_per_class)

@@ -114,7 +114,7 @@ def safe_random_choice(input_data, size):
         An array of size "size", randomly sampled from input_data
     """
     replace = len(input_data) < size
-    return np.random.choice(input_data, size=size, replace=replace)
+    return np.random.RandomState().choice(input_data, size=size, replace=replace)
 
 
 def longest_list(list_of_lists):

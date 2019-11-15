@@ -1,6 +1,7 @@
 # pytorch_metric_learning
 
-## Coming soon in a separate repo: a highly configurable and easy-to-use benchmarking tool.
+## See this [Google Spreadsheet](https://docs.google.com/spreadsheets/d/1kiJ5rKmneQvnYKpVO9vBFdMDNx-yLcXV2wbDXlb-SB8/edit?usp=sharing) for benchmark results (in progress). 
+## See [powerful_benchmarker](https://github.com/KevinMusgrave/powerful_benchmarker/) to use the benchmarking tool.
 
 ## Loss functions implemented:
 - angular

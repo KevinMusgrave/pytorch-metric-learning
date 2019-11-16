@@ -50,16 +50,16 @@ class GenericPairLoss(BaseMetricLossFunction):
         n = 0
         (a1_indices, p_indices, a2_indices, n_indices) = indices_tuple
         for i in range(mat.size(0)):
-            pos_pair, neg_pair = [], []
+            pos_pair, neg_pair, pos_labels, neg_labels = [], [], [], []
             if len(a1_indices) > 0:
                 p_idx = a1_indices == i
                 pos_pair = mat[a1_indices[p_idx], p_indices[p_idx]]
+                pos_labels = labels[a1_indices[p_idx]]
             if len(a2_indices) > 0:
                 n_idx = a2_indices == i
                 neg_pair = mat[a2_indices[n_idx], n_indices[n_idx]]
-            loss += self.pair_based_loss(
-                pos_pair, neg_pair, labels[a1_indices[p_idx]], labels[a2_indices[n_idx]]
-            )
+                neg_labels = labels[a2_indices[n_idx]]
+            loss += self.pair_based_loss(pos_pair, neg_pair, pos_labels, neg_labels)
             n += 1
         return loss / (n if n > 0 else 1)
 
@@ -70,6 +70,4 @@ class GenericPairLoss(BaseMetricLossFunction):
             pos_pair = mat[a1_indices, p_indices]
         if len(a2_indices) > 0:
             neg_pair = mat[a2_indices, n_indices]
-        return self.pair_based_loss(
-            pos_pair, neg_pair, labels[a1_indices], labels[a2_indices]
-        )
+        return self.pair_based_loss(pos_pair, neg_pair, labels[a1_indices], labels[a2_indices])

@@ -26,6 +26,7 @@ class TripletMarginLoss(BaseMetricLossFunction):
         swap=False,
         smooth_loss=False,
         avg_non_zero_only=True,
+        triplets_per_anchor=100,
         **kwargs
     ):
         self.margin = margin
@@ -34,13 +35,14 @@ class TripletMarginLoss(BaseMetricLossFunction):
         self.swap = swap
         self.smooth_loss = smooth_loss
         self.avg_non_zero_only = avg_non_zero_only
+        self.triplets_per_anchor = triplets_per_anchor
         self.num_non_zero_triplets = 0
         self.record_these = ["num_non_zero_triplets"]
         self.maybe_modify_loss = lambda x: x
         super().__init__(**kwargs)
 
     def compute_loss(self, embeddings, labels, indices_tuple):
-        indices_tuple = lmu.convert_to_triplets(indices_tuple, labels)
+        indices_tuple = lmu.convert_to_triplets(indices_tuple, labels, t_per_anchor=self.triplets_per_anchor)
         anchor_idx, positive_idx, negative_idx = indices_tuple
         if len(anchor_idx) == 0:
             self.num_non_zero_triplets = 0

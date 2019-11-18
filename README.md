@@ -3,31 +3,49 @@
 ## See this [Google Spreadsheet](https://docs.google.com/spreadsheets/d/1kiJ5rKmneQvnYKpVO9vBFdMDNx-yLcXV2wbDXlb-SB8/edit?usp=sharing) for benchmark results (in progress). 
 ## See [powerful_benchmarker](https://github.com/KevinMusgrave/powerful_benchmarker/) to use the benchmarking tool.
 
-## Loss functions implemented:
-- angular
-- contrastive
-- lifted structure
-- margin
-- multi similarity
-- n pairs
-- nca
-- proxy nca
-- triplet margin
+## Why use this library?
+1. Flexibility
+   - In this library, the various aspects of metric-learning are "dis-entangled" such that they can be mixed and matched in ways that other libraries don't allow. For example, in this library, you can use a cascaded-embeddings training method, with the multi-similarity loss, distance-weighted miner, and a classifier layer.  
+2. Modularity
+   - The function types are completely independent of each other, so you can import just the functions that suit your application. For instance, you might want to use a mining function by itself, to get access to the information it provides about your embedding space. 
+
+## Currently implemented classes:
+### [Loss functions](https://github.com/KevinMusgrave/pytorch_metric_learning/tree/master/pytorch_metric_learning/losses):
+- AngularLoss
+- AngularNPairsLoss
+- ContrastiveLoss
+- GeneralizedLiftedStructureLoss
+- MarginLoss
+- MultiSimilarityLoss
+- NCALoss
+- NPairsLoss
+- ProxyNCALoss
+- TripletMarginLoss
 - **more to be added**
 
-## Mining functions implemented:
-- distance weighted sampling
-- hard aware cascaded mining
-- maximum loss miner
-- multi similarity miner
-- pair margin miner
+### [Mining functions](https://github.com/KevinMusgrave/pytorch_metric_learning/tree/master/pytorch_metric_learning/miners):
+- DistanceWeightedMiner
+- HDCMiner
+- MaximumLossMiner
+- MultiSimilarityMiner
+- PairMarginMiner
 - **more to be added**
 
-## Training methods implemented:
-- metric loss only
-- training with classifier
-- cascaded embeddings
-- deep adversarial metric learning
+### [Samplers](https://github.com/KevinMusgrave/pytorch_metric_learning/tree/master/pytorch_metric_learning/samplers):
+- MPerClassSampler
+- FixedSetOfTriplets
+- **more to be added**
+
+### [Training methods](https://github.com/KevinMusgrave/pytorch_metric_learning/tree/master/pytorch_metric_learning/trainers):
+- MetricLossOnly
+- TrainWithClassifier
+- CascadedEmbeddings
+- DeepAdversarialMetricLearning
+- **more to be added**
+
+### [Testing methods](https://github.com/KevinMusgrave/pytorch_metric_learning/tree/master/pytorch_metric_learning/testers):
+- GlobalEmbeddingSpaceTester
+- WithSameParentLabelTester
 - **more to be added**
 
 ## Installation:
@@ -95,3 +113,47 @@ trainer = trainers.DeepAdversarialMetricLearning(
   
 trainer.train()
 ```
+
+## Details about losses
+Every loss function extends [BaseMetricLossFunction](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/losses/base_metric_loss_function.py). The three default input arguments are:
+- ```normalize_embeddings```: If True, normalizes embeddings to have Euclidean norm of 1, before computing the loss
+- ```learnable_param_names```: An optional list of strings that specifies which loss parameters you want to convert to nn.Parameter (and therefore make them learnable by using a PyTorch optimizer). If not specified, then no loss parameters will be converted. 
+- ```num_class_per_param```: An optional integer which specifies the size of the learnable parameters listed in learnable_param_names. If not specified, then each nn.Parameter will be of size 1.
+
+## Details about miners
+Every mining function extends either [BasePreGradientMiner](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/miners/base_miner.py#L84) or [BasePostGradientMiner](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/miners/base_miner.py#L39).
+
+Pre-gradient miners take in a batch of embeddings, and output indices corresponding to a subset of the batch. The idea is to use these miners with torch.no_grad(), and with a large input batch size.
+
+Post-gradient miners take in a batch of embeddings, and output a tuple of indices. If the miner outputs pairs, then the tuple is of size 4 (anchors, positives, anchors, negatives). If the miner outputs triplets, then the tuple is of size 3 (anchors, positives, negatives). These miners are typically used just before the loss is computed.
+
+Note that in the provided training methods, you can use zero, one, or both types of miners at the same time.
+
+What about miners that keep track of a global set of hard pairs or triplets? These should be implemented as Samplers.
+
+## Details about samplers
+Every sampler extends the standard PyTorch [Sampler](https://pytorch.org/docs/stable/data.html#torch.utils.data.Sampler) class that is passed into the Dataloader. Currently, the only implemented sampler is MPerClassSampler, which returns m samples per class, at every iteration.
+
+## Details about trainers
+Every trainer extends [BaseTrainer](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/trainers/base_trainer.py). The base class takes in a number of arguments:
+- ```models```: a dictionary of the form: {"trunk": trunk_model, "embedder": embedder_model}
+- ```optimizers```: a dictionary mapping strings to optimizers. The base class does not require any specific keys. For example, you could provide an empty dictionary, in which case no optimization will happen. Or you could provide just an optimizer for your trunk_model. But most likely, you'll want to pass in {"trunk_optimizer": trunk_optimizer, "embedder_optimizer": embedder_optimizer}.
+- ```batch_size```
+- ```loss_funcs```: a dictionary mapping strings to loss functions. The required keys depend on the training method, but all methods are likely to require a bare minimum of {"metric_loss": some_loss_func}
+- ```mining_funcs```: a dictionary mapping strings to mining functions. Pass in an empty dictionary, or one or more of the following keys: {"pre_gradient_miner": some_mining_func_1, "post_gradient_miner": some_mining_func_2}
+- ```num_epochs```
+- ```iterations_per_epoch```: this is what actually defines what an "epoch" is. (In this library, epochs are just a measure of the number of iterations that have passed. Epochs in the traditional sense do not necessarily make sense in the context of metric learning, because it is common to sample data in a way that is not completely random.
+- ```dataset```: The dataset you want to train on. Note that training methods do not perform validation, so do not pass in your validation or test set. Your dataset's ```__getitem__``` should return a dictionary. See [this class](https://github.com/KevinMusgrave/powerful_benchmarker/blob/master/datasets/cub200.py) for an example.
+- ```data_device```: *Optional*. The device that you want to put batches of data on. If not specified, it will put the data on any available GPUs.
+- ```loss_weights```: *Optional*. A dictionary mapping loss names to numbers. Each loss will be multiplied by the corresponding value in the dictionary. If not specified, then no loss weighting will occur.
+- ```label_mapper```: *Optional*. A function that takes in a label and returns another label. For example, it might be useful to move a set of labels ranging from 100-200 to a range of 0-100, in which case you could pass in ```lambda x: x-100```. If not specified, then the original labels are used.
+- ```sampler```: *Optional*. The sampler used by the dataloader. If not specified, then random sampling will be used.
+- ```collate_fn```: *Optional*. The collate function used by the dataloader.
+- ```record_keeper```: *Optional*. See the [record_keeper](https://github.com/KevinMusgrave/record_keeper) package.
+- ```lr_schedulers```: *Optional*. A dictionary of PyTorch learning rate schedulers. Each scheduler will be stepped at the end of every epoch.
+- ```gradient_clippers```: *Optional*. A dictionary of gradient clipping functions. Each function will be called before the optimizers.
+- ```freeze_trunk_batchnorm```: *Optional*. If True, then the BatchNorm parameters of the trunk model will be frozen during training.
+- ```label_hierarchy_level```: *Optional*. If each sample in your dataset has multiple hierarchical labels, then this can be used to select which hierarchy to use. This assumes that your labels are "2-dimensional" with shape (num_samples, num_hierarchy_levels).
+- ```dataloader_num_workers```: *Optional*. For the dataloader.
+- ```post_processor```: *Optional*. A function that takes in embeddings and labels, and returns embeddings and labels. This is called after computing embeddings using your trunk and embedder model.
+

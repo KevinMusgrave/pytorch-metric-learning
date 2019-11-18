@@ -48,6 +48,9 @@
 - WithSameParentLabelTester
 - **more to be added**
 
+## Want to add your own loss, miner, sampler, trainer, or tester? 
+Please create a pull request or issue, and I will be happy to add your class to the library!
+
 ## Installation:
 ```
 pip install pytorch_metric_learning
@@ -157,3 +160,20 @@ Every trainer extends [BaseTrainer](https://github.com/KevinMusgrave/pytorch_met
 - ```dataloader_num_workers```: *Optional*. For the dataloader.
 - ```post_processor```: *Optional*. A function that takes in embeddings and labels, and returns embeddings and labels. This is called after computing embeddings using your trunk and embedder model.
 
+## Details about testers
+Every tester extends [BaseTester](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/testers/base_tester.py). The arguments are:
+- ```reference_set```: This specifies from which set the nearest neighbors will be retrieved. 
+   - If "compared_to_self", each dataset split will refer to itself to find nearest neighbors. 
+   - If "compared_to_sets_combined", each dataset split will refer to all provided splits to find nearest neighbors. 
+   - If "compared_to_training_set", each dataset will refer to the training set to find nearest neighbors.
+- ```normalize_embeddings```: If True, embeddings will be normalized to Euclidean norm of 1 before nearest neighbors are computed.
+- ```use_trunk_output```: If True, the output of the embedder model will be ignored.
+- ```batch_size```
+- ```dataloader_num_workers```
+- ```metric_for_best_epoch```: The performance metric that will be used to determine which model is best. Requires record_keeper.
+- ```record_keeper```: See the [record_keeper](https://github.com/KevinMusgrave/record_keeper) package.
+
+Which tester should you use? Almost definitely GlobalEmbeddingSpaceTester, because it does what most metric-learning papers do.
+
+After you've initialized the tester, run ```tester.test(dataset_dict, epoch, trunk_model, embedder_model)```. 
+```dataset_dict``` is a dictionary mapping from strings to datasets. If your ```reference_set = "compared_to_training_set"``` then your ```dataset_dict``` must include a key called "train".

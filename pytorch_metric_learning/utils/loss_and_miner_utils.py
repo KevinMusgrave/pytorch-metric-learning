@@ -41,6 +41,8 @@ def dist_mat(x, y=None, eps=1e-16, squared=False):
         dist = dist * (1.0 - mask)
     return dist
 
+def get_pairwise_mat(x, use_similarity, squared):
+    return sim_mat(x) if use_similarity else dist_mat(x, squared=squared)
 
 def get_all_pairs_indices(labels):
     """
@@ -48,10 +50,10 @@ def get_all_pairs_indices(labels):
     The first 2 tensors are the indices which form all positive pairs
     The second 2 tensors are the indices which form all negative pairs
     """
-    labels1 = labels.unsqueeze(1).expand(labels.size(0), labels.size(0))
-    labels2 = labels.unsqueeze(0).expand(labels.size(0), labels.size(0))
+    labels1 = labels.unsqueeze(1)
+    labels2 = labels.unsqueeze(0)
     matches = (labels1 == labels2).byte()
-    diffs = 1 - matches
+    diffs = matches ^ 1
     matches -= torch.eye(matches.size(0)).byte().to(labels.device)
     a1_idx = matches.nonzero()[:, 0].flatten()
     p_idx = matches.nonzero()[:, 1].flatten()
@@ -82,6 +84,20 @@ def convert_to_pos_pairs_with_unique_labels(indices_tuple, labels):
     a, p, _, _ = convert_to_pairs(indices_tuple, labels)
     _, unique_idx = np.unique(labels[a].cpu().numpy(), return_index=True) 
     return a[unique_idx], p[unique_idx]
+
+
+def get_all_triplets_indices(labels):
+    labels1 = labels.unsqueeze(1)
+    labels2 = labels.unsqueeze(0)
+    matches = (labels1 == labels2).byte()
+    diffs = matches ^ 1
+    matches -= torch.eye(matches.size(0)).byte().to(labels.device)
+    triplets = matches.unsqueeze(2)*diffs.unsqueeze(1)
+    a_idx = triplets.nonzero()[:, 0].flatten()
+    p_idx = triplets.nonzero()[:, 1].flatten()
+    n_idx = triplets.nonzero()[:, 2].flatten()
+    return a_idx, p_idx, n_idx
+
 
 
 # sample triplets, with a weighted distribution if weights is specified.
@@ -138,7 +154,10 @@ def convert_to_triplets(indices_tuple, labels, t_per_anchor=100):
     regardless of what the input indices_tuple is
     """
     if indices_tuple is None:
-        return get_random_triplet_indices(labels, t_per_anchor=t_per_anchor)
+        if t_per_anchor == "all":
+            return get_all_triplets_indices(labels)
+        else:
+            return get_random_triplet_indices(labels, t_per_anchor=t_per_anchor)
     elif len(indices_tuple) == 3:
         return indices_tuple
     else:

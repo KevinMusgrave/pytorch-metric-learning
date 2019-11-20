@@ -32,11 +32,7 @@ class GenericPairLoss(BaseMetricLossFunction):
         super().__init__(**kwargs)
 
     def compute_loss(self, embeddings, labels, indices_tuple):
-        mat = (
-            lmu.sim_mat(embeddings)
-            if self.use_similarity
-            else lmu.dist_mat(embeddings, squared=self.squared_distances)
-        )
+        mat = lmu.get_pairwise_mat(embeddings, self.use_similarity, self.squared_distances)
         indices_tuple = lmu.convert_to_pairs(indices_tuple, labels)
         return self.loss_method(mat, labels, indices_tuple)
 

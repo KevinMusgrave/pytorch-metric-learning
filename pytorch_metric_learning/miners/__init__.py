@@ -1,3 +1,4 @@
+from .batch_hard_miner import BatchHardMiner
 from .distance_weighted_miner import DistanceWeightedMiner
 from .embeddings_already_packaged_as_triplets import EmbeddingsAlreadyPackagedAsTriplets
 from .hdc_miner import HDCMiner

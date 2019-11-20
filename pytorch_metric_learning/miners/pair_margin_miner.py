@@ -12,23 +12,19 @@ class PairMarginMiner(BasePostGradientMiner):
     """
 
     def __init__(
-        self, pos_margin, neg_margin, use_similarity, squared_mat=False, **kwargs
+        self, pos_margin, neg_margin, use_similarity, squared_distances=False, **kwargs
     ):
         super().__init__(**kwargs)
         self.pos_margin = pos_margin
         self.neg_margin = neg_margin
         self.use_similarity = use_similarity
-        self.squared_mat = squared_mat
+        self.squared_distances = squared_distances
         self.pos_pair_dist = 0
         self.neg_pair_dist = 0
         self.record_these += ["pos_pair_dist", "neg_pair_dist"]
 
     def mine(self, embeddings, labels):
-        mat = (
-            lmu.sim_mat(embeddings)
-            if self.use_similarity
-            else lmu.dist_mat(embeddings, squared=self.squared_mat)
-        )
+        mat = lmu.get_pairwise_mat(embeddings, self.use_similarity, self.squared_distances)
         a1, p, a2, n = lmu.get_all_pairs_indices(labels)
         pos_pair = mat[a1, p]
         neg_pair = mat[a2, n]

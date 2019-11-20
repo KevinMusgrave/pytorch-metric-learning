@@ -9,6 +9,11 @@
 2. Modularity
    - The function types are completely independent of each other, so you can import just the functions that suit your application. For instance, you might want to use a mining function by itself, to get access to the information it provides about your embedding space. 
 
+## Installation:
+```
+pip install pytorch_metric_learning
+```
+
 ## Currently implemented classes:
 ### [Loss functions](https://github.com/KevinMusgrave/pytorch_metric_learning/tree/master/pytorch_metric_learning/losses):
 - AngularLoss
@@ -24,6 +29,7 @@
 - **more to be added**
 
 ### [Mining functions](https://github.com/KevinMusgrave/pytorch_metric_learning/tree/master/pytorch_metric_learning/miners):
+- BatchHardMiner
 - DistanceWeightedMiner
 - HDCMiner
 - MaximumLossMiner
@@ -50,12 +56,6 @@
 
 ## Want to add your own loss, miner, sampler, trainer, or tester? 
 Please create a pull request or issue, and I will be happy to add your class to the library!
-
-## Installation:
-```
-pip install pytorch_metric_learning
-```
-
 
 ## Overview
 

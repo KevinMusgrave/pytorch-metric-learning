@@ -29,6 +29,7 @@ class BaseTrainer:
         dataloader_num_workers=32,
         post_processor=None,
         start_epoch=1,
+        possible_data_keys=None
     ):
         self.models = models
         self.optimizers = optimizers
@@ -51,6 +52,7 @@ class BaseTrainer:
         self.post_processor = post_processor
         self.epoch = start_epoch
         self.loss_weights = loss_weights
+        self.possible_data_keys = possible_data_keys
         self.custom_setup()
         self.initialize_data_device()
         self.initialize_label_mapper()
@@ -58,6 +60,7 @@ class BaseTrainer:
         self.initialize_loss_tracker()
         self.initialize_dataloader()
         self.initialize_loss_weights()
+        self.initialize_possible_data_keys()
 
     def custom_setup(self):
         pass
@@ -121,7 +124,7 @@ class BaseTrainer:
             curr_batch["label"], self.label_hierarchy_level, self.label_mapper
         )
         curr_batch = self.maybe_do_pre_gradient_mining(curr_batch)
-        return c_f.try_keys(curr_batch, ["data", "image"]), curr_batch["label"]
+        return c_f.try_keys(curr_batch, self.possible_data_keys), curr_batch["label"]
 
     def compute_embeddings(self, data, labels):
         trunk_output = self.get_trunk_output(data)
@@ -144,12 +147,12 @@ class BaseTrainer:
         if "pre_gradient_miner" in self.mining_funcs:
             with torch.no_grad():
                 self.set_to_eval()
-                data = c_f.try_keys(curr_batch, ["data", "image"])
+                data = c_f.try_keys(curr_batch, self.possible_data_keys)
                 labels = curr_batch["label"]
                 embeddings, labels = self.compute_embeddings(data, labels)
                 idx = self.mining_funcs["pre_gradient_miner"](embeddings, labels)
                 self.set_to_train()
-            curr_batch = {"data": data[idx], "label": labels[idx]}
+            curr_batch = {self.possible_data_keys[0]: data[idx], "label": labels[idx]}
         return curr_batch
 
     def backward(self):
@@ -187,11 +190,15 @@ class BaseTrainer:
 
     def initialize_label_mapper(self):
         if self.label_mapper is None:
-            self.label_mapper = lambda x: x
+            self.label_mapper = lambda label, hierarchy_level: label
 
     def initialize_loss_tracker(self):
         self.loss_tracker = l_t.LossTracker(self.loss_names())
         self.losses = self.loss_tracker.losses
+
+    def initialize_possible_data_keys(self):
+        if self.possible_data_keys is None:
+            self.possible_data_keys = ["data", "image"]
 
     def set_to_train(self):
         for k, v in self.models.items():

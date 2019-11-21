@@ -47,6 +47,7 @@ pip install pytorch_metric_learning
 - TrainWithClassifier
 - CascadedEmbeddings
 - DeepAdversarialMetricLearning
+- UnsupervisedEmbeddingsUsingAugmentations
 - **more to be added**
 
 ### [Testing methods](https://github.com/KevinMusgrave/pytorch_metric_learning/tree/master/pytorch_metric_learning/testers):

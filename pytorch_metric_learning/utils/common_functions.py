@@ -153,7 +153,8 @@ def get_dataloader(dataset, batch_size, sampler, num_workers, collate_fn):
         drop_last=True,
         num_workers=num_workers,
         collate_fn=collate_fn,
-        shuffle=sampler is None
+        shuffle=sampler is None,
+        pin_memory=True
     )
 
 

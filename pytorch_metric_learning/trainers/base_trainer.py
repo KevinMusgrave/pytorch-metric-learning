@@ -87,6 +87,7 @@ class BaseTrainer:
             self.epoch += 1
 
     def initialize_dataloader(self):
+        logging.info("Initializing dataloader")
         self.dataloader = c_f.get_dataloader(
             self.dataset,
             self.batch_size,
@@ -94,7 +95,9 @@ class BaseTrainer:
             self.dataloader_num_workers,
             self.collate_fn,
         )
+        logging.info("Initializing dataloader iterator")
         self.dataloader_iter = iter(self.dataloader)
+        logging.info("Done creating dataloader iterator")
 
     def forward_and_backward(self):
         self.zero_losses()

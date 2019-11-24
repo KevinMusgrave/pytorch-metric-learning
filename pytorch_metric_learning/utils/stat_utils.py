@@ -20,10 +20,8 @@ def get_knn(
     """
     logging.info("running k-nn with k=%d"%k)
     d = reference_embeddings.shape[1]
-    res = faiss.StandardGpuResources()
-    flat_config = faiss.GpuIndexFlatConfig()
-    flat_config.device = int(torch.cuda.device_count()) - 1
-    index = faiss.GpuIndexFlatL2(res, d, flat_config)
+    cpu_index = faiss.IndexFlatL2(d)
+    index = faiss.index_cpu_to_all_gpus(cpu_index)
     index.add(reference_embeddings)
     _, indices = index.search(test_embeddings, k + 1)
     if embeddings_come_from_same_source:
@@ -31,7 +29,7 @@ def get_knn(
     return indices[:, :k]
 
 
-# from https://raw.githubusercontent.com/facebookresearch/deepcluster/
+# modified from https://raw.githubusercontent.com/facebookresearch/deepcluster/
 def run_kmeans(x, nmb_clusters):
     """Runs kmeans on 1 GPU.
     Args:
@@ -46,12 +44,8 @@ def run_kmeans(x, nmb_clusters):
     clus = faiss.Clustering(d, nmb_clusters)
     clus.niter = 20
     clus.max_points_per_centroid = 10000000
-    res = faiss.StandardGpuResources()
-    flat_config = faiss.GpuIndexFlatConfig()
-    flat_config.useFloat16 = False
-    flat_config.device = 0
-    index = faiss.GpuIndexFlatL2(res, d, flat_config)
-
+    cpu_index = faiss.IndexFlatL2(d)
+    index = faiss.index_cpu_to_all_gpus(cpu_index)
     # perform the training
     clus.train(x, index)
     _, idxs = index.search(x, 1)

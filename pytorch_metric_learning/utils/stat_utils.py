@@ -2,6 +2,7 @@
 import faiss
 import torch
 import logging
+import numpy as np
 
 # modified from https://github.com/facebookresearch/deepcluster
 def get_knn(
@@ -31,7 +32,7 @@ def get_knn(
 
 # modified from https://raw.githubusercontent.com/facebookresearch/deepcluster/
 def run_kmeans(x, nmb_clusters):
-    """Runs kmeans on 1 GPU.
+    """
     Args:
         x: data
         nmb_clusters (int): number of clusters
@@ -51,3 +52,11 @@ def run_kmeans(x, nmb_clusters):
     _, idxs = index.search(x, 1)
 
     return [int(n[0]) for n in idxs]
+
+
+# modified from https://github.com/facebookresearch/faiss/wiki/Faiss-building-blocks:-clustering,-PCA,-quantization
+def run_pca(x, output_dimensionality):
+    mat = faiss.PCAMatrix(x.shape[1], output_dimensionality)
+    mat.train(x)
+    assert mat.is_trained
+    return mat.apply_py(x)

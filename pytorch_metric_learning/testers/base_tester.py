@@ -7,15 +7,16 @@ import numpy as np
 from ..utils import stat_utils
 from ..utils import common_functions as c_f
 import logging
-
+from sklearn.preprocessing import normalize, StandardScaler
 
 
 class BaseTester:
     def __init__(self, reference_set="compared_to_self", normalize_embeddings=True, use_trunk_output=False, 
                     batch_size=32, dataloader_num_workers=32, metric_for_best_epoch="mean_average_r_precision", 
-                    data_device=None, record_keeper=None):
+                    pca=None, data_device=None, record_keeper=None):
         self.reference_set = reference_set
         self.normalize_embeddings = normalize_embeddings
+        self.pca = int(pca) if pca else None
         self.use_trunk_output = use_trunk_output
         self.batch_size = int(batch_size)
         self.key_for_best_epoch = self.accuracies_keyname(metric_for_best_epoch, 0)
@@ -30,8 +31,11 @@ class BaseTester:
         return records["epoch"][np.argmax(accuracies)], np.max(accuracies)
 
     def maybe_normalize(self, embeddings):
+        if self.pca:
+            for_pca = StandardScaler().fit_transform(embeddings)
+            embeddings = stat_utils.run_pca(for_pca, self.pca)
         if self.normalize_embeddings:
-            return embeddings / np.expand_dims(np.linalg.norm(embeddings, axis=1), 1)
+            embeddings = normalize(embeddings)
         return embeddings
 
     def compute_all_embeddings(self, dataloader, trunk_model, embedder_model, post_processor):
@@ -79,6 +83,8 @@ class BaseTester:
         return embedder_model(trunk_output)
 
     def suffixes(self, base_name):
+        if self.pca:
+            base_name += "_pca%d"%self.pca
         if self.normalize_embeddings:
             base_name += "_normalized"
         if self.use_trunk_output:

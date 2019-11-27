@@ -59,24 +59,27 @@ pip install pytorch_metric_learning
 Please create a pull request or issue, and I will be happy to add your class to the library!
 
 ## Overview
-
-Use a loss function by itself
+Let’s try the vanilla triplet margin loss. In all examples, embeddings is assumed to be of size (N, embedding_size), and labels is of size (N).
 ```python
 from pytorch_metric_learning import losses
-loss_func = losses.TripletMarginLoss(normalize_embeddings=False, margin=0.1)
+loss_func = losses.TripletMarginLoss(margin=0.1)
 loss = loss_func(embeddings, labels)
 ```
-
-Or combine miners and loss functions, regardless of whether they mine or compute loss using pairs or triplets. Pairs are converted to triplets when necessary, and vice versa.
+Loss functions typically come with a variety of parameters. For example, with the TripletMarginLoss, you can control how many triplets per sample to use in each batch. You can also use all possible triplets within each batch:
+```python
+loss_func = losses.TripletMarginLoss(triplets_per_anchor="all")
+```
+Sometimes it can help to add a mining function:
 ```python
 from pytorch_metric_learning import miners, losses
 miner = miners.MultiSimilarityMiner(epsilon=0.1)
-loss_func = losses.TripletMarginLoss(normalize_embeddings=False, margin=0.1)
+loss_func = losses.TripletMarginLoss(margin=0.1)
 hard_pairs = miner(embeddings, labels)
 loss = loss_func(embeddings, labels, hard_pairs)
 ```
+In the above code, the miner finds positive and negative pairs that it thinks are particularly difficult. Note that even though the TripletMarginLoss operates on triplets, it’s still possible to pass in pairs. This is because the library automatically converts pairs to triplets and triplets to pairs, when necessary.
 
-Train using more advanced approaches, like deep adversarial metric learning. For example:
+Train using advanced approaches, like deep adversarial metric learning:
 ```python
 from pytorch_metric_learning import trainers
 

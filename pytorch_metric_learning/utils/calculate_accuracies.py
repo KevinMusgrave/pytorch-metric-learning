@@ -66,17 +66,6 @@ def mean_average_precision(knn_labels, gt_labels):
     return np.mean(avg_precision_per_row)
 
 
-def recall_at_k(knn_labels, gt_labels, k):
-    """
-    "Recall at k" in metric learning papers is defined as number of samples
-    that have at least 1 correct neighbor out of k.
-    """
-    num_samples = knn_labels.shape[0]
-    curr_knn_labels = knn_labels[:, :k]
-    num_matches_per_datapoint = np.sum(curr_knn_labels == gt_labels, axis=1)
-    return np.sum(np.clip(num_matches_per_datapoint, 0, 1)) / num_samples
-
-
 def NMI(input_embeddings, gt_labels):
     """
     Returns NMI and also the predicted labels from k-means
@@ -98,7 +87,7 @@ def compute_accuracies(query_embeddings, knn_labels, query_labels, embeddings_co
     """
     accuracies = {}
     accuracies["NMI"] = NMI(query_embeddings, query_labels)[0]
-    accuracies["recall_at_1"] = recall_at_k(knn_labels, query_labels[:, None], 1)
+    accuracies["precision_at_1"] = precision_at_k(knn_labels, query_labels[:, None], 1)
     accuracies["r_precision"] = r_precision(knn_labels, query_labels[:, None], embeddings_come_from_same_source, label_counts)
     accuracies["mean_average_r_precision"] = mean_average_r_precision(knn_labels, query_labels[:, None], embeddings_come_from_same_source, label_counts)
     return accuracies

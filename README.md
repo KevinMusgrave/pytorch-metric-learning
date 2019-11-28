@@ -17,7 +17,6 @@ pip install pytorch_metric_learning
 ## Currently implemented classes:
 ### [Loss functions](https://github.com/KevinMusgrave/pytorch_metric_learning/tree/master/pytorch_metric_learning/losses):
 - AngularLoss
-- AngularNPairsLoss
 - ContrastiveLoss
 - GeneralizedLiftedStructureLoss
 - MarginLoss
@@ -29,6 +28,7 @@ pip install pytorch_metric_learning
 - **more to be added**
 
 ### [Mining functions](https://github.com/KevinMusgrave/pytorch_metric_learning/tree/master/pytorch_metric_learning/miners):
+- AngularMiner
 - BatchHardMiner
 - DistanceWeightedMiner
 - HDCMiner

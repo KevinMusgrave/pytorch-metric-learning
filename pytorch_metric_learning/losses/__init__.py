@@ -1,4 +1,4 @@
-from .angular_loss import AngularLoss, AngularNPairsLoss
+from .angular_loss import AngularLoss
 from .contrastive_loss import ContrastiveLoss
 from .generic_pair_loss import GenericPairLoss
 from .lifted_structure_loss import GeneralizedLiftedStructureLoss

@@ -7,17 +7,18 @@ from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
 
 class MarginLoss(BaseMetricLossFunction):
 
-    def __init__(self, margin, nu, beta, **kwargs):
+    def __init__(self, margin, nu, beta, triplets_per_anchor=100, **kwargs):
         self.margin = margin
         self.nu = nu
         self.beta = beta
+        self.triplets_per_anchor = triplets_per_anchor
         self.num_pos_pairs = 0
         self.num_neg_pairs = 0
         self.record_these = ["num_pos_pairs", "num_neg_pairs"]
         super().__init__(**kwargs)
 
     def compute_loss(self, embeddings, labels, indices_tuple):
-        anchor_idx, positive_idx, negative_idx = lmu.convert_to_triplets(indices_tuple, labels)
+        anchor_idx, positive_idx, negative_idx = lmu.convert_to_triplets(indices_tuple, labels, self.triplets_per_anchor)
         if len(anchor_idx) == 0:
             self.num_pos_pairs = 0
             self.num_neg_pairs = 0

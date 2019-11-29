@@ -181,3 +181,6 @@ Which tester should you use? Almost definitely GlobalEmbeddingSpaceTester, becau
 
 After you've initialized the tester, run ```tester.test(dataset_dict, epoch, trunk_model, embedder_model)```. 
 ```dataset_dict``` is a dictionary mapping from strings to datasets. If your ```reference_set = "compared_to_training_set"``` then your ```dataset_dict``` must include a key called "train".
+
+## Acknowledgements
+Thank you to Ser-Nam Lim at Facebook AI, and my research advisor, Professor Serge Belongie. This project began during my internship at Facebook AI where I received valuable feedback from Ser-Nam, and his team of computer vision and machine learning engineers and research scientists.

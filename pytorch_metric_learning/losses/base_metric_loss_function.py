@@ -47,6 +47,8 @@ class BaseMetricLossFunction(torch.nn.Module):
         if self.normalize_embeddings:
             embeddings = torch.nn.functional.normalize(embeddings, p=2, dim=1)
         loss = self.compute_loss(embeddings, labels, indices_tuple)
+        if loss == 0:
+            loss = torch.sum(embeddings*0)
         return loss
 
     def initialize_learnable_parameters(self):

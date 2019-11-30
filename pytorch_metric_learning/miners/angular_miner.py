@@ -13,7 +13,7 @@ class AngularMiner(BasePostGradientMiner):
     """
     def __init__(self, angle, **kwargs):
         super().__init__(**kwargs)
-        self.angle = torch.tensor(np.radians(angle))
+        self.angle = np.radians(angle)
         self.average_angle = 0
         self.average_angle_above_threshold = 0
         self.average_angle_below_threshold = 0
@@ -30,7 +30,7 @@ class AngularMiner(BasePostGradientMiner):
         ap_dist = torch.nn.functional.pairwise_distance(anchors, positives, 2)
         nc_dist = torch.nn.functional.pairwise_distance(negatives, centers, 2)
         angles = torch.atan(ap_dist / (2*nc_dist))
-        threshold_condition = angles > self.angle.to(angles.device)
+        threshold_condition = angles > self.angle
         self.set_stats(angles, threshold_condition)
         return anchor_idx[threshold_condition], positive_idx[threshold_condition], negative_idx[threshold_condition]
 

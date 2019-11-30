@@ -35,6 +35,7 @@ pip install pytorch_metric_learning
 - MaximumLossMiner
 - MultiSimilarityMiner
 - PairMarginMiner
+- TripletMarginMiner
 - **more to be added**
 
 ### [Samplers](https://github.com/KevinMusgrave/pytorch_metric_learning/tree/master/pytorch_metric_learning/samplers):
@@ -165,6 +166,8 @@ Every trainer extends [BaseTrainer](https://github.com/KevinMusgrave/pytorch_met
 - ```post_processor```: *Optional*. A function that takes in embeddings and labels, and returns embeddings and labels. This is called after computing embeddings using your trunk and embedder model.
 
 ## Details about testers
+**The testers module requires faiss and scikit-learn. Please install these via pip or conda** 
+
 Every tester extends [BaseTester](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/testers/base_tester.py). The arguments are:
 - ```reference_set```: This specifies from which set the nearest neighbors will be retrieved. 
    - If "compared_to_self", each dataset split will refer to itself to find nearest neighbors. 
@@ -174,6 +177,7 @@ Every tester extends [BaseTester](https://github.com/KevinMusgrave/pytorch_metri
 - ```use_trunk_output```: If True, the output of the embedder model will be ignored.
 - ```batch_size```
 - ```dataloader_num_workers```
+- ```pca```: The number of dimensions that your embeddings will be reduced to, using PCA. The default is None, meaning PCA will not be applied.
 - ```metric_for_best_epoch```: The performance metric that will be used to determine which model is best. Requires record_keeper.
 - ```record_keeper```: See the [record_keeper](https://github.com/KevinMusgrave/record_keeper) package.
 

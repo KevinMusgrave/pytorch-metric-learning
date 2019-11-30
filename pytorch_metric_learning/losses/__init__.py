@@ -1,4 +1,5 @@
 from .angular_loss import AngularLoss
+from .arcface_loss import ArcFaceLoss
 from .contrastive_loss import ContrastiveLoss
 from .generic_pair_loss import GenericPairLoss
 from .lifted_structure_loss import GeneralizedLiftedStructureLoss

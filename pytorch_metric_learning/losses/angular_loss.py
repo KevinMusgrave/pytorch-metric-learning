@@ -36,7 +36,7 @@ class AngularLoss(BaseMetricLossFunction):
         anchor_idx, positive_idx, negative_idx = lmu.convert_to_triplets(indices_tuple, labels, self.triplets_per_anchor)
         self.num_anchors = len(anchor_idx)
         if self.num_anchors == 0:
-            return None, None, None
+            return [None]*4
         anchors, positives, negatives = embeddings[anchor_idx], embeddings[positive_idx], embeddings[negative_idx]
         centers = (anchors + positives) / 2
         ap_dist = torch.nn.functional.pairwise_distance(anchors, positives, 2)

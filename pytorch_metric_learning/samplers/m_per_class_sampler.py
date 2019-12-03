@@ -26,19 +26,23 @@ class MPerClassSampler(Sampler):
         self.m_per_class = int(m)
         self.labels_to_indices = labels_to_indices
         self.set_hierarchy_level(hierarchy_level)
+        self.length_of_single_pass = self.m_per_class*len(self.labels)
+        self.list_size = 1000000
+        self.list_size -= (self.list_size) % (self.length_of_single_pass)
 
     def __len__(self):
-        return len(self.labels) * self.m_per_class
+        return self.list_size
 
     def __iter__(self):
-        ret = []
-        for _ in range(1000):
+        idx_list = [0]*self.list_size
+        i = 0
+        for _ in range(self.list_size // self.length_of_single_pass):
             np.random.RandomState().shuffle(self.labels)
             for label in self.labels:
                 t = self.curr_labels_to_indices[label]
-                t = c_f.safe_random_choice(t, size=self.m_per_class)
-                ret.extend(t)
-        return iter(ret)
+                idx_list[i:i+self.m_per_class] = c_f.safe_random_choice(t, size=self.m_per_class)
+                i += self.m_per_class
+        return iter(idx_list)
 
     def set_hierarchy_level(self, hierarchy_level):
         self.curr_labels_to_indices = self.labels_to_indices[hierarchy_level]

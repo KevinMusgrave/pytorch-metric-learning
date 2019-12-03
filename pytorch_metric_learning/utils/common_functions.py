@@ -4,6 +4,8 @@ from torch.autograd import Variable
 import numpy as np
 
 
+NUMPY_RANDOM_STATE = np.random.RandomState()
+
 
 def try_keys(input_dict, keys):
     for k in keys:
@@ -114,7 +116,7 @@ def safe_random_choice(input_data, size):
         An array of size "size", randomly sampled from input_data
     """
     replace = len(input_data) < size
-    return np.random.RandomState().choice(input_data, size=size, replace=replace)
+    return NUMPY_RANDOM_STATE.choice(input_data, size=size, replace=replace)
 
 
 def longest_list(list_of_lists):

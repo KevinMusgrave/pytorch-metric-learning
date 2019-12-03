@@ -37,7 +37,7 @@ class MPerClassSampler(Sampler):
         idx_list = [0]*self.list_size
         i = 0
         for _ in range(self.list_size // self.length_of_single_pass):
-            np.random.RandomState().shuffle(self.labels)
+            c_f.NUMPY_RANDOM_STATE.shuffle(self.labels)
             for label in self.labels:
                 t = self.curr_labels_to_indices[label]
                 idx_list[i:i+self.m_per_class] = c_f.safe_random_choice(t, size=self.m_per_class)

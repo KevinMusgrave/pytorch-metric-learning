@@ -6,8 +6,7 @@ from ..utils import loss_and_miner_utils as lmu
 
 
 # adapted from
-# https://github.com/chaoyuaw/incubator-mxnet/blob/master/example/gluon/
-# /embedding_learning/model.py
+# https://github.com/chaoyuaw/incubator-mxnet/blob/master/example/gluon/embedding_learning/model.py
 class DistanceWeightedMiner(BasePostGradientMiner):
     def __init__(self, cutoff, nonzero_loss_cutoff, **kwargs):
         super().__init__(**kwargs)
@@ -35,8 +34,8 @@ class DistanceWeightedMiner(BasePostGradientMiner):
         # the same-class examples to 0.
         mask = torch.ones(weights.size()).to(embeddings.device)
         for i in label_set:
-            idx = (labels == i).nonzero()
-            mask[torch.meshgrid(idx.squeeze(1), idx.squeeze(1))] = 0
+            idx = (labels == i).nonzero().squeeze(1)
+            mask[torch.meshgrid(idx, idx)] = 0
 
         weights = weights * mask * ((dist_mat < self.nonzero_loss_cutoff).float())
         weights = weights / torch.sum(weights, dim=1, keepdim=True)

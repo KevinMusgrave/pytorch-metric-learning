@@ -19,7 +19,7 @@ class FixedSetOfTriplets(Sampler):
         return self.fixed_set_of_triplets.shape[0] * 3
 
     def __iter__(self):
-        np.random.RandomState().shuffle(self.fixed_set_of_triplets)
+        c_f.NUMPY_RANDOM_STATE.shuffle(self.fixed_set_of_triplets)
         flattened = self.fixed_set_of_triplets.flatten().tolist()
         return iter(flattened)
 
@@ -35,11 +35,10 @@ class FixedSetOfTriplets(Sampler):
         assert num_triplets > 0
         self.fixed_set_of_triplets = np.ones((num_triplets, 3), dtype=np.int) * -1
         label_list = list(labels_to_indices.keys())
-        np_random = np.random.RandomState()
         for i in range(num_triplets):
-            anchor_label, negative_label = random.sample(label_list, 2)
+            anchor_label, negative_label = c_f.NUMPY_RANDOM_STATE.choice(label_list, size=2, replace=False)
             anchor_list = labels_to_indices[anchor_label]
             negative_list = labels_to_indices[negative_label]
             anchor, positive = c_f.safe_random_choice(anchor_list, size=2)
-            negative = np_random.choice(negative_list, replace=False)
+            negative = c_f.NUMPY_RANDOM_STATE.choice(negative_list, replace=False)
             self.fixed_set_of_triplets[i, :] = np.array([anchor, positive, negative])

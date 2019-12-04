@@ -18,25 +18,25 @@ pip install pytorch_metric_learning
 
 ## Currently implemented classes:
 ### [Loss functions](https://github.com/KevinMusgrave/pytorch_metric_learning/tree/master/pytorch_metric_learning/losses):
-- AngularLoss
-- ArcFaceLoss
+- AngularLoss ([paper](https://arxiv.org/pdf/1708.01682.pdf))
+- ArcFaceLoss ([paper](https://arxiv.org/pdf/1801.07698.pdf))
 - ContrastiveLoss
 - GeneralizedLiftedStructureLoss
-- MarginLoss
-- MultiSimilarityLoss
-- NCALoss
-- NPairsLoss
-- ProxyNCALoss
+- MarginLoss ([paper](https://arxiv.org/pdf/1706.07567.pdf))
+- MultiSimilarityLoss ([paper](http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf))
+- NCALoss ([paper](https://www.cs.toronto.edu/~hinton/absps/nca.pdf))
+- NPairsLoss ([paper](http://www.nec-labs.com/uploads/images/Department-Images/MediaAnalytics/papers/nips16_npairmetriclearning.pdf))
+- ProxyNCALoss ([paper](https://arxiv.org/pdf/1703.07464.pdf))
 - TripletMarginLoss
 - **more to be added**
 
 ### [Mining functions](https://github.com/KevinMusgrave/pytorch_metric_learning/tree/master/pytorch_metric_learning/miners):
 - AngularMiner
-- BatchHardMiner
-- DistanceWeightedMiner
-- HDCMiner
+- BatchHardMiner ([paper](https://arxiv.org/pdf/1703.07737.pdf))
+- DistanceWeightedMiner ([paper](https://arxiv.org/pdf/1706.07567.pdf))
+- HDCMiner ([paper](http://openaccess.thecvf.com/content_ICCV_2017/papers/Yuan_Hard-Aware_Deeply_Cascaded_ICCV_2017_paper.pdf))
 - MaximumLossMiner
-- MultiSimilarityMiner
+- MultiSimilarityMiner ([paper](http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf))
 - PairMarginMiner
 - TripletMarginMiner
 - **more to be added**
@@ -49,8 +49,8 @@ pip install pytorch_metric_learning
 ### [Training methods](https://github.com/KevinMusgrave/pytorch_metric_learning/tree/master/pytorch_metric_learning/trainers):
 - MetricLossOnly
 - TrainWithClassifier
-- CascadedEmbeddings
-- DeepAdversarialMetricLearning
+- CascadedEmbeddings ([paper](http://openaccess.thecvf.com/content_ICCV_2017/papers/Yuan_Hard-Aware_Deeply_Cascaded_ICCV_2017_paper.pdf))
+- DeepAdversarialMetricLearning ([paper](http://openaccess.thecvf.com/content_cvpr_2018/papers/Duan_Deep_Adversarial_Metric_CVPR_2018_paper.pdf))
 - UnsupervisedEmbeddingsUsingAugmentations
 - **more to be added**
 

@@ -8,4 +8,5 @@ from .multi_similarity_loss import MultiSimilarityLoss
 from .nca_loss import NCALoss
 from .n_pairs_loss import NPairsLoss
 from .proxy_losses import ProxyNCALoss
+from .signal_to_noise_ratio_losses import SignalToNoiseRatioContrastiveLoss
 from .triplet_margin_loss import TripletMarginLoss

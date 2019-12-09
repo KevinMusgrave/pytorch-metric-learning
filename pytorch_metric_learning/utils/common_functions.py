@@ -147,7 +147,7 @@ def set_layers_to_eval(layer_name):
     return set_to_eval
 
 
-def get_dataloader(dataset, batch_size, sampler, num_workers, collate_fn):
+def get_train_dataloader(dataset, batch_size, sampler, num_workers, collate_fn):
     return torch.utils.data.DataLoader(
         dataset,
         batch_size=int(batch_size),
@@ -156,6 +156,17 @@ def get_dataloader(dataset, batch_size, sampler, num_workers, collate_fn):
         num_workers=num_workers,
         collate_fn=collate_fn,
         shuffle=sampler is None,
+        pin_memory=True
+    )
+
+def get_eval_dataloader(dataset, batch_size, num_workers, collate_fn):
+    return torch.utils.data.DataLoader(
+        dataset,
+        batch_size=int(batch_size),
+        drop_last=False,
+        num_workers=num_workers,
+        collate_fn=collate_fn,
+        shuffle=False,
         pin_memory=True
     )
 

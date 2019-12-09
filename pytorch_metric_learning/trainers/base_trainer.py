@@ -88,7 +88,7 @@ class BaseTrainer:
 
     def initialize_dataloader(self):
         logging.info("Initializing dataloader")
-        self.dataloader = c_f.get_dataloader(
+        self.dataloader = c_f.get_train_dataloader(
             self.dataset,
             self.batch_size,
             self.sampler,

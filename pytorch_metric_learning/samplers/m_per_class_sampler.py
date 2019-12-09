@@ -28,7 +28,8 @@ class MPerClassSampler(Sampler):
         self.set_hierarchy_level(hierarchy_level)
         self.length_of_single_pass = self.m_per_class*len(self.labels)
         self.list_size = 1000000
-        self.list_size -= (self.list_size) % (self.length_of_single_pass)
+        if self.length_of_single_pass < self.list_size:
+            self.list_size -= (self.list_size) % (self.length_of_single_pass)
 
     def __len__(self):
         return self.list_size
@@ -36,7 +37,8 @@ class MPerClassSampler(Sampler):
     def __iter__(self):
         idx_list = [0]*self.list_size
         i = 0
-        for _ in range(self.list_size // self.length_of_single_pass):
+        num_iters = self.list_size // self.length_of_single_pass if self.length_of_single_pass < self.list_size else 1
+        for _ in range(num_iters):
             c_f.NUMPY_RANDOM_STATE.shuffle(self.labels)
             for label in self.labels:
                 t = self.curr_labels_to_indices[label]

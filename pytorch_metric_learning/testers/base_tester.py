@@ -8,12 +8,13 @@ from ..utils import stat_utils
 from ..utils import common_functions as c_f
 import logging
 from sklearn.preprocessing import normalize, StandardScaler
+from sklearn.manifold import TSNE
 
 
 class BaseTester:
     def __init__(self, reference_set="compared_to_self", normalize_embeddings=True, use_trunk_output=False, 
                     batch_size=32, dataloader_num_workers=32, metric_for_best_epoch="mean_average_r_precision", 
-                    pca=None, data_device=None, record_keeper=None):
+                    pca=None, data_device=None, record_keeper=None, size_of_tsne=0, possible_data_keys=None):
         self.reference_set = reference_set
         self.normalize_embeddings = normalize_embeddings
         self.pca = int(pca) if pca else None
@@ -23,6 +24,8 @@ class BaseTester:
         self.data_device = torch.device("cuda" if torch.cuda.is_available() else "cpu") if data_device is None else data_device
         self.num_workers = dataloader_num_workers
         self.record_keeper = record_keeper
+        self.size_of_tsne = size_of_tsne
+        self.possible_data_keys = ["data", "image"] if possible_data_keys is None else possible_data_keys
         self.base_record_group_name = self.suffixes("%s_%s"%("accuracies", self.__class__.__name__))
 
     def get_best_epoch_and_accuracy(self, split_name):
@@ -43,7 +46,7 @@ class BaseTester:
         s, e = 0, 0
         with torch.no_grad():
             for i, data in enumerate(tqdm.tqdm(dataloader)):
-                input_imgs = c_f.try_keys(data, ["data", "image"])
+                input_imgs = c_f.try_keys(data, self.possible_data_keys)
                 label = data["label"]
                 q = self.get_embeddings_for_eval(trunk_model, embedder_model, input_imgs)
                 label = c_f.numpy_to_torch(label)
@@ -63,14 +66,7 @@ class BaseTester:
         return all_q, labels
 
     def get_all_embeddings(self, dataset, trunk_model, embedder_model, post_processor, collate_fn):
-        dataloader = torch.utils.data.DataLoader(
-            dataset,
-            batch_size=self.batch_size,
-            shuffle=False,
-            drop_last=False,
-            collate_fn=collate_fn,
-            num_workers=self.num_workers,
-        )
+        dataloader = c_f.get_eval_dataloader(dataset, self.batch_size, self.num_workers, collate_fn)
         if post_processor is None: post_processor = lambda e, l: (e, l)
         embeddings, labels = self.compute_all_embeddings(dataloader, trunk_model, embedder_model, post_processor)
         embeddings = self.maybe_normalize(embeddings)
@@ -81,6 +77,20 @@ class BaseTester:
         if self.use_trunk_output:
             return trunk_output
         return embedder_model(trunk_output)
+
+    def maybe_plot_tsne(self, embeddings_and_labels, dataset_dict, epoch, collate_fn):
+        if self.size_of_tsne > 0 and self.record_keeper is not None:
+            for split_name, (embeddings, labels) in embeddings_and_labels.items():
+                random_idx = c_f.NUMPY_RANDOM_STATE.choice(np.arange(len(embeddings)), size=self.size_of_tsne, replace=False)
+                curr_embeddings, curr_labels = embeddings[random_idx], labels[random_idx]
+                logging.info("Running TSNE on the %s set"%split_name)
+                curr_embeddings = TSNE().fit_transform(curr_embeddings)
+                logging.info("Finished TSNE")
+                for bbb in range(curr_labels.shape[1]):
+                    label_scheme = curr_labels[:, bbb]
+                    tag = '%s/%s'%(self.record_group_name(split_name), self.accuracies_keyname("tsne", bbb))
+                    self.record_keeper.add_embedding_plot(curr_embeddings, label_scheme, tag, epoch)
+
 
     def suffixes(self, base_name):
         if self.pca:
@@ -132,6 +142,7 @@ class BaseTester:
         for split_name, dataset in dataset_dict.items():
             logging.info('Getting embeddings for the %s split'%split_name)
             embeddings_and_labels[split_name] = self.get_all_embeddings(dataset, trunk_model, embedder_model, post_processor, collate_fn)
+        self.maybe_plot_tsne(embeddings_and_labels, dataset_dict, epoch, collate_fn)
         splits_to_eval = split_keys if splits_to_eval is None else splits_to_eval
         for split_name in splits_to_eval:
             logging.info('Computing accuracy for the %s split'%split_name)

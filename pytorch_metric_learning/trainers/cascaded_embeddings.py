@@ -1,45 +1,52 @@
 #! /usr/bin/env python3
 
 
-from .train_with_classifier import TrainWithClassifier
+from .base_trainer import BaseTrainer
 
 
-class CascadedEmbeddings(TrainWithClassifier):
-    def __init__(self, embedding_sizes, logit_sizes=None, **kwargs):
+class CascadedEmbeddings(BaseTrainer):
+    def __init__(self, embedding_sizes, **kwargs):
         super().__init__(**kwargs)
         self.embedding_sizes = embedding_sizes
-        self.logit_sizes = logit_sizes
 
     def calculate_loss(self, curr_batch):
         data, labels = curr_batch
         embeddings, labels = self.compute_embeddings(data, labels)
         s = 0
+        logits = []
         for i, curr_size in enumerate(self.embedding_sizes):
+            curr_loss_name = "metric_loss_%d"%i 
+            curr_miner_name = "post_gradient_miner_%d"%i
+            curr_classifier_name = "classifier_%d"%i
+
             e = embeddings[:, s : s + curr_size]
-            indices_tuple = self.maybe_mine_embeddings(e, labels)
-            self.losses["metric_loss"] += self.maybe_get_metric_loss(e, labels, indices_tuple)
-            self.update_record_keeper_in_loop(self.loss_funcs, ["metric_loss"], i)
-            self.update_record_keeper_in_loop(self.mining_funcs, ["post_gradient_miner"], i)
+            indices_tuple = self.maybe_mine_embeddings(e, labels, curr_miner_name)
+            self.losses[curr_loss_name] += self.maybe_get_metric_loss(e, labels, indices_tuple, curr_loss_name)
+            logits.append(self.maybe_get_logits(e, curr_classifier_name))
             s += curr_size
 
-        logits = self.maybe_get_logits(embeddings)
-        if logits is not None:
-            s = 0
-            for i, curr_size in enumerate(self.logit_sizes):
-                L = logits[:, s : s + curr_size]
-                self.losses["classifier_loss"] += self.maybe_get_classifier_loss(L, labels)
-                self.update_record_keeper_in_loop(self.loss_funcs, ["classifier_loss"], i)
-                s += curr_size
+        for i, L in enumerate(logits):
+            if L is None:
+                continue
+            curr_loss_name = "classifier_loss_%d"%i
+            self.losses[curr_loss_name] += self.maybe_get_classifier_loss(L, labels, curr_loss_name)
 
-    def update_record_keeper_in_loop(self, input_dict, keys, loop_iter):
-        if self.record_keeper is not None:
-            subset_dict = {}
-            for k in keys:
-                if k in input_dict:
-                    subset_dict['%s_%d'%(k, loop_iter)] = input_dict[k]
-            self.record_keeper.update_records(subset_dict, self.get_global_iteration())
+    def maybe_get_metric_loss(self, embeddings, labels, indices_tuple, curr_loss_name):
+        if self.loss_weights.get(curr_loss_name, 0) > 0:
+            return self.loss_funcs[curr_loss_name](embeddings, labels, indices_tuple)
+        return 0
 
-    def record_these(self):
-        # remove loss_funcs and mining_funcs since these are recorded in the loops above
-        data_to_record = super().record_these()
-        return data_to_record[:2] + data_to_record[4:]
+    def maybe_mine_embeddings(self, embeddings, labels, curr_miner_name):
+        if curr_miner_name in self.mining_funcs:
+            return self.mining_funcs[curr_miner_name](embeddings, labels)
+        return None
+
+    def maybe_get_logits(self, embeddings, curr_classifier_name):
+        if self.models.get(curr_classifier_name, None):
+            return self.models[curr_classifier_name](embeddings)
+        return None
+
+    def maybe_get_classifier_loss(self, logits, labels, curr_loss_name):
+        if self.loss_weights.get(curr_loss_name, 0) > 0:
+            return self.loss_funcs[curr_loss_name](logits, labels.to(logits.device))
+        return 0

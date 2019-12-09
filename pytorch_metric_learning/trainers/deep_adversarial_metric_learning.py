@@ -24,6 +24,7 @@ class DeepAdversarialMetricLearning(TrainWithClassifier):
         synth_packaged_as_triplets = miners.EmbeddingsAlreadyPackagedAsTriplets(
             normalize_embeddings=False)
         self.mining_funcs["synth_packaged_as_triplets"] = synth_packaged_as_triplets
+        self.loss_names += ["g_hard_loss", "g_reg_loss"]
 
     def calculate_loss(self, curr_batch):
         data, labels = curr_batch
@@ -41,9 +42,6 @@ class DeepAdversarialMetricLearning(TrainWithClassifier):
 
         if self.do_adv:
             self.calculate_synth_loss(penultimate_embeddings, labels)
-
-    def loss_names(self):
-        return ["metric_loss", "classifier_loss", "synth_loss", "g_hard_loss", "g_reg_loss", "g_adv_loss"]
 
     def update_loss_weights(self):
         self.do_metric_alone = self.epoch <= self.metric_alone_epochs

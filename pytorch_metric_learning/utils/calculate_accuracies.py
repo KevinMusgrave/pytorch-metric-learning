@@ -107,7 +107,7 @@ def calculate_accuracy(
     embeddings_come_from_same_source = embeddings_come_from_same_source or (query is reference)
 
     unique_labels, label_counts = np.unique(reference_labels, return_counts=True)
-    num_k = int(np.max(label_counts))
+    num_k = min(1023, int(np.max(label_counts))) # faiss-gpu can only do a max of k=1024, and we have to do k+1
     label_counts = {k:v for k,v in zip(unique_labels, label_counts)}
 
     knn_indices = stat_utils.get_knn(

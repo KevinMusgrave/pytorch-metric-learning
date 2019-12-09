@@ -4,9 +4,6 @@ from .metric_loss_only import MetricLossOnly
 
 
 class TrainWithClassifier(MetricLossOnly):
-    def loss_names(self):
-        return ["metric_loss", "classifier_loss"]
-
     def calculate_loss(self, curr_batch):
         data, labels = curr_batch
         embeddings, labels = self.compute_embeddings(data, labels)

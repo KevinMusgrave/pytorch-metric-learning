@@ -53,6 +53,7 @@ class BaseTrainer:
         self.epoch = start_epoch
         self.loss_weights = loss_weights
         self.possible_data_keys = possible_data_keys
+        self.loss_names = list(self.loss_funcs.keys())
         self.custom_setup()
         self.initialize_data_device()
         self.initialize_label_mapper()
@@ -66,9 +67,6 @@ class BaseTrainer:
         pass
 
     def calculate_loss(self):
-        raise NotImplementedError
-
-    def loss_names(self):
         raise NotImplementedError
 
     def update_loss_weights(self):
@@ -196,7 +194,7 @@ class BaseTrainer:
             self.label_mapper = lambda label, hierarchy_level: label
 
     def initialize_loss_tracker(self):
-        self.loss_tracker = l_t.LossTracker(self.loss_names())
+        self.loss_tracker = l_t.LossTracker(self.loss_names)
         self.losses = self.loss_tracker.losses
 
     def initialize_possible_data_keys(self):
@@ -214,7 +212,7 @@ class BaseTrainer:
 
     def initialize_loss_weights(self):
         if self.loss_weights is None:
-            self.loss_weights = {k: 1 for k in self.loss_names()}
+            self.loss_weights = {k: 1 for k in self.loss_names}
 
     def update_records(self, end_of_epoch=False):
         if self.record_keeper is not None:

@@ -22,7 +22,7 @@ class CascadedEmbeddings(BaseTrainer):
             curr_classifier_name = "classifier_%d"%i
 
             e = embeddings[:, s : s + curr_size]
-            indices_tuple = self.maybe_mine_embeddings(e, labels, indices_tuple, curr_miner_name, i)
+            indices_tuple = self.maybe_mine_embeddings(e, labels, indices_tuple, curr_miner_name)
             self.losses[curr_loss_name] += self.maybe_get_metric_loss(e, labels, indices_tuple, curr_loss_name)
             logits.append(self.maybe_get_logits(e, curr_classifier_name))
             s += curr_size
@@ -38,7 +38,7 @@ class CascadedEmbeddings(BaseTrainer):
             return self.loss_funcs[curr_loss_name](embeddings, labels, indices_tuple)
         return 0
 
-    def maybe_mine_embeddings(self, embeddings, labels, prev_indices_tuple, curr_miner_name, miner_count):
+    def maybe_mine_embeddings(self, embeddings, labels, prev_indices_tuple, curr_miner_name):
         if curr_miner_name in self.mining_funcs:
             curr_miner = self.mining_funcs[curr_miner_name]
             if isinstance(curr_miner, miners.HDCMiner):

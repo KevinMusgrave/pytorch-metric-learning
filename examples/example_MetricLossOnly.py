@@ -91,10 +91,10 @@ embedder_optimizer = torch.optim.Adam(embedder.parameters(), lr=0.00001, weight_
 
 # Set the image transform
 img_transform = transforms.Compose([transforms.Resize(256),
-									transforms.RandomResizedCrop(scale=(0.16, 1), ratio=(0.75, 1.33), size=227),
-									transforms.RandomHorizontalFlip(0.5),
-									transforms.ToTensor(),
-									transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
+                                    transforms.RandomResizedCrop(scale=(0.16, 1), ratio=(0.75, 1.33), size=227),
+                                    transforms.RandomHorizontalFlip(0.5),
+                                    transforms.ToTensor(),
+                                    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
 # Set the datasets
 train_dataset = datasets.CIFAR100(root="CIFAR100_Dataset", train=True, transform=img_transform, download=True)
@@ -118,13 +118,13 @@ loss_funcs = {"metric_loss": loss}
 mining_funcs = {"post_gradient_miner": miner}
 
 trainer = trainers.MetricLossOnly(models,
-								optimizers,
-								batch_size,
-								loss_funcs,
-								mining_funcs,
-								num_epochs,
-								iterations_per_epoch,
-								train_dataset,
+                                optimizers,
+                                batch_size,
+                                loss_funcs,
+                                mining_funcs,
+                                num_epochs,
+                                iterations_per_epoch,
+                                train_dataset,
                                 record_keeper=record_keeper)
 
 trainer.train()

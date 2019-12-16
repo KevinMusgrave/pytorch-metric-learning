@@ -29,7 +29,7 @@ class BaseTrainer:
         dataloader_num_workers=32,
         post_processor=None,
         start_epoch=1,
-        possible_data_keys=None
+        data_and_label_getter=None
     ):
         self.models = models
         self.optimizers = optimizers
@@ -52,7 +52,7 @@ class BaseTrainer:
         self.post_processor = post_processor
         self.epoch = start_epoch
         self.loss_weights = loss_weights
-        self.possible_data_keys = possible_data_keys
+        self.data_and_label_getter = data_and_label_getter
         self.loss_names = list(self.loss_funcs.keys())
         self.custom_setup()
         self.initialize_data_device()
@@ -61,7 +61,7 @@ class BaseTrainer:
         self.initialize_loss_tracker()
         self.initialize_dataloader()
         self.initialize_loss_weights()
-        self.initialize_possible_data_keys()
+        self.initialize_data_and_label_getter()
 
     def custom_setup(self):
         pass
@@ -119,13 +119,10 @@ class BaseTrainer:
             v.zero_grad()
 
     def get_batch(self):
-        self.dataloader_iter, curr_batch = c_f.try_next_on_generator(
-            self.dataloader_iter, self.dataloader)
-        curr_batch["label"] = c_f.process_label(
-            curr_batch["label"], self.label_hierarchy_level, self.label_mapper
-        )
-        curr_batch = self.maybe_do_pre_gradient_mining(curr_batch)
-        return c_f.try_keys(curr_batch, self.possible_data_keys), curr_batch["label"]
+        self.dataloader_iter, curr_batch = c_f.try_next_on_generator(self.dataloader_iter, self.dataloader)
+        data, labels = self.data_and_label_getter(curr_batch)
+        labels = c_f.process_label(labels, self.label_hierarchy_level, self.label_mapper)
+        return self.maybe_do_pre_gradient_mining(data, labels)
 
     def compute_embeddings(self, data, labels):
         trunk_output = self.get_trunk_output(data)
@@ -144,17 +141,15 @@ class BaseTrainer:
             return self.mining_funcs["post_gradient_miner"](embeddings, labels)
         return None
 
-    def maybe_do_pre_gradient_mining(self, curr_batch):
+    def maybe_do_pre_gradient_mining(self, data, labels):
         if "pre_gradient_miner" in self.mining_funcs:
             with torch.no_grad():
                 self.set_to_eval()
-                data = c_f.try_keys(curr_batch, self.possible_data_keys)
-                labels = curr_batch["label"]
                 embeddings, labels = self.compute_embeddings(data, labels)
                 idx = self.mining_funcs["pre_gradient_miner"](embeddings, labels)
                 self.set_to_train()
-            curr_batch = {self.possible_data_keys[0]: data[idx], "label": labels[idx]}
-        return curr_batch
+                data, labels = data[idx], labels[idx]
+        return data, labels
 
     def backward(self):
         if self.losses["total_loss"] > 0.0:
@@ -197,9 +192,9 @@ class BaseTrainer:
         self.loss_tracker = l_t.LossTracker(self.loss_names)
         self.losses = self.loss_tracker.losses
 
-    def initialize_possible_data_keys(self):
-        if self.possible_data_keys is None:
-            self.possible_data_keys = ["data", "image"]
+    def initialize_data_and_label_getter(self):
+        if self.data_and_label_getter is None:
+            self.data_and_label_getter = lambda x : x
 
     def set_to_train(self):
         for k, v in self.models.items():

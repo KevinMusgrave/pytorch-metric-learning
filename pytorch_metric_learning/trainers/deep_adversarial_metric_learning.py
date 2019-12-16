@@ -12,6 +12,7 @@ class DeepAdversarialMetricLearning(TrainWithClassifier):
         self,
         metric_alone_epochs=0,
         g_alone_epochs=0,
+        g_triplets_per_anchor=100,
         **kwargs
     ):
         super().__init__(**kwargs)
@@ -19,6 +20,7 @@ class DeepAdversarialMetricLearning(TrainWithClassifier):
         self.metric_alone_epochs = metric_alone_epochs
         self.g_alone_epochs = g_alone_epochs
         self.loss_funcs["g_adv_loss"].maybe_modify_loss = lambda x: x * -1
+        self.g_triplets_per_anchor = g_triplets_per_anchor
 
     def custom_setup(self):
         synth_packaged_as_triplets = miners.EmbeddingsAlreadyPackagedAsTriplets(
@@ -45,7 +47,7 @@ class DeepAdversarialMetricLearning(TrainWithClassifier):
 
     def update_loss_weights(self):
         self.do_metric_alone = self.epoch <= self.metric_alone_epochs
-        self.do_adv_alone = self.metric_alone_epochs < self.epoch <= self.g_alone_epochs
+        self.do_adv_alone = self.metric_alone_epochs < self.epoch <= self.metric_alone_epochs + self.g_alone_epochs
         self.do_both = not self.do_adv_alone and not self.do_metric_alone
         self.do_adv = self.do_adv_alone or self.do_both
         self.do_metric = self.do_metric_alone or self.do_both
@@ -94,17 +96,13 @@ class DeepAdversarialMetricLearning(TrainWithClassifier):
                 self.optimizers[k].step()
 
     def calculate_synth_loss(self, penultimate_embeddings, labels):
-        a_indices, p_indices, n_indices = lmu.get_random_triplet_indices(labels, t_per_anchor=10)
+        a_indices, p_indices, n_indices = lmu.convert_to_triplets(None, labels, t_per_anchor=self.g_triplets_per_anchor)
         real_anchors = penultimate_embeddings[a_indices]
         real_positives = penultimate_embeddings[p_indices]
         real_negatives = penultimate_embeddings[n_indices]
         penultimate_embeddings_cat = torch.cat([real_anchors, real_positives, real_negatives], dim=1)
-        synthetic_negatives = c_f.pass_data_to_model(
-            self.models["generator"], penultimate_embeddings_cat, self.data_device
-        )
-        penultimate_embeddings_with_negative_synth = c_f.unslice_by_n(
-            [real_anchors, real_positives, synthetic_negatives]
-        )
+        synthetic_negatives = c_f.pass_data_to_model(self.models["generator"], penultimate_embeddings_cat, self.data_device)
+        penultimate_embeddings_with_negative_synth = c_f.unslice_by_n([real_anchors, real_positives, synthetic_negatives])
         final_embeddings = self.get_final_embeddings(penultimate_embeddings_with_negative_synth)
 
         labels = torch.tensor(

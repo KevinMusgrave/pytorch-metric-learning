@@ -14,7 +14,7 @@ from sklearn.manifold import TSNE
 class BaseTester:
     def __init__(self, reference_set="compared_to_self", normalize_embeddings=True, use_trunk_output=False, 
                     batch_size=32, dataloader_num_workers=32, metric_for_best_epoch="mean_average_r_precision", 
-                    pca=None, data_device=None, record_keeper=None, size_of_tsne=0, possible_data_keys=None):
+                    pca=None, data_device=None, record_keeper=None, size_of_tsne=0, data_and_label_getter=None):
         self.reference_set = reference_set
         self.normalize_embeddings = normalize_embeddings
         self.pca = int(pca) if pca else None
@@ -25,7 +25,7 @@ class BaseTester:
         self.num_workers = dataloader_num_workers
         self.record_keeper = record_keeper
         self.size_of_tsne = size_of_tsne
-        self.possible_data_keys = ["data", "image"] if possible_data_keys is None else possible_data_keys
+        self.data_and_label_getter = (lambda x : x) if data_and_label_getter is None else data_and_label_getter
         self.base_record_group_name = self.suffixes("%s_%s"%("accuracies", self.__class__.__name__))
 
     def get_best_epoch_and_accuracy(self, split_name):
@@ -46,9 +46,8 @@ class BaseTester:
         s, e = 0, 0
         with torch.no_grad():
             for i, data in enumerate(tqdm.tqdm(dataloader)):
-                input_imgs = c_f.try_keys(data, self.possible_data_keys)
-                label = data["label"]
-                q = self.get_embeddings_for_eval(trunk_model, embedder_model, input_imgs)
+                img, label = self.data_and_label_getter(data)
+                q = self.get_embeddings_for_eval(trunk_model, embedder_model, img)
                 label = c_f.numpy_to_torch(label)
                 q, label = post_processor(q, label)
                 if label.dim() == 1:

@@ -122,12 +122,11 @@ trainer = trainers.MetricLossOnly(models,
                                 batch_size,
                                 loss_funcs,
                                 mining_funcs,
-                                num_epochs,
                                 iterations_per_epoch,
                                 train_dataset,
                                 record_keeper=record_keeper)
 
-trainer.train()
+trainer.train(num_epochs=num_epochs)
 
 
 

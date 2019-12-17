@@ -13,7 +13,6 @@ class BaseTrainer:
         batch_size,
         loss_funcs,
         mining_funcs,
-        num_epochs,
         iterations_per_epoch,
         dataset,
         data_device=None,
@@ -28,7 +27,6 @@ class BaseTrainer:
         label_hierarchy_level=0,
         dataloader_num_workers=32,
         post_processor=None,
-        start_epoch=1,
         data_and_label_getter=None
     ):
         self.models = models
@@ -37,7 +35,6 @@ class BaseTrainer:
         self.loss_funcs = loss_funcs
         self.mining_funcs = mining_funcs
         self.label_mapper = label_mapper
-        self.num_epochs = num_epochs
         self.iterations_per_epoch = iterations_per_epoch
         self.dataset = dataset
         self.data_device = data_device
@@ -50,7 +47,6 @@ class BaseTrainer:
         self.label_hierarchy_level = label_hierarchy_level
         self.dataloader_num_workers = dataloader_num_workers
         self.post_processor = post_processor
-        self.epoch = start_epoch
         self.loss_weights = loss_weights
         self.data_and_label_getter = data_and_label_getter
         self.loss_names = list(self.loss_funcs.keys())
@@ -72,9 +68,9 @@ class BaseTrainer:
     def update_loss_weights(self):
         pass
 
-    def train(self):
+    def train(self, start_epoch=1, num_epochs=0):
         self.set_to_train()
-        while self.epoch <= self.num_epochs:
+        for self.epoch in range(start_epoch, start_epoch+num_epochs):
             logging.info("TRAINING EPOCH %d" % self.epoch)
             pbar = tqdm.tqdm(range(self.iterations_per_epoch))
             for self.iteration in pbar:
@@ -82,7 +78,6 @@ class BaseTrainer:
                 pbar.set_description("total_loss=%.5f" % self.losses["total_loss"])
             self.step_lr_schedulers()
             self.update_records(end_of_epoch=True)
-            self.epoch += 1
 
     def initialize_dataloader(self):
         logging.info("Initializing dataloader")

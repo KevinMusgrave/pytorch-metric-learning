@@ -28,9 +28,18 @@ class BaseTester:
         self.data_and_label_getter = (lambda x : x) if data_and_label_getter is None else data_and_label_getter
         self.base_record_group_name = self.suffixes("%s_%s"%("accuracies", self.__class__.__name__))
 
+    def get_accuracy_of_epoch(self, split_name, epoch):
+        records = self.record_keeper.get_record(self.record_group_name(split_name))
+        try:
+            return records[self.key_for_best_epoch][records["epoch"].index(epoch)]
+        except ValueError:
+            return None 
+
     def get_best_epoch_and_accuracy(self, split_name):
         records = self.record_keeper.get_record(self.record_group_name(split_name))
         accuracies = records[self.key_for_best_epoch]
+        if len(accuracies) == 0:
+            return None, None
         return records["epoch"][np.argmax(accuracies)], np.max(accuracies)
 
     def maybe_normalize(self, embeddings):

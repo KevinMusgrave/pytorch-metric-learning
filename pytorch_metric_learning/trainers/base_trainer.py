@@ -156,7 +156,14 @@ class BaseTrainer:
     def step_lr_schedulers(self):
         if self.lr_schedulers is not None:
             for v in self.lr_schedulers.values():
-                v.step()
+                if not isinstance(v, torch.optim.lr_scheduler.ReduceLROnPlateau):
+                    v.step()
+
+    def step_lr_plateau_schedulers(self, validation_info):
+        if self.lr_schedulers is not None:
+            for v in self.lr_schedulers.values():
+                if isinstance(v, torch.optim.lr_scheduler.ReduceLROnPlateau):
+                    v.step(validation_info)
 
     def step_optimizers(self):
         for v in self.optimizers.values():

@@ -176,3 +176,18 @@ def convert_to_triplets(indices_tuple, labels, t_per_anchor=100):
                 p_out.append(p_idx)
                 n_out.append(n_idx)
         return [torch.cat(x, dim=0) for x in [a_out, p_out, n_out]]
+
+
+
+def convert_to_weights(indices_tuple, labels):
+    """
+    Returns a weight for each batch element, based on
+    how many times they appear in indices_tuple.
+    """
+    weights = torch.zeros_like(labels).float()
+    if indices_tuple is None:
+        return weights + 1
+    indices, counts = torch.unique(torch.cat(indices_tuple, dim=0), sorted=True, return_counts=True)
+    counts = (counts.float() / torch.sum(counts)) * len(labels) # multiply by number of labels to scale weights up
+    weights[indices] = counts
+    return weights

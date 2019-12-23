@@ -19,9 +19,10 @@ class ArcFaceLoss(BaseMetricLossFunction):
         self.record_these = ["avg_angle"]
         super().__init__(**kwargs)
         self.W = torch.nn.Parameter(torch.randn(embedding_size, num_labels))
-        self.cross_entropy = torch.nn.CrossEntropyLoss()
+        self.cross_entropy = torch.nn.CrossEntropyLoss(reduction='none')
         
-    def compute_loss(self, embeddings, labels, *_):
+    def compute_loss(self, embeddings, labels, indices_tuple):
+        miner_weights = lmu.convert_to_weights(indices_tuple, labels)
         batch_size = labels.size(0)
         mask = torch.zeros(batch_size, self.num_labels).to(embeddings.device)
         mask[torch.arange(batch_size), labels] = 1
@@ -34,5 +35,6 @@ class ArcFaceLoss(BaseMetricLossFunction):
         margin = self.maybe_mask_param(self.margin, labels)
         diff = (torch.cos(angle + margin) - cosine_of_target_classes).unsqueeze(1)
         cosine = cosine + (mask*diff)
-        return self.cross_entropy(cosine * self.scale, labels)
+        unweighted_loss = self.cross_entropy(cosine * self.scale, labels)
+        return torch.mean(unweighted_loss*miner_weights)
 

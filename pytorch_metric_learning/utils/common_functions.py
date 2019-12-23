@@ -53,8 +53,8 @@ def get_hierarchy_label(batch_labels, hierarchy_level):
 
 
 def map_labels(label_map, labels):
+    labels = torch_to_numpy(labels)
     if labels.ndim == 2:
-        labels = torch_to_numpy(labels)
         for h in range(labels.shape[1]):
             labels[:, h] = label_map(labels[:, h], h)
     else:

@@ -3,7 +3,6 @@ import torch
 from torch.autograd import Variable
 import numpy as np
 
-
 NUMPY_RANDOM_STATE = np.random.RandomState()
 
 
@@ -24,84 +23,56 @@ def try_next_on_generator(gen, iterable):
         return gen, next(gen)
 
 
-def apply_func_to_dict(input, f):
-    if isinstance(input, collections.Mapping):
-        for k, v in input.items():
-            input[k] = f(v)
-        return input
-    else:
-        return f(input)
+def numpy_to_torch(v):
+    try:
+        return torch.from_numpy(v)
+    except BaseException:
+        return v
+
+def torch_to_numpy(v):
+    try:
+        return v.cpu().numpy()
+    except BaseException:
+        return v
 
 
 def wrap_variable(batch_data, device):
-    def f(x):
-        return Variable(x).to(device)
-
-    return apply_func_to_dict(batch_data, f)
+    return Variable(batch_data).to(device)
 
 
 def get_hierarchy_label(batch_labels, hierarchy_level):
-    def f(v):
-        try:
-            if v.ndim == 2:
-                v = v[:, hierarchy_level]
-            return v
-        except BaseException:
-            return v
+    if hierarchy_level == "all":
+        return batch_labels
 
-    return apply_func_to_dict(batch_labels, f)
-
-
-def numpy_to_torch(input):
-    def f(v):
-        try:
-            return torch.from_numpy(v)
-        except BaseException:
-            return v
-
-    return apply_func_to_dict(input, f)
+    try:
+        if batch_labels.ndim == 2:
+            batch_labels = batch_labels[:, hierarchy_level]
+        return batch_labels
+    except BaseException:
+        return batch_labels
 
 
-def torch_to_numpy(input):
-    def f(v):
-        try:
-            return v.cpu().numpy()
-        except BaseException:
-            return v
-
-    return apply_func_to_dict(input, f)
-
+def map_labels(label_map, labels):
+    if labels.ndim == 2:
+        labels = torch_to_numpy(labels)
+        for h in range(labels.shape[1]):
+            labels[:, h] = label_map(labels[:, h], h)
+    else:
+        labels = label_map(labels, 0)
+    return labels
 
 def process_label(labels, hierarchy_level, label_map):
+    labels = map_labels(label_map, labels)
     labels = get_hierarchy_label(labels, hierarchy_level)
-    labels = torch_to_numpy(labels)
-    labels = label_map(labels, hierarchy_level)
     labels = numpy_to_torch(labels)
     return labels
 
-
 def pass_data_to_model(model, data, device, **kwargs):
-    if isinstance(data, collections.Mapping):
-        base_output = {}
-        for k, v in data.items():
-            base_output[k] = model(wrap_variable(v, device), k=k, **kwargs)
-        return base_output
-    else:
-        return model(wrap_variable(data, device), **kwargs)
+    return model(wrap_variable(data, device), **kwargs)
 
 def set_requires_grad(model, requires_grad):
     for param in model.parameters():
         param.requires_grad = requires_grad
-
-
-
-def copy_params_to_another_model(from_model, to_model):
-    params1 = from_model.named_parameters()
-    params2 = to_model.named_parameters()
-    dict_params2 = dict(params2)
-    for name1, param1 in params1:
-        if name1 in dict_params2:
-            dict_params2[name1].data.copy_(param1.data)
 
 
 def safe_random_choice(input_data, size):

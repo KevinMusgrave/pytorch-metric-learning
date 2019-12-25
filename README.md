@@ -153,7 +153,6 @@ Every trainer extends [BaseTrainer](https://github.com/KevinMusgrave/pytorch_met
 - ```batch_size```
 - ```loss_funcs```: a dictionary mapping strings to loss functions. The required keys depend on the training method, but all methods are likely to require a bare minimum of {"metric_loss": some_loss_func}
 - ```mining_funcs```: a dictionary mapping strings to mining functions. Pass in an empty dictionary, or one or more of the following keys: {"pre_gradient_miner": some_mining_func_1, "post_gradient_miner": some_mining_func_2}
-- ```num_epochs```
 - ```iterations_per_epoch```: this is what actually defines what an "epoch" is. (In this library, epochs are just a measure of the number of iterations that have passed. Epochs in the traditional sense do not necessarily make sense in the context of metric learning, because it is common to sample data in a way that is not completely random.
 - ```dataset```: The dataset you want to train on. Note that training methods do not perform validation, so do not pass in your validation or test set. Your dataset's ```__getitem__``` should return a dictionary. See [this class](https://github.com/KevinMusgrave/powerful_benchmarker/blob/master/datasets/cub200.py) for an example.
 - ```data_device```: *Optional*. The device that you want to put batches of data on. If not specified, it will put the data on any available GPUs.
@@ -167,7 +166,6 @@ Every trainer extends [BaseTrainer](https://github.com/KevinMusgrave/pytorch_met
 - ```freeze_trunk_batchnorm```: *Optional*. If True, then the BatchNorm parameters of the trunk model will be frozen during training.
 - ```label_hierarchy_level```: *Optional*. If each sample in your dataset has multiple hierarchical labels, then this can be used to select which hierarchy to use. This assumes that your labels are "2-dimensional" with shape (num_samples, num_hierarchy_levels).
 - ```dataloader_num_workers```: *Optional*. For the dataloader.
-- ```post_processor```: *Optional*. A function that takes in embeddings and labels, and returns embeddings and labels. This is called after computing embeddings using your trunk and embedder model.
 
 ## Details about testers
 **The testers module requires faiss and scikit-learn. Please install these via pip or conda** 

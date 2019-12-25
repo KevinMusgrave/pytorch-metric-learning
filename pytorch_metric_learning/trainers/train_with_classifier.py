@@ -6,7 +6,7 @@ from .metric_loss_only import MetricLossOnly
 class TrainWithClassifier(MetricLossOnly):
     def calculate_loss(self, curr_batch):
         data, labels = curr_batch
-        embeddings, labels = self.compute_embeddings(data, labels)
+        embeddings = self.compute_embeddings(data)
         logits = self.maybe_get_logits(embeddings)
         indices_tuple = self.maybe_mine_embeddings(embeddings, labels)
         self.losses["metric_loss"] = self.maybe_get_metric_loss(embeddings, labels, indices_tuple)

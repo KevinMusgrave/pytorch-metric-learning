@@ -26,7 +26,6 @@ class BaseTrainer:
         freeze_trunk_batchnorm=False,
         label_hierarchy_level=0,
         dataloader_num_workers=32,
-        post_processor=None,
         data_and_label_getter=None
     ):
         self.models = models
@@ -46,14 +45,12 @@ class BaseTrainer:
         self.freeze_trunk_batchnorm = freeze_trunk_batchnorm
         self.label_hierarchy_level = label_hierarchy_level
         self.dataloader_num_workers = dataloader_num_workers
-        self.post_processor = post_processor
         self.loss_weights = loss_weights
         self.data_and_label_getter = data_and_label_getter
         self.loss_names = list(self.loss_funcs.keys())
         self.custom_setup()
         self.initialize_data_device()
         self.initialize_label_mapper()
-        self.initialize_post_processor()
         self.initialize_loss_tracker()
         self.initialize_dataloader()
         self.initialize_loss_weights()
@@ -119,11 +116,10 @@ class BaseTrainer:
         labels = c_f.process_label(labels, self.label_hierarchy_level, self.label_mapper)
         return self.maybe_do_pre_gradient_mining(data, labels)
 
-    def compute_embeddings(self, data, labels):
+    def compute_embeddings(self, data):
         trunk_output = self.get_trunk_output(data)
         embeddings = self.get_final_embeddings(trunk_output)
-        embeddings, labels = self.post_processor(embeddings, labels)
-        return embeddings, labels
+        return embeddings
 
     def get_final_embeddings(self, base_output):
         return self.models["embedder"](base_output)
@@ -140,7 +136,7 @@ class BaseTrainer:
         if "pre_gradient_miner" in self.mining_funcs:
             with torch.no_grad():
                 self.set_to_eval()
-                embeddings, labels = self.compute_embeddings(data, labels)
+                embeddings = self.compute_embeddings(data)
                 idx = self.mining_funcs["pre_gradient_miner"](embeddings, labels)
                 self.set_to_train()
                 data, labels = data[idx], labels[idx]
@@ -177,10 +173,6 @@ class BaseTrainer:
     def maybe_freeze_trunk_batchnorm(self):
         if self.freeze_trunk_batchnorm:
             self.models["trunk"].apply(c_f.set_layers_to_eval("BatchNorm"))
-
-    def initialize_post_processor(self):
-        if self.post_processor is None:
-            self.post_processor = lambda embeddings, labels: (embeddings, labels)
 
     def initialize_data_device(self):
         if self.data_device is None:

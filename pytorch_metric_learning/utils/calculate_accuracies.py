@@ -6,7 +6,7 @@ import warnings
 
 from . import stat_utils
 
-
+METRICS = ["NMI", "precision_at_1", "r_precision", "mean_average_r_precision"]
 
 def get_relevance_mask(shape, gt_labels, embeddings_come_from_same_source=False, label_counts=None):
     # This assumes that k was set to at least the max number of relevant items 

@@ -12,7 +12,7 @@ class CascadedEmbeddings(BaseTrainer):
 
     def calculate_loss(self, curr_batch):
         data, labels = curr_batch
-        embeddings, labels = self.compute_embeddings(data, labels)
+        embeddings = self.compute_embeddings(data)
         s = 0
         logits = []
         indices_tuple = None

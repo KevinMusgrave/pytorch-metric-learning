@@ -34,7 +34,6 @@ class DeepAdversarialMetricLearning(TrainWithClassifier):
 
         if self.do_metric:
             authentic_final_embeddings = self.get_final_embeddings(penultimate_embeddings)
-            authentic_final_embeddings, labels = self.post_processor(authentic_final_embeddings, labels)
             indices_tuple = self.maybe_mine_embeddings(authentic_final_embeddings, labels)
             self.losses["metric_loss"] = self.loss_funcs["metric_loss"](
                 authentic_final_embeddings, labels, indices_tuple
@@ -114,8 +113,6 @@ class DeepAdversarialMetricLearning(TrainWithClassifier):
                 for val in tup
             ]
         )
-
-        final_embeddings, labels = self.post_processor(final_embeddings, labels)
 
         indices_tuple = self.mining_funcs["synth_packaged_as_triplets"](final_embeddings, labels)
 

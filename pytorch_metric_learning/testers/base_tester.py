@@ -31,8 +31,8 @@ class BaseTester:
         self.label_hierarchy_level = label_hierarchy_level
 
     def get_accuracy_of_epoch(self, split_name, epoch):
-        records = self.record_keeper.get_record(self.record_group_name(split_name))
         try:
+            records = self.record_keeper.get_record(self.record_group_name(split_name))
             average_key = self.accuracies_keyname(self.metric_for_best_epoch, prefix="AVERAGE")
             if average_key in records:
                 return records[average_key][records["epoch"].index(epoch)]

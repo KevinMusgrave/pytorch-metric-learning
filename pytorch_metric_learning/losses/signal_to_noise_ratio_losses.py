@@ -17,10 +17,7 @@ class SignalToNoiseRatioContrastiveLoss(BaseMetricLossFunction):
         self.neg_margin = neg_margin
         self.regularizer_weight = regularizer_weight
         self.avg_non_zero_only = avg_non_zero_only
-        self.num_non_zero_pos_pairs = 0
-        self.num_non_zero_neg_pairs = 0
-        self.feature_distance_from_zero_mean_distribution = 0
-        self.record_these = ["num_non_zero_pos_pairs", "num_non_zero_neg_pairs", "feature_distance_from_zero_mean_distribution"]
+        self.add_to_recordable_attributes(list_of_names=["num_non_zero_pos_pairs", "num_non_zero_neg_pairs", "feature_distance_from_zero_mean_distribution"])
         super().__init__(**kwargs)
 
     def compute_loss(self, embeddings, labels, indices_tuple):

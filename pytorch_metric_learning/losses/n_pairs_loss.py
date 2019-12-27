@@ -13,9 +13,7 @@ class NPairsLoss(BaseMetricLossFunction):
     """
     def __init__(self, l2_reg_weight=0, **kwargs):
         self.l2_reg_weight = l2_reg_weight
-        self.num_pairs = 0
-        self.avg_embedding_norm = 0
-        self.record_these = ["num_pairs", "avg_embedding_norm"]
+        self.add_to_recordable_attributes(name="num_pairs")
         super().__init__(**kwargs)
         self.cross_entropy = torch.nn.CrossEntropyLoss()
 

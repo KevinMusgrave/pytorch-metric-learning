@@ -10,10 +10,7 @@ class BatchHardMiner(BasePostGradientMiner):
         super().__init__(**kwargs)
         self.use_similarity = use_similarity
         self.squared_distances = squared_distances
-        self.hardest_triplet_dist = 0
-        self.hardest_pos_pair_dist = 0
-        self.hardest_neg_pair_dist = 0
-        self.record_these += ["hardest_triplet_dist", "hardest_pos_pair_dist", "hardest_neg_pair_dist"]
+        self.add_to_recordable_attributes(list_of_names=["hardest_triplet_dist", "hardest_pos_pair_dist", "hardest_neg_pair_dist"])
 
     def mine(self, embeddings, labels):
         mat = lmu.get_pairwise_mat(embeddings, self.use_similarity, self.squared_distances)
@@ -26,7 +23,7 @@ class BatchHardMiner(BasePostGradientMiner):
         hardest_negative_dist, hardest_negative_indices = neg_func(mat, a2_idx, n_idx) 
         self.set_stats(hardest_positive_dist, hardest_negative_dist)
         
-        return torch.arange(mat.size(0)), hardest_positive_indices, hardest_negative_indices
+        return torch.arange(mat.size(0)).to(hardest_positive_indices.device), hardest_positive_indices, hardest_negative_indices
 
     def get_max_per_row(self, mat, anchor_idx, other_idx):
         mask = torch.zeros_like(mat)

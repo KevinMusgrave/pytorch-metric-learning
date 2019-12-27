@@ -14,11 +14,8 @@ class AngularLoss(BaseMetricLossFunction):
     def __init__(self, alpha, triplets_per_anchor=100, **kwargs):
         self.alpha = torch.tensor(np.radians(alpha))
         self.maybe_modify_loss = lambda x: x
-        self.num_anchors = 0
-        self.avg_embedding_norm = 0
-        self.average_angle = 0
-        self.record_these = ["num_anchors", "avg_embedding_norm", "average_angle"]
         self.triplets_per_anchor = triplets_per_anchor
+        self.add_to_recordable_attributes(list_of_names=["num_anchors", "average_angle"])
         super().__init__(**kwargs)
 
     def compute_loss(self, embeddings, labels, indices_tuple):
@@ -32,7 +29,6 @@ class AngularLoss(BaseMetricLossFunction):
         return torch.mean(torch.logsumexp(final_form, dim=1))
 
     def set_stats_get_triplets(self, embeddings, labels, indices_tuple):
-        self.avg_embedding_norm = torch.mean(torch.norm(embeddings, p=2, dim=1))
         anchor_idx, positive_idx, negative_idx = lmu.convert_to_triplets(indices_tuple, labels, self.triplets_per_anchor)
         self.num_anchors = len(anchor_idx)
         if self.num_anchors == 0:

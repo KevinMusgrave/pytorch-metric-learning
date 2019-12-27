@@ -27,10 +27,8 @@ class ContrastiveLoss(GenericPairLoss):
         self.pos_margin = pos_margin
         self.neg_margin = neg_margin
         self.avg_non_zero_only = avg_non_zero_only
-        self.num_non_zero_pos_pairs = 0
-        self.num_non_zero_neg_pairs = 0
-        self.record_these = ["num_non_zero_pos_pairs", "num_non_zero_neg_pairs"]
         self.power = power
+        self.add_to_recordable_attributes(list_of_names=["num_non_zero_pos_pairs", "num_non_zero_neg_pairs"])
         super().__init__(use_similarity=use_similarity, iterate_through_loss=False, **kwargs)
 
     def pair_based_loss(

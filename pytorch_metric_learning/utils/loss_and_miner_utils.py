@@ -187,7 +187,7 @@ def convert_to_weights(indices_tuple, labels):
     weights = torch.zeros_like(labels).float()
     if indices_tuple is None:
         return weights + 1
-    indices, counts = torch.unique(torch.cat(indices_tuple, dim=0), sorted=True, return_counts=True)
+    indices, counts = torch.unique(torch.cat(indices_tuple, dim=0), return_counts=True)
     counts = (counts.float() / torch.sum(counts)) * len(labels) # multiply by number of labels to scale weights up
     weights[indices] = counts
     return weights

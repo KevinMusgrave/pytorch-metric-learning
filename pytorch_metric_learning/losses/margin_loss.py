@@ -12,9 +12,7 @@ class MarginLoss(BaseMetricLossFunction):
         self.nu = nu
         self.beta = beta
         self.triplets_per_anchor = triplets_per_anchor
-        self.num_pos_pairs = 0
-        self.num_neg_pairs = 0
-        self.record_these = ["num_pos_pairs", "num_neg_pairs"]
+        self.add_to_recordable_attributes(list_of_names=["num_pos_pairs", "num_neg_pairs"])
         super().__init__(**kwargs)
 
     def compute_loss(self, embeddings, labels, indices_tuple):

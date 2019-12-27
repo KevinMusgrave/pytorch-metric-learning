@@ -106,7 +106,7 @@ class BaseTester:
                 logging.info("Finished TSNE")
                 for bbb in self.label_levels_to_evaluate(curr_labels):
                     label_scheme = curr_labels[:, bbb]
-                    tag = '%s/%s'%(self.record_group_name(split_name), self.accuracies_keyname("tsne", bbb if tag_suffix == '' else tag_suffix))
+                    tag = '%s/%s'%(self.record_group_name(split_name), self.accuracies_keyname("tsne", suffix="level%d"%bbb if tag_suffix == '' else tag_suffix))
                     self.record_keeper.add_embedding_plot(curr_embeddings, label_scheme, tag, epoch)
 
 
@@ -120,9 +120,7 @@ class BaseTester:
         base_name += "_"+self.reference_set
         return base_name
 
-    def accuracies_keyname(self, metric, label_level=None, prefix='', suffix=''):
-        if label_level is not None:
-            metric = "%s_level%d"%(metric, label_level)
+    def accuracies_keyname(self, metric, prefix='', suffix=''):
         if prefix != '':
             metric = "%s_%s"%(prefix, metric)
         if suffix != '':
@@ -156,6 +154,8 @@ class BaseTester:
     def label_levels_to_evaluate(self, query_labels):
         if self.label_hierarchy_level == "all":
             return range(query_labels.shape[1])
+        elif query_labels.shape[1] == 1:
+            return [0]
         elif isinstance(self.label_hierarchy_level, int):
             return [self.label_hierarchy_level]
         elif isinstance(self.label_hierarchy_level, list):

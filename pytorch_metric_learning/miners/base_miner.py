@@ -36,6 +36,18 @@ class BaseMiner(torch.nn.Module):
         self.output_assertion(mining_output)
         return mining_output
 
+    def add_to_recordable_attributes(self, name=None, list_of_names=None):
+        if not hasattr(self, "record_these"):
+            self.record_these = []
+        if name is not None:
+            if name not in self.record_these:
+                self.record_these.append(name)
+            if not hasattr(self, name):
+                setattr(self, name, 0)
+        if list_of_names is not None and isinstance(list_of_names, list):
+            for n in list_of_names:
+                self.add_to_recordable_attributes(name=n)
+
 class BasePostGradientMiner(BaseMiner):
     """
     A post-gradient miner is used after gradients have already been computed. 
@@ -49,14 +61,7 @@ class BasePostGradientMiner(BaseMiner):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.num_pos_pairs = 0
-        self.num_neg_pairs = 0
-        self.num_triplets = 0
-        record_these = ["num_pos_pairs", "num_neg_pairs", "num_triplets"]
-        if hasattr(self, "record_these"):
-            self.record_these += record_these
-        else:
-            self.record_these = record_these
+        self.add_to_recordable_attributes(list_of_names=["num_pos_pairs", "num_neg_pairs", "num_triplets"])
 
 
     def output_assertion(self, output):

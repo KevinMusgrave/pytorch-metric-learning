@@ -36,8 +36,7 @@ class TripletMarginLoss(BaseMetricLossFunction):
         self.smooth_loss = smooth_loss
         self.avg_non_zero_only = avg_non_zero_only
         self.triplets_per_anchor = triplets_per_anchor
-        self.num_non_zero_triplets = 0
-        self.record_these = ["num_non_zero_triplets"]
+        self.add_to_recordable_attributes(name="num_non_zero_triplets")
         self.maybe_modify_loss = lambda x: x
         super().__init__(**kwargs)
 

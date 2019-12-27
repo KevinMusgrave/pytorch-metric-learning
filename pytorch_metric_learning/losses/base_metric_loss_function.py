@@ -26,6 +26,7 @@ class BaseMetricLossFunction(torch.nn.Module):
         self.num_class_per_param = num_class_per_param
         self.learnable_param_names = learnable_param_names
         self.initialize_learnable_parameters()
+        self.add_to_recordable_attributes(name="avg_embedding_norm")
 
     def compute_loss(self, embeddings, labels, indices_tuple=None):
         """
@@ -46,6 +47,8 @@ class BaseMetricLossFunction(torch.nn.Module):
         labels = labels.to(embeddings.device)
         if self.normalize_embeddings:
             embeddings = torch.nn.functional.normalize(embeddings, p=2, dim=1)
+        self.avg_embedding_norm = torch.mean(torch.norm(embeddings, p=2, dim=1))
+
         loss = self.compute_loss(embeddings, labels, indices_tuple)
         if loss == 0:
             loss = torch.sum(embeddings*0)
@@ -82,3 +85,15 @@ class BaseMetricLossFunction(torch.nn.Module):
         if self.num_class_per_param:
             return param[labels]
         return param
+
+    def add_to_recordable_attributes(self, name=None, list_of_names=None):
+        if not hasattr(self, "record_these"):
+            self.record_these = []
+        if name is not None:
+            if name not in self.record_these:
+                self.record_these.append(name)
+            if not hasattr(self, name):
+                setattr(self, name, 0)
+        if list_of_names is not None and isinstance(list_of_names, list):
+            for n in list_of_names:
+                self.add_to_recordable_attributes(name=n)

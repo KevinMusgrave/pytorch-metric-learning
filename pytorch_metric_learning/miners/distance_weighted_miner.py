@@ -10,8 +10,8 @@ from ..utils import loss_and_miner_utils as lmu
 class DistanceWeightedMiner(BasePostGradientMiner):
     def __init__(self, cutoff, nonzero_loss_cutoff, **kwargs):
         super().__init__(**kwargs)
-        self.cutoff = cutoff
-        self.nonzero_loss_cutoff = nonzero_loss_cutoff
+        self.cutoff = float(cutoff)
+        self.nonzero_loss_cutoff = float(nonzero_loss_cutoff)
 
     def mine(self, embeddings, labels):
         label_set = torch.unique(labels)

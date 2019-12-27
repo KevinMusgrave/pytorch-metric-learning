@@ -13,10 +13,9 @@ class ArcFaceLoss(BaseMetricLossFunction):
         self.margin = np.radians(margin)
         self.scale = scale
         self.num_labels = num_labels
-        self.avg_angle = 0
         self.min_cos = -1 + 1e-7
         self.max_cos = 1 - 1e-7
-        self.record_these = ["avg_angle"]
+        self.add_to_recordable_attributes(name="avg_angle")
         super().__init__(**kwargs)
         self.W = torch.nn.Parameter(torch.randn(embedding_size, num_labels))
         self.cross_entropy = torch.nn.CrossEntropyLoss(reduction='none')

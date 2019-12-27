@@ -18,10 +18,7 @@ class TripletMarginMiner(BasePostGradientMiner):
     def __init__(self, margin, type_of_triplets="all", **kwargs):
         super().__init__(**kwargs)
         self.margin = margin
-        self.pos_pair_dist = 0
-        self.neg_pair_dist = 0 
-        self.avg_triplet_margin = 0
-        self.record_these += ["avg_triplet_margin", "pos_pair_dist", "neg_pair_dist"]
+        self.add_to_recordable_attributes(list_of_names=["avg_triplet_margin", "pos_pair_dist", "neg_pair_dist"])
         self.type_of_triplets = type_of_triplets
 
     def mine(self, embeddings, labels):

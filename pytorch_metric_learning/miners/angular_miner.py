@@ -14,14 +14,10 @@ class AngularMiner(BasePostGradientMiner):
     def __init__(self, angle, **kwargs):
         super().__init__(**kwargs)
         self.angle = np.radians(angle)
-        self.average_angle = 0
-        self.average_angle_above_threshold = 0
-        self.average_angle_below_threshold = 0
-        self.min_angle, self.max_angle = 0, 0
-        self.record_these += ["average_angle", 
-                            "average_angle_above_threshold", 
-                            "average_angle_below_threshold",
-                            "min_angle", "max_angle", "std_of_angle"]
+        self.add_to_recordable_attributes(list_of_names=["average_angle", 
+                                                        "average_angle_above_threshold", 
+                                                        "average_angle_below_threshold",
+                                                        "min_angle", "max_angle", "std_of_angle"])
 
     def mine(self, embeddings, labels):
         anchor_idx, positive_idx, negative_idx = lmu.get_all_triplets_indices(labels)

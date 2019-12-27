@@ -22,7 +22,7 @@ class GlobalEmbeddingSpaceTester(BaseTester):
                 self.embeddings_come_from_same_source(embeddings_and_labels),
             )
             for metric, v in a.items():
-                keyname = self.accuracies_keyname(metric, bbb if tag_suffix == '' else tag_suffix)
+                keyname = self.accuracies_keyname(metric, suffix="level%d"%bbb if tag_suffix == '' else tag_suffix)
                 accuracies[keyname] = v
         if i > 0:
             self.calculate_average_accuracies(accuracies, calculate_accuracies.METRICS)

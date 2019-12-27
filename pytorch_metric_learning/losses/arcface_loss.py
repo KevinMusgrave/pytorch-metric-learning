@@ -25,8 +25,7 @@ class ArcFaceLoss(BaseMetricLossFunction):
         batch_size = labels.size(0)
         mask = torch.zeros(batch_size, self.num_labels).to(embeddings.device)
         mask[torch.arange(batch_size), labels] = 1
-        if self.normalize_embeddings:
-            curr_W = torch.nn.functional.normalize(self.W, p=2, dim=1)
+        curr_W = torch.nn.functional.normalize(self.W, p=2, dim=0)
         cosine = torch.matmul(embeddings, curr_W)
         cosine_of_target_classes = cosine[mask == 1]
         angle = torch.acos(torch.clamp(cosine_of_target_classes, self.min_cos, self.max_cos))

@@ -28,6 +28,7 @@ pip install pytorch_metric_learning
 - NPairsLoss ([paper](http://www.nec-labs.com/uploads/images/Department-Images/MediaAnalytics/papers/nips16_npairmetriclearning.pdf))
 - ProxyNCALoss ([paper](https://arxiv.org/pdf/1703.07464.pdf))
 - SignalToNoiseRatioContrastiveLoss ([paper](http://openaccess.thecvf.com/content_CVPR_2019/papers/Yuan_Signal-To-Noise_Ratio_A_Robust_Distance_Metric_for_Deep_Metric_Learning_CVPR_2019_paper.pdf))
+- SoftTripleLoss ([paper](http://openaccess.thecvf.com/content_ICCV_2019/papers/Qian_SoftTriple_Loss_Deep_Metric_Learning_Without_Triplet_Sampling_ICCV_2019_paper.pdf))
 - TripletMarginLoss
 - **more to be added**
 

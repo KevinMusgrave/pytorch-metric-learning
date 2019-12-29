@@ -19,8 +19,9 @@ def get_knn(
                                          each element (which is actually itself)
                                          will be ignored.
     """
-    logging.info("running k-nn with k=%d"%k)
     d = reference_embeddings.shape[1]
+    logging.info("running k-nn with k=%d"%k)
+    logging.info("embedding dimensionality is %d"%d)
     cpu_index = faiss.IndexFlatL2(d)
     index = faiss.index_cpu_to_all_gpus(cpu_index)
     index.add(reference_embeddings)

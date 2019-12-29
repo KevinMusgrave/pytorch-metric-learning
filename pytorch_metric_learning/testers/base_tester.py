@@ -15,7 +15,7 @@ class BaseTester:
     def __init__(self, reference_set="compared_to_self", normalize_embeddings=True, use_trunk_output=False, 
                     batch_size=32, dataloader_num_workers=32, metric_for_best_epoch="mean_average_r_precision", 
                     pca=None, data_device=None, record_keeper=None, size_of_tsne=0, data_and_label_getter=None,
-                    label_hierarchy_level=0):
+                    label_hierarchy_level=0, record_group_name_prefix=None):
         self.reference_set = reference_set
         self.normalize_embeddings = normalize_embeddings
         self.pca = int(pca) if pca else None
@@ -27,8 +27,12 @@ class BaseTester:
         self.record_keeper = record_keeper
         self.size_of_tsne = size_of_tsne
         self.data_and_label_getter = (lambda x : x) if data_and_label_getter is None else data_and_label_getter
-        self.base_record_group_name = self.suffixes("%s_%s"%("accuracies", self.__class__.__name__))
+        self.set_base_record_group_name(record_group_name_prefix)
         self.label_hierarchy_level = label_hierarchy_level
+
+    def set_base_record_group_name(self, record_group_name_prefix):
+        self.base_record_group_name = "%s_"%record_group_name_prefix if record_group_name_prefix else ''
+        self.base_record_group_name += self.suffixes("%s_%s"%("accuracies", self.__class__.__name__))
 
     def get_accuracy_of_epoch(self, split_name, epoch):
         try:
@@ -178,28 +182,50 @@ class BaseTester:
                 splits_to_eval.append(split)
         return splits_to_eval
 
+    def get_splits_to_compute_embeddings(self, original_splits_to_eval, splits_to_eval):
+        if self.reference_set == "compared_to_self":
+            return splits_to_eval
+        if self.reference_set == "compared_to_sets_combined":
+            return original_splits_to_eval
+        if self.reference_set == "compared_to_training_set":
+            return list(set(splits_to_eval).add("train"))
+
+    def get_necessary_splits(self, dataset_dict, epoch, splits_to_eval):
+        original_splits_to_eval = splits_to_eval        
+        splits_to_eval = self.get_splits_to_eval(list(dataset_dict.keys()) if original_splits_to_eval is None else original_splits_to_eval, epoch)
+        splits_to_compute_embeddings = self.get_splits_to_compute_embeddings(original_splits_to_eval, splits_to_eval)   
+        return splits_to_eval, splits_to_compute_embeddings
+
+    def get_all_embeddings_for_all_splits(self, dataset_dict, trunk_model, embedder_model, splits_to_compute_embeddings, collate_fn):
+        embeddings_and_labels = {}
+        for split_name in splits_to_compute_embeddings:
+            logging.info('Getting embeddings for the %s split'%split_name)
+            embeddings_and_labels[split_name] = self.get_all_embeddings(dataset_dict[split_name], trunk_model, embedder_model, collate_fn)
+        return embeddings_and_labels
+
+    def maybe_record_results(self, accuracies, epoch, split_name):
+        if self.record_keeper is not None:
+            self.record_keeper.update_records(accuracies, epoch, input_group_name_for_non_objects=self.record_group_name(split_name))
+            best_epoch, best_accuracy = self.get_best_epoch_and_accuracy(split_name)
+            accuracies = {"best_epoch":best_epoch, "best_accuracy":best_accuracy}
+            self.record_keeper.update_records(accuracies, epoch, input_group_name_for_non_objects=self.record_group_name(split_name))
+        else:
+            logging.info(accuracies) 
+
     def do_knn_and_accuracies(self, accuracies, embeddings_and_labels, split_name):
         raise NotImplementedError
 
     def test(self, dataset_dict, epoch, trunk_model, embedder_model, splits_to_eval=None, collate_fn=None, **kwargs):
         logging.info("Evaluating epoch %d" % epoch)
-        trunk_model = trunk_model.eval()
-        embedder_model = embedder_model.eval()
-        split_keys = list(dataset_dict.keys())
-        embeddings_and_labels = {k: None for k in split_keys}
-        for split_name, dataset in dataset_dict.items():
-            logging.info('Getting embeddings for the %s split'%split_name)
-            embeddings_and_labels[split_name] = self.get_all_embeddings(dataset, trunk_model, embedder_model, collate_fn)
+        trunk_model, embedder_model = trunk_model.eval(), embedder_model.eval()
+        splits_to_eval, splits_to_compute_embeddings = self.get_necessary_splits(dataset_dict, epoch, splits_to_eval)
+        if len(splits_to_eval) == 0:
+            logging.info("Already evaluated")
+            return
+        embeddings_and_labels = self.get_all_embeddings_for_all_splits(dataset_dict, trunk_model, embedder_model, splits_to_compute_embeddings, collate_fn)
         self.maybe_plot_tsne(embeddings_and_labels, epoch)
-        splits_to_eval = self.get_splits_to_eval(split_keys if splits_to_eval is None else splits_to_eval, epoch)
         for split_name in splits_to_eval:
             logging.info('Computing accuracy for the %s split'%split_name)
             accuracies = {"epoch":epoch}
             self.do_knn_and_accuracies(accuracies, embeddings_and_labels, split_name)
-            if self.record_keeper is not None:
-                self.record_keeper.update_records(accuracies, epoch, input_group_name_for_non_objects=self.record_group_name(split_name))
-                best_epoch, best_accuracy = self.get_best_epoch_and_accuracy(split_name)
-                accuracies = {"best_epoch":best_epoch, "best_accuracy":best_accuracy}
-                self.record_keeper.update_records(accuracies, epoch, input_group_name_for_non_objects=self.record_group_name(split_name))
-            else:
-                logging.info(accuracies)
+            self.maybe_record_results(accuracies, epoch, split_name)

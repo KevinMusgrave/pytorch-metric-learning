@@ -18,27 +18,28 @@ pip install pytorch_metric_learning
 
 ## Currently implemented classes:
 ### [Loss functions](https://github.com/KevinMusgrave/pytorch_metric_learning/tree/master/pytorch_metric_learning/losses):
-- AngularLoss ([paper](https://arxiv.org/pdf/1708.01682.pdf))
-- ArcFaceLoss ([paper](https://arxiv.org/pdf/1801.07698.pdf))
+- AngularLoss ([Deep Metric Learning with Angular Loss](https://arxiv.org/pdf/1708.01682.pdf))
+- ArcFaceLoss ([ArcFace: Additive Angular Margin Loss for Deep Face Recognition](https://arxiv.org/pdf/1801.07698.pdf))
 - ContrastiveLoss
+- FastAPLoss ([Deep Metric Learning to Rank](http://openaccess.thecvf.com/content_CVPR_2019/papers/Cakir_Deep_Metric_Learning_to_Rank_CVPR_2019_paper.pdf))
 - GeneralizedLiftedStructureLoss
-- MarginLoss ([paper](https://arxiv.org/pdf/1706.07567.pdf))
-- MultiSimilarityLoss ([paper](http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf))
-- NCALoss ([paper](https://www.cs.toronto.edu/~hinton/absps/nca.pdf))
-- NPairsLoss ([paper](http://www.nec-labs.com/uploads/images/Department-Images/MediaAnalytics/papers/nips16_npairmetriclearning.pdf))
-- ProxyNCALoss ([paper](https://arxiv.org/pdf/1703.07464.pdf))
-- SignalToNoiseRatioContrastiveLoss ([paper](http://openaccess.thecvf.com/content_CVPR_2019/papers/Yuan_Signal-To-Noise_Ratio_A_Robust_Distance_Metric_for_Deep_Metric_Learning_CVPR_2019_paper.pdf))
-- SoftTripleLoss ([paper](http://openaccess.thecvf.com/content_ICCV_2019/papers/Qian_SoftTriple_Loss_Deep_Metric_Learning_Without_Triplet_Sampling_ICCV_2019_paper.pdf))
+- MarginLoss ([Sampling Matters in Deep Embedding Learning](https://arxiv.org/pdf/1706.07567.pdf))
+- MultiSimilarityLoss ([Multi-Similarity Loss with General Pair Weighting for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf))
+- NCALoss ([Neighbourhood Components Analysis](https://www.cs.toronto.edu/~hinton/absps/nca.pdf))
+- NPairsLoss ([Improved Deep Metric Learning with Multi-class N-pair Loss Objective](http://www.nec-labs.com/uploads/images/Department-Images/MediaAnalytics/papers/nips16_npairmetriclearning.pdf))
+- ProxyNCALoss ([No Fuss Distance Metric Learning using Proxies](https://arxiv.org/pdf/1703.07464.pdf))
+- SignalToNoiseRatioContrastiveLoss ([Signal-to-Noise Ratio: A Robust Distance Metric for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Yuan_Signal-To-Noise_Ratio_A_Robust_Distance_Metric_for_Deep_Metric_Learning_CVPR_2019_paper.pdf))
+- SoftTripleLoss ([SoftTriple Loss: Deep Metric Learning Without Triplet Sampling](http://openaccess.thecvf.com/content_ICCV_2019/papers/Qian_SoftTriple_Loss_Deep_Metric_Learning_Without_Triplet_Sampling_ICCV_2019_paper.pdf))
 - TripletMarginLoss
 - **more to be added**
 
 ### [Mining functions](https://github.com/KevinMusgrave/pytorch_metric_learning/tree/master/pytorch_metric_learning/miners):
 - AngularMiner
-- BatchHardMiner ([paper](https://arxiv.org/pdf/1703.07737.pdf))
-- DistanceWeightedMiner ([paper](https://arxiv.org/pdf/1706.07567.pdf))
-- HDCMiner ([paper](http://openaccess.thecvf.com/content_ICCV_2017/papers/Yuan_Hard-Aware_Deeply_Cascaded_ICCV_2017_paper.pdf))
+- BatchHardMiner ([In Defense of the Triplet Loss for Person Re-Identification](https://arxiv.org/pdf/1703.07737.pdf))
+- DistanceWeightedMiner ([Sampling Matters in Deep Embedding Learning](https://arxiv.org/pdf/1706.07567.pdf))
+- HDCMiner ([Hard-Aware Deeply Cascaded Embedding](http://openaccess.thecvf.com/content_ICCV_2017/papers/Yuan_Hard-Aware_Deeply_Cascaded_ICCV_2017_paper.pdf))
 - MaximumLossMiner
-- MultiSimilarityMiner ([paper](http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf))
+- MultiSimilarityMiner ([Multi-Similarity Loss with General Pair Weighting for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf))
 - PairMarginMiner
 - TripletMarginMiner
 - **more to be added**
@@ -51,8 +52,8 @@ pip install pytorch_metric_learning
 ### [Training methods](https://github.com/KevinMusgrave/pytorch_metric_learning/tree/master/pytorch_metric_learning/trainers):
 - MetricLossOnly
 - TrainWithClassifier
-- CascadedEmbeddings ([paper](http://openaccess.thecvf.com/content_ICCV_2017/papers/Yuan_Hard-Aware_Deeply_Cascaded_ICCV_2017_paper.pdf))
-- DeepAdversarialMetricLearning ([paper](http://openaccess.thecvf.com/content_cvpr_2018/papers/Duan_Deep_Adversarial_Metric_CVPR_2018_paper.pdf))
+- CascadedEmbeddings ([Hard-Aware Deeply Cascaded Embedding](http://openaccess.thecvf.com/content_ICCV_2017/papers/Yuan_Hard-Aware_Deeply_Cascaded_ICCV_2017_paper.pdf))
+- DeepAdversarialMetricLearning ([Deep Adversarial Metric Learning](http://openaccess.thecvf.com/content_cvpr_2018/papers/Duan_Deep_Adversarial_Metric_CVPR_2018_paper.pdf))
 - UnsupervisedEmbeddingsUsingAugmentations
 - **more to be added**
 

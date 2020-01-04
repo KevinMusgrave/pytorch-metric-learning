@@ -2,6 +2,7 @@ from .base_metric_loss_function import BaseMetricLossFunction
 from .angular_loss import AngularLoss
 from .arcface_loss import ArcFaceLoss
 from .contrastive_loss import ContrastiveLoss
+from .fast_ap_loss import FastAPLoss
 from .generic_pair_loss import GenericPairLoss
 from .lifted_structure_loss import GeneralizedLiftedStructureLoss
 from .margin_loss import MarginLoss

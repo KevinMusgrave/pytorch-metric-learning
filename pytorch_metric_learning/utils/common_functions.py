@@ -127,7 +127,7 @@ def get_train_dataloader(dataset, batch_size, sampler, num_workers, collate_fn):
         num_workers=num_workers,
         collate_fn=collate_fn,
         shuffle=sampler is None,
-        pin_memory=True
+        pin_memory=False
     )
 
 def get_eval_dataloader(dataset, batch_size, num_workers, collate_fn):
@@ -138,7 +138,7 @@ def get_eval_dataloader(dataset, batch_size, num_workers, collate_fn):
         num_workers=num_workers,
         collate_fn=collate_fn,
         shuffle=False,
-        pin_memory=True
+        pin_memory=False
     )
 
 

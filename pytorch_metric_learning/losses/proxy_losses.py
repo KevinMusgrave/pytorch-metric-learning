@@ -5,10 +5,10 @@ import torch
 from ..utils import loss_and_miner_utils as lmu
 
 class ProxyNCALoss(NCALoss):
-    def __init__(self, num_labels, embedding_size, **kwargs):
+    def __init__(self, num_classes, embedding_size, **kwargs):
         super().__init__(**kwargs)
-        self.proxies = torch.nn.Parameter(torch.randn(num_labels, embedding_size))
-        self.proxy_labels = torch.arange(num_labels)
+        self.proxies = torch.nn.Parameter(torch.randn(num_classes, embedding_size))
+        self.proxy_labels = torch.arange(num_classes)
         
     def compute_loss(self, embeddings, labels, indices_tuple):
         if self.normalize_embeddings:

@@ -24,7 +24,7 @@ class SoftTripleLoss(BaseMetricLossFunction):
 
     def compute_loss(self, embeddings, labels, indices_tuple):
         miner_weights = lmu.convert_to_weights(indices_tuple, labels)
-        centers = F.normalize(self.fc, p=2, dim=0)
+        centers = F.normalize(self.fc, p=2, dim=0) if self.normalize_embeddings else self.fc
         sim_to_centers = torch.matmul(embeddings, centers)
         sim_to_centers = sim_to_centers.view(-1, self.num_classes, self.centers_per_class)
         prob = F.softmax(sim_to_centers*self.gamma, dim=2)

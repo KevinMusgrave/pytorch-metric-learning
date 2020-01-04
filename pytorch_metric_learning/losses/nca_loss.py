@@ -5,6 +5,10 @@ from ..utils import loss_and_miner_utils as lmu
 import torch
 
 class NCALoss(BaseMetricLossFunction):
+    def __init__(self, softmax_scale=1, **kwargs):
+        super().__init__(**kwargs)
+        self.softmax_scale = softmax_scale
+
     # https://www.cs.toronto.edu/~hinton/absps/nca.pdf
     def compute_loss(self, embeddings, labels, indices_tuple):
         return self.nca_computation(embeddings, embeddings, labels, labels, indices_tuple)
@@ -16,7 +20,7 @@ class NCALoss(BaseMetricLossFunction):
             diag_idx = torch.arange(query.size(0))
             x[diag_idx, diag_idx] = float('-inf')
         same_labels = (query_labels.unsqueeze(1) == reference_labels.unsqueeze(0)).float()
-        exp = torch.nn.functional.softmax(x, dim=1)
+        exp = torch.nn.functional.softmax(self.softmax_scale*x, dim=1)
         exp = torch.sum(exp * same_labels, dim=1)
         exp = exp * weights
         non_zero_prob = torch.masked_select(exp, exp != 0)

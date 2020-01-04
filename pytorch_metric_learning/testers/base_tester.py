@@ -47,10 +47,12 @@ class BaseTester:
         except:
             return None 
 
-    def get_best_epoch_and_accuracy(self, split_name):
+    def get_best_epoch_and_accuracy(self, split_name, ignore_epoch=-1):
         records = self.record_keeper.get_record(self.record_group_name(split_name))
         best_epoch, best_accuracy = 0, 0
         for epoch in records["epoch"]:
+            if epoch == ignore_epoch:
+                continue
             accuracy = self.get_accuracy_of_epoch(split_name, epoch)
             if accuracy is None:
                 return None, None
@@ -206,7 +208,7 @@ class BaseTester:
     def maybe_record_results(self, accuracies, epoch, split_name):
         if self.record_keeper is not None:
             self.record_keeper.update_records(accuracies, epoch, input_group_name_for_non_objects=self.record_group_name(split_name))
-            best_epoch, best_accuracy = self.get_best_epoch_and_accuracy(split_name)
+            best_epoch, best_accuracy = self.get_best_epoch_and_accuracy(split_name, ignore_epoch=None)
             accuracies = {"best_epoch":best_epoch, "best_accuracy":best_accuracy}
             self.record_keeper.update_records(accuracies, epoch, input_group_name_for_non_objects=self.record_group_name(split_name))
         else:

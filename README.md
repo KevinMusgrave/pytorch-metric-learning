@@ -63,9 +63,6 @@ pip install pytorch_metric_learning
 - [**WithSameParentLabelTester**](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/testers/with_same_parent_label.py)
 - **more to be added**
 
-## Want to add your own loss, miner, sampler, trainer, or tester? 
-Please create a pull request or issue, and I will be happy to add your class to the library!
-
 ## Overview
 Let’s try the vanilla triplet margin loss. In all examples, embeddings is assumed to be of size (N, embedding_size), and labels is of size (N).
 ```python
@@ -98,7 +95,8 @@ And all mining functions take in embeddings and labels:
 def forward(self, embeddings, labels)
 ```
 
-Train using advanced approaches, like deep adversarial metric learning:
+### Using trainers
+For more complex approaches, like deep adversarial metric learning, use one of the trainer classes:
 ```python
 from pytorch_metric_learning import trainers
 
@@ -131,17 +129,17 @@ trainer = trainers.DeepAdversarialMetricLearning(
   batch_size=120,
   loss_funcs=loss_funcs,
   mining_funcs=mining_funcs,
-  num_epochs=50,
   iterations_per_epoch=100,
   dataset=your_dataset,
   loss_weights=loss_weights
 )
   
-trainer.train()
+trainer.train(num_epochs=50)
 ```
+See the [examples](https://github.com/KevinMusgrave/pytorch_metric_learning/tree/master/examples) folder for more details.
 
 ## Details about losses
-Every loss function extends [BaseMetricLossFunction](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/losses/base_metric_loss_function.py). The three default input arguments are:
+Every loss function extends [BaseMetricLossFunction](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/losses/base_metric_loss_function.py). The three default initialization arguments are:
 - ```normalize_embeddings```: If True, normalizes embeddings to have Euclidean norm of 1, before computing the loss
 - ```learnable_param_names```: An optional list of strings that specifies which loss parameters you want to convert to nn.Parameter (and therefore make them learnable by using a PyTorch optimizer). If not specified, then no loss parameters will be converted. 
 - ```num_class_per_param```: An optional integer which specifies the size of the learnable parameters listed in learnable_param_names. If not specified, then each nn.Parameter will be of size 1.

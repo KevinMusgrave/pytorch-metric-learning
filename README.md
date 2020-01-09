@@ -1,4 +1,5 @@
-# pytorch_metric_learning
+# PyTorch Metric Learning
+[![PyPI Status](https://badge.fury.io/py/pytorch-metric-learning.svg)](https://badge.fury.io/py/pytorch-metric-learning)
 
 ## [Benchmark results (in progress)](https://drive.google.com/open?id=1Y_stkiqlHA7HTMNrhyPCnYhR0oevphRR): 
 - [Spreadsheet #1: Train/val 50/50](https://docs.google.com/spreadsheets/d/1kiJ5rKmneQvnYKpVO9vBFdMDNx-yLcXV2wbDXlb-SB8/edit?usp=sharing)
@@ -203,3 +204,16 @@ After you've initialized the tester, run ```tester.test(dataset_dict, epoch, tru
 
 ## Acknowledgements
 Thank you to Ser-Nam Lim at Facebook AI, and my research advisor, Professor Serge Belongie. This project began during my internship at Facebook AI where I received valuable feedback from Ser-Nam, and his team of computer vision and machine learning engineers and research scientists.
+
+## Citing this library
+If you'd like to cite pytorch_metric_learning in your paper, you can use this bibtex:
+```latex
+@misc{Musgrave2019,
+  author = {Musgrave, Kevin and Lim, Ser-Nam and Belongie, Serge},
+  title = {PyTorch Metric Learning},
+  year = {2019},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  howpublished = {\url{https://github.com/KevinMusgrave/pytorch_metric_learning}},
+}
+```

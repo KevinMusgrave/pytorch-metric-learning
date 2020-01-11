@@ -24,13 +24,10 @@ class FastAPLoss(BaseMetricLossFunction):
 
         histogram_max = 4. if self.normalize_embeddings else torch.max(dist_mat).item()
         histogram_delta = histogram_max / self.num_bins
-        mid_points = torch.linspace(0., histogram_max, steps=self.num_edges)
-        pos_hist = torch.zeros(N, self.num_edges).to(embeddings.device)
-        neg_hist = torch.zeros(N, self.num_edges).to(embeddings.device)
-        for i in range(self.num_edges):
-            pulse = torch.nn.functional.relu(1 - torch.abs(dist_mat-mid_points[i])/histogram_delta)
-            pos_hist[:,i] = torch.sum(pulse * I_pos, dim=1)
-            neg_hist[:,i] = torch.sum(pulse * I_neg, dim=1)
+        mid_points = torch.linspace(0., histogram_max, steps=self.num_edges).view(-1,1,1).to(embeddings.device)
+        pulse = torch.nn.functional.relu(1 - torch.abs(dist_mat-mid_points)/histogram_delta)
+        pos_hist = torch.t(torch.sum(pulse * I_pos, dim=2))
+        neg_hist = torch.t(torch.sum(pulse * I_neg, dim=2))
 
         total_pos_hist = torch.cumsum(pos_hist, dim=1)
         total_hist = torch.cumsum(pos_hist + neg_hist, dim=1)

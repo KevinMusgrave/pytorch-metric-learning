@@ -42,6 +42,12 @@
     
       <link rel="stylesheet" href="../assets/stylesheets/application.1b62728e.css">
       
+        <link rel="stylesheet" href="../assets/stylesheets/application-palette.a8b3c06d.css">
+      
+      
+        
+        
+        <meta name="theme-color" content="#ef5350">
       
     
     
@@ -63,11 +69,15 @@
     
   </head>
   
-    <body dir="ltr">
+    
+    
+    <body dir="ltr" data-md-color-primary="red" data-md-color-accent="red">
   
     <svg class="md-svg">
       <defs>
         
+        
+          <svg xmlns="http://www.w3.org/2000/svg" width="416" height="448" viewBox="0 0 416 448" id="__github"><path fill="currentColor" d="M160 304q0 10-3.125 20.5t-10.75 19T128 352t-18.125-8.5-10.75-19T96 304t3.125-20.5 10.75-19T128 256t18.125 8.5 10.75 19T160 304zm160 0q0 10-3.125 20.5t-10.75 19T288 352t-18.125-8.5-10.75-19T256 304t3.125-20.5 10.75-19T288 256t18.125 8.5 10.75 19T320 304zm40 0q0-30-17.25-51T296 232q-10.25 0-48.75 5.25Q229.5 240 208 240t-39.25-2.75Q130.75 232 120 232q-29.5 0-46.75 21T56 304q0 22 8 38.375t20.25 25.75 30.5 15 35 7.375 37.25 1.75h42q20.5 0 37.25-1.75t35-7.375 30.5-15 20.25-25.75T360 304zm56-44q0 51.75-15.25 82.75-9.5 19.25-26.375 33.25t-35.25 21.5-42.5 11.875-42.875 5.5T212 416q-19.5 0-35.5-.75t-36.875-3.125-38.125-7.5-34.25-12.875T37 371.5t-21.5-28.75Q0 312 0 260q0-59.25 34-99-6.75-20.5-6.75-42.5 0-29 12.75-54.5 27 0 47.5 9.875t47.25 30.875Q171.5 96 212 96q37 0 70 8 26.25-20.5 46.75-30.25T376 64q12.75 25.5 12.75 54.5 0 21.75-6.75 42 34 40 34 99.5z"/></svg>
         
       </defs>
     </svg>
@@ -136,6 +146,28 @@
         
       </div>
       
+        <div class="md-flex__cell md-flex__cell--shrink">
+          <div class="md-header-nav__source">
+            
+
+
+  
+
+<a href="https://github.com/KevinMusgrave/pytorch_metric_learning/" title="Go to repository" class="md-source" data-md-source="github">
+  
+    <div class="md-source__icon">
+      <svg viewBox="0 0 24 24" width="24" height="24">
+        <use xlink:href="#__github" width="24" height="24"></use>
+      </svg>
+    </div>
+  
+  <div class="md-source__repository">
+    KevinMusgrave/pytorch_metric_learning
+  </div>
+</a>
+          </div>
+        </div>
+      
     </div>
   </nav>
 </header>
@@ -161,6 +193,26 @@
     </a>
     PyTorch Metric Learning
   </label>
+  
+    <div class="md-nav__source">
+      
+
+
+  
+
+<a href="https://github.com/KevinMusgrave/pytorch_metric_learning/" title="Go to repository" class="md-source" data-md-source="github">
+  
+    <div class="md-source__icon">
+      <svg viewBox="0 0 24 24" width="24" height="24">
+        <use xlink:href="#__github" width="24" height="24"></use>
+      </svg>
+    </div>
+  
+  <div class="md-source__repository">
+    KevinMusgrave/pytorch_metric_learning
+  </div>
+</a>
+    </div>
   
   <ul class="md-nav__list" data-md-scrollfix>
     
@@ -337,7 +389,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../miners.md" title="Miners" class="md-nav__link">
+    <a href="../miners/" title="Miners" class="md-nav__link">
       Miners
     </a>
   </li>
@@ -491,8 +543,10 @@
             <article class="md-content__inner md-typeset">
               
                 
+                  <a href="https://github.com/KevinMusgrave/pytorch_metric_learning/edit/master/docs/losses.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
-                <h1 id="losses">Losses</h1>
+                
+                <h1 id="losses">Losses<a class="headerlink" href="#losses" title="Permanent link">&para;</a></h1>
 <p>All loss functions are used as follows:</p>
 <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">losses</span>
 <span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">SomeLoss</span><span class="p">()</span>
@@ -509,7 +563,7 @@
 </pre></div>
 
 
-<h2 id="angularloss">AngularLoss</h2>
+<h2 id="angularloss">AngularLoss<a class="headerlink" href="#angularloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1708.01682.pdf">Deep Metric Learning with Angular Loss</a></p>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">AngularLoss</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">triplets_per_anchor</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
@@ -520,7 +574,7 @@
 <li><strong>alpha</strong>: The angle (as described in the paper), specified in degrees.</li>
 <li><strong>triplets_per_anchor</strong>: The number of triplets per element to sample within a batch. Can be an integer or the string "all". For example, if your batch size is 128, and triplets_per_anchor is 100, then 12800 triplets will be sampled. If triplets_per_anchor is "all", then all possible triplets in the batch will be used.</li>
 </ul>
-<h2 id="arcfaceloss">ArcFaceLoss</h2>
+<h2 id="arcfaceloss">ArcFaceLoss<a class="headerlink" href="#arcfaceloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1801.07698.pdf">ArcFace: Additive Angular Margin Loss for Deep Face Recognition</a></p>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">ArcFaceLoss</span><span class="p">(</span><span class="n">margin</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
@@ -533,8 +587,8 @@
 <li><strong>embedding_size</strong>: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set <em>embedding_size</em> to 512.</li>
 <li><strong>scale</strong>: The exponent multiplier in the loss's softmax expression. (This is the inverse of the softmax temperature.)</li>
 </ul>
-<h2 id="basemetriclossfunction">BaseMetricLossFunction</h2>
-<p>All loss functions extend this class.</p>
+<h2 id="basemetriclossfunction">BaseMetricLossFunction<a class="headerlink" href="#basemetriclossfunction" title="Permanent link">&para;</a></h2>
+<p>All loss functions extend this class and therefore inherit its <em>__init__</em> parameters.</p>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">BaseMetricLossFunction</span><span class="p">(</span><span class="n">normalize_embeddings</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">num_class_per_param</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">learnable_param_names</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </pre></div>
 
@@ -551,8 +605,13 @@
 </pre></div>
 
 
-<h2 id="contrastiveloss">ContrastiveLoss</h2>
-<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">ContrastiveLoss</span><span class="p">(</span><span class="n">pos_margin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">neg_margin</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">use_similarity</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">power</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">avg_non_zero_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<h2 id="contrastiveloss">ContrastiveLoss<a class="headerlink" href="#contrastiveloss" title="Permanent link">&para;</a></h2>
+<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">ContrastiveLoss</span><span class="p">(</span><span class="n">pos_margin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> 
+                    <span class="n">neg_margin</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
+                    <span class="n">use_similarity</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
+                    <span class="n">power</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
+                    <span class="n">avg_non_zero_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+                    <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 </pre></div>
 
 
@@ -564,7 +623,7 @@
 <li><strong>power</strong>: Each pair's loss will be raised to this power.</li>
 <li><strong>avg_non_zero_only</strong>: Only pairs that contribute non-zero loss will be used in the final loss. </li>
 </ul>
-<h2 id="fastaploss">FastAPLoss</h2>
+<h2 id="fastaploss">FastAPLoss<a class="headerlink" href="#fastaploss" title="Permanent link">&para;</a></h2>
 <p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Cakir_Deep_Metric_Learning_to_Rank_CVPR_2019_paper.pdf">Deep Metric Learning to Rank</a></p>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">FastAPLoss</span><span class="p">(</span><span class="n">num_bins</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
@@ -574,7 +633,7 @@
 <ul>
 <li><strong>num_bins</strong>: The number of soft histogram bins for calculating average precision</li>
 </ul>
-<h2 id="genericpairloss">GenericPairLoss</h2>
+<h2 id="genericpairloss">GenericPairLoss<a class="headerlink" href="#genericpairloss" title="Permanent link">&para;</a></h2>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">GenericPairLoss</span><span class="p">(</span><span class="n">use_similarity</span><span class="p">,</span> <span class="n">iterate_through_loss</span><span class="p">,</span> <span class="n">squared_distances</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
@@ -591,24 +650,152 @@
 </pre></div>
 
 
-<h2 id="generalizedliftedstructureloss">GeneralizedLiftedStructureLoss</h2>
-<h2 id="marginloss">MarginLoss</h2>
+<h2 id="generalizedliftedstructureloss">GeneralizedLiftedStructureLoss<a class="headerlink" href="#generalizedliftedstructureloss" title="Permanent link">&para;</a></h2>
+<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">GeneralizedLiftedStructureLoss</span><span class="p">(</span><span class="n">neg_margin</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>neg_margin</strong>: The margin in the expression e^(margin - negative_distance) </li>
+</ul>
+<h2 id="marginloss">MarginLoss<a class="headerlink" href="#marginloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1706.07567.pdf">Sampling Matters in Deep Embedding Learning</a></p>
-<h2 id="multisimilarityloss">MultiSimilarityLoss</h2>
+<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">MarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">triplets_per_anchor</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>margin</strong>: The radius of the minimalbuffer between positive and negative pairs.</li>
+<li><strong>nu</strong>: The regularization weight for the magnitude of beta.</li>
+<li><strong>beta</strong>: The center of the minimal buffer between positive and negative pairs.</li>
+<li><strong>triplets_per_anchor</strong>: The number of triplets per element to sample within a batch. Can be an integer or the string "all". For example, if your batch size is 128, and triplets_per_anchor is 100, then 12800 triplets will be sampled. If triplets_per_anchor is "all", then all possible triplets in the batch will be used.</li>
+</ul>
+<p>To make beta a learnable parameter (as done in the paper), pass in the keyword argument:</p>
+<div class="codehilite"><pre><span></span><span class="n">learnable_param_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;beta&quot;</span><span class="p">]</span>
+</pre></div>
+
+
+<p>You can then pass the loss function's parameters() to any PyTorch optimizer.</p>
+<h2 id="multisimilarityloss">MultiSimilarityLoss<a class="headerlink" href="#multisimilarityloss" title="Permanent link">&para;</a></h2>
 <p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf">Multi-Similarity Loss with General Pair Weighting for Deep Metric Learning</a></p>
-<h2 id="ncaloss">NCALoss</h2>
-<p>Neighbourhood Components Analysis](https://www.cs.toronto.edu/~hinton/absps/nca.pdf)</p>
-<h2 id="normalizedsoftmaxloss">NormalizedSoftmaxLoss</h2>
-<p><a href="https://arxiv.org/pdf/1811.12649.pdf">Classification is a Strong Baseline for DeepMetric Learning</a></p>
-<h2 id="npairsloss">NPairsLoss</h2>
+<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">MultiSimilarityLoss</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>alpha</strong>: The weight applied to positive pairs.</li>
+<li><strong>beta</strong>: The weight applied to negative pairs.</li>
+<li><strong>base</strong>: The offset applied to the exponent in the loss.</li>
+</ul>
+<h2 id="ncaloss">NCALoss<a class="headerlink" href="#ncaloss" title="Permanent link">&para;</a></h2>
+<p><a href="https://www.cs.toronto.edu/~hinton/absps/nca.pdf">Neighbourhood Components Analysis</a></p>
+<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">NCALoss</span><span class="p">(</span><span class="n">softmax_scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>softmax_scale</strong>: The exponent multiplier in the loss's softmax expression. (This is the inverse of the softmax temperature.)</li>
+</ul>
+<h2 id="normalizedsoftmaxloss">NormalizedSoftmaxLoss<a class="headerlink" href="#normalizedsoftmaxloss" title="Permanent link">&para;</a></h2>
+<p><a href="https://arxiv.org/pdf/1811.12649.pdf">Classification is a Strong Baseline for Deep Metric Learning</a></p>
+<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">NormalizedSoftmaxLoss</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>temperature</strong>: The exponent divisor in the softmax funtion.</li>
+<li><strong>embedding_size</strong>: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set <em>embedding_size</em> to 512.</li>
+<li><strong>num_classes</strong>: The number of classes in your training dataset.</li>
+</ul>
+<h2 id="npairsloss">NPairsLoss<a class="headerlink" href="#npairsloss" title="Permanent link">&para;</a></h2>
 <p><a href="http://www.nec-labs.com/uploads/images/Department-Images/MediaAnalytics/papers/nips16_npairmetriclearning.pdf">Improved Deep Metric Learning with Multi-class N-pair Loss Objective</a></p>
-<h2 id="proxyncaloss">ProxyNCALoss</h2>
+<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">NPairsLoss</span><span class="p">(</span><span class="n">l2_reg_weight</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>l2_reg_weight</strong>: The regularization weight for the L2 norm of the embeddings.</li>
+</ul>
+<h2 id="proxyncaloss">ProxyNCALoss<a class="headerlink" href="#proxyncaloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1703.07464.pdf">No Fuss Distance Metric Learning using Proxies</a></p>
-<h2 id="signaltonoiseratiocontrastiveloss">SignalToNoiseRatioContrastiveLoss</h2>
+<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">ProxyNCALoss</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>num_classes</strong>: The number of classes in your training dataset.</li>
+<li><strong>embedding_size</strong>: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set <em>embedding_size</em> to 512.</li>
+<li><strong>softmax_scale</strong>: See <a href="./#ncaloss">NCALoss</a></li>
+</ul>
+<h2 id="signaltonoiseratiocontrastiveloss">SignalToNoiseRatioContrastiveLoss<a class="headerlink" href="#signaltonoiseratiocontrastiveloss" title="Permanent link">&para;</a></h2>
 <p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Yuan_Signal-To-Noise_Ratio_A_Robust_Distance_Metric_for_Deep_Metric_Learning_CVPR_2019_paper.pdf">Signal-to-Noise Ratio: A Robust Distance Metric for Deep Metric Learning</a></p>
-<h2 id="softtripleloss">SoftTripleLoss</h2>
+<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">SignalToNoiseRatioContrastiveLoss</span><span class="p">(</span><span class="n">pos_margin</span><span class="p">,</span> 
+                                        <span class="n">neg_margin</span><span class="p">,</span> 
+                                        <span class="n">regularizer_weight</span><span class="p">,</span> 
+                                        <span class="n">avg_non_zero_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+                                        <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>pos_margin</strong>: The noise-to-signal ratio over which positive pairs will contribute to the loss.</li>
+<li><strong>neg_margin</strong>: The noise-to-signal ratio under which negative pairs will contribute to the loss.</li>
+<li><strong>regularizer_weight</strong>: The regularizer encourages the embeddings to have zero-mean distributions. </li>
+<li><strong>avg_non_zero_only</strong>: Only pairs that contribute non-zero loss will be used in the final loss. </li>
+</ul>
+<h2 id="softtripleloss">SoftTripleLoss<a class="headerlink" href="#softtripleloss" title="Permanent link">&para;</a></h2>
 <p><a href="http://openaccess.thecvf.com/content_ICCV_2019/papers/Qian_SoftTriple_Loss_Deep_Metric_Learning_Without_Triplet_Sampling_ICCV_2019_paper.pdf">SoftTriple Loss: Deep Metric Learning Without Triplet Sampling</a></p>
-<h2 id="tripletmarginloss">TripletMarginLoss</h2>
+<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">SoftTripleLoss</span><span class="p">(</span><span class="n">embedding_size</span><span class="p">,</span> 
+                    <span class="n">num_classes</span><span class="p">,</span> 
+                    <span class="n">centers_per_class</span><span class="p">,</span> 
+                    <span class="n">la</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> 
+                    <span class="n">gamma</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> 
+                    <span class="n">reg_weight</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> 
+                    <span class="n">margin</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> 
+                    <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>embedding_size</strong>: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set <em>embedding_size</em> to 512.</li>
+<li><strong>num_classes</strong>: The number of classes in your training dataset.</li>
+<li><strong>centers_per_class</strong>: The number of weight vectors per class. (The regular cross entropy loss has 1 center per class.)</li>
+<li><strong>la</strong>: The exponent multiplier in the loss's softmax expression. (This is the inverse of the softmax temperature.)</li>
+<li><strong>gamma</strong>: The similarity-to-centers multiplier.</li>
+<li><strong>reg_weight</strong>: The regularization weight which encourages class centers to be close to each other.</li>
+<li><strong>margin</strong>: The margin in the expression e^(similarities - margin).</li>
+</ul>
+<h2 id="tripletmarginloss">TripletMarginLoss<a class="headerlink" href="#tripletmarginloss" title="Permanent link">&para;</a></h2>
+<div class="codehilite"><pre><span></span><span class="n">lossses</span><span class="o">.</span><span class="n">TripletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> 
+                        <span class="n">distance_norm</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> 
+                        <span class="n">power</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
+                        <span class="n">swap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
+                        <span class="n">smooth_loss</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
+                        <span class="n">avg_non_zero_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+                        <span class="n">triplets_per_anchor</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> 
+                        <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>margin</strong>: The desired difference between the anchor-positive distance and the anchor-negative distance.</li>
+<li><strong>distance_norm</strong>: The norm used when calculating distance between embeddings</li>
+<li><strong>power</strong>: Each pair's loss will be raised to this power.</li>
+<li><strong>swap</strong>: Use the positive-negative distance instead of anchor-negative distance, if it violates the margin more.</li>
+<li><strong>smooth_loss</strong>: Use the log-exp version of the triplet loss</li>
+<li><strong>avg_non_zero_only</strong>: Only triplets that contribute non-zero loss will be used in the final loss.</li>
+<li><strong>triplets_per_anchor</strong>: The number of triplets per element to sample within a batch. Can be an integer or the string "all". For example, if your batch size is 128, and triplets_per_anchor is 100, then 12800 triplets will be sampled. If triplets_per_anchor is "all", then all possible triplets in the batch will be used.</li>
+</ul>
                 
                   
                 
@@ -644,6 +831,20 @@
             </div>
           </a>
         
+        
+          <a href="../miners/" title="Miners" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Next
+                </span>
+                Miners
+              </span>
+            </div>
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
+            </div>
+          </a>
         
       </nav>
     </div>

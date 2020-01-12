@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="pytorch_metric_learning",
-    version="0.9.56",
+    version="0.9.57",
     author="Kevin Musgrave",
     author_email="tkm45@cornell.edu",
     description="A flexible and extensible metric learning library, written in PyTorch.",
@@ -18,7 +18,7 @@ setuptools.setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    python_requires='>=3.7',
+    python_requires='>=3.0',
     install_requires=[
           'torch',
           'torchvision',

@@ -1,6 +1,8 @@
 # PyTorch Metric Learning
 [![PyPI Status](https://badge.fury.io/py/pytorch-metric-learning.svg)](https://badge.fury.io/py/pytorch-metric-learning)
 
+[![PyPI Status](https://img.shields.io/pypi/dm/pytorch-metric-learning)](https://pypistats.org/packages/pytorch-metric-learning)
+
 ## Documentation
 [View the documentation here](https://kevinmusgrave.github.io/pytorch_metric_learning/)
 
@@ -8,7 +10,7 @@
 1. Ease of use
    - Add metric learning to your application with just 2 lines of code in your training loop.  
    - Mine pairs and triplets with a single function call. 
-2. Flexiblity
+2. Flexibility
    - Mix and match losses, miners, and trainers in ways that other libraries don't allow.
 
 ## Installation:

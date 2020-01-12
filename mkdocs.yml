@@ -1,0 +1,16 @@
+site_name: PyTorch Metric Learning
+nav:
+    - Home: index.md
+    - Losses: losses.md
+    - Miners: miners.md
+theme:
+  name: 'material'
+  palette:
+    primary: 'red'
+    accent: 'red'
+markdown_extensions:
+  - codehilite
+  - toc:
+      permalink: true
+repo_name: 'KevinMusgrave/pytorch_metric_learning'
+repo_url: 'https://github.com/KevinMusgrave/pytorch_metric_learning'

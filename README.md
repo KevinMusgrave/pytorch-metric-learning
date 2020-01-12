@@ -1,39 +1,40 @@
 # PyTorch Metric Learning
 [![PyPI Status](https://badge.fury.io/py/pytorch-metric-learning.svg)](https://badge.fury.io/py/pytorch-metric-learning)
 
-## [Benchmark results (in progress)](https://drive.google.com/open?id=1Y_stkiqlHA7HTMNrhyPCnYhR0oevphRR): 
-- [Spreadsheet #1: Train/val 50/50](https://docs.google.com/spreadsheets/d/1kiJ5rKmneQvnYKpVO9vBFdMDNx-yLcXV2wbDXlb-SB8/edit?usp=sharing)
-- [Spreadsheet #2: 4-fold cross validation, test on 2nd-half of classes](https://docs.google.com/spreadsheets/d/1brUBishNxmld-KLDAJewIc43A4EVZk3gY6yKe8OIKbY/edit?usp=sharing)
+## Documentation
+[View the documentation here](https://kevinmusgrave.github.io/pytorch_metric_learning/)
 
-## See [powerful_benchmarker](https://github.com/KevinMusgrave/powerful_benchmarker/) to use the benchmarking tool.
-
-## Why use this library?
-1. Flexibility
-   - In this library, the various aspects of metric-learning are "dis-entangled" such that they can be mixed and matched in ways that other libraries don't allow. For example, in this library, you can use a cascaded-embeddings training method, with the multi-similarity loss, distance-weighted miner, and a classifier layer.  
-2. Modularity
-   - The function types are completely independent of each other, so you can import just the functions that suit your application. For instance, you might want to use a mining function by itself, to get access to the information it provides about your embedding space. 
+## Benefits of this library
+1. Ease of use
+   - Add metric learning to your application with just 2 lines of code in your training loop.  
+   - Mine pairs and triplets with a single function call. 
+2. Flexiblity
+   - Mix and match losses, miners, and trainers in ways that other libraries don't allow.
 
 ## Installation:
 ```
 pip install pytorch_metric_learning
 ```
 
+## Benchmark results
+See [powerful_benchmarker](https://github.com/KevinMusgrave/powerful_benchmarker/) to view benchmark results and to use the benchmarking tool.
+
 ## Currently implemented classes:
 ### [Loss functions](https://github.com/KevinMusgrave/pytorch_metric_learning/tree/master/pytorch_metric_learning/losses):
-- [**AngularLoss**](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/losses/angular_loss.py) ([Deep Metric Learning with Angular Loss](https://arxiv.org/pdf/1708.01682.pdf))
-- [**ArcFaceLoss**](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/losses/arcface_loss.py) ([ArcFace: Additive Angular Margin Loss for Deep Face Recognition](https://arxiv.org/pdf/1801.07698.pdf))
-- [**ContrastiveLoss**](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/losses/contrastive_loss.py)
-- [**FastAPLoss**](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/losses/fast_ap_loss.py) ([Deep Metric Learning to Rank](http://openaccess.thecvf.com/content_CVPR_2019/papers/Cakir_Deep_Metric_Learning_to_Rank_CVPR_2019_paper.pdf))
-- [**GeneralizedLiftedStructureLoss**](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/losses/lifted_structure_loss.py)
-- [**MarginLoss**](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/losses/margin_loss.py) ([Sampling Matters in Deep Embedding Learning](https://arxiv.org/pdf/1706.07567.pdf))
-- [**MultiSimilarityLoss**](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/losses/multi_similarity_loss.py) ([Multi-Similarity Loss with General Pair Weighting for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf))
-- [**NCALoss**](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/losses/nca_loss.py) ([Neighbourhood Components Analysis](https://www.cs.toronto.edu/~hinton/absps/nca.pdf))
-- [**NormalizedSoftmaxLoss**](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/losses/normalized_softmax_loss.py) ([Classification is a Strong Baseline for DeepMetric Learning](https://arxiv.org/pdf/1811.12649.pdf))
-- [**NPairsLoss**](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/losses/n_pairs_loss.py) ([Improved Deep Metric Learning with Multi-class N-pair Loss Objective](http://www.nec-labs.com/uploads/images/Department-Images/MediaAnalytics/papers/nips16_npairmetriclearning.pdf))
-- [**ProxyNCALoss**](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/losses/proxy_losses.py) ([No Fuss Distance Metric Learning using Proxies](https://arxiv.org/pdf/1703.07464.pdf))
-- [**SignalToNoiseRatioContrastiveLoss**](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/losses/signal_to_noise_ratio_losses.py) ([Signal-to-Noise Ratio: A Robust Distance Metric for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Yuan_Signal-To-Noise_Ratio_A_Robust_Distance_Metric_for_Deep_Metric_Learning_CVPR_2019_paper.pdf))
-- [**SoftTripleLoss**](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/losses/soft_triple_loss.py) ([SoftTriple Loss: Deep Metric Learning Without Triplet Sampling](http://openaccess.thecvf.com/content_ICCV_2019/papers/Qian_SoftTriple_Loss_Deep_Metric_Learning_Without_Triplet_Sampling_ICCV_2019_paper.pdf))
-- [**TripletMarginLoss**](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/losses/triplet_margin_loss.py)
+- [**AngularLoss**](https://kevinmusgrave.github.io/pytorch_metric_learning/losses/#angularloss) ([Deep Metric Learning with Angular Loss](https://arxiv.org/pdf/1708.01682.pdf))
+- [**ArcFaceLoss**](https://kevinmusgrave.github.io/pytorch_metric_learning/losses/#arcfaceloss) ([ArcFace: Additive Angular Margin Loss for Deep Face Recognition](https://arxiv.org/pdf/1801.07698.pdf))
+- [**ContrastiveLoss**](https://kevinmusgrave.github.io/pytorch_metric_learning/losses/#contrastiveloss)
+- [**FastAPLoss**](https://kevinmusgrave.github.io/pytorch_metric_learning/losses/#fastaploss) ([Deep Metric Learning to Rank](http://openaccess.thecvf.com/content_CVPR_2019/papers/Cakir_Deep_Metric_Learning_to_Rank_CVPR_2019_paper.pdf))
+- [**GeneralizedLiftedStructureLoss**](https://kevinmusgrave.github.io/pytorch_metric_learning/losses/#generalizedliftedstructureloss)
+- [**MarginLoss**](https://kevinmusgrave.github.io/pytorch_metric_learning/losses/#marginloss) ([Sampling Matters in Deep Embedding Learning](https://arxiv.org/pdf/1706.07567.pdf))
+- [**MultiSimilarityLoss**](https://kevinmusgrave.github.io/pytorch_metric_learning/losses/#multisimilarityloss) ([Multi-Similarity Loss with General Pair Weighting for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf))
+- [**NCALoss**](https://kevinmusgrave.github.io/pytorch_metric_learning/losses/#ncaloss) ([Neighbourhood Components Analysis](https://www.cs.toronto.edu/~hinton/absps/nca.pdf))
+- [**NormalizedSoftmaxLoss**](https://kevinmusgrave.github.io/pytorch_metric_learning/losses/#normalizedsoftmaxloss) ([Classification is a Strong Baseline for DeepMetric Learning](https://arxiv.org/pdf/1811.12649.pdf))
+- [**NPairsLoss**](https://kevinmusgrave.github.io/pytorch_metric_learning/losses/#npairsloss) ([Improved Deep Metric Learning with Multi-class N-pair Loss Objective](http://www.nec-labs.com/uploads/images/Department-Images/MediaAnalytics/papers/nips16_npairmetriclearning.pdf))
+- [**ProxyNCALoss**](https://kevinmusgrave.github.io/pytorch_metric_learning/losses/#proxyncaloss) ([No Fuss Distance Metric Learning using Proxies](https://arxiv.org/pdf/1703.07464.pdf))
+- [**SignalToNoiseRatioContrastiveLoss**](https://kevinmusgrave.github.io/pytorch_metric_learning/losses/#signaltonoiseratiocontrastiveloss) ([Signal-to-Noise Ratio: A Robust Distance Metric for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Yuan_Signal-To-Noise_Ratio_A_Robust_Distance_Metric_for_Deep_Metric_Learning_CVPR_2019_paper.pdf))
+- [**SoftTripleLoss**](https://kevinmusgrave.github.io/pytorch_metric_learning/losses/#softtripleloss) ([SoftTriple Loss: Deep Metric Learning Without Triplet Sampling](http://openaccess.thecvf.com/content_ICCV_2019/papers/Qian_SoftTriple_Loss_Deep_Metric_Learning_Without_Triplet_Sampling_ICCV_2019_paper.pdf))
+- [**TripletMarginLoss**](https://kevinmusgrave.github.io/pytorch_metric_learning/losses/#tripletmarginloss)
 - **more to be added**
 
 ### [Mining functions](https://github.com/KevinMusgrave/pytorch_metric_learning/tree/master/pytorch_metric_learning/miners):

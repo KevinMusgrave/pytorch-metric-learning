@@ -1,8 +1,26 @@
-# PyTorch Metric Learning
-[![PyPI Status](https://badge.fury.io/py/pytorch-metric-learning.svg)](https://badge.fury.io/py/pytorch-metric-learning)
+<h1 align="center">
+PyTorch Metric Learning
+</h2>
+<p align="center">
+ <a href="https://badge.fury.io/py/pytorch-metric-learning">
+     <img alt="PyPi version" src="https://badge.fury.io/py/pytorch-metric-learning.svg">
+ </a>
+ 
+<a href="https://pypistats.org/packages/pytorch-metric-learning">
+     <img alt="PyPi stats" src="https://img.shields.io/pypi/dm/pytorch-metric-learning">
+ </a>
 
-[![PyPI Status](https://img.shields.io/pypi/dm/pytorch-metric-learning)](https://pypistats.org/packages/pytorch-metric-learning)
-
+</p>
+ <p align="center">
+<a href="https://github.com/KevinMusgrave/pytorch_metric_learning/commits/master">
+     <img alt="License" src="https://img.shields.io/github/commit-activity/m/KevinMusgrave/pytorch_metric_learning">
+ </a>
+ 
+<a href="https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/LICENSE">
+     <img alt="License" src="https://img.shields.io/github/license/KevinMusgrave/pytorch_metric_learning">
+ </a>
+</p>
+ 
 ## Documentation
 [View the documentation here](https://kevinmusgrave.github.io/pytorch_metric_learning/)
 

@@ -40,7 +40,7 @@ pip install pytorch_metric_learning
 See [powerful_benchmarker](https://github.com/KevinMusgrave/powerful_benchmarker/) to view benchmark results and to use the benchmarking tool.
 
 ## Currently implemented classes:
-### [Loss functions](https://github.com/KevinMusgrave/pytorch_metric_learning/tree/master/pytorch_metric_learning/losses):
+### [Loss functions](https://kevinmusgrave.github.io/pytorch_metric_learning/losses):
 - [**AngularLoss**](https://kevinmusgrave.github.io/pytorch_metric_learning/losses/#angularloss) ([Deep Metric Learning with Angular Loss](https://arxiv.org/pdf/1708.01682.pdf))
 - [**ArcFaceLoss**](https://kevinmusgrave.github.io/pytorch_metric_learning/losses/#arcfaceloss) ([ArcFace: Additive Angular Margin Loss for Deep Face Recognition](https://arxiv.org/pdf/1801.07698.pdf))
 - [**ContrastiveLoss**](https://kevinmusgrave.github.io/pytorch_metric_learning/losses/#contrastiveloss)
@@ -57,28 +57,28 @@ See [powerful_benchmarker](https://github.com/KevinMusgrave/powerful_benchmarker
 - [**TripletMarginLoss**](https://kevinmusgrave.github.io/pytorch_metric_learning/losses/#tripletmarginloss)
 - **more to be added**
 
-### [Mining functions](https://github.com/KevinMusgrave/pytorch_metric_learning/tree/master/pytorch_metric_learning/miners):
-- [**AngularMiner**](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/miners/angular_miner.py)
-- [**BatchHardMiner**](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/miners/batch_hard_miner.py) ([In Defense of the Triplet Loss for Person Re-Identification](https://arxiv.org/pdf/1703.07737.pdf))
-- [**DistanceWeightedMiner**](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/miners/distance_weighted_miner.py) ([Sampling Matters in Deep Embedding Learning](https://arxiv.org/pdf/1706.07567.pdf))
-- [**HDCMiner**](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/miners/hdc_miner.py) ([Hard-Aware Deeply Cascaded Embedding](http://openaccess.thecvf.com/content_ICCV_2017/papers/Yuan_Hard-Aware_Deeply_Cascaded_ICCV_2017_paper.pdf))
-- [**MaximumLossMiner**](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/miners/maximum_loss_miner.py)
-- [**MultiSimilarityMiner**](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/miners/multi_similarity_miner.py) ([Multi-Similarity Loss with General Pair Weighting for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf))
-- [**PairMarginMiner**](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/miners/pair_margin_miner.py)
-- [**TripletMarginMiner**](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/miners/triplet_margin_miner.py)
+### [Mining functions](https://kevinmusgrave.github.io/pytorch_metric_learning/miners):
+- [**AngularMiner**](https://kevinmusgrave.github.io/pytorch_metric_learning/miners/#angularminer)
+- [**BatchHardMiner**](https://kevinmusgrave.github.io/pytorch_metric_learning/miners/#batchhardminer) ([In Defense of the Triplet Loss for Person Re-Identification](https://arxiv.org/pdf/1703.07737.pdf))
+- [**DistanceWeightedMiner**](https://kevinmusgrave.github.io/pytorch_metric_learning/miners/#distanceweightedminer) ([Sampling Matters in Deep Embedding Learning](https://arxiv.org/pdf/1706.07567.pdf))
+- [**HDCMiner**](https://kevinmusgrave.github.io/pytorch_metric_learning/miners/#hdcminer) ([Hard-Aware Deeply Cascaded Embedding](http://openaccess.thecvf.com/content_ICCV_2017/papers/Yuan_Hard-Aware_Deeply_Cascaded_ICCV_2017_paper.pdf))
+- [**MaximumLossMiner**](https://kevinmusgrave.github.io/pytorch_metric_learning/miners/#maximumlossminer)
+- [**MultiSimilarityMiner**](https://kevinmusgrave.github.io/pytorch_metric_learning/miners/#multisimilarityminer) ([Multi-Similarity Loss with General Pair Weighting for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf))
+- [**PairMarginMiner**](https://kevinmusgrave.github.io/pytorch_metric_learning/miners/#pairmarginminer)
+- [**TripletMarginMiner**](https://kevinmusgrave.github.io/pytorch_metric_learning/miners/#tripletmarginminer)
 - **more to be added**
 
-### [Samplers](https://github.com/KevinMusgrave/pytorch_metric_learning/tree/master/pytorch_metric_learning/samplers):
-- [**MPerClassSampler**](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/samplers/m_per_class_sampler.py)
-- [**FixedSetOfTriplets**](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/samplers/fixed_set_of_triplets.py)
+### [Samplers](https://kevinmusgrave.github.io/pytorch_metric_learning/samplers):
+- [**MPerClassSampler**](https://kevinmusgrave.github.io/pytorch_metric_learning/samplers/#mperclasssampler)
+- [**FixedSetOfTriplets**](https://kevinmusgrave.github.io/pytorch_metric_learning/samplers/#fixedsetoftriplets)
 - **more to be added**
 
-### [Training methods](https://github.com/KevinMusgrave/pytorch_metric_learning/tree/master/pytorch_metric_learning/trainers):
-- [**MetricLossOnly**](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/trainers/metric_loss_only.py)
-- [**TrainWithClassifier**](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/trainers/train_with_classifier.py)
-- [**CascadedEmbeddings**](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/trainers/cascaded_embeddings.py) ([Hard-Aware Deeply Cascaded Embedding](http://openaccess.thecvf.com/content_ICCV_2017/papers/Yuan_Hard-Aware_Deeply_Cascaded_ICCV_2017_paper.pdf))
-- [**DeepAdversarialMetricLearning**](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/trainers/deep_adversarial_metric_learning.py) ([Deep Adversarial Metric Learning](http://openaccess.thecvf.com/content_cvpr_2018/papers/Duan_Deep_Adversarial_Metric_CVPR_2018_paper.pdf))
-- [**UnsupervisedEmbeddingsUsingAugmentations**](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/trainers/unsupervised_embeddings_using_augmentations.py)
+### [Training methods](https://kevinmusgrave.github.io/pytorch_metric_learning/trainers):
+- [**MetricLossOnly**](https://kevinmusgrave.github.io/pytorch_metric_learning/trainers/#metriclossonly)
+- [**TrainWithClassifier**](https://kevinmusgrave.github.io/pytorch_metric_learning/trainers/#trainwithclassifier)
+- [**CascadedEmbeddings**](https://kevinmusgrave.github.io/pytorch_metric_learning/trainers/#cascadedembeddings) ([Hard-Aware Deeply Cascaded Embedding](http://openaccess.thecvf.com/content_ICCV_2017/papers/Yuan_Hard-Aware_Deeply_Cascaded_ICCV_2017_paper.pdf))
+- [**DeepAdversarialMetricLearning**](https://kevinmusgrave.github.io/pytorch_metric_learning/trainers/#deepadversarialmetriclearning) ([Deep Adversarial Metric Learning](http://openaccess.thecvf.com/content_cvpr_2018/papers/Duan_Deep_Adversarial_Metric_CVPR_2018_paper.pdf))
+- [**UnsupervisedEmbeddingsUsingAugmentations**](https://kevinmusgrave.github.io/pytorch_metric_learning/trainers/#unsupervisedembeddingsusingaugmentations)
 - **more to be added**
 
 ### [Testing methods](https://github.com/KevinMusgrave/pytorch_metric_learning/tree/master/pytorch_metric_learning/testers):

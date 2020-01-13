@@ -85,6 +85,10 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
+      <a href="#trainers" tabindex="1" class="md-skip">
+        Skip to content
+      </a>
+    
     
       <header class="md-header" data-md-component="header">
   <nav class="md-header-nav md-grid">
@@ -271,10 +275,76 @@
     
     <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
     
+      
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Trainers
+      </label>
     
     <a href="./" title="Trainers" class="md-nav__link md-nav__link--active">
       Trainers
     </a>
+    
+      
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#basetrainer" class="md-nav__link">
+    BaseTrainer
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#metriclossonly" class="md-nav__link">
+    MetricLossOnly
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#trainwithclassifier" class="md-nav__link">
+    TrainWithClassifier
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cascadedembeddings" class="md-nav__link">
+    CascadedEmbeddings
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deepadversarialmetriclearning" class="md-nav__link">
+    DeepAdversarialMetricLearning
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#unsupervisedembeddingsusingaugmentations" class="md-nav__link">
+    UnsupervisedEmbeddingsUsingAugmentations
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
     
   </li>
 
@@ -310,6 +380,72 @@
               </div>
             
             
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#basetrainer" class="md-nav__link">
+    BaseTrainer
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#metriclossonly" class="md-nav__link">
+    MetricLossOnly
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#trainwithclassifier" class="md-nav__link">
+    TrainWithClassifier
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cascadedembeddings" class="md-nav__link">
+    CascadedEmbeddings
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#deepadversarialmetriclearning" class="md-nav__link">
+    DeepAdversarialMetricLearning
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#unsupervisedembeddingsusingaugmentations" class="md-nav__link">
+    UnsupervisedEmbeddingsUsingAugmentations
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
           
           <div class="md-content">
             <article class="md-content__inner md-typeset">
@@ -318,9 +454,209 @@
                   <a href="https://github.com/KevinMusgrave/pytorch_metric_learning/edit/master/docs/trainers.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                  <h1>Trainers</h1>
-                
-                <p>Docs coming soon</p>
+                <h1 id="trainers">Trainers<a class="headerlink" href="#trainers" title="Permanent link">&para;</a></h1>
+<p>Trainers exist in this library because some metric learning algorithms are more than just loss or mining functions. Some algorithms require additional networks, data augmentations, learning rate schedules etc. The goal of the trainers module is to provide access to these type of metric learning algorithms. </p>
+<p>In general, trainers are used as follows:</p>
+<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">trainers</span>
+<span class="n">t</span> <span class="o">=</span> <span class="n">trainers</span><span class="o">.</span><span class="n">SomeTrainingFunction</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="n">t</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+</pre></div>
+
+
+<h2 id="basetrainer">BaseTrainer<a class="headerlink" href="#basetrainer" title="Permanent link">&para;</a></h2>
+<p>All trainers extend this class and therefore inherit its <em>__init__</em> arguments.</p>
+<div class="codehilite"><pre><span></span><span class="n">trainers</span><span class="o">.</span><span class="n">BaseTrainer</span><span class="p">(</span><span class="n">models</span><span class="p">,</span>
+                    <span class="n">optimizers</span><span class="p">,</span>
+                    <span class="n">batch_size</span><span class="p">,</span>
+                    <span class="n">loss_funcs</span><span class="p">,</span>
+                    <span class="n">mining_funcs</span><span class="p">,</span>
+                    <span class="n">iterations_per_epoch</span><span class="p">,</span>
+                    <span class="n">dataset</span><span class="p">,</span>
+                    <span class="n">data_device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">loss_weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">label_mapper</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">sampler</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">collate_fn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">record_keeper</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">lr_schedulers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">gradient_clippers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">freeze_trunk_batchnorm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">label_hierarchy_level</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                    <span class="n">dataloader_num_workers</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+                    <span class="n">data_and_label_getter</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</pre></div>
+
+
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>models</strong>: A dictionary of the form: <ul>
+<li>{"trunk": trunk_model, "embedder": embedder_model}</li>
+</ul>
+</li>
+<li><strong>optimizers</strong>: A dictionary mapping strings to optimizers. The base class does not require any specific keys. For example, you could provide an empty dictionary, in which case no optimization will happen. Or you could provide just an optimizer for your trunk_model. But most likely, you'll want to pass in: <ul>
+<li>{"trunk_optimizer": trunk_optimizer, "embedder_optimizer": embedder_optimizer}.</li>
+</ul>
+</li>
+<li><strong>batch_size</strong>: The number of elements that are retrieved at each iteration.</li>
+<li><strong>loss_funcs</strong>: A dictionary mapping strings to loss functions. The required keys depend on the training method, but all methods are likely to require at least: <ul>
+<li>{"metric_loss": loss_func}.</li>
+</ul>
+</li>
+<li><strong>mining_funcs</strong>: A dictionary mapping strings to mining functions. Pass in an empty dictionary, or one or more of the following keys: <ul>
+<li>{"pre_gradient_miner": mining_func1, "post_gradient_miner": mining_func2}</li>
+</ul>
+</li>
+<li><strong>iterations_per_epoch</strong>: In this library, epochs are just a measure of the number of iterations that have passed. So _iterations_per_epoch is what actually defines what an "epoch" is.</li>
+<li><strong>dataset</strong>: The dataset you want to train on. Note that training methods do not perform validation, so do not pass in your validation or test set.</li>
+<li><strong>data_device</strong>: The device that you want to put batches of data on. If not specified, the trainer will put the data on any available GPUs.</li>
+<li><strong>loss_weights</strong>: A dictionary mapping loss names to numbers. Each loss will be multiplied by the corresponding value in the dictionary. If not specified, then no loss weighting will occur.</li>
+<li><strong>label_mapper</strong>: A function that takes in a label and returns another label. For example, it might be useful to move a set of labels ranging from 100-200 to a range of 0-100, in which case you could pass in <code>lambda x: x-100</code>. 
+If not specified, then the original labels are used.</li>
+<li><strong>sampler</strong>: The sampler used by the dataloader. If not specified, then random sampling will be used.</li>
+<li><strong>collate_fn</strong>: The collate function used by the dataloader.</li>
+<li><strong>record_keeper</strong>: An optional record_keeper object. <em>record_keeper</em> is a useful package for logging data during training and testing. You can use trainers without <em>record_keeper</em>, but if you'd like to use it, then <code>pip install record_keeper</code> and visit <a href="https://github.com/KevinMusgrave/record_keeper">the record_keeper repo</a> to learn more.</li>
+<li><strong>lr_scheduers</strong>: A dictionary of PyTorch learning rate schedulers. Each scheduler will be stepped at the end of every epoch.</li>
+<li><strong>gradient_clippers</strong>: A dictionary of gradient clipping functions. Each function will be called before the optimizers.</li>
+<li><strong>freeze_trunk_batchnorm</strong>: If True, then the BatchNorm parameters of the trunk model will be frozen during training.</li>
+<li><strong>label_hierarchy_level</strong>: If each sample in your dataset has multiple labels, then this integer argument can be used to select which "level" to use. This assumes that your labels are "2-dimensional" with shape (num_samples, num_hierarchy_levels).</li>
+<li><strong>dataloader_num_workers</strong>: The number of processes your dataloader will use to load data.</li>
+<li><strong>data_and_label_getter</strong>: A function that takes the output of your dataset's <em>__getitem__</em> function, and returns a tuple of (data, labels). If None, then it is assumed that <em>__getitem__</em> returns (data, labels). </li>
+</ul>
+<h2 id="metriclossonly">MetricLossOnly<a class="headerlink" href="#metriclossonly" title="Permanent link">&para;</a></h2>
+<p>This trainer just computes a metric loss from the output of your embedder network.</p>
+<div class="codehilite"><pre><span></span><span class="n">trainers</span><span class="o">.</span><span class="n">MetricLossOnly</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+
+<p><strong>Requirements</strong>:</p>
+<ul>
+<li><strong>models</strong>: Must have the following form:<ul>
+<li>{"trunk": trunk_model, "embedder": embedder_model}</li>
+</ul>
+</li>
+<li><strong>loss_funcs</strong>: Must have the following form:<ul>
+<li>{"metric_loss": loss_func}</li>
+</ul>
+</li>
+</ul>
+<h2 id="trainwithclassifier">TrainWithClassifier<a class="headerlink" href="#trainwithclassifier" title="Permanent link">&para;</a></h2>
+<p>This trainer is for the case where your architecture is trunk -&gt; embedder -&gt; classifier. It applies a metric loss to the output of the embedder network, and a classification loss to the output of the classifier network.</p>
+<div class="codehilite"><pre><span></span><span class="n">trainers</span><span class="o">.</span><span class="n">TrainWithClassifier</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+
+<p><strong>Requirements</strong>:</p>
+<ul>
+<li><strong>models</strong>: Must have the following form: <ul>
+<li>{"trunk": trunk_model, "embedder": embedder_model, "classifier": classifier_model}</li>
+</ul>
+</li>
+<li><strong>loss_funcs</strong>: Must have the following form:<ul>
+<li>{"metric_loss": loss_func1, "classifier_loss": loss_func2}</li>
+</ul>
+</li>
+</ul>
+<h2 id="cascadedembeddings">CascadedEmbeddings<a class="headerlink" href="#cascadedembeddings" title="Permanent link">&para;</a></h2>
+<p>This trainer is a generalization of <a href="http://openaccess.thecvf.com/content_ICCV_2017/papers/Yuan_Hard-Aware_Deeply_Cascaded_ICCV_2017_paper.pdf">Hard-Aware Deeply Cascaded Embedding</a>. It splits the output of your embedder network, computing a separate loss for each section. In other words, the output of your embedder should be the concatenation of your cascaded models.</p>
+<div class="codehilite"><pre><span></span><span class="n">trainers</span><span class="o">.</span><span class="n">CascadedEmbeddings</span><span class="p">(</span><span class="n">embedding_sizes</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li>embedding_sizes: A list of integers, which represent the size of the output of each cascaded model.</li>
+</ul>
+<p><strong>Requirements</strong>:</p>
+<ul>
+<li>
+<p><strong>models</strong>: Must have the following form:</p>
+<ul>
+<li>{"trunk": trunk_model, "embedder": embedder_model}<ul>
+<li>Optionally include key:values of the form "classifier_%d": classifier_model_%d. The integer appended to "classifier_" represents the cascaded model that the classifier will be appended to. For example, if the dictionary has classifier_0 and classifier_2, then the 0th and 2nd cascaded models will have classifier_model_0 and classifier_model_2 appended to them.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>loss_funcs</strong>: Must have the following form:</p>
+<ul>
+<li>{"metric_loss_%d": metric_loss_func_%d}<ul>
+<li>Optionally include key:values of the form "classifier_loss_%d": classifier_loss_func_%d. The appended integer represents which cascaded model the loss applies to.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>mining_funcs</strong>: Must have the following form:</p>
+<ul>
+<li>{"post_gradient_miner_%d": mining_func_%d}
+    *Optionally include "pre_gradient_miner": pre_gradient_miner</li>
+</ul>
+</li>
+</ul>
+<h2 id="deepadversarialmetriclearning">DeepAdversarialMetricLearning<a class="headerlink" href="#deepadversarialmetriclearning" title="Permanent link">&para;</a></h2>
+<p>This is an implementation of <a href="http://openaccess.thecvf.com/content_cvpr_2018/papers/Duan_Deep_Adversarial_Metric_CVPR_2018_paper.pdf">Deep Adversarial Metric Learning</a></p>
+<div class="codehilite"><pre><span></span><span class="n">trainers</span><span class="o">.</span><span class="n">DeepAdversarialMetricLearning</span><span class="p">(</span><span class="n">metric_alone_epochs</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                    <span class="n">g_alone_epochs</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                    <span class="n">g_triplets_per_anchor</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                                    <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</pre></div>
+
+
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>metric_alone_epochs</strong>: At the beginning of training, this many epochs will consist of only the metric_loss.</li>
+<li><strong>g_alone_epochs</strong>: After metric_alone_epochs, this many epochs will consist of only the adversarial generator loss.</li>
+<li><strong>g_triplets_per_anchor</strong>: The number of real triplets per sample that should be passed into the generator. For each real triplet, the generator will output a synthetic triplet.</li>
+</ul>
+<p><strong>Requirements</strong>:</p>
+<ul>
+<li>
+<p><strong>models</strong>: Must have the following form:</p>
+<ul>
+<li>{"trunk": trunk_model, "embedder": embedder_model}<ul>
+<li>Optionally include "classifier": classifier_model</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>loss_funcs</strong>: Must have the following form:</p>
+<ul>
+<li>{"metric_loss": metric_loss, "g_adv_loss": g_adv_loss, "synth_loss": synth_loss}<ul>
+<li>Optionally include "classifier_loss": classifier_loss</li>
+<li>metric_loss applies to the embeddings of real data.</li>
+<li>g_adv_loss is the adversarial generator loss. <strong>Currently, only TripletMarginLoss and AngularLoss are supported</strong></li>
+<li>synth_loss applies to the embeddings of the synthetic generator triplets. <strong>Currently, only TripletMarginLoss and AngularLoss are supported</strong></li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>loss_weights</strong>: Must be one of the following:</p>
+<ul>
+<li>None</li>
+<li>{"metric_loss": weight1, "g_adv_loss": weight2, "synth_loss": weight3, "g_reg_loss": weight4, "g_hard_lss": weight5}<ul>
+<li>Optionally include "classifier_loss": classifier_loss</li>
+<li>"g_reg_loss" and "g_hard_loss" refer to the regularization losses described in the paper.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="unsupervisedembeddingsusingaugmentations">UnsupervisedEmbeddingsUsingAugmentations<a class="headerlink" href="#unsupervisedembeddingsusingaugmentations" title="Permanent link">&para;</a></h2>
+<p>This is an implementation of a general approach that has been used in recent unsupervised learning papers, e.g. <a href="https://arxiv.org/pdf/1904.03436.pdf">Unsupervised Embedding Learning via Invariant and Spreading
+Instance Feature
+</a> and <a href="https://arxiv.org/abs/1911.07072">Unsupervised Deep Metric Learning via Auxiliary Rotation Loss</a>. The idea is that augmented versions of a datapoint should be close to each other in the embedding space.</p>
+<div class="codehilite"><pre><span></span><span class="n">trainers</span><span class="o">.</span><span class="n">UnsupervisedEmbeddingsUsingAugmentations</span><span class="p">(</span><span class="n">transforms</span><span class="p">,</span> <span class="n">data_and_label_setter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>transforms</strong>: A list of transforms. For every sample in a batch, each transform will be applied to the sample. If there are N transforms and the batch size is B, then there will be a total of B*N augmented samples. </li>
+<li><strong>data_and_label_setter</strong>: A function that takes in a tuple of (augmented_data, pseudo_labels) and outputs whatever is expected by self.data_and_label_getter.</li>
+</ul>
                 
                   
                 

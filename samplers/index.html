@@ -85,6 +85,10 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
+      <a href="#samplers" tabindex="1" class="md-skip">
+        Skip to content
+      </a>
+    
     
       <header class="md-header" data-md-component="header">
   <nav class="md-header-nav md-grid">
@@ -259,10 +263,48 @@
     
     <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
     
+      
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Samplers
+      </label>
     
     <a href="./" title="Samplers" class="md-nav__link md-nav__link--active">
       Samplers
     </a>
+    
+      
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#mperclasssampler" class="md-nav__link">
+    MPerClassSampler
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fixedsetoftriplets" class="md-nav__link">
+    FixedSetOfTriplets
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
     
   </li>
 
@@ -310,6 +352,44 @@
               </div>
             
             
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#mperclasssampler" class="md-nav__link">
+    MPerClassSampler
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fixedsetoftriplets" class="md-nav__link">
+    FixedSetOfTriplets
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
           
           <div class="md-content">
             <article class="md-content__inner md-typeset">
@@ -318,9 +398,32 @@
                   <a href="https://github.com/KevinMusgrave/pytorch_metric_learning/edit/master/docs/samplers.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                  <h1>Samplers</h1>
-                
-                <p>Docs coming soon</p>
+                <h1 id="samplers">Samplers<a class="headerlink" href="#samplers" title="Permanent link">&para;</a></h1>
+<p>Samplers are just extensions of the torch.utils.data.Sampler class, i.e. they are passed to a PyTorch Dataloader. The purpose of samplers is to determine how batches should be formed. This is also where any offline pair or triplet miners should exist.</p>
+<h2 id="mperclasssampler">MPerClassSampler<a class="headerlink" href="#mperclasssampler" title="Permanent link">&para;</a></h2>
+<p>At every iteration, this will return <em>m</em> samples per class, assuming that the batch size is a multiple of <em>m</em>. For example, if your dataloader's batch size is 100, and <em>m</em> = 5, then 20 classes with 5 samples each will be returned.</p>
+<div class="codehilite"><pre><span></span><span class="n">samplers</span><span class="o">.</span><span class="n">MPerClassSampler</span><span class="p">(</span><span class="n">labels_to_indices</span><span class="p">,</span> <span class="n">m</span><span class="p">,</span> <span class="n">hierarchy_level</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+
+
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>labels_to_indices</strong>: A list of dictionaries, where each dictionary maps labels to lists of indices that have that label. If your dataset has 1 label per element, then the list of dictionaries should contain just 1 dictionary.</li>
+<li><strong>m</strong>: The number of samples per class to fetch at every iteration. If a class has less than m samples, then there will be duplicates in the returned batch.</li>
+<li><strong>hierarchy_level</strong>: This is for multi-label datasets, and it indiates which level of labels will be used to form each batch. The default is 0, because most use-cases will have 1 label per datapoint. But for example, the iNaturalist dataset has 7 labels per datapoint, in which case <em>hierarchy_level</em> could be set to a number between 0 and 6.</li>
+</ul>
+<h2 id="fixedsetoftriplets">FixedSetOfTriplets<a class="headerlink" href="#fixedsetoftriplets" title="Permanent link">&para;</a></h2>
+<p>When initialized, this class creates a fixed set of triplets. This is useful for determining the performance of algorithms in cases where the only ground truth data is a set of triplets.</p>
+<div class="codehilite"><pre><span></span><span class="n">samplers</span><span class="o">.</span><span class="n">FixedSetOfTriplets</span><span class="p">(</span><span class="n">labels_to_indices</span><span class="p">,</span> <span class="n">num_triplets</span><span class="p">,</span> <span class="n">hierarchy_level</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+
+
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>labels_to_indices</strong>: A list of dictionaries, where each dictionary maps labels to lists of indices that have that label. If your dataset has N labels per datapoint, then the list of dictionaries should contain N dictionaries.</li>
+<li><strong>num_triplets</strong>: The number of triplets to create.</li>
+<li><strong>hierarchy_level</strong>: This is for multi-label datasets, and it indiates which level of labels will be used to form each batch. The default is 0, because most use-cases will have 1 label per datapoint. But for example, the iNaturalist dataset has 7 labels per datapoint, in which case <em>hierarchy_level</em> could be set to a number between 0 and 6.</li>
+</ul>
                 
                   
                 

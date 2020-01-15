@@ -60,7 +60,7 @@ pip install pytorch-metric-learning
 ```
 
 ## Benchmark results
-See [powerful_benchmarker](https://github.com/KevinMusgrave/powerful_benchmarker/) to view benchmark results and to use the benchmarking tool.
+See [powerful-benchmarker](https://github.com/KevinMusgrave/powerful-benchmarker/) to view benchmark results and to use the benchmarking tool.
 
 ## Currently implemented classes:
 ### [Loss functions](https://kevinmusgrave.github.io/pytorch-metric-learning/losses):

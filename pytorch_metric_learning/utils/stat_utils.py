@@ -1,5 +1,10 @@
 #! /usr/bin/env python3
-import faiss
+import sys
+try:
+    import faiss
+except ModuleNotFoundError:
+    logging.error("The testing module requires faiss. You can install it with the command 'conda install faiss-gpu'. Learn more at https://github.com/facebookresearch/faiss/blob/master/INSTALL.md")
+    sys.exit()
 import torch
 import logging
 import numpy as np

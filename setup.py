@@ -5,10 +5,10 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="pytorch_metric_learning",
-    version="0.9.57",
+    version="0.9.58",
     author="Kevin Musgrave",
     author_email="tkm45@cornell.edu",
-    description="A flexible and extensible metric learning library, written in PyTorch.",
+    description="The easiest way to use metric learning in your application. Modular, flexible, and extensible. Written in PyTorch.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/KevinMusgrave/pytorch_metric_learning",
@@ -20,9 +20,10 @@ setuptools.setup(
     ],
     python_requires='>=3.0',
     install_requires=[
+		  'numpy',
+		  'scikit-learn'
+		  'tqdm',
           'torch',
-          'torchvision',
-          'numpy',
-          'tqdm'
+          'torchvision'
     ],
 )

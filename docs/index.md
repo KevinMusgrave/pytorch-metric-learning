@@ -1,8 +1,15 @@
 # PyTorch Metric Learning
 
-## Installation
+## Installation:
+Conda:
+```
+conda install pytorch_metric_learning -c metric-learning
+```
 
-	pip install pytorch_metric_learning
+Pip:
+```
+pip install pytorch_metric_learning
+```
 
 ## Overview
 Let’s try the vanilla [triplet margin loss](losses/#tripletmarginloss). In all examples, _embeddings_ is assumed to be of size (N, embedding_size), and _labels_ is of size (N).

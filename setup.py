@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="pytorch_metric_learning",
-    version="0.9.58",
+    version="0.9.61",
     author="Kevin Musgrave",
     author_email="tkm45@cornell.edu",
     description="The easiest way to use metric learning in your application. Modular, flexible, and extensible. Written in PyTorch.",
@@ -21,9 +21,9 @@ setuptools.setup(
     python_requires='>=3.0',
     install_requires=[
 		  'numpy',
-		  'scikit-learn'
+		  'scikit-learn',
 		  'tqdm',
           'torch',
-          'torchvision'
+          'torchvision',
     ],
 )

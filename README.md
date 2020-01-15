@@ -9,18 +9,35 @@ PyTorch Metric Learning
 <a href="https://pypistats.org/packages/pytorch-metric-learning">
      <img alt="PyPi stats" src="https://img.shields.io/pypi/dm/pytorch-metric-learning">
  </a>
+ 
+
+</p>
+ <p align="center">
+<a href="https://anaconda.org/metric-learning/pytorch_metric_learning">
+     <img alt="Anaconda version" src="https://anaconda.org/metric-learning/pytorch_metric_learning/badges/version.svg">
+ </a>
+ 
+<a href="https://anaconda.org/metric-learning/pytorch_metric_learning">
+     <img alt="Anaconda last updated" src="https://anaconda.org/metric-learning/pytorch_metric_learning/badges/latest_release_date.svg">
+ </a>
+
+<a href="https://anaconda.org/metric-learning/pytorch_metric_learning">
+     <img alt="Anaconda downloads" src="https://anaconda.org/metric-learning/pytorch_metric_learning/badges/downloads.svg">
+ </a>
+</p>
 
 </p>
  <p align="center">
 <a href="https://github.com/KevinMusgrave/pytorch_metric_learning/commits/master">
-     <img alt="License" src="https://img.shields.io/github/commit-activity/m/KevinMusgrave/pytorch_metric_learning">
+     <img alt="Commit activity" src="https://img.shields.io/github/commit-activity/m/KevinMusgrave/pytorch_metric_learning">
  </a>
  
 <a href="https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/LICENSE">
      <img alt="License" src="https://img.shields.io/github/license/KevinMusgrave/pytorch_metric_learning">
  </a>
 </p>
- 
+
+
 ## Documentation
 [View the documentation here](https://kevinmusgrave.github.io/pytorch_metric_learning/)
 

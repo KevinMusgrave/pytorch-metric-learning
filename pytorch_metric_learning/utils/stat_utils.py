@@ -1,12 +1,11 @@
 #! /usr/bin/env python3
 import sys
+import logging
 try:
     import faiss
 except ModuleNotFoundError:
-    logging.error("The testing module requires faiss. You can install it with the command 'conda install faiss-gpu'. Learn more at https://github.com/facebookresearch/faiss/blob/master/INSTALL.md")
-    sys.exit()
+    logging.error("The testing module requires faiss. You can install it with the command 'conda install faiss-gpu -c pytorch'. Learn more at https://github.com/facebookresearch/faiss/blob/master/INSTALL.md")
 import torch
-import logging
 import numpy as np
 
 # modified from https://github.com/facebookresearch/deepcluster

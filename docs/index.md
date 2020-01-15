@@ -3,12 +3,12 @@
 ## Installation:
 Conda:
 ```
-conda install pytorch_metric_learning -c metric-learning
+conda install pytorch-metric-learning -c metric-learning
 ```
 
 Pip:
 ```
-pip install pytorch_metric_learning
+pip install pytorch-metric-learning
 ```
 
 ## Overview

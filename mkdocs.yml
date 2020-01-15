@@ -12,5 +12,5 @@ markdown_extensions:
   - codehilite
   - toc:
       permalink: true
-repo_name: 'KevinMusgrave/pytorch_metric_learning'
-repo_url: 'https://github.com/KevinMusgrave/pytorch_metric_learning'
+repo_name: 'KevinMusgrave/pytorch-metric-learning'
+repo_url: 'https://github.com/KevinMusgrave/pytorch-metric-learning'

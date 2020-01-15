@@ -13,33 +13,33 @@ PyTorch Metric Learning
 
 </p>
  <p align="center">
-<a href="https://anaconda.org/metric-learning/pytorch_metric_learning">
-     <img alt="Anaconda version" src="https://anaconda.org/metric-learning/pytorch_metric_learning/badges/version.svg">
+<a href="https://anaconda.org/metric-learning/pytorch-metric-learning">
+     <img alt="Anaconda version" src="https://anaconda.org/metric-learning/pytorch-metric-learning/badges/version.svg">
  </a>
  
-<a href="https://anaconda.org/metric-learning/pytorch_metric_learning">
-     <img alt="Anaconda last updated" src="https://anaconda.org/metric-learning/pytorch_metric_learning/badges/latest_release_date.svg">
+<a href="https://anaconda.org/metric-learning/pytorch-metric-learning">
+     <img alt="Anaconda last updated" src="https://anaconda.org/metric-learning/pytorch-metric-learning/badges/latest_release_date.svg">
  </a>
 
-<a href="https://anaconda.org/metric-learning/pytorch_metric_learning">
-     <img alt="Anaconda downloads" src="https://anaconda.org/metric-learning/pytorch_metric_learning/badges/downloads.svg">
+<a href="https://anaconda.org/metric-learning/pytorch-metric-learning">
+     <img alt="Anaconda downloads" src="https://anaconda.org/metric-learning/pytorch-metric-learning/badges/downloads.svg">
  </a>
 </p>
 
 </p>
  <p align="center">
-<a href="https://github.com/KevinMusgrave/pytorch_metric_learning/commits/master">
-     <img alt="Commit activity" src="https://img.shields.io/github/commit-activity/m/KevinMusgrave/pytorch_metric_learning">
+<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/commits/master">
+     <img alt="Commit activity" src="https://img.shields.io/github/commit-activity/m/KevinMusgrave/pytorch-metric-learning">
  </a>
  
-<a href="https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/LICENSE">
-     <img alt="License" src="https://img.shields.io/github/license/KevinMusgrave/pytorch_metric_learning">
+<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/LICENSE">
+     <img alt="License" src="https://img.shields.io/github/license/KevinMusgrave/pytorch-metric-learning">
  </a>
 </p>
 
 
 ## Documentation
-[View the documentation here](https://kevinmusgrave.github.io/pytorch_metric_learning/)
+[View the documentation here](https://kevinmusgrave.github.io/pytorch-metric-learning/)
 
 ## Benefits of this library
 1. Ease of use
@@ -51,62 +51,62 @@ PyTorch Metric Learning
 ## Installation:
 Conda:
 ```
-conda install pytorch_metric_learning -c metric-learning
+conda install pytorch-metric-learning -c metric-learning
 ```
 
 Pip:
 ```
-pip install pytorch_metric_learning
+pip install pytorch-metric-learning
 ```
 
 ## Benchmark results
 See [powerful_benchmarker](https://github.com/KevinMusgrave/powerful_benchmarker/) to view benchmark results and to use the benchmarking tool.
 
 ## Currently implemented classes:
-### [Loss functions](https://kevinmusgrave.github.io/pytorch_metric_learning/losses):
-- [**AngularLoss**](https://kevinmusgrave.github.io/pytorch_metric_learning/losses/#angularloss) ([Deep Metric Learning with Angular Loss](https://arxiv.org/pdf/1708.01682.pdf))
-- [**ArcFaceLoss**](https://kevinmusgrave.github.io/pytorch_metric_learning/losses/#arcfaceloss) ([ArcFace: Additive Angular Margin Loss for Deep Face Recognition](https://arxiv.org/pdf/1801.07698.pdf))
-- [**ContrastiveLoss**](https://kevinmusgrave.github.io/pytorch_metric_learning/losses/#contrastiveloss)
-- [**FastAPLoss**](https://kevinmusgrave.github.io/pytorch_metric_learning/losses/#fastaploss) ([Deep Metric Learning to Rank](http://openaccess.thecvf.com/content_CVPR_2019/papers/Cakir_Deep_Metric_Learning_to_Rank_CVPR_2019_paper.pdf))
-- [**GeneralizedLiftedStructureLoss**](https://kevinmusgrave.github.io/pytorch_metric_learning/losses/#generalizedliftedstructureloss)
-- [**MarginLoss**](https://kevinmusgrave.github.io/pytorch_metric_learning/losses/#marginloss) ([Sampling Matters in Deep Embedding Learning](https://arxiv.org/pdf/1706.07567.pdf))
-- [**MultiSimilarityLoss**](https://kevinmusgrave.github.io/pytorch_metric_learning/losses/#multisimilarityloss) ([Multi-Similarity Loss with General Pair Weighting for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf))
-- [**NCALoss**](https://kevinmusgrave.github.io/pytorch_metric_learning/losses/#ncaloss) ([Neighbourhood Components Analysis](https://www.cs.toronto.edu/~hinton/absps/nca.pdf))
-- [**NormalizedSoftmaxLoss**](https://kevinmusgrave.github.io/pytorch_metric_learning/losses/#normalizedsoftmaxloss) ([Classification is a Strong Baseline for DeepMetric Learning](https://arxiv.org/pdf/1811.12649.pdf))
-- [**NPairsLoss**](https://kevinmusgrave.github.io/pytorch_metric_learning/losses/#npairsloss) ([Improved Deep Metric Learning with Multi-class N-pair Loss Objective](http://www.nec-labs.com/uploads/images/Department-Images/MediaAnalytics/papers/nips16_npairmetriclearning.pdf))
-- [**ProxyNCALoss**](https://kevinmusgrave.github.io/pytorch_metric_learning/losses/#proxyncaloss) ([No Fuss Distance Metric Learning using Proxies](https://arxiv.org/pdf/1703.07464.pdf))
-- [**SignalToNoiseRatioContrastiveLoss**](https://kevinmusgrave.github.io/pytorch_metric_learning/losses/#signaltonoiseratiocontrastiveloss) ([Signal-to-Noise Ratio: A Robust Distance Metric for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Yuan_Signal-To-Noise_Ratio_A_Robust_Distance_Metric_for_Deep_Metric_Learning_CVPR_2019_paper.pdf))
-- [**SoftTripleLoss**](https://kevinmusgrave.github.io/pytorch_metric_learning/losses/#softtripleloss) ([SoftTriple Loss: Deep Metric Learning Without Triplet Sampling](http://openaccess.thecvf.com/content_ICCV_2019/papers/Qian_SoftTriple_Loss_Deep_Metric_Learning_Without_Triplet_Sampling_ICCV_2019_paper.pdf))
-- [**TripletMarginLoss**](https://kevinmusgrave.github.io/pytorch_metric_learning/losses/#tripletmarginloss)
+### [Loss functions](https://kevinmusgrave.github.io/pytorch-metric-learning/losses):
+- [**AngularLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#angularloss) ([Deep Metric Learning with Angular Loss](https://arxiv.org/pdf/1708.01682.pdf))
+- [**ArcFaceLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#arcfaceloss) ([ArcFace: Additive Angular Margin Loss for Deep Face Recognition](https://arxiv.org/pdf/1801.07698.pdf))
+- [**ContrastiveLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#contrastiveloss)
+- [**FastAPLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#fastaploss) ([Deep Metric Learning to Rank](http://openaccess.thecvf.com/content_CVPR_2019/papers/Cakir_Deep_Metric_Learning_to_Rank_CVPR_2019_paper.pdf))
+- [**GeneralizedLiftedStructureLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#generalizedliftedstructureloss)
+- [**MarginLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#marginloss) ([Sampling Matters in Deep Embedding Learning](https://arxiv.org/pdf/1706.07567.pdf))
+- [**MultiSimilarityLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#multisimilarityloss) ([Multi-Similarity Loss with General Pair Weighting for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf))
+- [**NCALoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#ncaloss) ([Neighbourhood Components Analysis](https://www.cs.toronto.edu/~hinton/absps/nca.pdf))
+- [**NormalizedSoftmaxLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#normalizedsoftmaxloss) ([Classification is a Strong Baseline for DeepMetric Learning](https://arxiv.org/pdf/1811.12649.pdf))
+- [**NPairsLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#npairsloss) ([Improved Deep Metric Learning with Multi-class N-pair Loss Objective](http://www.nec-labs.com/uploads/images/Department-Images/MediaAnalytics/papers/nips16_npairmetriclearning.pdf))
+- [**ProxyNCALoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#proxyncaloss) ([No Fuss Distance Metric Learning using Proxies](https://arxiv.org/pdf/1703.07464.pdf))
+- [**SignalToNoiseRatioContrastiveLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#signaltonoiseratiocontrastiveloss) ([Signal-to-Noise Ratio: A Robust Distance Metric for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Yuan_Signal-To-Noise_Ratio_A_Robust_Distance_Metric_for_Deep_Metric_Learning_CVPR_2019_paper.pdf))
+- [**SoftTripleLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#softtripleloss) ([SoftTriple Loss: Deep Metric Learning Without Triplet Sampling](http://openaccess.thecvf.com/content_ICCV_2019/papers/Qian_SoftTriple_Loss_Deep_Metric_Learning_Without_Triplet_Sampling_ICCV_2019_paper.pdf))
+- [**TripletMarginLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#tripletmarginloss)
 - **more to be added**
 
-### [Mining functions](https://kevinmusgrave.github.io/pytorch_metric_learning/miners):
-- [**AngularMiner**](https://kevinmusgrave.github.io/pytorch_metric_learning/miners/#angularminer)
-- [**BatchHardMiner**](https://kevinmusgrave.github.io/pytorch_metric_learning/miners/#batchhardminer) ([In Defense of the Triplet Loss for Person Re-Identification](https://arxiv.org/pdf/1703.07737.pdf))
-- [**DistanceWeightedMiner**](https://kevinmusgrave.github.io/pytorch_metric_learning/miners/#distanceweightedminer) ([Sampling Matters in Deep Embedding Learning](https://arxiv.org/pdf/1706.07567.pdf))
-- [**HDCMiner**](https://kevinmusgrave.github.io/pytorch_metric_learning/miners/#hdcminer) ([Hard-Aware Deeply Cascaded Embedding](http://openaccess.thecvf.com/content_ICCV_2017/papers/Yuan_Hard-Aware_Deeply_Cascaded_ICCV_2017_paper.pdf))
-- [**MaximumLossMiner**](https://kevinmusgrave.github.io/pytorch_metric_learning/miners/#maximumlossminer)
-- [**MultiSimilarityMiner**](https://kevinmusgrave.github.io/pytorch_metric_learning/miners/#multisimilarityminer) ([Multi-Similarity Loss with General Pair Weighting for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf))
-- [**PairMarginMiner**](https://kevinmusgrave.github.io/pytorch_metric_learning/miners/#pairmarginminer)
-- [**TripletMarginMiner**](https://kevinmusgrave.github.io/pytorch_metric_learning/miners/#tripletmarginminer)
+### [Mining functions](https://kevinmusgrave.github.io/pytorch-metric-learning/miners):
+- [**AngularMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#angularminer)
+- [**BatchHardMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#batchhardminer) ([In Defense of the Triplet Loss for Person Re-Identification](https://arxiv.org/pdf/1703.07737.pdf))
+- [**DistanceWeightedMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#distanceweightedminer) ([Sampling Matters in Deep Embedding Learning](https://arxiv.org/pdf/1706.07567.pdf))
+- [**HDCMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#hdcminer) ([Hard-Aware Deeply Cascaded Embedding](http://openaccess.thecvf.com/content_ICCV_2017/papers/Yuan_Hard-Aware_Deeply_Cascaded_ICCV_2017_paper.pdf))
+- [**MaximumLossMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#maximumlossminer)
+- [**MultiSimilarityMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#multisimilarityminer) ([Multi-Similarity Loss with General Pair Weighting for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf))
+- [**PairMarginMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#pairmarginminer)
+- [**TripletMarginMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#tripletmarginminer)
 - **more to be added**
 
-### [Samplers](https://kevinmusgrave.github.io/pytorch_metric_learning/samplers):
-- [**MPerClassSampler**](https://kevinmusgrave.github.io/pytorch_metric_learning/samplers/#mperclasssampler)
-- [**FixedSetOfTriplets**](https://kevinmusgrave.github.io/pytorch_metric_learning/samplers/#fixedsetoftriplets)
+### [Samplers](https://kevinmusgrave.github.io/pytorch-metric-learning/samplers):
+- [**MPerClassSampler**](https://kevinmusgrave.github.io/pytorch-metric-learning/samplers/#mperclasssampler)
+- [**FixedSetOfTriplets**](https://kevinmusgrave.github.io/pytorch-metric-learning/samplers/#fixedsetoftriplets)
 - **more to be added**
 
-### [Training methods](https://kevinmusgrave.github.io/pytorch_metric_learning/trainers):
-- [**MetricLossOnly**](https://kevinmusgrave.github.io/pytorch_metric_learning/trainers/#metriclossonly)
-- [**TrainWithClassifier**](https://kevinmusgrave.github.io/pytorch_metric_learning/trainers/#trainwithclassifier)
-- [**CascadedEmbeddings**](https://kevinmusgrave.github.io/pytorch_metric_learning/trainers/#cascadedembeddings) ([Hard-Aware Deeply Cascaded Embedding](http://openaccess.thecvf.com/content_ICCV_2017/papers/Yuan_Hard-Aware_Deeply_Cascaded_ICCV_2017_paper.pdf))
-- [**DeepAdversarialMetricLearning**](https://kevinmusgrave.github.io/pytorch_metric_learning/trainers/#deepadversarialmetriclearning) ([Deep Adversarial Metric Learning](http://openaccess.thecvf.com/content_cvpr_2018/papers/Duan_Deep_Adversarial_Metric_CVPR_2018_paper.pdf))
-- [**UnsupervisedEmbeddingsUsingAugmentations**](https://kevinmusgrave.github.io/pytorch_metric_learning/trainers/#unsupervisedembeddingsusingaugmentations)
+### [Training methods](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers):
+- [**MetricLossOnly**](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#metriclossonly)
+- [**TrainWithClassifier**](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#trainwithclassifier)
+- [**CascadedEmbeddings**](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#cascadedembeddings) ([Hard-Aware Deeply Cascaded Embedding](http://openaccess.thecvf.com/content_ICCV_2017/papers/Yuan_Hard-Aware_Deeply_Cascaded_ICCV_2017_paper.pdf))
+- [**DeepAdversarialMetricLearning**](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#deepadversarialmetriclearning) ([Deep Adversarial Metric Learning](http://openaccess.thecvf.com/content_cvpr_2018/papers/Duan_Deep_Adversarial_Metric_CVPR_2018_paper.pdf))
+- [**UnsupervisedEmbeddingsUsingAugmentations**](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#unsupervisedembeddingsusingaugmentations)
 - **more to be added**
 
-### [Testing methods](https://github.com/KevinMusgrave/pytorch_metric_learning/tree/master/pytorch_metric_learning/testers):
-- [**GlobalEmbeddingSpaceTester**](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/testers/global_embedding_space.py)
-- [**WithSameParentLabelTester**](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/testers/with_same_parent_label.py)
+### [Testing methods](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/pytorch-metric-learning/testers):
+- [**GlobalEmbeddingSpaceTester**](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/pytorch-metric-learning/testers/global_embedding_space.py)
+- [**WithSameParentLabelTester**](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/pytorch-metric-learning/testers/with_same_parent_label.py)
 - **more to be added**
 
 ## Overview
@@ -182,16 +182,16 @@ trainer = trainers.DeepAdversarialMetricLearning(
   
 trainer.train(num_epochs=50)
 ```
-See the [examples](https://github.com/KevinMusgrave/pytorch_metric_learning/tree/master/examples) folder for more details.
+See the [examples](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples) folder for more details.
 
 ## Details about losses
-Every loss function extends [BaseMetricLossFunction](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/losses/base_metric_loss_function.py). The three default initialization arguments are:
+Every loss function extends [BaseMetricLossFunction](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/pytorch-metric-learning/losses/base_metric_loss_function.py). The three default initialization arguments are:
 - ```normalize_embeddings```: If True, normalizes embeddings to have Euclidean norm of 1, before computing the loss
 - ```learnable_param_names```: An optional list of strings that specifies which loss parameters you want to convert to nn.Parameter (and therefore make them learnable by using a PyTorch optimizer). If not specified, then no loss parameters will be converted. 
 - ```num_class_per_param```: An optional integer which specifies the size of the learnable parameters listed in learnable_param_names. If not specified, then each nn.Parameter will be of size 1.
 
 ## Details about miners
-Every mining function extends either [BasePreGradientMiner](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/miners/base_miner.py#L84) or [BasePostGradientMiner](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/miners/base_miner.py#L39).
+Every mining function extends either [BasePreGradientMiner](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/pytorch-metric-learning/miners/base_miner.py#L84) or [BasePostGradientMiner](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/pytorch-metric-learning/miners/base_miner.py#L39).
 
 Pre-gradient miners take in a batch of embeddings, and output indices corresponding to a subset of the batch. The idea is to use these miners with torch.no_grad(), and with a large input batch size.
 
@@ -205,7 +205,7 @@ What about miners that keep track of a global set of hard pairs or triplets? The
 Every sampler extends the standard PyTorch [Sampler](https://pytorch.org/docs/stable/data.html#torch.utils.data.Sampler) class that is passed into the Dataloader. Currently, the only implemented sampler is MPerClassSampler, which returns m samples per class, at every iteration.
 
 ## Details about trainers
-Every trainer extends [BaseTrainer](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/trainers/base_trainer.py). The base class takes in a number of arguments:
+Every trainer extends [BaseTrainer](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/pytorch-metric-learning/trainers/base_trainer.py). The base class takes in a number of arguments:
 - ```models```: a dictionary of the form: {"trunk": trunk_model, "embedder": embedder_model}
 - ```optimizers```: a dictionary mapping strings to optimizers. The base class does not require any specific keys. For example, you could provide an empty dictionary, in which case no optimization will happen. Or you could provide just an optimizer for your trunk_model. But most likely, you'll want to pass in {"trunk_optimizer": trunk_optimizer, "embedder_optimizer": embedder_optimizer}.
 - ```batch_size```
@@ -228,7 +228,7 @@ Every trainer extends [BaseTrainer](https://github.com/KevinMusgrave/pytorch_met
 ## Details about testers
 **The testers module requires faiss and scikit-learn. Please install these via pip or conda** 
 
-Every tester extends [BaseTester](https://github.com/KevinMusgrave/pytorch_metric_learning/blob/master/pytorch_metric_learning/testers/base_tester.py). The arguments are:
+Every tester extends [BaseTester](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/pytorch-metric-learning/testers/base_tester.py). The arguments are:
 - ```reference_set```: This specifies from which set the nearest neighbors will be retrieved. 
    - If "compared_to_self", each dataset split will refer to itself to find nearest neighbors. 
    - If "compared_to_sets_combined", each dataset split will refer to all provided splits to find nearest neighbors. 
@@ -250,7 +250,7 @@ After you've initialized the tester, run ```tester.test(dataset_dict, epoch, tru
 Thank you to Ser-Nam Lim at Facebook AI, and my research advisor, Professor Serge Belongie. This project began during my internship at Facebook AI where I received valuable feedback from Ser-Nam, and his team of computer vision and machine learning engineers and research scientists.
 
 ## Citing this library
-If you'd like to cite pytorch_metric_learning in your paper, you can use this bibtex:
+If you'd like to cite pytorch-metric-learning in your paper, you can use this bibtex:
 ```latex
 @misc{Musgrave2019,
   author = {Musgrave, Kevin and Lim, Ser-Nam and Belongie, Serge},
@@ -258,6 +258,6 @@ If you'd like to cite pytorch_metric_learning in your paper, you can use this bi
   year = {2019},
   publisher = {GitHub},
   journal = {GitHub repository},
-  howpublished = {\url{https://github.com/KevinMusgrave/pytorch_metric_learning}},
+  howpublished = {\url{https://github.com/KevinMusgrave/pytorch-metric-learning}},
 }
 ```

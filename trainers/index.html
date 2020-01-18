@@ -474,7 +474,6 @@
                     <span class="n">dataset</span><span class="p">,</span>
                     <span class="n">data_device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">loss_weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                    <span class="n">label_mapper</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">sampler</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">collate_fn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">record_keeper</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -483,7 +482,9 @@
                     <span class="n">freeze_trunk_batchnorm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                     <span class="n">label_hierarchy_level</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                     <span class="n">dataloader_num_workers</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
-                    <span class="n">data_and_label_getter</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+                    <span class="n">data_and_label_getter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">dataset_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">set_min_label_to_zero</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 
 
@@ -509,8 +510,7 @@
 <li><strong>iterations_per_epoch</strong>: In this library, epochs are just a measure of the number of iterations that have passed. So _iterations_per_epoch is what actually defines what an "epoch" is.</li>
 <li><strong>dataset</strong>: The dataset you want to train on. Note that training methods do not perform validation, so do not pass in your validation or test set.</li>
 <li><strong>data_device</strong>: The device that you want to put batches of data on. If not specified, the trainer will put the data on any available GPUs.</li>
-<li><strong>loss_weights</strong>: A dictionary mapping loss names to numbers. Each loss will be multiplied by the corresponding value in the dictionary. If not specified, then no loss weighting will occur.</li>
-<li><strong>label_mapper</strong>: A function that takes in a label and returns another label. For example, it might be useful to move a set of labels ranging from 100-200 to a range of 0-100, in which case you could pass in <code>lambda x: x-100</code>. 
+<li><strong>loss_weights</strong>: A dictionary mapping loss names to numbers. Each loss will be multiplied by the corresponding value in the dictionary. If not specified, then no loss weighting will occur.
 If not specified, then the original labels are used.</li>
 <li><strong>sampler</strong>: The sampler used by the dataloader. If not specified, then random sampling will be used.</li>
 <li><strong>collate_fn</strong>: The collate function used by the dataloader.</li>
@@ -521,6 +521,8 @@ If not specified, then the original labels are used.</li>
 <li><strong>label_hierarchy_level</strong>: If each sample in your dataset has multiple labels, then this integer argument can be used to select which "level" to use. This assumes that your labels are "2-dimensional" with shape (num_samples, num_hierarchy_levels).</li>
 <li><strong>dataloader_num_workers</strong>: The number of processes your dataloader will use to load data.</li>
 <li><strong>data_and_label_getter</strong>: A function that takes the output of your dataset's <em>__getitem__</em> function, and returns a tuple of (data, labels). If None, then it is assumed that <em>__getitem__</em> returns (data, labels). </li>
+<li><strong>dataset_labels</strong>: The labels for your dataset. Can be 1-dimensional (1 label per datapoint) or 2-dimensional, where each row represents a datapoint, and the columns are the multiple labels that the datapoint has. This option needs to be specified only if <em>set_min_label_to_zero</em> is True.</li>
+<li><strong>set_min_label_to_zero</strong>: If True, labels will be mapped such that they represent their rank in the label set. For example, if your dataset has labels 5, 10, 12, 13, then at each iteration, these would become 0, 1, 2, 3. </li>
 </ul>
 <h2 id="metriclossonly">MetricLossOnly<a class="headerlink" href="#metriclossonly" title="Permanent link">&para;</a></h2>
 <p>This trainer just computes a metric loss from the output of your embedder network.</p>
@@ -589,8 +591,10 @@ If not specified, then the original labels are used.</li>
 <li>
 <p><strong>mining_funcs</strong>: Must have the following form:</p>
 <ul>
-<li>{"post_gradient_miner_%d": mining_func_%d}
-    *Optionally include "pre_gradient_miner": pre_gradient_miner</li>
+<li>{"post_gradient_miner_%d": mining_func_%d}<ul>
+<li>Optionally include "pre_gradient_miner": pre_gradient_miner</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

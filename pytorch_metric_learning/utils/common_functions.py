@@ -144,3 +144,41 @@ def get_eval_dataloader(dataset, batch_size, num_workers, collate_fn):
 
 def try_torch_operation(torch_op, input_val):
     return torch_op(input_val) if torch.is_tensor(input_val) else input_val 
+
+
+def get_labels_to_indices(labels):
+    """
+    Creates labels_to_indices, which is a dictionary mapping each label
+    to a numpy array of indices that will be used to index into self.dataset
+    """
+    labels_to_indices = collections.defaultdict(list)
+    for i, label in enumerate(labels):
+        labels_to_indices[label].append(i)
+    for k, v in labels_to_indices.items():
+        labels_to_indices[k] = np.array(v, dtype=np.int)
+    return labels_to_indices
+
+
+def make_label_to_rank_dict(label_set):
+    """
+    Args:
+        label_set: type sequence, a set of integer labels
+                    (no duplicates in the sequence)
+    Returns:
+        A dictionary mapping each label to its numeric rank in the original set
+    """
+    argsorted = list(np.argsort(label_set))
+    return {k: v for k, v in zip(label_set, argsorted)}
+
+
+def get_label_map(labels):
+    # Returns a nested dictionary. 
+    # First level of dictionary represents label hierarchy level.
+    # Second level is the label map for that hierarchy level
+    labels = np.array(labels)
+    if labels.ndim == 2:
+        label_map = {}
+        for hierarchy_level in range(labels.shape[1]):
+            label_map[hierarchy_level] = make_label_to_rank_dict(list(set(labels[:, hierarchy_level])))
+        return label_map
+    return {0: make_label_to_rank_dict(list(set(labels)))} 

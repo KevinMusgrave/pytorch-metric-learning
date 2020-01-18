@@ -21,7 +21,6 @@ trainers.BaseTrainer(models,
 			        dataset,
 			        data_device=None,
 			        loss_weights=None,
-			        label_mapper=None,
 			        sampler=None,
 			        collate_fn=None,
 			        record_keeper=None,
@@ -30,7 +29,9 @@ trainers.BaseTrainer(models,
 			        freeze_trunk_batchnorm=False,
 			        label_hierarchy_level=0,
 			        dataloader_num_workers=32,
-			        data_and_label_getter=None)
+			        data_and_label_getter=None,
+			        dataset_labels=None,
+			        set_min_label_to_zero=True)
 ```
 
 **Parameters**:
@@ -48,7 +49,6 @@ trainers.BaseTrainer(models,
 * **dataset**: The dataset you want to train on. Note that training methods do not perform validation, so do not pass in your validation or test set.
 * **data_device**: The device that you want to put batches of data on. If not specified, the trainer will put the data on any available GPUs.
 * **loss_weights**: A dictionary mapping loss names to numbers. Each loss will be multiplied by the corresponding value in the dictionary. If not specified, then no loss weighting will occur.
-* **label_mapper**: A function that takes in a label and returns another label. For example, it might be useful to move a set of labels ranging from 100-200 to a range of 0-100, in which case you could pass in ```lambda x: x-100```. 
 If not specified, then the original labels are used.
 * **sampler**: The sampler used by the dataloader. If not specified, then random sampling will be used.
 * **collate_fn**: The collate function used by the dataloader.
@@ -59,6 +59,8 @@ If not specified, then the original labels are used.
 * **label_hierarchy_level**: If each sample in your dataset has multiple labels, then this integer argument can be used to select which "level" to use. This assumes that your labels are "2-dimensional" with shape (num_samples, num_hierarchy_levels).
 * **dataloader_num_workers**: The number of processes your dataloader will use to load data.
 * **data_and_label_getter**: A function that takes the output of your dataset's _\_\_getitem\_\__ function, and returns a tuple of (data, labels). If None, then it is assumed that _\_\_getitem\_\__ returns (data, labels). 
+* **dataset_labels**: The labels for your dataset. Can be 1-dimensional (1 label per datapoint) or 2-dimensional, where each row represents a datapoint, and the columns are the multiple labels that the datapoint has. This option needs to be specified only if _set\_min\_label\_to\_zero_ is True.
+* **set_min_label_to_zero**: If True, labels will be mapped such that they represent their rank in the label set. For example, if your dataset has labels 5, 10, 12, 13, then at each iteration, these would become 0, 1, 2, 3. 
 
 ## MetricLossOnly
 This trainer just computes a metric loss from the output of your embedder network.
@@ -110,7 +112,7 @@ trainers.CascadedEmbeddings(embedding_sizes, **kwargs)
 
 * **mining_funcs**: Must have the following form:
 	* {"post_gradient_miner_%d": mining_func_%d}
-		*Optionally include "pre_gradient_miner": pre_gradient_miner
+		* Optionally include "pre_gradient_miner": pre_gradient_miner
 
 ## DeepAdversarialMetricLearning
 This is an implementation of [Deep Adversarial Metric Learning](http://openaccess.thecvf.com/content_cvpr_2018/papers/Duan_Deep_Adversarial_Metric_CVPR_2018_paper.pdf)

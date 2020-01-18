@@ -4,6 +4,7 @@ import torch
 from ..utils import common_functions as c_f, loss_tracker as l_t
 import tqdm
 import logging
+import numpy as np
 
 class BaseTrainer:
     def __init__(
@@ -17,7 +18,6 @@ class BaseTrainer:
         dataset,
         data_device=None,
         loss_weights=None,
-        label_mapper=None,
         sampler=None,
         collate_fn=None,
         record_keeper=None,
@@ -26,14 +26,15 @@ class BaseTrainer:
         freeze_trunk_batchnorm=False,
         label_hierarchy_level=0,
         dataloader_num_workers=32,
-        data_and_label_getter=None
+        data_and_label_getter=None,
+        dataset_labels=None,
+        set_min_label_to_zero=True
     ):
         self.models = models
         self.optimizers = optimizers
         self.batch_size = batch_size
         self.loss_funcs = loss_funcs
         self.mining_funcs = mining_funcs
-        self.label_mapper = label_mapper
         self.iterations_per_epoch = iterations_per_epoch
         self.dataset = dataset
         self.data_device = data_device
@@ -47,6 +48,8 @@ class BaseTrainer:
         self.dataloader_num_workers = dataloader_num_workers
         self.loss_weights = loss_weights
         self.data_and_label_getter = data_and_label_getter
+        self.dataset_labels = dataset_labels
+        self.set_min_label_to_zero = set_min_label_to_zero
         self.loss_names = list(self.loss_funcs.keys())
         self.custom_setup()
         self.initialize_data_device()
@@ -55,7 +58,7 @@ class BaseTrainer:
         self.initialize_dataloader()
         self.initialize_loss_weights()
         self.initialize_data_and_label_getter()
-
+        
     def custom_setup(self):
         pass
 
@@ -179,9 +182,12 @@ class BaseTrainer:
             self.data_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     def initialize_label_mapper(self):
-        if self.label_mapper is None:
-            self.label_mapper = lambda label, hierarchy_level: label
-
+        if not self.set_min_label_to_zero:
+            self.label_mapper = lambda labels, hierarchy_level: labels
+        else:
+            label_map = c_f.get_label_map(self.dataset_labels)
+            self.label_mapper = lambda labels, hierarchy_level: np.array([label_map[hierarchy_level][x] for x in labels], dtype=np.int)
+        
     def initialize_loss_tracker(self):
         self.loss_tracker = l_t.LossTracker(self.loss_names)
         self.losses = self.loss_tracker.losses

@@ -10,10 +10,10 @@ class FixedSetOfTriplets(Sampler):
     triplets, rather than having explicit labels.
     """
 
-    def __init__(self, labels_to_indices, num_triplets, hierarchy_level=0):
-        self.create_fixed_set_of_triplets(
-            labels_to_indices[hierarchy_level], num_triplets
-        )
+    def __init__(self, labels, num_triplets):
+        self.labels_to_indices = c_f.get_labels_to_indices(labels)
+        self.num_triplets = int(num_triplets)
+        self.create_fixed_set_of_triplets()
 
     def __len__(self):
         return self.fixed_set_of_triplets.shape[0] * 3
@@ -23,7 +23,7 @@ class FixedSetOfTriplets(Sampler):
         flattened = self.fixed_set_of_triplets.flatten().tolist()
         return iter(flattened)
 
-    def create_fixed_set_of_triplets(self, labels_to_indices, num_triplets):
+    def create_fixed_set_of_triplets(self):
         """
         This creates self.fixed_set_of_triplets, which is a numpy array of size
         (num_triplets, 3). Each row is a triplet of indices: (a, p, n), where
@@ -31,14 +31,13 @@ class FixedSetOfTriplets(Sampler):
         randomly sampling two classes, then randomly sampling an anchor, positive,
         and negative.
         """
-        num_triplets = int(num_triplets)
-        assert num_triplets > 0
-        self.fixed_set_of_triplets = np.ones((num_triplets, 3), dtype=np.int) * -1
-        label_list = list(labels_to_indices.keys())
-        for i in range(num_triplets):
+        assert self.num_triplets > 0
+        self.fixed_set_of_triplets = np.ones((self.num_triplets, 3), dtype=np.int) * -1
+        label_list = list(self.labels_to_indices.keys())
+        for i in range(self.num_triplets):
             anchor_label, negative_label = c_f.NUMPY_RANDOM_STATE.choice(label_list, size=2, replace=False)
-            anchor_list = labels_to_indices[anchor_label]
-            negative_list = labels_to_indices[negative_label]
+            anchor_list = self.labels_to_indices[anchor_label]
+            negative_list = self.labels_to_indices[negative_label]
             anchor, positive = c_f.safe_random_choice(anchor_list, size=2)
             negative = c_f.NUMPY_RANDOM_STATE.choice(negative_list, replace=False)
             self.fixed_set_of_triplets[i, :] = np.array([anchor, positive, negative])

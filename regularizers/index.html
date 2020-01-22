@@ -36,7 +36,7 @@
     
     
       
-        <title>Utils - PyTorch Metric Learning</title>
+        <title>Regularizers - PyTorch Metric Learning</title>
       
     
     
@@ -85,6 +85,10 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
+      <a href="#regularizers" tabindex="1" class="md-skip">
+        Skip to content
+      </a>
+    
     
       <header class="md-header" data-md-component="header">
   <nav class="md-header-nav md-grid">
@@ -107,7 +111,7 @@
             </span>
             <span class="md-header-nav__topic">
               
-                Utils
+                Regularizers
               
             </span>
           
@@ -252,11 +256,56 @@
       
       
 
+  
 
-  <li class="md-nav__item">
-    <a href="../regularizers/" title="Regularizers" class="md-nav__link">
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+      
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Regularizers
+      </label>
+    
+    <a href="./" title="Regularizers" class="md-nav__link md-nav__link--active">
       Regularizers
     </a>
+    
+      
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#baseweightregularizer" class="md-nav__link">
+    BaseWeightRegularizer
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#regularfaceregularizer" class="md-nav__link">
+    RegularFaceRegularizer
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+    
   </li>
 
     
@@ -300,18 +349,11 @@
       
       
 
-  
 
-
-  <li class="md-nav__item md-nav__item--active">
-    
-    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-    
-    
-    <a href="./" title="Utils" class="md-nav__link md-nav__link--active">
+  <li class="md-nav__item">
+    <a href="../utils/" title="Utils" class="md-nav__link">
       Utils
     </a>
-    
   </li>
 
     
@@ -322,17 +364,72 @@
               </div>
             
             
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#baseweightregularizer" class="md-nav__link">
+    BaseWeightRegularizer
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#regularfaceregularizer" class="md-nav__link">
+    RegularFaceRegularizer
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
           
           <div class="md-content">
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/edit/master/docs/utils.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
+                  <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/edit/master/docs/regularizers.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                  <h1>Utils</h1>
-                
-                <p>Docs coming soon</p>
+                <h1 id="regularizers">Regularizers<a class="headerlink" href="#regularizers" title="Permanent link">&para;</a></h1>
+<p>Regularizers are like helper-loss functions. They might not require any labels or embeddings as input, and might instead operate on weights that are learned by a network or loss function.</p>
+<p>Here is an example when used in conjunction with a compatible loss function:</p>
+<h2 id="baseweightregularizer">BaseWeightRegularizer<a class="headerlink" href="#baseweightregularizer" title="Permanent link">&para;</a></h2>
+<p>Weight regularizers take in a 2-D tensor of weights of size (num_classes, embedding_size).</p>
+<div class="codehilite"><pre><span></span><span class="n">regularizers</span><span class="o">.</span><span class="n">BaseWeightRegularizer</span><span class="p">(</span><span class="n">normalize_weights</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+
+
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>normalize_weights</strong>: If True, weights will be normalized to have a Euclidean norm of 1 before any regularization occurs.</li>
+</ul>
+<h2 id="regularfaceregularizer">RegularFaceRegularizer<a class="headerlink" href="#regularfaceregularizer" title="Permanent link">&para;</a></h2>
+<p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Zhao_RegularFace_Deep_Face_Recognition_via_Exclusive_Regularization_CVPR_2019_paper.pdf">RegularFace: Deep Face Recognition via Exclusive Regularization</a></p>
+<div class="codehilite"><pre><span></span><span class="n">regularizers</span><span class="o">.</span><span class="n">RegularFaceRegularizer</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+
+<p>Extends <a href="./#baseweightregularizer">BaseWeightRegularizer</a></p>
                 
                   
                 
@@ -354,7 +451,7 @@
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid">
         
-          <a href="../testers/" title="Testers" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../miners/" title="Miners" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-flex__cell md-flex__cell--shrink">
               <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
             </div>
@@ -363,11 +460,25 @@
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                Testers
+                Miners
               </span>
             </div>
           </a>
         
+        
+          <a href="../samplers/" title="Samplers" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Next
+                </span>
+                Samplers
+              </span>
+            </div>
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
+            </div>
+          </a>
         
       </nav>
     </div>

@@ -85,7 +85,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#angularminer" tabindex="1" class="md-skip">
+      <a href="#miners" tabindex="1" class="md-skip">
         Skip to content
       </a>
     
@@ -251,6 +251,8 @@
     
     <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
     
+      
+    
     
       <label class="md-nav__link md-nav__link--active" for="__toc">
         Miners
@@ -263,6 +265,8 @@
       
 <nav class="md-nav md-nav--secondary">
   
+  
+    
   
   
     <label class="md-nav__title" for="__toc">Table of contents</label>
@@ -355,6 +359,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../regularizers/" title="Regularizers" class="md-nav__link">
+      Regularizers
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
     <a href="../samplers/" title="Samplers" class="md-nav__link">
       Samplers
     </a>
@@ -410,6 +426,8 @@
                     
 <nav class="md-nav md-nav--secondary">
   
+  
+    
   
   
     <label class="md-nav__title" for="__toc">Table of contents</label>
@@ -504,9 +522,8 @@
                   <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/edit/master/docs/miners.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                  <h1>Miners</h1>
-                
-                <p>Mining functions come in two flavors:</p>
+                <h1 id="miners">Miners<a class="headerlink" href="#miners" title="Permanent link">&para;</a></h1>
+<p>Mining functions come in two flavors:</p>
 <ul>
 <li><strong>pre-gradient miners</strong> output indices corresponding to a subset of the input batch. The idea is to use these miners with torch.no_grad(), and with a large input batch size.</li>
 <li><strong>post-gradient miners</strong> output a tuple of indices: <ul>
@@ -708,13 +725,13 @@
           </a>
         
         
-          <a href="../samplers/" title="Samplers" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../regularizers/" title="Regularizers" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
               <span class="md-flex__ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                Samplers
+                Regularizers
               </span>
             </div>
             <div class="md-flex__cell md-flex__cell--shrink">

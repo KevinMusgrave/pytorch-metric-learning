@@ -372,6 +372,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#weightregularizermixin" class="md-nav__link">
+    WeightRegularizerMixin
+  </a>
+  
+</li>
+      
       
       
       
@@ -391,6 +398,18 @@
   <li class="md-nav__item">
     <a href="../miners/" title="Miners" class="md-nav__link">
       Miners
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../regularizers/" title="Regularizers" class="md-nav__link">
+      Regularizers
     </a>
   </li>
 
@@ -575,6 +594,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#weightregularizermixin" class="md-nav__link">
+    WeightRegularizerMixin
+  </a>
+  
+</li>
+      
       
       
       
@@ -635,6 +661,7 @@
 <li><strong>embedding_size</strong>: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set <em>embedding_size</em> to 512.</li>
 <li><strong>scale</strong>: The exponent multiplier in the loss's softmax expression. (This is the inverse of the softmax temperature.)</li>
 </ul>
+<p>Note: this also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts a <em>regularizer</em> and <em>reg_weight</em> as optional init arguments.</p>
 <h2 id="basemetriclossfunction">BaseMetricLossFunction<a class="headerlink" href="#basemetriclossfunction" title="Permanent link">&para;</a></h2>
 <p>All loss functions extend this class and therefore inherit its <em>__init__</em> parameters.</p>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">BaseMetricLossFunction</span><span class="p">(</span><span class="n">normalize_embeddings</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">num_class_per_param</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">learnable_param_names</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
@@ -760,6 +787,7 @@
 <li><strong>embedding_size</strong>: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set <em>embedding_size</em> to 512.</li>
 <li><strong>num_classes</strong>: The number of classes in your training dataset.</li>
 </ul>
+<p>Note: this also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts a <em>regularizer</em> and <em>reg_weight</em> as optional init arguments.</p>
 <h2 id="npairsloss">NPairsLoss<a class="headerlink" href="#npairsloss" title="Permanent link">&para;</a></h2>
 <p><a href="http://www.nec-labs.com/uploads/images/Department-Images/MediaAnalytics/papers/nips16_npairmetriclearning.pdf">Improved Deep Metric Learning with Multi-class N-pair Loss Objective</a></p>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">NPairsLoss</span><span class="p">(</span><span class="n">l2_reg_weight</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -782,6 +810,7 @@
 <li><strong>embedding_size</strong>: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set <em>embedding_size</em> to 512.</li>
 <li><strong>softmax_scale</strong>: See <a href="./#ncaloss">NCALoss</a></li>
 </ul>
+<p>Note: this also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts a <em>regularizer</em> and <em>reg_weight</em> as optional init arguments.</p>
 <h2 id="signaltonoiseratiocontrastiveloss">SignalToNoiseRatioContrastiveLoss<a class="headerlink" href="#signaltonoiseratiocontrastiveloss" title="Permanent link">&para;</a></h2>
 <p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Yuan_Signal-To-Noise_Ratio_A_Robust_Distance_Metric_for_Deep_Metric_Learning_CVPR_2019_paper.pdf">Signal-to-Noise Ratio: A Robust Distance Metric for Deep Metric Learning</a></p>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">SignalToNoiseRatioContrastiveLoss</span><span class="p">(</span><span class="n">pos_margin</span><span class="p">,</span> 
@@ -823,7 +852,7 @@
 <li><strong>margin</strong>: The margin in the expression e^(similarities - margin).</li>
 </ul>
 <h2 id="tripletmarginloss">TripletMarginLoss<a class="headerlink" href="#tripletmarginloss" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><span class="n">lossses</span><span class="o">.</span><span class="n">TripletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> 
+<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">TripletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> 
                         <span class="n">distance_norm</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> 
                         <span class="n">power</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
                         <span class="n">swap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
@@ -843,6 +872,17 @@
 <li><strong>smooth_loss</strong>: Use the log-exp version of the triplet loss</li>
 <li><strong>avg_non_zero_only</strong>: Only triplets that contribute non-zero loss will be used in the final loss.</li>
 <li><strong>triplets_per_anchor</strong>: The number of triplets per element to sample within a batch. Can be an integer or the string "all". For example, if your batch size is 128, and triplets_per_anchor is 100, then 12800 triplets will be sampled. If triplets_per_anchor is "all", then all possible triplets in the batch will be used.</li>
+</ul>
+<h2 id="weightregularizermixin">WeightRegularizerMixin<a class="headerlink" href="#weightregularizermixin" title="Permanent link">&para;</a></h2>
+<p>Losses can extend this class in addition to BaseMetricLossFunction. You should extend this class if your loss function can make use of a <a href="../regularizers/">weight regularizer</a>.</p>
+<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">WeightRegularizerMixin</span><span class="p">(</span><span class="n">regularizer</span><span class="p">,</span> <span class="n">reg_weight</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>regularizer</strong>: The <a href="../regularizers/">regularizer</a> to apply to the loss's learned weights.</li>
+<li><strong>reg_weight</strong>: The amount the regularization loss will be multiplied by.</li>
 </ul>
                 
                   

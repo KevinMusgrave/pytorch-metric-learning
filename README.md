@@ -91,6 +91,9 @@ See [powerful-benchmarker](https://github.com/KevinMusgrave/powerful-benchmarker
 - [**TripletMarginMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#tripletmarginminer)
 - **more to be added**
 
+### [Regularizers](https://kevinmusgrave.github.io/pytorch-metric-learning/regularizers):
+- [**RegularFaceRegularizer**](https://kevinmusgrave.github.io/pytorch-metric-learning/regularizers/#regularfaceregularizer) ([RegularFace: Deep Face Recognition via Exclusive Regularization](http://openaccess.thecvf.com/content_CVPR_2019/papers/Zhao_RegularFace_Deep_Face_Recognition_via_Exclusive_Regularization_CVPR_2019_paper.pdf))
+
 ### [Samplers](https://kevinmusgrave.github.io/pytorch-metric-learning/samplers):
 - [**MPerClassSampler**](https://kevinmusgrave.github.io/pytorch-metric-learning/samplers/#mperclasssampler)
 - [**FixedSetOfTriplets**](https://kevinmusgrave.github.io/pytorch-metric-learning/samplers/#fixedsetoftriplets)

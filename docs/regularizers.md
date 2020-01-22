@@ -20,5 +20,5 @@ regularizers.BaseWeightRegularizer(normalize_weights=True)
 ```python
 regularizers.RegularFaceRegularizer(**kwargs)
 ```
-Extends [BaseWeightRegularizer](regularizers/baseweightregularizer)
+Extends [BaseWeightRegularizer](regularizers.md#baseweightregularizer)
 

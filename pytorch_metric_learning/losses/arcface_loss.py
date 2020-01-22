@@ -1,11 +1,12 @@
 #! /usr/bin/env python3
 
+from .weight_regularizer_mixin import WeightRegularizerMixin
 from .base_metric_loss_function import BaseMetricLossFunction
 import numpy as np
 import torch
 from ..utils import loss_and_miner_utils as lmu
 
-class ArcFaceLoss(BaseMetricLossFunction):
+class ArcFaceLoss(WeightRegularizerMixin, BaseMetricLossFunction):
     """
     Implementation of https://arxiv.org/pdf/1801.07698.pdf
     """
@@ -34,5 +35,5 @@ class ArcFaceLoss(BaseMetricLossFunction):
         diff = (torch.cos(angle + margin) - cosine_of_target_classes).unsqueeze(1)
         cosine = cosine + (mask*diff)
         unweighted_loss = self.cross_entropy(cosine * self.scale, labels)
-        return torch.mean(unweighted_loss*miner_weights)
+        return torch.mean(unweighted_loss*miner_weights) + self.regularization_loss(self.W.t())
 

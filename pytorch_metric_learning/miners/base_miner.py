@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 
 import torch
-
+from ..utils import common_functions as c_f
 
 class BaseMiner(torch.nn.Module):
     def __init__(self, normalize_embeddings=True):
@@ -37,16 +37,8 @@ class BaseMiner(torch.nn.Module):
         return mining_output
 
     def add_to_recordable_attributes(self, name=None, list_of_names=None):
-        if not hasattr(self, "record_these"):
-            self.record_these = []
-        if name is not None:
-            if name not in self.record_these:
-                self.record_these.append(name)
-            if not hasattr(self, name):
-                setattr(self, name, 0)
-        if list_of_names is not None and isinstance(list_of_names, list):
-            for n in list_of_names:
-                self.add_to_recordable_attributes(name=n)
+        c_f.add_to_recordable_attributes(self, name=name, list_of_names=list_of_names)
+        
 
 class BasePostGradientMiner(BaseMiner):
     """

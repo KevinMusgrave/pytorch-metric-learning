@@ -1,3 +1,4 @@
+# Miners
 Mining functions come in two flavors:
 
 * **pre-gradient miners** output indices corresponding to a subset of the input batch. The idea is to use these miners with torch.no_grad(), and with a large input batch size.

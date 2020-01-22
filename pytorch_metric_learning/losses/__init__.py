@@ -14,3 +14,4 @@ from .proxy_losses import ProxyNCALoss
 from .signal_to_noise_ratio_losses import SignalToNoiseRatioContrastiveLoss
 from .soft_triple_loss import SoftTripleLoss
 from .triplet_margin_loss import TripletMarginLoss
+from .weight_regularizer_mixin import WeightRegularizerMixin

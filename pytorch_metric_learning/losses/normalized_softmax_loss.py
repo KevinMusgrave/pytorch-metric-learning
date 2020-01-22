@@ -1,8 +1,9 @@
+from .weight_regularizer_mixin import WeightRegularizerMixin
 from .base_metric_loss_function import BaseMetricLossFunction
 import torch
 from ..utils import loss_and_miner_utils as lmu
 
-class NormalizedSoftmaxLoss(BaseMetricLossFunction):
+class NormalizedSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
     def __init__(self, temperature, embedding_size, num_classes, **kwargs):
         super().__init__(**kwargs)
         self.temperature = temperature
@@ -14,4 +15,4 @@ class NormalizedSoftmaxLoss(BaseMetricLossFunction):
         normalized_W = torch.nn.functional.normalize(self.W, p=2, dim=0)
         exponent = torch.matmul(embeddings, normalized_W) / self.temperature
         unweighted_loss = self.cross_entropy(exponent, labels)
-        return torch.mean(unweighted_loss*miner_weights) 
+        return torch.mean(unweighted_loss*miner_weights) + self.regularization_loss(self.W.t())

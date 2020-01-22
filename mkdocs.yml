@@ -3,6 +3,7 @@ nav:
     - Home: index.md
     - Losses: losses.md
     - Miners: miners.md
+    - Regularizers: regularizers.md
     - Samplers: samplers.md
     - Trainers: trainers.md
     - Testers: testers.md

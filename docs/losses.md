@@ -44,6 +44,8 @@ losses.ArcFaceLoss(margin, num_classes, embedding_size, scale=64, **kwargs)
 * **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set _embedding\_size_ to 512.
 * **scale**: The exponent multiplier in the loss's softmax expression. (This is the inverse of the softmax temperature.)
 
+Note: this also extends [WeightRegularizerMixin](losses.weightregularizermixin), so it accepts a _regularizer_ and _reg\_weight_ as optional init arguments.
+
 ## BaseMetricLossFunction
 All loss functions extend this class and therefore inherit its _\_\_init\_\__ parameters.
 
@@ -172,6 +174,7 @@ losses.NormalizedSoftmaxLoss(temperature, embedding_size, num_classes, **kwargs)
 * **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set _embedding\_size_ to 512.
 * **num_classes**: The number of classes in your training dataset.
 
+Note: this also extends [WeightRegularizerMixin](losses.weightregularizermixin), so it accepts a _regularizer_ and _reg\_weight_ as optional init arguments.
 
 ## NPairsLoss
 [Improved Deep Metric Learning with Multi-class N-pair Loss Objective](http://www.nec-labs.com/uploads/images/Department-Images/MediaAnalytics/papers/nips16_npairmetriclearning.pdf)
@@ -195,6 +198,7 @@ losses.ProxyNCALoss(num_classes, embedding_size, **kwargs)
 * **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set _embedding\_size_ to 512.
 * **softmax_scale**: See [NCALoss](losses.md#ncaloss)
 
+Note: this also extends [WeightRegularizerMixin](losses.weightregularizermixin), so it accepts a _regularizer_ and _reg\_weight_ as optional init arguments.
 
 ## SignalToNoiseRatioContrastiveLoss
 [Signal-to-Noise Ratio: A Robust Distance Metric for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Yuan_Signal-To-Noise_Ratio_A_Robust_Distance_Metric_for_Deep_Metric_Learning_CVPR_2019_paper.pdf)
@@ -239,7 +243,7 @@ losses.SoftTripleLoss(embedding_size,
 ## TripletMarginLoss
 
 ```python
-lossses.TripletMarginLoss(margin=0.05, 
+losses.TripletMarginLoss(margin=0.05, 
 						distance_norm=2, 
 						power=1, 
 						swap=False, 
@@ -258,3 +262,15 @@ lossses.TripletMarginLoss(margin=0.05,
 * **smooth_loss**: Use the log-exp version of the triplet loss
 * **avg_non_zero_only**: Only triplets that contribute non-zero loss will be used in the final loss.
 * **triplets_per_anchor**: The number of triplets per element to sample within a batch. Can be an integer or the string "all". For example, if your batch size is 128, and triplets_per_anchor is 100, then 12800 triplets will be sampled. If triplets_per_anchor is "all", then all possible triplets in the batch will be used.
+
+
+## WeightRegularizerMixin
+Losses can extend this class in addition to BaseMetricLossFunction. You should extend this class if your loss function can make use of a [weight regularizer](regularizers).
+```python
+losses.WeightRegularizerMixin(regularizer, reg_weight, **kwargs)
+```
+
+**Parameters**:
+
+* **regularizer**: The [regularizer](regularizers) to apply to the loss's learned weights.
+* **reg_weight**: The amount the regularization loss will be multiplied by.

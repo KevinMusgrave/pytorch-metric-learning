@@ -182,3 +182,16 @@ def get_label_map(labels):
             label_map[hierarchy_level] = make_label_to_rank_dict(list(set(labels[:, hierarchy_level])))
         return label_map
     return {0: make_label_to_rank_dict(list(set(labels)))} 
+
+
+def add_to_recordable_attributes(input_obj, name=None, list_of_names=None):
+    if not hasattr(input_obj, "record_these"):
+        input_obj.record_these = []
+    if name is not None:
+        if name not in input_obj.record_these:
+            input_obj.record_these.append(name)
+        if not hasattr(input_obj, name):
+            setattr(input_obj, name, 0)
+    if list_of_names is not None and isinstance(list_of_names, list):
+        for n in list_of_names:
+            add_to_recordable_attributes(input_obj, name=n)

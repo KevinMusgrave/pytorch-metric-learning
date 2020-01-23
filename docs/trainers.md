@@ -31,7 +31,7 @@ trainers.BaseTrainer(models,
 			        dataloader_num_workers=32,
 			        data_and_label_getter=None,
 			        dataset_labels=None,
-			        set_min_label_to_zero=True)
+			        set_min_label_to_zero=False)
 ```
 
 **Parameters**:
@@ -45,14 +45,14 @@ trainers.BaseTrainer(models,
 	* {"metric_loss": loss_func}.
 * **mining_funcs**: A dictionary mapping strings to mining functions. Pass in an empty dictionary, or one or more of the following keys: 
 	* {"pre_gradient_miner": mining_func1, "post_gradient_miner": mining_func2}
-* **iterations_per_epoch**: In this library, epochs are just a measure of the number of iterations that have passed. So _iterations\_per\_epoch is what actually defines what an "epoch" is.
+* **iterations_per_epoch**: In this library, epochs are just a measure of the number of iterations that have passed. So _iterations\_per\_epoch_ is what actually defines what an "epoch" is.
 * **dataset**: The dataset you want to train on. Note that training methods do not perform validation, so do not pass in your validation or test set.
 * **data_device**: The device that you want to put batches of data on. If not specified, the trainer will put the data on any available GPUs.
 * **loss_weights**: A dictionary mapping loss names to numbers. Each loss will be multiplied by the corresponding value in the dictionary. If not specified, then no loss weighting will occur.
 If not specified, then the original labels are used.
 * **sampler**: The sampler used by the dataloader. If not specified, then random sampling will be used.
 * **collate_fn**: The collate function used by the dataloader.
-* **record_keeper**: An optional record_keeper object. _record_keeper_ is a useful package for logging data during training and testing. You can use trainers without _record_keeper_, but if you'd like to use it, then ```pip install record_keeper``` and visit [the record_keeper repo](https://github.com/KevinMusgrave/record_keeper) to learn more.
+* **record_keeper**: An optional record-keeper object. record-keeper is a useful package for logging data during training and testing. You can use trainers without record-keeper, but if you'd like to use it, then ```pip install record-keeper``` and visit [the record-keeper repo](https://github.com/KevinMusgrave/record-keeper) to learn more.
 * **lr_scheduers**: A dictionary of PyTorch learning rate schedulers. Each scheduler will be stepped at the end of every epoch.
 * **gradient_clippers**: A dictionary of gradient clipping functions. Each function will be called before the optimizers.
 * **freeze_trunk_batchnorm**: If True, then the BatchNorm parameters of the trunk model will be frozen during training.
@@ -60,7 +60,7 @@ If not specified, then the original labels are used.
 * **dataloader_num_workers**: The number of processes your dataloader will use to load data.
 * **data_and_label_getter**: A function that takes the output of your dataset's _\_\_getitem\_\__ function, and returns a tuple of (data, labels). If None, then it is assumed that _\_\_getitem\_\__ returns (data, labels). 
 * **dataset_labels**: The labels for your dataset. Can be 1-dimensional (1 label per datapoint) or 2-dimensional, where each row represents a datapoint, and the columns are the multiple labels that the datapoint has. This option needs to be specified only if _set\_min\_label\_to\_zero_ is True.
-* **set_min_label_to_zero**: If True, labels will be mapped such that they represent their rank in the label set. For example, if your dataset has labels 5, 10, 12, 13, then at each iteration, these would become 0, 1, 2, 3. 
+* **set_min_label_to_zero**: If True, labels will be mapped such that they represent their rank in the label set. For example, if your dataset has labels 5, 10, 12, 13, then at each iteration, these would become 0, 1, 2, 3. The default is False.
 
 ## MetricLossOnly
 This trainer just computes a metric loss from the output of your embedder network.
@@ -132,8 +132,9 @@ trainers.DeepAdversarialMetricLearning(metric_alone_epochs=0,
 **Requirements**:
 
 * **models**: Must have the following form:
-	* {"trunk": trunk_model, "embedder": embedder_model}
+	* {"trunk": trunk_model, "embedder": embedder_model, "generator": generator_model}
 		* Optionally include "classifier": classifier_model
+		* The input size to the generator must be 3*(size of trunk_model output). The output size must be (size of trunk_model output).
 
 * **loss_funcs**: Must have the following form:
 	* {"metric_loss": metric_loss, "g_adv_loss": g_adv_loss, "synth_loss": synth_loss}

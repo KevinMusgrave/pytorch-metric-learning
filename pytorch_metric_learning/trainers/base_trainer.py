@@ -28,7 +28,7 @@ class BaseTrainer:
         dataloader_num_workers=32,
         data_and_label_getter=None,
         dataset_labels=None,
-        set_min_label_to_zero=True
+        set_min_label_to_zero=False
     ):
         self.models = models
         self.optimizers = optimizers

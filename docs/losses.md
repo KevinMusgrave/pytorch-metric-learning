@@ -274,3 +274,5 @@ losses.WeightRegularizerMixin(regularizer, reg_weight, **kwargs)
 
 * **regularizer**: The [regularizer](regularizers.md) to apply to the loss's learned weights.
 * **reg_weight**: The amount the regularization loss will be multiplied by.
+
+Extended by: [ArcFaceLoss](losses.md#arcfaceloss), [NormalizedSoftmaxLoss](losses.md#normalizedsoftmaxloss), [ProxyNCALoss](losses.md#proxyncaloss).

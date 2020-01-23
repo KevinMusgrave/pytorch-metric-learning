@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 
 # This is a basic multilayer perceptron
@@ -34,29 +35,42 @@ class Identity(nn.Module):
     def forward(self, x):
         return x
 
+# This code is from https://github.com/KevinMusgrave/powerful_benchmarker
+class ListOfModels(nn.Module):
+    def __init__(self, list_of_models, input_sizes=None, operation_before_concat=None):
+        super().__init__()
+        self.list_of_models = nn.ModuleList(list_of_models)
+        self.input_sizes = input_sizes
+        self.operation_before_concat = (lambda x: x) if not operation_before_concat else operation_before_concat
+        for k in ["mean", "std", "input_space", "input_range"]:
+            setattr(self, k, getattr(list_of_models[0], k, None))
+
+    def forward(self, x):
+        outputs = []
+        if self.input_sizes is None:
+            for m in self.list_of_models:
+                curr_output = self.operation_before_concat(m(x))
+                outputs.append(curr_output)
+        else:
+            s = 0
+            for i, y in enumerate(self.input_sizes):
+                curr_input = x[:, s : s + y]
+                curr_output = self.operation_before_concat(self.list_of_models[i](curr_input))
+                outputs.append(curr_output)
+                s += y
+        return torch.cat(outputs, dim=-1)
+
 
 def get_record_keeper():
-    # record_keeper is a useful package for logging data during training and testing
-    # You can use the trainers and testers without record_keeper.
-    # But if you'd like to install it, then do pip install record_keeper
-    # See more info about it here https://github.com/KevinMusgrave/record_keeper
+    # record-keeper is a useful package for logging data during training and testing
+    # You can use the trainers and testers without record-keeper.
+    # But if you'd like to install it, then do pip install record-keeper
+    # See more info about it here https://github.com/KevinMusgrave/record-keeper
     try:
-        import os
-        import errno
         import record_keeper as record_keeper_package
         from torch.utils.tensorboard import SummaryWriter
-
-        def makedir_if_not_there(dir_name):
-            try:
-                os.makedirs(dir_name)
-            except OSError as e:
-                if e.errno != errno.EEXIST:
-                    raise
-
         pkl_folder = "example_logs"
         tensorboard_folder = "example_tensorboard"
-        makedir_if_not_there(pkl_folder)
-        makedir_if_not_there(tensorboard_folder)
         pickler_and_csver = record_keeper_package.PicklerAndCSVer(pkl_folder)
         tensorboard_writer = SummaryWriter(log_dir=tensorboard_folder)
         return record_keeper_package.RecordKeeper(tensorboard_writer, pickler_and_csver, ["record_these", "learnable_param_names"])

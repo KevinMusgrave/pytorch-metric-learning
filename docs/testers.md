@@ -49,7 +49,7 @@ testers.BaseTester(reference_set="compared_to_self",
 * **size_of_tsne**: The number of samples to use for a t-sne plot (requires a record_keeper). If 0, then no t-sne plot will be created.
 * **data_and_label_getter**: A function that takes the output of your dataset's _\_\_getitem\_\__ function, and returns a tuple of (data, labels). If None, then it is assumed that _\_\_getitem\_\__ returns (data, labels). 
 * **label_hierarchy_level**: If each sample in your dataset has multiple labels, then this integer argument can be used to select which "level" to use. This assumes that your labels are "2-dimensional" with shape (num_samples, num_hierarchy_levels). Leave this at the default value, 0, if your data does not have multiple labels per sample.
-* **record_group_name_prefix**: This argument is simply appended to all tensorboard tags. This is only applicable if you are using a record_keeper, and even then you probably don't need to set it. 
+* **record_group_name_prefix**: This argument is simply prepended to all tensorboard tags. This is only applicable if you are using a record_keeper, and even then you probably don't need to set it. 
 
 ## GlobalEmbeddingSpaceTester
 Computes nearest neighbors by looking at all points in the embedding space. This is probably the tester you are looking for.

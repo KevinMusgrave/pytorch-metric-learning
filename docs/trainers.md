@@ -141,7 +141,7 @@ trainers.DeepAdversarialMetricLearning(metric_alone_epochs=0,
 		* Optionally include "classifier_loss": classifier_loss
 		* metric_loss applies to the embeddings of real data.
 		* g_adv_loss is the adversarial generator loss. **Currently, only TripletMarginLoss and AngularLoss are supported**
-		* synth_loss applies to the embeddings of the synthetic generator triplets. **Currently, only TripletMarginLoss and AngularLoss are supported**
+		* synth_loss applies to the embeddings of the synthetic generator triplets.
 
 * **loss_weights**: Must be one of the following:
 	* None

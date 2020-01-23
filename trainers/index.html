@@ -496,7 +496,7 @@
                     <span class="n">dataloader_num_workers</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
                     <span class="n">data_and_label_getter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">dataset_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                    <span class="n">set_min_label_to_zero</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                    <span class="n">set_min_label_to_zero</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 
 
@@ -519,22 +519,22 @@
 <li>{"pre_gradient_miner": mining_func1, "post_gradient_miner": mining_func2}</li>
 </ul>
 </li>
-<li><strong>iterations_per_epoch</strong>: In this library, epochs are just a measure of the number of iterations that have passed. So _iterations_per_epoch is what actually defines what an "epoch" is.</li>
+<li><strong>iterations_per_epoch</strong>: In this library, epochs are just a measure of the number of iterations that have passed. So <em>iterations_per_epoch</em> is what actually defines what an "epoch" is.</li>
 <li><strong>dataset</strong>: The dataset you want to train on. Note that training methods do not perform validation, so do not pass in your validation or test set.</li>
 <li><strong>data_device</strong>: The device that you want to put batches of data on. If not specified, the trainer will put the data on any available GPUs.</li>
 <li><strong>loss_weights</strong>: A dictionary mapping loss names to numbers. Each loss will be multiplied by the corresponding value in the dictionary. If not specified, then no loss weighting will occur.
 If not specified, then the original labels are used.</li>
 <li><strong>sampler</strong>: The sampler used by the dataloader. If not specified, then random sampling will be used.</li>
 <li><strong>collate_fn</strong>: The collate function used by the dataloader.</li>
-<li><strong>record_keeper</strong>: An optional record_keeper object. <em>record_keeper</em> is a useful package for logging data during training and testing. You can use trainers without <em>record_keeper</em>, but if you'd like to use it, then <code>pip install record_keeper</code> and visit <a href="https://github.com/KevinMusgrave/record_keeper">the record_keeper repo</a> to learn more.</li>
+<li><strong>record_keeper</strong>: An optional record-keeper object. record-keeper is a useful package for logging data during training and testing. You can use trainers without record-keeper, but if you'd like to use it, then <code>pip install record-keeper</code> and visit <a href="https://github.com/KevinMusgrave/record-keeper">the record-keeper repo</a> to learn more.</li>
 <li><strong>lr_scheduers</strong>: A dictionary of PyTorch learning rate schedulers. Each scheduler will be stepped at the end of every epoch.</li>
 <li><strong>gradient_clippers</strong>: A dictionary of gradient clipping functions. Each function will be called before the optimizers.</li>
 <li><strong>freeze_trunk_batchnorm</strong>: If True, then the BatchNorm parameters of the trunk model will be frozen during training.</li>
-<li><strong>label_hierarchy_level</strong>: If each sample in your dataset has multiple labels, then this integer argument can be used to select which "level" to use. This assumes that your labels are "2-dimensional" with shape (num_samples, num_hierarchy_levels).</li>
+<li><strong>label_hierarchy_level</strong>: If each sample in your dataset has multiple labels, then this integer argument can be used to select which "level" to use. This assumes that your labels are "2-dimensional" with shape (num_samples, num_hierarchy_levels). Leave this at the default value, 0, if your data does not have multiple labels per sample.</li>
 <li><strong>dataloader_num_workers</strong>: The number of processes your dataloader will use to load data.</li>
 <li><strong>data_and_label_getter</strong>: A function that takes the output of your dataset's <em>__getitem__</em> function, and returns a tuple of (data, labels). If None, then it is assumed that <em>__getitem__</em> returns (data, labels). </li>
 <li><strong>dataset_labels</strong>: The labels for your dataset. Can be 1-dimensional (1 label per datapoint) or 2-dimensional, where each row represents a datapoint, and the columns are the multiple labels that the datapoint has. This option needs to be specified only if <em>set_min_label_to_zero</em> is True.</li>
-<li><strong>set_min_label_to_zero</strong>: If True, labels will be mapped such that they represent their rank in the label set. For example, if your dataset has labels 5, 10, 12, 13, then at each iteration, these would become 0, 1, 2, 3. </li>
+<li><strong>set_min_label_to_zero</strong>: If True, labels will be mapped such that they represent their rank in the label set. For example, if your dataset has labels 5, 10, 12, 13, then at each iteration, these would become 0, 1, 2, 3. The default is False.</li>
 </ul>
 <h2 id="metriclossonly">MetricLossOnly<a class="headerlink" href="#metriclossonly" title="Permanent link">&para;</a></h2>
 <p>This trainer just computes a metric loss from the output of your embedder network.</p>
@@ -630,8 +630,9 @@ If not specified, then the original labels are used.</li>
 <li>
 <p><strong>models</strong>: Must have the following form:</p>
 <ul>
-<li>{"trunk": trunk_model, "embedder": embedder_model}<ul>
+<li>{"trunk": trunk_model, "embedder": embedder_model, "generator": generator_model}<ul>
 <li>Optionally include "classifier": classifier_model</li>
+<li>The input size to the generator must be 3*(size of trunk_model output). The output size must be (size of trunk_model output).</li>
 </ul>
 </li>
 </ul>

@@ -451,10 +451,15 @@
 </pre></div>
 
 
-<p>And all <a href="miners">mining functions</a> take in embeddings and labels:</p>
+<p>And (almost) all <a href="miners">mining functions</a> take in embeddings and labels:</p>
 <div class="codehilite"><pre><span></span><span class="c1"># From BaseMiner</span>
 <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
 </pre></div>
+
+
+<p>For more complex approaches, like deep adversarial metric learning, use one of the <a href="trainers">trainers</a>.</p>
+<p>To check the accuracy of your model, use one of the <a href="testers">testers</a>. Which tester should you use? Almost definitely <a href="testers/#globalembeddingspacetester">GlobalEmbeddingSpaceTester</a>, because it does what most metric-learning papers do. </p>
+<p>Also check out the <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples">example scripts</a>.</p>
                 
                   
                 

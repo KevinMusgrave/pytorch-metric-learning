@@ -85,6 +85,10 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
+      <a href="#testers" tabindex="1" class="md-skip">
+        Skip to content
+      </a>
+    
     
       <header class="md-header" data-md-component="header">
   <nav class="md-header-nav md-grid">
@@ -295,10 +299,55 @@
     
     <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
     
+      
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Testers
+      </label>
     
     <a href="./" title="Testers" class="md-nav__link md-nav__link--active">
       Testers
     </a>
+    
+      
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#basetester" class="md-nav__link">
+    BaseTester
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#globalembeddingspacetester" class="md-nav__link">
+    GlobalEmbeddingSpaceTester
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#withsameparentlabeltester" class="md-nav__link">
+    WithSameParentLabelTester
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
     
   </li>
 
@@ -322,6 +371,51 @@
               </div>
             
             
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#basetester" class="md-nav__link">
+    BaseTester
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#globalembeddingspacetester" class="md-nav__link">
+    GlobalEmbeddingSpaceTester
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#withsameparentlabeltester" class="md-nav__link">
+    WithSameParentLabelTester
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
           
           <div class="md-content">
             <article class="md-content__inner md-typeset">
@@ -330,9 +424,72 @@
                   <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/edit/master/docs/testers.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                  <h1>Testers</h1>
-                
-                <p>Docs coming soon</p>
+                <h1 id="testers">Testers<a class="headerlink" href="#testers" title="Permanent link">&para;</a></h1>
+<p>Testers take your model and dataset, and compute nearest-neighbor based accuracy metrics. Note that the testers require the <a href="https://github.com/facebookresearch/faiss/blob/master/INSTALL.md">faiss package</a>, which you can install with conda.</p>
+<p>In general, testers are used as follows:</p>
+<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">testers</span>
+<span class="n">t</span> <span class="o">=</span> <span class="n">testers</span><span class="o">.</span><span class="n">SomeTestingFunction</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="n">dataset_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;train&quot;</span><span class="p">:</span> <span class="n">train_dataset</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">:</span> <span class="n">val_dataset</span><span class="p">}</span>
+<span class="n">tester</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="n">dataset_dict</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">trunk</span><span class="p">,</span> <span class="n">embedder</span><span class="p">)</span>
+</pre></div>
+
+
+<h2 id="basetester">BaseTester<a class="headerlink" href="#basetester" title="Permanent link">&para;</a></h2>
+<p>All trainers extend this class and therefore inherit its <em>__init__</em> arguments.</p>
+<div class="codehilite"><pre><span></span><span class="n">testers</span><span class="o">.</span><span class="n">BaseTester</span><span class="p">(</span><span class="n">reference_set</span><span class="o">=</span><span class="s2">&quot;compared_to_self&quot;</span><span class="p">,</span> 
+                    <span class="n">normalize_embeddings</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+                    <span class="n">use_trunk_output</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
+                    <span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> 
+                    <span class="n">dataloader_num_workers</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> 
+                    <span class="n">metric_for_best_epoch</span><span class="o">=</span><span class="s2">&quot;mean_average_r_precision&quot;</span><span class="p">,</span> 
+                    <span class="n">pca</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                    <span class="n">data_device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                    <span class="n">record_keeper</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                    <span class="n">size_of_tsne</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> 
+                    <span class="n">data_and_label_getter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">label_hierarchy_level</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> 
+                    <span class="n">record_group_name_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</pre></div>
+
+
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>reference_set</strong>: Must be one of the following:<ul>
+<li>"compared_to_self": each dataset split will refer to itself to find nearest neighbors.</li>
+<li>"compared_to_sets_combined": each dataset split will refer to all provided splits to find nearest neighbors.</li>
+<li>"compared_to_training_set": each dataset will refer to the training set to find nearest neighbors.</li>
+</ul>
+</li>
+<li><strong>normalize_embeddings</strong>: If True, embeddings will be normalized to Euclidean norm of 1 before nearest neighbors are computed.</li>
+<li><strong>use_trunk_output</strong>: If True, the output of the trunk_model will be used to compute nearest neighbors, i.e. the output of the embedder model will be ignored.</li>
+<li><strong>batch_size</strong>: How many dataset samples to process at each iteration when computing embeddings.</li>
+<li><strong>dataloader_num_workers</strong>: How many processes the dataloader will use.</li>
+<li><strong>metric_for_best_epoch</strong>: The performance metric that will be used to determine which model is best. Must be one of the following:<ul>
+<li>"NMI"</li>
+<li>"precision_at_1"</li>
+<li>"r_precision"</li>
+<li>"mean_average_r_precision"</li>
+<li><strong>Note</strong>: this assumes you call the "test" method multiple times with different models, and that the record_keeper argument is not None. The input to record_keeper must be a <a href="https://github.com/KevinMusgrave/record-keeper">record-keeper object</a>.</li>
+</ul>
+</li>
+<li><strong>pca</strong>: The number of dimensions that your embeddings will be reduced to, using PCA. The default is None, meaning PCA will not be applied.</li>
+<li><strong>data_device</strong>: Which gpu to use for the loaded dataset samples. If None, then the gpu or cpu will be used (whichever is available).</li>
+<li><strong>record_keeper</strong>: If you pass in a <a href="https://github.com/KevinMusgrave/record-keeper">record-keeper object</a>, then accuracies will be logged in tensorboard, CSV, and pickle format. If None, then accuracy results will be logged via the python logging module.</li>
+<li><strong>size_of_tsne</strong>: The number of samples to use for a t-sne plot (requires a record_keeper). If 0, then no t-sne plot will be created.</li>
+<li><strong>data_and_label_getter</strong>: A function that takes the output of your dataset's <em>__getitem__</em> function, and returns a tuple of (data, labels). If None, then it is assumed that <em>__getitem__</em> returns (data, labels). </li>
+<li><strong>label_hierarchy_level</strong>: If each sample in your dataset has multiple labels, then this integer argument can be used to select which "level" to use. This assumes that your labels are "2-dimensional" with shape (num_samples, num_hierarchy_levels). Leave this at the default value, 0, if your data does not have multiple labels per sample.</li>
+<li><strong>record_group_name_prefix</strong>: This argument is simply appended to all tensorboard tags. This is only applicable if you are using a record_keeper, and even then you probably don't need to set it. </li>
+</ul>
+<h2 id="globalembeddingspacetester">GlobalEmbeddingSpaceTester<a class="headerlink" href="#globalembeddingspacetester" title="Permanent link">&para;</a></h2>
+<p>Computes nearest neighbors by looking at all points in the embedding space. This is probably the tester you are looking for.</p>
+<div class="codehilite"><pre><span></span><span class="n">testers</span><span class="o">.</span><span class="n">GlobalEmbeddingSpaceTester</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+
+<h2 id="withsameparentlabeltester">WithSameParentLabelTester<a class="headerlink" href="#withsameparentlabeltester" title="Permanent link">&para;</a></h2>
+<p>This assumes there is a label hierarchy. For each sample, the search space is narrowed by only looking at sibling samples, i.e. samples with the same parent label. For example, consider a dataset with 4 fine-grained classes {cat, dog, car, truck}, and 2 coarse-grained classes {animal, vehicle}. The nearest neighbor search for cats and dogs will consist of animals, and the nearest-neighbor search for cars and trucks will consist of vehicles.</p>
+<div class="codehilite"><pre><span></span><span class="n">testers</span><span class="o">.</span><span class="n">WithSameParentLabelTester</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
                 
                   
                 

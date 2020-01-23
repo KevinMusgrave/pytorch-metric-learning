@@ -478,7 +478,7 @@
 <li><strong>size_of_tsne</strong>: The number of samples to use for a t-sne plot (requires a record_keeper). If 0, then no t-sne plot will be created.</li>
 <li><strong>data_and_label_getter</strong>: A function that takes the output of your dataset's <em>__getitem__</em> function, and returns a tuple of (data, labels). If None, then it is assumed that <em>__getitem__</em> returns (data, labels). </li>
 <li><strong>label_hierarchy_level</strong>: If each sample in your dataset has multiple labels, then this integer argument can be used to select which "level" to use. This assumes that your labels are "2-dimensional" with shape (num_samples, num_hierarchy_levels). Leave this at the default value, 0, if your data does not have multiple labels per sample.</li>
-<li><strong>record_group_name_prefix</strong>: This argument is simply appended to all tensorboard tags. This is only applicable if you are using a record_keeper, and even then you probably don't need to set it. </li>
+<li><strong>record_group_name_prefix</strong>: This argument is simply prepended to all tensorboard tags. This is only applicable if you are using a record_keeper, and even then you probably don't need to set it. </li>
 </ul>
 <h2 id="globalembeddingspacetester">GlobalEmbeddingSpaceTester<a class="headerlink" href="#globalembeddingspacetester" title="Permanent link">&para;</a></h2>
 <p>Computes nearest neighbors by looking at all points in the embedding space. This is probably the tester you are looking for.</p>

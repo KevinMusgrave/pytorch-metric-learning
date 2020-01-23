@@ -56,7 +56,7 @@ If not specified, then the original labels are used.
 * **lr_scheduers**: A dictionary of PyTorch learning rate schedulers. Each scheduler will be stepped at the end of every epoch.
 * **gradient_clippers**: A dictionary of gradient clipping functions. Each function will be called before the optimizers.
 * **freeze_trunk_batchnorm**: If True, then the BatchNorm parameters of the trunk model will be frozen during training.
-* **label_hierarchy_level**: If each sample in your dataset has multiple labels, then this integer argument can be used to select which "level" to use. This assumes that your labels are "2-dimensional" with shape (num_samples, num_hierarchy_levels).
+* **label_hierarchy_level**: If each sample in your dataset has multiple labels, then this integer argument can be used to select which "level" to use. This assumes that your labels are "2-dimensional" with shape (num_samples, num_hierarchy_levels). Leave this at the default value, 0, if your data does not have multiple labels per sample.
 * **dataloader_num_workers**: The number of processes your dataloader will use to load data.
 * **data_and_label_getter**: A function that takes the output of your dataset's _\_\_getitem\_\__ function, and returns a tuple of (data, labels). If None, then it is assumed that _\_\_getitem\_\__ returns (data, labels). 
 * **dataset_labels**: The labels for your dataset. Can be 1-dimensional (1 label per datapoint) or 2-dimensional, where each row represents a datapoint, and the columns are the multiple labels that the datapoint has. This option needs to be specified only if _set\_min\_label\_to\_zero_ is True.

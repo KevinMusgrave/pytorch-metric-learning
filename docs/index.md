@@ -37,9 +37,14 @@ In general, all [loss functions](losses) take in embeddings and labels, with an 
 # From BaseMetricLossFunction
 def forward(self, embeddings, labels, indices_tuple=None)
 ```
-And all [mining functions](miners) take in embeddings and labels:
+And (almost) all [mining functions](miners) take in embeddings and labels:
 ```python
 # From BaseMiner
 def forward(self, embeddings, labels)
 ```
 
+For more complex approaches, like deep adversarial metric learning, use one of the [trainers](trainers).
+
+To check the accuracy of your model, use one of the [testers](testers). Which tester should you use? Almost definitely [GlobalEmbeddingSpaceTester](testers/#globalembeddingspacetester), because it does what most metric-learning papers do. 
+
+Also check out the [example scripts](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples).

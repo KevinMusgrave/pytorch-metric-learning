@@ -107,9 +107,9 @@ See [powerful-benchmarker](https://github.com/KevinMusgrave/powerful-benchmarker
 - [**UnsupervisedEmbeddingsUsingAugmentations**](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#unsupervisedembeddingsusingaugmentations)
 - **more to be added**
 
-### [Testing methods](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/pytorch-metric-learning/testers):
-- [**GlobalEmbeddingSpaceTester**](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/pytorch-metric-learning/testers/global_embedding_space.py)
-- [**WithSameParentLabelTester**](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/pytorch-metric-learning/testers/with_same_parent_label.py)
+### [Testing methods](https://kevinmusgrave.github.io/pytorch-metric-learning/testers):
+- [**GlobalEmbeddingSpaceTester**](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#globalembeddingspacetester)
+- [**WithSameParentLabelTester**](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#withsameparentlabeltester)
 - **more to be added**
 
 ## Overview
@@ -138,14 +138,14 @@ In general, all loss functions take in embeddings and labels, with an optional i
 # From BaseMetricLossFunction
 def forward(self, embeddings, labels, indices_tuple=None)
 ```
-And all mining functions take in embeddings and labels:
+And (almost) all mining functions take in embeddings and labels:
 ```python
 # From BaseMiner
 def forward(self, embeddings, labels)
 ```
 For more complex approaches, like deep adversarial metric learning, use one of the [trainers](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers).
 
-To check the accuracy of your model, use one of the [testers](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers). Which tester should you use? Almost definitely GlobalEmbeddingSpaceTester, because it does what most metric-learning papers do. 
+To check the accuracy of your model, use one of the [testers](https://kevinmusgrave.github.io/pytorch-metric-learning/testers). Which tester should you use? Almost definitely [GlobalEmbeddingSpaceTester](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#globalembeddingspacetester), because it does what most metric-learning papers do. 
 
 Also check out the [example scripts](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples).
 

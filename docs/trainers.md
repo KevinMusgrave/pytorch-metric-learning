@@ -31,7 +31,8 @@ trainers.BaseTrainer(models,
 			        dataloader_num_workers=32,
 			        data_and_label_getter=None,
 			        dataset_labels=None,
-			        set_min_label_to_zero=False)
+			        set_min_label_to_zero=False,
+			        end_of_epoch_hook=None)
 ```
 
 **Parameters**:
@@ -61,6 +62,7 @@ If not specified, then the original labels are used.
 * **data_and_label_getter**: A function that takes the output of your dataset's _\_\_getitem\_\__ function, and returns a tuple of (data, labels). If None, then it is assumed that _\_\_getitem\_\__ returns (data, labels). 
 * **dataset_labels**: The labels for your dataset. Can be 1-dimensional (1 label per datapoint) or 2-dimensional, where each row represents a datapoint, and the columns are the multiple labels that the datapoint has. This option needs to be specified only if _set\_min\_label\_to\_zero_ is True.
 * **set_min_label_to_zero**: If True, labels will be mapped such that they represent their rank in the label set. For example, if your dataset has labels 5, 10, 12, 13, then at each iteration, these would become 0, 1, 2, 3. The default is False.
+* **end_of_epoch_hook**: This is a function that has one input argument, the trainer object, and performs some action (e.g. validation, saving models etc) at the end of every epoch. See [the end of this script](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/example_MetricLossOnly.py) for an example. If None, then this parameter has no effect. 
 
 ## MetricLossOnly
 This trainer just computes a metric loss from the output of your embedder network.

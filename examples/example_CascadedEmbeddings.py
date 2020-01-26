@@ -84,6 +84,20 @@ mining_funcs = {"post_gradient_miner_1": miner1, "post_gradient_miner_2": miner2
 
 record_keeper = get_record_keeper()
 
+# The testing module requires faiss
+# So if you don't have these, then this import will break
+from pytorch_metric_learning import testers
+
+# Create the tester
+tester = testers.GlobalEmbeddingSpaceTester(record_keeper=record_keeper)
+dataset_dict = {"train": train_dataset, "val": val_dataset}
+
+# This hook will be passed into the trainer and will be executed at the end of every epoch.
+def end_of_epoch_hook(trainer):
+    tester.test(dataset_dict, trainer.epoch, trainer.models["trunk"], trainer.models["embedder"])
+    if trainer.record_keeper is not None:
+        trainer.record_keeper.pickler_and_csver.save_records()
+
 trainer = trainers.CascadedEmbeddings(models=models,
                                     optimizers=optimizers,
                                     batch_size=batch_size,
@@ -93,24 +107,7 @@ trainer = trainers.CascadedEmbeddings(models=models,
                                     dataset=train_dataset,
                                     sampler=sampler,
                                     record_keeper=record_keeper,
+                                    end_of_epoch_hook=end_of_epoch_hook,
                                     embedding_sizes=[64, 64, 64])
 
 trainer.train(num_epochs=num_epochs)
-
-
-#############################
-########## Testing ##########
-############################# 
-
-# The testing module requires faiss
-# So if you don't have these, then this import will break
-from pytorch_metric_learning import testers
-
-tester = testers.GlobalEmbeddingSpaceTester(record_keeper=record_keeper)
-dataset_dict = {"train": train_dataset, "val": val_dataset}
-epoch = 2
-
-tester.test(dataset_dict, epoch, trunk, embedder)
-
-if record_keeper is not None:
-    record_keeper.pickler_and_csver.save_records()

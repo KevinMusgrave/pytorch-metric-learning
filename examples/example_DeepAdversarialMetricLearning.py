@@ -55,7 +55,7 @@ miner = miners.MultiSimilarityMiner(epsilon=0.1)
 sampler = samplers.MPerClassSampler(train_dataset.targets, m=4)
 
 # Set other training parameters
-batch_size = 128
+batch_size = 32
 num_epochs = 2
 iterations_per_epoch = 100
 
@@ -83,6 +83,20 @@ loss_weights = {"metric_loss": 1,
 
 record_keeper = get_record_keeper()
 
+# The testing module requires faiss
+# So if you don't have these, then this import will break
+from pytorch_metric_learning import testers
+
+# Create the tester
+tester = testers.GlobalEmbeddingSpaceTester(record_keeper=record_keeper)
+dataset_dict = {"train": train_dataset, "val": val_dataset}
+
+# This hook will be passed into the trainer and will be executed at the end of every epoch.
+def end_of_epoch_hook(trainer):
+    tester.test(dataset_dict, trainer.epoch, trainer.models["trunk"], trainer.models["embedder"])
+    if trainer.record_keeper is not None:
+        trainer.record_keeper.pickler_and_csver.save_records()
+
 # Create trainer object
 trainer = trainers.DeepAdversarialMetricLearning(models=models,
                                                 optimizers=optimizers,
@@ -93,27 +107,9 @@ trainer = trainers.DeepAdversarialMetricLearning(models=models,
                                                 dataset=train_dataset,
                                                 sampler=sampler,
                                                 record_keeper=record_keeper,
+                                                end_of_epoch_hook=end_of_epoch_hook,
                                                 metric_alone_epochs=0,
                                                 g_alone_epochs=0,
                                                 g_triplets_per_anchor=100)
   
 trainer.train(num_epochs=num_epochs)
-
-
-
-#############################
-########## Testing ##########
-############################# 
-
-# The testing module requires faiss
-# So if you don't have these, then this import will break
-from pytorch_metric_learning import testers
-
-tester = testers.GlobalEmbeddingSpaceTester(record_keeper=record_keeper)
-dataset_dict = {"train": train_dataset, "val": val_dataset}
-epoch = 2
-
-tester.test(dataset_dict, epoch, trunk, embedder)
-
-if record_keeper is not None:
-    record_keeper.pickler_and_csver.save_records()

@@ -28,7 +28,8 @@ class BaseTrainer:
         dataloader_num_workers=32,
         data_and_label_getter=None,
         dataset_labels=None,
-        set_min_label_to_zero=False
+        set_min_label_to_zero=False,
+        end_of_epoch_hook=None
     ):
         self.models = models
         self.optimizers = optimizers
@@ -50,6 +51,7 @@ class BaseTrainer:
         self.data_and_label_getter = data_and_label_getter
         self.dataset_labels = dataset_labels
         self.set_min_label_to_zero = set_min_label_to_zero
+        self.end_of_epoch_hook = end_of_epoch_hook
         self.loss_names = list(self.loss_funcs.keys())
         self.custom_setup()
         self.initialize_data_device()
@@ -58,6 +60,7 @@ class BaseTrainer:
         self.initialize_dataloader()
         self.initialize_loss_weights()
         self.initialize_data_and_label_getter()
+        self.initialize_end_of_epoch_hook()
         
     def custom_setup(self):
         pass
@@ -78,6 +81,7 @@ class BaseTrainer:
                 pbar.set_description("total_loss=%.5f" % self.losses["total_loss"])
             self.step_lr_schedulers()
             self.update_records(end_of_epoch=True)
+            self.end_of_epoch_hook(self)
 
     def initialize_dataloader(self):
         logging.info("Initializing dataloader")
@@ -208,6 +212,10 @@ class BaseTrainer:
     def initialize_loss_weights(self):
         if self.loss_weights is None:
             self.loss_weights = {k: 1 for k in self.loss_names}
+
+    def initialize_end_of_epoch_hook(self):
+    	if self.end_of_epoch_hook is None:
+    		self.end_of_epoch_hook = lambda x: None
 
     def update_records(self, end_of_epoch=False):
         if self.record_keeper is not None:

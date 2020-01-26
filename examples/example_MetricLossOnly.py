@@ -50,8 +50,8 @@ miner = miners.MultiSimilarityMiner(epsilon=0.1)
 sampler = samplers.MPerClassSampler(train_dataset.targets, m=4)
 
 # Set other training parameters
-batch_size = 128
-num_epochs = 2
+batch_size = 32
+num_epochs = 3
 iterations_per_epoch = 100
 
 # Package the above stuff into dictionaries.
@@ -62,6 +62,20 @@ mining_funcs = {"post_gradient_miner": miner}
 
 record_keeper = get_record_keeper()
 
+# The testing module requires faiss
+# So if you don't have these, then this import will break
+from pytorch_metric_learning import testers
+
+# Create the tester
+tester = testers.GlobalEmbeddingSpaceTester(record_keeper=record_keeper)
+dataset_dict = {"train": train_dataset, "val": val_dataset}
+
+# This hook will be passed into the trainer and will be executed at the end of every epoch.
+def end_of_epoch_hook(trainer):
+    tester.test(dataset_dict, trainer.epoch, trainer.models["trunk"], trainer.models["embedder"])
+    if trainer.record_keeper is not None:
+        trainer.record_keeper.pickler_and_csver.save_records()
+
 trainer = trainers.MetricLossOnly(models,
                                 optimizers,
                                 batch_size,
@@ -70,26 +84,8 @@ trainer = trainers.MetricLossOnly(models,
                                 iterations_per_epoch,
                                 train_dataset,
                                 sampler=sampler,
-                                record_keeper=record_keeper)
+                                record_keeper=record_keeper,
+                                end_of_epoch_hook=end_of_epoch_hook)
 
 trainer.train(num_epochs=num_epochs)
 
-
-
-
-#############################
-########## Testing ##########
-############################# 
-
-# The testing module requires faiss
-# So if you don't have these, then this import will break
-from pytorch_metric_learning import testers
-
-tester = testers.GlobalEmbeddingSpaceTester(record_keeper=record_keeper)
-dataset_dict = {"train": train_dataset, "val": val_dataset}
-epoch = 2
-
-tester.test(dataset_dict, epoch, trunk, embedder)
-
-if record_keeper is not None:
-    record_keeper.pickler_and_csver.save_records()

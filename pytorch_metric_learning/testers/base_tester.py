@@ -9,13 +9,14 @@ from ..utils import common_functions as c_f
 import logging
 from sklearn.preprocessing import normalize, StandardScaler
 from sklearn.manifold import TSNE
+from collections import defaultdict
 
 
 class BaseTester:
     def __init__(self, reference_set="compared_to_self", normalize_embeddings=True, use_trunk_output=False, 
                     batch_size=32, dataloader_num_workers=32, metric_for_best_epoch="mean_average_r_precision", 
-                    pca=None, data_device=None, record_keeper=None, size_of_tsne=0, data_and_label_getter=None,
-                    label_hierarchy_level=0, record_group_name_prefix=None):
+                    pca=None, data_device=None, size_of_tsne=0, data_and_label_getter=None, label_hierarchy_level=0,
+                    end_of_testing_hook=None):
         self.reference_set = reference_set
         self.normalize_embeddings = normalize_embeddings
         self.pca = int(pca) if pca else None
@@ -23,42 +24,11 @@ class BaseTester:
         self.batch_size = int(batch_size)
         self.metric_for_best_epoch = metric_for_best_epoch
         self.data_device = torch.device("cuda" if torch.cuda.is_available() else "cpu") if data_device is None else data_device
-        self.num_workers = dataloader_num_workers
-        self.record_keeper = record_keeper
+        self.dataloader_num_workers = dataloader_num_workers
         self.size_of_tsne = size_of_tsne
         self.data_and_label_getter = (lambda x : x) if data_and_label_getter is None else data_and_label_getter
-        self.set_base_record_group_name(record_group_name_prefix)
         self.label_hierarchy_level = label_hierarchy_level
-
-    def set_base_record_group_name(self, record_group_name_prefix):
-        self.base_record_group_name = "%s_"%record_group_name_prefix if record_group_name_prefix else ''
-        self.base_record_group_name += self.suffixes("%s_%s"%("accuracies", self.__class__.__name__))
-
-    def get_accuracy_of_epoch(self, split_name, epoch):
-        try:
-            records = self.record_keeper.get_record(self.record_group_name(split_name))
-            average_key = self.accuracies_keyname(self.metric_for_best_epoch, prefix="AVERAGE")
-            if average_key in records:
-                return records[average_key][records["epoch"].index(epoch)]
-            else:
-                for metric, accuracies in records.items():
-                    if metric.startswith(self.metric_for_best_epoch):
-                        return accuracies[records["epoch"].index(epoch)]
-        except:
-            return None 
-
-    def get_best_epoch_and_accuracy(self, split_name, ignore_epoch=-1):
-        records = self.record_keeper.get_record(self.record_group_name(split_name))
-        best_epoch, best_accuracy = 0, 0
-        for epoch in records["epoch"]:
-            if epoch == ignore_epoch:
-                continue
-            accuracy = self.get_accuracy_of_epoch(split_name, epoch)
-            if accuracy is None:
-                return None, None
-            if accuracy > best_accuracy:
-                best_epoch, best_accuracy = epoch, accuracy
-        return best_epoch, best_accuracy
+        self.end_of_testing_hook = (lambda x: logging.info(x.all_accuracies)) if end_of_testing_hook is None else end_of_testing_hook        
 
     def maybe_normalize(self, embeddings):
         if self.pca:
@@ -91,7 +61,7 @@ class BaseTester:
         return all_q, labels
 
     def get_all_embeddings(self, dataset, trunk_model, embedder_model, collate_fn):
-        dataloader = c_f.get_eval_dataloader(dataset, self.batch_size, self.num_workers, collate_fn)
+        dataloader = c_f.get_eval_dataloader(dataset, self.batch_size, self.dataloader_num_workers, collate_fn)
         embeddings, labels = self.compute_all_embeddings(dataloader, trunk_model, embedder_model)
         embeddings = self.maybe_normalize(embeddings)
         return embeddings, labels
@@ -102,19 +72,20 @@ class BaseTester:
             return trunk_output
         return embedder_model(trunk_output)
 
-    def maybe_plot_tsne(self, embeddings_and_labels, epoch, tag_suffix=''):
-        if self.size_of_tsne > 0 and self.record_keeper is not None:
+    def maybe_compute_tsne(self, embeddings_and_labels, epoch, tag_suffix=''):
+        self.tsne_embeddings = defaultdict(dict)
+        if self.size_of_tsne > 0:
             for split_name, (embeddings, labels) in embeddings_and_labels.items():
                 random_idx = c_f.NUMPY_RANDOM_STATE.choice(np.arange(len(embeddings)), size=self.size_of_tsne, replace=False)
                 curr_embeddings, curr_labels = embeddings[random_idx], labels[random_idx]
                 logging.info("Running TSNE on the %s set"%split_name)
                 curr_embeddings = TSNE().fit_transform(curr_embeddings)
                 logging.info("Finished TSNE")
+                self.tsne_embeddings[split_name]["epoch"] = epoch
                 for bbb in self.label_levels_to_evaluate(curr_labels):
                     label_scheme = curr_labels[:, bbb]
-                    tag = '%s/%s'%(self.record_group_name(split_name), self.accuracies_keyname("tsne", suffix="level%d"%bbb if tag_suffix == '' else tag_suffix))
-                    self.record_keeper.add_embedding_plot(curr_embeddings, label_scheme, tag, epoch)
-
+                    keyname = self.accuracies_keyname("tsne", suffix="level%d"%bbb if tag_suffix == '' else tag_suffix)
+                    self.tsne_embeddings[split_name][keyname] = (curr_embeddings, label_scheme)
 
     def suffixes(self, base_name):
         if self.pca:
@@ -154,9 +125,6 @@ class BaseTester:
     def embeddings_come_from_same_source(self, embeddings_and_labels):
         return self.reference_set in ["compared_to_self", "compared_to_sets_combined"]
 
-    def record_group_name(self, split_name):
-        return "%s_%s"%(self.base_record_group_name, split_name.upper())
-
     def label_levels_to_evaluate(self, query_labels):
         if self.label_hierarchy_level == "all":
             return range(query_labels.shape[1])
@@ -177,26 +145,12 @@ class BaseTester:
                     num_entries += 1
             accuracies[keyname] = summed_accuracy / num_entries
 
-    def get_splits_to_eval(self, input_splits_to_eval, epoch):
-        splits_to_eval = []
-        for split in input_splits_to_eval:
-            if self.get_accuracy_of_epoch(split, epoch) is None:
-                splits_to_eval.append(split)
-        return splits_to_eval
-
-    def get_splits_to_compute_embeddings(self, original_splits_to_eval, splits_to_eval):
-        if self.reference_set == "compared_to_self":
-            return splits_to_eval
-        if self.reference_set == "compared_to_sets_combined":
-            return original_splits_to_eval
+    def get_splits_to_compute_embeddings(self, dataset_dict, splits_to_eval):
+        splits_to_eval = list(dataset_dict.keys()) if splits_to_eval is None else splits_to_eval
+        if self.reference_set in ["compared_to_self", "compared_to_sets_combined"]:
+            return splits_to_eval, splits_to_eval
         if self.reference_set == "compared_to_training_set":
-            return list(set(splits_to_eval).add("train"))
-
-    def get_necessary_splits(self, dataset_dict, epoch, splits_to_eval):
-        original_splits_to_eval = splits_to_eval        
-        splits_to_eval = self.get_splits_to_eval(list(dataset_dict.keys()) if original_splits_to_eval is None else original_splits_to_eval, epoch)
-        splits_to_compute_embeddings = self.get_splits_to_compute_embeddings(original_splits_to_eval, splits_to_eval)   
-        return splits_to_eval, splits_to_compute_embeddings
+            return splits_to_eval, list(set(splits_to_eval).add("train"))
 
     def get_all_embeddings_for_all_splits(self, dataset_dict, trunk_model, embedder_model, splits_to_compute_embeddings, collate_fn):
         embeddings_and_labels = {}
@@ -205,29 +159,18 @@ class BaseTester:
             embeddings_and_labels[split_name] = self.get_all_embeddings(dataset_dict[split_name], trunk_model, embedder_model, collate_fn)
         return embeddings_and_labels
 
-    def maybe_record_results(self, accuracies, epoch, split_name):
-        if self.record_keeper is not None:
-            self.record_keeper.update_records(accuracies, epoch, input_group_name_for_non_objects=self.record_group_name(split_name))
-            best_epoch, best_accuracy = self.get_best_epoch_and_accuracy(split_name, ignore_epoch=None)
-            accuracies = {"best_epoch":best_epoch, "best_accuracy":best_accuracy}
-            self.record_keeper.update_records(accuracies, epoch, input_group_name_for_non_objects=self.record_group_name(split_name))
-        else:
-            logging.info(accuracies) 
-
     def do_knn_and_accuracies(self, accuracies, embeddings_and_labels, split_name):
         raise NotImplementedError
 
     def test(self, dataset_dict, epoch, trunk_model, embedder_model, splits_to_eval=None, collate_fn=None, **kwargs):
         logging.info("Evaluating epoch %d" % epoch)
         trunk_model, embedder_model = trunk_model.eval(), embedder_model.eval()
-        splits_to_eval, splits_to_compute_embeddings = self.get_necessary_splits(dataset_dict, epoch, splits_to_eval)
-        if len(splits_to_eval) == 0:
-            logging.info("Already evaluated")
-            return
+        splits_to_eval, splits_to_compute_embeddings = self.get_splits_to_compute_embeddings(dataset_dict, splits_to_eval)
         embeddings_and_labels = self.get_all_embeddings_for_all_splits(dataset_dict, trunk_model, embedder_model, splits_to_compute_embeddings, collate_fn)
-        self.maybe_plot_tsne(embeddings_and_labels, epoch)
+        self.maybe_compute_tsne(embeddings_and_labels, epoch)
+        self.all_accuracies = defaultdict(dict)
         for split_name in splits_to_eval:
             logging.info('Computing accuracy for the %s split'%split_name)
-            accuracies = {"epoch":epoch}
-            self.do_knn_and_accuracies(accuracies, embeddings_and_labels, split_name)
-            self.maybe_record_results(accuracies, epoch, split_name)
+            self.all_accuracies[split_name]["epoch"] = epoch 
+            self.do_knn_and_accuracies(self.all_accuracies[split_name], embeddings_and_labels, split_name)
+        self.end_of_testing_hook(self)

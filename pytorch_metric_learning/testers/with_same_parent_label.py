@@ -9,7 +9,7 @@ from .base_tester import BaseTester
 
 
 class WithSameParentLabelTester(BaseTester):
-    def do_knn_and_accuracies(self, accuracies, embeddings_and_labels, split_name):
+    def do_knn_and_accuracies(self, accuracies, embeddings_and_labels, split_name, tag_suffix=''):
         query_embeddings, query_labels, reference_embeddings, reference_labels = self.set_reference_and_query(
             embeddings_and_labels, split_name
         )
@@ -36,7 +36,7 @@ class WithSameParentLabelTester(BaseTester):
                 for metric, v in a.items():
                     average_accuracies[metric].append(v)
             for metric, v in average_accuracies.items():
-                keyname = self.accuracies_keyname(metric, suffix="level%d"%bbb)
+                keyname = self.accuracies_keyname(metric, suffix="level%d"%bbb if tag_suffix == '' else tag_suffix)
                 accuracies[keyname].append(np.mean(v))
         if i > 0:
             self.calculate_average_accuracies(accuracies, calculate_accuracies.METRICS)

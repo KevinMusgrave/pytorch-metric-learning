@@ -59,21 +59,3 @@ class ListOfModels(nn.Module):
                 outputs.append(curr_output)
                 s += y
         return torch.cat(outputs, dim=-1)
-
-
-def get_record_keeper():
-    # record-keeper is a useful package for logging data during training and testing
-    # You can use the trainers and testers without record-keeper.
-    # But if you'd like to install it, then do pip install record-keeper
-    # See more info about it here https://github.com/KevinMusgrave/record-keeper
-    try:
-        import record_keeper as record_keeper_package
-        from torch.utils.tensorboard import SummaryWriter
-        pkl_folder = "example_logs"
-        tensorboard_folder = "example_tensorboard"
-        pickler_and_csver = record_keeper_package.PicklerAndCSVer(pkl_folder)
-        tensorboard_writer = SummaryWriter(log_dir=tensorboard_folder)
-        return record_keeper_package.RecordKeeper(tensorboard_writer, pickler_and_csver, ["record_these", "learnable_param_names"])
-
-    except ModuleNotFoundError:
-        return None

@@ -9,7 +9,7 @@ class MPerClassSampler(Sampler):
     if dataloader's batchsize is 100, and m = 5, then 20 classes with 5 samples
     each will be returned
     """
-    def __init__(self, labels, m, length_before_new_iter=1000000):
+    def __init__(self, labels, m, length_before_new_iter=100000):
         self.m_per_class = int(m)
         self.labels_to_indices = c_f.get_labels_to_indices(labels)
         self.labels = list(self.labels_to_indices.keys())

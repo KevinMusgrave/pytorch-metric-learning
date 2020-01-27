@@ -1,13 +1,17 @@
-from pytorch_metric_learning import losses, miners, samplers, trainers
+# The testing module requires faiss
+# So if you don't have that, then this import will break
+from pytorch_metric_learning import losses, miners, samplers, trainers, testers
+import pytorch_metric_learning.utils.logging_presets as logging_presets
 import numpy as np
 from torchvision import datasets, models, transforms
 import torch
 import logging
-from utils_for_examples import MLP, Identity, get_record_keeper
+from utils_for_examples import MLP, Identity
 logging.getLogger().setLevel(logging.INFO)
 
 import pytorch_metric_learning
 logging.info("VERSION %s"%pytorch_metric_learning.__version__)
+
 
 ##############################
 ########## Training ##########
@@ -81,23 +85,12 @@ loss_weights = {"metric_loss": 1,
                 "g_hard_loss": 0.1,
                 "g_reg_loss": 0.1}
 
-record_keeper = get_record_keeper()
-
-# The testing module requires faiss
-# So if you don't have these, then this import will break
-from pytorch_metric_learning import testers
-
-# Create the tester
-tester = testers.GlobalEmbeddingSpaceTester(record_keeper=record_keeper)
+record_keeper, _, _ = logging_presets.get_record_keeper("example_logs", "example_tensorboard")
+hooks = logging_presets.get_hook_container(record_keeper)
 dataset_dict = {"train": train_dataset, "val": val_dataset}
 
-# This hook will be passed into the trainer and will be executed at the end of every epoch.
-def end_of_epoch_hook(trainer):
-    tester.test(dataset_dict, trainer.epoch, trainer.models["trunk"], trainer.models["embedder"])
-    if trainer.record_keeper is not None:
-        trainer.record_keeper.pickler_and_csver.save_records()
-
-# Create trainer object
+# Create the tester
+tester = testers.GlobalEmbeddingSpaceTester(end_of_testing_hook=hooks.end_of_testing_hook)
 trainer = trainers.DeepAdversarialMetricLearning(models=models,
                                                 optimizers=optimizers,
                                                 batch_size=batch_size,
@@ -106,8 +99,8 @@ trainer = trainers.DeepAdversarialMetricLearning(models=models,
                                                 iterations_per_epoch=iterations_per_epoch,
                                                 dataset=train_dataset,
                                                 sampler=sampler,
-                                                record_keeper=record_keeper,
-                                                end_of_epoch_hook=end_of_epoch_hook,
+                                                end_of_iteration_hook=hooks.end_of_iteration_hook,
+                                                end_of_epoch_hook=hooks.end_of_epoch_hook(tester, dataset_dict),
                                                 metric_alone_epochs=0,
                                                 g_alone_epochs=0,
                                                 g_triplets_per_anchor=100)

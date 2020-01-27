@@ -23,7 +23,6 @@ trainers.BaseTrainer(models,
 			        loss_weights=None,
 			        sampler=None,
 			        collate_fn=None,
-			        record_keeper=None,
 			        lr_schedulers=None,
 			        gradient_clippers=None,
 			        freeze_trunk_batchnorm=False,
@@ -32,6 +31,7 @@ trainers.BaseTrainer(models,
 			        data_and_label_getter=None,
 			        dataset_labels=None,
 			        set_min_label_to_zero=False,
+			        end_of_iteration_hook=None,
 			        end_of_epoch_hook=None)
 ```
 
@@ -53,7 +53,6 @@ trainers.BaseTrainer(models,
 If not specified, then the original labels are used.
 * **sampler**: The sampler used by the dataloader. If not specified, then random sampling will be used.
 * **collate_fn**: The collate function used by the dataloader.
-* **record_keeper**: An optional record-keeper object. record-keeper is a useful package for logging data during training and testing. You can use trainers without record-keeper, but if you'd like to use it, then ```pip install record-keeper``` and visit [the record-keeper repo](https://github.com/KevinMusgrave/record-keeper) to learn more.
 * **lr_scheduers**: A dictionary of PyTorch learning rate schedulers. Each scheduler will be stepped at the end of every epoch.
 * **gradient_clippers**: A dictionary of gradient clipping functions. Each function will be called before the optimizers.
 * **freeze_trunk_batchnorm**: If True, then the BatchNorm parameters of the trunk model will be frozen during training.
@@ -62,7 +61,8 @@ If not specified, then the original labels are used.
 * **data_and_label_getter**: A function that takes the output of your dataset's _\_\_getitem\_\__ function, and returns a tuple of (data, labels). If None, then it is assumed that _\_\_getitem\_\__ returns (data, labels). 
 * **dataset_labels**: The labels for your dataset. Can be 1-dimensional (1 label per datapoint) or 2-dimensional, where each row represents a datapoint, and the columns are the multiple labels that the datapoint has. This option needs to be specified only if _set\_min\_label\_to\_zero_ is True.
 * **set_min_label_to_zero**: If True, labels will be mapped such that they represent their rank in the label set. For example, if your dataset has labels 5, 10, 12, 13, then at each iteration, these would become 0, 1, 2, 3. The default is False.
-* **end_of_epoch_hook**: This is a function that has one input argument, the trainer object, and performs some action (e.g. validation, saving models etc) at the end of every epoch. See [the end of this script](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/example_MetricLossOnly.py) for an example. If None, then this parameter has no effect. 
+* **end_of_iteration_hook**: This is a function that has one input argument, the trainer object, and performs some action (e.g. logging data) at the end of every iteration. If None, then this parameter has no effect. If you want ready-to-use hooks, take a look at the HookContainer class in [logging_presets](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/pytorch_metric_learning/utils/logging_presets.py), and see [the end of this script](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/example_MetricLossOnly.py) for an example of how to use the hooks.
+* **end_of_epoch_hook**: The same as _end\_of\_iteration\_hook_, except this occurs at the end of every epoch, so this might be a suitable place to do validation. If None, then this parameter has no effect. If you want ready-to-use hooks, take a look at the HookContainer class in [logging_presets](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/pytorch_metric_learning/utils/logging_presets.py), and see [the end of this script](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/example_MetricLossOnly.py) for an example of how to use the hooks. 
 
 ## MetricLossOnly
 This trainer just computes a metric loss from the output of your embedder network.

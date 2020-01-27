@@ -20,7 +20,6 @@ class BaseTrainer:
         loss_weights=None,
         sampler=None,
         collate_fn=None,
-        record_keeper=None,
         lr_schedulers=None,
         gradient_clippers=None,
         freeze_trunk_batchnorm=False,
@@ -29,6 +28,7 @@ class BaseTrainer:
         data_and_label_getter=None,
         dataset_labels=None,
         set_min_label_to_zero=False,
+        end_of_iteration_hook=None,
         end_of_epoch_hook=None
     ):
         self.models = models
@@ -41,7 +41,6 @@ class BaseTrainer:
         self.data_device = data_device
         self.sampler = sampler
         self.collate_fn = collate_fn
-        self.record_keeper = record_keeper
         self.lr_schedulers = lr_schedulers
         self.gradient_clippers = gradient_clippers
         self.freeze_trunk_batchnorm = freeze_trunk_batchnorm
@@ -51,6 +50,7 @@ class BaseTrainer:
         self.data_and_label_getter = data_and_label_getter
         self.dataset_labels = dataset_labels
         self.set_min_label_to_zero = set_min_label_to_zero
+        self.end_of_iteration_hook = end_of_iteration_hook
         self.end_of_epoch_hook = end_of_epoch_hook
         self.loss_names = list(self.loss_funcs.keys())
         self.custom_setup()
@@ -60,7 +60,7 @@ class BaseTrainer:
         self.initialize_dataloader()
         self.initialize_loss_weights()
         self.initialize_data_and_label_getter()
-        self.initialize_end_of_epoch_hook()
+        self.initialize_hooks()
         
     def custom_setup(self):
         pass
@@ -78,9 +78,9 @@ class BaseTrainer:
             pbar = tqdm.tqdm(range(self.iterations_per_epoch))
             for self.iteration in pbar:
                 self.forward_and_backward()
+                self.end_of_iteration_hook(self)
                 pbar.set_description("total_loss=%.5f" % self.losses["total_loss"])
             self.step_lr_schedulers()
-            self.update_records(end_of_epoch=True)
             self.end_of_epoch_hook(self)
 
     def initialize_dataloader(self):
@@ -102,7 +102,6 @@ class BaseTrainer:
         self.update_loss_weights()
         self.calculate_loss(self.get_batch())
         self.loss_tracker.update(self.loss_weights)
-        self.update_records()
         self.backward()
         self.clip_gradients()
         self.step_optimizers()
@@ -213,22 +212,8 @@ class BaseTrainer:
         if self.loss_weights is None:
             self.loss_weights = {k: 1 for k in self.loss_names}
 
-    def initialize_end_of_epoch_hook(self):
-    	if self.end_of_epoch_hook is None:
-    		self.end_of_epoch_hook = lambda x: None
-
-    def update_records(self, end_of_epoch=False):
-        if self.record_keeper is not None:
-            if end_of_epoch:
-                self.record_keeper.maybe_add_custom_figures_to_tensorboard(self.get_global_iteration())
-            else:
-               for record, kwargs in self.record_these():
-                  self.record_keeper.update_records(record, self.get_global_iteration(), **kwargs)
-
-    def record_these(self):
-        return [[self.loss_tracker.losses, {"input_group_name_for_non_objects": "loss_histories"}],
-                [self.loss_tracker.loss_weights, {"input_group_name_for_non_objects": "loss_weights"}],
-                [self.loss_funcs, {}],
-                [self.mining_funcs, {}],
-                [self.models, {}],
-                [self.optimizers, {"custom_attr_func": lambda x: {"lr": x.param_groups[0]["lr"]}}]]
+    def initialize_hooks(self):
+        if self.end_of_iteration_hook is None:
+            self.end_of_iteration_hook = lambda x: None
+        if self.end_of_epoch_hook is None:
+            self.end_of_epoch_hook = lambda x: None

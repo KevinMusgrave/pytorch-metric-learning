@@ -1,9 +1,12 @@
-from pytorch_metric_learning import losses, miners, samplers, trainers
+# The testing module requires faiss
+# So if you don't have that, then this import will break
+from pytorch_metric_learning import losses, miners, samplers, trainers, testers
+import pytorch_metric_learning.utils.logging_presets as logging_presets
 import numpy as np
 from torchvision import datasets, models, transforms
 import torch
 import logging
-from utils_for_examples import MLP, Identity, get_record_keeper
+from utils_for_examples import MLP, Identity
 logging.getLogger().setLevel(logging.INFO)
 
 import pytorch_metric_learning
@@ -60,22 +63,12 @@ optimizers = {"trunk_optimizer": trunk_optimizer, "embedder_optimizer": embedder
 loss_funcs = {"metric_loss": loss}
 mining_funcs = {"post_gradient_miner": miner}
 
-record_keeper = get_record_keeper()
-
-# The testing module requires faiss
-# So if you don't have these, then this import will break
-from pytorch_metric_learning import testers
-
-# Create the tester
-tester = testers.GlobalEmbeddingSpaceTester(record_keeper=record_keeper)
+record_keeper, _, _ = logging_presets.get_record_keeper("example_logs", "example_tensorboard")
+hooks = logging_presets.get_hook_container(record_keeper)
 dataset_dict = {"train": train_dataset, "val": val_dataset}
 
-# This hook will be passed into the trainer and will be executed at the end of every epoch.
-def end_of_epoch_hook(trainer):
-    tester.test(dataset_dict, trainer.epoch, trainer.models["trunk"], trainer.models["embedder"])
-    if trainer.record_keeper is not None:
-        trainer.record_keeper.pickler_and_csver.save_records()
-
+# Create the tester
+tester = testers.GlobalEmbeddingSpaceTester(end_of_testing_hook=hooks.end_of_testing_hook)
 trainer = trainers.MetricLossOnly(models,
                                 optimizers,
                                 batch_size,
@@ -84,8 +77,8 @@ trainer = trainers.MetricLossOnly(models,
                                 iterations_per_epoch,
                                 train_dataset,
                                 sampler=sampler,
-                                record_keeper=record_keeper,
-                                end_of_epoch_hook=end_of_epoch_hook)
+                                end_of_iteration_hook=hooks.end_of_iteration_hook,
+                                end_of_epoch_hook=hooks.end_of_epoch_hook(tester, dataset_dict))
 
 trainer.train(num_epochs=num_epochs)
 

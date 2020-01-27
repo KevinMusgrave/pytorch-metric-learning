@@ -20,11 +20,10 @@ testers.BaseTester(reference_set="compared_to_self",
                     metric_for_best_epoch="mean_average_r_precision", 
                     pca=None, 
                     data_device=None, 
-                    record_keeper=None, 
 					size_of_tsne=0, 
 					data_and_label_getter=None,
-                    label_hierarchy_level=0, 
-                    record_group_name_prefix=None)
+                    label_hierarchy_level=0,
+                    end_of_testing_hook=None)
 ```
 
 **Parameters**:
@@ -45,11 +44,10 @@ testers.BaseTester(reference_set="compared_to_self",
 	* **Note**: this assumes you call the "test" method multiple times with different models, and that the record_keeper argument is not None. The input to record_keeper must be a [record-keeper object](https://github.com/KevinMusgrave/record-keeper).
 * **pca**: The number of dimensions that your embeddings will be reduced to, using PCA. The default is None, meaning PCA will not be applied.
 * **data_device**: Which gpu to use for the loaded dataset samples. If None, then the gpu or cpu will be used (whichever is available).
-* **record_keeper**: If you pass in a [record-keeper object](https://github.com/KevinMusgrave/record-keeper), then accuracies will be logged in tensorboard, CSV, and pickle format. If None, then accuracy results will be logged via the python logging module.
 * **size_of_tsne**: The number of samples to use for a t-sne plot (requires a record_keeper). If 0, then no t-sne plot will be created.
 * **data_and_label_getter**: A function that takes the output of your dataset's _\_\_getitem\_\__ function, and returns a tuple of (data, labels). If None, then it is assumed that _\_\_getitem\_\__ returns (data, labels). 
 * **label_hierarchy_level**: If each sample in your dataset has multiple labels, then this integer argument can be used to select which "level" to use. This assumes that your labels are "2-dimensional" with shape (num_samples, num_hierarchy_levels). Leave this at the default value, 0, if your data does not have multiple labels per sample.
-* **record_group_name_prefix**: This argument is simply prepended to all tensorboard tags. This is only applicable if you are using a record_keeper, and even then you probably don't need to set it. 
+* **end_of_testing_hook**: This is a function that has one input argument, the tester object, and performs some action (e.g. logging data) at the end of testing. If None, then this parameter has no effect. If you want ready-to-use hooks, take a look at the HookContainer class in [logging_presets](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/pytorch_metric_learning/utils/logging_presets.py), and see [the end of this script](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/example_MetricLossOnly.py) for an example of how to use the hooks.
 
 ## GlobalEmbeddingSpaceTester
 Computes nearest neighbors by looking at all points in the embedding space. This is probably the tester you are looking for.

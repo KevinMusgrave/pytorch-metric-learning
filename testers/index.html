@@ -444,11 +444,10 @@
                     <span class="n">metric_for_best_epoch</span><span class="o">=</span><span class="s2">&quot;mean_average_r_precision&quot;</span><span class="p">,</span> 
                     <span class="n">pca</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
                     <span class="n">data_device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
-                    <span class="n">record_keeper</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
                     <span class="n">size_of_tsne</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> 
                     <span class="n">data_and_label_getter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                    <span class="n">label_hierarchy_level</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> 
-                    <span class="n">record_group_name_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+                    <span class="n">label_hierarchy_level</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                    <span class="n">end_of_testing_hook</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </pre></div>
 
 
@@ -474,11 +473,10 @@
 </li>
 <li><strong>pca</strong>: The number of dimensions that your embeddings will be reduced to, using PCA. The default is None, meaning PCA will not be applied.</li>
 <li><strong>data_device</strong>: Which gpu to use for the loaded dataset samples. If None, then the gpu or cpu will be used (whichever is available).</li>
-<li><strong>record_keeper</strong>: If you pass in a <a href="https://github.com/KevinMusgrave/record-keeper">record-keeper object</a>, then accuracies will be logged in tensorboard, CSV, and pickle format. If None, then accuracy results will be logged via the python logging module.</li>
 <li><strong>size_of_tsne</strong>: The number of samples to use for a t-sne plot (requires a record_keeper). If 0, then no t-sne plot will be created.</li>
 <li><strong>data_and_label_getter</strong>: A function that takes the output of your dataset's <em>__getitem__</em> function, and returns a tuple of (data, labels). If None, then it is assumed that <em>__getitem__</em> returns (data, labels). </li>
 <li><strong>label_hierarchy_level</strong>: If each sample in your dataset has multiple labels, then this integer argument can be used to select which "level" to use. This assumes that your labels are "2-dimensional" with shape (num_samples, num_hierarchy_levels). Leave this at the default value, 0, if your data does not have multiple labels per sample.</li>
-<li><strong>record_group_name_prefix</strong>: This argument is simply prepended to all tensorboard tags. This is only applicable if you are using a record_keeper, and even then you probably don't need to set it. </li>
+<li><strong>end_of_testing_hook</strong>: This is a function that has one input argument, the tester object, and performs some action (e.g. logging data) at the end of testing. If None, then this parameter has no effect. If you want ready-to-use hooks, take a look at the HookContainer class in <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/pytorch_metric_learning/utils/logging_presets.py">logging_presets</a>, and see <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/example_MetricLossOnly.py">the end of this script</a> for an example of how to use the hooks.</li>
 </ul>
 <h2 id="globalembeddingspacetester">GlobalEmbeddingSpaceTester<a class="headerlink" href="#globalembeddingspacetester" title="Permanent link">&para;</a></h2>
 <p>Computes nearest neighbors by looking at all points in the embedding space. This is probably the tester you are looking for.</p>

@@ -488,7 +488,6 @@
                     <span class="n">loss_weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">sampler</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">collate_fn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                    <span class="n">record_keeper</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">lr_schedulers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">gradient_clippers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">freeze_trunk_batchnorm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -496,7 +495,9 @@
                     <span class="n">dataloader_num_workers</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
                     <span class="n">data_and_label_getter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">dataset_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                    <span class="n">set_min_label_to_zero</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+                    <span class="n">set_min_label_to_zero</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">end_of_iteration_hook</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">end_of_epoch_hook</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </pre></div>
 
 
@@ -526,7 +527,6 @@
 If not specified, then the original labels are used.</li>
 <li><strong>sampler</strong>: The sampler used by the dataloader. If not specified, then random sampling will be used.</li>
 <li><strong>collate_fn</strong>: The collate function used by the dataloader.</li>
-<li><strong>record_keeper</strong>: An optional record-keeper object. record-keeper is a useful package for logging data during training and testing. You can use trainers without record-keeper, but if you'd like to use it, then <code>pip install record-keeper</code> and visit <a href="https://github.com/KevinMusgrave/record-keeper">the record-keeper repo</a> to learn more.</li>
 <li><strong>lr_scheduers</strong>: A dictionary of PyTorch learning rate schedulers. Each scheduler will be stepped at the end of every epoch.</li>
 <li><strong>gradient_clippers</strong>: A dictionary of gradient clipping functions. Each function will be called before the optimizers.</li>
 <li><strong>freeze_trunk_batchnorm</strong>: If True, then the BatchNorm parameters of the trunk model will be frozen during training.</li>
@@ -535,6 +535,8 @@ If not specified, then the original labels are used.</li>
 <li><strong>data_and_label_getter</strong>: A function that takes the output of your dataset's <em>__getitem__</em> function, and returns a tuple of (data, labels). If None, then it is assumed that <em>__getitem__</em> returns (data, labels). </li>
 <li><strong>dataset_labels</strong>: The labels for your dataset. Can be 1-dimensional (1 label per datapoint) or 2-dimensional, where each row represents a datapoint, and the columns are the multiple labels that the datapoint has. This option needs to be specified only if <em>set_min_label_to_zero</em> is True.</li>
 <li><strong>set_min_label_to_zero</strong>: If True, labels will be mapped such that they represent their rank in the label set. For example, if your dataset has labels 5, 10, 12, 13, then at each iteration, these would become 0, 1, 2, 3. The default is False.</li>
+<li><strong>end_of_iteration_hook</strong>: This is a function that has one input argument, the trainer object, and performs some action (e.g. logging data) at the end of every iteration. If None, then this parameter has no effect. If you want ready-to-use hooks, take a look at the HookContainer class in <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/pytorch_metric_learning/utils/logging_presets.py">logging_presets</a>, and see <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/example_MetricLossOnly.py">the end of this script</a> for an example of how to use the hooks.</li>
+<li><strong>end_of_epoch_hook</strong>: The same as <em>end_of_iteration_hook</em>, except this occurs at the end of every epoch, so this might be a suitable place to do validation. If None, then this parameter has no effect. If you want ready-to-use hooks, take a look at the HookContainer class in <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/pytorch_metric_learning/utils/logging_presets.py">logging_presets</a>, and see <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/example_MetricLossOnly.py">the end of this script</a> for an example of how to use the hooks. </li>
 </ul>
 <h2 id="metriclossonly">MetricLossOnly<a class="headerlink" href="#metriclossonly" title="Permanent link">&para;</a></h2>
 <p>This trainer just computes a metric loss from the output of your embedder network.</p>

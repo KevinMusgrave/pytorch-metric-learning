@@ -14,7 +14,7 @@ PyTorch Metric Learning
 </p>
  <p align="center">
 <a href="https://anaconda.org/metric-learning/pytorch-metric-learning">
-     <img alt="Anaconda version" src="https://img.shields.io/conda/v/metric-learning/pytorch-metric-learning">
+     <img alt="Anaconda version" src="https://img.shields.io/conda/v/metric-learning/pytorch-metric-learning?color=bright-green">
  </a>
 
 <a href="https://anaconda.org/metric-learning/pytorch-metric-learning">
@@ -29,7 +29,7 @@ PyTorch Metric Learning
  </a>
  
 <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/LICENSE">
-     <img alt="License" src="https://img.shields.io/github/license/KevinMusgrave/pytorch-metric-learning">
+     <img alt="License" src="https://img.shields.io/github/license/KevinMusgrave/pytorch-metric-learning?color=bright-green">
  </a>
 </p>
 

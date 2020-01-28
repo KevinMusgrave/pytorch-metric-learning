@@ -14,15 +14,11 @@ PyTorch Metric Learning
 </p>
  <p align="center">
 <a href="https://anaconda.org/metric-learning/pytorch-metric-learning">
-     <img alt="Anaconda version" src="https://anaconda.org/metric-learning/pytorch-metric-learning/badges/version.svg">
- </a>
- 
-<a href="https://anaconda.org/metric-learning/pytorch-metric-learning">
-     <img alt="Anaconda last updated" src="https://anaconda.org/metric-learning/pytorch-metric-learning/badges/latest_release_date.svg">
+     <img alt="Anaconda version" src="https://img.shields.io/conda/v/metric-learning/pytorch-metric-learning">
  </a>
 
 <a href="https://anaconda.org/metric-learning/pytorch-metric-learning">
-     <img alt="Anaconda downloads" src="https://anaconda.org/metric-learning/pytorch-metric-learning/badges/downloads.svg">
+     <img alt="Anaconda downloads" src="https://img.shields.io/conda/dn/metric-learning/pytorch-metric-learning?color=bright-green">
  </a>
 </p>
 

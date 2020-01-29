@@ -476,7 +476,12 @@
 <li><strong>size_of_tsne</strong>: The number of samples to use for a t-sne plot (requires a record_keeper). If 0, then no t-sne plot will be created.</li>
 <li><strong>data_and_label_getter</strong>: A function that takes the output of your dataset's <em>__getitem__</em> function, and returns a tuple of (data, labels). If None, then it is assumed that <em>__getitem__</em> returns (data, labels). </li>
 <li><strong>label_hierarchy_level</strong>: If each sample in your dataset has multiple labels, then this integer argument can be used to select which "level" to use. This assumes that your labels are "2-dimensional" with shape (num_samples, num_hierarchy_levels). Leave this at the default value, 0, if your data does not have multiple labels per sample.</li>
-<li><strong>end_of_testing_hook</strong>: This is a function that has one input argument, the tester object, and performs some action (e.g. logging data) at the end of testing. If None, then this parameter has no effect. If you want ready-to-use hooks, take a look at the HookContainer class in <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/pytorch_metric_learning/utils/logging_presets.py">logging_presets</a>, and see <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/example_MetricLossOnly.py">the end of this script</a> for an example of how to use the hooks.</li>
+<li><strong>end_of_testing_hook</strong>: This is an optional function that has one input argument (the tester object) and performs some action (e.g. logging data) at the end of testing.<ul>
+<li>You'll probably want to access the accuracy metrics, which are stored in <code>tester.all_accuracies</code>. This is a nested dictionary with the following format: <code>tester.all_accuracies[split_name][metric_name] = metric_value</code></li>
+<li>If you set <code>size_of_tsne</code> to be greater than 0, then the T-SNE embeddings will be stored in <code>tester.tsne_embeddings</code> which is a dictionary with the following format: <code>tester.tsne_embeddings[split_name]["tsne_level%d"] = (embeddings, labels)</code>. (Note that <code>"tsne_level%d"</code> refers to the label hierarchy level. If you use the default label hierarchy level, then the string will be <code>"tsne_level0"</code>.)</li>
+<li>If you want ready-to-use hooks, take a look at the <a href="../utils/#logging_presets">logging_presets module</a>.</li>
+</ul>
+</li>
 </ul>
 <h2 id="globalembeddingspacetester">GlobalEmbeddingSpaceTester<a class="headerlink" href="#globalembeddingspacetester" title="Permanent link">&para;</a></h2>
 <p>Computes nearest neighbors by looking at all points in the embedding space. This is probably the tester you are looking for.</p>

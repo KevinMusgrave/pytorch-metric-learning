@@ -535,8 +535,21 @@ If not specified, then the original labels are used.</li>
 <li><strong>data_and_label_getter</strong>: A function that takes the output of your dataset's <em>__getitem__</em> function, and returns a tuple of (data, labels). If None, then it is assumed that <em>__getitem__</em> returns (data, labels). </li>
 <li><strong>dataset_labels</strong>: The labels for your dataset. Can be 1-dimensional (1 label per datapoint) or 2-dimensional, where each row represents a datapoint, and the columns are the multiple labels that the datapoint has. This option needs to be specified only if <em>set_min_label_to_zero</em> is True.</li>
 <li><strong>set_min_label_to_zero</strong>: If True, labels will be mapped such that they represent their rank in the label set. For example, if your dataset has labels 5, 10, 12, 13, then at each iteration, these would become 0, 1, 2, 3. The default is False.</li>
-<li><strong>end_of_iteration_hook</strong>: This is a function that has one input argument, the trainer object, and performs some action (e.g. logging data) at the end of every iteration. If None, then this parameter has no effect. If you want ready-to-use hooks, take a look at the HookContainer class in <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/pytorch_metric_learning/utils/logging_presets.py">logging_presets</a>, and see <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/example_MetricLossOnly.py">the end of this script</a> for an example of how to use the hooks.</li>
-<li><strong>end_of_epoch_hook</strong>: The same as <em>end_of_iteration_hook</em>, except this occurs at the end of every epoch, so this might be a suitable place to do validation. If None, then this parameter has no effect. If you want ready-to-use hooks, take a look at the HookContainer class in <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/pytorch_metric_learning/utils/logging_presets.py">logging_presets</a>, and see <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/example_MetricLossOnly.py">the end of this script</a> for an example of how to use the hooks. </li>
+<li><strong>end_of_iteration_hook</strong>: This is an optional function that has one input argument (the trainer object), and performs some action (e.g. logging data) at the end of every iteration. Here are some things you might want to log:<ul>
+<li><code>trainer.losses</code>: this dictionary contains all loss values at the current iteration. </li>
+<li><code>trainer.loss_funcs</code> and <code>trainer.mining_funcs</code>: these dictionaries contain the loss and mining functions. <ul>
+<li>All loss and mining functions in pytorch-metric-learning have an attribute called <code>record_these</code>. This attribute is a list of strings, which are the names of other attributes that are worth recording for the purpose of analysis. For example, the <code>record_these</code> list for TripletMarginLoss is <code>["avg_embedding_norm, "num_non_zero_triplets"]</code>, so at each iteration you could log the value of <code>trainer.loss_funcs["metric_loss"].avg_embedding_norm</code> and <code>trainer.loss_funcs["metric_loss"].num_non_zero_triplets</code>. To accomplish this programmatically, you can loop through <code>record_these</code> and use the python function <code>getattr</code> to retrieve the attribute value.</li>
+</ul>
+</li>
+<li>If you want ready-to-use hooks, take a look at the <a href="../utils/#logging_presets">logging_presets module</a>.</li>
+</ul>
+</li>
+<li><strong>end_of_epoch_hook</strong>: This is an optional function that operates like <em>end_of_iteration_hook</em>, except this occurs at the end of every epoch, so this might be a suitable place to run validation and save models. <ul>
+<li>To end training early, your hook should return the boolean value False. Note, it must specifically <code>return False</code>, not <code>None</code>, <code>0</code>, <code>[]</code> etc.</li>
+<li>For this hook, you might want to access the following dictionaries: <code>trainer.models</code>, <code>trainer.optimizers</code>, <code>trainer.lr_schedulers</code>, <code>trainer.loss_funcs</code>, and <code>trainer.mining_funcs</code>.</li>
+<li>If you want ready-to-use hooks, take a look at the <a href="../utils/#logging_presets">logging_presets module</a>.</li>
+</ul>
+</li>
 </ul>
 <h2 id="metriclossonly">MetricLossOnly<a class="headerlink" href="#metriclossonly" title="Permanent link">&para;</a></h2>
 <p>This trainer just computes a metric loss from the output of your embedder network.</p>

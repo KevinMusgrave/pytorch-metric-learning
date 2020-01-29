@@ -1,6 +1,6 @@
 # PyTorch Metric Learning
 
-## Installation:
+## Installation
 Conda:
 ```
 conda install pytorch-metric-learning -c metric-learning

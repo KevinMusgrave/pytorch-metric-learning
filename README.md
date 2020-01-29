@@ -58,8 +58,8 @@ pip install pytorch-metric-learning
 ## Benchmark results
 See [powerful-benchmarker](https://github.com/KevinMusgrave/powerful-benchmarker/) to view benchmark results and to use the benchmarking tool.
 
-## Currently implemented classes:
-### [Loss functions](https://kevinmusgrave.github.io/pytorch-metric-learning/losses):
+## Library contents
+### [Losses](https://kevinmusgrave.github.io/pytorch-metric-learning/losses):
 - [**AngularLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#angularloss) ([Deep Metric Learning with Angular Loss](https://arxiv.org/pdf/1708.01682.pdf))
 - [**ArcFaceLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#arcfaceloss) ([ArcFace: Additive Angular Margin Loss for Deep Face Recognition](https://arxiv.org/pdf/1801.07698.pdf))
 - [**ContrastiveLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#contrastiveloss)
@@ -76,7 +76,7 @@ See [powerful-benchmarker](https://github.com/KevinMusgrave/powerful-benchmarker
 - [**TripletMarginLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#tripletmarginloss)
 - **more to be added**
 
-### [Mining functions](https://kevinmusgrave.github.io/pytorch-metric-learning/miners):
+### [Miners](https://kevinmusgrave.github.io/pytorch-metric-learning/miners):
 - [**AngularMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#angularminer)
 - [**BatchHardMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#batchhardminer) ([In Defense of the Triplet Loss for Person Re-Identification](https://arxiv.org/pdf/1703.07737.pdf))
 - [**DistanceWeightedMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#distanceweightedminer) ([Sampling Matters in Deep Embedding Learning](https://arxiv.org/pdf/1706.07567.pdf))
@@ -95,7 +95,7 @@ See [powerful-benchmarker](https://github.com/KevinMusgrave/powerful-benchmarker
 - [**FixedSetOfTriplets**](https://kevinmusgrave.github.io/pytorch-metric-learning/samplers/#fixedsetoftriplets)
 - **more to be added**
 
-### [Training methods](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers):
+### [Trainers](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers):
 - [**MetricLossOnly**](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#metriclossonly)
 - [**TrainWithClassifier**](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#trainwithclassifier)
 - [**CascadedEmbeddings**](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#cascadedembeddings) ([Hard-Aware Deeply Cascaded Embedding](http://openaccess.thecvf.com/content_ICCV_2017/papers/Yuan_Hard-Aware_Deeply_Cascaded_ICCV_2017_paper.pdf))
@@ -103,10 +103,14 @@ See [powerful-benchmarker](https://github.com/KevinMusgrave/powerful-benchmarker
 - [**UnsupervisedEmbeddingsUsingAugmentations**](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#unsupervisedembeddingsusingaugmentations)
 - **more to be added**
 
-### [Testing methods](https://kevinmusgrave.github.io/pytorch-metric-learning/testers):
+### [Testers](https://kevinmusgrave.github.io/pytorch-metric-learning/testers):
 - [**GlobalEmbeddingSpaceTester**](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#globalembeddingspacetester)
 - [**WithSameParentLabelTester**](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#withsameparentlabeltester)
 - **more to be added**
+
+### [Utils](https://kevinmusgrave.github.io/pytorch-metric-learning/utils):
+- [**HookContainer**](https://kevinmusgrave.github.io/pytorch-metric-learning/utils/#hookcontainer)
+
 
 ## Overview
 Let’s try the vanilla triplet margin loss. In all examples, embeddings is assumed to be of size (N, embedding_size), and labels is of size (N).

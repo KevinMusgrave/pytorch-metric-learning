@@ -4,7 +4,8 @@ import logging
 try:
     import faiss
 except ModuleNotFoundError:
-    logging.error("The testing module requires faiss. You can install it with the command 'conda install faiss-gpu -c pytorch'. Learn more at https://github.com/facebookresearch/faiss/blob/master/INSTALL.md")
+    logging.error("""The testing module requires faiss. You can install the GPU version with the command 'conda install faiss-gpu -c pytorch' 
+                        or the CPU version with 'conda install faiss-cpu -c pytorch'. Learn more at https://github.com/facebookresearch/faiss/blob/master/INSTALL.md""")
 import torch
 import numpy as np
 
@@ -26,8 +27,9 @@ def get_knn(
     d = reference_embeddings.shape[1]
     logging.info("running k-nn with k=%d"%k)
     logging.info("embedding dimensionality is %d"%d)
-    cpu_index = faiss.IndexFlatL2(d)
-    index = faiss.index_cpu_to_all_gpus(cpu_index)
+    index = faiss.IndexFlatL2(d)
+    if faiss.get_num_gpus() > 0:
+        index = faiss.index_cpu_to_all_gpus(index)
     index.add(reference_embeddings)
     _, indices = index.search(test_embeddings, k + 1)
     if embeddings_come_from_same_source:
@@ -50,8 +52,9 @@ def run_kmeans(x, nmb_clusters):
     clus = faiss.Clustering(d, nmb_clusters)
     clus.niter = 20
     clus.max_points_per_centroid = 10000000
-    cpu_index = faiss.IndexFlatL2(d)
-    index = faiss.index_cpu_to_all_gpus(cpu_index)
+    index = faiss.IndexFlatL2(d)
+    if faiss.get_num_gpus() > 0:
+        index = faiss.index_cpu_to_all_gpus(index)
     # perform the training
     clus.train(x, index)
     _, idxs = index.search(x, 1)

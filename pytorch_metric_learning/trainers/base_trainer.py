@@ -57,10 +57,10 @@ class BaseTrainer:
         self.initialize_data_device()
         self.initialize_label_mapper()
         self.initialize_loss_tracker()
-        self.initialize_dataloader()
         self.initialize_loss_weights()
         self.initialize_data_and_label_getter()
         self.initialize_hooks()
+        self.initialize_lr_schedulers()
         
     def custom_setup(self):
         pass
@@ -71,9 +71,10 @@ class BaseTrainer:
     def update_loss_weights(self):
         pass
 
-    def train(self, start_epoch=1, num_epochs=0):
-        self.set_to_train()
-        for self.epoch in range(start_epoch, start_epoch+num_epochs):
+    def train(self, start_epoch=1, num_epochs=1):
+        self.initialize_dataloader()
+        for self.epoch in range(start_epoch, num_epochs+1):
+            self.set_to_train()
             logging.info("TRAINING EPOCH %d" % self.epoch)
             pbar = tqdm.tqdm(range(self.iterations_per_epoch))
             for self.iteration in pbar:
@@ -81,7 +82,8 @@ class BaseTrainer:
                 self.end_of_iteration_hook(self)
                 pbar.set_description("total_loss=%.5f" % self.losses["total_loss"])
             self.step_lr_schedulers()
-            self.end_of_epoch_hook(self)
+            if self.end_of_epoch_hook(self) is False:
+                break
 
     def initialize_dataloader(self):
         logging.info("Initializing dataloader")
@@ -216,4 +218,8 @@ class BaseTrainer:
         if self.end_of_iteration_hook is None:
             self.end_of_iteration_hook = lambda x: None
         if self.end_of_epoch_hook is None:
-            self.end_of_epoch_hook = lambda x: None
+            self.end_of_epoch_hook = lambda x: True
+
+    def initialize_lr_schedulers(self):
+        if self.lr_schedulers is None:
+            self.lr_schedulers = {}

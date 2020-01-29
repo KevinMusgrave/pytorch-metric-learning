@@ -2,17 +2,11 @@ import collections
 import torch
 from torch.autograd import Variable
 import numpy as np
+import os
+import logging
+import glob
 
 NUMPY_RANDOM_STATE = np.random.RandomState()
-
-
-def try_keys(input_dict, keys):
-    for k in keys:
-        try:
-            return input_dict[k]
-        except BaseException:
-            pass
-    return None
 
 
 def try_next_on_generator(gen, iterable):
@@ -195,3 +189,74 @@ def add_to_recordable_attributes(input_obj, name=None, list_of_names=None):
     if list_of_names is not None and isinstance(list_of_names, list):
         for n in list_of_names:
             add_to_recordable_attributes(input_obj, name=n)
+
+
+def modelpath_creator(folder, basename, identifier, extension=".pth"):
+    if identifier is None:
+        return os.path.join(folder, basename+extension)
+    else:
+        return os.path.join(folder, "%s_%s%s" % (basename, str(identifier), extension))
+
+
+def save_model(model, model_name, filepath):
+    if isinstance(model, torch.nn.DataParallel):
+        torch.save(model.module.state_dict(), filepath)
+    else:
+        torch.save(model.state_dict(), filepath)
+
+
+def load_model(model_def, model_filename, device):
+    try:
+        model_def.load_state_dict(torch.load(model_filename, map_location=device))
+    except BaseException:
+        # original saved file with DataParallel
+        state_dict = torch.load(model_filename)
+        # create new OrderedDict that does not contain `module.`
+        from collections import OrderedDict
+
+        new_state_dict = OrderedDict()
+        for k, v in state_dict.items():
+            name = k[7:]  # remove `module.`
+            new_state_dict[name] = v
+        # load params
+        model_def.load_state_dict(new_state_dict)
+
+
+def operate_on_dict_of_models(input_dict, suffix, folder, operation, logging_string=''):
+    for k, v in input_dict.items():
+        opt_cond = "optimizer" in k
+        if opt_cond or len([i for i in v.parameters()]) > 0:
+            model_path = modelpath_creator(folder, k, suffix)
+            if logging_string != '':
+                logging.info("%s %s"%(logging_string, model_path))
+            operation(k, v, model_path)
+
+
+def save_dict_of_models(input_dict, suffix, folder):
+    def operation(k, v, model_path):
+        save_model(v, k, model_path)
+    operate_on_dict_of_models(input_dict, suffix, folder, operation)
+
+
+def load_dict_of_models(input_dict, suffix, folder, device):
+    def operation(k, v, model_path):
+        load_model(v, model_path, device)
+    operate_on_dict_of_models(input_dict, suffix, folder, operation, "LOADING")
+
+
+def delete_dict_of_models(input_dict, suffix, folder):
+    def operation(k, v, model_path):
+        try:
+            os.remove(model_path)
+        except:
+            pass
+    operate_on_dict_of_models(input_dict, suffix, folder, operation)
+            
+
+def latest_version(folder, string_to_glob):
+    items = glob.glob(os.path.join(folder, string_to_glob))
+    if items == []:
+        return None
+    items = [x for x in items if not x.endswith("best.pth")]
+    version = [int(x.split("_")[-1].split(".")[0]) for x in items]
+    return max(version)

@@ -287,6 +287,20 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#basepostgradientminer" class="md-nav__link">
+    BasePostGradientMiner
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#basepregradientminer" class="md-nav__link">
+    BasePreGradientMiner
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#batchhardminer" class="md-nav__link">
     BatchHardMiner
   </a>
@@ -448,6 +462,20 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#basepostgradientminer" class="md-nav__link">
+    BasePostGradientMiner
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#basepregradientminer" class="md-nav__link">
+    BasePreGradientMiner
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#batchhardminer" class="md-nav__link">
     BatchHardMiner
   </a>
@@ -525,8 +553,8 @@
                 <h1 id="miners">Miners<a class="headerlink" href="#miners" title="Permanent link">&para;</a></h1>
 <p>Mining functions come in two flavors:</p>
 <ul>
-<li><strong>pre-gradient miners</strong> output indices corresponding to a subset of the input batch. The idea is to use these miners with torch.no_grad(), and with a large input batch size.</li>
-<li><strong>post-gradient miners</strong> output a tuple of indices: <ul>
+<li><strong><a href="./#basepregradientminer">pre-gradient miners</a></strong> output indices corresponding to a subset of the input batch. The idea is to use these miners with torch.no_grad(), and with a large input batch size.</li>
+<li><strong><a href="./#basepostgradientminer">post-gradient miners</a></strong> output a tuple of indices: <ul>
 <li>Pair miners output a tuple of size 4: (anchors, positives, anchors, negatives)</li>
 <li>Triplet miners output a tuple of size 3: (anchors, positives, negatives) </li>
 </ul>
@@ -562,14 +590,37 @@
 <li><strong>normalize_embeddings</strong>: If True, embeddings will be normalized to have a Euclidean norm of 1 before any mining occurs.</li>
 </ul>
 <p><strong>Required Implementations</strong>:</p>
-<div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">mine</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
+<div class="codehilite"><pre><span></span><span class="c1"># Return indices of some form</span>
+<span class="k">def</span> <span class="nf">mine</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
     <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
+<span class="c1"># Validate the output of the miner. </span>
 <span class="k">def</span> <span class="nf">output_assertion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">):</span>
     <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 </pre></div>
 
 
+<h2 id="basepostgradientminer">BasePostGradientMiner<a class="headerlink" href="#basepostgradientminer" title="Permanent link">&para;</a></h2>
+<p>This extends <a href="./#baseminer">BaseMiner</a>, and most miners extend this class. </p>
+<p>It outputs a tuple of indices:</p>
+<ul>
+<li>Pair miners output a tuple of size 4: (anchors, positives, anchors, negatives)</li>
+<li>Triplet miners output a tuple of size 3: (anchors, positives, negatives) </li>
+</ul>
+<div class="codehilite"><pre><span></span><span class="n">miners</span><span class="o">.</span><span class="n">BasePostGradientMiner</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+
+<h2 id="basepregradientminer">BasePreGradientMiner<a class="headerlink" href="#basepregradientminer" title="Permanent link">&para;</a></h2>
+<p>This extends <a href="./#baseminer">BaseMiner</a>. It outputs indices corresponding to a subset of the input batch. The idea is to use these miners with torch.no_grad(), and with a large input batch size.</p>
+<div class="codehilite"><pre><span></span><span class="n">miners</span><span class="o">.</span><span class="n">BasePreGradientMiner</span><span class="p">(</span><span class="n">output_batch_size</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>output_batch_size</strong>: An integer that is the size of the subset that the miner will output.</li>
+</ul>
 <h2 id="batchhardminer">BatchHardMiner<a class="headerlink" href="#batchhardminer" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1703.07737.pdf">In Defense of the Triplet Loss for Person Re-Identification</a></p>
 <div class="codehilite"><pre><span></span><span class="n">miners</span><span class="o">.</span><span class="n">BatchHardMiner</span><span class="p">(</span><span class="n">use_similarity</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">squared_distances</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>

@@ -1,8 +1,8 @@
 # Miners
 Mining functions come in two flavors:
 
-* **pre-gradient miners** output indices corresponding to a subset of the input batch. The idea is to use these miners with torch.no_grad(), and with a large input batch size.
-* **post-gradient miners** output a tuple of indices: 
+* **[pre-gradient miners](miners.md#basepregradientminer)** output indices corresponding to a subset of the input batch. The idea is to use these miners with torch.no_grad(), and with a large input batch size.
+* **[post-gradient miners](miners.md#basepostgradientminer)** output a tuple of indices: 
 	* Pair miners output a tuple of size 4: (anchors, positives, anchors, negatives)
 	* Triplet miners output a tuple of size 3: (anchors, positives, negatives) 
 
@@ -40,27 +40,35 @@ miners.BaseMiner(normalize_embeddings=True)
 
 **Required Implementations**:
 ```python
+# Return indices of some form
 def mine(self, embeddings, labels):
     raise NotImplementedError
 
+# Validate the output of the miner. 
 def output_assertion(self, output):
 	raise NotImplementedError
 ```
 
 ## BasePostGradientMiner
-This extends [BaseMiner](miners.md#BaseMiner), and most miners extend this class.
+This extends [BaseMiner](miners.md#baseminer), and most miners extend this class. 
+
+It outputs a tuple of indices:
+
+* Pair miners output a tuple of size 4: (anchors, positives, anchors, negatives)
+* Triplet miners output a tuple of size 3: (anchors, positives, negatives) 
 
 ```python
 miners.BasePostGradientMiner(**kwargs)
 ```
 
 ## BasePreGradientMiner
-This extends [BaseMiner](miners.md#BaseMiner).
+This extends [BaseMiner](miners.md#baseminer). It outputs indices corresponding to a subset of the input batch. The idea is to use these miners with torch.no_grad(), and with a large input batch size.
 ```python
 miners.BasePreGradientMiner(output_batch_size, **kwargs)
 ```
 
 **Parameters**
+
 * **output_batch_size**: An integer that is the size of the subset that the miner will output.
 
 ## BatchHardMiner

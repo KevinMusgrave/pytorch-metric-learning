@@ -1,5 +1,5 @@
 {% set name = "pytorch-metric-learning" %}
-{% set version = "0.9.68" %}
+{% set version = "0.9.69" %}
 
 package:
   name: "{{ name|lower }}"
@@ -7,7 +7,7 @@ package:
 
 source:
   url: "https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz"
-  sha256: "b8df048bdb511217c826bba9775bf80f376c93201a5b31a059d5b35a25eb84c2"
+  sha256: "c77541bedaf2fbf12547dee41d84249210aefb8b0fca967989c577be73ddfddb"
 
 build:
   number: 0
@@ -28,7 +28,7 @@ about:
   license: "MIT"
   license_family: "MIT"
   license_file: ""
-  summary: "The easiest way to use metric learning in your application. Modular, flexible, and extensible. Written in PyTorch."
+  summary: "The easiest way to use deep metric learning in your application. Modular, flexible, and extensible. Written in PyTorch."
   doc_url: "https://kevinmusgrave.github.io/pytorch-metric-learning"
   dev_url: ""
 

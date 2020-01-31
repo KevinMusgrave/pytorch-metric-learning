@@ -5,10 +5,10 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="pytorch-metric-learning",
-    version="0.9.68",
+    version="0.9.69",
     author="Kevin Musgrave",
     author_email="tkm45@cornell.edu",
-    description="The easiest way to use metric learning in your application. Modular, flexible, and extensible. Written in PyTorch.",
+    description="The easiest way to use deep metric learning in your application. Modular, flexible, and extensible. Written in PyTorch.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/KevinMusgrave/pytorch-metric-learning",

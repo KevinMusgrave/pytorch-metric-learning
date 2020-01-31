@@ -1,4 +1,4 @@
-from .base_miner import BaseMiner
+from .base_miner import BaseMiner, BasePostGradientMiner, BasePreGradientMiner
 from .angular_miner import AngularMiner
 from .batch_hard_miner import BatchHardMiner
 from .distance_weighted_miner import DistanceWeightedMiner

@@ -199,7 +199,7 @@ def modelpath_creator(folder, basename, identifier, extension=".pth"):
 
 
 def save_model(model, model_name, filepath):
-    if isinstance(model, torch.nn.DataParallel):
+    if any(isinstance(model, x) for x in [torch.nn.DataParallel, torch.nn.parallel.DistributedDataParallel]):
         torch.save(model.module.state_dict(), filepath)
     else:
         torch.save(model.state_dict(), filepath)

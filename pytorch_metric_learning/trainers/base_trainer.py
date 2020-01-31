@@ -203,12 +203,12 @@ class BaseTrainer:
 
     def set_to_train(self):
         for k, v in self.models.items():
-            self.models[k] = v.train()
+            v.train()
         self.maybe_freeze_trunk_batchnorm()
 
     def set_to_eval(self):
         for k, v in self.models.items():
-            self.models[k] = v.eval()
+            v.eval()
 
     def initialize_loss_weights(self):
         if self.loss_weights is None:

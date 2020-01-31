@@ -47,6 +47,22 @@ def output_assertion(self, output):
 	raise NotImplementedError
 ```
 
+## BasePostGradientMiner
+This extends [BaseMiner](miners.md#BaseMiner), and most miners extend this class.
+
+```python
+miners.BasePostGradientMiner(**kwargs)
+```
+
+## BasePreGradientMiner
+This extends [BaseMiner](miners.md#BaseMiner).
+```python
+miners.BasePreGradientMiner(output_batch_size, **kwargs)
+```
+
+**Parameters**
+* **output_batch_size**: An integer that is the size of the subset that the miner will output.
+
 ## BatchHardMiner
 
 [In Defense of the Triplet Loss for Person Re-Identification](https://arxiv.org/pdf/1703.07737.pdf)

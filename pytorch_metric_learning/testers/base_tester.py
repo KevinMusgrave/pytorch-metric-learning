@@ -164,7 +164,8 @@ class BaseTester:
 
     def test(self, dataset_dict, epoch, trunk_model, embedder_model, splits_to_eval=None, collate_fn=None, **kwargs):
         logging.info("Evaluating epoch %d" % epoch)
-        trunk_model, embedder_model = trunk_model.eval(), embedder_model.eval()
+        trunk_model.eval()
+        embedder_model.eval()
         splits_to_eval, splits_to_compute_embeddings = self.get_splits_to_compute_embeddings(dataset_dict, splits_to_eval)
         embeddings_and_labels = self.get_all_embeddings_for_all_splits(dataset_dict, trunk_model, embedder_model, splits_to_compute_embeddings, collate_fn)
         self.maybe_compute_tsne(embeddings_and_labels, epoch)

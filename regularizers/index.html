@@ -292,6 +292,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#centerinvariantregularizer" class="md-nav__link">
+    CenterInvariantRegularizer
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#regularfaceregularizer" class="md-nav__link">
     RegularFaceRegularizer
   </a>
@@ -385,6 +392,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#centerinvariantregularizer" class="md-nav__link">
+    CenterInvariantRegularizer
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#regularfaceregularizer" class="md-nav__link">
     RegularFaceRegularizer
   </a>
@@ -429,10 +443,18 @@
 <ul>
 <li><strong>normalize_weights</strong>: If True, weights will be normalized to have a Euclidean norm of 1 before any regularization occurs.</li>
 </ul>
-<p>An object of this class can be passed as the <em>regularizer</em> argument into any class that extends <a href="../losses/#weightregularizermixin">WeightRegularizerMixin</a>.</p>
+<p>An object of this class can be passed as the <code>regularizer</code> argument into any class that extends <a href="../losses/#weightregularizermixin">WeightRegularizerMixin</a>.</p>
+<h2 id="centerinvariantregularizer">CenterInvariantRegularizer<a class="headerlink" href="#centerinvariantregularizer" title="Permanent link">&para;</a></h2>
+<p><a href="http://www1.ece.neu.edu/~yuewu/files/2017/twu024.pdf">Deep Face Recognition with Center Invariant Loss</a></p>
+<div class="codehilite"><pre><span></span><span class="n">regularizers</span><span class="o">.</span><span class="n">CenterInvariantRegularizer</span><span class="p">(</span><span class="n">normalize_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+
+
+<p>Extends <a href="./#baseweightregularizer">BaseWeightRegularizer</a>.
+<code>normalize_weights</code> must be False.</p>
 <h2 id="regularfaceregularizer">RegularFaceRegularizer<a class="headerlink" href="#regularfaceregularizer" title="Permanent link">&para;</a></h2>
 <p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Zhao_RegularFace_Deep_Face_Recognition_via_Exclusive_Regularization_CVPR_2019_paper.pdf">RegularFace: Deep Face Recognition via Exclusive Regularization</a></p>
-<div class="codehilite"><pre><span></span><span class="n">regularizers</span><span class="o">.</span><span class="n">RegularFaceRegularizer</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><span class="n">regularizers</span><span class="o">.</span><span class="n">RegularFaceRegularizer</span><span class="p">(</span><span class="n">normalize_weights</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 
 

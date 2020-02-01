@@ -19,12 +19,22 @@ regularizers.BaseWeightRegularizer(normalize_weights=True)
 
 * **normalize_weights**: If True, weights will be normalized to have a Euclidean norm of 1 before any regularization occurs.
 
-An object of this class can be passed as the _regularizer_ argument into any class that extends [WeightRegularizerMixin](losses.md#weightregularizermixin).
+An object of this class can be passed as the ```regularizer``` argument into any class that extends [WeightRegularizerMixin](losses.md#weightregularizermixin).
+
+
+## CenterInvariantRegularizer
+[Deep Face Recognition with Center Invariant Loss](http://www1.ece.neu.edu/~yuewu/files/2017/twu024.pdf)
+```python
+regularizers.CenterInvariantRegularizer(normalize_weights=False)
+```
+Extends [BaseWeightRegularizer](regularizers.md#baseweightregularizer).
+```normalize_weights``` must be False.
+
 
 ## RegularFaceRegularizer
 [RegularFace: Deep Face Recognition via Exclusive Regularization](http://openaccess.thecvf.com/content_CVPR_2019/papers/Zhao_RegularFace_Deep_Face_Recognition_via_Exclusive_Regularization_CVPR_2019_paper.pdf)
 ```python
-regularizers.RegularFaceRegularizer(**kwargs)
+regularizers.RegularFaceRegularizer(normalize_weights=True)
 ```
 Extends [BaseWeightRegularizer](regularizers.md#baseweightregularizer).
 

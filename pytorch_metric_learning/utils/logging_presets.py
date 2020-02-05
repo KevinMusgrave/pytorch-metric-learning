@@ -25,7 +25,7 @@ class HookContainer:
     def end_of_iteration_hook(self, trainer):
         record_these = [[trainer.loss_tracker.losses, {"input_group_name_for_non_objects": "loss_histories"}],
                         [trainer.loss_tracker.loss_weights, {"input_group_name_for_non_objects": "loss_weights"}],
-                        [trainer.loss_funcs, {}],
+                        [trainer.loss_funcs, {"recursive_types": [torch.nn.Module]}],
                         [trainer.mining_funcs, {}],
                         [trainer.models, {}],
                         [trainer.optimizers, {"custom_attr_func": lambda x: {"lr": x.param_groups[0]["lr"]}}]]

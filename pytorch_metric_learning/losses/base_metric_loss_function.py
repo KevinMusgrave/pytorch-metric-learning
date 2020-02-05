@@ -88,3 +88,16 @@ class BaseMetricLossFunction(torch.nn.Module):
 
     def add_to_recordable_attributes(self, name=None, list_of_names=None):
         c_f.add_to_recordable_attributes(self, name=name, list_of_names=list_of_names)
+
+
+
+class MultipleLosses(torch.nn.Module):
+    def __init__(self, losses):
+        super().__init__()
+        self.losses = torch.nn.ModuleList(losses)
+
+    def forward(self, embeddings, labels, indices_tuple=None):
+        total_loss = 0
+        for loss in self.losses:
+            total_loss += loss(embeddings, labels, indices_tuple)
+        return total_loss / len(self.losses)

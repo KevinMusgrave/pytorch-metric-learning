@@ -28,7 +28,7 @@ class HookContainer:
                         [trainer.loss_funcs, {"recursive_types": [torch.nn.Module]}],
                         [trainer.mining_funcs, {}],
                         [trainer.models, {}],
-                        [trainer.optimizers, {"custom_attr_func": lambda x: {"lr": x.param_groups[0]["lr"]}}]]
+                        [trainer.optimizers, {"custom_attr_func": self.optimizer_custom_attr_func}]]
         for record, kwargs in record_these:
             self.record_keeper.update_records(record, trainer.get_global_iteration(), **kwargs)
 
@@ -161,6 +161,9 @@ class HookContainer:
         base_record_group_name += tester.suffixes("%s_%s"%("accuracies", tester.__class__.__name__))
         return "%s_%s"%(base_record_group_name, split_name.upper())
 
+    def optimizer_custom_attr_func(self, optimizer):
+        return {"lr": optimizer.param_groups[0]["lr"]}
+
 
 
 def get_record_keeper(pkl_folder, tensorboard_folder):
@@ -183,7 +186,8 @@ def get_hook_container(record_keeper):
     else:
         logging.warn("No record_keeper, so no preset hooks are being returned.")
         class EmptyContainer:
+            def end_of_epoch_hook(self, *args):
+                return None
             end_of_iteration_hook = None
-            end_of_epoch_hook = lambda *args: None
             end_of_testing_hook = None
         return EmptyContainer()

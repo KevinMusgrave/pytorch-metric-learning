@@ -13,7 +13,6 @@ class AngularLoss(BaseMetricLossFunction):
     """
     def __init__(self, alpha, triplets_per_anchor=100, **kwargs):
         self.alpha = torch.tensor(np.radians(alpha))
-        self.maybe_modify_loss = lambda x: x
         self.triplets_per_anchor = triplets_per_anchor
         self.add_to_recordable_attributes(list_of_names=["num_anchors", "average_angle"])
         super().__init__(**kwargs)
@@ -43,3 +42,6 @@ class AngularLoss(BaseMetricLossFunction):
 
     def create_learnable_parameter(self, init_value):
         return super().create_learnable_parameter(init_value, unsqueeze=True)
+
+    def maybe_modify_loss(self, x):
+        return x

@@ -37,7 +37,6 @@ class TripletMarginLoss(BaseMetricLossFunction):
         self.avg_non_zero_only = avg_non_zero_only
         self.triplets_per_anchor = triplets_per_anchor
         self.add_to_recordable_attributes(name="num_non_zero_triplets")
-        self.maybe_modify_loss = lambda x: x
         super().__init__(**kwargs)
 
     def compute_loss(self, embeddings, labels, indices_tuple):
@@ -67,3 +66,7 @@ class TripletMarginLoss(BaseMetricLossFunction):
             if self.avg_non_zero_only:
                 return torch.sum(relued) / (self.num_non_zero_triplets + 1e-16)
             return torch.mean(relued)
+
+    def maybe_modify_loss(self, x):
+        return x
+

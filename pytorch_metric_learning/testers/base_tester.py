@@ -26,9 +26,24 @@ class BaseTester:
         self.data_device = torch.device("cuda" if torch.cuda.is_available() else "cpu") if data_device is None else data_device
         self.dataloader_num_workers = dataloader_num_workers
         self.size_of_tsne = size_of_tsne
-        self.data_and_label_getter = (lambda x : x) if data_and_label_getter is None else data_and_label_getter
+        self.data_and_label_getter = data_and_label_getter
         self.label_hierarchy_level = label_hierarchy_level
-        self.end_of_testing_hook = (lambda x: logging.info(x.all_accuracies)) if end_of_testing_hook is None else end_of_testing_hook        
+        self.end_of_testing_hook = end_of_testing_hook
+        self.initialize_data_and_label_getter()
+        self.initialize_hooks()
+              
+
+    def initialize_data_and_label_getter(self):
+        if self.data_and_label_getter is None:
+            def data_and_label_getter(x):
+                return x
+            self.data_and_label_getter = data_and_label_getter
+
+    def initialize_hooks(self):
+        if self.end_of_testing_hook is None:
+            def end_of_testing_hook(x):
+                logging.info(x.all_accuracies)
+            self.end_of_testing_hook = end_of_testing_hook 
 
     def maybe_normalize(self, embeddings):
         if self.pca:

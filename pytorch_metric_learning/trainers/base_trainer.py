@@ -188,10 +188,13 @@ class BaseTrainer:
 
     def initialize_label_mapper(self):
         if not self.set_min_label_to_zero:
-            self.label_mapper = lambda labels, hierarchy_level: labels
+            def label_mapper(labels, hierarchy_level):
+                return labels
         else:
             label_map = c_f.get_label_map(self.dataset_labels)
-            self.label_mapper = lambda labels, hierarchy_level: np.array([label_map[hierarchy_level][x] for x in labels], dtype=np.int)
+            def label_mapper(labels, hierarchy_level):
+                return np.array([label_map[hierarchy_level][x] for x in labels], dtype=np.int)
+        self.label_mapper = label_mapper
         
     def initialize_loss_tracker(self):
         self.loss_tracker = l_t.LossTracker(self.loss_names)
@@ -199,7 +202,9 @@ class BaseTrainer:
 
     def initialize_data_and_label_getter(self):
         if self.data_and_label_getter is None:
-            self.data_and_label_getter = lambda x : x
+            def data_and_label_getter(x):
+                return x
+            self.data_and_label_getter = data_and_label_getter
 
     def set_to_train(self):
         for k, v in self.models.items():
@@ -216,9 +221,14 @@ class BaseTrainer:
 
     def initialize_hooks(self):
         if self.end_of_iteration_hook is None:
-            self.end_of_iteration_hook = lambda x: None
+            def end_of_iteration_hook(x):
+                return None
+            self.end_of_iteration_hook = end_of_iteration_hook
+            
         if self.end_of_epoch_hook is None:
-            self.end_of_epoch_hook = lambda x: True
+            def end_of_epoch_hook(x):
+                return True
+            self.end_of_epoch_hook = end_of_epoch_hook
 
     def initialize_lr_schedulers(self):
         if self.lr_schedulers is None:

@@ -64,7 +64,7 @@ See [powerful-benchmarker](https://github.com/KevinMusgrave/powerful-benchmarker
 - [**ArcFaceLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#arcfaceloss) ([ArcFace: Additive Angular Margin Loss for Deep Face Recognition](https://arxiv.org/pdf/1801.07698.pdf))
 - [**ContrastiveLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#contrastiveloss) ([Learning a similarity metric discriminatively, with application to face verification](http://yann.lecun.com/exdb/publis/pdf/chopra-05.pdf))
 - [**FastAPLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#fastaploss) ([Deep Metric Learning to Rank](http://openaccess.thecvf.com/content_CVPR_2019/papers/Cakir_Deep_Metric_Learning_to_Rank_CVPR_2019_paper.pdf))
-- [**GeneralizedLiftedStructureLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#generalizedliftedstructureloss)
+- [**GeneralizedLiftedStructureLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#generalizedliftedstructureloss) ([Deep Metric Learning via Lifted Structured Feature Embedding](https://arxiv.org/pdf/1511.06452.pdf))
 - [**MarginLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#marginloss) ([Sampling Matters in Deep Embedding Learning](https://arxiv.org/pdf/1706.07567.pdf))
 - [**MultiSimilarityLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#multisimilarityloss) ([Multi-Similarity Loss with General Pair Weighting for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf))
 - [**NCALoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#ncaloss) ([Neighbourhood Components Analysis](https://www.cs.toronto.edu/~hinton/absps/nca.pdf))
@@ -108,16 +108,17 @@ See [powerful-benchmarker](https://github.com/KevinMusgrave/powerful-benchmarker
 ### [Utils](https://kevinmusgrave.github.io/pytorch-metric-learning/utils):
 - [**HookContainer**](https://kevinmusgrave.github.io/pytorch-metric-learning/utils/#hookcontainer)
 
-### Base Classes and Mixins:
+### Base Classes, Mixins, and Wrappers:
 - [**BaseMetricLossFunction**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#basemetriclossfunction)
-- [**GenericPairLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#genericpairloss)
-- [**WeightRegularizerMixin**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#weightregularizermixin)
 - [**BaseMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#baseminer)
 - [**BasePostGradientMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#basepostgradientminer)
 - [**BasePreGradientMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#basepregradientminer)
 - [**BaseWeightRegularizer**](https://kevinmusgrave.github.io/pytorch-metric-learning/regularizers/#baseweightregularizer)
 - [**BaseTrainer**](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#basetrainer)
 - [**BaseTester**](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#basetester)
+- [**GenericPairLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#genericpairloss)
+- [**MultipleLosses**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#multiplelosses)
+- [**WeightRegularizerMixin**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#weightregularizermixin)
 
 
 ## Overview
@@ -164,7 +165,7 @@ To learn more about all of the above, [see the documentation](https://kevinmusgr
 Thank you to [Ser-Nam Lim](https://research.fb.com/people/lim-ser-nam/) at [Facebook AI](https://ai.facebook.com/), and my research advisor, [Professor Serge Belongie](https://vision.cornell.edu/se3/people/serge-belongie/). This project began during my internship at Facebook AI where I received valuable feedback from Ser-Nam, and his team of computer vision and machine learning engineers and research scientists. In particular, thanks to [Ashish Shah](https://www.linkedin.com/in/ashish217/) and [Austin Reiter](https://www.linkedin.com/in/austin-reiter-3962aa7/) for reviewing my code during its early stages of development.
 
 ### Open-source repos
-This library contains code that has been adapted from the following great open-source repos:
+This library contains code that has been adapted and modified from the following great open-source repos:
 - https://github.com/bnu-wangxun/Deep_Metric
 - https://github.com/chaoyuaw/incubator-mxnet/blob/master/example/gluon/embedding_learning
 - https://github.com/facebookresearch/deepcluster

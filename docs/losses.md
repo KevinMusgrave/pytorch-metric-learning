@@ -141,6 +141,15 @@ learnable_param_names=["beta"]
 ```
 You can then pass the loss function's parameters() to any PyTorch optimizer.
 
+## MultipleLosses
+This is a simple wrapper for multiple losses. Pass in a list of already-initialized loss functions. Then, when you call forward on this object, it will return the average loss across the wrapped loss functions.
+```python
+losses.MultipleLosses(losses)
+```
+**Parameters**:
+
+* **losses**: A list of initialized loss functions. On the forward call of MultipleLosses, each wrapped loss will be computed, and then the average will be returned.
+
 ## MultiSimilarityLoss
 [Multi-Similarity Loss with General Pair Weighting for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf)
 ```python

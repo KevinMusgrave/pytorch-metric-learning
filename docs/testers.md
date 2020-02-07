@@ -10,7 +10,7 @@ tester.test(dataset_dict, epoch, trunk, embedder)
 ```
 
 ## BaseTester
-All trainers extend this class and therefore inherit its _\_\_init\_\__ arguments.
+All trainers extend this class and therefore inherit its ```__init__``` arguments.
 ```python
 testers.BaseTester(reference_set="compared_to_self", 
 					normalize_embeddings=True, 
@@ -45,7 +45,7 @@ testers.BaseTester(reference_set="compared_to_self",
 * **pca**: The number of dimensions that your embeddings will be reduced to, using PCA. The default is None, meaning PCA will not be applied.
 * **data_device**: Which gpu to use for the loaded dataset samples. If None, then the gpu or cpu will be used (whichever is available).
 * **size_of_tsne**: The number of samples to use for a t-sne plot (requires a record_keeper). If 0, then no t-sne plot will be created.
-* **data_and_label_getter**: A function that takes the output of your dataset's _\_\_getitem\_\__ function, and returns a tuple of (data, labels). If None, then it is assumed that _\_\_getitem\_\__ returns (data, labels). 
+* **data_and_label_getter**: A function that takes the output of your dataset's ```__getitem__``` function, and returns a tuple of (data, labels). If None, then it is assumed that ```__getitem__``` returns (data, labels). 
 * **label_hierarchy_level**: If each sample in your dataset has multiple labels, then this integer argument can be used to select which "level" to use. This assumes that your labels are "2-dimensional" with shape (num_samples, num_hierarchy_levels). Leave this at the default value, 0, if your data does not have multiple labels per sample.
 * **end_of_testing_hook**: This is an optional function that has one input argument (the tester object) and performs some action (e.g. logging data) at the end of testing.
 	* You'll probably want to access the accuracy metrics, which are stored in ```tester.all_accuracies```. This is a nested dictionary with the following format: ```tester.all_accuracies[split_name][metric_name] = metric_value```

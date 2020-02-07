@@ -19,10 +19,11 @@ class DeepAdversarialMetricLearning(TrainWithClassifier):
         self.original_loss_weights = copy.deepcopy(self.loss_weights)
         self.metric_alone_epochs = metric_alone_epochs
         self.g_alone_epochs = g_alone_epochs
-        def maybe_modify_loss(x):
-            return x*-1
-        self.loss_funcs["g_adv_loss"].maybe_modify_loss = maybe_modify_loss
+        self.loss_funcs["g_adv_loss"].maybe_modify_loss = self.maybe_modify_loss
         self.g_triplets_per_anchor = g_triplets_per_anchor
+
+    def maybe_modify_loss(self, x):
+        return x*-1
 
     def custom_setup(self):
         synth_packaged_as_triplets = miners.EmbeddingsAlreadyPackagedAsTriplets(

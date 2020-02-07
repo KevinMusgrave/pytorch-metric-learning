@@ -41,13 +41,13 @@ losses.ArcFaceLoss(margin, num_classes, embedding_size, scale=64, **kwargs)
 
 * **margin**: The angular margin penalty in degrees. 
 * **num_classes**: The number of classes in your training dataset.
-* **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set _embedding\_size_ to 512.
+* **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set ```embedding_size``` to 512.
 * **scale**: The exponent multiplier in the loss's softmax expression. (This is the inverse of the softmax temperature.)
 
-Note: this also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts a _regularizer_ and _reg\_weight_ as optional init arguments.
+Note: this also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts a ```regularizer``` and ```reg_weight``` as optional init arguments.
 
 ## BaseMetricLossFunction
-All loss functions extend this class and therefore inherit its _\_\_init\_\__ parameters.
+All loss functions extend this class and therefore inherit its ```__init__``` parameters.
 
 ```python
 losses.BaseMetricLossFunction(normalize_embeddings=True, num_class_per_param=None, learnable_param_names=None)
@@ -83,6 +83,22 @@ losses.ContrastiveLoss(pos_margin=0,
 * **use_similarity**: If True, will use dot product between vectors instead of euclidean distance.
 * **power**: Each pair's loss will be raised to this power.
 * **avg_non_zero_only**: Only pairs that contribute non-zero loss will be used in the final loss. 
+
+## CosFaceLoss 
+[CosFace: Large Margin Cosine Loss for Deep Face Recognition](https://arxiv.org/pdf/1801.09414.pdf)
+
+```python
+losses.CosFaceLoss(margin, num_classes, embedding_size, scale=64, **kwargs)
+```
+
+**Parameters**:
+
+* **margin**: The cosine margin penalty: ```cos(theta) - margin```. The paper got optimal performance with margin values between 0.25 and 0.45.
+* **num_classes**: The number of classes in your training dataset.
+* **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set ```embedding_size``` to 512.
+* **scale**: The exponent multiplier in the loss's softmax expression. (This is the inverse of the softmax temperature.)
+
+Note: this also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts a ```regularizer``` and ```reg_weight``` as optional init arguments.
 
 ## FastAPLoss
 [Deep Metric Learning to Rank](http://openaccess.thecvf.com/content_CVPR_2019/papers/Cakir_Deep_Metric_Learning_to_Rank_CVPR_2019_paper.pdf)
@@ -120,7 +136,24 @@ losses.GeneralizedLiftedStructureLoss(neg_margin, **kwargs)
 
 **Parameters**:
 
-* **neg_margin**: The margin in the expression e^(margin - negative_distance) 
+* **neg_margin**: The margin in the expression ```e^(margin - negative_distance)```
+
+## LargeMarginSoftmaxLoss
+[Large-Margin Softmax Loss for Convolutional Neural Networks](https://arxiv.org/pdf/1612.02295.pdf)
+
+```python
+losses.LargeMarginSoftmaxLoss(margin, num_classes, embedding_size, scale=1, normalize_weights=False, **kwargs)
+```
+
+**Parameters**:
+
+* **margin**: An integer which dictates the size of the angular margin. Specifically, it multiplies the angle between the embeddings and weights: ```cos(margin*theta)```. 
+* **num_classes**: The number of classes in your training dataset.
+* **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set ```embedding_size``` to 512.
+* **scale**: The exponent multiplier in the loss's softmax expression. (This is the inverse of the softmax temperature.)
+* **normalize_weights**: If True, the learned weights will be normalized to have Euclidean norm of 1, before the loss is computed. Note that when this parameter is True, it becomes equivalent to [SphereFaceLoss](losses.md#spherefaceloss).
+
+Note: this also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts a ```regularizer``` and ```reg_weight``` as optional init arguments.
 
 ## MarginLoss
 [Sampling Matters in Deep Embedding Learning](https://arxiv.org/pdf/1706.07567.pdf)
@@ -180,10 +213,10 @@ losses.NormalizedSoftmaxLoss(temperature, embedding_size, num_classes, **kwargs)
 **Parameters**:
 
 * **temperature**: The exponent divisor in the softmax funtion.
-* **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set _embedding\_size_ to 512.
+* **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set ```embedding_size``` to 512.
 * **num_classes**: The number of classes in your training dataset.
 
-Note: this also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts a _regularizer_ and _reg\_weight_ as optional init arguments.
+Note: this also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts a ```regularizer``` and ```reg_weight``` as optional init arguments.
 
 ## NPairsLoss
 [Improved Deep Metric Learning with Multi-class N-pair Loss Objective](http://www.nec-labs.com/uploads/images/Department-Images/MediaAnalytics/papers/nips16_npairmetriclearning.pdf)
@@ -204,10 +237,10 @@ losses.ProxyNCALoss(num_classes, embedding_size, **kwargs)
 **Parameters**:
 
 * **num_classes**: The number of classes in your training dataset.
-* **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set _embedding\_size_ to 512.
+* **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set ```embedding_size``` to 512.
 * **softmax_scale**: See [NCALoss](losses.md#ncaloss)
 
-Note: this also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts a _regularizer_ and _reg\_weight_ as optional init arguments.
+Note: this also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts a ```regularizer``` and ```reg_weight``` as optional init arguments.
 
 ## SignalToNoiseRatioContrastiveLoss
 [Signal-to-Noise Ratio: A Robust Distance Metric for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Yuan_Signal-To-Noise_Ratio_A_Robust_Distance_Metric_for_Deep_Metric_Learning_CVPR_2019_paper.pdf)
@@ -241,13 +274,29 @@ losses.SoftTripleLoss(embedding_size,
 
 **Parameters**:
 
-* **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set _embedding\_size_ to 512.
+* **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set ```embedding_size``` to 512.
 * **num_classes**: The number of classes in your training dataset.
 * **centers_per_class**: The number of weight vectors per class. (The regular cross entropy loss has 1 center per class.)
 * **la**: The exponent multiplier in the loss's softmax expression. (This is the inverse of the softmax temperature.)
 * **gamma**: The similarity-to-centers multiplier.
 * **reg_weight**: The regularization weight which encourages class centers to be close to each other.
 * **margin**: The margin in the expression e^(similarities - margin).
+
+## SphereFaceLoss 
+[SphereFace: Deep Hypersphere Embedding for Face Recognition](https://arxiv.org/pdf/1704.08063.pdf)
+
+```python
+losses.SphereFaceLoss(margin, num_classes, embedding_size, scale=1, **kwargs)
+```
+
+**Parameters**:
+
+* **margin**: An integer which dictates the size of the angular margin. Specifically, it multiplies the angle between the embeddings and weights: ```cos(margin*theta)```. 
+* **num_classes**: The number of classes in your training dataset.
+* **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set ```embedding_size``` to 512.
+* **scale**: The exponent multiplier in the loss's softmax expression. (This is the inverse of the softmax temperature.)
+
+Note: this also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts a ```regularizer``` and ```reg_weight``` as optional init arguments.
 
 ## TripletMarginLoss
 

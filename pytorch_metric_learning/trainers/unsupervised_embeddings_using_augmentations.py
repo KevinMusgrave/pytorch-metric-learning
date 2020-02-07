@@ -26,6 +26,4 @@ class UnsupervisedEmbeddingsUsingAugmentations(MetricLossOnly):
 
     def initialize_data_and_label_setter(self):
         if self.data_and_label_setter is None:
-            def data_and_label_setter(x):
-                return x
-            self.data_and_label_setter = data_and_label_setter
+            self.data_and_label_setter = c_f.return_input

@@ -260,3 +260,6 @@ def latest_version(folder, string_to_glob):
     items = [x for x in items if not x.endswith("best.pth")]
     version = [int(x.split("_")[-1].split(".")[0]) for x in items]
     return max(version)
+
+def return_input(x):
+    return x

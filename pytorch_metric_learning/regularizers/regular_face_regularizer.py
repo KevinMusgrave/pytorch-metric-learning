@@ -8,7 +8,7 @@ class RegularFaceRegularizer(BaseWeightRegularizer):
         num_classes = weights.size(0)
         cos = torch.mm(weights, weights.t())
         if not self.normalize_weights:
-            norms = torch.norm(weights, p=2, dim=1, keepdim=True)
+            norms = self.weight_norms.unsqueeze(1)
             cos = cos / (norms*norms.t())
 
         cos1 = cos.clone()

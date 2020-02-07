@@ -18,7 +18,8 @@ class BaseWeightRegularizer(torch.nn.Module):
         """
         if self.normalize_weights:
             weights = torch.nn.functional.normalize(weights, p=2, dim=1)
-        self.avg_weight_norm = torch.mean(torch.norm(weights, p=2, dim=1))
+        self.weight_norms = torch.norm(weights, p=2, dim=1)
+        self.avg_weight_norm = torch.mean(self.weight_norms)
         loss = self.compute_loss(weights)
         if loss == 0:
             loss = torch.sum(weights*0)

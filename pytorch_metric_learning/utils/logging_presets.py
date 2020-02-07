@@ -166,6 +166,14 @@ class HookContainer:
 
 
 
+class EmptyContainer:
+    def end_of_epoch_hook(self, *args):
+        return None
+    end_of_iteration_hook = None
+    end_of_testing_hook = None
+
+
+
 def get_record_keeper(pkl_folder, tensorboard_folder):
     try:
         import record_keeper as record_keeper_package
@@ -185,9 +193,4 @@ def get_hook_container(record_keeper):
         return HookContainer(record_keeper)
     else:
         logging.warn("No record_keeper, so no preset hooks are being returned.")
-        class EmptyContainer:
-            def end_of_epoch_hook(self, *args):
-                return None
-            end_of_iteration_hook = None
-            end_of_testing_hook = None
         return EmptyContainer()

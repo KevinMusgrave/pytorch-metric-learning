@@ -29,7 +29,7 @@ miners.AngularMiner(angle, **kwargs)
 * **angle**: The miner will return triplets that form an angle greater than this input angle. The angle is computed as defined in the [angular loss paper](https://arxiv.org/abs/1708.01682)
 
 ## BaseMiner
-All miners extend this class and therefore inherit its _\_\_init\_\__ parameters.
+All miners extend this class and therefore inherit its ```__init__``` parameters.
 ```python
 miners.BaseMiner(normalize_embeddings=True)
 ```
@@ -139,7 +139,7 @@ very_hard_pairs = minerB(embeddings, labels)
 ```
 
 ## MaximumLossMiner
-This is a simple pre-gradient miner. It computes the loss for random subsets of the input batch, _num\_trials_ times. Then it returns the subset with the highest loss.
+This is a simple pre-gradient miner. It computes the loss for random subsets of the input batch, ```num_trials``` times. Then it returns the subset with the highest loss.
 
 ```python
 miners.MaximumLossMiner(loss_function, mining_function=None, num_trials=5, **kwargs)

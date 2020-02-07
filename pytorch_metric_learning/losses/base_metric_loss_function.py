@@ -47,7 +47,8 @@ class BaseMetricLossFunction(torch.nn.Module):
         labels = labels.to(embeddings.device)
         if self.normalize_embeddings:
             embeddings = torch.nn.functional.normalize(embeddings, p=2, dim=1)
-        self.avg_embedding_norm = torch.mean(torch.norm(embeddings, p=2, dim=1))
+        self.embedding_norms = torch.norm(embeddings, p=2, dim=1)
+        self.avg_embedding_norm = torch.mean(self.embedding_norms)
 
         loss = self.compute_loss(embeddings, labels, indices_tuple)
         if loss == 0:

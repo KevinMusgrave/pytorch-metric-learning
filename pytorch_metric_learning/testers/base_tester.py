@@ -26,24 +26,10 @@ class BaseTester:
         self.data_device = torch.device("cuda" if torch.cuda.is_available() else "cpu") if data_device is None else data_device
         self.dataloader_num_workers = dataloader_num_workers
         self.size_of_tsne = size_of_tsne
-        self.data_and_label_getter = data_and_label_getter
+        self.data_and_label_getter = c_f.return_input if data_and_label_getter is None else data_and_label_getter
         self.label_hierarchy_level = label_hierarchy_level
-        self.end_of_testing_hook = end_of_testing_hook
-        self.initialize_data_and_label_getter()
-        self.initialize_hooks()
-              
+        self.end_of_testing_hook = end_of_testing_hook              
 
-    def initialize_data_and_label_getter(self):
-        if self.data_and_label_getter is None:
-            def data_and_label_getter(x):
-                return x
-            self.data_and_label_getter = data_and_label_getter
-
-    def initialize_hooks(self):
-        if self.end_of_testing_hook is None:
-            def end_of_testing_hook(x):
-                logging.info(x.all_accuracies)
-            self.end_of_testing_hook = end_of_testing_hook 
 
     def maybe_normalize(self, embeddings):
         if self.pca:
@@ -189,4 +175,4 @@ class BaseTester:
             logging.info('Computing accuracy for the %s split'%split_name)
             self.all_accuracies[split_name]["epoch"] = epoch 
             self.do_knn_and_accuracies(self.all_accuracies[split_name], embeddings_and_labels, split_name)
-        self.end_of_testing_hook(self)
+        self.end_of_testing_hook(self) if self.end_of_testing_hook else logging.info(self.all_accuracies)

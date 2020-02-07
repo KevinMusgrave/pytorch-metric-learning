@@ -3,7 +3,7 @@ Samplers are just extensions of the torch.utils.data.Sampler class, i.e. they ar
 
 
 ## MPerClassSampler
-At every iteration, this will return _m_ samples per class, assuming that the batch size is a multiple of _m_. For example, if your dataloader's batch size is 100, and _m_ = 5, then 20 classes with 5 samples each will be returned.
+At every iteration, this will return ```m``` samples per class, assuming that the batch size is a multiple of ```m```. For example, if your dataloader's batch size is 100, and ```m``` = 5, then 20 classes with 5 samples each will be returned.
 ```python
 samplers.MPerClassSampler(labels, m)
 ```

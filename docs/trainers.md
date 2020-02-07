@@ -10,7 +10,7 @@ t.train()
 
 
 ## BaseTrainer
-All trainers extend this class and therefore inherit its _\_\_init\_\__ arguments.
+All trainers extend this class and therefore inherit its ```__init__``` arguments.
 ```python
 trainers.BaseTrainer(models,
 			        optimizers,
@@ -46,7 +46,7 @@ trainers.BaseTrainer(models,
 	* {"metric_loss": loss_func}.
 * **mining_funcs**: A dictionary mapping strings to mining functions. Pass in an empty dictionary, or one or more of the following keys: 
 	* {"pre_gradient_miner": mining_func1, "post_gradient_miner": mining_func2}
-* **iterations_per_epoch**: In this library, epochs are just a measure of the number of iterations that have passed. So _iterations\_per\_epoch_ is what actually defines what an "epoch" is.
+* **iterations_per_epoch**: In this library, epochs are just a measure of the number of iterations that have passed. So ```iterations_per_epoch``` is what actually defines what an "epoch" is.
 * **dataset**: The dataset you want to train on. Note that training methods do not perform validation, so do not pass in your validation or test set.
 * **data_device**: The device that you want to put batches of data on. If not specified, the trainer will put the data on any available GPUs.
 * **loss_weights**: A dictionary mapping loss names to numbers. Each loss will be multiplied by the corresponding value in the dictionary. If not specified, then no loss weighting will occur.
@@ -58,15 +58,15 @@ If not specified, then the original labels are used.
 * **freeze_trunk_batchnorm**: If True, then the BatchNorm parameters of the trunk model will be frozen during training.
 * **label_hierarchy_level**: If each sample in your dataset has multiple labels, then this integer argument can be used to select which "level" to use. This assumes that your labels are "2-dimensional" with shape (num_samples, num_hierarchy_levels). Leave this at the default value, 0, if your data does not have multiple labels per sample.
 * **dataloader_num_workers**: The number of processes your dataloader will use to load data.
-* **data_and_label_getter**: A function that takes the output of your dataset's _\_\_getitem\_\__ function, and returns a tuple of (data, labels). If None, then it is assumed that _\_\_getitem\_\__ returns (data, labels). 
-* **dataset_labels**: The labels for your dataset. Can be 1-dimensional (1 label per datapoint) or 2-dimensional, where each row represents a datapoint, and the columns are the multiple labels that the datapoint has. This option needs to be specified only if _set\_min\_label\_to\_zero_ is True.
+* **data_and_label_getter**: A function that takes the output of your dataset's ```__getitem__``` function, and returns a tuple of (data, labels). If None, then it is assumed that ```__getitem__``` returns (data, labels). 
+* **dataset_labels**: The labels for your dataset. Can be 1-dimensional (1 label per datapoint) or 2-dimensional, where each row represents a datapoint, and the columns are the multiple labels that the datapoint has. This option needs to be specified only if ```set_min_label_to_zero``` is True.
 * **set_min_label_to_zero**: If True, labels will be mapped such that they represent their rank in the label set. For example, if your dataset has labels 5, 10, 12, 13, then at each iteration, these would become 0, 1, 2, 3. The default is False.
 * **end_of_iteration_hook**: This is an optional function that has one input argument (the trainer object), and performs some action (e.g. logging data) at the end of every iteration. Here are some things you might want to log:
 	* ```trainer.losses```: this dictionary contains all loss values at the current iteration. 
 	* ```trainer.loss_funcs``` and ```trainer.mining_funcs```: these dictionaries contain the loss and mining functions. 
 		* All loss and mining functions in pytorch-metric-learning have an attribute called ```record_these```. This attribute is a list of strings, which are the names of other attributes that are worth recording for the purpose of analysis. For example, the ```record_these``` list for TripletMarginLoss is ```["avg_embedding_norm, "num_non_zero_triplets"]```, so at each iteration you could log the value of ```trainer.loss_funcs["metric_loss"].avg_embedding_norm``` and ```trainer.loss_funcs["metric_loss"].num_non_zero_triplets```. To accomplish this programmatically, you can loop through ```record_these``` and use the python function ```getattr``` to retrieve the attribute value.
 	* If you want ready-to-use hooks, take a look at the [logging_presets module](utils.md#logging_presets).
-* **end_of_epoch_hook**: This is an optional function that operates like _end\_of\_iteration\_hook_, except this occurs at the end of every epoch, so this might be a suitable place to run validation and save models. 
+* **end_of_epoch_hook**: This is an optional function that operates like ```end_of_iteration_hook```, except this occurs at the end of every epoch, so this might be a suitable place to run validation and save models. 
 	* To end training early, your hook should return the boolean value False. Note, it must specifically ```return False```, not ```None```, ```0```, ```[]``` etc.
 	* For this hook, you might want to access the following dictionaries: ```trainer.models```, ```trainer.optimizers```, ```trainer.lr_schedulers```, ```trainer.loss_funcs```, and ```trainer.mining_funcs```.
 	* If you want ready-to-use hooks, take a look at the [logging_presets module](utils.md#logging_presets).

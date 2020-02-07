@@ -17,7 +17,6 @@ testers.BaseTester(reference_set="compared_to_self",
 					use_trunk_output=False, 
                     batch_size=32, 
                     dataloader_num_workers=32, 
-                    metric_for_best_epoch="mean_average_r_precision", 
                     pca=None, 
                     data_device=None, 
 					size_of_tsne=0, 
@@ -36,15 +35,9 @@ testers.BaseTester(reference_set="compared_to_self",
 * **use_trunk_output**: If True, the output of the trunk_model will be used to compute nearest neighbors, i.e. the output of the embedder model will be ignored.
 * **batch_size**: How many dataset samples to process at each iteration when computing embeddings.
 * **dataloader_num_workers**: How many processes the dataloader will use.
-* **metric_for_best_epoch**: The performance metric that will be used to determine which model is best. Must be one of the following:
-	* "NMI"
-	* "precision_at_1"
-	* "r_precision"
-	* "mean_average_r_precision"
-	* **Note**: this assumes you call the "test" method multiple times with different models, and that the record_keeper argument is not None. The input to record_keeper must be a [record-keeper object](https://github.com/KevinMusgrave/record-keeper).
 * **pca**: The number of dimensions that your embeddings will be reduced to, using PCA. The default is None, meaning PCA will not be applied.
 * **data_device**: Which gpu to use for the loaded dataset samples. If None, then the gpu or cpu will be used (whichever is available).
-* **size_of_tsne**: The number of samples to use for a t-sne plot (requires a record_keeper). If 0, then no t-sne plot will be created.
+* **size_of_tsne**: The number of samples to use to compute tsne embeddings. If 0, then no t-sne plot will be created.
 * **data_and_label_getter**: A function that takes the output of your dataset's ```__getitem__``` function, and returns a tuple of (data, labels). If None, then it is assumed that ```__getitem__``` returns (data, labels). 
 * **label_hierarchy_level**: If each sample in your dataset has multiple labels, then this integer argument can be used to select which "level" to use. This assumes that your labels are "2-dimensional" with shape (num_samples, num_hierarchy_levels). Leave this at the default value, 0, if your data does not have multiple labels per sample.
 * **end_of_testing_hook**: This is an optional function that has one input argument (the tester object) and performs some action (e.g. logging data) at the end of testing.

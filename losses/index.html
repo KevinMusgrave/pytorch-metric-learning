@@ -289,6 +289,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#cosfaceloss" class="md-nav__link">
+    CosFaceLoss
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#fastaploss" class="md-nav__link">
     FastAPLoss
   </a>
@@ -305,6 +312,13 @@
         <li class="md-nav__item">
   <a href="#generalizedliftedstructureloss" class="md-nav__link">
     GeneralizedLiftedStructureLoss
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#largemarginsoftmaxloss" class="md-nav__link">
+    LargeMarginSoftmaxLoss
   </a>
   
 </li>
@@ -368,6 +382,13 @@
         <li class="md-nav__item">
   <a href="#softtripleloss" class="md-nav__link">
     SoftTripleLoss
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spherefaceloss" class="md-nav__link">
+    SphereFaceLoss
   </a>
   
 </li>
@@ -518,6 +539,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#cosfaceloss" class="md-nav__link">
+    CosFaceLoss
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#fastaploss" class="md-nav__link">
     FastAPLoss
   </a>
@@ -534,6 +562,13 @@
         <li class="md-nav__item">
   <a href="#generalizedliftedstructureloss" class="md-nav__link">
     GeneralizedLiftedStructureLoss
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#largemarginsoftmaxloss" class="md-nav__link">
+    LargeMarginSoftmaxLoss
   </a>
   
 </li>
@@ -597,6 +632,13 @@
         <li class="md-nav__item">
   <a href="#softtripleloss" class="md-nav__link">
     SoftTripleLoss
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spherefaceloss" class="md-nav__link">
+    SphereFaceLoss
   </a>
   
 </li>
@@ -672,12 +714,12 @@
 <ul>
 <li><strong>margin</strong>: The angular margin penalty in degrees. </li>
 <li><strong>num_classes</strong>: The number of classes in your training dataset.</li>
-<li><strong>embedding_size</strong>: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set <em>embedding_size</em> to 512.</li>
+<li><strong>embedding_size</strong>: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set <code>embedding_size</code> to 512.</li>
 <li><strong>scale</strong>: The exponent multiplier in the loss's softmax expression. (This is the inverse of the softmax temperature.)</li>
 </ul>
-<p>Note: this also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts a <em>regularizer</em> and <em>reg_weight</em> as optional init arguments.</p>
+<p>Note: this also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts a <code>regularizer</code> and <code>reg_weight</code> as optional init arguments.</p>
 <h2 id="basemetriclossfunction">BaseMetricLossFunction<a class="headerlink" href="#basemetriclossfunction" title="Permanent link">&para;</a></h2>
-<p>All loss functions extend this class and therefore inherit its <em>__init__</em> parameters.</p>
+<p>All loss functions extend this class and therefore inherit its <code>__init__</code> parameters.</p>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">BaseMetricLossFunction</span><span class="p">(</span><span class="n">normalize_embeddings</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">num_class_per_param</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">learnable_param_names</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </pre></div>
 
@@ -712,6 +754,20 @@
 <li><strong>power</strong>: Each pair's loss will be raised to this power.</li>
 <li><strong>avg_non_zero_only</strong>: Only pairs that contribute non-zero loss will be used in the final loss. </li>
 </ul>
+<h2 id="cosfaceloss">CosFaceLoss<a class="headerlink" href="#cosfaceloss" title="Permanent link">&para;</a></h2>
+<p><a href="https://arxiv.org/pdf/1801.09414.pdf">CosFace: Large Margin Cosine Loss for Deep Face Recognition</a></p>
+<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">CosFaceLoss</span><span class="p">(</span><span class="n">margin</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>margin</strong>: The cosine margin penalty: <code>cos(theta) - margin</code>. The paper got optimal performance with margin values between 0.25 and 0.45.</li>
+<li><strong>num_classes</strong>: The number of classes in your training dataset.</li>
+<li><strong>embedding_size</strong>: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set <code>embedding_size</code> to 512.</li>
+<li><strong>scale</strong>: The exponent multiplier in the loss's softmax expression. (This is the inverse of the softmax temperature.)</li>
+</ul>
+<p>Note: this also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts a <code>regularizer</code> and <code>reg_weight</code> as optional init arguments.</p>
 <h2 id="fastaploss">FastAPLoss<a class="headerlink" href="#fastaploss" title="Permanent link">&para;</a></h2>
 <p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Cakir_Deep_Metric_Learning_to_Rank_CVPR_2019_paper.pdf">Deep Metric Learning to Rank</a></p>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">FastAPLoss</span><span class="p">(</span><span class="n">num_bins</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -746,8 +802,23 @@
 
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>neg_margin</strong>: The margin in the expression e^(margin - negative_distance) </li>
+<li><strong>neg_margin</strong>: The margin in the expression <code>e^(margin - negative_distance)</code></li>
 </ul>
+<h2 id="largemarginsoftmaxloss">LargeMarginSoftmaxLoss<a class="headerlink" href="#largemarginsoftmaxloss" title="Permanent link">&para;</a></h2>
+<p><a href="https://arxiv.org/pdf/1612.02295.pdf">Large-Margin Softmax Loss for Convolutional Neural Networks</a></p>
+<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">LargeMarginSoftmaxLoss</span><span class="p">(</span><span class="n">margin</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">normalize_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>margin</strong>: An integer which dictates the size of the angular margin. Specifically, it multiplies the angle between the embeddings and weights: <code>cos(margin*theta)</code>. </li>
+<li><strong>num_classes</strong>: The number of classes in your training dataset.</li>
+<li><strong>embedding_size</strong>: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set <code>embedding_size</code> to 512.</li>
+<li><strong>scale</strong>: The exponent multiplier in the loss's softmax expression. (This is the inverse of the softmax temperature.)</li>
+<li><strong>normalize_weights</strong>: If True, the learned weights will be normalized to have Euclidean norm of 1, before the loss is computed. Note that when this parameter is True, it becomes equivalent to <a href="./#spherefaceloss">SphereFaceLoss</a>.</li>
+</ul>
+<p>Note: this also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts a <code>regularizer</code> and <code>reg_weight</code> as optional init arguments.</p>
 <h2 id="marginloss">MarginLoss<a class="headerlink" href="#marginloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1706.07567.pdf">Sampling Matters in Deep Embedding Learning</a></p>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">MarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">triplets_per_anchor</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -808,10 +879,10 @@
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>temperature</strong>: The exponent divisor in the softmax funtion.</li>
-<li><strong>embedding_size</strong>: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set <em>embedding_size</em> to 512.</li>
+<li><strong>embedding_size</strong>: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set <code>embedding_size</code> to 512.</li>
 <li><strong>num_classes</strong>: The number of classes in your training dataset.</li>
 </ul>
-<p>Note: this also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts a <em>regularizer</em> and <em>reg_weight</em> as optional init arguments.</p>
+<p>Note: this also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts a <code>regularizer</code> and <code>reg_weight</code> as optional init arguments.</p>
 <h2 id="npairsloss">NPairsLoss<a class="headerlink" href="#npairsloss" title="Permanent link">&para;</a></h2>
 <p><a href="http://www.nec-labs.com/uploads/images/Department-Images/MediaAnalytics/papers/nips16_npairmetriclearning.pdf">Improved Deep Metric Learning with Multi-class N-pair Loss Objective</a></p>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">NPairsLoss</span><span class="p">(</span><span class="n">l2_reg_weight</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -831,10 +902,10 @@
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>num_classes</strong>: The number of classes in your training dataset.</li>
-<li><strong>embedding_size</strong>: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set <em>embedding_size</em> to 512.</li>
+<li><strong>embedding_size</strong>: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set <code>embedding_size</code> to 512.</li>
 <li><strong>softmax_scale</strong>: See <a href="./#ncaloss">NCALoss</a></li>
 </ul>
-<p>Note: this also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts a <em>regularizer</em> and <em>reg_weight</em> as optional init arguments.</p>
+<p>Note: this also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts a <code>regularizer</code> and <code>reg_weight</code> as optional init arguments.</p>
 <h2 id="signaltonoiseratiocontrastiveloss">SignalToNoiseRatioContrastiveLoss<a class="headerlink" href="#signaltonoiseratiocontrastiveloss" title="Permanent link">&para;</a></h2>
 <p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Yuan_Signal-To-Noise_Ratio_A_Robust_Distance_Metric_for_Deep_Metric_Learning_CVPR_2019_paper.pdf">Signal-to-Noise Ratio: A Robust Distance Metric for Deep Metric Learning</a></p>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">SignalToNoiseRatioContrastiveLoss</span><span class="p">(</span><span class="n">pos_margin</span><span class="p">,</span> 
@@ -867,7 +938,7 @@
 
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>embedding_size</strong>: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set <em>embedding_size</em> to 512.</li>
+<li><strong>embedding_size</strong>: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set <code>embedding_size</code> to 512.</li>
 <li><strong>num_classes</strong>: The number of classes in your training dataset.</li>
 <li><strong>centers_per_class</strong>: The number of weight vectors per class. (The regular cross entropy loss has 1 center per class.)</li>
 <li><strong>la</strong>: The exponent multiplier in the loss's softmax expression. (This is the inverse of the softmax temperature.)</li>
@@ -875,6 +946,20 @@
 <li><strong>reg_weight</strong>: The regularization weight which encourages class centers to be close to each other.</li>
 <li><strong>margin</strong>: The margin in the expression e^(similarities - margin).</li>
 </ul>
+<h2 id="spherefaceloss">SphereFaceLoss<a class="headerlink" href="#spherefaceloss" title="Permanent link">&para;</a></h2>
+<p><a href="https://arxiv.org/pdf/1704.08063.pdf">SphereFace: Deep Hypersphere Embedding for Face Recognition</a></p>
+<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">SphereFaceLoss</span><span class="p">(</span><span class="n">margin</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>margin</strong>: An integer which dictates the size of the angular margin. Specifically, it multiplies the angle between the embeddings and weights: <code>cos(margin*theta)</code>. </li>
+<li><strong>num_classes</strong>: The number of classes in your training dataset.</li>
+<li><strong>embedding_size</strong>: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set <code>embedding_size</code> to 512.</li>
+<li><strong>scale</strong>: The exponent multiplier in the loss's softmax expression. (This is the inverse of the softmax temperature.)</li>
+</ul>
+<p>Note: this also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts a <code>regularizer</code> and <code>reg_weight</code> as optional init arguments.</p>
 <h2 id="tripletmarginloss">TripletMarginLoss<a class="headerlink" href="#tripletmarginloss" title="Permanent link">&para;</a></h2>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">TripletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> 
                         <span class="n">distance_norm</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> 

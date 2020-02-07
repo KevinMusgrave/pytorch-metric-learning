@@ -580,7 +580,7 @@
 <li><strong>angle</strong>: The miner will return triplets that form an angle greater than this input angle. The angle is computed as defined in the <a href="https://arxiv.org/abs/1708.01682">angular loss paper</a></li>
 </ul>
 <h2 id="baseminer">BaseMiner<a class="headerlink" href="#baseminer" title="Permanent link">&para;</a></h2>
-<p>All miners extend this class and therefore inherit its <em>__init__</em> parameters.</p>
+<p>All miners extend this class and therefore inherit its <code>__init__</code> parameters.</p>
 <div class="codehilite"><pre><span></span><span class="n">miners</span><span class="o">.</span><span class="n">BaseMiner</span><span class="p">(</span><span class="n">normalize_embeddings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 
@@ -686,7 +686,7 @@
 
 
 <h2 id="maximumlossminer">MaximumLossMiner<a class="headerlink" href="#maximumlossminer" title="Permanent link">&para;</a></h2>
-<p>This is a simple pre-gradient miner. It computes the loss for random subsets of the input batch, <em>num_trials</em> times. Then it returns the subset with the highest loss.</p>
+<p>This is a simple pre-gradient miner. It computes the loss for random subsets of the input batch, <code>num_trials</code> times. Then it returns the subset with the highest loss.</p>
 <div class="codehilite"><pre><span></span><span class="n">miners</span><span class="o">.</span><span class="n">MaximumLossMiner</span><span class="p">(</span><span class="n">loss_function</span><span class="p">,</span> <span class="n">mining_function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_trials</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 

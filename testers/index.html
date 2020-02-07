@@ -435,13 +435,12 @@
 
 
 <h2 id="basetester">BaseTester<a class="headerlink" href="#basetester" title="Permanent link">&para;</a></h2>
-<p>All trainers extend this class and therefore inherit its <em>__init__</em> arguments.</p>
+<p>All trainers extend this class and therefore inherit its <code>__init__</code> arguments.</p>
 <div class="codehilite"><pre><span></span><span class="n">testers</span><span class="o">.</span><span class="n">BaseTester</span><span class="p">(</span><span class="n">reference_set</span><span class="o">=</span><span class="s2">&quot;compared_to_self&quot;</span><span class="p">,</span> 
                     <span class="n">normalize_embeddings</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
                     <span class="n">use_trunk_output</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
                     <span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> 
                     <span class="n">dataloader_num_workers</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> 
-                    <span class="n">metric_for_best_epoch</span><span class="o">=</span><span class="s2">&quot;mean_average_r_precision&quot;</span><span class="p">,</span> 
                     <span class="n">pca</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
                     <span class="n">data_device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
                     <span class="n">size_of_tsne</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> 
@@ -463,18 +462,10 @@
 <li><strong>use_trunk_output</strong>: If True, the output of the trunk_model will be used to compute nearest neighbors, i.e. the output of the embedder model will be ignored.</li>
 <li><strong>batch_size</strong>: How many dataset samples to process at each iteration when computing embeddings.</li>
 <li><strong>dataloader_num_workers</strong>: How many processes the dataloader will use.</li>
-<li><strong>metric_for_best_epoch</strong>: The performance metric that will be used to determine which model is best. Must be one of the following:<ul>
-<li>"NMI"</li>
-<li>"precision_at_1"</li>
-<li>"r_precision"</li>
-<li>"mean_average_r_precision"</li>
-<li><strong>Note</strong>: this assumes you call the "test" method multiple times with different models, and that the record_keeper argument is not None. The input to record_keeper must be a <a href="https://github.com/KevinMusgrave/record-keeper">record-keeper object</a>.</li>
-</ul>
-</li>
 <li><strong>pca</strong>: The number of dimensions that your embeddings will be reduced to, using PCA. The default is None, meaning PCA will not be applied.</li>
 <li><strong>data_device</strong>: Which gpu to use for the loaded dataset samples. If None, then the gpu or cpu will be used (whichever is available).</li>
-<li><strong>size_of_tsne</strong>: The number of samples to use for a t-sne plot (requires a record_keeper). If 0, then no t-sne plot will be created.</li>
-<li><strong>data_and_label_getter</strong>: A function that takes the output of your dataset's <em>__getitem__</em> function, and returns a tuple of (data, labels). If None, then it is assumed that <em>__getitem__</em> returns (data, labels). </li>
+<li><strong>size_of_tsne</strong>: The number of samples to use to compute tsne embeddings. If 0, then no t-sne plot will be created.</li>
+<li><strong>data_and_label_getter</strong>: A function that takes the output of your dataset's <code>__getitem__</code> function, and returns a tuple of (data, labels). If None, then it is assumed that <code>__getitem__</code> returns (data, labels). </li>
 <li><strong>label_hierarchy_level</strong>: If each sample in your dataset has multiple labels, then this integer argument can be used to select which "level" to use. This assumes that your labels are "2-dimensional" with shape (num_samples, num_hierarchy_levels). Leave this at the default value, 0, if your data does not have multiple labels per sample.</li>
 <li><strong>end_of_testing_hook</strong>: This is an optional function that has one input argument (the tester object) and performs some action (e.g. logging data) at the end of testing.<ul>
 <li>You'll probably want to access the accuracy metrics, which are stored in <code>tester.all_accuracies</code>. This is a nested dictionary with the following format: <code>tester.all_accuracies[split_name][metric_name] = metric_value</code></li>

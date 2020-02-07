@@ -476,7 +476,7 @@
 
 
 <h2 id="basetrainer">BaseTrainer<a class="headerlink" href="#basetrainer" title="Permanent link">&para;</a></h2>
-<p>All trainers extend this class and therefore inherit its <em>__init__</em> arguments.</p>
+<p>All trainers extend this class and therefore inherit its <code>__init__</code> arguments.</p>
 <div class="codehilite"><pre><span></span><span class="n">trainers</span><span class="o">.</span><span class="n">BaseTrainer</span><span class="p">(</span><span class="n">models</span><span class="p">,</span>
                     <span class="n">optimizers</span><span class="p">,</span>
                     <span class="n">batch_size</span><span class="p">,</span>
@@ -520,7 +520,7 @@
 <li>{"pre_gradient_miner": mining_func1, "post_gradient_miner": mining_func2}</li>
 </ul>
 </li>
-<li><strong>iterations_per_epoch</strong>: In this library, epochs are just a measure of the number of iterations that have passed. So <em>iterations_per_epoch</em> is what actually defines what an "epoch" is.</li>
+<li><strong>iterations_per_epoch</strong>: In this library, epochs are just a measure of the number of iterations that have passed. So <code>iterations_per_epoch</code> is what actually defines what an "epoch" is.</li>
 <li><strong>dataset</strong>: The dataset you want to train on. Note that training methods do not perform validation, so do not pass in your validation or test set.</li>
 <li><strong>data_device</strong>: The device that you want to put batches of data on. If not specified, the trainer will put the data on any available GPUs.</li>
 <li><strong>loss_weights</strong>: A dictionary mapping loss names to numbers. Each loss will be multiplied by the corresponding value in the dictionary. If not specified, then no loss weighting will occur.
@@ -532,8 +532,8 @@ If not specified, then the original labels are used.</li>
 <li><strong>freeze_trunk_batchnorm</strong>: If True, then the BatchNorm parameters of the trunk model will be frozen during training.</li>
 <li><strong>label_hierarchy_level</strong>: If each sample in your dataset has multiple labels, then this integer argument can be used to select which "level" to use. This assumes that your labels are "2-dimensional" with shape (num_samples, num_hierarchy_levels). Leave this at the default value, 0, if your data does not have multiple labels per sample.</li>
 <li><strong>dataloader_num_workers</strong>: The number of processes your dataloader will use to load data.</li>
-<li><strong>data_and_label_getter</strong>: A function that takes the output of your dataset's <em>__getitem__</em> function, and returns a tuple of (data, labels). If None, then it is assumed that <em>__getitem__</em> returns (data, labels). </li>
-<li><strong>dataset_labels</strong>: The labels for your dataset. Can be 1-dimensional (1 label per datapoint) or 2-dimensional, where each row represents a datapoint, and the columns are the multiple labels that the datapoint has. This option needs to be specified only if <em>set_min_label_to_zero</em> is True.</li>
+<li><strong>data_and_label_getter</strong>: A function that takes the output of your dataset's <code>__getitem__</code> function, and returns a tuple of (data, labels). If None, then it is assumed that <code>__getitem__</code> returns (data, labels). </li>
+<li><strong>dataset_labels</strong>: The labels for your dataset. Can be 1-dimensional (1 label per datapoint) or 2-dimensional, where each row represents a datapoint, and the columns are the multiple labels that the datapoint has. This option needs to be specified only if <code>set_min_label_to_zero</code> is True.</li>
 <li><strong>set_min_label_to_zero</strong>: If True, labels will be mapped such that they represent their rank in the label set. For example, if your dataset has labels 5, 10, 12, 13, then at each iteration, these would become 0, 1, 2, 3. The default is False.</li>
 <li><strong>end_of_iteration_hook</strong>: This is an optional function that has one input argument (the trainer object), and performs some action (e.g. logging data) at the end of every iteration. Here are some things you might want to log:<ul>
 <li><code>trainer.losses</code>: this dictionary contains all loss values at the current iteration. </li>
@@ -544,7 +544,7 @@ If not specified, then the original labels are used.</li>
 <li>If you want ready-to-use hooks, take a look at the <a href="../utils/#logging_presets">logging_presets module</a>.</li>
 </ul>
 </li>
-<li><strong>end_of_epoch_hook</strong>: This is an optional function that operates like <em>end_of_iteration_hook</em>, except this occurs at the end of every epoch, so this might be a suitable place to run validation and save models. <ul>
+<li><strong>end_of_epoch_hook</strong>: This is an optional function that operates like <code>end_of_iteration_hook</code>, except this occurs at the end of every epoch, so this might be a suitable place to run validation and save models. <ul>
 <li>To end training early, your hook should return the boolean value False. Note, it must specifically <code>return False</code>, not <code>None</code>, <code>0</code>, <code>[]</code> etc.</li>
 <li>For this hook, you might want to access the following dictionaries: <code>trainer.models</code>, <code>trainer.optimizers</code>, <code>trainer.lr_schedulers</code>, <code>trainer.loss_funcs</code>, and <code>trainer.mining_funcs</code>.</li>
 <li>If you want ready-to-use hooks, take a look at the <a href="../utils/#logging_presets">logging_presets module</a>.</li>

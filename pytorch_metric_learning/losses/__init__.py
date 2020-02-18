@@ -11,6 +11,7 @@ from .margin_loss import MarginLoss
 from .multi_similarity_loss import MultiSimilarityLoss
 from .nca_loss import NCALoss
 from .normalized_softmax_loss import NormalizedSoftmaxLoss
+from .ntxent_loss import NTXentLoss
 from .n_pairs_loss import NPairsLoss
 from .proxy_losses import ProxyNCALoss
 from .signal_to_noise_ratio_losses import SignalToNoiseRatioContrastiveLoss

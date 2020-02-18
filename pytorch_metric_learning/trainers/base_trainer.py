@@ -151,8 +151,7 @@ class BaseTrainer:
         return data, labels
 
     def backward(self):
-        if self.losses["total_loss"] > 0.0:
-            self.losses["total_loss"].backward()
+        self.losses["total_loss"].backward()
 
     def get_global_iteration(self):
         return self.iteration + self.iterations_per_epoch * (self.epoch - 1)

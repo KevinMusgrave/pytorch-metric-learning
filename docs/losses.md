@@ -228,6 +228,17 @@ losses.NPairsLoss(l2_reg_weight=0, **kwargs)
 
 * **l2_reg_weight**: The regularization weight for the L2 norm of the embeddings.
 
+## NTXentLoss
+This is the normalized temperature-scaled cross entropy loss used in [A Simple Framework for Contrastive Learning of Visual Representations](https://arxiv.org/abs/2002.05709).
+```python
+losses.NTXentLoss(temperature, **kwargs)
+```
+
+**Parameters**:
+
+* **temperature**: The exponent divisor in the softmax funtion.
+
+
 ## ProxyNCALoss
 [No Fuss Distance Metric Learning using Proxies](https://arxiv.org/pdf/1703.07464.pdf)
 ```python

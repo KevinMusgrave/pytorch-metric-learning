@@ -44,7 +44,16 @@ losses.ArcFaceLoss(margin, num_classes, embedding_size, scale=64, **kwargs)
 * **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set ```embedding_size``` to 512.
 * **scale**: The exponent multiplier in the loss's softmax expression. (This is the inverse of the softmax temperature.)
 
-Note: this also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts a ```regularizer``` and ```reg_weight``` as optional init arguments.
+**Other info**: 
+
+* This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts a ```regularizer``` and ```reg_weight``` as optional init arguments.
+* This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
+```python
+loss_func = losses.ArcFaceLoss(...)
+loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
+# then during training:
+loss_optimizer.step()
+```
 
 ## BaseMetricLossFunction
 All loss functions extend this class and therefore inherit its ```__init__``` parameters.
@@ -98,7 +107,16 @@ losses.CosFaceLoss(margin, num_classes, embedding_size, scale=64, **kwargs)
 * **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set ```embedding_size``` to 512.
 * **scale**: The exponent multiplier in the loss's softmax expression. (This is the inverse of the softmax temperature.)
 
-Note: this also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts a ```regularizer``` and ```reg_weight``` as optional init arguments.
+**Other info**: 
+
+* This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts a ```regularizer``` and ```reg_weight``` as optional init arguments.
+* This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
+```python
+loss_func = losses.CosFaceLoss(...)
+loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
+# then during training:
+loss_optimizer.step()
+```
 
 ## FastAPLoss
 [Deep Metric Learning to Rank](http://openaccess.thecvf.com/content_CVPR_2019/papers/Cakir_Deep_Metric_Learning_to_Rank_CVPR_2019_paper.pdf)
@@ -153,7 +171,16 @@ losses.LargeMarginSoftmaxLoss(margin, num_classes, embedding_size, scale=1, norm
 * **scale**: The exponent multiplier in the loss's softmax expression. (This is the inverse of the softmax temperature.)
 * **normalize_weights**: If True, the learned weights will be normalized to have Euclidean norm of 1, before the loss is computed. Note that when this parameter is True, it becomes equivalent to [SphereFaceLoss](losses.md#spherefaceloss).
 
-Note: this also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts a ```regularizer``` and ```reg_weight``` as optional init arguments.
+**Other info**: 
+
+* This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts a ```regularizer``` and ```reg_weight``` as optional init arguments.
+* This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
+```python
+loss_func = losses.LargeMarginSoftmaxLoss(...)
+loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
+# then during training:
+loss_optimizer.step()
+```
 
 ## MarginLoss
 [Sampling Matters in Deep Embedding Learning](https://arxiv.org/pdf/1706.07567.pdf)
@@ -216,7 +243,16 @@ losses.NormalizedSoftmaxLoss(temperature, embedding_size, num_classes, **kwargs)
 * **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set ```embedding_size``` to 512.
 * **num_classes**: The number of classes in your training dataset.
 
-Note: this also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts a ```regularizer``` and ```reg_weight``` as optional init arguments.
+**Other info**
+
+* This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts a ```regularizer``` and ```reg_weight``` as optional init arguments.
+* This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
+```python
+loss_func = losses.NormalizedSoftmaxLoss(...)
+loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
+# then during training:
+loss_optimizer.step()
+```
 
 ## NPairsLoss
 [Improved Deep Metric Learning with Multi-class N-pair Loss Objective](http://www.nec-labs.com/uploads/images/Department-Images/MediaAnalytics/papers/nips16_npairmetriclearning.pdf)
@@ -251,7 +287,16 @@ losses.ProxyNCALoss(num_classes, embedding_size, **kwargs)
 * **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set ```embedding_size``` to 512.
 * **softmax_scale**: See [NCALoss](losses.md#ncaloss)
 
-Note: this also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts a ```regularizer``` and ```reg_weight``` as optional init arguments.
+**Other info**
+
+* This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts a ```regularizer``` and ```reg_weight``` as optional init arguments.
+* This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
+```python
+loss_func = losses.ProxyNCALoss(...)
+loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
+# then during training:
+loss_optimizer.step()
+```
 
 ## SignalToNoiseRatioContrastiveLoss
 [Signal-to-Noise Ratio: A Robust Distance Metric for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Yuan_Signal-To-Noise_Ratio_A_Robust_Distance_Metric_for_Deep_Metric_Learning_CVPR_2019_paper.pdf)
@@ -293,6 +338,16 @@ losses.SoftTripleLoss(embedding_size,
 * **reg_weight**: The regularization weight which encourages class centers to be close to each other.
 * **margin**: The margin in the expression e^(similarities - margin).
 
+**Other info**
+
+* This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
+```python
+loss_func = losses.SoftTripleLoss(...)
+loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
+# then during training:
+loss_optimizer.step()
+```
+
 ## SphereFaceLoss 
 [SphereFace: Deep Hypersphere Embedding for Face Recognition](https://arxiv.org/pdf/1704.08063.pdf)
 
@@ -307,7 +362,16 @@ losses.SphereFaceLoss(margin, num_classes, embedding_size, scale=1, **kwargs)
 * **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set ```embedding_size``` to 512.
 * **scale**: The exponent multiplier in the loss's softmax expression. (This is the inverse of the softmax temperature.)
 
-Note: this also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts a ```regularizer``` and ```reg_weight``` as optional init arguments.
+**Other info**
+
+* This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts a ```regularizer``` and ```reg_weight``` as optional init arguments.
+* This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
+```python
+loss_func = losses.SphereFaceLoss(...)
+loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
+# then during training:
+loss_optimizer.step()
+```
 
 ## TripletMarginLoss
 
@@ -344,4 +408,11 @@ losses.WeightRegularizerMixin(regularizer, reg_weight, **kwargs)
 * **regularizer**: The [regularizer](regularizers.md) to apply to the loss's learned weights.
 * **reg_weight**: The amount the regularization loss will be multiplied by.
 
-Extended by: [ArcFaceLoss](losses.md#arcfaceloss), [NormalizedSoftmaxLoss](losses.md#normalizedsoftmaxloss), [ProxyNCALoss](losses.md#proxyncaloss).
+Extended by:
+
+* [ArcFaceLoss](losses.md#arcfaceloss)
+* [CosFaceLoss](losses.md#cosfaceloss)
+* [LargeMarginSoftmaxLoss](losses.md#largemarginsoftmaxloss)
+* [NormalizedSoftmaxLoss](losses.md#normalizedsoftmaxloss)
+* [ProxyNCALoss](losses.md#proxyncaloss)
+* [SphereFaceLoss](losses.md#spherefaceloss)

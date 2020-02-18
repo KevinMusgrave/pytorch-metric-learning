@@ -366,6 +366,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#ntxentloss" class="md-nav__link">
+    NTXentLoss
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#proxyncaloss" class="md-nav__link">
     ProxyNCALoss
   </a>
@@ -611,6 +618,13 @@
         <li class="md-nav__item">
   <a href="#npairsloss" class="md-nav__link">
     NPairsLoss
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ntxentloss" class="md-nav__link">
+    NTXentLoss
   </a>
   
 </li>
@@ -936,6 +950,16 @@
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>l2_reg_weight</strong>: The regularization weight for the L2 norm of the embeddings.</li>
+</ul>
+<h2 id="ntxentloss">NTXentLoss<a class="headerlink" href="#ntxentloss" title="Permanent link">&para;</a></h2>
+<p>This is the normalized temperature-scaled cross entropy loss used in <a href="https://arxiv.org/abs/2002.05709">A Simple Framework for Contrastive Learning of Visual Representations</a>.</p>
+<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">NTXentLoss</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>temperature</strong>: The exponent divisor in the softmax funtion.</li>
 </ul>
 <h2 id="proxyncaloss">ProxyNCALoss<a class="headerlink" href="#proxyncaloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1703.07464.pdf">No Fuss Distance Metric Learning using Proxies</a></p>

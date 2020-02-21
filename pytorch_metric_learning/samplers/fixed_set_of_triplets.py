@@ -1,3 +1,4 @@
+import torch
 from torch.utils.data.sampler import Sampler
 from ..utils import common_functions as c_f
 import numpy as np
@@ -11,6 +12,8 @@ class FixedSetOfTriplets(Sampler):
     """
 
     def __init__(self, labels, num_triplets):
+        if isinstance(labels, torch.Tensor):
+            labels = labels.numpy()
         self.labels_to_indices = c_f.get_labels_to_indices(labels)
         self.num_triplets = int(num_triplets)
         self.create_fixed_set_of_triplets()

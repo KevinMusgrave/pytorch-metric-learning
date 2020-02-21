@@ -133,8 +133,6 @@ losses.CrossBatchMemory(loss, embedding_size, memory_size=1024, miner=None)
 * **miner**: An optional miner, which will be used to mine pairs/triplets from the memory queue.
 
 
-**Parameters**:
-
 ## FastAPLoss
 [Deep Metric Learning to Rank](http://openaccess.thecvf.com/content_CVPR_2019/papers/Cakir_Deep_Metric_Learning_to_Rank_CVPR_2019_paper.pdf)
 

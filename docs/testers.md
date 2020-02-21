@@ -6,6 +6,9 @@ In general, testers are used as follows:
 from pytorch_metric_learning import testers
 t = testers.SomeTestingFunction(**kwargs)
 dataset_dict = {"train": train_dataset, "val": val_dataset}
+tester.test(dataset_dict, epoch, model)
+
+# Or if your model is composed of a trunk + embedder
 tester.test(dataset_dict, epoch, trunk, embedder)
 ```
 

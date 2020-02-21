@@ -5,7 +5,7 @@ In general, trainers are used as follows:
 ```python
 from pytorch_metric_learning import trainers
 t = trainers.SomeTrainingFunction(**kwargs)
-t.train()
+t.train(num_epochs=10)
 ```
 
 
@@ -39,6 +39,7 @@ trainers.BaseTrainer(models,
 
 * **models**: A dictionary of the form: 
 	* {"trunk": trunk_model, "embedder": embedder_model}
+	* The "embedder" key is optional.
 * **optimizers**: A dictionary mapping strings to optimizers. The base class does not require any specific keys. For example, you could provide an empty dictionary, in which case no optimization will happen. Or you could provide just an optimizer for your trunk_model. But most likely, you'll want to pass in: 
 	* {"trunk_optimizer": trunk_optimizer, "embedder_optimizer": embedder_optimizer}.
 * **batch_size**: The number of elements that are retrieved at each iteration.
@@ -80,7 +81,8 @@ trainers.MetricLossOnly(**kwargs)
 **Requirements**:
 
 * **models**: Must have the following form:
-	* {"trunk": trunk_model, "embedder": embedder_model}
+	* {"trunk": trunk_model}
+	* Optionally include "embedder": embedder_model
 * **loss_funcs**: Must have the following form:
 	* {"metric_loss": loss_func}
 
@@ -92,7 +94,8 @@ trainers.TrainWithClassifier(**kwargs)
 **Requirements**:
 
 * **models**: Must have the following form: 
-	* {"trunk": trunk_model, "embedder": embedder_model, "classifier": classifier_model}
+	* {"trunk": trunk_model, "classifier": classifier_model}
+	* Optionally include "embedder": embedder_model
 * **loss_funcs**: Must have the following form:
 	* {"metric_loss": loss_func1, "classifier_loss": loss_func2}
 
@@ -112,7 +115,8 @@ trainers.CascadedEmbeddings(embedding_sizes, **kwargs)
 
 * **models**: Must have the following form:
 
-	* {"trunk": trunk_model, "embedder": embedder_model}
+	* {"trunk": trunk_model}
+		* Optionally include "embedder": embedder_model
 		* Optionally include key:values of the form "classifier_%d": classifier_model_%d. The integer appended to "classifier_" represents the cascaded model that the classifier will be appended to. For example, if the dictionary has classifier_0 and classifier_2, then the 0th and 2nd cascaded models will have classifier_model_0 and classifier_model_2 appended to them.
 
 * **loss_funcs**: Must have the following form:
@@ -141,9 +145,10 @@ trainers.DeepAdversarialMetricLearning(metric_alone_epochs=0,
 **Requirements**:
 
 * **models**: Must have the following form:
-	* {"trunk": trunk_model, "embedder": embedder_model, "generator": generator_model}
+	* {"trunk": trunk_model, "generator": generator_model}
+		* Optionally include "embedder": embedder_model
 		* Optionally include "classifier": classifier_model
-		* The input size to the generator must be 3*(size of trunk_model output). The output size must be (size of trunk_model output).
+		* The input size to the generator must be 3\*(size of trunk_model output). The output size must be (size of trunk_model output).
 
 * **loss_funcs**: Must have the following form:
 	* {"metric_loss": metric_loss, "g_adv_loss": g_adv_loss, "synth_loss": synth_loss}

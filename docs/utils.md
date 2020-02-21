@@ -20,15 +20,15 @@ model_folder = "example_saved_models"
 tester = testers.GlobalEmbeddingSpaceTester(end_of_testing_hook=hooks.end_of_testing_hook)
 end_of_epoch_hook = hooks.end_of_epoch_hook(tester, dataset_dict, model_folder)
 trainer = trainers.MetricLossOnly(models,
-                                optimizers,
-                                batch_size,
-                                loss_funcs,
-                                mining_funcs,
-                                iterations_per_epoch,
-                                train_dataset,
-                                sampler=sampler,
-                                end_of_iteration_hook=hooks.end_of_iteration_hook,
-                                end_of_epoch_hook=end_of_epoch_hook)
+								optimizers,
+								batch_size,
+								loss_funcs,
+								mining_funcs,
+								iterations_per_epoch,
+								train_dataset,
+								sampler=sampler,
+								end_of_iteration_hook=hooks.end_of_iteration_hook,
+								end_of_epoch_hook=end_of_epoch_hook)
 
 trainer.train(num_epochs=num_epochs)
 ```
@@ -39,13 +39,18 @@ This class contains ready-to-use hooks to be used by trainers and testers.
 
 ```python
 import pytorch_metric_learning.utils.logging_presets as LP
-LP.HookContainer(record_keeper, record_group_name_prefix=None)
+LP.HookContainer(record_keeper, record_group_name_prefix=None, metric_for_best_epoch="mean_average_r_precision")
 ```
 
 **Parameters**:
 
 * **record_keeper**: A ```record-keeper``` object. Install: ```pip install record-keeper tensorboard```.
 * **record_group_name_prefix**: A string which will be prepended to all record names and tensorboard tags.
+* **metric_for_best_epoch**: A string that specifies the accuracy metric which will be used to determine the best checkpoint. Must be one of:
+    * mean_average_r_precision
+	* r_precision
+	* precision_at_1
+	* NMI
 
 **Important functions**:
 

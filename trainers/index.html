@@ -471,7 +471,7 @@
 <p>In general, trainers are used as follows:</p>
 <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">trainers</span>
 <span class="n">t</span> <span class="o">=</span> <span class="n">trainers</span><span class="o">.</span><span class="n">SomeTrainingFunction</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-<span class="n">t</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+<span class="n">t</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">num_epochs</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 </pre></div>
 
 
@@ -505,6 +505,7 @@
 <ul>
 <li><strong>models</strong>: A dictionary of the form: <ul>
 <li>{"trunk": trunk_model, "embedder": embedder_model}</li>
+<li>The "embedder" key is optional.</li>
 </ul>
 </li>
 <li><strong>optimizers</strong>: A dictionary mapping strings to optimizers. The base class does not require any specific keys. For example, you could provide an empty dictionary, in which case no optimization will happen. Or you could provide just an optimizer for your trunk_model. But most likely, you'll want to pass in: <ul>
@@ -560,7 +561,8 @@ If not specified, then the original labels are used.</li>
 <p><strong>Requirements</strong>:</p>
 <ul>
 <li><strong>models</strong>: Must have the following form:<ul>
-<li>{"trunk": trunk_model, "embedder": embedder_model}</li>
+<li>{"trunk": trunk_model}</li>
+<li>Optionally include "embedder": embedder_model</li>
 </ul>
 </li>
 <li><strong>loss_funcs</strong>: Must have the following form:<ul>
@@ -577,7 +579,8 @@ If not specified, then the original labels are used.</li>
 <p><strong>Requirements</strong>:</p>
 <ul>
 <li><strong>models</strong>: Must have the following form: <ul>
-<li>{"trunk": trunk_model, "embedder": embedder_model, "classifier": classifier_model}</li>
+<li>{"trunk": trunk_model, "classifier": classifier_model}</li>
+<li>Optionally include "embedder": embedder_model</li>
 </ul>
 </li>
 <li><strong>loss_funcs</strong>: Must have the following form:<ul>
@@ -600,7 +603,8 @@ If not specified, then the original labels are used.</li>
 <li>
 <p><strong>models</strong>: Must have the following form:</p>
 <ul>
-<li>{"trunk": trunk_model, "embedder": embedder_model}<ul>
+<li>{"trunk": trunk_model}<ul>
+<li>Optionally include "embedder": embedder_model</li>
 <li>Optionally include key:values of the form "classifier_%d": classifier_model_%d. The integer appended to "classifier_" represents the cascaded model that the classifier will be appended to. For example, if the dictionary has classifier_0 and classifier_2, then the 0th and 2nd cascaded models will have classifier_model_0 and classifier_model_2 appended to them.</li>
 </ul>
 </li>
@@ -645,7 +649,8 @@ If not specified, then the original labels are used.</li>
 <li>
 <p><strong>models</strong>: Must have the following form:</p>
 <ul>
-<li>{"trunk": trunk_model, "embedder": embedder_model, "generator": generator_model}<ul>
+<li>{"trunk": trunk_model, "generator": generator_model}<ul>
+<li>Optionally include "embedder": embedder_model</li>
 <li>Optionally include "classifier": classifier_model</li>
 <li>The input size to the generator must be 3*(size of trunk_model output). The output size must be (size of trunk_model output).</li>
 </ul>

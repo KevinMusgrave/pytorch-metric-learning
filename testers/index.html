@@ -430,6 +430,9 @@
 <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">testers</span>
 <span class="n">t</span> <span class="o">=</span> <span class="n">testers</span><span class="o">.</span><span class="n">SomeTestingFunction</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 <span class="n">dataset_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;train&quot;</span><span class="p">:</span> <span class="n">train_dataset</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">:</span> <span class="n">val_dataset</span><span class="p">}</span>
+<span class="n">tester</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="n">dataset_dict</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
+
+<span class="c1"># Or if your model is composed of a trunk + embedder</span>
 <span class="n">tester</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="n">dataset_dict</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">trunk</span><span class="p">,</span> <span class="n">embedder</span><span class="p">)</span>
 </pre></div>
 

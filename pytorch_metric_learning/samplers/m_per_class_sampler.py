@@ -1,3 +1,4 @@
+import torch
 from torch.utils.data.sampler import Sampler
 from ..utils import common_functions as c_f
 
@@ -10,6 +11,8 @@ class MPerClassSampler(Sampler):
     each will be returned
     """
     def __init__(self, labels, m, length_before_new_iter=100000):
+        if isinstance(labels, torch.Tensor):
+            labels = labels.numpy()
         self.m_per_class = int(m)
         self.labels_to_indices = c_f.get_labels_to_indices(labels)
         self.labels = list(self.labels_to_indices.keys())

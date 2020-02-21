@@ -118,6 +118,23 @@ loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
 loss_optimizer.step()
 ```
 
+## CrossBatchMemory 
+This wraps a loss function, and implements [Cross-Batch Memory for Embedding Learning](https://arxiv.org/pdf/1912.06798.pdf). It stores embeddings from previous iterations in a queue, and uses them to form more pairs/triplets with the current iteration's embeddings.
+
+```python
+losses.CrossBatchMemory(loss, embedding_size, memory_size=1024, miner=None)
+```
+
+**Parameters**:
+
+* **loss**: The loss function to be wrapped. For example, you could pass in ```ContrastiveLoss()```.
+* **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set ```embedding_size``` to 512.
+* **memory_size**: The size of the memory queue.
+* **miner**: An optional miner, which will be used to mine pairs/triplets from the memory queue.
+
+
+**Parameters**:
+
 ## FastAPLoss
 [Deep Metric Learning to Rank](http://openaccess.thecvf.com/content_CVPR_2019/papers/Cakir_Deep_Metric_Learning_to_Rank_CVPR_2019_paper.pdf)
 

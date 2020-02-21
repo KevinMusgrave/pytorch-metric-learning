@@ -120,6 +120,7 @@ See [powerful-benchmarker](https://github.com/KevinMusgrave/powerful-benchmarker
 - [**BaseWeightRegularizer**](https://kevinmusgrave.github.io/pytorch-metric-learning/regularizers/#baseweightregularizer)
 - [**BaseTrainer**](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#basetrainer)
 - [**BaseTester**](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#basetester)
+- [**CrossBatchMemory**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#crossbatchmemory) ([Cross-Batch Memory for Embedding Learning](https://arxiv.org/pdf/1912.06798.pdf))
 - [**GenericPairLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#genericpairloss)
 - [**MultipleLosses**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#multiplelosses)
 - [**WeightRegularizerMixin**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#weightregularizermixin)

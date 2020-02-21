@@ -14,15 +14,13 @@ from collections import defaultdict
 
 class BaseTester:
     def __init__(self, reference_set="compared_to_self", normalize_embeddings=True, use_trunk_output=False, 
-                    batch_size=32, dataloader_num_workers=32, metric_for_best_epoch="mean_average_r_precision", 
-                    pca=None, data_device=None, size_of_tsne=0, data_and_label_getter=None, label_hierarchy_level=0,
-                    end_of_testing_hook=None):
+                    batch_size=32, dataloader_num_workers=32, pca=None, data_device=None, size_of_tsne=0, 
+                    data_and_label_getter=None, label_hierarchy_level=0, end_of_testing_hook=None):
         self.reference_set = reference_set
         self.normalize_embeddings = normalize_embeddings
         self.pca = int(pca) if pca else None
         self.use_trunk_output = use_trunk_output
         self.batch_size = int(batch_size)
-        self.metric_for_best_epoch = metric_for_best_epoch
         self.data_device = torch.device("cuda" if torch.cuda.is_available() else "cpu") if data_device is None else data_device
         self.dataloader_num_workers = dataloader_num_workers
         self.size_of_tsne = size_of_tsne
@@ -163,8 +161,9 @@ class BaseTester:
     def do_knn_and_accuracies(self, accuracies, embeddings_and_labels, split_name):
         raise NotImplementedError
 
-    def test(self, dataset_dict, epoch, trunk_model, embedder_model, splits_to_eval=None, collate_fn=None, **kwargs):
+    def test(self, dataset_dict, epoch, trunk_model, embedder_model=None, splits_to_eval=None, collate_fn=None, **kwargs):
         logging.info("Evaluating epoch %d" % epoch)
+        if embedder_model is None: embedder_model = c_f.Identity()
         trunk_model.eval()
         embedder_model.eval()
         splits_to_eval, splits_to_compute_embeddings = self.get_splits_to_compute_embeddings(dataset_dict, splits_to_eval)

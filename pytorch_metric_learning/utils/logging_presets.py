@@ -10,10 +10,11 @@ import torch
 
 class HookContainer: 
 
-    def __init__(self, record_keeper, record_group_name_prefix=None):
+    def __init__(self, record_keeper, record_group_name_prefix=None, metric_for_best_epoch="mean_average_r_precision"):
         self.record_keeper = record_keeper
         self.record_group_name_prefix = record_group_name_prefix
-        self.saveable_trainer_objects = ["models", "optimizers", "lr_schedulers", "loss_funcs", "mining_funcs"] 
+        self.saveable_trainer_objects = ["models", "optimizers", "lr_schedulers", "loss_funcs", "mining_funcs"]
+        self.metric_for_best_epoch = metric_for_best_epoch 
 
     ############################################
     ############################################
@@ -125,12 +126,12 @@ class HookContainer:
     def get_accuracy_of_epoch(self, tester, split_name, epoch): 
         try:
             records = self.record_keeper.get_record(self.record_group_name(tester, split_name))
-            average_key = tester.accuracies_keyname(tester.metric_for_best_epoch, prefix="AVERAGE")
+            average_key = tester.accuracies_keyname(self.metric_for_best_epoch, prefix="AVERAGE")
             if average_key in records:
                 return records[average_key][records["epoch"].index(epoch)]
             else:
                 for metric, accuracies in records.items():
-                    if metric.startswith(tester.metric_for_best_epoch):
+                    if metric.startswith(self.metric_for_best_epoch):
                         return accuracies[records["epoch"].index(epoch)]
         except:
             return None 

@@ -8,6 +8,13 @@ import glob
 
 NUMPY_RANDOM_STATE = np.random.RandomState()
 
+class Identity(torch.nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x):
+        return x
+
 
 def try_next_on_generator(gen, iterable):
     try:

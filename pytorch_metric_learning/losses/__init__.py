@@ -3,6 +3,7 @@ from .angular_loss import AngularLoss
 from .arcface_loss import ArcFaceLoss
 from .contrastive_loss import ContrastiveLoss
 from .cosface_loss import CosFaceLoss
+from .cross_batch_memory import CrossBatchMemory
 from .fast_ap_loss import FastAPLoss
 from .generic_pair_loss import GenericPairLoss
 from .large_margin_softmax_loss import LargeMarginSoftmaxLoss

@@ -54,6 +54,7 @@ class BaseTrainer:
         self.end_of_epoch_hook = end_of_epoch_hook
         self.loss_names = list(self.loss_funcs.keys())
         self.custom_setup()
+        self.initialize_models()
         self.initialize_data_device()
         self.initialize_label_mapper()
         self.initialize_loss_tracker()
@@ -228,3 +229,7 @@ class BaseTrainer:
     def initialize_lr_schedulers(self):
         if self.lr_schedulers is None:
             self.lr_schedulers = {}
+
+    def initialize_models(self):
+        if "embedder" not in self.models:
+            self.models["embedder"] = c_f.Identity()

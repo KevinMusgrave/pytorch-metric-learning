@@ -12,9 +12,9 @@ class BatchHardMiner(BasePostGradientMiner):
         self.squared_distances = squared_distances
         self.add_to_recordable_attributes(list_of_names=["hardest_triplet_dist", "hardest_pos_pair_dist", "hardest_neg_pair_dist"])
 
-    def mine(self, embeddings, labels):
-        mat = lmu.get_pairwise_mat(embeddings, self.use_similarity, self.squared_distances)
-        a1_idx, p_idx, a2_idx, n_idx = lmu.get_all_pairs_indices(labels)
+    def mine(self, embeddings, labels, ref_emb, ref_labels):
+        mat = lmu.get_pairwise_mat(embeddings, ref_emb, self.use_similarity, self.squared_distances)
+        a1_idx, p_idx, a2_idx, n_idx = lmu.get_all_pairs_indices(labels, ref_labels)
 
         pos_func = self.get_min_per_row if self.use_similarity else self.get_max_per_row
         neg_func = self.get_max_per_row if self.use_similarity else self.get_min_per_row

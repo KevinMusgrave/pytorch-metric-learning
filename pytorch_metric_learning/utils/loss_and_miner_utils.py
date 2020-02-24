@@ -4,11 +4,27 @@ import math
 from . import common_functions as c_f
 
 
-def sim_mat(x):
+def logsumexp(x, keep_mask=None, add_one=True):
+    max_vals, _ = torch.max(x, dim=1, keepdim=True)
+    inside_exp = x - max_vals
+    exp = torch.exp(inside_exp)
+    if keep_mask is not None:
+        exp = exp*keep_mask
+    inside_log = torch.sum(exp, dim=1, keepdim=True)
+    if add_one: 
+        inside_log = inside_log + torch.exp(-max_vals)
+    else:
+        # add one only if necessary
+        inside_log[inside_log==0] = torch.exp(-max_vals[inside_log==0])
+    return torch.log(inside_log) + max_vals
+
+def sim_mat(x, y=None):
     """
     returns a matrix where entry (i,j) is the dot product of x[i] and x[j]
     """
-    return torch.matmul(x, x.t())
+    if y is None:
+        y = x
+    return torch.matmul(x, y.t())
 
 
 # https://discuss.pytorch.org/t/efficient-distance-matrix-computation/9065/7
@@ -41,20 +57,25 @@ def dist_mat(x, y=None, eps=1e-16, squared=False):
         dist = dist * (1.0 - mask)
     return dist
 
-def get_pairwise_mat(x, use_similarity, squared):
-    return sim_mat(x) if use_similarity else dist_mat(x, squared=squared)
+def get_pairwise_mat(x, y, use_similarity, squared):
+    if x is y:
+        y = None
+    return sim_mat(x, y=y) if use_similarity else dist_mat(x, y=y, squared=squared)
 
-def get_all_pairs_indices(labels):
+def get_all_pairs_indices(labels, ref_labels=None):
     """
     Given a tensor of labels, this will return 4 tensors.
     The first 2 tensors are the indices which form all positive pairs
     The second 2 tensors are the indices which form all negative pairs
     """
+    if ref_labels is None:
+        ref_labels = labels
     labels1 = labels.unsqueeze(1)
-    labels2 = labels.unsqueeze(0)
+    labels2 = ref_labels.unsqueeze(0)
     matches = (labels1 == labels2).byte()
     diffs = matches ^ 1
-    matches -= torch.eye(matches.size(0)).byte().to(labels.device)
+    if ref_labels is labels:
+        matches -= torch.eye(matches.size(0)).byte().to(labels.device)
     a1_idx = matches.nonzero()[:, 0].flatten()
     p_idx = matches.nonzero()[:, 1].flatten()
     a2_idx = diffs.nonzero()[:, 0].flatten()
@@ -86,12 +107,15 @@ def convert_to_pos_pairs_with_unique_labels(indices_tuple, labels):
     return a[unique_idx], p[unique_idx]
 
 
-def get_all_triplets_indices(labels):
+def get_all_triplets_indices(labels, ref_labels=None):
+    if ref_labels is None:
+        ref_labels = labels
     labels1 = labels.unsqueeze(1)
-    labels2 = labels.unsqueeze(0)
+    labels2 = ref_labels.unsqueeze(0)
     matches = (labels1 == labels2).byte()
     diffs = matches ^ 1
-    matches -= torch.eye(matches.size(0)).byte().to(labels.device)
+    if ref_labels is labels:
+        matches -= torch.eye(matches.size(0)).byte().to(labels.device)
     triplets = matches.unsqueeze(2)*diffs.unsqueeze(1)
     a_idx = triplets.nonzero()[:, 0].flatten()
     p_idx = triplets.nonzero()[:, 1].flatten()
@@ -101,26 +125,28 @@ def get_all_triplets_indices(labels):
 
 
 # sample triplets, with a weighted distribution if weights is specified.
-def get_random_triplet_indices(labels, t_per_anchor=None, weights=None):
+def get_random_triplet_indices(labels, ref_labels=None, t_per_anchor=None, weights=None):
     a_idx, p_idx, n_idx = [], [], []
-    batch_size = labels.size(0)
     labels = labels.cpu().numpy()
-    label_count = dict(zip(*np.unique(labels, return_counts=True)))
+    ref_labels = labels if ref_labels is None else ref_labels.cpu().numpy()
+    batch_size = ref_labels.shape[0]
+    label_count = dict(zip(*np.unique(ref_labels, return_counts=True)))
     indices = np.arange(batch_size)
     for i, label in enumerate(labels):
         curr_label_count = label_count[label]
-        if curr_label_count == 1:
+        if ref_labels is labels: curr_label_count -= 1
+        if curr_label_count == 0:
             continue
-        k = curr_label_count - 1 if t_per_anchor is None else t_per_anchor
+        k = curr_label_count if t_per_anchor is None else t_per_anchor
 
         if weights is not None and not np.any(np.isnan(weights[i])):
             n_idx += c_f.NUMPY_RANDOM_STATE.choice(batch_size, k, p=weights[i]).tolist()
         else:
-            possible_n_idx = list(np.where(labels != label)[0])
+            possible_n_idx = list(np.where(ref_labels != label)[0])
             n_idx += c_f.NUMPY_RANDOM_STATE.choice(possible_n_idx, k).tolist()
 
         a_idx.extend([i] * k)
-        curr_p_idx = c_f.safe_random_choice(np.where((labels == label) & (indices != i))[0], k)
+        curr_p_idx = c_f.safe_random_choice(np.where((ref_labels == label) & (indices != i))[0], k)
         p_idx.extend(curr_p_idx.tolist())
 
     return (

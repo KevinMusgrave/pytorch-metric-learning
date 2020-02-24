@@ -20,10 +20,11 @@ class TripletMarginMiner(BasePostGradientMiner):
         self.margin = margin
         self.add_to_recordable_attributes(list_of_names=["avg_triplet_margin", "pos_pair_dist", "neg_pair_dist"])
         self.type_of_triplets = type_of_triplets
+        self.idx_type = "triplet"
 
-    def mine(self, embeddings, labels):
-        anchor_idx, positive_idx, negative_idx = lmu.get_all_triplets_indices(labels)
-        anchors, positives, negatives = embeddings[anchor_idx], embeddings[positive_idx], embeddings[negative_idx]
+    def mine(self, embeddings, labels, ref_emb, ref_labels):
+        anchor_idx, positive_idx, negative_idx  = lmu.get_all_triplets_indices(labels, ref_labels)
+        anchors, positives, negatives = embeddings[anchor_idx], ref_emb[positive_idx], ref_emb[negative_idx]
         ap_dist = torch.nn.functional.pairwise_distance(anchors, positives, 2)
         an_dist = torch.nn.functional.pairwise_distance(anchors, negatives, 2)
         triplet_margin = ap_dist - an_dist

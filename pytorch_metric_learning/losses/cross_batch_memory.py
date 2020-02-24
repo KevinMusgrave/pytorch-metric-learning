@@ -25,9 +25,9 @@ class CrossBatchMemory(torch.nn.Module):
             E_mem = self.embedding_memory
             L_mem = self.label_memory
 
+        indices_tuple = self.create_indices_tuple(batch_size, embeddings, labels, E_mem, L_mem, input_indices_tuple)
         combined_embeddings = torch.cat([embeddings, E_mem], dim=0)
         combined_labels = torch.cat([labels, L_mem], dim=0)
-        indices_tuple = self.create_indices_tuple(batch_size, combined_embeddings, combined_labels, input_indices_tuple)
         loss = self.loss(combined_embeddings, combined_labels, indices_tuple)
         self.add_to_memory(embeddings, labels, batch_size)
         return loss
@@ -41,8 +41,8 @@ class CrossBatchMemory(torch.nn.Module):
         else:
             self.embedding_memory[:end_idx] = embeddings[:end_idx].detach()
             self.embedding_memory[self.queue_idx:] = embeddings[end_idx:].detach()
-            self.label_memory[:end_idx] = label[:end_idx].detach()
-            self.label_memory[self.queue_idx:] = label[end_idx:].detach()
+            self.label_memory[:end_idx] = labels[:end_idx].detach()
+            self.label_memory[self.queue_idx:] = labels[end_idx:].detach()
 
         prev_queue_idx = self.queue_idx
         self.queue_idx = (self.queue_idx + batch_size) % self.memory_size
@@ -51,31 +51,27 @@ class CrossBatchMemory(torch.nn.Module):
             self.has_been_filled = True
 
 
-    def create_indices_tuple(self, batch_size, combined_embeddings, combined_labels, input_indices_tuple):
+    def create_indices_tuple(self, batch_size, embeddings, labels, E_mem, L_mem, input_indices_tuple):
         if self.miner:
-            indices_tuple = self.miner(combined_embeddings, combined_labels)
+        	indices_tuple = self.miner(embeddings, labels, E_mem, L_mem)
         else:
-            indices_tuple = lmu.get_all_pairs_indices(combined_labels)
-
-        # Discard pairs and triplets that have only memory embeddings
-        if len(indices_tuple) == 3:
-            a, p, n = indices_tuple
-            keep = (a<batch_size) | (p<batch_size) | (n<batch_size)
-            indices_tuple = tuple([x[keep] for x in indices_tuple])
-        elif len(indices_tuple) == 4:
-            a1, p, a2, n = indices_tuple
-            keep1 = (a1<batch_size) | (p<batch_size)
-            keep2 = (a2<batch_size) | (n<batch_size)
-            indices_tuple = (a1[keep1], p[keep1], a2[keep2], n[keep2])
+        	indices_tuple = lmu.get_all_pairs_indices(labels, L_mem)
+        
+        indices_tuple = self.shift_indices_tuple(indices_tuple, batch_size)
 
         if input_indices_tuple is not None:
             if len(input_indices_tuple) == 3 and len(indices_tuple) == 4:
-                input_indices_tuple = lmu.convert_to_pairs(input_indices_tuple, combined_labels[:batch_size])
+                input_indices_tuple = lmu.convert_to_pairs(input_indices_tuple, labels)
             elif len(input_indices_tuple) == 4 and len(indices_tuple) == 3:
-                input_indices_tuple = lmu.convert_to_triplets(input_indices_tuple, combined_labels[:batch_size])
+                input_indices_tuple = lmu.convert_to_triplets(input_indices_tuple, labels)
             indices_tuple = tuple([torch.cat([x,y.to(x.device)], dim=0) for x,y in zip(indices_tuple, input_indices_tuple)])
 
         return indices_tuple
 
 
-
+    def shift_indices_tuple(self, indices_tuple, batch_size):
+        if len(indices_tuple) == 3:
+            indices_tuple = (indices_tuple[0],) + tuple([x+batch_size if len(x) > 0 else x for x in indices_tuple])
+        elif len(indices_tuple) == 4:
+            indices_tuple = tuple([x+batch_size if len(x) > 0 and i%2==1 else x for i,x in enumerate(indices_tuple)])
+        return indices_tuple

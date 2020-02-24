@@ -24,36 +24,26 @@ class ContrastiveLoss(GenericPairLoss):
         avg_non_zero_only=True,
         **kwargs
     ):
+        super().__init__(use_similarity=use_similarity, mat_based_loss=False, **kwargs)
         self.pos_margin = pos_margin
         self.neg_margin = neg_margin
         self.avg_non_zero_only = avg_non_zero_only
         self.power = power
         self.add_to_recordable_attributes(list_of_names=["num_non_zero_pos_pairs", "num_non_zero_neg_pairs"])
-        super().__init__(use_similarity=use_similarity, iterate_through_loss=False, **kwargs)
+        
 
-    def pair_based_loss(
-        self,
-        pos_pair_dist,
-        neg_pair_dist,
-        pos_pair_anchor_labels,
-        neg_pair_anchor_labels,
-    ):
+    def _compute_loss(self, pos_pair_dist, neg_pair_dist):
         pos_loss, neg_loss = 0, 0
         self.num_non_zero_pos_pairs, self.num_non_zero_neg_pairs = 0, 0
         if len(pos_pair_dist) > 0:
-            pos_loss, self.num_non_zero_pos_pairs = self.mask_margin_and_calculate_loss(
-                pos_pair_dist, pos_pair_anchor_labels, "pos"
-            )
+            pos_loss, self.num_non_zero_pos_pairs = self.mask_margin_and_calculate_loss(pos_pair_dist, "pos")
         if len(neg_pair_dist) > 0:
-            neg_loss, self.num_non_zero_neg_pairs = self.mask_margin_and_calculate_loss(
-                neg_pair_dist, neg_pair_anchor_labels, "neg"
-            )
+            neg_loss, self.num_non_zero_neg_pairs = self.mask_margin_and_calculate_loss(neg_pair_dist, "neg")
         return pos_loss + neg_loss
 
-    def mask_margin_and_calculate_loss(self, pair_dists, labels, pos_or_neg):
+    def mask_margin_and_calculate_loss(self, pair_dists, pos_or_neg):
         loss_calc_func = self.pos_calc if pos_or_neg == "pos" else self.neg_calc
-        input_margin = self.pos_margin if pos_or_neg == "pos" else self.neg_margin
-        margin = self.maybe_mask_param(input_margin, labels)
+        margin = self.pos_margin if pos_or_neg == "pos" else self.neg_margin
         per_pair_loss = loss_calc_func(pair_dists, margin) ** self.power
         num_non_zero_pairs = (per_pair_loss > 0).nonzero().size(0)
         if self.avg_non_zero_only:

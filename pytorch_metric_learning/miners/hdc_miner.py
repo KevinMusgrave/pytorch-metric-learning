@@ -14,9 +14,9 @@ class HDCMiner(BasePostGradientMiner):
         self.squared_distances = squared_distances
         self.reset_idx()
 
-    def mine(self, embeddings, labels):
-        mat = lmu.get_pairwise_mat(embeddings, self.use_similarity, self.squared_distances)
-        self.set_idx(labels)
+    def mine(self, embeddings, labels, ref_emb, ref_labels):
+        mat = lmu.get_pairwise_mat(embeddings, ref_emb, self.use_similarity, self.squared_distances)
+        self.set_idx(labels, ref_labels)
 
         for name, (anchor, other) in {"pos": (self.a1, self.p), "neg": (self.a2, self.n)}.items():
             if len(anchor) > 0:
@@ -34,9 +34,9 @@ class HDCMiner(BasePostGradientMiner):
             return False if name == "pos" else True
         return True if name == "pos" else False
 
-    def set_idx(self, labels):
+    def set_idx(self, labels, ref_labels):
         if not self.was_set_externally:
-            self.a1, self.p, self.a2, self.n = lmu.get_all_pairs_indices(labels)
+            self.a1, self.p, self.a2, self.n = lmu.get_all_pairs_indices(labels, ref_labels)
 
     def set_idx_externally(self, external_indices_tuple, labels):
         self.a1, self.p, self.a2, self.n = lmu.convert_to_pairs(external_indices_tuple, labels)

@@ -3,6 +3,7 @@
 import torch
 
 from .generic_pair_loss import GenericPairLoss
+from ..utils import loss_and_miner_utils as lmu
 
 
 class GeneralizedLiftedStructureLoss(GenericPairLoss):
@@ -10,14 +11,10 @@ class GeneralizedLiftedStructureLoss(GenericPairLoss):
     # of the "in defense of triplet loss" paper
     # https://arxiv.org/pdf/1703.07737.pdf
     def __init__(self, neg_margin, **kwargs):
+        super().__init__(use_similarity=False, mat_based_loss=True, **kwargs)
         self.neg_margin = neg_margin
-        super().__init__(use_similarity=False, iterate_through_loss=True, **kwargs)
 
-    def pair_based_loss(self, pos_pairs, neg_pairs, pos_pair_anchor_labels, neg_pair_anchor_labels):
-        neg_margin = self.maybe_mask_param(self.neg_margin, neg_pair_anchor_labels)
-        loss = torch.tensor(0.).to(pos_pairs.device)
-        if len(pos_pairs) > 0:
-            loss += torch.logsumexp(pos_pairs, dim=0)
-        if len(neg_pairs) > 0:
-            loss += torch.logsumexp(neg_margin - neg_pairs, dim=0)
-        return torch.mean(torch.relu(loss))
+    def _compute_loss(self, mat, pos_mask, neg_mask):
+        pos_loss = lmu.logsumexp(mat, keep_mask=pos_mask, add_one=False)
+        neg_loss = lmu.logsumexp(self.neg_margin - mat, keep_mask=neg_mask, add_one=False)
+        return torch.mean(torch.relu(pos_loss+neg_loss))

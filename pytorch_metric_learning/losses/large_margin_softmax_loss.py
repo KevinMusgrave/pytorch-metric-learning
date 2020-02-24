@@ -13,13 +13,13 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
     Implementation of https://arxiv.org/pdf/1612.02295.pdf
     """
     def __init__(self, margin, num_classes, embedding_size, scale=1, normalize_weights=False, **kwargs):
+        super().__init__(**kwargs)
         self.margin = margin
         self.num_classes = num_classes
         self.scale = scale
         self.normalize_weights = normalize_weights
         self.add_to_recordable_attributes(name="avg_angle")
         self.init_margin()
-        super().__init__(**kwargs)
         self.W = torch.nn.Parameter(torch.randn(embedding_size, num_classes))
         self.cross_entropy = torch.nn.CrossEntropyLoss(reduction='none')
 

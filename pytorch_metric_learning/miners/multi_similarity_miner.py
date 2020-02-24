@@ -10,20 +10,21 @@ class MultiSimilarityMiner(BasePostGradientMiner):
         super().__init__(**kwargs)
         self.epsilon = epsilon
 
-    def mine(self, embeddings, labels):
-        self.sim_mat = lmu.sim_mat(embeddings)
-
-        a1, p, a2, n = lmu.get_all_pairs_indices(labels)
+    def mine(self, embeddings, labels, ref_emb, ref_labels):
+        sim_mat = lmu.sim_mat(embeddings, ref_emb)
+        a1, p, a2, n = lmu.get_all_pairs_indices(labels, ref_labels)
 
         if len(a1) == 0 or len(a2) == 0:
-            return [], [], [], []
+            empty = torch.LongTensor([]).to(labels.device)
+            return empty.clone(), empty.clone(), empty.clone(), empty.clone()
 
-        sim_mat_pos_sorting = self.sim_mat.clone()
-        sim_mat_neg_sorting = self.sim_mat.clone()
+        sim_mat_neg_sorting = sim_mat.clone()
+        sim_mat_pos_sorting = sim_mat.clone()
 
         sim_mat_pos_sorting[a2, n] = float('inf')
         sim_mat_neg_sorting[a1, p] = -float('inf')
-        sim_mat_neg_sorting[range(len(labels)), range(len(labels))] = -float('inf')
+        if embeddings is ref_emb:
+            sim_mat_neg_sorting[range(len(labels)), range(len(labels))] = -float('inf')
 
         pos_sorted, pos_sorted_idx = torch.sort(sim_mat_pos_sorting, dim=1)
         neg_sorted, neg_sorted_idx = torch.sort(sim_mat_neg_sorting, dim=1)

@@ -21,9 +21,9 @@ class PairMarginMiner(BasePostGradientMiner):
         self.squared_distances = squared_distances
         self.add_to_recordable_attributes(list_of_names=["pos_pair_dist", "neg_pair_dist"])
 
-    def mine(self, embeddings, labels):
-        mat = lmu.get_pairwise_mat(embeddings, self.use_similarity, self.squared_distances)
-        a1, p, a2, n = lmu.get_all_pairs_indices(labels)
+    def mine(self, embeddings, labels, ref_emb, ref_labels):
+        mat = lmu.get_pairwise_mat(embeddings, ref_emb, self.use_similarity, self.squared_distances)
+        a1, p, a2, n = lmu.get_all_pairs_indices(labels, ref_labels)
         pos_pair = mat[a1, p]
         neg_pair = mat[a2, n]
         self.pos_pair_dist = torch.mean(pos_pair).item()

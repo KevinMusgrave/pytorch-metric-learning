@@ -146,18 +146,20 @@ losses.FastAPLoss(num_bins, **kwargs)
 
 ## GenericPairLoss
 ```python
-losses.GenericPairLoss(use_similarity, iterate_through_loss, squared_distances=False, **kwargs)
+losses.GenericPairLoss(use_similarity, mat_based_loss, squared_distances=False, **kwargs)
 ```
 
 **Parameters**:
 
 * **use_similarity**: Set to True if the loss function uses pairwise similarity (dot product of each embedding pair). Otherwise, euclidean distance will be used.
-* **iterate_through_loss**: If True, then pairs are passed iteratively to self.pair_based_loss, by going through each sample in a batch, and selecting just the positive and negative pairs containing that sample. Otherwise, the pairs are passed to self.pair_based_loss all at once. 
+* **mat_based_loss**: See required implementations.
 * **squared_distances**: If True, then the euclidean distance will be squared.
 
 **Required Implementations**:
 ```python
-def pair_based_loss(self, pos_pairs, neg_pairs, pos_pair_anchor_labels, neg_pair_anchor_labels):
+# If mat_based_loss is True, then this takes in mat, pos_mask, and neg_mask
+# If False, this takes in pos_pairs and neg_pairs
+def _compute_loss(self):
     raise NotImplementedError
 ```
 

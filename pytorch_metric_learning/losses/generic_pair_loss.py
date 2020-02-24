@@ -24,46 +24,36 @@ class GenericPairLoss(BaseMetricLossFunction):
     """
 
     def __init__(
-        self, use_similarity, iterate_through_loss, squared_distances=False, **kwargs
+        self, use_similarity, mat_based_loss, squared_distances=False, **kwargs
     ):
+        super().__init__(**kwargs)
         self.use_similarity = use_similarity
         self.squared_distances = squared_distances
-        self.loss_method = self.loss_loop if iterate_through_loss else self.loss_once
-        super().__init__(**kwargs)
-
+        self.loss_method = self.mat_based_loss if mat_based_loss else self.pair_based_loss
+        
     def compute_loss(self, embeddings, labels, indices_tuple):
-        mat = lmu.get_pairwise_mat(embeddings, self.use_similarity, self.squared_distances)
+        mat = lmu.get_pairwise_mat(embeddings, embeddings, self.use_similarity, self.squared_distances)
+        if not self.normalize_embeddings:
+            embedding_norms_mat = self.embedding_norms.unsqueeze(0)*self.embedding_norms.unsqueeze(1)
+            mat = mat / (embedding_norms_mat)
         indices_tuple = lmu.convert_to_pairs(indices_tuple, labels)
         return self.loss_method(mat, labels, indices_tuple)
 
-    def pair_based_loss(
-        self, pos_pairs, neg_pairs, pos_pair_anchor_labels, neg_pair_anchor_labels
-    ):
+    def _compute_loss(self):
         raise NotImplementedError
 
-    def loss_loop(self, mat, labels, indices_tuple):
-        loss = torch.tensor(0.0).to(mat.device)
-        n = 0
-        (a1_indices, p_indices, a2_indices, n_indices) = indices_tuple
-        for i in range(mat.size(0)):
-            pos_pair, neg_pair, pos_labels, neg_labels = [], [], [], []
-            if len(a1_indices) > 0:
-                p_idx = a1_indices == i
-                pos_pair = mat[a1_indices[p_idx], p_indices[p_idx]]
-                pos_labels = labels[a1_indices[p_idx]]
-            if len(a2_indices) > 0:
-                n_idx = a2_indices == i
-                neg_pair = mat[a2_indices[n_idx], n_indices[n_idx]]
-                neg_labels = labels[a2_indices[n_idx]]
-            loss += self.pair_based_loss(pos_pair, neg_pair, pos_labels, neg_labels)
-            n += 1
-        return loss / (n if n > 0 else 1)
+    def mat_based_loss(self, mat, labels, indices_tuple):
+        a1, p, a2, n = indices_tuple
+        pos_mask, neg_mask = torch.zeros_like(mat), torch.zeros_like(mat)
+        pos_mask[a1, p] = 1
+        neg_mask[a2, n] = 1
+        return self._compute_loss(mat, pos_mask, neg_mask)
 
-    def loss_once(self, mat, labels, indices_tuple):
-        (a1_indices, p_indices, a2_indices, n_indices) = indices_tuple
+    def pair_based_loss(self, mat, labels, indices_tuple):
+        a1, p, a2, n = indices_tuple
         pos_pair, neg_pair = [], []
-        if len(a1_indices) > 0:
-            pos_pair = mat[a1_indices, p_indices]
-        if len(a2_indices) > 0:
-            neg_pair = mat[a2_indices, n_indices]
-        return self.pair_based_loss(pos_pair, neg_pair, labels[a1_indices], labels[a2_indices])
+        if len(a1) > 0:
+            pos_pair = mat[a1, p]
+        if len(a2) > 0:
+            neg_pair = mat[a2, n]
+        return self._compute_loss(pos_pair, neg_pair)

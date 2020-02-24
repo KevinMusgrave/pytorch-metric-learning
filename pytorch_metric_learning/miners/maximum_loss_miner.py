@@ -13,7 +13,7 @@ class MaximumLossMiner(BasePreGradientMiner):
         self.mining_function = mining_function
         self.num_trials = num_trials
 
-    def mine(self, embeddings, labels):
+    def mine(self, embeddings, labels, *_):
         losses = []
         rand_subset_idx = torch.randint(0, len(embeddings), size=(self.num_trials, self.output_batch_size))
         for i in range(self.num_trials):

@@ -12,9 +12,9 @@ class NPairsLoss(BaseMetricLossFunction):
         l2_reg_weight: The L2 regularizer weight (multiplier)
     """
     def __init__(self, l2_reg_weight=0, **kwargs):
+        super().__init__(**kwargs)
         self.l2_reg_weight = l2_reg_weight
         self.add_to_recordable_attributes(name="num_pairs")
-        super().__init__(**kwargs)
         self.cross_entropy = torch.nn.CrossEntropyLoss()
 
     def compute_loss(self, embeddings, labels, indices_tuple):

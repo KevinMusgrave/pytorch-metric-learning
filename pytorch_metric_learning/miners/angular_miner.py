@@ -19,9 +19,9 @@ class AngularMiner(BasePostGradientMiner):
                                                         "average_angle_below_threshold",
                                                         "min_angle", "max_angle", "std_of_angle"])
 
-    def mine(self, embeddings, labels):
-        anchor_idx, positive_idx, negative_idx = lmu.get_all_triplets_indices(labels)
-        anchors, positives, negatives = embeddings[anchor_idx], embeddings[positive_idx], embeddings[negative_idx]
+    def mine(self, embeddings, labels, ref_emb, ref_labels):
+        anchor_idx, positive_idx, negative_idx = lmu.get_all_triplets_indices(labels, ref_labels)
+        anchors, positives, negatives = embeddings[anchor_idx], ref_emb[positive_idx], ref_emb[negative_idx]
         centers = (anchors + positives) / 2
         ap_dist = torch.nn.functional.pairwise_distance(anchors, positives, 2)
         nc_dist = torch.nn.functional.pairwise_distance(negatives, centers, 2)
@@ -42,3 +42,4 @@ class AngularMiner(BasePostGradientMiner):
         negated_condition = ~threshold_condition
         if torch.sum(negated_condition) > 0:
             self.average_angle_below_threshold = np.degrees(torch.mean(angles[~threshold_condition]).item())
+

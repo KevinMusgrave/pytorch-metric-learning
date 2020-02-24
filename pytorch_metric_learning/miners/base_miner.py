@@ -8,7 +8,7 @@ class BaseMiner(torch.nn.Module):
         super().__init__()
         self.normalize_embeddings = normalize_embeddings
 
-    def mine(self, embeddings, labels):
+    def mine(self, embeddings, labels, ref_emb, ref_labels):
         """
         Args:
             embeddings: tensor of size (batch_size, embedding_size)
@@ -20,7 +20,7 @@ class BaseMiner(torch.nn.Module):
     def output_assertion(self, output):
         raise NotImplementedError
 
-    def forward(self, embeddings, labels):
+    def forward(self, embeddings, labels, ref_emb=None, ref_labels=None):
         """
         Args:
             embeddings: tensor of size (batch_size, embedding_size)
@@ -28,13 +28,24 @@ class BaseMiner(torch.nn.Module):
         Does any necessary preprocessing, then does mining, and then checks the
         shape of the mining output before returning it
         """
-        labels = labels.to(embeddings.device)
         with torch.no_grad():
+            labels = labels.to(embeddings.device)
             if self.normalize_embeddings:
-                embeddings = torch.nn.functional.normalize(embeddings, p=2, dim=1) 
-            mining_output = self.mine(embeddings, labels)
+                embeddings = torch.nn.functional.normalize(embeddings, p=2, dim=1)
+            ref_emb, ref_labels = self.set_ref_emb(embeddings, labels, ref_emb, ref_labels)
+            mining_output = self.mine(embeddings, labels, ref_emb, ref_labels)
         self.output_assertion(mining_output)
         return mining_output
+
+    def set_ref_emb(self, embeddings, labels, ref_emb, ref_labels):
+        if ref_emb is not None:
+            if self.normalize_embeddings:
+                ref_emb = torch.nn.functional.normalize(ref_emb, p=2, dim=1)
+            ref_labels = ref_labels.to(ref_emb.device)
+        else:
+            ref_emb, ref_labels = embeddings, labels
+        return ref_emb, ref_labels
+
 
     def add_to_recordable_attributes(self, name=None, list_of_names=None):
         c_f.add_to_recordable_attributes(self, name=name, list_of_names=list_of_names)

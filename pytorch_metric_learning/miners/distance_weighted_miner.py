@@ -12,14 +12,15 @@ class DistanceWeightedMiner(BasePostGradientMiner):
         super().__init__(**kwargs)
         self.cutoff = float(cutoff)
         self.nonzero_loss_cutoff = float(nonzero_loss_cutoff)
+        self.mat_type = "dist"
 
-    def mine(self, embeddings, labels):
-        label_set = torch.unique(labels)
-        n, d = embeddings.size()
-
-        dist_mat = lmu.dist_mat(embeddings)
-        dist_mat = dist_mat + torch.eye(dist_mat.size(0)).to(embeddings.device)  
-        # so that we don't get log(0). We mask the diagonal out later anyway
+    def mine(self, embeddings, labels, ref_emb, ref_labels):
+        d = embeddings.size(1)
+        dist_mat = lmu.dist_mat(embeddings, ref_emb)
+        
+        if embeddings is ref_emb:
+            # so that we don't get log(0). We mask the diagonal out later anyway
+            dist_mat = dist_mat + torch.eye(dist_mat.size(0)).to(embeddings.device)  
         # Cut off to avoid high variance.
         dist_mat = torch.max(dist_mat, torch.tensor(self.cutoff).to(dist_mat.device))
 
@@ -33,9 +34,8 @@ class DistanceWeightedMiner(BasePostGradientMiner):
         # Sample only negative examples by setting weights of
         # the same-class examples to 0.
         mask = torch.ones(weights.size()).to(embeddings.device)
-        for i in label_set:
-            idx = (labels == i).nonzero().squeeze(1)
-            mask[torch.meshgrid(idx, idx)] = 0
+        same_class = labels.unsqueeze(1) == ref_labels.unsqueeze(0)
+        mask[same_class] = 0
 
         weights = weights * mask * ((dist_mat < self.nonzero_loss_cutoff).float())
         weights = weights / torch.sum(weights, dim=1, keepdim=True)

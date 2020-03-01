@@ -793,6 +793,7 @@
 <li><strong>power</strong>: Each pair's loss will be raised to this power.</li>
 <li><strong>avg_non_zero_only</strong>: Only pairs that contribute non-zero loss will be used in the final loss. </li>
 </ul>
+<p>Note that the default values for <code>pos_margin</code> and <code>neg_margin</code> are suitable if <code>use_similarity = False</code>. If you set <code>use_similarity = True</code>, then more appropriate values would be <code>pos_margin = 1</code> and <code>neg_margin = 0</code>.</p>
 <h2 id="cosfaceloss">CosFaceLoss<a class="headerlink" href="#cosfaceloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1801.09414.pdf">CosFace: Large Margin Cosine Loss for Deep Face Recognition</a></p>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">CosFaceLoss</span><span class="p">(</span><span class="n">margin</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -842,18 +843,20 @@
 <li><strong>num_bins</strong>: The number of soft histogram bins for calculating average precision</li>
 </ul>
 <h2 id="genericpairloss">GenericPairLoss<a class="headerlink" href="#genericpairloss" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">GenericPairLoss</span><span class="p">(</span><span class="n">use_similarity</span><span class="p">,</span> <span class="n">iterate_through_loss</span><span class="p">,</span> <span class="n">squared_distances</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">GenericPairLoss</span><span class="p">(</span><span class="n">use_similarity</span><span class="p">,</span> <span class="n">mat_based_loss</span><span class="p">,</span> <span class="n">squared_distances</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
 
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>use_similarity</strong>: Set to True if the loss function uses pairwise similarity (dot product of each embedding pair). Otherwise, euclidean distance will be used.</li>
-<li><strong>iterate_through_loss</strong>: If True, then pairs are passed iteratively to self.pair_based_loss, by going through each sample in a batch, and selecting just the positive and negative pairs containing that sample. Otherwise, the pairs are passed to self.pair_based_loss all at once. </li>
+<li><strong>mat_based_loss</strong>: See required implementations.</li>
 <li><strong>squared_distances</strong>: If True, then the euclidean distance will be squared.</li>
 </ul>
 <p><strong>Required Implementations</strong>:</p>
-<div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">pair_based_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pos_pairs</span><span class="p">,</span> <span class="n">neg_pairs</span><span class="p">,</span> <span class="n">pos_pair_anchor_labels</span><span class="p">,</span> <span class="n">neg_pair_anchor_labels</span><span class="p">):</span>
+<div class="codehilite"><pre><span></span><span class="c1"># If mat_based_loss is True, then this takes in mat, pos_mask, and neg_mask</span>
+<span class="c1"># If False, this takes in pos_pairs and neg_pairs</span>
+<span class="k">def</span> <span class="nf">_compute_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
     <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 </pre></div>
 

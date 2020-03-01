@@ -75,7 +75,7 @@ class BaseTester:
         self.tsne_embeddings = defaultdict(dict)
         if self.size_of_tsne > 0:
             for split_name, (embeddings, labels) in embeddings_and_labels.items():
-                random_idx = c_f.NUMPY_RANDOM_STATE.choice(np.arange(len(embeddings)), size=self.size_of_tsne, replace=False)
+                random_idx = c_f.NUMPY_RANDOM.choice(np.arange(len(embeddings)), size=self.size_of_tsne, replace=False)
                 curr_embeddings, curr_labels = embeddings[random_idx], labels[random_idx]
                 logging.info("Running TSNE on the %s set"%split_name)
                 curr_embeddings = TSNE().fit_transform(curr_embeddings)

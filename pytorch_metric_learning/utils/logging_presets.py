@@ -2,6 +2,8 @@ import logging
 from . import common_functions as c_f
 import os
 import torch
+from . import calculate_accuracies as c_a
+from collections import defaultdict
 
 # You can write your own hooks for logging.
 # But if you'd like something that just works, then use this HookContainer.
@@ -51,7 +53,7 @@ class HookContainer:
         for split_name, accuracies in tester.all_accuracies.items():
             epoch = accuracies["epoch"]
             self.record_keeper.update_records(accuracies, epoch, input_group_name_for_non_objects=self.record_group_name(tester, split_name))
-            best_epoch, best_accuracy = self.get_best_epoch_and_accuracy(tester, split_name, ignore_epoch=None)
+            best_epoch, best_accuracy, _ = self.get_best_epoch_and_accuracies(tester, split_name, ignore_epoch=None)
             best_dict = {"best_epoch":best_epoch, "best_accuracy":best_accuracy}
             self.record_keeper.update_records(best_dict, epoch, input_group_name_for_non_objects=self.record_group_name(tester, split_name))
 
@@ -103,9 +105,21 @@ class HookContainer:
     ############################################
     ############################################
 
+    def get_primary_metric(self, accuracies, tester):
+        if accuracies is None:
+            return None
+        average_key = tester.accuracies_keyname(self.metric_for_best_epoch, prefix="AVERAGE")
+        if average_key in accuracies:
+            return accuracies[average_key]
+        else:
+            for k, v in accuracies.items():
+                if k.startswith(self.metric_for_best_epoch):
+                    return v
+
     def get_best_epoch_and_curr_accuracy(self, tester, split_name, epoch):
-        curr_accuracy = self.get_accuracy_of_epoch(tester, split_name, epoch)
-        best_epoch = self.get_best_epoch_and_accuracy(tester, split_name)[0]
+        curr_accuracies = self.get_accuracies_of_epoch(tester, split_name, epoch)
+        curr_accuracy = self.get_primary_metric(curr_accuracies, tester)
+        best_epoch = self.get_best_epoch_and_accuracies(tester, split_name)[0]
         return best_epoch, curr_accuracy
 
     def patience_remaining(self, epoch, best_epoch, patience):
@@ -123,37 +137,36 @@ class HookContainer:
         tester.test(dataset_dict, epoch, trunk, embedder, splits_to_eval, collate_fn)
         return True
 
-    def get_accuracy_of_epoch(self, tester, split_name, epoch): 
+    def get_accuracies_of_epoch(self, tester, split_name, epoch): 
         try:
             records = self.record_keeper.get_record(self.record_group_name(tester, split_name))
-            average_key = tester.accuracies_keyname(self.metric_for_best_epoch, prefix="AVERAGE")
-            if average_key in records:
-                return records[average_key][records["epoch"].index(epoch)]
-            else:
-                for metric, accuracies in records.items():
-                    if metric.startswith(self.metric_for_best_epoch):
-                        return accuracies[records["epoch"].index(epoch)]
+            output = {}
+            for metric, accuracies in records.items():
+                if any(x in metric for x in c_a.METRICS):
+                    output[metric] = accuracies[records["epoch"].index(epoch)]
+            return output
         except:
             return None 
 
-    def get_best_epoch_and_accuracy(self, tester, split_name, ignore_epoch=-1):
+    def get_best_epoch_and_accuracies(self, tester, split_name, ignore_epoch=-1):
         records = self.record_keeper.get_record(self.record_group_name(tester, split_name))
-        best_epoch, best_accuracy = 0, 0
+        best_epoch, best_accuracy, best_accuracies = 0, 0, defaultdict(float)
         for epoch in records["epoch"]:
             if epoch == ignore_epoch:
                 continue
-            accuracy = self.get_accuracy_of_epoch(tester, split_name, epoch)
+            accuracies = self.get_accuracies_of_epoch(tester, split_name, epoch)
+            accuracy = self.get_primary_metric(accuracies, tester)
             if accuracy is None:
                 return None, None
             if accuracy > best_accuracy:
-                best_epoch, best_accuracy = epoch, accuracy
-        return best_epoch, best_accuracy
+                best_epoch, best_accuracy, best_accuracies = epoch, accuracy, accuracies
+        return best_epoch, best_accuracy, best_accuracies
 
     def get_splits_to_eval(self, tester, dataset_dict, epoch, input_splits_to_eval):
         input_splits_to_eval = list(dataset_dict.keys()) if input_splits_to_eval is None else input_splits_to_eval
         splits_to_eval = []
         for split in input_splits_to_eval:
-            if self.get_accuracy_of_epoch(tester, split, epoch) is None:
+            if self.get_accuracies_of_epoch(tester, split, epoch) in [None, {}]:
                 splits_to_eval.append(split)
         return splits_to_eval
 

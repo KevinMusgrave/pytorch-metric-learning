@@ -32,7 +32,7 @@ class ContrastiveLoss(GenericPairLoss):
         self.add_to_recordable_attributes(list_of_names=["num_non_zero_pos_pairs", "num_non_zero_neg_pairs"])
         
 
-    def _compute_loss(self, pos_pair_dist, neg_pair_dist):
+    def _compute_loss(self, pos_pair_dist, neg_pair_dist, *_):
         pos_loss, neg_loss = 0, 0
         self.num_non_zero_pos_pairs, self.num_non_zero_neg_pairs = 0, 0
         if len(pos_pair_dist) > 0:

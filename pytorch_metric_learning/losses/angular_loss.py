@@ -11,36 +11,38 @@ class AngularLoss(BaseMetricLossFunction):
     Args:
         alpha: The angle (as described in the paper), specified in degrees.
     """
-    def __init__(self, alpha, triplets_per_anchor=100, **kwargs):
+    def __init__(self, alpha, **kwargs):
         super().__init__(**kwargs)
         self.alpha = torch.tensor(np.radians(alpha))
-        self.triplets_per_anchor = triplets_per_anchor
-        self.add_to_recordable_attributes(list_of_names=["num_anchors", "average_angle"])
+        self.add_to_recordable_attributes(list_of_names=["average_angle"])
         
     def compute_loss(self, embeddings, labels, indices_tuple):
-        anchors, positives, negatives = self.set_stats_get_triplets(embeddings, labels, indices_tuple)
+        anchors, positives, keep_mask = self.set_stats_get_pairs(embeddings, labels, indices_tuple)
         if anchors is None: return 0
-        sq_tan_alpha = torch.tan(self.alpha) ** 2
-        term1 = 4 * sq_tan_alpha * torch.sum((anchors + positives) * negatives, dim=1, keepdim=True)
-        term2 = 2 * (1 + sq_tan_alpha) * torch.sum(anchors * positives, dim=1, keepdim=True)
-        final_form = term1-term2
-        final_form = self.maybe_modify_loss(final_form)
-        return torch.mean(lmu.logsumexp(final_form, add_one=True))
 
-    def set_stats_get_triplets(self, embeddings, labels, indices_tuple):
-        anchor_idx, positive_idx, negative_idx = lmu.convert_to_triplets(indices_tuple, labels, self.triplets_per_anchor)
-        self.num_anchors = len(anchor_idx)
-        if self.num_anchors == 0:
-            return [None]*4
-        anchors, positives, negatives = embeddings[anchor_idx], embeddings[positive_idx], embeddings[negative_idx]
+        sq_tan_alpha = torch.tan(self.alpha) ** 2
+        ap_dot = torch.sum(anchors * positives, dim=1, keepdim=True)
+        ap_matmul_embeddings = torch.matmul((anchors + positives),(embeddings.unsqueeze(2)))
+        ap_matmul_embeddings = ap_matmul_embeddings.squeeze(2).t()
+
+        final_form = (4 * sq_tan_alpha * ap_matmul_embeddings) - (2 * (1 + sq_tan_alpha) * ap_dot)
+        final_form = self.maybe_modify_loss(final_form)
+        return torch.mean(lmu.logsumexp(final_form, keep_mask=keep_mask, add_one=True))
+
+    def set_stats_get_pairs(self, embeddings, labels, indices_tuple):
+        a1, p, a2, _ = lmu.convert_to_pairs(indices_tuple, labels)
+        if len(a1) == 0 or len(a2) == 0:
+            return [None]*3
+        anchors, positives = embeddings[a1], embeddings[p]
+        keep_mask = (labels[a1].unsqueeze(1) != labels.unsqueeze(0)).float()
+
         centers = (anchors + positives) / 2
         ap_dist = torch.nn.functional.pairwise_distance(anchors, positives, 2)
-        nc_dist = torch.nn.functional.pairwise_distance(negatives, centers, 2)
-        self.average_angle = np.degrees(torch.mean(torch.atan(ap_dist / (2*nc_dist))).item())
-        return anchors, positives, negatives
-
-    def create_learnable_parameter(self, init_value):
-        return super().create_learnable_parameter(init_value, unsqueeze=True)
+        nc_dist = torch.norm(centers - embeddings.unsqueeze(1), p=2, dim=2).t()
+        angles = torch.atan(ap_dist.unsqueeze(1) / (2*nc_dist))
+        average_angle = torch.sum(angles*keep_mask) / torch.sum(keep_mask)
+        self.average_angle = np.degrees(average_angle.item())
+        return anchors, positives, keep_mask
 
     def maybe_modify_loss(self, x):
         return x

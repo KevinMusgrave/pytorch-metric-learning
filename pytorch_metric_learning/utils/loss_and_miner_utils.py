@@ -4,13 +4,13 @@ import math
 from . import common_functions as c_f
 
 
-def logsumexp(x, keep_mask=None, add_one=True):
-    max_vals, _ = torch.max(x, dim=1, keepdim=True)
+def logsumexp(x, keep_mask=None, add_one=True, dim=1):
+    max_vals, _ = torch.max(x, dim=dim, keepdim=True)
     inside_exp = x - max_vals
     exp = torch.exp(inside_exp)
     if keep_mask is not None:
         exp = exp*keep_mask
-    inside_log = torch.sum(exp, dim=1, keepdim=True)
+    inside_log = torch.sum(exp, dim=dim, keepdim=True)
     if add_one: 
         inside_log = inside_log + torch.exp(-max_vals)
     else:
@@ -140,10 +140,10 @@ def get_random_triplet_indices(labels, ref_labels=None, t_per_anchor=None, weigh
         k = curr_label_count if t_per_anchor is None else t_per_anchor
 
         if weights is not None and not np.any(np.isnan(weights[i])):
-            n_idx += c_f.NUMPY_RANDOM_STATE.choice(batch_size, k, p=weights[i]).tolist()
+            n_idx += c_f.NUMPY_RANDOM.choice(batch_size, k, p=weights[i]).tolist()
         else:
             possible_n_idx = list(np.where(ref_labels != label)[0])
-            n_idx += c_f.NUMPY_RANDOM_STATE.choice(possible_n_idx, k).tolist()
+            n_idx += c_f.NUMPY_RANDOM.choice(possible_n_idx, k).tolist()
 
         a_idx.extend([i] * k)
         curr_p_idx = c_f.safe_random_choice(np.where((ref_labels == label) & (indices != i))[0], k)

@@ -93,6 +93,8 @@ losses.ContrastiveLoss(pos_margin=0,
 * **power**: Each pair's loss will be raised to this power.
 * **avg_non_zero_only**: Only pairs that contribute non-zero loss will be used in the final loss. 
 
+Note that the default values for ```pos_margin``` and ```neg_margin``` are suitable if ```use_similarity = False```. If you set ```use_similarity = True```, then more appropriate values would be ```pos_margin = 1``` and ```neg_margin = 0```.
+
 ## CosFaceLoss 
 [CosFace: Large Margin Cosine Loss for Deep Face Recognition](https://arxiv.org/pdf/1801.09414.pdf)
 

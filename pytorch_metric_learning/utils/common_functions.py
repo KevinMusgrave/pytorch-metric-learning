@@ -6,7 +6,7 @@ import os
 import logging
 import glob
 
-NUMPY_RANDOM_STATE = np.random.RandomState()
+NUMPY_RANDOM = np.random
 
 class Identity(torch.nn.Module):
     def __init__(self):
@@ -88,7 +88,7 @@ def safe_random_choice(input_data, size):
         An array of size "size", randomly sampled from input_data
     """
     replace = len(input_data) < size
-    return NUMPY_RANDOM_STATE.choice(input_data, size=size, replace=replace)
+    return NUMPY_RANDOM.choice(input_data, size=size, replace=replace)
 
 
 def longest_list(list_of_lists):
@@ -229,26 +229,26 @@ def load_model(model_def, model_filename, device):
         model_def.load_state_dict(new_state_dict)
 
 
-def operate_on_dict_of_models(input_dict, suffix, folder, operation, logging_string=''):
+def operate_on_dict_of_models(input_dict, suffix, folder, operation, logging_string='', log_if_successful=False):
     for k, v in input_dict.items():
-        opt_cond = "optimizer" in k
-        if opt_cond or len([i for i in v.parameters()]) > 0:
-            model_path = modelpath_creator(folder, k, suffix)
-            if logging_string != '':
-                logging.info("%s %s"%(logging_string, model_path))
+        model_path = modelpath_creator(folder, k, suffix)
+        try:
             operation(k, v, model_path)
-
+            if log_if_successful:
+                logging.info("%s %s"%(logging_string, model_path))
+        except:
+            logging.warn("Could not %s %s"%(logging_string, model_path))
 
 def save_dict_of_models(input_dict, suffix, folder):
     def operation(k, v, model_path):
         save_model(v, k, model_path)
-    operate_on_dict_of_models(input_dict, suffix, folder, operation)
+    operate_on_dict_of_models(input_dict, suffix, folder, operation, "SAVE")
 
 
 def load_dict_of_models(input_dict, suffix, folder, device):
     def operation(k, v, model_path):
         load_model(v, model_path, device)
-    operate_on_dict_of_models(input_dict, suffix, folder, operation, "LOADING")
+    operate_on_dict_of_models(input_dict, suffix, folder, operation, "LOAD", log_if_successful=True)
 
 
 def delete_dict_of_models(input_dict, suffix, folder):
@@ -257,7 +257,7 @@ def delete_dict_of_models(input_dict, suffix, folder):
             os.remove(model_path)
         except:
             pass
-    operate_on_dict_of_models(input_dict, suffix, folder, operation)
+    operate_on_dict_of_models(input_dict, suffix, folder, operation, "DELETE")
             
 
 def latest_version(folder, string_to_glob):

@@ -7,7 +7,7 @@ from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
 
 class MarginLoss(BaseMetricLossFunction):
 
-    def __init__(self, margin, nu, beta, triplets_per_anchor=100, **kwargs):
+    def __init__(self, margin, nu, beta, triplets_per_anchor="all", **kwargs):
         self.margin = margin
         self.nu = nu
         self.beta = beta

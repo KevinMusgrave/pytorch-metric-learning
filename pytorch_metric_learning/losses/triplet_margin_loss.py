@@ -26,7 +26,7 @@ class TripletMarginLoss(BaseMetricLossFunction):
         swap=False,
         smooth_loss=False,
         avg_non_zero_only=True,
-        triplets_per_anchor=100,
+        triplets_per_anchor="all",
         **kwargs
     ):
         super().__init__(**kwargs)

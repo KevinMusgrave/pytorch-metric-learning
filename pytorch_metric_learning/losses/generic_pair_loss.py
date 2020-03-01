@@ -33,7 +33,7 @@ class GenericPairLoss(BaseMetricLossFunction):
         
     def compute_loss(self, embeddings, labels, indices_tuple):
         mat = lmu.get_pairwise_mat(embeddings, embeddings, self.use_similarity, self.squared_distances)
-        if not self.normalize_embeddings:
+        if self.use_similarity and not self.normalize_embeddings:
             embedding_norms_mat = self.embedding_norms.unsqueeze(0)*self.embedding_norms.unsqueeze(1)
             mat = mat / (embedding_norms_mat)
         indices_tuple = lmu.convert_to_pairs(indices_tuple, labels)
@@ -56,4 +56,4 @@ class GenericPairLoss(BaseMetricLossFunction):
             pos_pair = mat[a1, p]
         if len(a2) > 0:
             neg_pair = mat[a2, n]
-        return self._compute_loss(pos_pair, neg_pair)
+        return self._compute_loss(pos_pair, neg_pair, indices_tuple)

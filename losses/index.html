@@ -723,14 +723,13 @@
 
 <h2 id="angularloss">AngularLoss<a class="headerlink" href="#angularloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1708.01682.pdf">Deep Metric Learning with Angular Loss</a></p>
-<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">AngularLoss</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">triplets_per_anchor</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">AngularLoss</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
 
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>alpha</strong>: The angle (as described in the paper), specified in degrees.</li>
-<li><strong>triplets_per_anchor</strong>: The number of triplets per element to sample within a batch. Can be an integer or the string "all". For example, if your batch size is 128, and triplets_per_anchor is 100, then 12800 triplets will be sampled. If triplets_per_anchor is "all", then all possible triplets in the batch will be used.</li>
 </ul>
 <h2 id="arcfaceloss">ArcFaceLoss<a class="headerlink" href="#arcfaceloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1801.07698.pdf">ArcFace: Additive Angular Margin Loss for Deep Face Recognition</a></p>
@@ -898,7 +897,7 @@
 
 <h2 id="marginloss">MarginLoss<a class="headerlink" href="#marginloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1706.07567.pdf">Sampling Matters in Deep Embedding Learning</a></p>
-<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">MarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">triplets_per_anchor</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">MarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">triplets_per_anchor</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
 
@@ -1098,7 +1097,7 @@
                         <span class="n">swap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
                         <span class="n">smooth_loss</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
                         <span class="n">avg_non_zero_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
-                        <span class="n">triplets_per_anchor</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> 
+                        <span class="n">triplets_per_anchor</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> 
                         <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 

@@ -1,11 +1,11 @@
 #! /usr/bin/env python3
 
-from .base_miner import BasePostGradientMiner
+from .base_miner import BaseTupleMiner
 import torch
 from ..utils import loss_and_miner_utils as lmu
 
 
-class BatchHardMiner(BasePostGradientMiner):
+class BatchHardMiner(BaseTupleMiner):
     def __init__(self, use_similarity=False, squared_distances=False, **kwargs):
         super().__init__(**kwargs)
         self.use_similarity = use_similarity

@@ -1,11 +1,11 @@
 #! /usr/bin/env python3
 
-from .base_miner import BasePostGradientMiner
+from .base_miner import BaseTupleMiner
 from ..utils import loss_and_miner_utils as lmu
 import torch
 
 
-class PairMarginMiner(BasePostGradientMiner):
+class PairMarginMiner(BaseTupleMiner):
     """
     Returns positive pairs that have distance greater than a margin and negative
     pairs that have distance less than a margin

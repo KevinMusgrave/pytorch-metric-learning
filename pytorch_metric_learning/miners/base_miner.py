@@ -51,12 +51,8 @@ class BaseMiner(torch.nn.Module):
         c_f.add_to_recordable_attributes(self, name=name, list_of_names=list_of_names)
         
 
-class BasePostGradientMiner(BaseMiner):
+class BaseTupleMiner(BaseMiner):
     """
-    A post-gradient miner is used after gradients have already been computed. 
-    In other words, the composition of the batch has already been decided, 
-    and the miner will find pairs or triplets within the batch that should 
-    be used to compute the loss.
     Args:
         normalize_embeddings: type boolean, if True then normalize embeddings
                                 to have norm = 1 before mining
@@ -89,11 +85,8 @@ class BasePostGradientMiner(BaseMiner):
             raise BaseException
 
 
-class BasePreGradientMiner(BaseMiner):
+class BaseBatchMiner(BaseMiner):
     """
-    A pre-gradient miner is used before gradients have been computed.
-    The miner finds a subset of the sampled batch for which gradients will
-    then need to be computed.
     Args:
         output_batch_size: type int. The size of the subset that the miner
                             will output.

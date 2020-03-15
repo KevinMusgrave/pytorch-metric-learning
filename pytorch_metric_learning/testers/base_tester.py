@@ -71,7 +71,7 @@ class BaseTester:
             return trunk_output
         return embedder_model(trunk_output)
 
-    def maybe_compute_tsne(self, embeddings_and_labels, epoch, tag_suffix=''):
+    def maybe_compute_tsne(self, embeddings_and_labels, epoch):
         self.tsne_embeddings = defaultdict(dict)
         if self.size_of_tsne > 0:
             for split_name, (embeddings, labels) in embeddings_and_labels.items():
@@ -83,10 +83,10 @@ class BaseTester:
                 self.tsne_embeddings[split_name]["epoch"] = epoch
                 for bbb in self.label_levels_to_evaluate(curr_labels):
                     label_scheme = curr_labels[:, bbb]
-                    keyname = self.accuracies_keyname("tsne", suffix="level%d"%bbb if tag_suffix == '' else tag_suffix)
+                    keyname = self.accuracies_keyname("tsne", label_hierarchy_level=bbb)
                     self.tsne_embeddings[split_name][keyname] = (curr_embeddings, label_scheme)
 
-    def suffixes(self, base_name):
+    def description_suffixes(self, base_name):
         if self.pca:
             base_name += "_pca%d"%self.pca
         if self.normalize_embeddings:
@@ -94,14 +94,14 @@ class BaseTester:
         if self.use_trunk_output:
             base_name += "_trunk"
         base_name += "_"+self.reference_set
+        base_name += "_"+self.__class__.__name__
+        base_name += "_level_"+str(self.label_hierarchy_level)
         return base_name
 
-    def accuracies_keyname(self, metric, prefix='', suffix=''):
-        if prefix != '':
-            metric = "%s_%s"%(prefix, metric)
-        if suffix != '':
-            metric = "%s_%s"%(metric, suffix)
-        return metric
+    def accuracies_keyname(self, metric, label_hierarchy_level=0, average=False):
+        if average:
+            return "AVERAGE_%s"%metric
+        return "%s_level%d"%(metric, label_hierarchy_level)
 
     def all_splits_combined(self, embeddings_and_labels):
         eee, lll = list(zip(*list(embeddings_and_labels.values())))
@@ -134,15 +134,14 @@ class BaseTester:
         elif isinstance(self.label_hierarchy_level, list):
             return self.label_hierarchy_level
 
-    def calculate_average_accuracies(self, accuracies, metrics):
+    def calculate_average_accuracies(self, accuracies, metrics, label_levels):
         for m in metrics:
-            keyname = self.accuracies_keyname(m, prefix="AVERAGE")
-            summed_accuracy, num_entries = 0, 0
-            for metric, value in accuracies.items():
-                if metric.startswith(m):
-                    summed_accuracy += value
-                    num_entries += 1
-            accuracies[keyname] = summed_accuracy / num_entries
+            keyname = self.accuracies_keyname(m, average=True)
+            summed_accuracy = 0
+            for L in label_levels:
+                curr_key = self.accuracies_keyname(m, label_hierarchy_level=L)
+                summed_accuracy += accuracies[curr_key]
+            accuracies[keyname] = summed_accuracy / len(label_levels)
 
     def get_splits_to_compute_embeddings(self, dataset_dict, splits_to_eval):
         splits_to_eval = list(dataset_dict.keys()) if splits_to_eval is None else splits_to_eval

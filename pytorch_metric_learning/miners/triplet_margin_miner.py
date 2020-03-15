@@ -1,11 +1,11 @@
 #! /usr/bin/env python3
 
-from .base_miner import BasePostGradientMiner
+from .base_miner import BaseTupleMiner
 from ..utils import loss_and_miner_utils as lmu
 import torch
 
 
-class TripletMarginMiner(BasePostGradientMiner):
+class TripletMarginMiner(BaseTupleMiner):
     """
     Returns triplets that violate the margin
     Args:

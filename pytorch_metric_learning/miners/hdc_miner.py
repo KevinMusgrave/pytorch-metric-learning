@@ -1,12 +1,12 @@
 #! /usr/bin/env python3
-from .base_miner import BasePostGradientMiner
+from .base_miner import BaseTupleMiner
 import torch
 from ..utils import loss_and_miner_utils as lmu
 import math
 
 # mining method used in Hard Aware Deeply Cascaded Embeddings
 # https://arxiv.org/abs/1611.05720
-class HDCMiner(BasePostGradientMiner):
+class HDCMiner(BaseTupleMiner):
     def __init__(self, filter_percentage, use_similarity=False, squared_distances=False, **kwargs):
         super().__init__(**kwargs)
         self.filter_percentage = filter_percentage

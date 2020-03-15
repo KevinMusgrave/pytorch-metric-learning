@@ -1,13 +1,13 @@
 #! /usr/bin/env python3
 
-from .base_miner import BasePostGradientMiner
+from .base_miner import BaseTupleMiner
 import torch
 from ..utils import loss_and_miner_utils as lmu
 
 
 # adapted from
 # https://github.com/chaoyuaw/incubator-mxnet/blob/master/example/gluon/embedding_learning/model.py
-class DistanceWeightedMiner(BasePostGradientMiner):
+class DistanceWeightedMiner(BaseTupleMiner):
     def __init__(self, cutoff, nonzero_loss_cutoff, **kwargs):
         super().__init__(**kwargs)
         self.cutoff = float(cutoff)

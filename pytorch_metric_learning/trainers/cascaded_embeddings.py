@@ -18,7 +18,7 @@ class CascadedEmbeddings(BaseTrainer):
         indices_tuple = None
         for i, curr_size in enumerate(self.embedding_sizes):
             curr_loss_name = "metric_loss_%d"%i 
-            curr_miner_name = "post_gradient_miner_%d"%i
+            curr_miner_name = "tuple_miner_%d"%i
             curr_classifier_name = "classifier_%d"%i
 
             e = embeddings[:, s : s + curr_size]

@@ -1,10 +1,10 @@
 #! /usr/bin/env python3
 
-from .base_miner import BasePostGradientMiner
+from .base_miner import BaseTupleMiner
 import torch
 
 
-class EmbeddingsAlreadyPackagedAsTriplets(BasePostGradientMiner):
+class EmbeddingsAlreadyPackagedAsTriplets(BaseTupleMiner):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 

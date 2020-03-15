@@ -123,7 +123,7 @@ class BaseTrainer:
         self.dataloader_iter, curr_batch = c_f.try_next_on_generator(self.dataloader_iter, self.dataloader)
         data, labels = self.data_and_label_getter(curr_batch)
         labels = c_f.process_label(labels, self.label_hierarchy_level, self.label_mapper)
-        return self.maybe_do_pre_gradient_mining(data, labels)
+        return self.maybe_do_batch_mining(data, labels)
 
     def compute_embeddings(self, data):
         trunk_output = self.get_trunk_output(data)
@@ -137,16 +137,16 @@ class BaseTrainer:
         return c_f.pass_data_to_model(self.models["trunk"], data, self.data_device)
 
     def maybe_mine_embeddings(self, embeddings, labels):
-        if "post_gradient_miner" in self.mining_funcs:
-            return self.mining_funcs["post_gradient_miner"](embeddings, labels)
+        if "tuple_miner" in self.mining_funcs:
+            return self.mining_funcs["tuple_miner"](embeddings, labels)
         return None
 
-    def maybe_do_pre_gradient_mining(self, data, labels):
-        if "pre_gradient_miner" in self.mining_funcs:
+    def maybe_do_batch_mining(self, data, labels):
+        if "batch_miner" in self.mining_funcs:
             with torch.no_grad():
                 self.set_to_eval()
                 embeddings = self.compute_embeddings(data)
-                idx = self.mining_funcs["pre_gradient_miner"](embeddings, labels)
+                idx = self.mining_funcs["batch_miner"](embeddings, labels)
                 self.set_to_train()
                 data, labels = data[idx], labels[idx]
         return data, labels

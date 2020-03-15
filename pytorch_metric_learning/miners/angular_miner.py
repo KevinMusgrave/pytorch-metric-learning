@@ -1,11 +1,11 @@
 #! /usr/bin/env python3
 
-from .base_miner import BasePostGradientMiner
+from .base_miner import BaseTupleMiner
 import torch
 from ..utils import loss_and_miner_utils as lmu
 import numpy as np
 
-class AngularMiner(BasePostGradientMiner):
+class AngularMiner(BaseTupleMiner):
     """
     Returns triplets that form an angle greater than some threshold (angle).
     The angle is computed as defined in the angular loss paper:

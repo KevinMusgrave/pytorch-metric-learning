@@ -12,11 +12,12 @@ from collections import defaultdict
 
 class HookContainer: 
 
-    def __init__(self, record_keeper, record_group_name_prefix=None, metric_for_best_epoch="mean_average_r_precision"):
+    def __init__(self, record_keeper, record_group_name_prefix=None, primary_metric="mean_average_precision_at_r", validation_split_name="val"):
         self.record_keeper = record_keeper
         self.record_group_name_prefix = record_group_name_prefix
         self.saveable_trainer_objects = ["models", "optimizers", "lr_schedulers", "loss_funcs", "mining_funcs"]
-        self.metric_for_best_epoch = metric_for_best_epoch 
+        self.primary_metric = primary_metric
+        self.validation_split_name = validation_split_name 
 
     ############################################
     ############################################
@@ -36,16 +37,14 @@ class HookContainer:
             self.record_keeper.update_records(record, trainer.get_global_iteration(), **kwargs)
 
     # This hook will be passed into the trainer and will be executed at the end of every epoch.
-    def end_of_epoch_hook(self, tester, dataset_dict, model_folder, test_interval=1, validation_split_name="val", patience=None):
+    def end_of_epoch_hook(self, tester, dataset_dict, model_folder, test_interval=1, patience=None):
         if not os.path.exists(model_folder): os.makedirs(model_folder)
         def actual_hook(trainer):
             continue_training = True
             self.record_keeper.maybe_add_custom_figures_to_tensorboard(trainer.get_global_iteration())
             if trainer.epoch % test_interval == 0:
-                best_epoch, curr_accuracy = self.save_models_and_eval(trainer, dataset_dict, model_folder, test_interval, tester, validation_split_name)
-                trainer.step_lr_plateau_schedulers(curr_accuracy)
-                continue_training = self.patience_remaining(trainer.epoch, best_epoch, patience)   
-                self.record_keeper.pickler_and_csver.save_records()
+                best_epoch = self.save_models_and_eval(trainer, dataset_dict, model_folder, test_interval, tester)
+                continue_training = self.patience_remaining(trainer.epoch, best_epoch, patience)
             return continue_training
         return actual_hook
 
@@ -53,9 +52,9 @@ class HookContainer:
         for split_name, accuracies in tester.all_accuracies.items():
             epoch = accuracies["epoch"]
             self.record_keeper.update_records(accuracies, epoch, input_group_name_for_non_objects=self.record_group_name(tester, split_name))
-            best_epoch, best_accuracy, _ = self.get_best_epoch_and_accuracies(tester, split_name, ignore_epoch=None)
-            best_dict = {"best_epoch":best_epoch, "best_accuracy":best_accuracy}
-            self.record_keeper.update_records(best_dict, epoch, input_group_name_for_non_objects=self.record_group_name(tester, split_name))
+            _, _, best_epoch, best_accuracy = self.is_new_best_accuracy(tester, split_name, epoch)
+            best = {"best_epoch":best_epoch, "best_accuracy": best_accuracy}
+            self.record_keeper.update_records(best, epoch, input_group_name_for_non_objects=self.record_group_name(tester, split_name)) 
 
         for split_name, tsne in tester.tsne_embeddings.items():
             epoch = tsne.pop("epoch", None)
@@ -72,7 +71,7 @@ class HookContainer:
     ############################################
 
     def load_latest_saved_models_and_records(self, trainer, model_folder, device=None):
-        self.record_keeper.pickler_and_csver.load_records()
+        self.record_keeper.load_records()
         if device is None: device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         resume_epoch = c_f.latest_version(model_folder, "trunk_*.pth") or 0
         if resume_epoch > 0:
@@ -87,16 +86,26 @@ class HookContainer:
             if prev_suffix is not None:
                 c_f.delete_dict_of_models(obj_dict, prev_suffix, model_folder) 
 
-    def save_models_and_eval(self, trainer, dataset_dict, model_folder, test_interval, tester, validation_split_name, **kwargs):
+    def save_models_and_eval(self, trainer, dataset_dict, model_folder, test_interval, tester, **kwargs):
         epoch = trainer.epoch
-        self.save_models(trainer, model_folder, epoch, trainer.epoch-test_interval) # save latest model
         tester.test(dataset_dict, epoch, trainer.models["trunk"], trainer.models["embedder"], list(dataset_dict.keys()), trainer.collate_fn, **kwargs)
-        best_epoch, curr_accuracy = self.get_best_epoch_and_curr_accuracy(tester, validation_split_name, epoch)
-        if epoch == best_epoch:
+        is_new_best, curr_accuracy, best_epoch, best_accuracy = self.is_new_best_accuracy(tester, self.validation_split_name, epoch)
+        trainer.step_lr_plateau_schedulers(curr_accuracy)
+        self.save_models(trainer, model_folder, epoch, epoch-test_interval) # save latest model
+        if is_new_best:
             logging.info("New best accuracy!")
-            self.save_models(trainer, model_folder, "best") # save best model
-        return best_epoch, curr_accuracy
+            self.save_models(trainer, model_folder, "best") # save best model    
+        self.record_keeper.save_records()
+        return best_epoch
 
+    def is_new_best_accuracy(self, tester, split_name, epoch):
+        curr_accuracy = self.get_curr_primary_metric(tester, split_name)
+        best_epoch, best_accuracy = self.get_best_epoch_and_accuracy(tester, split_name)
+        is_new_best = False
+        if curr_accuracy > best_accuracy:
+            best_epoch, best_accuracy = epoch, curr_accuracy
+            is_new_best = True
+        return is_new_best, curr_accuracy, best_epoch, best_accuracy 
 
 
     ############################################
@@ -105,25 +114,53 @@ class HookContainer:
     ############################################
     ############################################
 
-    def get_primary_metric(self, accuracies, tester):
-        if accuracies is None:
-            return None
-        average_key = tester.accuracies_keyname(self.metric_for_best_epoch, prefix="AVERAGE")
-        if average_key in accuracies:
-            return accuracies[average_key]
-        else:
-            for k, v in accuracies.items():
-                if k.startswith(self.metric_for_best_epoch):
-                    return v
+    def get_curr_primary_metric(self, tester, split_name):
+        def get_curr(key):
+            return tester.all_accuracies[split_name][key]
+        return self.try_primary_metric(tester, get_curr)
 
-    def get_best_epoch_and_curr_accuracy(self, tester, split_name, epoch):
-        curr_accuracies = self.get_accuracies_of_epoch(tester, split_name, epoch)
-        curr_accuracy = self.get_primary_metric(curr_accuracies, tester)
-        best_epoch = self.get_best_epoch_and_accuracies(tester, split_name)[0]
-        return best_epoch, curr_accuracy
+    def try_primary_metric(self, tester, input_func):
+        for average in [True, False]:
+            key = tester.accuracies_keyname(self.primary_metric, average=average)
+            try:
+                return input_func(key)
+            except:
+                pass
+        raise KeyError
+
+    # returns accuracies of a specified epoch
+    def get_accuracies_of_epoch(self, tester, split_name, epoch, select_all=True):
+        table_name = self.record_group_name(tester, split_name)
+        if not self.record_keeper.table_exists(table_name):
+            return []
+        def get_accuracies(key):
+            columns = "*" if select_all else "epoch, %s"%key
+            query = "SELECT %s FROM %s WHERE epoch=?"%(columns, table_name)
+            return self.record_keeper.query(query, (epoch, ))
+        return self.try_primary_metric(tester, get_accuracies)
+
+    # returns accuracies of best epoch and the metric name used to determine best acuracy
+    def get_accuracies_of_best_epoch(self, tester, split_name, select_all=True, ignore_epoch=-1):
+        table_name = self.record_group_name(tester, split_name)
+        if not self.record_keeper.table_exists(table_name):
+            return [], None        
+        def get_accuracies(key):
+            columns = "*" if select_all else "epoch, %s"%key
+            query = """SELECT {0} FROM {1} WHERE {2}=
+                        (SELECT max({2}) FROM {1} WHERE epoch!=?)
+                        AND epoch!=?""".format(columns, table_name, key)
+            output = self.record_keeper.query(query, (ignore_epoch, ignore_epoch))
+            return output, key
+        return self.try_primary_metric(tester, get_accuracies)
+
+    def get_best_epoch_and_accuracy(self, tester, split_name):
+        accuracies, key = self.get_accuracies_of_best_epoch(tester, split_name, select_all=False)
+        if len(accuracies) > 0:
+            return accuracies[0]["epoch"], accuracies[0][key]
+        return None, 0
 
     def patience_remaining(self, epoch, best_epoch, patience):
-        if patience is not None:
+        if patience is not None and best_epoch is not None:
             if epoch - best_epoch > patience:
                 logging.info("Validation accuracy has plateaued. Exiting.")
                 return False
@@ -137,42 +174,17 @@ class HookContainer:
         tester.test(dataset_dict, epoch, trunk, embedder, splits_to_eval, collate_fn)
         return True
 
-    def get_accuracies_of_epoch(self, tester, split_name, epoch): 
-        try:
-            records = self.record_keeper.get_record(self.record_group_name(tester, split_name))
-            output = {}
-            for metric, accuracies in records.items():
-                if any(x in metric for x in c_a.METRICS):
-                    output[metric] = accuracies[records["epoch"].index(epoch)]
-            return output
-        except:
-            return None 
-
-    def get_best_epoch_and_accuracies(self, tester, split_name, ignore_epoch=-1):
-        records = self.record_keeper.get_record(self.record_group_name(tester, split_name))
-        best_epoch, best_accuracy, best_accuracies = 0, 0, defaultdict(float)
-        for epoch in records["epoch"]:
-            if epoch == ignore_epoch:
-                continue
-            accuracies = self.get_accuracies_of_epoch(tester, split_name, epoch)
-            accuracy = self.get_primary_metric(accuracies, tester)
-            if accuracy is None:
-                return None, None
-            if accuracy > best_accuracy:
-                best_epoch, best_accuracy, best_accuracies = epoch, accuracy, accuracies
-        return best_epoch, best_accuracy, best_accuracies
-
     def get_splits_to_eval(self, tester, dataset_dict, epoch, input_splits_to_eval):
         input_splits_to_eval = list(dataset_dict.keys()) if input_splits_to_eval is None else input_splits_to_eval
         splits_to_eval = []
         for split in input_splits_to_eval:
-            if self.get_accuracies_of_epoch(tester, split, epoch) in [None, {}]:
+            if len(self.get_accuracies_of_epoch(tester, split, epoch)) == 0:
                 splits_to_eval.append(split)
         return splits_to_eval
 
     def record_group_name(self, tester, split_name):
         base_record_group_name = "%s_"%self.record_group_name_prefix if self.record_group_name_prefix else ''
-        base_record_group_name += tester.suffixes("%s_%s"%("accuracies", tester.__class__.__name__))
+        base_record_group_name += tester.description_suffixes("accuracies")
         return "%s_%s"%(base_record_group_name, split_name.upper())
 
     def optimizer_custom_attr_func(self, optimizer):
@@ -188,14 +200,14 @@ class EmptyContainer:
 
 
 
-def get_record_keeper(pkl_folder, tensorboard_folder):
+def get_record_keeper(pkl_folder, tensorboard_folder, global_db_path=None, experiment_name=None, is_new_experiment=True):
     try:
         import record_keeper as record_keeper_package
         from torch.utils.tensorboard import SummaryWriter
-        pickler_and_csver = record_keeper_package.PicklerAndCSVer(pkl_folder)
+        record_writer = record_keeper_package.RecordWriter(pkl_folder, global_db_path, experiment_name, is_new_experiment)
         tensorboard_writer = SummaryWriter(log_dir=tensorboard_folder)
-        record_keeper = record_keeper_package.RecordKeeper(tensorboard_writer, pickler_and_csver, ["record_these", "learnable_param_names"])
-        return record_keeper, pickler_and_csver, tensorboard_writer
+        record_keeper = record_keeper_package.RecordKeeper(tensorboard_writer, record_writer, ["record_these", "learnable_param_names"])
+        return record_keeper, record_writer, tensorboard_writer
 
     except ModuleNotFoundError as e:
         logging.warn(e)

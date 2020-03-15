@@ -6,7 +6,7 @@ import warnings
 
 from . import stat_utils
 
-METRICS = ["NMI", "precision_at_1", "r_precision", "mean_average_r_precision"]
+METRICS = ["NMI", "precision_at_1", "r_precision", "mean_average_precision_at_r"]
 
 def get_relevance_mask(shape, gt_labels, embeddings_come_from_same_source=False, label_counts=None):
     # This assumes that k was set to at least the max number of relevant items 
@@ -25,7 +25,7 @@ def r_precision(knn_labels, gt_labels, embeddings_come_from_same_source=False, l
     max_possible_matches_per_row = np.sum(relevance_mask, axis=1)
     return np.mean(matches_per_row / max_possible_matches_per_row)
 
-def mean_average_r_precision(knn_labels, gt_labels, embeddings_come_from_same_source=False, label_counts=None):
+def mean_average_precision_at_r(knn_labels, gt_labels, embeddings_come_from_same_source=False, label_counts=None):
     relevance_mask = get_relevance_mask(knn_labels.shape, gt_labels, embeddings_come_from_same_source, label_counts)
     num_samples, num_k = knn_labels.shape
     equality = (knn_labels == gt_labels) * relevance_mask.astype(bool)
@@ -47,23 +47,6 @@ def precision_at_k(knn_labels, gt_labels, k):
     curr_knn_labels = knn_labels[:, :k]
     precision = np.mean(np.sum(curr_knn_labels == gt_labels, axis=1) / k)
     return precision
-
-def mean_average_precision(knn_labels, gt_labels):
-    """
-    See this for an explanation:
-    https://web.stanford.edu/class/cs276/handouts/EvaluationNew-handout-1-per.pdf
-    """
-    num_samples, num_k = knn_labels.shape
-    equality = knn_labels == gt_labels
-    num_correct_per_row = np.sum(equality, axis=1)
-    cumulative_correct = np.cumsum(equality, axis=1)
-    k_idx = np.tile(np.arange(1, num_k + 1), (num_samples, 1))
-    precision_at_ks = (cumulative_correct * equality) / k_idx
-    summed_precision_per_row = np.sum(precision_at_ks, axis=1)
-    with np.errstate(divide='ignore', invalid='ignore'):
-        avg_precision_per_row = summed_precision_per_row / num_correct_per_row
-    avg_precision_per_row[np.isnan(avg_precision_per_row)] = 0
-    return np.mean(avg_precision_per_row)
 
 
 def NMI(input_embeddings, gt_labels):
@@ -89,7 +72,7 @@ def compute_accuracies(query_embeddings, knn_labels, query_labels, embeddings_co
     accuracies["NMI"] = NMI(query_embeddings, query_labels)[0]
     accuracies["precision_at_1"] = precision_at_k(knn_labels, query_labels[:, None], 1)
     accuracies["r_precision"] = r_precision(knn_labels, query_labels[:, None], embeddings_come_from_same_source, label_counts)
-    accuracies["mean_average_r_precision"] = mean_average_r_precision(knn_labels, query_labels[:, None], embeddings_come_from_same_source, label_counts)
+    accuracies["mean_average_precision_at_r"] = mean_average_precision_at_r(knn_labels, query_labels[:, None], embeddings_come_from_same_source, label_counts)
     return accuracies
 
 

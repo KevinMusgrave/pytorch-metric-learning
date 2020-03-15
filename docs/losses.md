@@ -21,13 +21,12 @@ losses = loss_func(embeddings, labels, miner_output)
 [Deep Metric Learning with Angular Loss](https://arxiv.org/pdf/1708.01682.pdf)
 
 ```python
-losses.AngularLoss(alpha, triplets_per_anchor=100, **kwargs)
+losses.AngularLoss(alpha,**kwargs)
 ```
 
 **Parameters**:
 
 * **alpha**: The angle (as described in the paper), specified in degrees.
-* **triplets_per_anchor**: The number of triplets per element to sample within a batch. Can be an integer or the string "all". For example, if your batch size is 128, and triplets_per_anchor is 100, then 12800 triplets will be sampled. If triplets_per_anchor is "all", then all possible triplets in the batch will be used.
 
 
 ## ArcFaceLoss 
@@ -204,7 +203,7 @@ loss_optimizer.step()
 ## MarginLoss
 [Sampling Matters in Deep Embedding Learning](https://arxiv.org/pdf/1706.07567.pdf)
 ```python
-losses.MarginLoss(margin, nu, beta, triplets_per_anchor=100, **kwargs)
+losses.MarginLoss(margin, nu, beta, triplets_per_anchor="all", **kwargs)
 ```
 
 **Parameters**:
@@ -401,7 +400,7 @@ losses.TripletMarginLoss(margin=0.05,
 						swap=False, 
 						smooth_loss=False, 
 						avg_non_zero_only=True, 
-						triplets_per_anchor=100, 
+						triplets_per_anchor="all", 
 						**kwargs)
 ```
 

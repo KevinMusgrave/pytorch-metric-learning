@@ -287,15 +287,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#basepostgradientminer" class="md-nav__link">
-    BasePostGradientMiner
+  <a href="#basetupleminer" class="md-nav__link">
+    BaseTupleMiner
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#basepregradientminer" class="md-nav__link">
-    BasePreGradientMiner
+  <a href="#basesubsetbatchminer" class="md-nav__link">
+    BaseSubsetBatchMiner
   </a>
   
 </li>
@@ -462,15 +462,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#basepostgradientminer" class="md-nav__link">
-    BasePostGradientMiner
+  <a href="#basetupleminer" class="md-nav__link">
+    BaseTupleMiner
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#basepregradientminer" class="md-nav__link">
-    BasePreGradientMiner
+  <a href="#basesubsetbatchminer" class="md-nav__link">
+    BaseSubsetBatchMiner
   </a>
   
 </li>
@@ -553,15 +553,17 @@
                 <h1 id="miners">Miners<a class="headerlink" href="#miners" title="Permanent link">&para;</a></h1>
 <p>Mining functions come in two flavors:</p>
 <ul>
-<li><strong><a href="./#basepregradientminer">pre-gradient miners</a></strong> output indices corresponding to a subset of the input batch. The idea is to use these miners with torch.no_grad(), and with a large input batch size.</li>
-<li><strong><a href="./#basepostgradientminer">post-gradient miners</a></strong> output a tuple of indices: <ul>
-<li>Pair miners output a tuple of size 4: (anchors, positives, anchors, negatives)</li>
-<li>Triplet miners output a tuple of size 3: (anchors, positives, negatives) </li>
+<li><strong><a href="./#basesubsetbatchminer">Subset Batch Miners</a></strong> take a batch of <code>N</code> embeddings and return a subset <code>n</code> to be used by a tuple miner, or directly by a loss function. Without a subset batch miner, <code>n == N</code>.</li>
+<li><strong><a href="./#basetupleminer">Tuple Miners</a></strong> take a batch of <code>n</code> embeddings and return <code>k</code> pairs/triplets to be used for calculating the loss:<ul>
+<li>Pair miners output a tuple of size 4: (anchors, positives, anchors, negatives).</li>
+<li>Triplet miners output a tuple of size 3: (anchors, positives, negatives).</li>
+<li>Without a tuple miner, loss functions will by default use all possible pairs/triplets in the batch.</li>
+<li>Almost all current miners are tuple miners.</li>
 </ul>
 </li>
 </ul>
-<p><strong>Almost all miners are post-gradient miners.</strong></p>
-<p>Post-gradient miners are used with loss functions as follows:</p>
+<p>You might be familiar with the terminology: "online" and "offline" miners. Tuple miners are online, while subset batch miners are a mix between online and offline. Completely offline miners should be implemented as a <a href="../samplers/">PyTorch Sampler</a>.</p>
+<p>Tuple miners are used with loss functions as follows:</p>
 <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">miners</span><span class="p">,</span> <span class="n">losses</span>
 <span class="n">miner_func</span> <span class="o">=</span> <span class="n">miners</span><span class="o">.</span><span class="n">SomeMiner</span><span class="p">()</span>
 <span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">SomeLoss</span><span class="p">()</span>
@@ -591,29 +593,33 @@
 </ul>
 <p><strong>Required Implementations</strong>:</p>
 <div class="codehilite"><pre><span></span><span class="c1"># Return indices of some form</span>
-<span class="k">def</span> <span class="nf">mine</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">mine</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">ref_emb</span><span class="p">,</span> <span class="n">ref_labels</span><span class="p">):</span>
     <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</pre></div>
 
-<span class="c1"># Validate the output of the miner. </span>
+
+<p>Note: by default, <code>embeddings == ref_emb</code> and <code>labels == ref_labels</code>.</p>
+<div class="codehilite"><pre><span></span><span class="c1"># Validate the output of the miner. </span>
 <span class="k">def</span> <span class="nf">output_assertion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">):</span>
     <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 </pre></div>
 
 
-<h2 id="basepostgradientminer">BasePostGradientMiner<a class="headerlink" href="#basepostgradientminer" title="Permanent link">&para;</a></h2>
+<h2 id="basetupleminer">BaseTupleMiner<a class="headerlink" href="#basetupleminer" title="Permanent link">&para;</a></h2>
 <p>This extends <a href="./#baseminer">BaseMiner</a>, and most miners extend this class. </p>
 <p>It outputs a tuple of indices:</p>
 <ul>
 <li>Pair miners output a tuple of size 4: (anchors, positives, anchors, negatives)</li>
 <li>Triplet miners output a tuple of size 3: (anchors, positives, negatives) </li>
 </ul>
-<div class="codehilite"><pre><span></span><span class="n">miners</span><span class="o">.</span><span class="n">BasePostGradientMiner</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><span class="n">miners</span><span class="o">.</span><span class="n">BaseTupleMiner</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
 
-<h2 id="basepregradientminer">BasePreGradientMiner<a class="headerlink" href="#basepregradientminer" title="Permanent link">&para;</a></h2>
+<p>If you write your own miner, the <code>mine</code> function should work such that anchor indices correspond to <code>embeddings</code> and <code>labels</code>, and all other indices correspond to <code>ref_emb</code> and <code>ref_labels</code>. By default, <code>embeddings == ref_emb</code> and <code>labels == ref_labels</code>, but separating the anchor source from the positive/negative source allows for interesting use cases. For example, see <a href="../losses/#crossbatchmemory">CrossBatchMemory</a>.</p>
+<h2 id="basesubsetbatchminer">BaseSubsetBatchMiner<a class="headerlink" href="#basesubsetbatchminer" title="Permanent link">&para;</a></h2>
 <p>This extends <a href="./#baseminer">BaseMiner</a>. It outputs indices corresponding to a subset of the input batch. The idea is to use these miners with torch.no_grad(), and with a large input batch size.</p>
-<div class="codehilite"><pre><span></span><span class="n">miners</span><span class="o">.</span><span class="n">BasePreGradientMiner</span><span class="p">(</span><span class="n">output_batch_size</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><span class="n">miners</span><span class="o">.</span><span class="n">BaseSubsetBatchMiner</span><span class="p">(</span><span class="n">output_batch_size</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
 
@@ -686,7 +692,7 @@
 
 
 <h2 id="maximumlossminer">MaximumLossMiner<a class="headerlink" href="#maximumlossminer" title="Permanent link">&para;</a></h2>
-<p>This is a simple pre-gradient miner. It computes the loss for random subsets of the input batch, <code>num_trials</code> times. Then it returns the subset with the highest loss.</p>
+<p>This is a simple subset batch miner. It computes the loss for random subsets of the input batch, <code>num_trials</code> times. Then it returns the subset with the highest loss.</p>
 <div class="codehilite"><pre><span></span><span class="n">miners</span><span class="o">.</span><span class="n">MaximumLossMiner</span><span class="p">(</span><span class="n">loss_function</span><span class="p">,</span> <span class="n">mining_function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_trials</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
@@ -694,7 +700,7 @@
 <p><strong>Parameters</strong></p>
 <ul>
 <li><strong>loss_function</strong>: The loss function used to compute the loss.</li>
-<li><strong>mining_functions</strong>: Optional post-gradient mining function which extracts pairs/triplets for the loss function.</li>
+<li><strong>mining_function</strong>: Optional tuple miner which extracts pairs/triplets for the loss function.</li>
 <li><strong>num_trials</strong>: The number of random subsets to try.</li>
 </ul>
 <h2 id="multisimilarityminer">MultiSimilarityMiner<a class="headerlink" href="#multisimilarityminer" title="Permanent link">&para;</a></h2>

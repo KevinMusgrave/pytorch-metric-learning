@@ -518,7 +518,7 @@
 </ul>
 </li>
 <li><strong>mining_funcs</strong>: A dictionary mapping strings to mining functions. Pass in an empty dictionary, or one or more of the following keys: <ul>
-<li>{"pre_gradient_miner": mining_func1, "post_gradient_miner": mining_func2}</li>
+<li>{"batch_miner": mining_func1, "tuple_miner": mining_func2}</li>
 </ul>
 </li>
 <li><strong>iterations_per_epoch</strong>: In this library, epochs are just a measure of the number of iterations that have passed. So <code>iterations_per_epoch</code> is what actually defines what an "epoch" is.</li>
@@ -534,8 +534,8 @@ If not specified, then the original labels are used.</li>
 <li><strong>label_hierarchy_level</strong>: If each sample in your dataset has multiple labels, then this integer argument can be used to select which "level" to use. This assumes that your labels are "2-dimensional" with shape (num_samples, num_hierarchy_levels). Leave this at the default value, 0, if your data does not have multiple labels per sample.</li>
 <li><strong>dataloader_num_workers</strong>: The number of processes your dataloader will use to load data.</li>
 <li><strong>data_and_label_getter</strong>: A function that takes the output of your dataset's <code>__getitem__</code> function, and returns a tuple of (data, labels). If None, then it is assumed that <code>__getitem__</code> returns (data, labels). </li>
-<li><strong>dataset_labels</strong>: The labels for your dataset. Can be 1-dimensional (1 label per datapoint) or 2-dimensional, where each row represents a datapoint, and the columns are the multiple labels that the datapoint has. This option needs to be specified only if <code>set_min_label_to_zero</code> is True.</li>
-<li><strong>set_min_label_to_zero</strong>: If True, labels will be mapped such that they represent their rank in the label set. For example, if your dataset has labels 5, 10, 12, 13, then at each iteration, these would become 0, 1, 2, 3. The default is False.</li>
+<li><strong>dataset_labels</strong>: The labels for your dataset. Can be 1-dimensional (1 label per datapoint) or 2-dimensional, where each row represents a datapoint, and the columns are the multiple labels that the datapoint has. Labels can be integers or strings. <strong>This option needs to be specified only if <code>set_min_label_to_zero</code> is True.</strong></li>
+<li><strong>set_min_label_to_zero</strong>: If True, labels will be mapped such that they represent their rank in the label set. For example, if your dataset has labels 5, 10, 12, 13, then at each iteration, these would become 0, 1, 2, 3. You should also set this to True if you want to use string labels. In that case, 'dog', 'cat', 'monkey' would get mapped to 1, 0, 2. If True, you must pass in <code>dataset_labels</code> (see above). The default is False.</li>
 <li><strong>end_of_iteration_hook</strong>: This is an optional function that has one input argument (the trainer object), and performs some action (e.g. logging data) at the end of every iteration. Here are some things you might want to log:<ul>
 <li><code>trainer.losses</code>: this dictionary contains all loss values at the current iteration. </li>
 <li><code>trainer.loss_funcs</code> and <code>trainer.mining_funcs</code>: these dictionaries contain the loss and mining functions. <ul>
@@ -622,8 +622,8 @@ If not specified, then the original labels are used.</li>
 <li>
 <p><strong>mining_funcs</strong>: Must have the following form:</p>
 <ul>
-<li>{"post_gradient_miner_%d": mining_func_%d}<ul>
-<li>Optionally include "pre_gradient_miner": pre_gradient_miner</li>
+<li>{"tuple_miner_%d": mining_func_%d}<ul>
+<li>Optionally include "batch_miner": subset_batch_miner</li>
 </ul>
 </li>
 </ul>

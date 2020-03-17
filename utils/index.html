@@ -453,11 +453,11 @@
 </pre></div>
 
 
-<p>With the provided hooks, data from both the training and validation stages will be saved in pkl, csv, and tensorboard format, and models and optimizers will be saved in the specified model folder. See <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/example_MetricLossOnly.py">this script</a> for a complete example. Read the next section to learn more about the provided hooks.</p>
+<p>With the provided hooks, data from both the training and validation stages will be saved in pkl, sqlite, and tensorboard format, and models and optimizers will be saved in the specified model folder. See <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/example_MetricLossOnly.py">this script</a> for a complete example. Read the next section to learn more about the provided hooks.</p>
 <h3 id="hookcontainer">HookContainer<a class="headerlink" href="#hookcontainer" title="Permanent link">&para;</a></h3>
 <p>This class contains ready-to-use hooks to be used by trainers and testers.</p>
 <div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">pytorch_metric_learning.utils.logging_presets</span> <span class="k">as</span> <span class="nn">LP</span>
-<span class="n">LP</span><span class="o">.</span><span class="n">HookContainer</span><span class="p">(</span><span class="n">record_keeper</span><span class="p">,</span> <span class="n">record_group_name_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metric_for_best_epoch</span><span class="o">=</span><span class="s2">&quot;mean_average_r_precision&quot;</span><span class="p">)</span>
+<span class="n">LP</span><span class="o">.</span><span class="n">HookContainer</span><span class="p">(</span><span class="n">record_keeper</span><span class="p">,</span> <span class="n">record_group_name_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">primary_metric</span><span class="o">=</span><span class="s2">&quot;mean_average_precision_at_r&quot;</span><span class="p">,</span> <span class="n">validation_split_name</span><span class="o">=</span><span class="s2">&quot;val&quot;</span><span class="p">)</span>
 </pre></div>
 
 
@@ -465,13 +465,14 @@
 <ul>
 <li><strong>record_keeper</strong>: A <code>record-keeper</code> object. Install: <code>pip install record-keeper tensorboard</code>.</li>
 <li><strong>record_group_name_prefix</strong>: A string which will be prepended to all record names and tensorboard tags.</li>
-<li><strong>metric_for_best_epoch</strong>: A string that specifies the accuracy metric which will be used to determine the best checkpoint. Must be one of:<ul>
-<li>mean_average_r_precision</li>
+<li><strong>primary_metric</strong>: A string that specifies the accuracy metric which will be used to determine the best checkpoint. Must be one of:<ul>
+<li>mean_average_precision_at_r</li>
 <li>r_precision</li>
 <li>precision_at_1</li>
 <li>NMI</li>
 </ul>
 </li>
+<li><strong>validation_split_name</strong>: Optional. Default value is "val". The name of your validation set in <code>dataset_dict</code>.</li>
 </ul>
 <p><strong>Important functions</strong>:</p>
 <ul>
@@ -481,7 +482,6 @@
 <li><strong>dataset_dict</strong>: A dictionary mapping from split names to PyTorch datasets. For example: <code>{"train": train_dataset, "val": val_dataset}</code></li>
 <li><strong>model_folder</strong>: A string which is the folder path where models, optimizers etc. will be saved. </li>
 <li><strong>test_interval</strong>: Optional. Default value is 1. Validation will be run every <code>test_interval</code> epochs.</li>
-<li><strong>validation_split_name</strong>: Optional. Default value is "val". The name of your validation set in <code>dataset_dict</code>.</li>
 <li><strong>patience</strong>: Optional. Default value is None. If not None, training will end early if <code>epoch - best_epoch &gt; patience</code>.</li>
 </ul>
 </li>

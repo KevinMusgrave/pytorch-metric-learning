@@ -449,7 +449,10 @@
                     <span class="n">size_of_tsne</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> 
                     <span class="n">data_and_label_getter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">label_hierarchy_level</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-                    <span class="n">end_of_testing_hook</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+                    <span class="n">end_of_testing_hook</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">dataset_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">dataset_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">set_min_label_to_zero</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 
 
@@ -476,6 +479,8 @@
 <li>If you want ready-to-use hooks, take a look at the <a href="../utils/#logging_presets">logging_presets module</a>.</li>
 </ul>
 </li>
+<li><strong>dataset_labels</strong>: The labels for your dataset. Can be 1-dimensional (1 label per datapoint) or 2-dimensional, where each row represents a datapoint, and the columns are the multiple labels that the datapoint has. Labels can be integers or strings. <strong>This option needs to be specified only if <code>set_min_label_to_zero</code> is True.</strong></li>
+<li><strong>set_min_label_to_zero</strong>: If True, labels will be mapped such that they represent their rank in the label set. For example, if your dataset has labels 5, 10, 12, 13, then at each iteration, these would become 0, 1, 2, 3. You should also set this to True if you want to use string labels. In that case, 'dog', 'cat', 'monkey' would get mapped to 1, 0, 2. If True, you must pass in <code>dataset_labels</code> (see above). The default is False.</li>
 </ul>
 <h2 id="globalembeddingspacetester">GlobalEmbeddingSpaceTester<a class="headerlink" href="#globalembeddingspacetester" title="Permanent link">&para;</a></h2>
 <p>Computes nearest neighbors by looking at all points in the embedding space. This is probably the tester you are looking for.</p>

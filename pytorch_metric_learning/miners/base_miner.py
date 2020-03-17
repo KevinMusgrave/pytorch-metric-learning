@@ -85,7 +85,7 @@ class BaseTupleMiner(BaseMiner):
             raise BaseException
 
 
-class BaseBatchMiner(BaseMiner):
+class BaseSubsetBatchMiner(BaseMiner):
     """
     Args:
         output_batch_size: type int. The size of the subset that the miner

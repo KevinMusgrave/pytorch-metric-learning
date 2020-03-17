@@ -70,8 +70,7 @@ class HookContainer:
     ############################################
     ############################################
 
-    def load_latest_saved_models_and_records(self, trainer, model_folder, device=None):
-        self.record_keeper.load_records()
+    def load_latest_saved_models(self, trainer, model_folder, device=None):
         if device is None: device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         resume_epoch = c_f.latest_version(model_folder, "trunk_*.pth") or 0
         if resume_epoch > 0:

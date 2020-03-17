@@ -5,6 +5,7 @@ import numpy as np
 import os
 import logging
 import glob
+import scipy.stats
 
 NUMPY_RANDOM = np.random
 
@@ -30,7 +31,9 @@ def numpy_to_torch(v):
     except BaseException:
         return v
 
-def torch_to_numpy(v):
+def to_numpy(v):
+    if isinstance(v, tuple):
+        return np.array(v)
     try:
         return v.cpu().numpy()
     except BaseException:
@@ -54,7 +57,7 @@ def get_hierarchy_label(batch_labels, hierarchy_level):
 
 
 def map_labels(label_map, labels):
-    labels = torch_to_numpy(labels)
+    labels = to_numpy(labels)
     if labels.ndim == 2:
         for h in range(labels.shape[1]):
             labels[:, h] = label_map(labels[:, h], h)
@@ -168,8 +171,8 @@ def make_label_to_rank_dict(label_set):
     Returns:
         A dictionary mapping each label to its numeric rank in the original set
     """
-    argsorted = list(np.argsort(label_set))
-    return {k: v for k, v in zip(label_set, argsorted)}
+    ranked = scipy.stats.rankdata(label_set)-1
+    return {k: v for k, v in zip(label_set, ranked)}
 
 
 def get_label_map(labels):
@@ -183,6 +186,20 @@ def get_label_map(labels):
             label_map[hierarchy_level] = make_label_to_rank_dict(list(set(labels[:, hierarchy_level])))
         return label_map
     return {0: make_label_to_rank_dict(list(set(labels)))} 
+
+
+class LabelMapper:
+    def __init__(self, set_min_label_to_zero=False, dataset_labels=None):
+        self.set_min_label_to_zero = set_min_label_to_zero
+        if dataset_labels is not None:
+            self.label_map = get_label_map(dataset_labels)
+
+    def map(self, labels, hierarchy_level):
+        if not self.set_min_label_to_zero:
+            return labels
+        else:
+            return np.array([self.label_map[hierarchy_level][x] for x in labels], dtype=np.int)
+        
 
 
 def add_to_recordable_attributes(input_obj, name=None, list_of_names=None):

@@ -13,9 +13,22 @@ from collections import defaultdict
 
 
 class BaseTester:
-    def __init__(self, reference_set="compared_to_self", normalize_embeddings=True, use_trunk_output=False, 
-                    batch_size=32, dataloader_num_workers=32, pca=None, data_device=None, size_of_tsne=0, 
-                    data_and_label_getter=None, label_hierarchy_level=0, end_of_testing_hook=None):
+    def __init__(
+        self, 
+        reference_set="compared_to_self", 
+        normalize_embeddings=True, 
+        use_trunk_output=False, 
+        batch_size=32, 
+        dataloader_num_workers=32, 
+        pca=None, 
+        data_device=None, 
+        size_of_tsne=0, 
+        data_and_label_getter=None, 
+        label_hierarchy_level=0, 
+        end_of_testing_hook=None,
+        dataset_labels=None,
+        set_min_label_to_zero=False
+    ):
         self.reference_set = reference_set
         self.normalize_embeddings = normalize_embeddings
         self.pca = int(pca) if pca else None
@@ -26,8 +39,13 @@ class BaseTester:
         self.size_of_tsne = size_of_tsne
         self.data_and_label_getter = c_f.return_input if data_and_label_getter is None else data_and_label_getter
         self.label_hierarchy_level = label_hierarchy_level
-        self.end_of_testing_hook = end_of_testing_hook              
+        self.end_of_testing_hook = end_of_testing_hook
+        self.dataset_labels = dataset_labels
+        self.set_min_label_to_zero = set_min_label_to_zero
+        self.initialize_label_mapper()              
 
+    def initialize_label_mapper(self):
+        self.label_mapper = c_f.LabelMapper(self.set_min_label_to_zero, self.dataset_labels).map
 
     def maybe_normalize(self, embeddings):
         if self.pca:
@@ -43,8 +61,8 @@ class BaseTester:
         with torch.no_grad():
             for i, data in enumerate(tqdm.tqdm(dataloader)):
                 img, label = self.data_and_label_getter(data)
+                label = c_f.process_label(label, self.label_hierarchy_level, self.label_mapper)
                 q = self.get_embeddings_for_eval(trunk_model, embedder_model, img)
-                label = c_f.numpy_to_torch(label)
                 if label.dim() == 1:
                     label = label.unsqueeze(1)
                 if i == 0:

@@ -1,12 +1,12 @@
 #! /usr/bin/env python3
 
 
-from .base_miner import BaseBatchMiner
+from .base_miner import BaseSubsetBatchMiner
 from ..utils import loss_and_miner_utils as lmu
 import numpy as np
 import torch
 
-class MaximumLossMiner(BaseBatchMiner):
+class MaximumLossMiner(BaseSubsetBatchMiner):
     def __init__(self, loss_function, mining_function=None, num_trials=5, **kwargs):
         super().__init__(**kwargs)
         self.loss_function = loss_function

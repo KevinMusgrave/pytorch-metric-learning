@@ -15,8 +15,10 @@ class CrossBatchMemory(torch.nn.Module):
     def forward(self, embeddings, labels, input_indices_tuple=None):
         assert embeddings.size(0) <= self.embedding_memory.size(0)
         batch_size = embeddings.size(0)
+        labels = labels.to(embeddings.device)
         self.embedding_memory = self.embedding_memory.to(embeddings.device)
         self.label_memory = self.label_memory.to(labels.device)
+        self.add_to_memory(embeddings, labels, batch_size)
         
         if not self.has_been_filled:
             E_mem = self.embedding_memory[:self.queue_idx]
@@ -29,7 +31,6 @@ class CrossBatchMemory(torch.nn.Module):
         combined_embeddings = torch.cat([embeddings, E_mem], dim=0)
         combined_labels = torch.cat([labels, L_mem], dim=0)
         loss = self.loss(combined_embeddings, combined_labels, indices_tuple)
-        self.add_to_memory(embeddings, labels, batch_size)
         return loss
 
     def add_to_memory(self, embeddings, labels, batch_size):

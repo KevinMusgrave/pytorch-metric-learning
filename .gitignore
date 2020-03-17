@@ -3,5 +3,5 @@ __pycache__/
 .nfs*
 build/
 dist/
-pytorch_metric_learning.egg-info/
+*.egg-info/
 site/

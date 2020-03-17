@@ -186,18 +186,8 @@ class BaseTrainer:
         if self.data_device is None:
             self.data_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    def return_raw_labels(self, labels, hierarchy_level):
-        return labels
-
-    def return_zero_set_labels(self, labels, hierarchy_level):
-        return np.array([self.label_map[hierarchy_level][x] for x in labels], dtype=np.int)
-
     def initialize_label_mapper(self):
-        if not self.set_min_label_to_zero:
-            self.label_mapper = self.return_raw_labels
-        else:
-            self.label_map = c_f.get_label_map(self.dataset_labels)
-            self.label_mapper = self.return_zero_set_labels
+        self.label_mapper = c_f.LabelMapper(self.set_min_label_to_zero, self.dataset_labels).map
         
     def initialize_loss_tracker(self):
         self.loss_tracker = l_t.LossTracker(self.loss_names)

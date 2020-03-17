@@ -1,4 +1,4 @@
-from .base_miner import BaseMiner, BaseTupleMiner, BaseBatchMiner
+from .base_miner import BaseMiner, BaseTupleMiner, BaseSubsetBatchMiner
 from .angular_miner import AngularMiner
 from .batch_hard_miner import BatchHardMiner
 from .distance_weighted_miner import DistanceWeightedMiner

@@ -32,25 +32,26 @@ trainer = trainers.MetricLossOnly(models,
 
 trainer.train(num_epochs=num_epochs)
 ```
-With the provided hooks, data from both the training and validation stages will be saved in pkl, csv, and tensorboard format, and models and optimizers will be saved in the specified model folder. See [this script](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/example_MetricLossOnly.py) for a complete example. Read the next section to learn more about the provided hooks.
+With the provided hooks, data from both the training and validation stages will be saved in pkl, sqlite, and tensorboard format, and models and optimizers will be saved in the specified model folder. See [this script](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/example_MetricLossOnly.py) for a complete example. Read the next section to learn more about the provided hooks.
 
 ### HookContainer
 This class contains ready-to-use hooks to be used by trainers and testers.
 
 ```python
 import pytorch_metric_learning.utils.logging_presets as LP
-LP.HookContainer(record_keeper, record_group_name_prefix=None, metric_for_best_epoch="mean_average_r_precision")
+LP.HookContainer(record_keeper, record_group_name_prefix=None, primary_metric="mean_average_precision_at_r", validation_split_name="val")
 ```
 
 **Parameters**:
 
 * **record_keeper**: A ```record-keeper``` object. Install: ```pip install record-keeper tensorboard```.
 * **record_group_name_prefix**: A string which will be prepended to all record names and tensorboard tags.
-* **metric_for_best_epoch**: A string that specifies the accuracy metric which will be used to determine the best checkpoint. Must be one of:
-    * mean_average_r_precision
+* **primary_metric**: A string that specifies the accuracy metric which will be used to determine the best checkpoint. Must be one of:
+    * mean_average_precision_at_r
 	* r_precision
 	* precision_at_1
 	* NMI
+* **validation_split_name**: Optional. Default value is "val". The name of your validation set in ```dataset_dict```.
 
 **Important functions**:
 
@@ -60,6 +61,5 @@ LP.HookContainer(record_keeper, record_group_name_prefix=None, metric_for_best_e
 	* **dataset_dict**: A dictionary mapping from split names to PyTorch datasets. For example: ```{"train": train_dataset, "val": val_dataset}```
 	* **model_folder**: A string which is the folder path where models, optimizers etc. will be saved. 
 	* **test_interval**: Optional. Default value is 1. Validation will be run every ```test_interval``` epochs.
-	* **validation_split_name**: Optional. Default value is "val". The name of your validation set in ```dataset_dict```.
 	* **patience**: Optional. Default value is None. If not None, training will end early if ```epoch - best_epoch > patience```.
 * **end_of_testing_hook**: This function records accuracy metrics. You can pass this function directly into a tester object.

@@ -25,7 +25,10 @@ testers.BaseTester(reference_set="compared_to_self",
 					size_of_tsne=0, 
 					data_and_label_getter=None,
                     label_hierarchy_level=0,
-                    end_of_testing_hook=None)
+                    end_of_testing_hook=None,
+                    dataset_labels=None,
+			        dataset_labels=None,
+			        set_min_label_to_zero=False)
 ```
 
 **Parameters**:
@@ -47,6 +50,8 @@ testers.BaseTester(reference_set="compared_to_self",
 	* You'll probably want to access the accuracy metrics, which are stored in ```tester.all_accuracies```. This is a nested dictionary with the following format: ```tester.all_accuracies[split_name][metric_name] = metric_value```
 	* If you set ```size_of_tsne``` to be greater than 0, then the T-SNE embeddings will be stored in ```tester.tsne_embeddings``` which is a dictionary with the following format: ```tester.tsne_embeddings[split_name]["tsne_level%d"] = (embeddings, labels)```. (Note that ```"tsne_level%d"``` refers to the label hierarchy level. If you use the default label hierarchy level, then the string will be ```"tsne_level0"```.)
 	* If you want ready-to-use hooks, take a look at the [logging_presets module](utils.md#logging_presets).
+* **dataset_labels**: The labels for your dataset. Can be 1-dimensional (1 label per datapoint) or 2-dimensional, where each row represents a datapoint, and the columns are the multiple labels that the datapoint has. Labels can be integers or strings. **This option needs to be specified only if ```set_min_label_to_zero``` is True.**
+* **set_min_label_to_zero**: If True, labels will be mapped such that they represent their rank in the label set. For example, if your dataset has labels 5, 10, 12, 13, then at each iteration, these would become 0, 1, 2, 3. You should also set this to True if you want to use string labels. In that case, 'dog', 'cat', 'monkey' would get mapped to 1, 0, 2. If True, you must pass in ```dataset_labels``` (see above). The default is False.
 
 ## GlobalEmbeddingSpaceTester
 Computes nearest neighbors by looking at all points in the embedding space. This is probably the tester you are looking for.

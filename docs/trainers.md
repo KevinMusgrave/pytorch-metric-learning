@@ -46,7 +46,7 @@ trainers.BaseTrainer(models,
 * **loss_funcs**: A dictionary mapping strings to loss functions. The required keys depend on the training method, but all methods are likely to require at least: 
 	* {"metric_loss": loss_func}.
 * **mining_funcs**: A dictionary mapping strings to mining functions. Pass in an empty dictionary, or one or more of the following keys: 
-	* {"pre_gradient_miner": mining_func1, "post_gradient_miner": mining_func2}
+	* {"batch_miner": mining_func1, "tuple_miner": mining_func2}
 * **iterations_per_epoch**: In this library, epochs are just a measure of the number of iterations that have passed. So ```iterations_per_epoch``` is what actually defines what an "epoch" is.
 * **dataset**: The dataset you want to train on. Note that training methods do not perform validation, so do not pass in your validation or test set.
 * **data_device**: The device that you want to put batches of data on. If not specified, the trainer will put the data on any available GPUs.
@@ -60,8 +60,8 @@ If not specified, then the original labels are used.
 * **label_hierarchy_level**: If each sample in your dataset has multiple labels, then this integer argument can be used to select which "level" to use. This assumes that your labels are "2-dimensional" with shape (num_samples, num_hierarchy_levels). Leave this at the default value, 0, if your data does not have multiple labels per sample.
 * **dataloader_num_workers**: The number of processes your dataloader will use to load data.
 * **data_and_label_getter**: A function that takes the output of your dataset's ```__getitem__``` function, and returns a tuple of (data, labels). If None, then it is assumed that ```__getitem__``` returns (data, labels). 
-* **dataset_labels**: The labels for your dataset. Can be 1-dimensional (1 label per datapoint) or 2-dimensional, where each row represents a datapoint, and the columns are the multiple labels that the datapoint has. This option needs to be specified only if ```set_min_label_to_zero``` is True.
-* **set_min_label_to_zero**: If True, labels will be mapped such that they represent their rank in the label set. For example, if your dataset has labels 5, 10, 12, 13, then at each iteration, these would become 0, 1, 2, 3. The default is False.
+* **dataset_labels**: The labels for your dataset. Can be 1-dimensional (1 label per datapoint) or 2-dimensional, where each row represents a datapoint, and the columns are the multiple labels that the datapoint has. Labels can be integers or strings. **This option needs to be specified only if ```set_min_label_to_zero``` is True.**
+* **set_min_label_to_zero**: If True, labels will be mapped such that they represent their rank in the label set. For example, if your dataset has labels 5, 10, 12, 13, then at each iteration, these would become 0, 1, 2, 3. You should also set this to True if you want to use string labels. In that case, 'dog', 'cat', 'monkey' would get mapped to 1, 0, 2. If True, you must pass in ```dataset_labels``` (see above). The default is False.
 * **end_of_iteration_hook**: This is an optional function that has one input argument (the trainer object), and performs some action (e.g. logging data) at the end of every iteration. Here are some things you might want to log:
 	* ```trainer.losses```: this dictionary contains all loss values at the current iteration. 
 	* ```trainer.loss_funcs``` and ```trainer.mining_funcs```: these dictionaries contain the loss and mining functions. 
@@ -124,8 +124,8 @@ trainers.CascadedEmbeddings(embedding_sizes, **kwargs)
 		* Optionally include key:values of the form "classifier_loss_%d": classifier_loss_func_%d. The appended integer represents which cascaded model the loss applies to.
 
 * **mining_funcs**: Must have the following form:
-	* {"post_gradient_miner_%d": mining_func_%d}
-		* Optionally include "pre_gradient_miner": pre_gradient_miner
+	* {"tuple_miner_%d": mining_func_%d}
+		* Optionally include "batch_miner": subset_batch_miner
 
 ## DeepAdversarialMetricLearning
 This is an implementation of [Deep Adversarial Metric Learning](http://openaccess.thecvf.com/content_cvpr_2018/papers/Duan_Deep_Adversarial_Metric_CVPR_2018_paper.pdf)

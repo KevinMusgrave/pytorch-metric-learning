@@ -115,8 +115,8 @@ See [powerful-benchmarker](https://github.com/KevinMusgrave/powerful-benchmarker
 ### Base Classes, Mixins, and Wrappers:
 - [**BaseMetricLossFunction**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#basemetriclossfunction)
 - [**BaseMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#baseminer)
-- [**BasePostGradientMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#basepostgradientminer)
-- [**BasePreGradientMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#basepregradientminer)
+- [**BaseTupleMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#basetupleminer)
+- [**BaseSubsetBatchMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#basesubsetbatchminer)
 - [**BaseWeightRegularizer**](https://kevinmusgrave.github.io/pytorch-metric-learning/regularizers/#baseweightregularizer)
 - [**BaseTrainer**](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#basetrainer)
 - [**BaseTester**](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#basetester)

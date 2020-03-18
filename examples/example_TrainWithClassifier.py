@@ -75,7 +75,7 @@ iterations_per_epoch = 100
 models = {"trunk": trunk, "embedder": embedder, "classifier": classifier}
 optimizers = {"trunk_optimizer": trunk_optimizer, "embedder_optimizer": embedder_optimizer, "classifier_optimizer": classifier_optimizer}
 loss_funcs = {"metric_loss": loss, "classifier_loss": classification_loss}
-mining_funcs = {"post_gradient_miner": miner}
+mining_funcs = {"tuple_miner": miner}
 
 # We can specify loss weights if we want to. This is optional
 loss_weights = {"metric_loss": 1, "classifier_loss": 0.5}

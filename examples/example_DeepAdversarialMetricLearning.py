@@ -82,7 +82,7 @@ loss_funcs = {"metric_loss": metric_loss,
               "g_adv_loss": g_adv_loss}
 
 # Package the above stuff into dictionaries.
-mining_funcs = {"post_gradient_miner": miner}
+mining_funcs = {"tuple_miner": miner}
 
 loss_weights = {"metric_loss": 1, 
                 "synth_loss": 0.1,

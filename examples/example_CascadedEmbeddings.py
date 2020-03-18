@@ -88,7 +88,7 @@ iterations_per_epoch = 100
 models = {"trunk": trunk, "embedder": embedder}
 optimizers = {"trunk_optimizer": trunk_optimizer, "embedder_optimizer": embedder_optimizer}
 loss_funcs = {"metric_loss_0": loss0, "metric_loss_1": loss1, "metric_loss_2": loss2}
-mining_funcs = {"post_gradient_miner_1": miner1, "post_gradient_miner_2": miner2}
+mining_funcs = {"tuple_miner_1": miner1, "tuple_miner_2": miner2}
 
 record_keeper, _, _ = logging_presets.get_record_keeper("example_logs", "example_tensorboard")
 hooks = logging_presets.get_hook_container(record_keeper)

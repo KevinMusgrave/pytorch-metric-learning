@@ -37,13 +37,13 @@ class HookContainer:
             self.record_keeper.update_records(record, trainer.get_global_iteration(), **kwargs)
 
     # This hook will be passed into the trainer and will be executed at the end of every epoch.
-    def end_of_epoch_hook(self, tester, dataset_dict, model_folder, test_interval=1, patience=None):
+    def end_of_epoch_hook(self, tester, dataset_dict, model_folder, test_interval=1, patience=None, test_collate_fn=None):
         if not os.path.exists(model_folder): os.makedirs(model_folder)
         def actual_hook(trainer):
             continue_training = True
             self.record_keeper.maybe_add_custom_figures_to_tensorboard(trainer.get_global_iteration())
             if trainer.epoch % test_interval == 0:
-                best_epoch = self.save_models_and_eval(trainer, dataset_dict, model_folder, test_interval, tester)
+                best_epoch = self.save_models_and_eval(trainer, dataset_dict, model_folder, test_interval, tester, test_collate_fn)
                 continue_training = self.patience_remaining(trainer.epoch, best_epoch, patience)
             return continue_training
         return actual_hook
@@ -85,9 +85,9 @@ class HookContainer:
             if prev_suffix is not None:
                 c_f.delete_dict_of_models(obj_dict, prev_suffix, model_folder) 
 
-    def save_models_and_eval(self, trainer, dataset_dict, model_folder, test_interval, tester, **kwargs):
+    def save_models_and_eval(self, trainer, dataset_dict, model_folder, test_interval, tester, collate_fn):
         epoch = trainer.epoch
-        tester.test(dataset_dict, epoch, trainer.models["trunk"], trainer.models["embedder"], list(dataset_dict.keys()), trainer.collate_fn, **kwargs)
+        tester.test(dataset_dict, epoch, trainer.models["trunk"], trainer.models["embedder"], list(dataset_dict.keys()), collate_fn)
         is_new_best, curr_accuracy, best_epoch, best_accuracy = self.is_new_best_accuracy(tester, self.validation_split_name, epoch)
         trainer.step_lr_plateau_schedulers(curr_accuracy)
         self.save_models(trainer, model_folder, epoch, epoch-test_interval) # save latest model
@@ -199,11 +199,11 @@ class EmptyContainer:
 
 
 
-def get_record_keeper(pkl_folder, tensorboard_folder, global_db_path=None, experiment_name=None, is_new_experiment=True):
+def get_record_keeper(csv_folder, tensorboard_folder, global_db_path=None, experiment_name=None, is_new_experiment=True):
     try:
         import record_keeper as record_keeper_package
         from torch.utils.tensorboard import SummaryWriter
-        record_writer = record_keeper_package.RecordWriter(pkl_folder, global_db_path, experiment_name, is_new_experiment)
+        record_writer = record_keeper_package.RecordWriter(csv_folder, global_db_path, experiment_name, is_new_experiment)
         tensorboard_writer = SummaryWriter(log_dir=tensorboard_folder)
         record_keeper = record_keeper_package.RecordKeeper(tensorboard_writer, record_writer, ["record_these", "learnable_param_names"])
         return record_keeper, record_writer, tensorboard_writer

@@ -32,7 +32,7 @@ trainer = trainers.MetricLossOnly(models,
 
 trainer.train(num_epochs=num_epochs)
 ```
-With the provided hooks, data from both the training and validation stages will be saved in pkl, sqlite, and tensorboard format, and models and optimizers will be saved in the specified model folder. See [this script](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/example_MetricLossOnly.py) for a complete example. Read the next section to learn more about the provided hooks.
+With the provided hooks, data from both the training and validation stages will be saved in csv, sqlite, and tensorboard format, and models and optimizers will be saved in the specified model folder. See [this script](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/example_MetricLossOnly.py) for a complete example. Read the next section to learn more about the provided hooks.
 
 ### HookContainer
 This class contains ready-to-use hooks to be used by trainers and testers.
@@ -62,4 +62,5 @@ LP.HookContainer(record_keeper, record_group_name_prefix=None, primary_metric="m
 	* **model_folder**: A string which is the folder path where models, optimizers etc. will be saved. 
 	* **test_interval**: Optional. Default value is 1. Validation will be run every ```test_interval``` epochs.
 	* **patience**: Optional. Default value is None. If not None, training will end early if ```epoch - best_epoch > patience```.
+	* **test_collate_fn**: Optional. Default value is None. This is the collate function used by the dataloader during testing. 
 * **end_of_testing_hook**: This function records accuracy metrics. You can pass this function directly into a tester object.

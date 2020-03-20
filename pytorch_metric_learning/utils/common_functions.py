@@ -6,6 +6,7 @@ import os
 import logging
 import glob
 import scipy.stats
+import re
 
 NUMPY_RANDOM = np.random
 
@@ -287,3 +288,15 @@ def latest_version(folder, string_to_glob):
 
 def return_input(x):
     return x
+
+
+def regex_wrapper(x):
+    if isinstance(x, list):
+        return [re.compile(z) for z in x]
+    return re.compile(x)
+
+
+def angle_to_coord(angle):
+    x = np.cos(np.radians(angle))
+    y = np.sin(np.radians(angle))
+    return x, y

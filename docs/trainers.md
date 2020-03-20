@@ -46,7 +46,7 @@ trainers.BaseTrainer(models,
 * **loss_funcs**: A dictionary mapping strings to loss functions. The required keys depend on the training method, but all methods are likely to require at least: 
 	* {"metric_loss": loss_func}.
 * **mining_funcs**: A dictionary mapping strings to mining functions. Pass in an empty dictionary, or one or more of the following keys: 
-	* {"batch_miner": mining_func1, "tuple_miner": mining_func2}
+	* {"subset_batch_miner": mining_func1, "tuple_miner": mining_func2}
 * **iterations_per_epoch**: In this library, epochs are just a measure of the number of iterations that have passed. So ```iterations_per_epoch``` is what actually defines what an "epoch" is.
 * **dataset**: The dataset you want to train on. Note that training methods do not perform validation, so do not pass in your validation or test set.
 * **data_device**: The device that you want to put batches of data on. If not specified, the trainer will put the data on any available GPUs.
@@ -125,7 +125,7 @@ trainers.CascadedEmbeddings(embedding_sizes, **kwargs)
 
 * **mining_funcs**: Must have the following form:
 	* {"tuple_miner_%d": mining_func_%d}
-		* Optionally include "batch_miner": subset_batch_miner
+		* Optionally include "subset_batch_miner": subset_batch_miner
 
 ## DeepAdversarialMetricLearning
 This is an implementation of [Deep Adversarial Metric Learning](http://openaccess.thecvf.com/content_cvpr_2018/papers/Duan_Deep_Adversarial_Metric_CVPR_2018_paper.pdf)

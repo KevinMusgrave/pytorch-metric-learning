@@ -26,8 +26,7 @@ class DeepAdversarialMetricLearning(TrainWithClassifier):
         return x*-1
 
     def custom_setup(self):
-        synth_packaged_as_triplets = miners.EmbeddingsAlreadyPackagedAsTriplets(
-            normalize_embeddings=False)
+        synth_packaged_as_triplets = miners.EmbeddingsAlreadyPackagedAsTriplets(normalize_embeddings=False)
         self.mining_funcs["synth_packaged_as_triplets"] = synth_packaged_as_triplets
         self.loss_names += ["g_hard_loss", "g_reg_loss"]
 
@@ -38,9 +37,7 @@ class DeepAdversarialMetricLearning(TrainWithClassifier):
         if self.do_metric:
             authentic_final_embeddings = self.get_final_embeddings(penultimate_embeddings)
             indices_tuple = self.maybe_mine_embeddings(authentic_final_embeddings, labels)
-            self.losses["metric_loss"] = self.loss_funcs["metric_loss"](
-                authentic_final_embeddings, labels, indices_tuple
-            )
+            self.losses["metric_loss"] = self.loss_funcs["metric_loss"](authentic_final_embeddings, labels, indices_tuple)
             logits = self.maybe_get_logits(authentic_final_embeddings)
             self.losses["classifier_loss"] = self.maybe_get_classifier_loss(logits, labels)
 
@@ -135,3 +132,19 @@ class DeepAdversarialMetricLearning(TrainWithClassifier):
             torch.nn.functional.normalize(synthetic_negatives, p=2, dim=1),
             torch.nn.functional.normalize(real_negatives, p=2, dim=1),
         )
+
+
+    def allowed_model_keys(self):
+        return super().allowed_model_keys()+["generator"]
+
+    def allowed_loss_funcs_keys(self):
+        return super().allowed_loss_funcs_keys()+["synth_loss", "g_adv_loss"]
+
+    def allowed_mining_funcs_keys(self):
+        return super().allowed_mining_funcs_keys()+["synth_packaged_as_triplets"]
+
+    def verify_models_keys(self):
+        self._verify_dict_keys("models", self.allowed_model_keys(), True, essential_keys=["trunk", "generator"])
+
+    def verify_loss_funcs_keys(self):
+        self._verify_dict_keys("loss_funcs", self.allowed_loss_funcs_keys(), True, important_keys=self.allowed_loss_funcs_keys(), essential_keys=["synth_loss", "g_adv_loss"])

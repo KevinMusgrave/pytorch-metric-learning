@@ -54,6 +54,7 @@ class BaseTrainer:
         self.end_of_epoch_hook = end_of_epoch_hook
         self.loss_names = list(self.loss_funcs.keys())
         self.custom_setup()
+        self.verify_dict_keys()
         self.initialize_models()
         self.initialize_data_device()
         self.initialize_label_mapper()
@@ -142,11 +143,11 @@ class BaseTrainer:
         return None
 
     def maybe_do_batch_mining(self, data, labels):
-        if "batch_miner" in self.mining_funcs:
+        if "subset_batch_miner" in self.mining_funcs:
             with torch.no_grad():
                 self.set_to_eval()
                 embeddings = self.compute_embeddings(data)
-                idx = self.mining_funcs["batch_miner"](embeddings, labels)
+                idx = self.mining_funcs["subset_batch_miner"](embeddings, labels)
                 self.set_to_train()
                 data, labels = data[idx], labels[idx]
         return data, labels
@@ -223,3 +224,65 @@ class BaseTrainer:
     def initialize_models(self):
         if "embedder" not in self.models:
             self.models["embedder"] = c_f.Identity()
+
+    def verify_dict_keys(self):
+        self.verify_models_keys()
+        self.verify_optimizers_keys()
+        self.verify_loss_funcs_keys()
+        self.verify_mining_funcs_keys()
+        self.verify_lr_schedulers_keys()
+        self.verify_loss_weights_keys()
+        self.verify_gradient_clippers_keys()
+
+    def _verify_dict_keys(self, obj_name, allowed_keys, warn_if_empty, important_keys=(), essential_keys=()):
+        obj = getattr(self, obj_name, None)
+        if obj in [None, {}]:
+            if warn_if_empty:
+                logging.warn("%s is empty"%obj_name)
+        else:
+            for k in obj.keys():
+                assert any(pattern.match(k) for pattern in c_f.regex_wrapper(allowed_keys)), "%s keys must be one of %s"%(obj_name, ", ".join(allowed_keys))
+            for imp_key in important_keys:
+                if not any(c_f.regex_wrapper(imp_key).match(k) for k in obj):
+                    logging.warn("%s is missing \"%s\""%(obj_name, imp_key))
+            for ess_key in essential_keys:
+                assert any(c_f.regex_wrapper(ess_key).match(k) for k in obj), "%s must contain \"%s\""%(obj_name, ess_key)
+
+    def allowed_model_keys(self):
+        return ["trunk", "embedder"]
+
+    def allowed_optimizer_keys(self):
+        return [x+"_optimizer" for x in self.allowed_model_keys()]
+
+    def allowed_loss_funcs_keys(self):
+        return ["metric_loss"]
+
+    def allowed_mining_funcs_keys(self):
+        return ["subset_batch_miner", "tuple_miner"]
+
+    def allowed_lr_scheduers_keys(self):
+        return [x+"_scheduler" for x in self.allowed_model_keys()]
+
+    def allowed_gradient_clippers_keys(self):
+        return [x+"_grad_clipper" for x in self.allowed_model_keys()]
+
+    def verify_models_keys(self):
+        self._verify_dict_keys("models", self.allowed_model_keys(), warn_if_empty=True, essential_keys=["trunk"])
+
+    def verify_optimizers_keys(self):
+        self._verify_dict_keys("optimizers", self.allowed_optimizer_keys(), warn_if_empty=True, important_keys=[x+"_optimizer" for x in self.models.keys()])
+
+    def verify_loss_funcs_keys(self):
+        self._verify_dict_keys("loss_funcs", self.allowed_loss_funcs_keys(), warn_if_empty=True, important_keys=self.allowed_loss_funcs_keys())
+
+    def verify_mining_funcs_keys(self):
+        self._verify_dict_keys("mining_funcs", self.allowed_mining_funcs_keys(), warn_if_empty=False)
+
+    def verify_lr_schedulers_keys(self):
+        self._verify_dict_keys("lr_schedulers", self.allowed_lr_scheduers_keys(), warn_if_empty=False)
+
+    def verify_loss_weights_keys(self):
+        self._verify_dict_keys("loss_weights", self.loss_names, warn_if_empty=False, essential_keys=self.loss_names)
+
+    def verify_gradient_clippers_keys(self):
+        self._verify_dict_keys("gradient_clippers", self.allowed_gradient_clippers_keys(), warn_if_empty=False)

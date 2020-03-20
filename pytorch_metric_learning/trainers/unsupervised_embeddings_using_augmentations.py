@@ -8,22 +8,20 @@ class UnsupervisedEmbeddingsUsingAugmentations(MetricLossOnly):
         super().__init__(**kwargs)
         self.data_and_label_setter = data_and_label_setter
         self.initialize_data_and_label_setter()
-        self.collate_fn = self.get_custom_collate_fn(transforms)
+        self.transforms = transforms
+        self.collate_fn = self.custom_collate_fn
         self.initialize_dataloader()
         logging.info("Transforms: %s"%transforms)
-
-
-    def get_custom_collate_fn(self, transforms, data_and_label_setter):
-        def custom_collate_fn(data):
-            transformed_data, labels = [], []
-            for i, d in enumerate(data):
-                img, _ = self.data_and_label_getter(d)
-                for t in transforms:
-                    transformed_data.append(t(img))
-                    labels.append(i)
-            return self.data_and_label_setter((torch.stack(transformed_data, dim=0), torch.LongTensor(labels)))
-        return custom_collate_fn
 
     def initialize_data_and_label_setter(self):
         if self.data_and_label_setter is None:
             self.data_and_label_setter = c_f.return_input
+
+    def custom_collate_fn(self, data):
+        transformed_data, labels = [], []
+        for i, d in enumerate(data):
+            img, _ = self.data_and_label_getter(d)
+            for t in self.transforms:
+                transformed_data.append(t(img))
+                labels.append(i)
+        return self.data_and_label_setter((torch.stack(transformed_data, dim=0), torch.LongTensor(labels)))

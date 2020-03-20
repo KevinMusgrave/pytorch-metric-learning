@@ -453,7 +453,7 @@
 </pre></div>
 
 
-<p>With the provided hooks, data from both the training and validation stages will be saved in pkl, sqlite, and tensorboard format, and models and optimizers will be saved in the specified model folder. See <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/example_MetricLossOnly.py">this script</a> for a complete example. Read the next section to learn more about the provided hooks.</p>
+<p>With the provided hooks, data from both the training and validation stages will be saved in csv, sqlite, and tensorboard format, and models and optimizers will be saved in the specified model folder. See <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/example_MetricLossOnly.py">this script</a> for a complete example. Read the next section to learn more about the provided hooks.</p>
 <h3 id="hookcontainer">HookContainer<a class="headerlink" href="#hookcontainer" title="Permanent link">&para;</a></h3>
 <p>This class contains ready-to-use hooks to be used by trainers and testers.</p>
 <div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">pytorch_metric_learning.utils.logging_presets</span> <span class="k">as</span> <span class="nn">LP</span>
@@ -483,6 +483,7 @@
 <li><strong>model_folder</strong>: A string which is the folder path where models, optimizers etc. will be saved. </li>
 <li><strong>test_interval</strong>: Optional. Default value is 1. Validation will be run every <code>test_interval</code> epochs.</li>
 <li><strong>patience</strong>: Optional. Default value is None. If not None, training will end early if <code>epoch - best_epoch &gt; patience</code>.</li>
+<li><strong>test_collate_fn</strong>: Optional. Default value is None. This is the collate function used by the dataloader during testing. </li>
 </ul>
 </li>
 <li><strong>end_of_testing_hook</strong>: This function records accuracy metrics. You can pass this function directly into a tester object.</li>

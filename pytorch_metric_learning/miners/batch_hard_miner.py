@@ -20,14 +20,12 @@ class BatchHardMiner(BaseTupleMiner):
         neg_func = self.get_max_per_row if self.use_similarity else self.get_min_per_row
 
         (hardest_positive_dist, hardest_positive_indices), a1p_keep = pos_func(mat, a1_idx, p_idx)
-        (hardest_negative_dist, hardest_negative_indices), a2n_keep = neg_func(mat, a2_idx, n_idx) 
-        self.set_stats(hardest_positive_dist, hardest_negative_dist)
-        
+        (hardest_negative_dist, hardest_negative_indices), a2n_keep = neg_func(mat, a2_idx, n_idx)
         a_keep_idx = torch.where(a1p_keep & a2n_keep)
-
+        self.set_stats(hardest_positive_dist[a_keep_idx], hardest_negative_dist[a_keep_idx])
         a = torch.arange(mat.size(0)).to(hardest_positive_indices.device)[a_keep_idx]
         p = hardest_positive_indices[a_keep_idx]
-        n = hardest_negative_indices[a_keep_idx]
+        n = hardest_negative_indices[a_keep_idx]        
         return a, p, n 
 
     def get_max_per_row(self, mat, anchor_idx, other_idx):
@@ -42,12 +40,17 @@ class BatchHardMiner(BaseTupleMiner):
         mask[anchor_idx, other_idx] = 1
         non_inf_rows = torch.any(mask!=float('inf'), dim=1)
         mat_masked = mat * mask
-        mat_masked[torch.isnan(mat_masked)] = float('inf') 
+        mat_masked[torch.isnan(mat_masked) | torch.isinf(mat_masked)] = float('inf')
         return torch.min(mat_masked, dim=1), non_inf_rows
         
     def set_stats(self, hardest_positive_dist, hardest_negative_dist):
         pos_func = torch.min if self.use_similarity else torch.max
         neg_func = torch.max if self.use_similarity else torch.min
-        self.hardest_triplet_dist = pos_func(hardest_positive_dist - hardest_negative_dist).item()
-        self.hardest_pos_pair_dist = pos_func(hardest_positive_dist).item()
-        self.hardest_neg_pair_dist = neg_func(hardest_negative_dist).item()
+        try:
+            self.hardest_triplet_dist = pos_func(hardest_positive_dist - hardest_negative_dist).item()
+            self.hardest_pos_pair_dist = pos_func(hardest_positive_dist).item()
+            self.hardest_neg_pair_dist = neg_func(hardest_negative_dist).item()
+        except:
+            self.hardest_triplet_dist = 0
+            self.hardest_pos_pair_dist = 0
+            self.hardest_neg_pair_dist = 0

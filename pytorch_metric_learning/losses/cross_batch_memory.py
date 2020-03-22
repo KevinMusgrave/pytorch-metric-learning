@@ -72,7 +72,7 @@ class CrossBatchMemory(torch.nn.Module):
 
     def shift_indices_tuple(self, indices_tuple, batch_size):
         if len(indices_tuple) == 3:
-            indices_tuple = (indices_tuple[0],) + tuple([x+batch_size if len(x) > 0 else x for x in indices_tuple])
+            indices_tuple = (indices_tuple[0],) + tuple([x+batch_size if len(x) > 0 else x for x in indices_tuple[1:]])
         elif len(indices_tuple) == 4:
             indices_tuple = tuple([x+batch_size if len(x) > 0 and i%2==1 else x for i,x in enumerate(indices_tuple)])
         return indices_tuple

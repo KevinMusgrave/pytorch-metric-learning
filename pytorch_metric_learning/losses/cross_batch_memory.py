@@ -40,10 +40,12 @@ class CrossBatchMemory(torch.nn.Module):
             self.embedding_memory[self.queue_idx:end_idx] = embeddings.detach()
             self.label_memory[self.queue_idx:end_idx] = labels.detach()            
         else:
-            self.embedding_memory[:end_idx] = embeddings[:end_idx].detach()
-            self.embedding_memory[self.queue_idx:] = embeddings[end_idx:].detach()
-            self.label_memory[:end_idx] = labels[:end_idx].detach()
-            self.label_memory[self.queue_idx:] = labels[end_idx:].detach()
+            se = self.memory_size-self.queue_idx
+            self.embedding_memory[self.queue_idx:] = embeddings[:se].detach()
+            self.embedding_memory[:end_idx] = embeddings[se:].detach()
+            self.label_memory[self.queue_idx:] = labels[:se].detach()
+            self.label_memory[:end_idx] = labels[se:].detach()
+            
 
         prev_queue_idx = self.queue_idx
         self.queue_idx = (self.queue_idx + batch_size) % self.memory_size

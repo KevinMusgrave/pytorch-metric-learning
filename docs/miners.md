@@ -146,16 +146,16 @@ very_hard_pairs = minerB(embeddings, labels)
 ```
 
 ## MaximumLossMiner
-This is a simple subset batch miner. It computes the loss for random subsets of the input batch, ```num_trials``` times. Then it returns the subset with the highest loss.
+This is a simple [subset batch miner](miners.md#basesubsetbatchminer). It computes the loss for random subsets of the input batch, ```num_trials``` times. Then it returns the subset with the highest loss.
 
 ```python
-miners.MaximumLossMiner(loss_function, mining_function=None, num_trials=5, **kwargs)
+miners.MaximumLossMiner(loss, miner=None, num_trials=5, **kwargs)
 ```
 
 **Parameters**
 
-* **loss_function**: The loss function used to compute the loss.
-* **mining_function**: Optional tuple miner which extracts pairs/triplets for the loss function.
+* **loss**: The loss function used to compute the loss.
+* **miner**: Optional tuple miner which extracts pairs/triplets for the loss function.
 * **num_trials**: The number of random subsets to try.
 
 ## MultiSimilarityMiner

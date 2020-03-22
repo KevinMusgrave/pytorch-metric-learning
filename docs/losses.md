@@ -131,7 +131,7 @@ losses.CrossBatchMemory(loss, embedding_size, memory_size=1024, miner=None)
 * **loss**: The loss function to be wrapped. For example, you could pass in ```ContrastiveLoss()```.
 * **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set ```embedding_size``` to 512.
 * **memory_size**: The size of the memory queue.
-* **miner**: An optional miner, which will be used to mine pairs/triplets from the memory queue.
+* **miner**: An optional [tuple miner](miners.md), which will be used to mine pairs/triplets from the memory queue.
 
 
 ## FastAPLoss

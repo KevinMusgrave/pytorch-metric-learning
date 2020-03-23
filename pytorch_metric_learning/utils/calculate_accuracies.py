@@ -76,6 +76,12 @@ def compute_accuracies(query_embeddings, knn_labels, query_labels, embeddings_co
     return accuracies
 
 
+def get_label_counts(reference_labels):
+    unique_labels, label_counts = np.unique(reference_labels, return_counts=True)
+    num_k = min(1023, int(np.max(label_counts))) # faiss can only do a max of k=1024, and we have to do k+1
+    return {k:v for k,v in zip(unique_labels, label_counts)}
+
+
 def calculate_accuracy(
     query,
     reference,
@@ -88,10 +94,7 @@ def calculate_accuracy(
     Then computes various accuracy metrics.
     """
     embeddings_come_from_same_source = embeddings_come_from_same_source or (query is reference)
-
-    unique_labels, label_counts = np.unique(reference_labels, return_counts=True)
-    num_k = min(1023, int(np.max(label_counts))) # faiss can only do a max of k=1024, and we have to do k+1
-    label_counts = {k:v for k,v in zip(unique_labels, label_counts)}
+    label_counts = get_label_counts(reference_labels)
 
     knn_indices = stat_utils.get_knn(
         reference,

@@ -47,8 +47,9 @@ class TestCalculateAccuracies(unittest.TestCase):
         self.assertTrue(acc==correct_acc)
 
     def test_get_label_counts(self):
-        label_counts = calculate_accuracies.get_label_counts([0,1,3,2,3,1,3,3,4,6,5,10,4,4,4,4,6,6,5])
+        label_counts, num_k = calculate_accuracies.get_label_counts([0,1,3,2,3,1,3,3,4,6,5,10,4,4,4,4,6,6,5])
         self.assertTrue(label_counts=={0:1, 1:2, 2:1, 3:4, 4:5, 5:2, 6:3, 10:1})
+        self.assertTrue(num_k==5)
 
 
 if __name__ == '__main__':

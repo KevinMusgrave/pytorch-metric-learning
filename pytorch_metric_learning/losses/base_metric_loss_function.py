@@ -93,12 +93,13 @@ class BaseMetricLossFunction(torch.nn.Module):
 
 
 class MultipleLosses(torch.nn.Module):
-    def __init__(self, losses):
+    def __init__(self, losses, weights=None):
         super().__init__()
         self.losses = torch.nn.ModuleList(losses)
+        self.weights = weights if weights is not None else [1]*len(self.losses)
 
     def forward(self, embeddings, labels, indices_tuple=None):
         total_loss = 0
-        for loss in self.losses:
-            total_loss += loss(embeddings, labels, indices_tuple)
-        return total_loss / len(self.losses)
+        for i, loss in enumerate(self.losses):
+            total_loss += loss(embeddings, labels, indices_tuple)*self.weights[i]
+        return total_loss

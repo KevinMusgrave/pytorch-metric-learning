@@ -6,6 +6,7 @@ from .cosface_loss import CosFaceLoss
 from .cross_batch_memory import CrossBatchMemory
 from .fast_ap_loss import FastAPLoss
 from .generic_pair_loss import GenericPairLoss
+from .intra_pair_variance_loss import IntraPairVarianceLoss
 from .large_margin_softmax_loss import LargeMarginSoftmaxLoss
 from .lifted_structure_loss import GeneralizedLiftedStructureLoss
 from .margin_loss import MarginLoss
@@ -19,4 +20,5 @@ from .signal_to_noise_ratio_losses import SignalToNoiseRatioContrastiveLoss
 from .soft_triple_loss import SoftTripleLoss
 from .sphereface_loss import SphereFaceLoss
 from .triplet_margin_loss import TripletMarginLoss
+from .tuplet_margin_loss import TupletMarginLoss
 from .weight_regularizer_mixin import WeightRegularizerMixin

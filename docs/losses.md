@@ -174,6 +174,24 @@ losses.GeneralizedLiftedStructureLoss(neg_margin, **kwargs)
 
 * **neg_margin**: The margin in the expression ```e^(margin - negative_distance)```
 
+## IntraPairVarianceLoss
+[Deep Metric Learning with Tuplet Margin Loss](http://openaccess.thecvf.com/content_ICCV_2019/papers/Yu_Deep_Metric_Learning_With_Tuplet_Margin_Loss_ICCV_2019_paper.pdf)
+```python
+losses.IntraPairVarianceLoss(pos_eps=0.01, neg_eps=0.01, **kwargs)
+```
+
+**Parameters**:
+
+* **pos_eps**: The offset in the expression ```(1-pos_eps)*mu_ap - cos(theta_ap)```. See equation 15 in the paper.
+* **neg_eps**: The offset in the expression ```cos(theta_an) - (1+neg_eps)*mu_an```. See equation 16 in the paper.
+
+You should probably use this in conjunction with another loss, as described in the paper. You can accomplish this by using [MultipleLosses](losses.md#multiplelosses):
+```python
+main_loss = losses.TupletMarginLoss(margin=5)
+var_loss = losses.IntraPairVarianceLoss()
+complete_loss = losses.MultipleLosses([main_loss, var_loss], weights=[1, 0.5])
+```
+
 ## LargeMarginSoftmaxLoss
 [Large-Margin Softmax Loss for Convolutional Neural Networks](https://arxiv.org/pdf/1612.02295.pdf)
 
@@ -220,13 +238,14 @@ learnable_param_names=["beta"]
 You can then pass the loss function's parameters() to any PyTorch optimizer.
 
 ## MultipleLosses
-This is a simple wrapper for multiple losses. Pass in a list of already-initialized loss functions. Then, when you call forward on this object, it will return the average loss across the wrapped loss functions.
+This is a simple wrapper for multiple losses. Pass in a list of already-initialized loss functions. Then, when you call forward on this object, it will return the sum of all wrapped losses.
 ```python
-losses.MultipleLosses(losses)
+losses.MultipleLosses(losses, weights=None)
 ```
 **Parameters**:
 
 * **losses**: A list of initialized loss functions. On the forward call of MultipleLosses, each wrapped loss will be computed, and then the average will be returned.
+* **weights**: Optional. A list of loss weights, which will be multiplied by the corresponding losses obtained by the loss functions. The default is to multiply each loss by 1.
 
 ## MultiSimilarityLoss
 [Multi-Similarity Loss with General Pair Weighting for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf)
@@ -414,6 +433,23 @@ losses.TripletMarginLoss(margin=0.05,
 * **avg_non_zero_only**: Only triplets that contribute non-zero loss will be used in the final loss.
 * **triplets_per_anchor**: The number of triplets per element to sample within a batch. Can be an integer or the string "all". For example, if your batch size is 128, and triplets_per_anchor is 100, then 12800 triplets will be sampled. If triplets_per_anchor is "all", then all possible triplets in the batch will be used.
 
+## TupletMarginLoss
+[Deep Metric Learning with Tuplet Margin Loss](http://openaccess.thecvf.com/content_ICCV_2019/papers/Yu_Deep_Metric_Learning_With_Tuplet_Margin_Loss_ICCV_2019_paper.pdf)
+```python
+losses.TupletMarginLoss(margin, scale=64, **kwargs)
+```
+
+**Parameters**:
+
+* **margin**: The angular margin (in degrees) applied to positive pairs. The paper uses a value of 5.73 degrees (0.1 radians).
+* **scale**: The exponent multiplier in the logsumexp expression.
+
+The paper combines this loss with [IntraPairVarianceLoss](losses.md#intrapairvarianceloss). You can accomplish this by using [MultipleLosses](losses.md#multiplelosses):
+```python
+main_loss = losses.TupletMarginLoss(margin=5)
+var_loss = losses.IntraPairVarianceLoss()
+complete_loss = losses.MultipleLosses([main_loss, var_loss], weights=[1, 0.5])
+```
 
 ## WeightRegularizerMixin
 Losses can extend this class in addition to BaseMetricLossFunction. You should extend this class if your loss function can make use of a [weight regularizer](regularizers.md).

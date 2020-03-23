@@ -324,6 +324,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#intrapairvarianceloss" class="md-nav__link">
+    IntraPairVarianceLoss
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#largemarginsoftmaxloss" class="md-nav__link">
     LargeMarginSoftmaxLoss
   </a>
@@ -410,6 +417,13 @@
         <li class="md-nav__item">
   <a href="#tripletmarginloss" class="md-nav__link">
     TripletMarginLoss
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tupletmarginloss" class="md-nav__link">
+    TupletMarginLoss
   </a>
   
 </li>
@@ -588,6 +602,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#intrapairvarianceloss" class="md-nav__link">
+    IntraPairVarianceLoss
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#largemarginsoftmaxloss" class="md-nav__link">
     LargeMarginSoftmaxLoss
   </a>
@@ -674,6 +695,13 @@
         <li class="md-nav__item">
   <a href="#tripletmarginloss" class="md-nav__link">
     TripletMarginLoss
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tupletmarginloss" class="md-nav__link">
+    TupletMarginLoss
   </a>
   
 </li>
@@ -829,7 +857,7 @@
 <li><strong>loss</strong>: The loss function to be wrapped. For example, you could pass in <code>ContrastiveLoss()</code>.</li>
 <li><strong>embedding_size</strong>: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set <code>embedding_size</code> to 512.</li>
 <li><strong>memory_size</strong>: The size of the memory queue.</li>
-<li><strong>miner</strong>: An optional miner, which will be used to mine pairs/triplets from the memory queue.</li>
+<li><strong>miner</strong>: An optional <a href="../miners/">tuple miner</a>, which will be used to mine pairs/triplets from the memory queue.</li>
 </ul>
 <h2 id="fastaploss">FastAPLoss<a class="headerlink" href="#fastaploss" title="Permanent link">&para;</a></h2>
 <p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Cakir_Deep_Metric_Learning_to_Rank_CVPR_2019_paper.pdf">Deep Metric Learning to Rank</a></p>
@@ -869,6 +897,24 @@
 <ul>
 <li><strong>neg_margin</strong>: The margin in the expression <code>e^(margin - negative_distance)</code></li>
 </ul>
+<h2 id="intrapairvarianceloss">IntraPairVarianceLoss<a class="headerlink" href="#intrapairvarianceloss" title="Permanent link">&para;</a></h2>
+<p><a href="http://openaccess.thecvf.com/content_ICCV_2019/papers/Yu_Deep_Metric_Learning_With_Tuplet_Margin_Loss_ICCV_2019_paper.pdf">Deep Metric Learning with Tuplet Margin Loss</a></p>
+<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">IntraPairVarianceLoss</span><span class="p">(</span><span class="n">pos_eps</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">neg_eps</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>pos_eps</strong>: The offset in the expression <code>(1-pos_eps)*mu_ap - cos(theta_ap)</code>. See equation 15 in the paper.</li>
+<li><strong>neg_eps</strong>: The offset in the expression <code>cos(theta_an) - (1+neg_eps)*mu_an</code>. See equation 16 in the paper.</li>
+</ul>
+<p>You should probably use this in conjunction with another loss, as described in the paper. You can accomplish this by using <a href="./#multiplelosses">MultipleLosses</a>:</p>
+<div class="codehilite"><pre><span></span><span class="n">main_loss</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">TupletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">var_loss</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">IntraPairVarianceLoss</span><span class="p">()</span>
+<span class="n">complete_loss</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">MultipleLosses</span><span class="p">([</span><span class="n">main_loss</span><span class="p">,</span> <span class="n">var_loss</span><span class="p">],</span> <span class="n">weights</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">])</span>
+</pre></div>
+
+
 <h2 id="largemarginsoftmaxloss">LargeMarginSoftmaxLoss<a class="headerlink" href="#largemarginsoftmaxloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1612.02295.pdf">Large-Margin Softmax Loss for Convolutional Neural Networks</a></p>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">LargeMarginSoftmaxLoss</span><span class="p">(</span><span class="n">margin</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">normalize_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -915,14 +961,15 @@
 
 <p>You can then pass the loss function's parameters() to any PyTorch optimizer.</p>
 <h2 id="multiplelosses">MultipleLosses<a class="headerlink" href="#multiplelosses" title="Permanent link">&para;</a></h2>
-<p>This is a simple wrapper for multiple losses. Pass in a list of already-initialized loss functions. Then, when you call forward on this object, it will return the average loss across the wrapped loss functions.</p>
-<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">MultipleLosses</span><span class="p">(</span><span class="n">losses</span><span class="p">)</span>
+<p>This is a simple wrapper for multiple losses. Pass in a list of already-initialized loss functions. Then, when you call forward on this object, it will return the sum of all wrapped losses.</p>
+<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">MultipleLosses</span><span class="p">(</span><span class="n">losses</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </pre></div>
 
 
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>losses</strong>: A list of initialized loss functions. On the forward call of MultipleLosses, each wrapped loss will be computed, and then the average will be returned.</li>
+<li><strong>weights</strong>: Optional. A list of loss weights, which will be multiplied by the corresponding losses obtained by the loss functions. The default is to multiply each loss by 1.</li>
 </ul>
 <h2 id="multisimilarityloss">MultiSimilarityLoss<a class="headerlink" href="#multisimilarityloss" title="Permanent link">&para;</a></h2>
 <p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf">Multi-Similarity Loss with General Pair Weighting for Deep Metric Learning</a></p>
@@ -1112,6 +1159,24 @@
 <li><strong>avg_non_zero_only</strong>: Only triplets that contribute non-zero loss will be used in the final loss.</li>
 <li><strong>triplets_per_anchor</strong>: The number of triplets per element to sample within a batch. Can be an integer or the string "all". For example, if your batch size is 128, and triplets_per_anchor is 100, then 12800 triplets will be sampled. If triplets_per_anchor is "all", then all possible triplets in the batch will be used.</li>
 </ul>
+<h2 id="tupletmarginloss">TupletMarginLoss<a class="headerlink" href="#tupletmarginloss" title="Permanent link">&para;</a></h2>
+<p><a href="http://openaccess.thecvf.com/content_ICCV_2019/papers/Yu_Deep_Metric_Learning_With_Tuplet_Margin_Loss_ICCV_2019_paper.pdf">Deep Metric Learning with Tuplet Margin Loss</a></p>
+<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">TupletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>margin</strong>: The angular margin (in degrees) applied to positive pairs. The paper uses a value of 5.73 degrees (0.1 radians).</li>
+<li><strong>scale</strong>: The exponent multiplier in the logsumexp expression.</li>
+</ul>
+<p>The paper combines this loss with <a href="./#intrapairvarianceloss">IntraPairVarianceLoss</a>. You can accomplish this by using <a href="./#multiplelosses">MultipleLosses</a>:</p>
+<div class="codehilite"><pre><span></span><span class="n">main_loss</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">TupletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<span class="n">var_loss</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">IntraPairVarianceLoss</span><span class="p">()</span>
+<span class="n">complete_loss</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">MultipleLosses</span><span class="p">([</span><span class="n">main_loss</span><span class="p">,</span> <span class="n">var_loss</span><span class="p">],</span> <span class="n">weights</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">])</span>
+</pre></div>
+
+
 <h2 id="weightregularizermixin">WeightRegularizerMixin<a class="headerlink" href="#weightregularizermixin" title="Permanent link">&para;</a></h2>
 <p>Losses can extend this class in addition to BaseMetricLossFunction. You should extend this class if your loss function can make use of a <a href="../regularizers/">weight regularizer</a>.</p>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">WeightRegularizerMixin</span><span class="p">(</span><span class="n">regularizer</span><span class="p">,</span> <span class="n">reg_weight</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>

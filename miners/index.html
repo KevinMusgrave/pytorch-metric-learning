@@ -692,15 +692,15 @@
 
 
 <h2 id="maximumlossminer">MaximumLossMiner<a class="headerlink" href="#maximumlossminer" title="Permanent link">&para;</a></h2>
-<p>This is a simple subset batch miner. It computes the loss for random subsets of the input batch, <code>num_trials</code> times. Then it returns the subset with the highest loss.</p>
-<div class="codehilite"><pre><span></span><span class="n">miners</span><span class="o">.</span><span class="n">MaximumLossMiner</span><span class="p">(</span><span class="n">loss_function</span><span class="p">,</span> <span class="n">mining_function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_trials</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<p>This is a simple <a href="./#basesubsetbatchminer">subset batch miner</a>. It computes the loss for random subsets of the input batch, <code>num_trials</code> times. Then it returns the subset with the highest loss.</p>
+<div class="codehilite"><pre><span></span><span class="n">miners</span><span class="o">.</span><span class="n">MaximumLossMiner</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="n">miner</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_trials</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
 
 <p><strong>Parameters</strong></p>
 <ul>
-<li><strong>loss_function</strong>: The loss function used to compute the loss.</li>
-<li><strong>mining_function</strong>: Optional tuple miner which extracts pairs/triplets for the loss function.</li>
+<li><strong>loss</strong>: The loss function used to compute the loss.</li>
+<li><strong>miner</strong>: Optional tuple miner which extracts pairs/triplets for the loss function.</li>
 <li><strong>num_trials</strong>: The number of random subsets to try.</li>
 </ul>
 <h2 id="multisimilarityminer">MultiSimilarityMiner<a class="headerlink" href="#multisimilarityminer" title="Permanent link">&para;</a></h2>

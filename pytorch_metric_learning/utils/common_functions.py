@@ -29,7 +29,7 @@ def try_next_on_generator(gen, iterable):
 def numpy_to_torch(v):
     try:
         return torch.from_numpy(v)
-    except BaseException:
+    except AttributeError:
         return v
 
 def to_numpy(v):
@@ -37,7 +37,7 @@ def to_numpy(v):
         return np.array(v)
     try:
         return v.cpu().numpy()
-    except BaseException:
+    except AttributeError:
         return v
 
 
@@ -53,7 +53,7 @@ def get_hierarchy_label(batch_labels, hierarchy_level):
         if batch_labels.ndim == 2:
             batch_labels = batch_labels[:, hierarchy_level]
         return batch_labels
-    except BaseException:
+    except AttributeError:
         return batch_labels
 
 
@@ -233,7 +233,7 @@ def save_model(model, model_name, filepath):
 def load_model(model_def, model_filename, device):
     try:
         model_def.load_state_dict(torch.load(model_filename, map_location=device))
-    except BaseException:
+    except KeyError:
         # original saved file with DataParallel
         state_dict = torch.load(model_filename)
         # create new OrderedDict that does not contain `module.`
@@ -254,7 +254,7 @@ def operate_on_dict_of_models(input_dict, suffix, folder, operation, logging_str
             operation(k, v, model_path)
             if log_if_successful:
                 logging.info("%s %s"%(logging_string, model_path))
-        except:
+        except IOError:
             logging.warn("Could not %s %s"%(logging_string, model_path))
 
 def save_dict_of_models(input_dict, suffix, folder):
@@ -271,10 +271,7 @@ def load_dict_of_models(input_dict, suffix, folder, device):
 
 def delete_dict_of_models(input_dict, suffix, folder):
     def operation(k, v, model_path):
-        try:
-            os.remove(model_path)
-        except:
-            pass
+        if os.path.exists(model_path): os.remove(model_path)
     operate_on_dict_of_models(input_dict, suffix, folder, operation, "DELETE")
             
 

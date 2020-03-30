@@ -50,7 +50,7 @@ class BatchHardMiner(BaseTupleMiner):
             self.hardest_triplet_dist = pos_func(hardest_positive_dist - hardest_negative_dist).item()
             self.hardest_pos_pair_dist = pos_func(hardest_positive_dist).item()
             self.hardest_neg_pair_dist = neg_func(hardest_negative_dist).item()
-        except:
+        except RuntimeError:
             self.hardest_triplet_dist = 0
             self.hardest_pos_pair_dist = 0
             self.hardest_neg_pair_dist = 0

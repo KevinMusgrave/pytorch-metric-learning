@@ -4,6 +4,7 @@ import os
 import torch
 from . import calculate_accuracies as c_a
 from collections import defaultdict
+import sqlite3
 
 # You can write your own hooks for logging.
 # But if you'd like something that just works, then use this HookContainer.
@@ -123,7 +124,7 @@ class HookContainer:
             key = tester.accuracies_keyname(self.primary_metric, average=average)
             try:
                 return input_func(key)
-            except:
+            except (KeyError, sqlite3.OperationalError):
                 pass
         raise KeyError
 
@@ -165,11 +166,12 @@ class HookContainer:
                 return False
         return True
 
-    def run_tester_separately(self, tester, dataset_dict, epoch, trunk, embedder, splits_to_eval=None, collate_fn=None):
-        splits_to_eval = self.get_splits_to_eval(tester, dataset_dict, epoch, splits_to_eval)
-        if len(splits_to_eval) == 0:
-            logging.info("Already evaluated")
-            return False
+    def run_tester_separately(self, tester, dataset_dict, epoch, trunk, embedder, splits_to_eval=None, collate_fn=None, skip_eval_if_already_done=True):
+        if skip_eval_if_already_done:
+            splits_to_eval = self.get_splits_to_eval(tester, dataset_dict, epoch, splits_to_eval)
+            if len(splits_to_eval) == 0:
+                logging.info("Already evaluated")
+                return False
         tester.test(dataset_dict, epoch, trunk, embedder, splits_to_eval, collate_fn)
         return True
 

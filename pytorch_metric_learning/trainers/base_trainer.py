@@ -83,7 +83,7 @@ class BaseTrainer:
                 self.forward_and_backward()
                 self.end_of_iteration_hook(self)
                 pbar.set_description("total_loss=%.5f" % self.losses["total_loss"])
-            self.step_lr_schedulers()
+                self.step_lr_schedulers()
             if self.end_of_epoch_hook(self) is False:
                 break
 
@@ -252,7 +252,7 @@ class BaseTrainer:
         return ["trunk", "embedder"]
 
     def allowed_optimizer_keys(self):
-        return [x+"_optimizer" for x in self.allowed_model_keys()]
+        return [x+"_optimizer" for x in self.allowed_model_keys() + self.allowed_loss_funcs_keys()]
 
     def allowed_loss_funcs_keys(self):
         return ["metric_loss"]
@@ -261,10 +261,10 @@ class BaseTrainer:
         return ["subset_batch_miner", "tuple_miner"]
 
     def allowed_lr_scheduers_keys(self):
-        return [x+"_scheduler" for x in self.allowed_model_keys()]
+        return [x+"_scheduler" for x in self.allowed_model_keys() + self.allowed_loss_funcs_keys()]
 
     def allowed_gradient_clippers_keys(self):
-        return [x+"_grad_clipper" for x in self.allowed_model_keys()]
+        return [x+"_grad_clipper" for x in self.allowed_model_keys() + self.allowed_loss_funcs_keys()]
 
     def verify_models_keys(self):
         self._verify_dict_keys("models", self.allowed_model_keys(), warn_if_empty=True, essential_keys=["trunk"])

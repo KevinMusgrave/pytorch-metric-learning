@@ -140,21 +140,22 @@ class HookContainer:
         return self.try_primary_metric(tester, get_accuracies)
 
     # returns accuracies of best epoch and the metric name used to determine best acuracy
-    def get_accuracies_of_best_epoch(self, tester, split_name, select_all=True, ignore_epoch=-1):
+    def get_accuracies_of_best_epoch(self, tester, split_name, select_all=True, ignore_epoch=(-1,)):
         table_name = self.record_group_name(tester, split_name)
         if not self.record_keeper.table_exists(table_name):
             return [], None        
         def get_accuracies(key):
             columns = "*" if select_all else "epoch, %s"%key
+            params = ", ".join(["?"]*len(ignore_epoch))
             query = """SELECT {0} FROM {1} WHERE {2}=
-                        (SELECT max({2}) FROM {1} WHERE epoch!=?)
-                        AND epoch!=?""".format(columns, table_name, key)
-            output = self.record_keeper.query(query, (ignore_epoch, ignore_epoch))
+                        (SELECT max({2}) FROM {1} WHERE epoch NOT IN ({3}))
+                        AND epoch NOT IN ({3})""".format(columns, table_name, key, params)
+            output = self.record_keeper.query(query, ignore_epoch+ignore_epoch)
             return output, key
         return self.try_primary_metric(tester, get_accuracies)
 
-    def get_best_epoch_and_accuracy(self, tester, split_name):
-        accuracies, key = self.get_accuracies_of_best_epoch(tester, split_name, select_all=False)
+    def get_best_epoch_and_accuracy(self, tester, split_name, ignore_epoch=(-1,)):
+        accuracies, key = self.get_accuracies_of_best_epoch(tester, split_name, select_all=False, ignore_epoch=ignore_epoch)
         if len(accuracies) > 0:
             return accuracies[0]["epoch"], accuracies[0][key]
         return None, 0

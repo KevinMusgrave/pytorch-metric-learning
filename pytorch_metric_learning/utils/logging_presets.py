@@ -13,12 +13,17 @@ import sqlite3
 
 class HookContainer: 
 
-    def __init__(self, record_keeper, record_group_name_prefix=None, primary_metric="mean_average_precision_at_r", validation_split_name="val"):
+    def __init__(self, record_keeper, 
+                        record_group_name_prefix=None, 
+                        primary_metric="mean_average_precision_at_r", 
+                        validation_split_name="val", 
+                        save_custom_figures=False):
         self.record_keeper = record_keeper
         self.record_group_name_prefix = record_group_name_prefix
         self.saveable_trainer_objects = ["models", "optimizers", "lr_schedulers", "loss_funcs", "mining_funcs"]
         self.primary_metric = primary_metric
-        self.validation_split_name = validation_split_name 
+        self.validation_split_name = validation_split_name
+        self.save_custom_figures = save_custom_figures 
 
     ############################################
     ############################################
@@ -42,7 +47,7 @@ class HookContainer:
         if not os.path.exists(model_folder): os.makedirs(model_folder)
         def actual_hook(trainer):
             continue_training = True
-            self.record_keeper.maybe_add_custom_figures_to_tensorboard(trainer.get_global_iteration())
+            if self.save_custom_figures: self.record_keeper.maybe_add_custom_figures_to_tensorboard(trainer.get_global_iteration())
             if trainer.epoch % test_interval == 0:
                 best_epoch = self.save_models_and_eval(trainer, dataset_dict, model_folder, test_interval, tester, test_collate_fn)
                 continue_training = self.patience_remaining(trainer.epoch, best_epoch, patience)

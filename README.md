@@ -167,6 +167,16 @@ Also check out the [example scripts](https://github.com/KevinMusgrave/pytorch-me
 
 To learn more about all of the above, [see the documentation](https://kevinmusgrave.github.io/pytorch-metric-learning). 
 
+## Development
+In order to run unit tests do:
+```bash
+pip install -e .[dev]
+pytest tests
+```
+The first command may fail initially on Windows. In such a case, install `torch` by following the official
+guide. Proceed to `pip install -e .[dev]` afterwards.
+
+
 ## Acknowledgements
 ### Facebook AI
 Thank you to [Ser-Nam Lim](https://research.fb.com/people/lim-ser-nam/) at [Facebook AI](https://ai.facebook.com/), and my research advisor, [Professor Serge Belongie](https://vision.cornell.edu/se3/people/serge-belongie/). This project began during my internship at Facebook AI where I received valuable feedback from Ser-Nam, and his team of computer vision and machine learning engineers and research scientists. In particular, thanks to [Ashish Shah](https://www.linkedin.com/in/ashish217/) and [Austin Reiter](https://www.linkedin.com/in/austin-reiter-3962aa7/) for reviewing my code during its early stages of development.

@@ -95,12 +95,12 @@ class HookContainer:
         epoch = trainer.epoch
         tester.test(dataset_dict, epoch, trainer.models["trunk"], trainer.models["embedder"], list(dataset_dict.keys()), collate_fn)
         is_new_best, curr_accuracy, best_epoch, best_accuracy = self.is_new_best_accuracy(tester, self.validation_split_name, epoch)
+        self.record_keeper.save_records()
         trainer.step_lr_plateau_schedulers(curr_accuracy)
         self.save_models(trainer, model_folder, epoch, epoch-test_interval) # save latest model
         if is_new_best:
             logging.info("New best accuracy!")
             self.save_models(trainer, model_folder, "best") # save best model    
-        self.record_keeper.save_records()
         return best_epoch
 
     def is_new_best_accuracy(self, tester, split_name, epoch):

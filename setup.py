@@ -3,6 +3,12 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
+# Requirements for testing and development
+extras_require_dev = [
+    "pytest > 3.8",
+    "pytest-cov ~= 2.8",
+]
+
 setuptools.setup(
     name="pytorch-metric-learning",
     version="0.9.82.dev2",
@@ -12,7 +18,8 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/KevinMusgrave/pytorch-metric-learning",
-    packages=setuptools.find_packages(include=["pytorch_metric_learning.*"]),
+    package_dir={"": "src"},
+    packages=setuptools.find_packages(where="src"),
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
@@ -20,10 +27,11 @@ setuptools.setup(
     ],
     python_requires='>=3.0',
     install_requires=[
-		  'numpy',
-		  'scikit-learn',
-		  'tqdm',
+          'numpy',
+          'scikit-learn',
+          'tqdm',
           'torch',
           'torchvision',
     ],
+    extras_require={"dev": extras_require_dev},
 )

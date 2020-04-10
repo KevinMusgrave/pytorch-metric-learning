@@ -14,8 +14,8 @@ class BaseTrainer:
         batch_size,
         loss_funcs,
         mining_funcs,
-        iterations_per_epoch,
         dataset,
+        iterations_per_epoch=None,
         data_device=None,
         loss_weights=None,
         sampler=None,
@@ -36,8 +36,8 @@ class BaseTrainer:
         self.batch_size = batch_size
         self.loss_funcs = loss_funcs
         self.mining_funcs = mining_funcs
-        self.iterations_per_epoch = iterations_per_epoch
         self.dataset = dataset
+        self.iterations_per_epoch = iterations_per_epoch
         self.data_device = data_device
         self.sampler = sampler
         self.collate_fn = collate_fn
@@ -83,7 +83,8 @@ class BaseTrainer:
                 self.forward_and_backward()
                 self.end_of_iteration_hook(self)
                 pbar.set_description("total_loss=%.5f" % self.losses["total_loss"])
-                self.step_lr_schedulers()
+                self.step_lr_schedulers(end_of_epoch=False)
+            self.step_lr_schedulers(end_of_epoch=True)
             if self.end_of_epoch_hook(self) is False:
                 break
 
@@ -96,6 +97,8 @@ class BaseTrainer:
             self.dataloader_num_workers,
             self.collate_fn,
         )
+        if not self.iterations_per_epoch:
+            self.iterations_per_epoch = len(self.dataloader)
         logging.info("Initializing dataloader iterator")
         self.dataloader_iter = iter(self.dataloader)
         logging.info("Done creating dataloader iterator")
@@ -135,7 +138,7 @@ class BaseTrainer:
         return self.models["embedder"](base_output)
 
     def get_trunk_output(self, data):
-        return c_f.pass_data_to_model(self.models["trunk"], data, self.data_device)
+        return self.models["trunk"](data.to(self.data_device))
 
     def maybe_mine_embeddings(self, embeddings, labels):
         if "tuple_miner" in self.mining_funcs:
@@ -158,16 +161,18 @@ class BaseTrainer:
     def get_global_iteration(self):
         return self.iteration + self.iterations_per_epoch * (self.epoch - 1)
 
-    def step_lr_schedulers(self):
+    def step_lr_schedulers(self, end_of_epoch=False):
         if self.lr_schedulers is not None:
-            for v in self.lr_schedulers.values():
-                if not isinstance(v, torch.optim.lr_scheduler.ReduceLROnPlateau):
+            for k, v in self.lr_schedulers.items():
+                if end_of_epoch and k.endswith(self.allowed_lr_scheduler_key_suffixes["epoch"]):
+                    v.step()
+                elif not end_of_epoch and k.endswith(self.allowed_lr_scheduler_key_suffixes["iteration"]):
                     v.step()
 
     def step_lr_plateau_schedulers(self, validation_info):
         if self.lr_schedulers is not None:
-            for v in self.lr_schedulers.values():
-                if isinstance(v, torch.optim.lr_scheduler.ReduceLROnPlateau):
+            for k, v in self.lr_schedulers.items():
+                if k.endswith(self.allowed_lr_scheduler_key_suffixes["plateau"]):
                     v.step(validation_info)
 
     def step_optimizers(self):
@@ -226,6 +231,7 @@ class BaseTrainer:
             self.models["embedder"] = c_f.Identity()
 
     def verify_dict_keys(self):
+        self.allowed_lr_scheduler_key_suffixes = {"iteration": "_scheduler_by_iteration", "epoch": "_scheduler_by_epoch", "plateau": "_scheduler_by_plateau"}
         self.verify_models_keys()
         self.verify_optimizers_keys()
         self.verify_loss_funcs_keys()
@@ -261,7 +267,7 @@ class BaseTrainer:
         return ["subset_batch_miner", "tuple_miner"]
 
     def allowed_lr_scheduers_keys(self):
-        return [x+"_scheduler" for x in self.allowed_model_keys() + self.allowed_loss_funcs_keys()]
+        return [x+y for y in self.allowed_lr_scheduler_key_suffixes.values()  for x in self.allowed_model_keys() + self.allowed_loss_funcs_keys()]
 
     def allowed_gradient_clippers_keys(self):
         return [x+"_grad_clipper" for x in self.allowed_model_keys() + self.allowed_loss_funcs_keys()]

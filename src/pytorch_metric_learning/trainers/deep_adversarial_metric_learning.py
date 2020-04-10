@@ -100,7 +100,7 @@ class DeepAdversarialMetricLearning(TrainWithClassifier):
         real_positives = penultimate_embeddings[p_indices]
         real_negatives = penultimate_embeddings[n_indices]
         penultimate_embeddings_cat = torch.cat([real_anchors, real_positives, real_negatives], dim=1)
-        synthetic_negatives = c_f.pass_data_to_model(self.models["generator"], penultimate_embeddings_cat, self.data_device)
+        synthetic_negatives = self.models["generator"](penultimate_embeddings_cat.to(self.data_device))
         penultimate_embeddings_with_negative_synth = c_f.unslice_by_n([real_anchors, real_positives, synthetic_negatives])
         final_embeddings = self.get_final_embeddings(penultimate_embeddings_with_negative_synth)
 

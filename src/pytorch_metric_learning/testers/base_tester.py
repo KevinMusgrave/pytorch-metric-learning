@@ -84,7 +84,7 @@ class BaseTester:
         return embeddings, labels
 
     def get_embeddings_for_eval(self, trunk_model, embedder_model, input_imgs):
-        trunk_output = c_f.pass_data_to_model(trunk_model, input_imgs, self.data_device)
+        trunk_output = trunk_model(input_imgs.to(self.data_device))
         if self.use_trunk_output:
             return trunk_output
         return embedder_model(trunk_output)

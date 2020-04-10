@@ -1,6 +1,5 @@
 import collections
 import torch
-from torch.autograd import Variable
 import numpy as np
 import os
 import logging
@@ -41,10 +40,6 @@ def to_numpy(v):
         return v
 
 
-def wrap_variable(batch_data, device):
-    return Variable(batch_data).to(device)
-
-
 def get_hierarchy_label(batch_labels, hierarchy_level):
     if hierarchy_level == "all":
         return batch_labels
@@ -71,9 +66,6 @@ def process_label(labels, hierarchy_level, label_map):
     labels = get_hierarchy_label(labels, hierarchy_level)
     labels = numpy_to_torch(labels)
     return labels
-
-def pass_data_to_model(model, data, device, **kwargs):
-    return model(wrap_variable(data, device), **kwargs)
 
 def set_requires_grad(model, requires_grad):
     for param in model.parameters():

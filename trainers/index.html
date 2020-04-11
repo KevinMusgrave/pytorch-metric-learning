@@ -524,7 +524,11 @@
 <li><strong>dataset</strong>: The dataset you want to train on. Note that training methods do not perform validation, so do not pass in your validation or test set.</li>
 <li><strong>data_device</strong>: The device that you want to put batches of data on. If not specified, the trainer will put the data on any available GPUs.</li>
 <li><strong>iterations_per_epoch</strong>: Optional. <ul>
-<li>If you don't specify iterations_per_epoch then 1 epoch = 1 pass through the dataloader iterator. If <code>sampler=None</code>, then 1 pass through the iterator is 1 pass through the dataset. If you use a sampler, then 1 pass through the iterator is 1 pass through the iterable returned by the sampler. This is basically fine for the standard samplers provided by PyTorch.</li>
+<li>If you don't specify <code>iterations_per_epoch</code>:<ul>
+<li>1 epoch = 1 pass through the dataloader iterator. If <code>sampler=None</code>, then 1 pass through the iterator is 1 pass through the dataset. </li>
+<li>If you use a sampler, then 1 pass through the iterator is 1 pass through the iterable returned by the sampler.</li>
+</ul>
+</li>
 <li>For samplers like <code>MPerClassSampler</code> or some offline mining method, the iterable returned might be very long or very short etc, and might not be related to the length of the dataset. The length of the epoch might vary each time the sampler creates a new iterable. In these cases, it can be useful to specify <code>iterations_per_epoch</code> so that each "epoch" is just a fixed number of iterations. The definition of epoch matters because there's various things like LR schedulers and hooks that depend on an epoch ending.</li>
 </ul>
 </li>
@@ -532,10 +536,16 @@
 If not specified, then the original labels are used.</li>
 <li><strong>sampler</strong>: The sampler used by the dataloader. If not specified, then random sampling will be used.</li>
 <li><strong>collate_fn</strong>: The collate function used by the dataloader.</li>
-<li><strong>lr_scheduers</strong>: A dictionary of PyTorch learning rate schedulers. Use different keys to get different functionality:<ul>
-<li>"scheduler_by_iteration" will be stepped at every iteration.</li>
-<li>"scheduler_by_epoch" will be stepped at the end of each epoch.</li>
-<li>"scheduler_by_plateau" will step if accuracy plateaus. This requires you to write your own end-of-epoch hook, compute validation accuracy, and call <code>trainer.step_lr_plateau_schedulers(validation_accuracy)</code>. Or you can use <a href="../utils/#logging_presets">HookContainer</a>.</li>
+<li><strong>lr_scheduers</strong>: A dictionary of PyTorch learning rate schedulers. Your keys should be strings of the form <code>&lt;model&gt;_&lt;step_type&gt;</code>, where <code>&lt;model&gt;</code> is a key that comes from either the <code>models</code> or <code>loss_funcs</code> dictionary, and <code>&lt;step_type&gt;</code> is one of the following:<ul>
+<li>"scheduler_by_iteration" (will be stepped at every iteration)</li>
+<li>"scheduler_by_epoch" (will be stepped at the end of each epoch)</li>
+<li>"scheduler_by_plateau" (will step if accuracy plateaus. This requires you to write your own end-of-epoch hook, compute validation accuracy, and call <code>trainer.step_lr_plateau_schedulers(validation_accuracy)</code>. Or you can use <a href="../utils/#logging_presets">HookContainer</a>.)</li>
+<li>Here are some example valid <code>lr_scheduler</code> keys: <ul>
+<li><code>trunk_scheduler_by_iteration</code></li>
+<li><code>metric_loss_scheduler_by_epoch</code></li>
+<li><code>embedder_scheduler_by_plateau</code></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><strong>gradient_clippers</strong>: A dictionary of gradient clipping functions. Each function will be called before the optimizers.</li>

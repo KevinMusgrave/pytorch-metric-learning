@@ -443,7 +443,6 @@
                                 <span class="n">batch_size</span><span class="p">,</span>
                                 <span class="n">loss_funcs</span><span class="p">,</span>
                                 <span class="n">mining_funcs</span><span class="p">,</span>
-                                <span class="n">iterations_per_epoch</span><span class="p">,</span>
                                 <span class="n">train_dataset</span><span class="p">,</span>
                                 <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">,</span>
                                 <span class="n">end_of_iteration_hook</span><span class="o">=</span><span class="n">hooks</span><span class="o">.</span><span class="n">end_of_iteration_hook</span><span class="p">,</span>
@@ -457,7 +456,11 @@
 <h3 id="hookcontainer">HookContainer<a class="headerlink" href="#hookcontainer" title="Permanent link">&para;</a></h3>
 <p>This class contains ready-to-use hooks to be used by trainers and testers.</p>
 <div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">pytorch_metric_learning.utils.logging_presets</span> <span class="k">as</span> <span class="nn">LP</span>
-<span class="n">LP</span><span class="o">.</span><span class="n">HookContainer</span><span class="p">(</span><span class="n">record_keeper</span><span class="p">,</span> <span class="n">record_group_name_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">primary_metric</span><span class="o">=</span><span class="s2">&quot;mean_average_precision_at_r&quot;</span><span class="p">,</span> <span class="n">validation_split_name</span><span class="o">=</span><span class="s2">&quot;val&quot;</span><span class="p">)</span>
+<span class="n">LP</span><span class="o">.</span><span class="n">HookContainer</span><span class="p">(</span><span class="n">record_keeper</span><span class="p">,</span> 
+    <span class="n">record_group_name_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+    <span class="n">primary_metric</span><span class="o">=</span><span class="s2">&quot;mean_average_precision_at_r&quot;</span><span class="p">,</span> 
+    <span class="n">validation_split_name</span><span class="o">=</span><span class="s2">&quot;val&quot;</span><span class="p">,</span>
+    <span class="n">save_custom_figures</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 
 
@@ -473,6 +476,7 @@
 </ul>
 </li>
 <li><strong>validation_split_name</strong>: Optional. Default value is "val". The name of your validation set in <code>dataset_dict</code>.</li>
+<li><strong>save_custom_figures</strong>: Optional. If True, records that consist of a tensor at each iteration (rather than just a scalar), will be plotted on tensorboard.</li>
 </ul>
 <p><strong>Important functions</strong>:</p>
 <ul>

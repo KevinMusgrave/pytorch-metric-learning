@@ -387,6 +387,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#proxyanchorloss" class="md-nav__link">
+    ProxyAnchorLoss
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#proxyncaloss" class="md-nav__link">
     ProxyNCALoss
   </a>
@@ -660,6 +667,13 @@
         <li class="md-nav__item">
   <a href="#ntxentloss" class="md-nav__link">
     NTXentLoss
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#proxyanchorloss" class="md-nav__link">
+    ProxyAnchorLoss
   </a>
   
 </li>
@@ -1037,6 +1051,28 @@
 <ul>
 <li><strong>temperature</strong>: The exponent divisor in the softmax funtion.</li>
 </ul>
+<h2 id="proxyanchorloss">ProxyAnchorLoss<a class="headerlink" href="#proxyanchorloss" title="Permanent link">&para;</a></h2>
+<p><a href="https://arxiv.org/pdf/2003.13911.pdf">Proxy Anchor Loss for Deep Metric Learning</a></p>
+<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">ProxyAnchorLoss</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">margin</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="mi">32</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>num_classes</strong>: The number of classes in your training dataset.</li>
+<li><strong>embedding_size</strong>: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set <code>embedding_size</code> to 512.</li>
+<li><strong>margin</strong>: This is subtracted from the cosine similarity of positive pairs, and added to the cosine similarity of negative pairs. See delta in equation 4 of the paper.</li>
+<li><strong>alpha</strong>: This is the multiplier in the exponent of the LogSumExp expression. See equation 4 in the paper.</li>
+</ul>
+<p><strong>Other info</strong>
+* This loss <strong>requires an optimizer</strong>. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:</p>
+<div class="codehilite"><pre><span></span><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">ProxyAnchorLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">loss_optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">SGD</span><span class="p">(</span><span class="n">loss_func</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+<span class="c1"># then during training:</span>
+<span class="n">loss_optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+</pre></div>
+
+
 <h2 id="proxyncaloss">ProxyNCALoss<a class="headerlink" href="#proxyncaloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1703.07464.pdf">No Fuss Distance Metric Learning using Proxies</a></p>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">ProxyNCALoss</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>

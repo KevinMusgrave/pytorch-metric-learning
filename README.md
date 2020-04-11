@@ -55,6 +55,11 @@ Pip:
 pip install pytorch-metric-learning
 ```
 
+To get the latest dev version:
+```
+pip install pytorch-metric-learning==0.9.83.dev0
+```
+
 ## Benchmark results
 See [powerful-benchmarker](https://github.com/KevinMusgrave/powerful-benchmarker/) to view benchmark results and to use the benchmarking tool.
 

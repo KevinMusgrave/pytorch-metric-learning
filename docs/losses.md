@@ -325,6 +325,8 @@ losses.ProxyAnchorLoss(num_classes, embedding_size, margin = 0.1, alpha = 32, **
 * **alpha**: This is the multiplier in the exponent of the LogSumExp expression. See equation 4 in the paper.
 
 **Other info**
+
+* This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts a ```regularizer``` and ```reg_weight``` as optional init arguments.
 * This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
 ```python
 loss_func = losses.ProxyAnchorLoss(...)
@@ -489,5 +491,6 @@ Extended by:
 * [CosFaceLoss](losses.md#cosfaceloss)
 * [LargeMarginSoftmaxLoss](losses.md#largemarginsoftmaxloss)
 * [NormalizedSoftmaxLoss](losses.md#normalizedsoftmaxloss)
+* [ProxyAnchorLoss](losses.md#proxyanchorloss)
 * [ProxyNCALoss](losses.md#proxyncaloss)
 * [SphereFaceLoss](losses.md#spherefaceloss)

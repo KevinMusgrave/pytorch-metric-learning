@@ -11,7 +11,7 @@ extras_require_dev = [
 
 setuptools.setup(
     name="pytorch-metric-learning",
-    version="0.9.82",
+    version="0.9.83.dev0",
     author="Kevin Musgrave",
     author_email="tkm45@cornell.edu",
     description="The easiest way to use deep metric learning in your application. Modular, flexible, and extensible. Written in PyTorch.",

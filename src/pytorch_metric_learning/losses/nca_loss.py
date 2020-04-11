@@ -22,6 +22,5 @@ class NCALoss(BaseMetricLossFunction):
         same_labels = (query_labels.unsqueeze(1) == reference_labels.unsqueeze(0)).float()
         exp = torch.nn.functional.softmax(self.softmax_scale*x, dim=1)
         exp = torch.sum(exp * same_labels, dim=1)
-        exp = exp * miner_weights
-        non_zero_prob = torch.masked_select(exp, exp != 0)
-        return -torch.mean(torch.log(non_zero_prob))
+        non_zero = exp!=0
+        return -torch.mean(torch.log(exp[non_zero])*miner_weights[non_zero])

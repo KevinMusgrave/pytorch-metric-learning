@@ -46,6 +46,15 @@ class TestLossAndMinerUtils(unittest.TestCase):
             a, p, n = lmu.get_all_triplets_indices(x)
             self.assertTrue(len(a) == len(p) == len(n) == correct_num_triplets)
 
+
+    def test_convert_to_weights(self):
+        a = torch.LongTensor([0,1,2,3])
+        p = torch.LongTensor([4,4,4,4])
+        n = torch.LongTensor([5,5,6,6])
+        weights = lmu.convert_to_weights((a,p,n), labels=torch.arange(7))
+        correct_weights = torch.FloatTensor([0.25,0.25,0.25,0.25,1,0.5,0.5])
+        self.assertTrue(torch.all(weights==correct_weights))
+
             
 if __name__ == '__main__':
     unittest.main()

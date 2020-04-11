@@ -42,7 +42,7 @@ class FastAPLoss(BaseMetricLossFunction):
             safe_N = (N_pos > 0)
             if torch.sum(safe_N) > 0:
                 FastAP = FastAP[safe_N] / N_pos[safe_N]
-                FastAP = FastAP * miner_weights[safe_N]
-                loss = 1 - torch.mean(FastAP)
+                FastAP = (1-FastAP)*miner_weights[safe_N]
+                loss = torch.mean(FastAP)
         return loss
 

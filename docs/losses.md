@@ -311,6 +311,27 @@ losses.NTXentLoss(temperature, **kwargs)
 
 * **temperature**: The exponent divisor in the softmax funtion.
 
+## ProxyAnchorLoss
+[Proxy Anchor Loss for Deep Metric Learning](https://arxiv.org/pdf/2003.13911.pdf)
+```python
+losses.ProxyAnchorLoss(num_classes, embedding_size, margin = 0.1, alpha = 32, **kwargs)
+```
+
+**Parameters**:
+
+* **num_classes**: The number of classes in your training dataset.
+* **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set ```embedding_size``` to 512.
+* **margin**: This is subtracted from the cosine similarity of positive pairs, and added to the cosine similarity of negative pairs. See delta in equation 4 of the paper.
+* **alpha**: This is the multiplier in the exponent of the LogSumExp expression. See equation 4 in the paper.
+
+**Other info**
+* This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
+```python
+loss_func = losses.ProxyAnchorLoss(...)
+loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
+# then during training:
+loss_optimizer.step()
+```
 
 ## ProxyNCALoss
 [No Fuss Distance Metric Learning using Proxies](https://arxiv.org/pdf/1703.07464.pdf)

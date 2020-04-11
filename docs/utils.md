@@ -24,7 +24,6 @@ trainer = trainers.MetricLossOnly(models,
 								batch_size,
 								loss_funcs,
 								mining_funcs,
-								iterations_per_epoch,
 								train_dataset,
 								sampler=sampler,
 								end_of_iteration_hook=hooks.end_of_iteration_hook,
@@ -39,7 +38,11 @@ This class contains ready-to-use hooks to be used by trainers and testers.
 
 ```python
 import pytorch_metric_learning.utils.logging_presets as LP
-LP.HookContainer(record_keeper, record_group_name_prefix=None, primary_metric="mean_average_precision_at_r", validation_split_name="val")
+LP.HookContainer(record_keeper, 
+	record_group_name_prefix=None, 
+	primary_metric="mean_average_precision_at_r", 
+	validation_split_name="val",
+	save_custom_figures=False)
 ```
 
 **Parameters**:
@@ -52,6 +55,7 @@ LP.HookContainer(record_keeper, record_group_name_prefix=None, primary_metric="m
 	* precision_at_1
 	* NMI
 * **validation_split_name**: Optional. Default value is "val". The name of your validation set in ```dataset_dict```.
+* **save_custom_figures**: Optional. If True, records that consist of a tensor at each iteration (rather than just a scalar), will be plotted on tensorboard.
 
 **Important functions**:
 

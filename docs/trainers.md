@@ -50,16 +50,22 @@ trainers.BaseTrainer(models,
 * **dataset**: The dataset you want to train on. Note that training methods do not perform validation, so do not pass in your validation or test set.
 * **data_device**: The device that you want to put batches of data on. If not specified, the trainer will put the data on any available GPUs.
 * **iterations_per_epoch**: Optional. 
-	* If you don't specify iterations_per_epoch then 1 epoch = 1 pass through the dataloader iterator. If ```sampler=None```, then 1 pass through the iterator is 1 pass through the dataset. If you use a sampler, then 1 pass through the iterator is 1 pass through the iterable returned by the sampler. This is basically fine for the standard samplers provided by PyTorch.
+	* If you don't specify ```iterations_per_epoch```:
+		* 1 epoch = 1 pass through the dataloader iterator. If ```sampler=None```, then 1 pass through the iterator is 1 pass through the dataset. 
+		* If you use a sampler, then 1 pass through the iterator is 1 pass through the iterable returned by the sampler.
 	* For samplers like ```MPerClassSampler``` or some offline mining method, the iterable returned might be very long or very short etc, and might not be related to the length of the dataset. The length of the epoch might vary each time the sampler creates a new iterable. In these cases, it can be useful to specify ```iterations_per_epoch``` so that each "epoch" is just a fixed number of iterations. The definition of epoch matters because there's various things like LR schedulers and hooks that depend on an epoch ending.
 * **loss_weights**: A dictionary mapping loss names to numbers. Each loss will be multiplied by the corresponding value in the dictionary. If not specified, then no loss weighting will occur.
 If not specified, then the original labels are used.
 * **sampler**: The sampler used by the dataloader. If not specified, then random sampling will be used.
 * **collate_fn**: The collate function used by the dataloader.
-* **lr_scheduers**: A dictionary of PyTorch learning rate schedulers. Use different keys to get different functionality:
-	* "scheduler_by_iteration" will be stepped at every iteration.
-	* "scheduler_by_epoch" will be stepped at the end of each epoch.
-	* "scheduler_by_plateau" will step if accuracy plateaus. This requires you to write your own end-of-epoch hook, compute validation accuracy, and call ```trainer.step_lr_plateau_schedulers(validation_accuracy)```. Or you can use [HookContainer](utils.md#logging_presets).
+* **lr_scheduers**: A dictionary of PyTorch learning rate schedulers. Your keys should be strings of the form ```<model>_<step_type>```, where ```<model>``` is a key that comes from either the ```models``` or ```loss_funcs``` dictionary, and ```<step_type>``` is one of the following:
+	* "scheduler_by_iteration" (will be stepped at every iteration)
+	* "scheduler_by_epoch" (will be stepped at the end of each epoch)
+	* "scheduler_by_plateau" (will step if accuracy plateaus. This requires you to write your own end-of-epoch hook, compute validation accuracy, and call ```trainer.step_lr_plateau_schedulers(validation_accuracy)```. Or you can use [HookContainer](utils.md#logging_presets).)
+	* Here are some example valid ```lr_scheduler``` keys: 
+		* ```trunk_scheduler_by_iteration```
+		* ```metric_loss_scheduler_by_epoch```
+		* ```embedder_scheduler_by_plateau```
 * **gradient_clippers**: A dictionary of gradient clipping functions. Each function will be called before the optimizers.
 * **freeze_trunk_batchnorm**: If True, then the BatchNorm parameters of the trunk model will be frozen during training.
 * **label_hierarchy_level**: If each sample in your dataset has multiple labels, then this integer argument can be used to select which "level" to use. This assumes that your labels are "2-dimensional" with shape (num_samples, num_hierarchy_levels). Leave this at the default value, 0, if your data does not have multiple labels per sample.

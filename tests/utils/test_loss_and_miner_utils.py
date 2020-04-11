@@ -30,5 +30,22 @@ class TestLossAndMinerUtils(unittest.TestCase):
         correct_result = torch.stack([row0, row1, row2, row3], dim=0)
         self.assertTrue(torch.allclose(result, correct_result))
 
+
+    def test_get_all_pairs_triplets_indices(self):
+        original_x = torch.arange(10)
+
+        for i in range(1, 11):
+            x = original_x.repeat(i)
+            correct_num_pos = len(x)*(i-1)
+            correct_num_neg = len(x)*(len(x)-i)
+            a1, p, a2, n = lmu.get_all_pairs_indices(x)
+            self.assertTrue(len(a1) == len(p) == correct_num_pos)
+            self.assertTrue(len(a2) == len(n) == correct_num_neg)
+
+            correct_num_triplets = len(x)*(i-1)*(len(x)-i)
+            a, p, n = lmu.get_all_triplets_indices(x)
+            self.assertTrue(len(a) == len(p) == len(n) == correct_num_triplets)
+
+            
 if __name__ == '__main__':
     unittest.main()

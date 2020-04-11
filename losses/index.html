@@ -1064,8 +1064,11 @@
 <li><strong>margin</strong>: This is subtracted from the cosine similarity of positive pairs, and added to the cosine similarity of negative pairs. See delta in equation 4 of the paper.</li>
 <li><strong>alpha</strong>: This is the multiplier in the exponent of the LogSumExp expression. See equation 4 in the paper.</li>
 </ul>
-<p><strong>Other info</strong>
-* This loss <strong>requires an optimizer</strong>. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:</p>
+<p><strong>Other info</strong></p>
+<ul>
+<li>This also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts a <code>regularizer</code> and <code>reg_weight</code> as optional init arguments.</li>
+<li>This loss <strong>requires an optimizer</strong>. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:</li>
+</ul>
 <div class="codehilite"><pre><span></span><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">ProxyAnchorLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 <span class="n">loss_optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">SGD</span><span class="p">(</span><span class="n">loss_func</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
 <span class="c1"># then during training:</span>
@@ -1230,6 +1233,7 @@
 <li><a href="./#cosfaceloss">CosFaceLoss</a></li>
 <li><a href="./#largemarginsoftmaxloss">LargeMarginSoftmaxLoss</a></li>
 <li><a href="./#normalizedsoftmaxloss">NormalizedSoftmaxLoss</a></li>
+<li><a href="./#proxyanchorloss">ProxyAnchorLoss</a></li>
 <li><a href="./#proxyncaloss">ProxyNCALoss</a></li>
 <li><a href="./#spherefaceloss">SphereFaceLoss</a></li>
 </ul>

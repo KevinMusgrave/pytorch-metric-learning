@@ -61,12 +61,11 @@ g_adv_loss = losses.AngularLoss(alpha=35)
 miner = miners.MultiSimilarityMiner(epsilon=0.1)
 
 # Set the dataloader sampler
-sampler = samplers.MPerClassSampler(train_dataset.targets, m=4)
+sampler = samplers.MPerClassSampler(train_dataset.targets, m=4, length_before_new_iter=3200)
 
 # Set other training parameters
 batch_size = 32
 num_epochs = 2
-iterations_per_epoch = 100
 
 # Set up your models, optimizers, loss functions etc.
 models = {"trunk": trunk, 
@@ -103,7 +102,6 @@ trainer = trainers.DeepAdversarialMetricLearning(models=models,
                                                 batch_size=batch_size,
                                                 loss_funcs=loss_funcs,
                                                 mining_funcs=mining_funcs,
-                                                iterations_per_epoch=iterations_per_epoch,
                                                 dataset=train_dataset,
                                                 loss_weights=loss_weights,
                                                 sampler=sampler,

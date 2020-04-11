@@ -77,12 +77,11 @@ miner1 = miners.MultiSimilarityMiner(epsilon=0.1)
 miner2 = miners.HDCMiner(filter_percentage=0.25)
 
 # Set the dataloader sampler
-sampler = samplers.MPerClassSampler(train_dataset.targets, m=4)
+sampler = samplers.MPerClassSampler(train_dataset.targets, m=4, length_before_new_iter=3200)
 
 # Set other training parameters
 batch_size = 32
 num_epochs = 2
-iterations_per_epoch = 100
 
 # Package the above stuff into dictionaries.
 models = {"trunk": trunk, "embedder": embedder}
@@ -103,7 +102,6 @@ trainer = trainers.CascadedEmbeddings(models=models,
                                     batch_size=batch_size,
                                     loss_funcs=loss_funcs,
                                     mining_funcs=mining_funcs,
-                                    iterations_per_epoch=iterations_per_epoch,
                                     dataset=train_dataset,
                                     sampler=sampler,
                                     end_of_iteration_hook=hooks.end_of_iteration_hook,

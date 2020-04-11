@@ -55,12 +55,11 @@ loss = losses.TripletMarginLoss(margin=0.01)
 miner = miners.MultiSimilarityMiner(epsilon=0.1)
 
 # Set the dataloader sampler
-sampler = samplers.MPerClassSampler(train_dataset.targets, m=4)
+sampler = samplers.MPerClassSampler(train_dataset.targets, m=4, length_before_new_iter=3200)
 
 # Set other training parameters
 batch_size = 32
 num_epochs = 2
-iterations_per_epoch = 100
 
 # Package the above stuff into dictionaries.
 models = {"trunk": trunk, "embedder": embedder}
@@ -81,7 +80,6 @@ trainer = trainers.MetricLossOnly(models,
                                 batch_size,
                                 loss_funcs,
                                 mining_funcs,
-                                iterations_per_epoch,
                                 train_dataset,
                                 sampler=sampler,
                                 end_of_iteration_hook=hooks.end_of_iteration_hook,

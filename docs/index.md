@@ -11,6 +11,11 @@ Pip:
 pip install pytorch-metric-learning
 ```
 
+To get the latest dev version:
+```
+pip install pytorch-metric-learning==0.9.83.dev0
+```
+
 ## Overview
 Let’s try the vanilla [triplet margin loss](losses/#tripletmarginloss). In all examples, _embeddings_ is assumed to be of size (N, embedding_size), and _labels_ is of size (N).
 ```python

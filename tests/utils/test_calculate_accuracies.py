@@ -4,47 +4,57 @@ import numpy as np
 
 class TestCalculateAccuracies(unittest.TestCase):
 
-    @classmethod
-    def setUpClass(self):
-        self.query_labels = np.array([0, 1, 2, 3, 4])
-        self.knn_labels = np.array([[0, 1, 1, 2, 2],
+    def test_accuracy_calculator(self):
+        query_labels = np.array([0, 1, 2, 3, 4])
+        knn_labels = np.array([[0, 1, 1, 2, 2],
                                     [1, 0, 1, 1, 3],
                                     [4, 4, 4, 4, 2],
                                     [3, 1, 3, 1, 3],
                                     [0, 0, 4, 2, 2]])
-        self.label_counts = {0:2, 1:3, 2:5, 3:4, 4:5}
+        label_counts = {0:2, 1:3, 2:5, 3:4, 4:5}
+        accuracy_calculator = calculate_accuracies.AccuracyCalculator()
+        kwargs = {"query_labels": query_labels,
+                "label_counts": label_counts,
+                "knn_labels": knn_labels}
 
-    def test_precision_at_1(self):
-        acc = calculate_accuracies.precision_at_k(self.knn_labels, self.query_labels[:, None], 1)
-        self.assertTrue(acc==0.6)
+        function_dict = accuracy_calculator.get_function_dict()
+        function_dict.pop("NMI", None)
 
-    def test_r_precision(self):
-        acc = calculate_accuracies.r_precision(self.knn_labels, self.query_labels[:, None], False, self.label_counts)
-        correct_acc = np.mean([1./2, 2./3, 1./5, 2./4, 1./5])
-        self.assertTrue(acc==correct_acc)
+        for ecfss in [False, True]:
+            if ecfss:
+                kwargs["knn_labels"] = kwargs["knn_labels"][:, 1:]
+            kwargs["embeddings_come_from_same_source"] = ecfss
+            acc = accuracy_calculator._get_accuracy(function_dict, **kwargs)
+            self.assertTrue(acc["precision_at_1"]==self.correct_precision_at_1(ecfss))
+            self.assertTrue(acc["r_precision"]==self.correct_r_precision(ecfss))
+            self.assertTrue(acc["mean_average_precision_at_r"]==self.correct_mean_average_precision_at_r(ecfss))
 
-        acc = calculate_accuracies.r_precision(self.knn_labels[:,1:], self.query_labels[:, None], True, self.label_counts)
-        correct_acc = np.mean([0./1, 1./2, 1./4, 1./3, 1./4])
-        self.assertTrue(acc==correct_acc)
 
-    def test_mean_average_precision_at_r(self):
-        acc = calculate_accuracies.mean_average_precision_at_r(self.knn_labels, self.query_labels[:, None], False, self.label_counts)
-        acc0 = (1) / 2
-        acc1 = (1 + 2./3) / 3
-        acc2 = (1./5) / 5
-        acc3 = (1 + 2./3) / 4
-        acc4 = (1./3) / 5
-        correct_acc = np.mean([acc0, acc1, acc2, acc3, acc4])
-        self.assertTrue(acc==correct_acc)
+    def correct_precision_at_1(self, embeddings_come_from_same_source):
+        if not embeddings_come_from_same_source:
+            return 0.6
+        return 0
+        
+    def correct_r_precision(self, embeddings_come_from_same_source):
+        if not embeddings_come_from_same_source:
+            return np.mean([1./2, 2./3, 1./5, 2./4, 1./5])
+        return np.mean([0./1, 1./2, 1./4, 1./3, 1./4])
 
-        acc = calculate_accuracies.mean_average_precision_at_r(self.knn_labels[:,1:], self.query_labels[:, None], True, self.label_counts)
-        acc0 = 0
-        acc1 = (1./2) / 2
-        acc2 = (1./4) / 4
-        acc3 = (1./2) / 3
-        acc4 = (1./2) / 4
-        correct_acc = np.mean([acc0, acc1, acc2, acc3, acc4])
-        self.assertTrue(acc==correct_acc)
+    def correct_mean_average_precision_at_r(self, embeddings_come_from_same_source):
+        if not embeddings_come_from_same_source:
+            acc0 = (1) / 2
+            acc1 = (1 + 2./3) / 3
+            acc2 = (1./5) / 5
+            acc3 = (1 + 2./3) / 4
+            acc4 = (1./3) / 5
+            return np.mean([acc0, acc1, acc2, acc3, acc4])
+        else:
+            acc0 = 0
+            acc1 = (1./2) / 2
+            acc2 = (1./4) / 4
+            acc3 = (1./2) / 3
+            acc4 = (1./2) / 4
+            return np.mean([acc0, acc1, acc2, acc3, acc4])
 
     def test_get_label_counts(self):
         label_counts, num_k = calculate_accuracies.get_label_counts([0,1,3,2,3,1,3,3,4,6,5,10,4,4,4,4,6,6,5])

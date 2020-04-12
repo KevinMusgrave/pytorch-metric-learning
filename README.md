@@ -118,6 +118,7 @@ See [powerful-benchmarker](https://github.com/KevinMusgrave/powerful-benchmarker
 - [**WithSameParentLabelTester**](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#withsameparentlabeltester)
 
 ### [Utils](https://kevinmusgrave.github.io/pytorch-metric-learning/utils):
+- [**AccuracyCalculator**](https://kevinmusgrave.github.io/pytorch-metric-learning/utils/#accuracycalculator)
 - [**HookContainer**](https://kevinmusgrave.github.io/pytorch-metric-learning/utils/#hookcontainer)
 
 ### Base Classes, Mixins, and Wrappers:
@@ -198,6 +199,12 @@ This library contains code that has been adapted and modified from the following
 - https://github.com/ronekko/deep_metric_learning
 - https://github.com/tjddus9597/Proxy-Anchor-CVPR2020
 - http://kaizhao.net/regularface
+
+### Contributors
+Thanks to the contributors who made pull requests!
+#### Bug fixes
+- [fralik](https://github.com/fralik)
+- [JoOkuma](https://github.com/JoOkuma)
 
 ## Citing this library
 If you'd like to cite pytorch-metric-learning in your paper, you can use this bibtex:

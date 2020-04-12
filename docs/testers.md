@@ -28,7 +28,8 @@ testers.BaseTester(reference_set="compared_to_self",
                     end_of_testing_hook=None,
                     dataset_labels=None,
 			        dataset_labels=None,
-			        set_min_label_to_zero=False)
+			        set_min_label_to_zero=False,
+			        accuracy_calculator=None)
 ```
 
 **Parameters**:
@@ -52,6 +53,7 @@ testers.BaseTester(reference_set="compared_to_self",
 	* If you want ready-to-use hooks, take a look at the [logging_presets module](utils.md#logging_presets).
 * **dataset_labels**: The labels for your dataset. Can be 1-dimensional (1 label per datapoint) or 2-dimensional, where each row represents a datapoint, and the columns are the multiple labels that the datapoint has. Labels can be integers or strings. **This option needs to be specified only if ```set_min_label_to_zero``` is True.**
 * **set_min_label_to_zero**: If True, labels will be mapped such that they represent their rank in the label set. For example, if your dataset has labels 5, 10, 12, 13, then at each iteration, these would become 0, 1, 2, 3. You should also set this to True if you want to use string labels. In that case, 'dog', 'cat', 'monkey' would get mapped to 1, 0, 2. If True, you must pass in ```dataset_labels``` (see above). The default is False.
+* **accuracy_calculator**: An object that extends [AccuracyCalculator](utils.md#accuracycalculator). This will be used to compute the accuracy of your model. By default, AccuracyCalculator is used.
 
 ## GlobalEmbeddingSpaceTester
 Computes nearest neighbors by looking at all points in the embedding space. This is probably the tester you are looking for.

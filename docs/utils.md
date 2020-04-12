@@ -1,9 +1,99 @@
 # Utils
 Utils contains various helpful functions and classes. Some of the more useful features are listed here.
 
+## Accuracy Calculations
+The ```accuracy_calculator``` module contains functions for determining the quality of an embedding space.
+### AccuracyCalculator
 
-## logging_presets
-This module contains ready-to-use hooks for logging data, validating and saving your models, and early stoppage during training. It requires the record-keeper and tensorboard packages, which can be installed with pip:
+This class computes several accuracy metrics given a query and reference embeddings. It can be easily extended to create custom accuracy metrics.
+
+```python
+from pytorch_metric_learning.utils import AccuracyCalculator
+AccuracyCalculator(exclude_metrics=())
+```
+**Parameters**:
+
+* **exclude_metrics**: Optional. A list or tuple of strings, which are the names of metrics you do not want to calculate.
+
+**Getting accuracy**:
+
+Call the ```get_accuracy``` method to obtain a dictionary of accuracies.
+```python
+def get_accuracy(self, 
+	query, 		
+	reference, 
+	query_labels, 
+	reference_labels, 
+	embeddings_come_from_same_source, 
+	exclude_metrics=()
+):
+# returns a dictionary mapping from metric names to accuracy values
+# The default metrics are:
+# "NMI" (Normalized Mutual Information)
+# "AMI" (Adjusted Mutual Information)
+# "precision_at_1"
+# "r_precision"
+# "mean_average_precision_at_r"
+```
+* **query**: A 2D numpy array of size ```(Nq, D)```, where Nq is the number of query samples. For each query sample, nearest neighbors are retrieved and accuracy is computed.
+* **reference**: A 2D numpy array of size ```(Nr, D)```, where Nr is the number of reference samples. This is where nearest neighbors are retrieved from.
+* **query_labels**: A 1D numpy array of size ```(Nq)```. Each element should be an integer representing the sample's label.
+* **reference_labels**: A 1D numpy array of size ```(Nr)```. Each element should be an integer representing the sample's label. 
+* **embeddings_come_from_same_source**: Set to True if ```query``` is a subset of ```reference``` or if ```query is reference```. Set to False otherwise.
+* **exclude_metrics**: Optional. A list or tuple of strings, which are the names of metrics you do not want to calculate.
+
+**Adding custom accuracy metrics**
+
+Let's say you want to use the existing metrics but also compute precision @ 2, and a fancy mutual info method. You can extend the existing class, and write methods that start with the keyword ```calculate_```
+
+```python
+from pytorch_metric_learning.utils import accuracy_calculator, AccuracyCalculator
+
+class YourCalculator(AccuracyCalculator):
+    def calculate_precision_at_2(self, knn_labels, query_labels, **kwargs):
+        return accuracy_calculator.precision_at_k(knn_labels, query_labels[:, None], 2)
+
+    def calculate_fancy_mutual_info(self, query_labels, cluster_labels, **kwargs):
+        return fancy_computations
+
+    def requires_clustering(self):
+        return super().requires_clustering() + ["fancy_mutual_info"] 
+```
+
+Any method that starts with "calculate_" will be passed the following kwargs:
+```python
+kwargs = {"query": query,                    # query embeddings
+    "reference": reference,                  # reference embeddings
+    "query_labels": query_labels,        
+    "reference_labels": reference_labels,
+    "embeddings_come_from_same_source": e,  # True if query is reference, or if query is a subset of reference.
+    "label_counts": label_counts,           # a dictionary mapping from reference labels to the number of times they occur
+    "knn_labels": knn_labels}               # A 2d array where each row is the labels of the nearest neighbors of each query. The neighbors are retrieved from the reference set
+```
+
+If your method requires cluster labels, then append your method's name to the ```requires_clustering``` list, via ```super()```. Then, if any of your methods need cluster labels, ```self.get_cluster_labels()``` will be called, and the kwargs will include ```cluster_labels```.
+
+Now when ```get_accuracy``` is called, the returned dictionary will contain ```precision_at_2``` and ```fancy_mutual_info```:
+```python
+calculator = YourCalculator()
+acc_dict = calculator.get_accuracy(query_embeddings,
+    reference_embeddings,
+    query_labels,
+    reference_labels,
+    embeddings_come_from_same_source=True
+)
+# Now acc_dict contains the metrics "precision_at_2" and "fancy_mutual_info"
+# in addition to the original metrics from AccuracyCalculator
+```
+
+You can use your custom calculator with the [tester](testers.md) classes as well, by passing it in as an init argument. (By default, the testers use AccuracyCalculator.)
+```python
+from pytorch_metric_learning import testers
+t = testers.GlobalEmbeddingSpaceTester(..., accuracy_calculator=YourCalculator())
+```
+
+## Logging Presets
+The ```logging_presets``` module contains ready-to-use hooks for logging data, validating and saving your models, and early stoppage during training. It requires the record-keeper and tensorboard packages, which can be installed with pip:
 
 ```pip install record-keeper tensorboard```
 

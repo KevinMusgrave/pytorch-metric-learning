@@ -333,8 +333,28 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#logging_presets" class="md-nav__link">
-    logging_presets
+  <a href="#accuracy-calculations" class="md-nav__link">
+    Accuracy Calculations
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#accuracycalculator" class="md-nav__link">
+    AccuracyCalculator
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#logging-presets" class="md-nav__link">
+    Logging Presets
   </a>
   
     <nav class="md-nav">
@@ -384,8 +404,28 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#logging_presets" class="md-nav__link">
-    logging_presets
+  <a href="#accuracy-calculations" class="md-nav__link">
+    Accuracy Calculations
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#accuracycalculator" class="md-nav__link">
+    AccuracyCalculator
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#logging-presets" class="md-nav__link">
+    Logging Presets
   </a>
   
     <nav class="md-nav">
@@ -424,8 +464,96 @@
                 
                 <h1 id="utils">Utils<a class="headerlink" href="#utils" title="Permanent link">&para;</a></h1>
 <p>Utils contains various helpful functions and classes. Some of the more useful features are listed here.</p>
-<h2 id="logging_presets">logging_presets<a class="headerlink" href="#logging_presets" title="Permanent link">&para;</a></h2>
-<p>This module contains ready-to-use hooks for logging data, validating and saving your models, and early stoppage during training. It requires the record-keeper and tensorboard packages, which can be installed with pip:</p>
+<h2 id="accuracy-calculations">Accuracy Calculations<a class="headerlink" href="#accuracy-calculations" title="Permanent link">&para;</a></h2>
+<p>The <code>accuracy_calculator</code> module contains functions for determining the quality of an embedding space.</p>
+<h3 id="accuracycalculator">AccuracyCalculator<a class="headerlink" href="#accuracycalculator" title="Permanent link">&para;</a></h3>
+<p>This class computes several accuracy metrics given a query and reference embeddings. It can be easily extended to create custom accuracy metrics.</p>
+<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils</span> <span class="kn">import</span> <span class="n">AccuracyCalculator</span>
+<span class="n">AccuracyCalculator</span><span class="p">(</span><span class="n">exclude_metrics</span><span class="o">=</span><span class="p">())</span>
+</pre></div>
+
+
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>exclude_metrics</strong>: Optional. A list or tuple of strings, which are the names of metrics you do not want to calculate.</li>
+</ul>
+<p><strong>Getting accuracy</strong>:</p>
+<p>Call the <code>get_accuracy</code> method to obtain a dictionary of accuracies.</p>
+<div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_accuracy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+    <span class="n">query</span><span class="p">,</span>      
+    <span class="n">reference</span><span class="p">,</span> 
+    <span class="n">query_labels</span><span class="p">,</span> 
+    <span class="n">reference_labels</span><span class="p">,</span> 
+    <span class="n">embeddings_come_from_same_source</span><span class="p">,</span> 
+    <span class="n">exclude_metrics</span><span class="o">=</span><span class="p">()</span>
+<span class="p">):</span>
+<span class="c1"># returns a dictionary mapping from metric names to accuracy values</span>
+<span class="c1"># The default metrics are:</span>
+<span class="c1"># &quot;NMI&quot; (Normalized Mutual Information)</span>
+<span class="c1"># &quot;AMI&quot; (Adjusted Mutual Information)</span>
+<span class="c1"># &quot;precision_at_1&quot;</span>
+<span class="c1"># &quot;r_precision&quot;</span>
+<span class="c1"># &quot;mean_average_precision_at_r&quot;</span>
+</pre></div>
+
+
+<ul>
+<li><strong>query</strong>: A 2D numpy array of size <code>(Nq, D)</code>, where Nq is the number of query samples. For each query sample, nearest neighbors are retrieved and accuracy is computed.</li>
+<li><strong>reference</strong>: A 2D numpy array of size <code>(Nr, D)</code>, where Nr is the number of reference samples. This is where nearest neighbors are retrieved from.</li>
+<li><strong>query_labels</strong>: A 1D numpy array of size <code>(Nq)</code>. Each element should be an integer representing the sample's label.</li>
+<li><strong>reference_labels</strong>: A 1D numpy array of size <code>(Nr)</code>. Each element should be an integer representing the sample's label. </li>
+<li><strong>embeddings_come_from_same_source</strong>: Set to True if <code>query</code> is a subset of <code>reference</code> or if <code>query is reference</code>. Set to False otherwise.</li>
+<li><strong>exclude_metrics</strong>: Optional. A list or tuple of strings, which are the names of metrics you do not want to calculate.</li>
+</ul>
+<p><strong>Adding custom accuracy metrics</strong></p>
+<p>Let's say you want to use the existing metrics but also compute precision @ 2, and a fancy mutual info method. You can extend the existing class, and write methods that start with the keyword <code>calculate_</code></p>
+<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils</span> <span class="kn">import</span> <span class="n">accuracy_calculator</span><span class="p">,</span> <span class="n">AccuracyCalculator</span>
+
+<span class="k">class</span> <span class="nc">YourCalculator</span><span class="p">(</span><span class="n">AccuracyCalculator</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">calculate_precision_at_2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">knn_labels</span><span class="p">,</span> <span class="n">query_labels</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">accuracy_calculator</span><span class="o">.</span><span class="n">precision_at_k</span><span class="p">(</span><span class="n">knn_labels</span><span class="p">,</span> <span class="n">query_labels</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">],</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">calculate_fancy_mutual_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query_labels</span><span class="p">,</span> <span class="n">cluster_labels</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">fancy_computations</span>
+
+    <span class="k">def</span> <span class="nf">requires_clustering</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">requires_clustering</span><span class="p">()</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;fancy_mutual_info&quot;</span><span class="p">]</span> 
+</pre></div>
+
+
+<p>Any method that starts with "calculate_" will be passed the following kwargs:</p>
+<div class="codehilite"><pre><span></span><span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;query&quot;</span><span class="p">:</span> <span class="n">query</span><span class="p">,</span>                    <span class="c1"># query embeddings</span>
+    <span class="s2">&quot;reference&quot;</span><span class="p">:</span> <span class="n">reference</span><span class="p">,</span>                  <span class="c1"># reference embeddings</span>
+    <span class="s2">&quot;query_labels&quot;</span><span class="p">:</span> <span class="n">query_labels</span><span class="p">,</span>        
+    <span class="s2">&quot;reference_labels&quot;</span><span class="p">:</span> <span class="n">reference_labels</span><span class="p">,</span>
+    <span class="s2">&quot;embeddings_come_from_same_source&quot;</span><span class="p">:</span> <span class="n">e</span><span class="p">,</span>  <span class="c1"># True if query is reference, or if query is a subset of reference.</span>
+    <span class="s2">&quot;label_counts&quot;</span><span class="p">:</span> <span class="n">label_counts</span><span class="p">,</span>           <span class="c1"># a dictionary mapping from reference labels to the number of times they occur</span>
+    <span class="s2">&quot;knn_labels&quot;</span><span class="p">:</span> <span class="n">knn_labels</span><span class="p">}</span>               <span class="c1"># A 2d array where each row is the labels of the nearest neighbors of each query. The neighbors are retrieved from the reference set</span>
+</pre></div>
+
+
+<p>If your method requires cluster labels, then append your method's name to the <code>requires_clustering</code> list, via <code>super()</code>. Then, if any of your methods need cluster labels, <code>self.get_cluster_labels()</code> will be called, and the kwargs will include <code>cluster_labels</code>.</p>
+<p>Now when <code>get_accuracy</code> is called, the returned dictionary will contain <code>precision_at_2</code> and <code>fancy_mutual_info</code>:</p>
+<div class="codehilite"><pre><span></span><span class="n">calculator</span> <span class="o">=</span> <span class="n">YourCalculator</span><span class="p">()</span>
+<span class="n">acc_dict</span> <span class="o">=</span> <span class="n">calculator</span><span class="o">.</span><span class="n">get_accuracy</span><span class="p">(</span><span class="n">query_embeddings</span><span class="p">,</span>
+    <span class="n">reference_embeddings</span><span class="p">,</span>
+    <span class="n">query_labels</span><span class="p">,</span>
+    <span class="n">reference_labels</span><span class="p">,</span>
+    <span class="n">embeddings_come_from_same_source</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+<span class="c1"># Now acc_dict contains the metrics &quot;precision_at_2&quot; and &quot;fancy_mutual_info&quot;</span>
+<span class="c1"># in addition to the original metrics from AccuracyCalculator</span>
+</pre></div>
+
+
+<p>You can use your custom calculator with the <a href="../testers/">tester</a> classes as well, by passing it in as an init argument. (By default, the testers use AccuracyCalculator.)</p>
+<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">testers</span>
+<span class="n">t</span> <span class="o">=</span> <span class="n">testers</span><span class="o">.</span><span class="n">GlobalEmbeddingSpaceTester</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">accuracy_calculator</span><span class="o">=</span><span class="n">YourCalculator</span><span class="p">())</span>
+</pre></div>
+
+
+<h2 id="logging-presets">Logging Presets<a class="headerlink" href="#logging-presets" title="Permanent link">&para;</a></h2>
+<p>The <code>logging_presets</code> module contains ready-to-use hooks for logging data, validating and saving your models, and early stoppage during training. It requires the record-keeper and tensorboard packages, which can be installed with pip:</p>
 <p><code>pip install record-keeper tensorboard</code></p>
 <p>Here's how you can use it in conjunction with a trainer and tester:</p>
 <div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">pytorch_metric_learning.utils.logging_presets</span> <span class="k">as</span> <span class="nn">LP</span>

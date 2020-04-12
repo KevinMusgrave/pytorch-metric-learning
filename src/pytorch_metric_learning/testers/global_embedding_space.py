@@ -1,5 +1,4 @@
 #! /usr/bin/env python3
-from ..utils import calculate_accuracies
 from ..utils import common_functions as c_f
 
 from .base_tester import BaseTester
@@ -14,7 +13,7 @@ class GlobalEmbeddingSpaceTester(BaseTester):
         for i, bbb in enumerate(label_levels):
             curr_query_labels = query_labels[:, bbb]
             curr_reference_labels = reference_labels[:, bbb]
-            a = calculate_accuracies.calculate_accuracy(
+            a = self.accuracy_calculator.get_accuracy(
                 query_embeddings,
                 reference_embeddings,
                 curr_query_labels,
@@ -26,4 +25,4 @@ class GlobalEmbeddingSpaceTester(BaseTester):
                 accuracies[keyname] = v
 
         if len(label_levels) > 1:
-            self.calculate_average_accuracies(accuracies, calculate_accuracies.METRICS, label_levels)
+            self.calculate_average_accuracies(accuracies, self.accuracy_calculator.get_curr_metrics(), label_levels)

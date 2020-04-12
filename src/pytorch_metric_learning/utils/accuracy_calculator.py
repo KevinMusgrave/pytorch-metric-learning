@@ -2,7 +2,6 @@
 
 import numpy as np
 from sklearn.metrics import normalized_mutual_info_score, adjusted_mutual_info_score
-import warnings
 from . import stat_utils
 
 def get_relevance_mask(shape, gt_labels, embeddings_come_from_same_source=False, label_counts=None):
@@ -45,14 +44,19 @@ def get_label_counts(reference_labels):
 
 
 class AccuracyCalculator:
-    def __init__(self):
+    def __init__(self, exclude_metrics=()):
         self.function_keyword = "calculate_"
-        self.function_names = [x for x in dir(self) if x.startswith(self.function_keyword)]
-        self.metrics = [x.replace(self.function_keyword, "", 1) for x in self.function_names]
+        function_names = [x for x in dir(self) if x.startswith(self.function_keyword)]
+        metrics = [x.replace(self.function_keyword, "", 1) for x in function_names]
+        function_dict = {x:getattr(self, y) for x,y in zip(metrics, function_names)}
+        self.original_function_dict = {k:v for k,v in function_dict.items() if k not in exclude_metrics}
+        self.curr_function_dict = self.get_function_dict()
 
-    def get_function_dict(self, metrics=None):
-        if metrics is None: metrics = self.metrics
-        return {x:getattr(self, y) for x,y in zip(metrics, self.function_names)}
+    def get_function_dict(self, exclude_metrics=()):
+        return {k:v for k,v in self.original_function_dict.items() if k not in exclude_metrics}
+
+    def get_curr_metrics(self):
+        return [k for k in self.curr_function_dict.keys()]
 
     def requires_clustering(self):
         return ["NMI", "AMI"]
@@ -91,13 +95,12 @@ class AccuracyCalculator:
                 "label_counts": label_counts,
                 "knn_labels": knn_labels}
 
-        metrics = [x for x in self.metrics if x not in exclude_metrics]
-        function_dict = self.get_function_dict(metrics)
+        self.curr_function_dict = self.get_function_dict(exclude_metrics)
 
-        if any(x in self.requires_clustering() for x in metrics):
+        if any(x in self.requires_clustering() for x in self.get_curr_metrics()):
             kwargs["cluster_labels"] = self.get_cluster_labels(**kwargs)                
 
-        return self._get_accuracy(function_dict, **kwargs)
+        return self._get_accuracy(self.curr_function_dict, **kwargs)
 
     def _get_accuracy(self, function_dict, **kwargs):
         return {k:v(**kwargs) for k,v in function_dict.items()}

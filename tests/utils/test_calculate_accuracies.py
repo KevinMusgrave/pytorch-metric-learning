@@ -1,5 +1,5 @@
 import unittest
-from pytorch_metric_learning.utils import calculate_accuracies
+from pytorch_metric_learning.utils import accuracy_calculator
 import numpy as np
 
 class TestCalculateAccuracies(unittest.TestCase):
@@ -12,19 +12,18 @@ class TestCalculateAccuracies(unittest.TestCase):
                                     [3, 1, 3, 1, 3],
                                     [0, 0, 4, 2, 2]])
         label_counts = {0:2, 1:3, 2:5, 3:4, 4:5}
-        accuracy_calculator = calculate_accuracies.AccuracyCalculator()
+        AC = accuracy_calculator.AccuracyCalculator(exclude_metrics=("NMI", "AMI"))
         kwargs = {"query_labels": query_labels,
                 "label_counts": label_counts,
                 "knn_labels": knn_labels}
 
-        function_dict = accuracy_calculator.get_function_dict()
-        function_dict.pop("NMI", None)
+        function_dict = AC.get_function_dict()
 
         for ecfss in [False, True]:
             if ecfss:
                 kwargs["knn_labels"] = kwargs["knn_labels"][:, 1:]
             kwargs["embeddings_come_from_same_source"] = ecfss
-            acc = accuracy_calculator._get_accuracy(function_dict, **kwargs)
+            acc = AC._get_accuracy(function_dict, **kwargs)
             self.assertTrue(acc["precision_at_1"]==self.correct_precision_at_1(ecfss))
             self.assertTrue(acc["r_precision"]==self.correct_r_precision(ecfss))
             self.assertTrue(acc["mean_average_precision_at_r"]==self.correct_mean_average_precision_at_r(ecfss))
@@ -57,7 +56,7 @@ class TestCalculateAccuracies(unittest.TestCase):
             return np.mean([acc0, acc1, acc2, acc3, acc4])
 
     def test_get_label_counts(self):
-        label_counts, num_k = calculate_accuracies.get_label_counts([0,1,3,2,3,1,3,3,4,6,5,10,4,4,4,4,6,6,5])
+        label_counts, num_k = accuracy_calculator.get_label_counts([0,1,3,2,3,1,3,3,4,6,5,10,4,4,4,4,6,6,5])
         self.assertTrue(label_counts=={0:1, 1:2, 2:1, 3:4, 4:5, 5:2, 6:3, 10:1})
         self.assertTrue(num_k==5)
 

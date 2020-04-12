@@ -2,7 +2,6 @@
 from collections import defaultdict
 
 import numpy as np
-from ..utils import calculate_accuracies
 from ..utils import common_functions as c_f
 
 from .base_tester import BaseTester
@@ -26,7 +25,7 @@ class WithSameParentLabelTester(BaseTester):
                 curr_reference_labels = reference_labels[:, bbb][reference_match]
                 curr_query_embeddings = query_embeddings[query_match]
                 curr_reference_embeddings = reference_embeddings[reference_match]
-                a = calculate_accuracies.calculate_accuracy(
+                a = self.accuracy_calculator.get_accuracy(
                     curr_query_embeddings,
                     curr_reference_embeddings,
                     curr_query_labels,
@@ -40,4 +39,4 @@ class WithSameParentLabelTester(BaseTester):
                 accuracies[keyname].append(np.mean(v))
                 
         if len(label_levels) > 1:
-            self.calculate_average_accuracies(accuracies, calculate_accuracies.METRICS, label_levels)
+            self.calculate_average_accuracies(accuracies, self.accuracy_calculator.get_curr_metrics(), label_levels)

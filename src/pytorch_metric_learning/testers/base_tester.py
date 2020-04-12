@@ -1,11 +1,11 @@
 #! /usr/bin/env python3
 
 import tqdm
-
 import torch
 import numpy as np
 from ..utils import stat_utils
 from ..utils import common_functions as c_f
+from ..utils import AccuracyCalculator
 import logging
 from sklearn.preprocessing import normalize, StandardScaler
 from sklearn.manifold import TSNE
@@ -27,7 +27,8 @@ class BaseTester:
         label_hierarchy_level=0, 
         end_of_testing_hook=None,
         dataset_labels=None,
-        set_min_label_to_zero=False
+        set_min_label_to_zero=False,
+        accuracy_calculator=None
     ):
         self.reference_set = reference_set
         self.normalize_embeddings = normalize_embeddings
@@ -42,10 +43,16 @@ class BaseTester:
         self.end_of_testing_hook = end_of_testing_hook
         self.dataset_labels = dataset_labels
         self.set_min_label_to_zero = set_min_label_to_zero
-        self.initialize_label_mapper()              
+        self.accuracy_calculator = accuracy_calculator
+        self.initialize_label_mapper()
+        self.initialize_accuracy_calculator()         
 
     def initialize_label_mapper(self):
         self.label_mapper = c_f.LabelMapper(self.set_min_label_to_zero, self.dataset_labels).map
+
+    def initialize_accuracy_calculator(self):
+        if self.accuracy_calculator is None:
+            self.accuracy_calculator = AccuracyCalculator()     
 
     def maybe_normalize(self, embeddings):
         if self.pca:

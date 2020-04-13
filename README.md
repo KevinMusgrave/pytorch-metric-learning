@@ -57,7 +57,7 @@ pip install pytorch-metric-learning
 
 To get the latest dev version:
 ```
-pip install pytorch-metric-learning==0.9.83.dev1
+pip install pytorch-metric-learning==0.9.83
 ```
 
 ## Benchmark results
@@ -67,6 +67,7 @@ See [powerful-benchmarker](https://github.com/KevinMusgrave/powerful-benchmarker
 ### [Losses](https://kevinmusgrave.github.io/pytorch-metric-learning/losses):
 - [**AngularLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#angularloss) ([Deep Metric Learning with Angular Loss](https://arxiv.org/pdf/1708.01682.pdf))
 - [**ArcFaceLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#arcfaceloss) ([ArcFace: Additive Angular Margin Loss for Deep Face Recognition](https://arxiv.org/pdf/1801.07698.pdf))
+- [**CircleLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#circleloss) ([Circle Loss: A Unified Perspective of Pair Similarity Optimization])(https://arxiv.org/pdf/2002.10857.pdf)
 - [**ContrastiveLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#contrastiveloss) ([Dimensionality Reduction by Learning an Invariant Mapping](http://yann.lecun.com/exdb/publis/pdf/hadsell-chopra-lecun-06.pdf))
 - [**CosFaceLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#cosfaceloss) ([CosFace: Large Margin Cosine Loss for Deep Face Recognition](https://arxiv.org/pdf/1801.09414.pdf))
 - [**FastAPLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#fastaploss) ([Deep Metric Learning to Rank](http://openaccess.thecvf.com/content_CVPR_2019/papers/Cakir_Deep_Metric_Learning_to_Rank_CVPR_2019_paper.pdf))
@@ -202,6 +203,11 @@ This library contains code that has been adapted and modified from the following
 
 ### Contributors
 Thanks to the contributors who made pull requests!
+
+#### Algorithm implementations
+- [AlenUbuntu](https://github.com/AlenUbuntu):
+	- CircleLoss
+
 #### Bug fixes
 - [fralik](https://github.com/fralik)
 - [JoOkuma](https://github.com/JoOkuma)

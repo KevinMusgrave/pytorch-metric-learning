@@ -282,6 +282,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#circleloss" class="md-nav__link">
+    CircleLoss
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#contrastiveloss" class="md-nav__link">
     ContrastiveLoss
   </a>
@@ -567,6 +574,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#circleloss" class="md-nav__link">
+    CircleLoss
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#contrastiveloss" class="md-nav__link">
     ContrastiveLoss
   </a>
@@ -816,6 +830,18 @@
 </pre></div>
 
 
+<h2 id="circleloss">CircleLoss<a class="headerlink" href="#circleloss" title="Permanent link">&para;</a></h2>
+<p><a href="https://arxiv.org/pdf/2002.10857.pdf">Circle Loss: A Unified Perspective of Pair Similarity Optimization</a></p>
+<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">CircleLoss</span><span class="p">(</span><span class="n">m</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="n">triplets_per_anchor</span><span class="o">=</span><span class="s1">&#39;all&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>m</strong>:  The relaxation factor that controls the radious of the decision boundary.</li>
+<li><strong>gamma</strong>: The scale factor that determines the largest scale of each similarity score.</li>
+<li><strong>triplets_per_anchor</strong>: The number of triplets per element to sample within a batch. Can be an integer or the string "all". For example, if your batch size is 128, and triplets_per_anchor is 100, then 12800 triplets will be sampled. If triplets_per_anchor is "all", then all possible triplets in the batch will be used.</li>
+</ul>
 <h2 id="contrastiveloss">ContrastiveLoss<a class="headerlink" href="#contrastiveloss" title="Permanent link">&para;</a></h2>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">ContrastiveLoss</span><span class="p">(</span><span class="n">pos_margin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> 
                     <span class="n">neg_margin</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 

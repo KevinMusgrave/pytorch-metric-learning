@@ -73,6 +73,21 @@ def compute_loss(self, embeddings, labels, indices_tuple=None):
     raise NotImplementedError
 ```
 
+
+## CircleLoss 
+[Circle Loss: A Unified Perspective of Pair Similarity Optimization](https://arxiv.org/pdf/2002.10857.pdf)
+
+```python
+losses.CircleLoss(m=0.4, gamma=80, triplets_per_anchor='all', **kwargs)
+```
+
+**Parameters**:
+
+* **m**:  The relaxation factor that controls the radious of the decision boundary.
+* **gamma**: The scale factor that determines the largest scale of each similarity score.
+* **triplets_per_anchor**: The number of triplets per element to sample within a batch. Can be an integer or the string "all". For example, if your batch size is 128, and triplets_per_anchor is 100, then 12800 triplets will be sampled. If triplets_per_anchor is "all", then all possible triplets in the batch will be used.
+
+
 ## ContrastiveLoss
 ```python
 losses.ContrastiveLoss(pos_margin=0, 

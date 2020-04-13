@@ -45,7 +45,6 @@ class CircleLoss(BaseMetricLossFunction):
         self.num_triplets = len(anchor_idx)
         if self.num_triplets == 0:
             self.num_unique_anchors = 0
-            self.num_triplets = 0
             return 0
         anchors, positives, negatives = embeddings[anchor_idx], embeddings[positive_idx], embeddings[negative_idx]
         

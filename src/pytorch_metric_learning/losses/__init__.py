@@ -1,6 +1,7 @@
 from .base_metric_loss_function import BaseMetricLossFunction, MultipleLosses
 from .angular_loss import AngularLoss
 from .arcface_loss import ArcFaceLoss
+from .circle_loss import CircleLoss
 from .contrastive_loss import ContrastiveLoss
 from .cosface_loss import CosFaceLoss
 from .cross_batch_memory import CrossBatchMemory
@@ -23,4 +24,3 @@ from .sphereface_loss import SphereFaceLoss
 from .triplet_margin_loss import TripletMarginLoss
 from .tuplet_margin_loss import TupletMarginLoss
 from .weight_regularizer_mixin import WeightRegularizerMixin
-from .circle_loss import CircleLoss

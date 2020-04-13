@@ -34,7 +34,7 @@ class CircleLoss(BaseMetricLossFunction):
         self.m = m 
         self.gamma = gamma 
         self.triplets_per_anchor = triplets_per_anchor
-        self.add_to_recordable_attributes(name="num_valid_samples")
+        self.add_to_recordable_attributes(list_of_names=["num_unique_anchors", "num_triplets"])
         self.soft_plus = torch.nn.Softplus(beta=1)
 
         assert self.normalize_embeddings, "Embeddings must be normalized in circle loss!"
@@ -42,9 +42,11 @@ class CircleLoss(BaseMetricLossFunction):
     def compute_loss(self, embeddings, labels, indices_tuple):
         indices_tuple = lmu.convert_to_triplets(indices_tuple, labels, t_per_anchor=self.triplets_per_anchor)
         anchor_idx, positive_idx, negative_idx = indices_tuple 
-        if len(anchor_idx) == 0:
-            self.num_valid_samples = 0
-            return 0 
+        self.num_triplets = len(anchor_idx)
+        if self.num_triplets == 0:
+            self.num_unique_anchors = 0
+            self.num_triplets = 0
+            return 0
         anchors, positives, negatives = embeddings[anchor_idx], embeddings[positive_idx], embeddings[negative_idx]
         
         # compute cosine similarities
@@ -62,7 +64,7 @@ class CircleLoss(BaseMetricLossFunction):
         # find unique anchor index 
         # for each unique anchor index, we have (sp1, sp2, ..., spK) (sn1, sn2, ..., snL)
         unique_anchor_idx = torch.unique(anchor_idx)
-        self.num_valid_samples = len(unique_anchor_idx)
+        self.num_unique_anchors = len(unique_anchor_idx)
 
         for anchor in unique_anchor_idx:
             mask = anchor_idx == anchor 
@@ -76,14 +78,10 @@ class CircleLoss(BaseMetricLossFunction):
 
             loss_for_this_anchor = self.soft_plus(
                 torch.logsumexp(logit_n, dim=0) + torch.logsumexp(logit_p, dim=0))
-            loss_for_this_anchor = self.maybe_modify_loss(loss_for_this_anchor)
             loss += loss_for_this_anchor
         
         loss /= len(unique_anchor_idx)
         return loss
-
-    def maybe_modify_loss(self, x):
-        return x
 
 
 

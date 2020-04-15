@@ -12,7 +12,7 @@ class TestCalculateAccuracies(unittest.TestCase):
                                     [3, 1, 3, 1, 3],
                                     [0, 0, 4, 2, 2]])
         label_counts = {0:2, 1:3, 2:5, 3:4, 4:5}
-        AC = accuracy_calculator.AccuracyCalculator(exclude_metrics=("NMI", "AMI"))
+        AC = accuracy_calculator.AccuracyCalculator(exclude=("NMI", "AMI"))
         kwargs = {"query_labels": query_labels,
                 "label_counts": label_counts,
                 "knn_labels": knn_labels}

@@ -47,6 +47,8 @@ def run_kmeans(x, nmb_clusters):
         list: ids of data in each cluster
     """
     n_data, d = x.shape
+    logging.info("running k-means clustering with k=%d"%nmb_clusters)
+    logging.info("embedding dimensionality is %d"%d)
 
     # faiss implementation of k-means
     clus = faiss.Clustering(d, nmb_clusters)

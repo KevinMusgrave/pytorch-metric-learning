@@ -44,22 +44,28 @@ def get_label_counts(reference_labels):
 
 
 class AccuracyCalculator:
-    def __init__(self, exclude_metrics=()):
+    def __init__(self, include=(), exclude=()):
         self.function_keyword = "calculate_"
         function_names = [x for x in dir(self) if x.startswith(self.function_keyword)]
         metrics = [x.replace(self.function_keyword, "", 1) for x in function_names]
-        function_dict = {x:getattr(self, y) for x,y in zip(metrics, function_names)}
-        self.original_function_dict = {k:v for k,v in function_dict.items() if k not in exclude_metrics}
+        self.original_function_dict = {x:getattr(self, y) for x,y in zip(metrics, function_names)}
+        self.original_function_dict = self.get_function_dict(include, exclude)
         self.curr_function_dict = self.get_function_dict()
 
-    def get_function_dict(self, exclude_metrics=()):
-        return {k:v for k,v in self.original_function_dict.items() if k not in exclude_metrics}
+    def get_function_dict(self, include=(), exclude=()):
+        if len(include) == 0:
+            include = list(self.original_function_dict.keys())
+        included_metrics = [k for k in include if k not in exclude] 
+        return {k:v for k,v in self.original_function_dict.items() if k in included_metrics}
 
     def get_curr_metrics(self):
         return [k for k in self.curr_function_dict.keys()]
 
     def requires_clustering(self):
         return ["NMI", "AMI"]
+
+    def requires_knn(self):
+        return ["precision_at_1", "mean_average_precision_at_r", "r_precision"]
 
     def get_cluster_labels(self, query, query_labels, **kwargs):
         num_clusters = len(set(query_labels.flatten()))
@@ -80,22 +86,23 @@ class AccuracyCalculator:
     def calculate_r_precision(self, knn_labels, query_labels, embeddings_come_from_same_source=False, label_counts=None, **kwargs):
         return r_precision(knn_labels, query_labels[:, None], embeddings_come_from_same_source, label_counts)
 
-    def get_accuracy(self, query, reference, query_labels, reference_labels, embeddings_come_from_same_source, exclude_metrics=()):
+    def get_accuracy(self, query, reference, query_labels, reference_labels, embeddings_come_from_same_source, include=(), exclude=()):
         embeddings_come_from_same_source = embeddings_come_from_same_source or (query is reference)
-        label_counts, num_k = get_label_counts(reference_labels)
 
-        knn_indices = stat_utils.get_knn(reference, query, num_k, embeddings_come_from_same_source)
-        knn_labels = reference_labels[knn_indices]
+        self.curr_function_dict = self.get_function_dict(include, exclude)
 
         kwargs = {"query": query, 
                 "reference": reference,
                 "query_labels": query_labels,
                 "reference_labels": reference_labels,
-                "embeddings_come_from_same_source": embeddings_come_from_same_source,
-                "label_counts": label_counts,
-                "knn_labels": knn_labels}
+                "embeddings_come_from_same_source": embeddings_come_from_same_source}
 
-        self.curr_function_dict = self.get_function_dict(exclude_metrics)
+        if any(x in self.requires_knn() for x in self.get_curr_metrics()):
+            label_counts, num_k = get_label_counts(reference_labels)
+            knn_indices = stat_utils.get_knn(reference, query, num_k, embeddings_come_from_same_source)
+            knn_labels = reference_labels[knn_indices]
+            kwargs["label_counts"] = label_counts
+            kwargs["knn_labels"] = knn_labels
 
         if any(x in self.requires_clustering() for x in self.get_curr_metrics()):
             kwargs["cluster_labels"] = self.get_cluster_labels(**kwargs)                

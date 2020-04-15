@@ -220,9 +220,9 @@ def get_record_keeper(csv_folder, tensorboard_folder, global_db_path=None, exper
         return None, None, None
 
 
-def get_hook_container(record_keeper):
+def get_hook_container(record_keeper, **kwargs):
     if record_keeper:
-        return HookContainer(record_keeper)
+        return HookContainer(record_keeper, **kwargs)
     else:
         logging.warn("No record_keeper, so no preset hooks are being returned.")
         return EmptyContainer()

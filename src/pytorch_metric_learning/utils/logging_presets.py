@@ -43,6 +43,8 @@ class HookContainer:
 
     # This hook will be passed into the trainer and will be executed at the end of every epoch.
     def end_of_epoch_hook(self, tester, dataset_dict, model_folder, test_interval=1, patience=None, test_collate_fn=None):
+        if not self.primary_metric in tester.accuracy_calculator.get_curr_metrics():
+            raise ValueError("HookContainer `primary_metric` must be one of: {}".format(tester.accuracy_calculator.get_curr_metrics()))
         if not os.path.exists(model_folder): os.makedirs(model_folder)
         def actual_hook(trainer):
             continue_training = True

@@ -63,11 +63,10 @@ class HookContainer:
             best = {"best_epoch":best_epoch, "best_accuracy": best_accuracy}
             self.record_keeper.update_records(best, epoch, input_group_name_for_non_objects=self.record_group_name(tester, split_name)) 
 
-        for split_name, tsne in tester.tsne_embeddings.items():
-            epoch = tsne.pop("epoch", None)
-            for k, (tsne_embeddings, tsne_labels) in tsne.items():
+        for split_name, u in tester.umap_embeddings.items():
+            for k, (_, umap_embeddings, umap_labels) in u.items():
                 tag = '%s/%s'%(self.record_group_name(tester, split_name), k)
-                self.record_keeper.add_embedding_plot(tsne_embeddings, tsne_labels, tag, epoch)
+                self.record_keeper.add_embedding_plot(umap_embeddings, umap_labels, tag, epoch)
 
 
 
@@ -219,6 +218,8 @@ def get_record_keeper(csv_folder, tensorboard_folder, global_db_path=None, exper
 
     except ModuleNotFoundError as e:
         logging.warn(e)
+        logging.warn("There won't be any logging or model saving.")
+        logging.warn("To fix this, pip install record-keeper tensorboard")
         return None, None, None
 
 

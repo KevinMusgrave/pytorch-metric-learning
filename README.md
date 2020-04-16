@@ -52,7 +52,7 @@ pip install pytorch-metric-learning
 
 **To get the latest dev version**:
 ```
-pip install pytorch-metric-learning==0.9.84.dev0
+pip install pytorch-metric-learning==0.9.84.dev1
 ```
 
 **To install on Windows**:
@@ -223,7 +223,8 @@ Thanks to the contributors who made pull requests!
 - [AlenUbuntu](https://github.com/AlenUbuntu):
 	- CircleLoss
 
-#### Bug fixes
+#### General improvements and bug fixes
+- [wconnell](https://github.com/wconnell)
 - [fralik](https://github.com/fralik)
 - [JoOkuma](https://github.com/JoOkuma)
 

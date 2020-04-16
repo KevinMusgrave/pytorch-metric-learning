@@ -8,8 +8,12 @@ from ..utils import common_functions as c_f
 from ..utils import AccuracyCalculator
 import logging
 from sklearn.preprocessing import normalize, StandardScaler
-from sklearn.manifold import TSNE
 from collections import defaultdict
+try:
+    import umap
+except ModuleNotFoundError as e:
+    logging.warn(e)
+    logging.warn("If you would like to visualize embeddings, pip install umap-learn[plot]")
 
 
 class BaseTester:
@@ -21,14 +25,14 @@ class BaseTester:
         batch_size=32, 
         dataloader_num_workers=32, 
         pca=None, 
-        data_device=None, 
-        size_of_tsne=0, 
+        data_device=None,  
         data_and_label_getter=None, 
         label_hierarchy_level=0, 
         end_of_testing_hook=None,
         dataset_labels=None,
         set_min_label_to_zero=False,
-        accuracy_calculator=None
+        accuracy_calculator=None,
+        umap_kwargs=None
     ):
         self.reference_set = reference_set
         self.normalize_embeddings = normalize_embeddings
@@ -37,13 +41,13 @@ class BaseTester:
         self.batch_size = int(batch_size)
         self.data_device = torch.device("cuda" if torch.cuda.is_available() else "cpu") if data_device is None else data_device
         self.dataloader_num_workers = dataloader_num_workers
-        self.size_of_tsne = size_of_tsne
         self.data_and_label_getter = c_f.return_input if data_and_label_getter is None else data_and_label_getter
         self.label_hierarchy_level = label_hierarchy_level
         self.end_of_testing_hook = end_of_testing_hook
         self.dataset_labels = dataset_labels
         self.set_min_label_to_zero = set_min_label_to_zero
         self.accuracy_calculator = accuracy_calculator
+        self.umap = None if umap_kwargs is None else umap.UMAP(**umap_kwargs)
         self.initialize_label_mapper()
         self.initialize_accuracy_calculator()         
 
@@ -96,20 +100,18 @@ class BaseTester:
             return trunk_output
         return embedder_model(trunk_output)
 
-    def maybe_compute_tsne(self, embeddings_and_labels, epoch):
-        self.tsne_embeddings = defaultdict(dict)
-        if self.size_of_tsne > 0:
+    def maybe_compute_umap(self, embeddings_and_labels, epoch):
+        self.umap_embeddings = defaultdict(dict)
+        if self.umap:
             for split_name, (embeddings, labels) in embeddings_and_labels.items():
-                random_idx = c_f.NUMPY_RANDOM.choice(np.arange(len(embeddings)), size=self.size_of_tsne, replace=False)
-                curr_embeddings, curr_labels = embeddings[random_idx], labels[random_idx]
-                logging.info("Running TSNE on the %s set"%split_name)
-                curr_embeddings = TSNE().fit_transform(curr_embeddings)
-                logging.info("Finished TSNE")
-                self.tsne_embeddings[split_name]["epoch"] = epoch
-                for bbb in self.label_levels_to_evaluate(curr_labels):
-                    label_scheme = curr_labels[:, bbb]
-                    keyname = self.accuracies_keyname("tsne", label_hierarchy_level=bbb)
-                    self.tsne_embeddings[split_name][keyname] = (curr_embeddings, label_scheme)
+                logging.info("Running UMAP on the %s set"%split_name)
+                umapper = self.umap.fit(embeddings)
+                umap_embedding = self.umap.transform(embeddings)
+                logging.info("Finished UMAP")
+                for bbb in self.label_levels_to_evaluate(labels):
+                    label_scheme = labels[:, bbb]
+                    keyname = self.accuracies_keyname("umap", label_hierarchy_level=bbb)
+                    self.umap_embeddings[split_name][keyname] = (umapper, umap_embedding, label_scheme)
 
     def description_suffixes(self, base_name):
         if self.pca:
@@ -191,11 +193,11 @@ class BaseTester:
         trunk_model.eval()
         embedder_model.eval()
         splits_to_eval, splits_to_compute_embeddings = self.get_splits_to_compute_embeddings(dataset_dict, splits_to_eval)
-        embeddings_and_labels = self.get_all_embeddings_for_all_splits(dataset_dict, trunk_model, embedder_model, splits_to_compute_embeddings, collate_fn)
-        self.maybe_compute_tsne(embeddings_and_labels, epoch)
+        self.embeddings_and_labels = self.get_all_embeddings_for_all_splits(dataset_dict, trunk_model, embedder_model, splits_to_compute_embeddings, collate_fn)
+        self.maybe_compute_umap(self.embeddings_and_labels, epoch)
         self.all_accuracies = defaultdict(dict)
         for split_name in splits_to_eval:
             logging.info('Computing accuracy for the %s split'%split_name)
             self.all_accuracies[split_name]["epoch"] = epoch 
-            self.do_knn_and_accuracies(self.all_accuracies[split_name], embeddings_and_labels, split_name)
+            self.do_knn_and_accuracies(self.all_accuracies[split_name], self.embeddings_and_labels, split_name)
         self.end_of_testing_hook(self) if self.end_of_testing_hook else logging.info(self.all_accuracies)

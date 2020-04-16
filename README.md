@@ -44,7 +44,7 @@ PyTorch Metric Learning
 2. Flexibility
    - Mix and match losses, miners, and trainers in ways that other libraries don't allow.
 
-## Installation:
+## Installation
 **Pip**:
 ```
 pip install pytorch-metric-learning
@@ -65,7 +65,7 @@ pip install pytorch-metric-learning
 ```
 conda install pytorch-metric-learning -c metric-learning
 ```
-We have recently noticed some issues with the conda installation, so we recommend installing with pip. You can use pip inside of conda:
+We have recently noticed some sporadic issues with the conda installation, so we recommend installing with pip. You can use pip inside of conda:
 ```
 conda install pip
 pip install pytorch-metric-learning

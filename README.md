@@ -45,19 +45,25 @@ PyTorch Metric Learning
    - Mix and match losses, miners, and trainers in ways that other libraries don't allow.
 
 ## Installation:
-Conda:
-```
-conda install pytorch-metric-learning -c metric-learning
-```
-
-Pip:
+**Pip**:
 ```
 pip install pytorch-metric-learning
 ```
 
-To get the latest dev version:
+**To get the latest dev version**:
 ```
 pip install pytorch-metric-learning==0.9.84.dev0
+```
+
+**To install on Windows**:
+```
+pip install torch===1.4.0 torchvision===0.5.0 -f https://download.pytorch.org/whl/torch_stable.html
+pip install pytorch-metric-learning
+```
+
+**Conda**:
+```
+conda install pytorch-metric-learning -c metric-learning
 ```
 
 If you run into problems during installation, please create an issue!

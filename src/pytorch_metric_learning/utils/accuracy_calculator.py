@@ -49,6 +49,7 @@ class AccuracyCalculator:
         function_names = [x for x in dir(self) if x.startswith(self.function_keyword)]
         metrics = [x.replace(self.function_keyword, "", 1) for x in function_names]
         self.original_function_dict = {x:getattr(self, y) for x,y in zip(metrics, function_names)}
+        self.check_primary_metrics(include, exclude)
         self.original_function_dict = self.get_function_dict(include, exclude)
         self.curr_function_dict = self.get_function_dict()
 
@@ -111,3 +112,11 @@ class AccuracyCalculator:
 
     def _get_accuracy(self, function_dict, **kwargs):
         return {k:v(**kwargs) for k,v in function_dict.items()}
+
+    def check_primary_metrics(calc, include=(), exclude=()):
+        primary_metrics = list(calc.original_function_dict.keys())
+        for met in [include, exclude]:
+            if not isinstance(met, (tuple, list)):
+                raise TypeError("Arguments must be of type tuple, not {}.".format(type(met)))
+            if not set(met).issubset(set(primary_metrics)):
+                raise ValueError("Primary metrics must be one or more of: {}.".format(primary_metrics))

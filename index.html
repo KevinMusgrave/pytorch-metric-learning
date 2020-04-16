@@ -412,21 +412,28 @@
                 
                 <h1 id="pytorch-metric-learning">PyTorch Metric Learning<a class="headerlink" href="#pytorch-metric-learning" title="Permanent link">&para;</a></h1>
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
-<p>Conda:</p>
-<div class="codehilite"><pre><span></span><span class="err">conda install pytorch-metric-learning -c metric-learning</span>
-</pre></div>
-
-
-<p>Pip:</p>
+<p><strong>Pip</strong>:</p>
 <div class="codehilite"><pre><span></span><span class="err">pip install pytorch-metric-learning</span>
 </pre></div>
 
 
-<p>To get the latest dev version:</p>
+<p><strong>To get the latest dev version</strong>:</p>
 <div class="codehilite"><pre><span></span><span class="err">pip install pytorch-metric-learning==0.9.84.dev0</span>
 </pre></div>
 
 
+<p><strong>To install on Windows</strong>:</p>
+<div class="codehilite"><pre><span></span><span class="err">pip install torch===1.4.0 torchvision===0.5.0 -f https://download.pytorch.org/whl/torch_stable.html</span>
+<span class="err">pip install pytorch-metric-learning</span>
+</pre></div>
+
+
+<p><strong>Conda</strong>:</p>
+<div class="codehilite"><pre><span></span><span class="err">conda install pytorch-metric-learning -c metric-learning</span>
+</pre></div>
+
+
+<p>If you run into problems during installation, please create an issue!</p>
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
 <p>Let’s try the vanilla <a href="losses/#tripletmarginloss">triplet margin loss</a>. In all examples, <em>embeddings</em> is assumed to be of size (N, embedding_size), and <em>labels</em> is of size (N).</p>
 <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">losses</span>

@@ -65,8 +65,15 @@ pip install pytorch-metric-learning
 ```
 conda install pytorch-metric-learning -c metric-learning
 ```
+We have recently noticed some issues with the conda installation, so we recommend installing with pip. You can use pip inside of conda:
+```
+conda install pip
+pip install pytorch-metric-learning
+```
+If you run into problems during installation, please post in [this issue](https://github.com/KevinMusgrave/pytorch-metric-learning/issues/55#issue-600601602).
 
-If you run into problems during installation, please create an issue!
+
+
 
 ## Benchmark results
 See [powerful-benchmarker](https://github.com/KevinMusgrave/powerful-benchmarker/) to view benchmark results and to use the benchmarking tool.

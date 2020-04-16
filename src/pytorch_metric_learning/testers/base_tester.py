@@ -9,12 +9,6 @@ from ..utils import AccuracyCalculator
 import logging
 from sklearn.preprocessing import normalize, StandardScaler
 from collections import defaultdict
-try:
-    import umap
-except ModuleNotFoundError as e:
-    logging.warn(e)
-    logging.warn("If you would like to visualize embeddings, pip install umap-learn[plot]")
-
 
 class BaseTester:
     def __init__(
@@ -32,7 +26,8 @@ class BaseTester:
         dataset_labels=None,
         set_min_label_to_zero=False,
         accuracy_calculator=None,
-        umap_kwargs=None
+        visualizer=None,
+        visualizer_hook=None
     ):
         self.reference_set = reference_set
         self.normalize_embeddings = normalize_embeddings
@@ -47,7 +42,8 @@ class BaseTester:
         self.dataset_labels = dataset_labels
         self.set_min_label_to_zero = set_min_label_to_zero
         self.accuracy_calculator = accuracy_calculator
-        self.umap = None if umap_kwargs is None else umap.UMAP(**umap_kwargs)
+        self.visualizer = visualizer
+        self.original_visualizer_hook = visualizer_hook
         self.initialize_label_mapper()
         self.initialize_accuracy_calculator()         
 
@@ -56,7 +52,11 @@ class BaseTester:
 
     def initialize_accuracy_calculator(self):
         if self.accuracy_calculator is None:
-            self.accuracy_calculator = AccuracyCalculator()     
+            self.accuracy_calculator = AccuracyCalculator()
+
+    def visualizer_hook(self, visualizer, dim_reduced_embeddings, labels, split_name, keyname):
+        if self.original_visualizer_hook is not None:
+            self.original_visualizer_hook(visualizer, dim_reduced_embeddings, labels, split_name, keyname)
 
     def maybe_normalize(self, embeddings):
         if self.pca:
@@ -100,18 +100,20 @@ class BaseTester:
             return trunk_output
         return embedder_model(trunk_output)
 
-    def maybe_compute_umap(self, embeddings_and_labels, epoch):
-        self.umap_embeddings = defaultdict(dict)
-        if self.umap:
+    def maybe_visualize(self, embeddings_and_labels, epoch):
+        self.dim_reduced_embeddings = defaultdict(dict)
+        if self.visualizer:
+            visualizer_name = self.visualizer.__class__.__name__
             for split_name, (embeddings, labels) in embeddings_and_labels.items():
-                logging.info("Running UMAP on the %s set"%split_name)
-                umapper = self.umap.fit(embeddings)
-                umap_embedding = self.umap.transform(embeddings)
-                logging.info("Finished UMAP")
+                logging.info("Running {} on the {} set".format(visualizer_name, split_name))
+                self.visualizer.fit(embeddings)
+                dim_reduced = self.visualizer.transform(embeddings)
+                logging.info("Finished {}".format(visualizer_name))
                 for bbb in self.label_levels_to_evaluate(labels):
                     label_scheme = labels[:, bbb]
-                    keyname = self.accuracies_keyname("umap", label_hierarchy_level=bbb)
-                    self.umap_embeddings[split_name][keyname] = (umapper, umap_embedding, label_scheme)
+                    keyname = self.accuracies_keyname(visualizer_name, label_hierarchy_level=bbb)
+                    self.dim_reduced_embeddings[split_name][keyname] = (dim_reduced, label_scheme)
+                    self.visualizer_hook(self.visualizer, dim_reduced, label_scheme, split_name, keyname)
 
     def description_suffixes(self, base_name):
         if self.pca:
@@ -194,7 +196,7 @@ class BaseTester:
         embedder_model.eval()
         splits_to_eval, splits_to_compute_embeddings = self.get_splits_to_compute_embeddings(dataset_dict, splits_to_eval)
         self.embeddings_and_labels = self.get_all_embeddings_for_all_splits(dataset_dict, trunk_model, embedder_model, splits_to_compute_embeddings, collate_fn)
-        self.maybe_compute_umap(self.embeddings_and_labels, epoch)
+        self.maybe_visualize(self.embeddings_and_labels, epoch)
         self.all_accuracies = defaultdict(dict)
         for split_name in splits_to_eval:
             logging.info('Computing accuracy for the %s split'%split_name)

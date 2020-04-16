@@ -15,14 +15,12 @@ class HookContainer:
     def __init__(self, record_keeper, 
                         record_group_name_prefix=None, 
                         primary_metric="mean_average_precision_at_r", 
-                        validation_split_name="val", 
-                        save_custom_figures=False):
+                        validation_split_name="val"):
         self.record_keeper = record_keeper
         self.record_group_name_prefix = record_group_name_prefix
         self.saveable_trainer_objects = ["models", "optimizers", "lr_schedulers", "loss_funcs", "mining_funcs"]
         self.primary_metric = primary_metric
         self.validation_split_name = validation_split_name
-        self.save_custom_figures = save_custom_figures 
 
     ############################################
     ############################################
@@ -48,7 +46,7 @@ class HookContainer:
         if not os.path.exists(model_folder): os.makedirs(model_folder)
         def actual_hook(trainer):
             continue_training = True
-            if self.save_custom_figures: self.record_keeper.maybe_add_custom_figures_to_tensorboard(trainer.get_global_iteration())
+            self.record_keeper.maybe_add_multi_line_plots_to_tensorboard(trainer.get_global_iteration())
             if trainer.epoch % test_interval == 0:
                 best_epoch = self.save_models_and_eval(trainer, dataset_dict, model_folder, test_interval, tester, test_collate_fn)
                 continue_training = self.patience_remaining(trainer.epoch, best_epoch, patience)
@@ -63,10 +61,10 @@ class HookContainer:
             best = {"best_epoch":best_epoch, "best_accuracy": best_accuracy}
             self.record_keeper.update_records(best, epoch, input_group_name_for_non_objects=self.record_group_name(tester, split_name)) 
 
-        for split_name, u in tester.umap_embeddings.items():
-            for k, (_, umap_embeddings, umap_labels) in u.items():
+        for split_name, u in tester.dim_reduced_embeddings.items():
+            for k, (dim_reduced, labels) in u.items():
                 tag = '%s/%s'%(self.record_group_name(tester, split_name), k)
-                self.record_keeper.add_embedding_plot(umap_embeddings, umap_labels, tag, epoch)
+                self.record_keeper.add_embedding_plot(dim_reduced, labels, tag, epoch)
 
 
 
@@ -207,13 +205,13 @@ class EmptyContainer:
 
 
 
-def get_record_keeper(csv_folder, tensorboard_folder, global_db_path=None, experiment_name=None, is_new_experiment=True):
+def get_record_keeper(csv_folder, tensorboard_folder, global_db_path=None, experiment_name=None, is_new_experiment=True, save_figures=False):
     try:
         import record_keeper as record_keeper_package
         from torch.utils.tensorboard import SummaryWriter
         record_writer = record_keeper_package.RecordWriter(csv_folder, global_db_path, experiment_name, is_new_experiment)
         tensorboard_writer = SummaryWriter(log_dir=tensorboard_folder)
-        record_keeper = record_keeper_package.RecordKeeper(tensorboard_writer, record_writer, ["record_these", "learnable_param_names"])
+        record_keeper = record_keeper_package.RecordKeeper(tensorboard_writer, record_writer, ["record_these", "learnable_param_names"], save_figures=save_figures)
         return record_keeper, record_writer, tensorboard_writer
 
     except ModuleNotFoundError as e:

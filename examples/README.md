@@ -10,3 +10,5 @@ View [this Google Colab notebook](https://colab.research.google.com/drive/1fwTC-
 - initializes a loss, miner, sampler, trainer, and tester
 - trains the model, records accuracy, and plots the embedding space
 
+## [Example using trainers.TrainWithClassifier](https://colab.research.google.com/drive/1o3VeS7lnpZudoxc6HU566LUvfdrbo5nC)
+This is the same as the ```trainers.MetricLossOnly``` notebook, but it appends a classification network, and adds a classification loss.

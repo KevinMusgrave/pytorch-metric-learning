@@ -186,7 +186,7 @@ For more complex approaches, like deep adversarial metric learning, use one of t
 
 To check the accuracy of your model, use one of the [testers](https://kevinmusgrave.github.io/pytorch-metric-learning/testers). Which tester should you use? Almost definitely [GlobalEmbeddingSpaceTester](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#globalembeddingspacetester), because it does what most metric-learning papers do. 
 
-Also check out the [example Google Colab notebooks](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples). Each one shows how to set up models, optimizers, losses etc for a particular trainer.
+Also check out the [example Google Colab notebooks](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples/README.md).
 
 To learn more about all of the above, [see the documentation](https://kevinmusgrave.github.io/pytorch-metric-learning). 
 

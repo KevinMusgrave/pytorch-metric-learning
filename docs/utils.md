@@ -9,11 +9,12 @@ This class computes several accuracy metrics given a query and reference embeddi
 
 ```python
 from pytorch_metric_learning.utils import AccuracyCalculator
-AccuracyCalculator(exclude_metrics=())
+AccuracyCalculator(include=(), exclude=())
 ```
 **Parameters**:
 
-* **exclude_metrics**: Optional. A list or tuple of strings, which are the names of metrics you do not want to calculate.
+* **include**: Optional. A list or tuple of strings, which are the names of metrics you want to calculate. If left empty, all default metrics will be calculated.
+* **exclude**: Optional. A list or tuple of strings, which are the names of metrics you **do not** want to calculate.
 
 **Getting accuracy**:
 
@@ -25,7 +26,8 @@ def get_accuracy(self,
 	query_labels, 
 	reference_labels, 
 	embeddings_come_from_same_source, 
-	exclude_metrics=()
+	include=(),
+	exclude=()
 ):
 # returns a dictionary mapping from metric names to accuracy values
 # The default metrics are:
@@ -40,7 +42,8 @@ def get_accuracy(self,
 * **query_labels**: A 1D numpy array of size ```(Nq)```. Each element should be an integer representing the sample's label.
 * **reference_labels**: A 1D numpy array of size ```(Nr)```. Each element should be an integer representing the sample's label. 
 * **embeddings_come_from_same_source**: Set to True if ```query``` is a subset of ```reference``` or if ```query is reference```. Set to False otherwise.
-* **exclude_metrics**: Optional. A list or tuple of strings, which are the names of metrics you do not want to calculate.
+* **include**: Optional. A list or tuple of strings, which are the names of metrics you want to calculate. If left empty, all metrics specified during initialization will be calculated.
+* **exclude**: Optional. A list or tuple of strings, which are the names of metrics you do not want to calculate.
 
 **Adding custom accuracy metrics**
 
@@ -58,6 +61,9 @@ class YourCalculator(AccuracyCalculator):
 
     def requires_clustering(self):
         return super().requires_clustering() + ["fancy_mutual_info"] 
+
+    def requires_knn(self):
+    	return super().requires_knn() + ["precision_at_2"] 
 ```
 
 Any method that starts with "calculate_" will be passed the following kwargs:
@@ -71,7 +77,7 @@ kwargs = {"query": query,                    # query embeddings
     "knn_labels": knn_labels}               # A 2d array where each row is the labels of the nearest neighbors of each query. The neighbors are retrieved from the reference set
 ```
 
-If your method requires cluster labels, then append your method's name to the ```requires_clustering``` list, via ```super()```. Then, if any of your methods need cluster labels, ```self.get_cluster_labels()``` will be called, and the kwargs will include ```cluster_labels```.
+If your method requires cluster labels, then append your method's name to the ```requires_clustering``` list, via ```super()```. Then, if any of your methods need cluster labels, ```self.get_cluster_labels()``` will be called, and the kwargs will include ```cluster_labels```. Likewise for computing k-nearest-neighbors.
 
 Now when ```get_accuracy``` is called, the returned dictionary will contain ```precision_at_2``` and ```fancy_mutual_info```:
 ```python
@@ -121,7 +127,7 @@ trainer = trainers.MetricLossOnly(models,
 
 trainer.train(num_epochs=num_epochs)
 ```
-With the provided hooks, data from both the training and validation stages will be saved in csv, sqlite, and tensorboard format, and models and optimizers will be saved in the specified model folder. See [this script](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/example_MetricLossOnly.py) for a complete example. Read the next section to learn more about the provided hooks.
+With the provided hooks, data from both the training and validation stages will be saved in csv, sqlite, and tensorboard format, and models and optimizers will be saved in the specified model folder. See [this Google Colab notebook](https://colab.research.google.com/drive/1fwTC-GRW3X6QiJq6_abJ47On2f3s9e5e) for a complete example. Read the next section to learn more about the provided hooks.
 
 ### HookContainer
 This class contains ready-to-use hooks to be used by trainers and testers.

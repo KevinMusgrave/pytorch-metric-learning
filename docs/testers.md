@@ -22,14 +22,15 @@ testers.BaseTester(reference_set="compared_to_self",
                     dataloader_num_workers=32, 
                     pca=None, 
                     data_device=None, 
-					size_of_tsne=0, 
 					data_and_label_getter=None,
                     label_hierarchy_level=0,
                     end_of_testing_hook=None,
                     dataset_labels=None,
 			        dataset_labels=None,
 			        set_min_label_to_zero=False,
-			        accuracy_calculator=None)
+			        accuracy_calculator=None,
+			        visualizer=None,
+        			visualizer_hook=None)
 ```
 
 **Parameters**:
@@ -44,7 +45,6 @@ testers.BaseTester(reference_set="compared_to_self",
 * **dataloader_num_workers**: How many processes the dataloader will use.
 * **pca**: The number of dimensions that your embeddings will be reduced to, using PCA. The default is None, meaning PCA will not be applied.
 * **data_device**: Which gpu to use for the loaded dataset samples. If None, then the gpu or cpu will be used (whichever is available).
-* **size_of_tsne**: The number of samples to use to compute tsne embeddings. If 0, then no t-sne plot will be created.
 * **data_and_label_getter**: A function that takes the output of your dataset's ```__getitem__``` function, and returns a tuple of (data, labels). If None, then it is assumed that ```__getitem__``` returns (data, labels). 
 * **label_hierarchy_level**: If each sample in your dataset has multiple labels, then this integer argument can be used to select which "level" to use. This assumes that your labels are "2-dimensional" with shape (num_samples, num_hierarchy_levels). Leave this at the default value, 0, if your data does not have multiple labels per sample.
 * **end_of_testing_hook**: This is an optional function that has one input argument (the tester object) and performs some action (e.g. logging data) at the end of testing.
@@ -53,7 +53,15 @@ testers.BaseTester(reference_set="compared_to_self",
 	* If you want ready-to-use hooks, take a look at the [logging_presets module](utils.md#logging_presets).
 * **dataset_labels**: The labels for your dataset. Can be 1-dimensional (1 label per datapoint) or 2-dimensional, where each row represents a datapoint, and the columns are the multiple labels that the datapoint has. Labels can be integers or strings. **This option needs to be specified only if ```set_min_label_to_zero``` is True.**
 * **set_min_label_to_zero**: If True, labels will be mapped such that they represent their rank in the label set. For example, if your dataset has labels 5, 10, 12, 13, then at each iteration, these would become 0, 1, 2, 3. You should also set this to True if you want to use string labels. In that case, 'dog', 'cat', 'monkey' would get mapped to 1, 0, 2. If True, you must pass in ```dataset_labels``` (see above). The default is False.
-* **accuracy_calculator**: An object that extends [AccuracyCalculator](utils.md#accuracycalculator). This will be used to compute the accuracy of your model. By default, AccuracyCalculator is used.
+* **accuracy_calculator**: Optional. An object that extends [AccuracyCalculator](utils.md#accuracycalculator). This will be used to compute the accuracy of your model. By default, AccuracyCalculator is used.
+* **visualizer**: Optional. An object that has implemented the ```fit``` and ```transform``` methods, as done by [UMAP](https://github.com/lmcinnes/umap) and many scikit-learn functions. For example, you can set ```visualizer = umap.UMAP()```. The object's ```fit``` function should take in a 2D array of embeddings, and reduce the dimensionality, such that calling ```visualizer.transform(embeddings)``` results in a 2D array of size (N, 2).
+* **visualizer_hook**: Optional. This function will be passed the following args. You can do whatever you want in this function, but the reason it exists is to allow you to save a plot of the embeddings etc.
+	* visualizer: The visualizer object that you passed in.
+	* embeddings: The dimensionality reduced embeddings.
+	* label: The corresponding labels for each embedding.
+	* split_name: The name of the split (train, val, etc.)
+	* keyname: The name of the dictionary key where the embeddings and labels are stored. (The dictionary is self.dim_reduced_embeddings[split_name][keyname].)
+
 
 ## GlobalEmbeddingSpaceTester
 Computes nearest neighbors by looking at all points in the embedding space. This is probably the tester you are looking for.

@@ -1,5 +1,8 @@
 # PyTorch Metric Learning
 
+## Google Colab Example
+See [this notebook](https://colab.research.google.com/drive/1fwTC-GRW3X6QiJq6_abJ47On2f3s9e5e) for an example of a complete training and testing workflow. View other examples in the [examples folder](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/README.md)
+
 ## Installation
 **Pip**:
 ```
@@ -66,4 +69,4 @@ For more complex approaches, like deep adversarial metric learning, use one of t
 
 To check the accuracy of your model, use one of the [testers](testers). Which tester should you use? Almost definitely [GlobalEmbeddingSpaceTester](testers/#globalembeddingspacetester), because it does what most metric-learning papers do. 
 
-Also check out the [example scripts](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples).
+Also check out the [example Google Colab notebooks](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples).

@@ -15,3 +15,9 @@ Before running the notebooks, make sure that the runtime type is set to "GPU", b
 
 ## [Example using trainers.CascadedEmbeddings](https://colab.research.google.com/drive/1P2Zq-sE07xvVAHihwVWQKIZ25NQoeRts)
 [This notebook](https://colab.research.google.com/drive/1P2Zq-sE07xvVAHihwVWQKIZ25NQoeRts) uses the [CascadedEmbeddings](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#cascadedembeddings) trainer. The setup is more complicated in this one, because the trunk and embedder models each consist of 3 sub-networks, and the outputs are then concatenated to get the final embedding.
+
+## [Example using trainers.DeepAdversarialMetricLearning](https://colab.research.google.com/drive/1qENr4zEoF_VfHw_2gv902ZuHZ657NGS8)
+[This notebook](https://colab.research.google.com/drive/1qENr4zEoF_VfHw_2gv902ZuHZ657NGS8) uses the [DeepAdversarialMetricLearning](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#deepadversarialmetriclearning) trainer. It uses a generator to create hard negatives during training.
+
+
+

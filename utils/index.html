@@ -469,13 +469,14 @@
 <h3 id="accuracycalculator">AccuracyCalculator<a class="headerlink" href="#accuracycalculator" title="Permanent link">&para;</a></h3>
 <p>This class computes several accuracy metrics given a query and reference embeddings. It can be easily extended to create custom accuracy metrics.</p>
 <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils</span> <span class="kn">import</span> <span class="n">AccuracyCalculator</span>
-<span class="n">AccuracyCalculator</span><span class="p">(</span><span class="n">exclude_metrics</span><span class="o">=</span><span class="p">())</span>
+<span class="n">AccuracyCalculator</span><span class="p">(</span><span class="n">include</span><span class="o">=</span><span class="p">(),</span> <span class="n">exclude</span><span class="o">=</span><span class="p">())</span>
 </pre></div>
 
 
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>exclude_metrics</strong>: Optional. A list or tuple of strings, which are the names of metrics you do not want to calculate.</li>
+<li><strong>include</strong>: Optional. A list or tuple of strings, which are the names of metrics you want to calculate. If left empty, all default metrics will be calculated.</li>
+<li><strong>exclude</strong>: Optional. A list or tuple of strings, which are the names of metrics you <strong>do not</strong> want to calculate.</li>
 </ul>
 <p><strong>Getting accuracy</strong>:</p>
 <p>Call the <code>get_accuracy</code> method to obtain a dictionary of accuracies.</p>
@@ -485,7 +486,8 @@
     <span class="n">query_labels</span><span class="p">,</span> 
     <span class="n">reference_labels</span><span class="p">,</span> 
     <span class="n">embeddings_come_from_same_source</span><span class="p">,</span> 
-    <span class="n">exclude_metrics</span><span class="o">=</span><span class="p">()</span>
+    <span class="n">include</span><span class="o">=</span><span class="p">(),</span>
+    <span class="n">exclude</span><span class="o">=</span><span class="p">()</span>
 <span class="p">):</span>
 <span class="c1"># returns a dictionary mapping from metric names to accuracy values</span>
 <span class="c1"># The default metrics are:</span>
@@ -503,7 +505,8 @@
 <li><strong>query_labels</strong>: A 1D numpy array of size <code>(Nq)</code>. Each element should be an integer representing the sample's label.</li>
 <li><strong>reference_labels</strong>: A 1D numpy array of size <code>(Nr)</code>. Each element should be an integer representing the sample's label. </li>
 <li><strong>embeddings_come_from_same_source</strong>: Set to True if <code>query</code> is a subset of <code>reference</code> or if <code>query is reference</code>. Set to False otherwise.</li>
-<li><strong>exclude_metrics</strong>: Optional. A list or tuple of strings, which are the names of metrics you do not want to calculate.</li>
+<li><strong>include</strong>: Optional. A list or tuple of strings, which are the names of metrics you want to calculate. If left empty, all metrics specified during initialization will be calculated.</li>
+<li><strong>exclude</strong>: Optional. A list or tuple of strings, which are the names of metrics you do not want to calculate.</li>
 </ul>
 <p><strong>Adding custom accuracy metrics</strong></p>
 <p>Let's say you want to use the existing metrics but also compute precision @ 2, and a fancy mutual info method. You can extend the existing class, and write methods that start with the keyword <code>calculate_</code></p>
@@ -518,6 +521,9 @@
 
     <span class="k">def</span> <span class="nf">requires_clustering</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">requires_clustering</span><span class="p">()</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;fancy_mutual_info&quot;</span><span class="p">]</span> 
+
+    <span class="k">def</span> <span class="nf">requires_knn</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">requires_knn</span><span class="p">()</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;precision_at_2&quot;</span><span class="p">]</span> 
 </pre></div>
 
 
@@ -532,7 +538,7 @@
 </pre></div>
 
 
-<p>If your method requires cluster labels, then append your method's name to the <code>requires_clustering</code> list, via <code>super()</code>. Then, if any of your methods need cluster labels, <code>self.get_cluster_labels()</code> will be called, and the kwargs will include <code>cluster_labels</code>.</p>
+<p>If your method requires cluster labels, then append your method's name to the <code>requires_clustering</code> list, via <code>super()</code>. Then, if any of your methods need cluster labels, <code>self.get_cluster_labels()</code> will be called, and the kwargs will include <code>cluster_labels</code>. Likewise for computing k-nearest-neighbors.</p>
 <p>Now when <code>get_accuracy</code> is called, the returned dictionary will contain <code>precision_at_2</code> and <code>fancy_mutual_info</code>:</p>
 <div class="codehilite"><pre><span></span><span class="n">calculator</span> <span class="o">=</span> <span class="n">YourCalculator</span><span class="p">()</span>
 <span class="n">acc_dict</span> <span class="o">=</span> <span class="n">calculator</span><span class="o">.</span><span class="n">get_accuracy</span><span class="p">(</span><span class="n">query_embeddings</span><span class="p">,</span>
@@ -580,7 +586,7 @@
 </pre></div>
 
 
-<p>With the provided hooks, data from both the training and validation stages will be saved in csv, sqlite, and tensorboard format, and models and optimizers will be saved in the specified model folder. See <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/example_MetricLossOnly.py">this script</a> for a complete example. Read the next section to learn more about the provided hooks.</p>
+<p>With the provided hooks, data from both the training and validation stages will be saved in csv, sqlite, and tensorboard format, and models and optimizers will be saved in the specified model folder. See <a href="https://colab.research.google.com/drive/1fwTC-GRW3X6QiJq6_abJ47On2f3s9e5e">this Google Colab notebook</a> for a complete example. Read the next section to learn more about the provided hooks.</p>
 <h3 id="hookcontainer">HookContainer<a class="headerlink" href="#hookcontainer" title="Permanent link">&para;</a></h3>
 <p>This class contains ready-to-use hooks to be used by trainers and testers.</p>
 <div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">pytorch_metric_learning.utils.logging_presets</span> <span class="k">as</span> <span class="nn">LP</span>

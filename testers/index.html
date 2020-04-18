@@ -446,14 +446,15 @@
                     <span class="n">dataloader_num_workers</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> 
                     <span class="n">pca</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
                     <span class="n">data_device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
-                    <span class="n">size_of_tsne</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> 
                     <span class="n">data_and_label_getter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">label_hierarchy_level</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                     <span class="n">end_of_testing_hook</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">dataset_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">dataset_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">set_min_label_to_zero</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                    <span class="n">accuracy_calculator</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+                    <span class="n">accuracy_calculator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">visualizer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">visualizer_hook</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </pre></div>
 
 
@@ -471,7 +472,6 @@
 <li><strong>dataloader_num_workers</strong>: How many processes the dataloader will use.</li>
 <li><strong>pca</strong>: The number of dimensions that your embeddings will be reduced to, using PCA. The default is None, meaning PCA will not be applied.</li>
 <li><strong>data_device</strong>: Which gpu to use for the loaded dataset samples. If None, then the gpu or cpu will be used (whichever is available).</li>
-<li><strong>size_of_tsne</strong>: The number of samples to use to compute tsne embeddings. If 0, then no t-sne plot will be created.</li>
 <li><strong>data_and_label_getter</strong>: A function that takes the output of your dataset's <code>__getitem__</code> function, and returns a tuple of (data, labels). If None, then it is assumed that <code>__getitem__</code> returns (data, labels). </li>
 <li><strong>label_hierarchy_level</strong>: If each sample in your dataset has multiple labels, then this integer argument can be used to select which "level" to use. This assumes that your labels are "2-dimensional" with shape (num_samples, num_hierarchy_levels). Leave this at the default value, 0, if your data does not have multiple labels per sample.</li>
 <li><strong>end_of_testing_hook</strong>: This is an optional function that has one input argument (the tester object) and performs some action (e.g. logging data) at the end of testing.<ul>
@@ -482,7 +482,16 @@
 </li>
 <li><strong>dataset_labels</strong>: The labels for your dataset. Can be 1-dimensional (1 label per datapoint) or 2-dimensional, where each row represents a datapoint, and the columns are the multiple labels that the datapoint has. Labels can be integers or strings. <strong>This option needs to be specified only if <code>set_min_label_to_zero</code> is True.</strong></li>
 <li><strong>set_min_label_to_zero</strong>: If True, labels will be mapped such that they represent their rank in the label set. For example, if your dataset has labels 5, 10, 12, 13, then at each iteration, these would become 0, 1, 2, 3. You should also set this to True if you want to use string labels. In that case, 'dog', 'cat', 'monkey' would get mapped to 1, 0, 2. If True, you must pass in <code>dataset_labels</code> (see above). The default is False.</li>
-<li><strong>accuracy_calculator</strong>: An object that extends <a href="../utils/#accuracycalculator">AccuracyCalculator</a>. This will be used to compute the accuracy of your model. By default, AccuracyCalculator is used.</li>
+<li><strong>accuracy_calculator</strong>: Optional. An object that extends <a href="../utils/#accuracycalculator">AccuracyCalculator</a>. This will be used to compute the accuracy of your model. By default, AccuracyCalculator is used.</li>
+<li><strong>visualizer</strong>: Optional. An object that has implemented the <code>fit</code> and <code>transform</code> methods, as done by <a href="https://github.com/lmcinnes/umap">UMAP</a> and many scikit-learn functions. For example, you can set <code>visualizer = umap.UMAP()</code>. The object's <code>fit</code> function should take in a 2D array of embeddings, and reduce the dimensionality, such that calling <code>visualizer.transform(embeddings)</code> results in a 2D array of size (N, 2).</li>
+<li><strong>visualizer_hook</strong>: Optional. This function will be passed the following args. You can do whatever you want in this function, but the reason it exists is to allow you to save a plot of the embeddings etc.<ul>
+<li>visualizer: The visualizer object that you passed in.</li>
+<li>embeddings: The dimensionality reduced embeddings.</li>
+<li>label: The corresponding labels for each embedding.</li>
+<li>split_name: The name of the split (train, val, etc.)</li>
+<li>keyname: The name of the dictionary key where the embeddings and labels are stored. (The dictionary is self.dim_reduced_embeddings[split_name][keyname].)</li>
+</ul>
+</li>
 </ul>
 <h2 id="globalembeddingspacetester">GlobalEmbeddingSpaceTester<a class="headerlink" href="#globalembeddingspacetester" title="Permanent link">&para;</a></h2>
 <p>Computes nearest neighbors by looking at all points in the embedding space. This is probably the tester you are looking for.</p>

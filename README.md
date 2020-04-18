@@ -37,6 +37,9 @@ PyTorch Metric Learning
 ## Documentation
 [**View the documentation here**](https://kevinmusgrave.github.io/pytorch-metric-learning/)
 
+## Google Colab Example
+See [this notebook](https://colab.research.google.com/drive/1fwTC-GRW3X6QiJq6_abJ47On2f3s9e5e) for an example of a complete training and testing workflow. View other examples in the [examples folder](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/README.md)
+
 ## Benefits of this library
 1. Ease of use
    - Add metric learning to your application with just 2 lines of code in your training loop.  
@@ -71,9 +74,6 @@ conda install pip
 pip install pytorch-metric-learning
 ```
 If you run into problems during installation, please post in [this issue](https://github.com/KevinMusgrave/pytorch-metric-learning/issues/55#issue-600601602).
-
-
-
 
 ## Benchmark results
 See [powerful-benchmarker](https://github.com/KevinMusgrave/powerful-benchmarker/) to view benchmark results and to use the benchmarking tool.

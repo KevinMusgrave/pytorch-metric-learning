@@ -5,5 +5,5 @@ build/
 dist/
 *.egg-info/
 site/
-example_*
+/example_*
 .vscode

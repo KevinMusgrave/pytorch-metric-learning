@@ -5,18 +5,18 @@ import torch
 class TwoStreamDataset(Dataset):
     """Two Stream dataset."""
 
-    def __init__(self, root, query_transform=None, ref_transform=None):
+    def __init__(self, root, query_transform=None, anchor_transform=None):
         """
         Args:
             root (string): Directory with all the images.
-            transform (callable, optional): Optional transform to be applied
-                on a sample.
+            query_transform (callable, optional): Optional transform to be applied on queries
+            ref_transform (callable, optional): Optional transform to be applied on references
         """
         self.root = root
         self.query_transform = query_transform
-        self.ref_transform = ref_transform
+        self.anchor_transform = anchor_transform
         self.queries_dataset = datasets.ImageFolder(root=root+"/queries", transform=query_transform)
-        self.references_dataset = datasets.ImageFolder(root=root+"/references", transform=ref_transform)
+        self.anchor_dataset = datasets.ImageFolder(root=root+"/references", transform=anchor_transform)
         self.classes = self.queries_dataset.classes
 
     def __len__(self):
@@ -27,5 +27,5 @@ class TwoStreamDataset(Dataset):
             idx = idx.tolist()
 
         (query_img, classidx) = self.queries_dataset.__getitem__(idx)
-        (ref_img, _) = self.references_dataset.__getitem__(classidx)
-        return query_img, ref_img, classidx
+        (anchor_img, _) = self.anchor_dataset.__getitem__(classidx)
+        return query_img, anchor_img, classidx

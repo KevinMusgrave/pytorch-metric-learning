@@ -5,4 +5,5 @@ build/
 dist/
 *.egg-info/
 site/
-venv/
+example_*
+.vscode

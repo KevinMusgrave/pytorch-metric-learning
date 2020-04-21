@@ -34,21 +34,20 @@ trunk_optimizer = torch.optim.Adam(trunk.parameters(), lr=0.00004, weight_decay=
 embedder_optimizer = torch.optim.Adam(embedder.parameters(), lr=0.00004, weight_decay=0.00005)
 
 
-query_transform = transforms.Compose([transforms.Resize(256),
+posneg_transform = transforms.Compose([transforms.Resize(256),
                                     transforms.RandomResizedCrop(scale=(0.16, 1), ratio=(0.75, 1.33), size=227),
                                     transforms.RandomHorizontalFlip(0.5),
                                     transforms.ToTensor(),
                                     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
-anchor_transform = transforms.Compose([transforms.Resize(256),
-                                    transforms.CenterCrop(227),
+anchor_transform = transforms.Compose([transforms.CenterCrop(227),
                                     transforms.ToTensor(),
                                     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
 # Set the datasets
 dataroot = "/data/IAMAI"
-train_dataset = TwoStreamDataset(root=dataroot+"/train/", anchor_transform=anchor_transform, query_transform=query_transform)
-val_dataset = TwoStreamDataset(root=dataroot+"/val/", anchor_transform=anchor_transform, query_transform=query_transform)
+train_dataset = TwoStreamDataset(root=dataroot+"/train/", anchor_transform=anchor_transform, posneg_transform=posneg_transform)
+val_dataset = TwoStreamDataset(root=dataroot+"/val/", anchor_transform=anchor_transform, posneg_transform=posneg_transform)
 
 
 # Set the loss function

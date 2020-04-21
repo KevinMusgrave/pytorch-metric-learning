@@ -5,27 +5,27 @@ import torch
 class TwoStreamDataset(Dataset):
     """Two Stream dataset."""
 
-    def __init__(self, root, query_transform=None, anchor_transform=None):
+    def __init__(self, root, posneg_transform=None, anchor_transform=None):
         """
         Args:
-            root (string): Directory with all the images.
-            query_transform (callable, optional): Optional transform to be applied on queries
-            ref_transform (callable, optional): Optional transform to be applied on references
+            root (string): path containing directory achors and posnegs
+            posneg_transform (callable, optional): Optional transform to be applied on positve/negatives
+            anchor_transform (callable, optional): Optional transform to be applied on anchors
         """
         self.root = root
-        self.query_transform = query_transform
+        self.posneg_transform = posneg_transform
         self.anchor_transform = anchor_transform
-        self.queries_dataset = datasets.ImageFolder(root=root+"/queries", transform=query_transform)
-        self.anchor_dataset = datasets.ImageFolder(root=root+"/references", transform=anchor_transform)
-        self.classes = self.queries_dataset.classes
+        self.anchor_dataset = datasets.ImageFolder(root=root+"/anchors", transform=anchor_transform)
+        self.posneg_dataset = datasets.ImageFolder(root=root+"/posnegs", transform=posneg_transform)
+        self.classes = self.anchor_dataset.classes
 
     def __len__(self):
-        return len(self.queries_dataset.samples)
+        return len(self.anchor_dataset.samples)
 
     def __getitem__(self, idx):
         if torch.is_tensor(idx):
             idx = idx.tolist()
 
-        (query_img, classidx) = self.queries_dataset.__getitem__(idx)
-        (anchor_img, _) = self.anchor_dataset.__getitem__(classidx)
-        return query_img, anchor_img, classidx
+        (anchor_img, classidx) = self.anchor_dataset.__getitem__(idx)
+        (posneg_img, _) = self.posneg_dataset.__getitem__(classidx)
+        return anchor_img, posneg_img, classidx

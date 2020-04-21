@@ -12,16 +12,16 @@ class TwoStreamTrainer(BaseTrainer):
         super().__init__(**kwargs)
 
     def calculate_loss(self, curr_batch):
-        (queries, anchors), labels = curr_batch
-        embeddings = (self.compute_embeddings(queries), self.compute_embeddings(anchors))
+        ( anchors, posnegs), labels = curr_batch
+        embeddings = (self.compute_embeddings(anchors), self.compute_embeddings(posnegs))
 
         indices_tuple = self.maybe_mine_embeddings(embeddings, labels)
         self.losses["metric_loss"] = self.maybe_get_metric_loss(embeddings, labels, indices_tuple)
     
     def get_batch(self):
         self.dataloader_iter, curr_batch = c_f.try_next_on_generator(self.dataloader_iter, self.dataloader)
-        queries, anchors,labels = self.data_and_label_getter(curr_batch)
-        data = (queries,anchors)
+        anchors, posnegs,labels = self.data_and_label_getter(curr_batch)
+        data = (anchors,posnegs)
         labels = c_f.process_label(labels, self.label_hierarchy_level, self.label_mapper)
         return self.maybe_do_batch_mining(data, labels)
 
@@ -34,6 +34,6 @@ class TwoStreamTrainer(BaseTrainer):
 
     def maybe_mine_embeddings(self, embeddings, labels):
         if "tuple_miner" in self.mining_funcs:
-            (queries_embeddings, anchors_embeddings) = embeddings
-            return self.mining_funcs["tuple_miner"](queries_embeddings, labels, anchors_embeddings, labels)
+            (anchors_embeddings, posnegs_embeddings) = embeddings
+            return self.mining_funcs["tuple_miner"](anchors_embeddings, labels, posnegs_embeddings, labels)
         return None

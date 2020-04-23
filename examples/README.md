@@ -1,7 +1,9 @@
 # Examples on Google Colab
 The following notebooks are meant to show entire workflows. If you want to use just a loss or miner in your own code, you can do that too. 
 
-Before running the notebooks, make sure that the runtime type is set to "GPU", by going to the Runtime menu, and clicking on "Change runtime type"
+Before running the notebooks, make sure that the runtime type is set to "GPU", by going to the Runtime menu, and clicking on "Change runtime type".
+
+Click "Open in playground" on the Colab header to interact with the notebook.
 
 ## [Example using trainers.MetricLossOnly](https://colab.research.google.com/drive/1fwTC-GRW3X6QiJq6_abJ47On2f3s9e5e)
 [This notebook](https://colab.research.google.com/drive/1fwTC-GRW3X6QiJq6_abJ47On2f3s9e5e) uses the [MetricLossOnly](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#metriclossonly) trainer, and does the following:
@@ -19,5 +21,7 @@ Before running the notebooks, make sure that the runtime type is set to "GPU", b
 ## [Example using trainers.DeepAdversarialMetricLearning](https://colab.research.google.com/drive/1qENr4zEoF_VfHw_2gv902ZuHZ657NGS8)
 [This notebook](https://colab.research.google.com/drive/1qENr4zEoF_VfHw_2gv902ZuHZ657NGS8) uses the [DeepAdversarialMetricLearning](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#deepadversarialmetriclearning) trainer. It uses a generator to create hard negatives during training.
 
+## [Applied Example: Learning a scRNAseq Metric Embedding](https://colab.research.google.com/drive/1DhSLDv6qXiLFKkSXKUFRjCEK1V4kPy0a)
+[This notebook](https://colab.research.google.com/drive/1DhSLDv6qXiLFKkSXKUFRjCEK1V4kPy0a) uses  the [MetricLossOnly](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#metriclossonly) trainer to train a *single* embedding model. The model is trained on canonical single-cell RNAseq cell types and used to infer intermediary differentiation states.
 
 

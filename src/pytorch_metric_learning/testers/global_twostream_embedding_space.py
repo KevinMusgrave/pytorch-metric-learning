@@ -20,10 +20,10 @@ class GlobalTwoStreamEmbeddingSpaceTester(GlobalEmbeddingSpaceTester):
                     label = label.unsqueeze(1)
                 if i == 0:
                     labels = torch.zeros(len(dataloader.dataset), label.size(1))
-                    all_anchors = torch.zeros(len(dataloader.dataset), q.size(1))
-                    all_posnegs = torch.zeros(len(dataloader.dataset), q.size(1))
+                    all_anchors = torch.zeros(len(dataloader.dataset), pns.size(1))
+                    all_posnegs = torch.zeros(len(dataloader.dataset), pns.size(1))
                 
-                e = s + q.size(0)
+                e = s + pns.size(0)
                 all_anchors[s:e] = a
                 all_posnegs[s:e] = pns
                 labels[s:e] = label

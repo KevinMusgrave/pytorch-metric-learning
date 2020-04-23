@@ -5,5 +5,9 @@ build/
 dist/
 *.egg-info/
 site/
-/example_*
+/examples/example_*
 .vscode
+CIFAR100_Dataset
+.gitignore
+examples/.ipynb_checkpoints/
+example_*

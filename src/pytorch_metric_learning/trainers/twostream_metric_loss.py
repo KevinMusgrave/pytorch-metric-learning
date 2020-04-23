@@ -6,9 +6,15 @@ from ..utils import common_functions as c_f
 import logging
 import torch
 
-class TwoStreamTrainer(BaseTrainer):
+class TwoStreamMetricLoss(BaseTrainer):
 
     def __init__(self, **kwargs):
+        if not "TwoStream" in str(kwargs["dataset"].__class__):
+            raise Exception("The provided dataset must be a TwoStream Dataset")
+
+        if "subset_batch_miner" in kwargs["mining_funcs"]:
+            raise Exception("Subset batch mining is not supported with TwoStream training")
+        
         super().__init__(**kwargs)
 
     def calculate_loss(self, curr_batch):
@@ -24,6 +30,7 @@ class TwoStreamTrainer(BaseTrainer):
         data = (anchors,posnegs)
         labels = c_f.process_label(labels, self.label_hierarchy_level, self.label_mapper)
         return self.maybe_do_batch_mining(data, labels)
+
 
     def maybe_get_metric_loss(self, embeddings, labels, indices_tuple):
         if self.loss_weights.get("metric_loss", 0) > 0:

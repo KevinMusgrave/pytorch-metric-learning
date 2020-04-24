@@ -101,7 +101,7 @@ trainers.MetricLossOnly(**kwargs)
 This trainer computes a metric loss from the output of your embedder network.
 The supplied **dataset** must return a tuple of images.
 The first image is used as anchor, the second as either positve or negative.
-See examples/twostream_metriclossonly.ipynb for an example
+See the examples/README.md for an example
 
 ## TrainWithClassifier
 This trainer is for the case where your architecture is trunk -> embedder -> classifier. It applies a metric loss to the output of the embedder network, and a classification loss to the output of the classifier network.

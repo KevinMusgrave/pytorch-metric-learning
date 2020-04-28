@@ -12,6 +12,9 @@ Click "Open in playground" on the Colab header to interact with the notebook.
 - initializes a loss, miner, sampler, trainer, and tester
 - trains the model, records accuracy, and plots the embedding space
 
+## [Applied Example: Learning a scRNAseq Metric Embedding](https://colab.research.google.com/drive/1DhSLDv6qXiLFKkSXKUFRjCEK1V4kPy0a)
+[This notebook](https://colab.research.google.com/drive/1DhSLDv6qXiLFKkSXKUFRjCEK1V4kPy0a) uses the [MetricLossOnly](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#metriclossonly) trainer to train a *single* embedding model. The model is trained on canonical single-cell RNAseq cell types and used to infer intermediary differentiation states.
+
 ## [Example using trainers.TrainWithClassifier](https://colab.research.google.com/drive/1o3VeS7lnpZudoxc6HU566LUvfdrbo5nC)
 [This notebook](https://colab.research.google.com/drive/1o3VeS7lnpZudoxc6HU566LUvfdrbo5nC) uses the [TrainWithClassifier](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#trainwithclassifier) trainer. It does the same thing as the MetricLossOnly notebook, but adds a classification network and a classification loss.
 
@@ -20,8 +23,4 @@ Click "Open in playground" on the Colab header to interact with the notebook.
 
 ## [Example using trainers.DeepAdversarialMetricLearning](https://colab.research.google.com/drive/1qENr4zEoF_VfHw_2gv902ZuHZ657NGS8)
 [This notebook](https://colab.research.google.com/drive/1qENr4zEoF_VfHw_2gv902ZuHZ657NGS8) uses the [DeepAdversarialMetricLearning](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#deepadversarialmetriclearning) trainer. It uses a generator to create hard negatives during training.
-
-## [Applied Example: Learning a scRNAseq Metric Embedding](https://colab.research.google.com/drive/1DhSLDv6qXiLFKkSXKUFRjCEK1V4kPy0a)
-[This notebook](https://colab.research.google.com/drive/1DhSLDv6qXiLFKkSXKUFRjCEK1V4kPy0a) uses  the [MetricLossOnly](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#metriclossonly) trainer to train a *single* embedding model. The model is trained on canonical single-cell RNAseq cell types and used to infer intermediary differentiation states.
-
 

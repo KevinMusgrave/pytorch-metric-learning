@@ -55,7 +55,7 @@ pip install pytorch-metric-learning
 
 **To get the latest dev version**:
 ```
-pip install pytorch-metric-learning==0.9.84
+pip install pytorch-metric-learning==0.9.85.dev0
 ```
 
 **To install on Windows**:
@@ -221,7 +221,11 @@ Thanks to the contributors who made pull requests!
 
 #### Algorithm implementations
 - [AlenUbuntu](https://github.com/AlenUbuntu):
-	- CircleLoss
+	- [CircleLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#circleloss)
+
+#### Example notebooks
+- [wconnell](https://github.com/wconnell)
+	- [Learning a scRNAseq Metric Embedding](https://colab.research.google.com/drive/1DhSLDv6qXiLFKkSXKUFRjCEK1V4kPy0a)
 
 #### General improvements and bug fixes
 - [wconnell](https://github.com/wconnell)

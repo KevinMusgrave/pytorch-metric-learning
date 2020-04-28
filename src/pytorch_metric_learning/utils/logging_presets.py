@@ -105,7 +105,7 @@ class HookContainer:
         curr_accuracy = self.get_curr_primary_metric(tester, split_name)
         best_epoch, best_accuracy = self.get_best_epoch_and_accuracy(tester, split_name)
         is_new_best = False
-        if curr_accuracy > best_accuracy:
+        if (curr_accuracy > best_accuracy) or (best_epoch is None):
             best_epoch, best_accuracy = epoch, curr_accuracy
             is_new_best = True
         return is_new_best, curr_accuracy, best_epoch, best_accuracy 

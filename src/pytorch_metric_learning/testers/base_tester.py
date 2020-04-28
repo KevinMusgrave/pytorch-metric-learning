@@ -106,8 +106,7 @@ class BaseTester:
             visualizer_name = self.visualizer.__class__.__name__
             for split_name, (embeddings, labels) in embeddings_and_labels.items():
                 logging.info("Running {} on the {} set".format(visualizer_name, split_name))
-                self.visualizer.fit(embeddings)
-                dim_reduced = self.visualizer.transform(embeddings)
+                dim_reduced = self.visualizer.fit_transform(embeddings)
                 logging.info("Finished {}".format(visualizer_name))
                 for bbb in self.label_levels_to_evaluate(labels):
                     label_scheme = labels[:, bbb]

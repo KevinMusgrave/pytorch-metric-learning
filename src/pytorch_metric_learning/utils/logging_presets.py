@@ -117,19 +117,50 @@ class HookContainer:
     ############################################
     ############################################
 
+
+    def get_loss_history(self, loss_names=()):
+        columns = "*" if len(loss_names) == 0 else ", ".join(loss_names)
+        table_name = "loss_histories"
+        if not self.record_keeper.table_exists(table_name):
+            return {}
+        output = self.record_keeper.query("SELECT {} FROM {}".format(columns, table_name), return_dict=True)
+        output.pop("id", None)
+        return output
+
+
+    def get_accuracy_history(self, tester, split_name, return_all_metrics=False, metrics=()):
+        table_name = self.record_group_name(tester, split_name)
+
+        if not self.record_keeper.table_exists(table_name):
+            return {}
+
+        def get_accuracies(keys):
+            keys = "*" if return_all_metrics else "epoch, %s"%keys
+            query = "SELECT {} FROM {}".format(keys, table_name)
+            return self.record_keeper.query(query, return_dict=True)
+
+        keys = metrics if len(metrics) > 0 else [self.primary_metric]
+        output = self.try_keys(keys, tester, get_accuracies)
+        output.pop("id", None)
+        return output
+
+
     def get_curr_primary_metric(self, tester, split_name):
         def get_curr(key):
             return tester.all_accuracies[split_name][key]
         return self.try_primary_metric(tester, get_curr)
 
-    def try_primary_metric(self, tester, input_func):
+    def try_keys(self, input_keys, tester, input_func):
         for average in [True, False]:
-            key = tester.accuracies_keyname(self.primary_metric, average=average)
+            keys = ", ".join([tester.accuracies_keyname(k, average=average) for k in input_keys])
             try:
-                return input_func(key)
+                return input_func(keys)
             except (KeyError, sqlite3.OperationalError):
                 pass
-        raise KeyError
+        raise KeyError        
+
+    def try_primary_metric(self, tester, input_func):
+        return self.try_keys([self.primary_metric], tester, input_func)
 
     # returns accuracies of a specified epoch
     def get_accuracies_of_epoch(self, tester, split_name, epoch, select_all=True):

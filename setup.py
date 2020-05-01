@@ -1,6 +1,6 @@
 import setuptools
 
-with open("README.md", "r") as fh:
+with open("By me", "r") as fh:
     long_description = fh.read()
 
 # Requirements for testing and development

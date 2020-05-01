@@ -201,20 +201,6 @@ guide. Proceed to `pip install -e .[dev]` afterwards.
 
 
 ## Acknowledgements
-### Facebook AI
-Thank you to [Ser-Nam Lim](https://research.fb.com/people/lim-ser-nam/) at [Facebook AI](https://ai.facebook.com/), and my research advisor, [Professor Serge Belongie](https://vision.cornell.edu/se3/people/serge-belongie/). This project began during my internship at Facebook AI where I received valuable feedback from Ser-Nam, and his team of computer vision and machine learning engineers and research scientists. In particular, thanks to [Ashish Shah](https://www.linkedin.com/in/ashish217/) and [Austin Reiter](https://www.linkedin.com/in/austin-reiter-3962aa7/) for reviewing my code during its early stages of development.
-
-### Open-source repos
-This library contains code that has been adapted and modified from the following great open-source repos:
-- https://github.com/bnu-wangxun/Deep_Metric
-- https://github.com/chaoyuaw/incubator-mxnet/blob/master/example/gluon/embedding_learning
-- https://github.com/facebookresearch/deepcluster
-- https://github.com/geonm/proxy-anchor-loss
-- https://github.com/idstcv/SoftTriple
-- https://github.com/kunhe/FastAP-metric-learning
-- https://github.com/ronekko/deep_metric_learning
-- https://github.com/tjddus9597/Proxy-Anchor-CVPR2020
-- http://kaizhao.net/regularface
 
 ### Contributors
 Thanks to the contributors who made pull requests!
@@ -231,6 +217,23 @@ Thanks to the contributors who made pull requests!
 - [wconnell](https://github.com/wconnell)
 - [fralik](https://github.com/fralik)
 - [JoOkuma](https://github.com/JoOkuma)
+
+### Facebook AI
+Thank you to [Ser-Nam Lim](https://research.fb.com/people/lim-ser-nam/) at [Facebook AI](https://ai.facebook.com/), and my research advisor, [Professor Serge Belongie](https://vision.cornell.edu/se3/people/serge-belongie/). This project began during my internship at Facebook AI where I received valuable feedback from Ser-Nam, and his team of computer vision and machine learning engineers and research scientists. In particular, thanks to [Ashish Shah](https://www.linkedin.com/in/ashish217/) and [Austin Reiter](https://www.linkedin.com/in/austin-reiter-3962aa7/) for reviewing my code during its early stages of development.
+
+### Open-source repos
+This library contains code that has been adapted and modified from the following great open-source repos:
+- https://github.com/bnu-wangxun/Deep_Metric
+- https://github.com/chaoyuaw/incubator-mxnet/blob/master/example/gluon/embedding_learning
+- https://github.com/facebookresearch/deepcluster
+- https://github.com/geonm/proxy-anchor-loss
+- https://github.com/idstcv/SoftTriple
+- https://github.com/kunhe/FastAP-metric-learning
+- https://github.com/ronekko/deep_metric_learning
+- https://github.com/tjddus9597/Proxy-Anchor-CVPR2020
+- http://kaizhao.net/regularface
+
+
 
 ## Citing this library
 If you'd like to cite pytorch-metric-learning in your paper, you can use this bibtex:

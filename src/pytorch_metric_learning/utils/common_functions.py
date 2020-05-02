@@ -18,7 +18,7 @@ class Identity(torch.nn.Module):
 
 
 def is_list_or_tuple(x):
-    return any(isinstance(x, y) for y in [list, tuple])
+    return isinstance(x, (list, tuple))
 
 
 def try_next_on_generator(gen, iterable):

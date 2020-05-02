@@ -6,8 +6,8 @@ from .. import miners
 
 
 class CascadedEmbeddings(BaseTrainer):
-    def __init__(self, embedding_sizes, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, embedding_sizes, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.embedding_sizes = embedding_sizes
 
     def calculate_loss(self, curr_batch):

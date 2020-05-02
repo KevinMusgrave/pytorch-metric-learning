@@ -124,6 +124,9 @@ class BaseTester:
         base_name += "_"+self.reference_set
         base_name += "_"+self.__class__.__name__
         base_name += "_level_"+self.label_hierarchy_level_to_str(self.label_hierarchy_level)
+        accuracy_calculator_descriptor = self.accuracy_calculator.description()
+        if accuracy_calculator_descriptor != "":
+            base_name += "_"+accuracy_calculator_descriptor
         return base_name
 
     def label_hierarchy_level_to_str(self, label_hierarchy_level):

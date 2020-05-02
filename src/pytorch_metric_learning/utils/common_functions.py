@@ -17,6 +17,10 @@ class Identity(torch.nn.Module):
         return x
 
 
+def is_list_or_tuple(x):
+    return any(isinstance(x, y) for y in [list, tuple])
+
+
 def try_next_on_generator(gen, iterable):
     try:
         return gen, next(gen)
@@ -32,8 +36,8 @@ def numpy_to_torch(v):
         return v
 
 def to_numpy(v):
-    if isinstance(v, tuple):
-        return np.array(v)
+    if is_list_or_tuple(v):
+        return np.stack([to_numpy(sub_v) for sub_v in v], axis=1)
     try:
         return v.cpu().numpy()
     except AttributeError:
@@ -43,13 +47,15 @@ def to_numpy(v):
 def get_hierarchy_label(batch_labels, hierarchy_level):
     if hierarchy_level == "all":
         return batch_labels
-
-    try:
-        if batch_labels.ndim == 2:
-            batch_labels = batch_labels[:, hierarchy_level]
-        return batch_labels
-    except AttributeError:
-        return batch_labels
+    if is_list_or_tuple(hierarchy_level):
+        max_hierarchy_level = max(hierarchy_level)
+    else:
+        max_hierarchy_level = hierarchy_level
+    if max_hierarchy_level > 0:
+        assert (batch_labels.ndim == 2) and batch_labels.shape[1] > max_hierarchy_level
+    if batch_labels.ndim == 2:
+        batch_labels = batch_labels[:, hierarchy_level]
+    return batch_labels
 
 
 def map_labels(label_map, labels):

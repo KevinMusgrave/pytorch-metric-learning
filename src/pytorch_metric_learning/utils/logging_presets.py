@@ -152,7 +152,7 @@ class HookContainer:
 
     def try_keys(self, input_keys, tester, input_func):
         for average in [True, False]:
-            keys = ", ".join([tester.accuracies_keyname(k, average=average) for k in input_keys])
+            keys = ", ".join([tester.accuracies_keyname(k, average=average, label_hierarchy_level=tester.label_hierarchy_level) for k in input_keys])
             try:
                 return input_func(keys)
             except (KeyError, sqlite3.OperationalError):

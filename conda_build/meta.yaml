@@ -1,5 +1,5 @@
 {% set name = "pytorch-metric-learning" %}
-{% set version = "0.9.84" %}
+{% set version = "0.9.85" %}
 
 package:
   name: "{{ name|lower }}"

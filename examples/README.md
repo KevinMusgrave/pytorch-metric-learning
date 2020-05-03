@@ -24,3 +24,5 @@ Click "Open in playground" on the Colab header to interact with the notebook.
 ## [Example using trainers.DeepAdversarialMetricLearning](https://colab.research.google.com/drive/1qENr4zEoF_VfHw_2gv902ZuHZ657NGS8)
 [This notebook](https://colab.research.google.com/drive/1qENr4zEoF_VfHw_2gv902ZuHZ657NGS8) uses the [DeepAdversarialMetricLearning](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#deepadversarialmetriclearning) trainer. It uses a generator to create hard negatives during training.
 
+## [Example using trainers.TwoStreamMetricLoss](https://colab.research.google.com/drive/1moDUSeKY6teOrqSZPWUPJqjJcEGqqgKm)
+[This notebook](https://colab.research.google.com/drive/1moDUSeKY6teOrqSZPWUPJqjJcEGqqgKm) is similar to the MetricLossOnly example. The main difference is that it takes two seperate streams as input for training the model. The first stream is exclusively used to get anchors from. The second stream is used for positives and negatives. As an example the notebook shows how to split CIFAR100 in two streams and use these streams for metric learning.

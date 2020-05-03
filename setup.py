@@ -9,6 +9,9 @@ extras_require_dev = [
     "pytest-cov ~= 2.8",
 ]
 
+extras_require_with_hooks = ["record-keeper >= 0.9.25", "faiss-gpu >= 1.6.3", "tensorboard"]
+extras_require_with_hooks_cpu = ["record-keeper >= 0.9.25", "faiss-cpu >= 1.6.3", "tensorboard"]
+
 setuptools.setup(
     name="pytorch-metric-learning",
     version="0.9.85",
@@ -33,5 +36,9 @@ setuptools.setup(
           'torch',
           'torchvision',
     ],
-    extras_require={"dev": extras_require_dev},
+    extras_require={
+        "dev": extras_require_dev,
+        "with-hooks": extras_require_with_hooks,
+        "with-hooks-cpu": extras_require_with_hooks_cpu
+    },
 )

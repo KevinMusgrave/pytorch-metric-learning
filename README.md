@@ -55,7 +55,7 @@ pip install pytorch-metric-learning
 
 **To get the latest dev version**:
 ```
-pip install pytorch-metric-learning==0.9.84
+pip install pytorch-metric-learning==0.9.85.dev3
 ```
 
 **To install on Windows**:
@@ -201,6 +201,23 @@ guide. Proceed to `pip install -e .[dev]` afterwards.
 
 
 ## Acknowledgements
+
+### Contributors
+Thanks to the contributors who made pull requests!
+
+#### Algorithm implementations
+- [AlenUbuntu](https://github.com/AlenUbuntu):
+	- [CircleLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#circleloss)
+
+#### Example notebooks
+- [wconnell](https://github.com/wconnell)
+	- [Learning a scRNAseq Metric Embedding](https://colab.research.google.com/drive/1DhSLDv6qXiLFKkSXKUFRjCEK1V4kPy0a)
+
+#### General improvements and bug fixes
+- [wconnell](https://github.com/wconnell)
+- [fralik](https://github.com/fralik)
+- [JoOkuma](https://github.com/JoOkuma)
+
 ### Facebook AI
 Thank you to [Ser-Nam Lim](https://research.fb.com/people/lim-ser-nam/) at [Facebook AI](https://ai.facebook.com/), and my research advisor, [Professor Serge Belongie](https://vision.cornell.edu/se3/people/serge-belongie/). This project began during my internship at Facebook AI where I received valuable feedback from Ser-Nam, and his team of computer vision and machine learning engineers and research scientists. In particular, thanks to [Ashish Shah](https://www.linkedin.com/in/ashish217/) and [Austin Reiter](https://www.linkedin.com/in/austin-reiter-3962aa7/) for reviewing my code during its early stages of development.
 
@@ -216,17 +233,7 @@ This library contains code that has been adapted and modified from the following
 - https://github.com/tjddus9597/Proxy-Anchor-CVPR2020
 - http://kaizhao.net/regularface
 
-### Contributors
-Thanks to the contributors who made pull requests!
 
-#### Algorithm implementations
-- [AlenUbuntu](https://github.com/AlenUbuntu):
-	- CircleLoss
-
-#### General improvements and bug fixes
-- [wconnell](https://github.com/wconnell)
-- [fralik](https://github.com/fralik)
-- [JoOkuma](https://github.com/JoOkuma)
 
 ## Citing this library
 If you'd like to cite pytorch-metric-learning in your paper, you can use this bibtex:

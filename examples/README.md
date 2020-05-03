@@ -1,7 +1,9 @@
 # Examples on Google Colab
 The following notebooks are meant to show entire workflows. If you want to use just a loss or miner in your own code, you can do that too. 
 
-Before running the notebooks, make sure that the runtime type is set to "GPU", by going to the Runtime menu, and clicking on "Change runtime type"
+Before running the notebooks, make sure that the runtime type is set to "GPU", by going to the Runtime menu, and clicking on "Change runtime type".
+
+Click "Open in playground" on the Colab header to interact with the notebook.
 
 ## [Example using trainers.MetricLossOnly](https://colab.research.google.com/drive/1fwTC-GRW3X6QiJq6_abJ47On2f3s9e5e)
 [This notebook](https://colab.research.google.com/drive/1fwTC-GRW3X6QiJq6_abJ47On2f3s9e5e) uses the [MetricLossOnly](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#metriclossonly) trainer, and does the following:
@@ -9,6 +11,9 @@ Before running the notebooks, make sure that the runtime type is set to "GPU", b
 - creates train/validation splits that are class-disjoint, using the CIFAR100 dataset
 - initializes a loss, miner, sampler, trainer, and tester
 - trains the model, records accuracy, and plots the embedding space
+
+## [Applied Example: Learning a scRNAseq Metric Embedding](https://colab.research.google.com/drive/1DhSLDv6qXiLFKkSXKUFRjCEK1V4kPy0a)
+[This notebook](https://colab.research.google.com/drive/1DhSLDv6qXiLFKkSXKUFRjCEK1V4kPy0a) uses the [MetricLossOnly](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#metriclossonly) trainer to train a *single* embedding model. The model is trained on canonical single-cell RNAseq cell types and used to infer intermediary differentiation states.
 
 ## [Example using trainers.TrainWithClassifier](https://colab.research.google.com/drive/1o3VeS7lnpZudoxc6HU566LUvfdrbo5nC)
 [This notebook](https://colab.research.google.com/drive/1o3VeS7lnpZudoxc6HU566LUvfdrbo5nC) uses the [TrainWithClassifier](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#trainwithclassifier) trainer. It does the same thing as the MetricLossOnly notebook, but adds a classification network and a classification loss.
@@ -19,8 +24,5 @@ Before running the notebooks, make sure that the runtime type is set to "GPU", b
 ## [Example using trainers.DeepAdversarialMetricLearning](https://colab.research.google.com/drive/1qENr4zEoF_VfHw_2gv902ZuHZ657NGS8)
 [This notebook](https://colab.research.google.com/drive/1qENr4zEoF_VfHw_2gv902ZuHZ657NGS8) uses the [DeepAdversarialMetricLearning](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#deepadversarialmetriclearning) trainer. It uses a generator to create hard negatives during training.
 
-
 ## [Example using trainers.TwoStreamMetricLoss](https://colab.research.google.com/drive/1moDUSeKY6teOrqSZPWUPJqjJcEGqqgKm)
-[This notebook](https://colab.research.google.com/drive/1moDUSeKY6teOrqSZPWUPJqjJcEGqqgKm) is similar to the MetricLossOnly example. The main difference is that it takes two seperate streams as input for training the model. The first stream is exclusively used to get anchors from. The second stream is used for positives and negatives.
-
-As an example the notebook shows how to split CIFAR100 in two streams and use these streams for metric learning.
+[This notebook](https://colab.research.google.com/drive/1moDUSeKY6teOrqSZPWUPJqjJcEGqqgKm) is similar to the MetricLossOnly example. The main difference is that it takes two seperate streams as input for training the model. The first stream is exclusively used to get anchors from. The second stream is used for positives and negatives. As an example the notebook shows how to split CIFAR100 in two streams and use these streams for metric learning.

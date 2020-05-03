@@ -4,8 +4,8 @@ from ..utils import common_functions as c_f
 import torch
 
 class UnsupervisedEmbeddingsUsingAugmentations(MetricLossOnly):
-    def __init__(self, transforms, data_and_label_setter=None, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, transforms, data_and_label_setter=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.data_and_label_setter = data_and_label_setter
         self.initialize_data_and_label_setter()
         self.transforms = transforms

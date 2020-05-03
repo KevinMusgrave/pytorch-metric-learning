@@ -72,7 +72,7 @@ class BaseTester:
         with torch.no_grad():
             for i, data in enumerate(tqdm.tqdm(dataloader)):
                 img, label = self.data_and_label_getter(data)
-                label = c_f.process_label(label, self.label_hierarchy_level, self.label_mapper)
+                label = c_f.process_label(label, "all", self.label_mapper)
                 q = self.get_embeddings_for_eval(trunk_model, embedder_model, img)
                 if label.dim() == 1:
                     label = label.unsqueeze(1)
@@ -106,12 +106,11 @@ class BaseTester:
             visualizer_name = self.visualizer.__class__.__name__
             for split_name, (embeddings, labels) in embeddings_and_labels.items():
                 logging.info("Running {} on the {} set".format(visualizer_name, split_name))
-                self.visualizer.fit(embeddings)
-                dim_reduced = self.visualizer.transform(embeddings)
+                dim_reduced = self.visualizer.fit_transform(embeddings)
                 logging.info("Finished {}".format(visualizer_name))
-                for bbb in self.label_levels_to_evaluate(labels):
-                    label_scheme = labels[:, bbb]
-                    keyname = self.accuracies_keyname(visualizer_name, label_hierarchy_level=bbb)
+                for L in self.label_levels_to_evaluate(labels):
+                    label_scheme = labels[:, L]
+                    keyname = self.accuracies_keyname(visualizer_name, label_hierarchy_level=L)
                     self.dim_reduced_embeddings[split_name][keyname] = (dim_reduced, label_scheme)
                     self.visualizer_hook(self.visualizer, dim_reduced, label_scheme, split_name, keyname)
 
@@ -124,13 +123,24 @@ class BaseTester:
             base_name += "_trunk"
         base_name += "_"+self.reference_set
         base_name += "_"+self.__class__.__name__
-        base_name += "_level_"+str(self.label_hierarchy_level)
+        base_name += "_level_"+self.label_hierarchy_level_to_str(self.label_hierarchy_level)
+        accuracy_calculator_descriptor = self.accuracy_calculator.description()
+        if accuracy_calculator_descriptor != "":
+            base_name += "_"+accuracy_calculator_descriptor
         return base_name
+
+    def label_hierarchy_level_to_str(self, label_hierarchy_level):
+        if c_f.is_list_or_tuple(label_hierarchy_level):
+            return "_".join(str(x) for x in label_hierarchy_level)
+        else:
+            return str(label_hierarchy_level)
 
     def accuracies_keyname(self, metric, label_hierarchy_level=0, average=False):
         if average:
             return "AVERAGE_%s"%metric
-        return "%s_level%d"%(metric, label_hierarchy_level)
+        if (label_hierarchy_level=="all" or c_f.is_list_or_tuple(label_hierarchy_level)) and len(self.label_levels) == 1:
+            label_hierarchy_level = self.label_levels[0]
+        return "%s_level%s"%(metric, self.label_hierarchy_level_to_str(label_hierarchy_level))
 
     def all_splits_combined(self, embeddings_and_labels):
         eee, lll = list(zip(*list(embeddings_and_labels.values())))
@@ -154,13 +164,14 @@ class BaseTester:
         return self.reference_set in ["compared_to_self", "compared_to_sets_combined"]
 
     def label_levels_to_evaluate(self, query_labels):
+        num_levels_available = query_labels.shape[1]
         if self.label_hierarchy_level == "all":
-            return range(query_labels.shape[1])
-        elif query_labels.shape[1] == 1:
-            return [0]
+            return range(num_levels_available)
         elif isinstance(self.label_hierarchy_level, int):
+            assert self.label_hierarchy_level < num_levels_available
             return [self.label_hierarchy_level]
-        elif isinstance(self.label_hierarchy_level, list):
+        elif c_f.is_list_or_tuple(self.label_hierarchy_level):
+            assert max(self.label_hierarchy_level) < num_levels_available
             return self.label_hierarchy_level
 
     def calculate_average_accuracies(self, accuracies, metrics, label_levels):

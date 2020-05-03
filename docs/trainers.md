@@ -84,7 +84,7 @@ If not specified, then the original labels are used.
 	* If you want ready-to-use hooks, take a look at the [logging_presets module](utils.md#logging_presets).
 
 ## MetricLossOnly
-This trainer just computes a metric loss from the output of your embedder network. See [the example notebook](https://colab.research.google.com/drive/1fwTC-GRW3X6QiJq6_abJ47On2f3s9e5e).
+This trainer just computes a metric loss from the output of your embedder network. See [the example notebook](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/MetricLossOnly.ipynb).
 ```python
 trainers.MetricLossOnly(*args, **kwargs)
 ```
@@ -99,7 +99,7 @@ trainers.MetricLossOnly(*args, **kwargs)
 
 
 ## TrainWithClassifier
-This trainer is for the case where your architecture is trunk -> embedder -> classifier. It applies a metric loss to the output of the embedder network, and a classification loss to the output of the classifier network. See [the example notebook](https://colab.research.google.com/drive/1o3VeS7lnpZudoxc6HU566LUvfdrbo5nC).
+This trainer is for the case where your architecture is trunk -> embedder -> classifier. It applies a metric loss to the output of the embedder network, and a classification loss to the output of the classifier network. See [the example notebook](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/TrainWithClassifier.ipynb).
 ```python
 trainers.TrainWithClassifier(*args, **kwargs)
 ```
@@ -113,7 +113,7 @@ trainers.TrainWithClassifier(*args, **kwargs)
 
 ## CascadedEmbeddings
 
-This trainer is a generalization of [Hard-Aware Deeply Cascaded Embedding](http://openaccess.thecvf.com/content_ICCV_2017/papers/Yuan_Hard-Aware_Deeply_Cascaded_ICCV_2017_paper.pdf). It splits the output of your embedder network, computing a separate loss for each section. In other words, the output of your embedder should be the concatenation of your cascaded models. See [the example notebook](https://colab.research.google.com/drive/1P2Zq-sE07xvVAHihwVWQKIZ25NQoeRts).
+This trainer is a generalization of [Hard-Aware Deeply Cascaded Embedding](http://openaccess.thecvf.com/content_ICCV_2017/papers/Yuan_Hard-Aware_Deeply_Cascaded_ICCV_2017_paper.pdf). It splits the output of your embedder network, computing a separate loss for each section. In other words, the output of your embedder should be the concatenation of your cascaded models. See [the example notebook](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/CascadedEmbeddings.ipynb).
 
 ```python
 trainers.CascadedEmbeddings(embedding_sizes, *args, **kwargs)
@@ -140,7 +140,7 @@ trainers.CascadedEmbeddings(embedding_sizes, *args, **kwargs)
 		* Optionally include "subset_batch_miner": subset_batch_miner
 
 ## DeepAdversarialMetricLearning
-This is an implementation of [Deep Adversarial Metric Learning](http://openaccess.thecvf.com/content_cvpr_2018/papers/Duan_Deep_Adversarial_Metric_CVPR_2018_paper.pdf). See [the example notebook](https://colab.research.google.com/drive/1qENr4zEoF_VfHw_2gv902ZuHZ657NGS8).
+This is an implementation of [Deep Adversarial Metric Learning](http://openaccess.thecvf.com/content_cvpr_2018/papers/Duan_Deep_Adversarial_Metric_CVPR_2018_paper.pdf). See [the example notebook](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/DeepAdversarialMetricLearning.ipynb).
 ```python
 trainers.DeepAdversarialMetricLearning(metric_alone_epochs=0,
 		        					g_alone_epochs=0,
@@ -194,7 +194,7 @@ trainers.UnsupervisedEmbeddingsUsingAugmentations(transforms, data_and_label_set
 ## TwoStreamMetricLoss
 This trainer is the same as [MetricLossOnly](trainers.md#metriclossonly) but operates on separate streams of anchors and positives/negatives.
 The supplied **dataset** must return ```(anchor, positive, label)```.
-Given a batch of ```(anchor, positive, label)```, triplets are formed using ```anchor``` as the anchor, and ```positive``` as either the positive or negative. See [the example notebook](https://colab.research.google.com/drive/1moDUSeKY6teOrqSZPWUPJqjJcEGqqgKm).
+Given a batch of ```(anchor, positive, label)```, triplets are formed using ```anchor``` as the anchor, and ```positive``` as either the positive or negative. See [the example notebook](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/TwoStreamMetricLoss.ipynb).
 ```python
 trainers.TwoStreamMetricLoss(*args, **kwargs)
 ```

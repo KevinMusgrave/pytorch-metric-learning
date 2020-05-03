@@ -226,9 +226,9 @@ Thanks to the contributors who made pull requests!
 
 #### Example notebooks
 - [wconnell](https://github.com/wconnell)
-	- [Learning a scRNAseq Metric Embedding](https://colab.research.google.com/drive/1DhSLDv6qXiLFKkSXKUFRjCEK1V4kPy0a)
+	- [Learning a scRNAseq Metric Embedding](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/scRNAseq_MetricEmbedding.ipynb)
 - [marijnl](https://github.com/marijnl)
-    - [Example using trainers.TwoStreamMetricLoss](https://colab.research.google.com/drive/1moDUSeKY6teOrqSZPWUPJqjJcEGqqgKm)
+    - [Example using trainers.TwoStreamMetricLoss](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/TwoStreamMetricLoss.ipynb)
 
 #### General improvements and bug fixes
 - [wconnell](https://github.com/wconnell)

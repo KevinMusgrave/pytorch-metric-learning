@@ -341,6 +341,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#globaltwostreamembeddingspacetester" class="md-nav__link">
+    GlobalTwoStreamEmbeddingSpaceTester
+  </a>
+  
+</li>
+      
       
       
       
@@ -405,6 +412,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#globaltwostreamembeddingspacetester" class="md-nav__link">
+    GlobalTwoStreamEmbeddingSpaceTester
+  </a>
+  
+</li>
+      
       
       
       
@@ -428,7 +442,7 @@
 <p>Testers take your model and dataset, and compute nearest-neighbor based accuracy metrics. Note that the testers require the <a href="https://github.com/facebookresearch/faiss/blob/master/INSTALL.md">faiss package</a>, which you can install with conda.</p>
 <p>In general, testers are used as follows:</p>
 <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">testers</span>
-<span class="n">t</span> <span class="o">=</span> <span class="n">testers</span><span class="o">.</span><span class="n">SomeTestingFunction</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="n">t</span> <span class="o">=</span> <span class="n">testers</span><span class="o">.</span><span class="n">SomeTestingFunction</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 <span class="n">dataset_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;train&quot;</span><span class="p">:</span> <span class="n">train_dataset</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">:</span> <span class="n">val_dataset</span><span class="p">}</span>
 <span class="n">tester</span><span class="o">.</span><span class="n">test</span><span class="p">(</span><span class="n">dataset_dict</span><span class="p">,</span> <span class="n">epoch</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
 
@@ -483,7 +497,7 @@
 <li><strong>dataset_labels</strong>: The labels for your dataset. Can be 1-dimensional (1 label per datapoint) or 2-dimensional, where each row represents a datapoint, and the columns are the multiple labels that the datapoint has. Labels can be integers or strings. <strong>This option needs to be specified only if <code>set_min_label_to_zero</code> is True.</strong></li>
 <li><strong>set_min_label_to_zero</strong>: If True, labels will be mapped such that they represent their rank in the label set. For example, if your dataset has labels 5, 10, 12, 13, then at each iteration, these would become 0, 1, 2, 3. You should also set this to True if you want to use string labels. In that case, 'dog', 'cat', 'monkey' would get mapped to 1, 0, 2. If True, you must pass in <code>dataset_labels</code> (see above). The default is False.</li>
 <li><strong>accuracy_calculator</strong>: Optional. An object that extends <a href="../utils/#accuracycalculator">AccuracyCalculator</a>. This will be used to compute the accuracy of your model. By default, AccuracyCalculator is used.</li>
-<li><strong>visualizer</strong>: Optional. An object that has implemented the <code>fit</code> and <code>transform</code> methods, as done by <a href="https://github.com/lmcinnes/umap">UMAP</a> and many scikit-learn functions. For example, you can set <code>visualizer = umap.UMAP()</code>. The object's <code>fit</code> function should take in a 2D array of embeddings, and reduce the dimensionality, such that calling <code>visualizer.transform(embeddings)</code> results in a 2D array of size (N, 2).</li>
+<li><strong>visualizer</strong>: Optional. An object that has implemented the <code>fit_transform</code> method, as done by <a href="https://github.com/lmcinnes/umap">UMAP</a> and many scikit-learn functions. For example, you can set <code>visualizer = umap.UMAP()</code>. The object's <code>fit_transform</code> function should take in a 2D array of embeddings, and reduce the dimensionality, such that calling <code>visualizer.fit_transform(embeddings)</code> results in a 2D array of size (N, 2).</li>
 <li><strong>visualizer_hook</strong>: Optional. This function will be passed the following args. You can do whatever you want in this function, but the reason it exists is to allow you to save a plot of the embeddings etc.<ul>
 <li>visualizer: The visualizer object that you passed in.</li>
 <li>embeddings: The dimensionality reduced embeddings.</li>
@@ -494,15 +508,27 @@
 </li>
 </ul>
 <h2 id="globalembeddingspacetester">GlobalEmbeddingSpaceTester<a class="headerlink" href="#globalembeddingspacetester" title="Permanent link">&para;</a></h2>
-<p>Computes nearest neighbors by looking at all points in the embedding space. This is probably the tester you are looking for.</p>
-<div class="codehilite"><pre><span></span><span class="n">testers</span><span class="o">.</span><span class="n">GlobalEmbeddingSpaceTester</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<p>Computes nearest neighbors by looking at all points in the embedding space. This is probably the tester you are looking for. To see it in action, check one of the <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples">example notebooks</a></p>
+<div class="codehilite"><pre><span></span><span class="n">testers</span><span class="o">.</span><span class="n">GlobalEmbeddingSpaceTester</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
 
 <h2 id="withsameparentlabeltester">WithSameParentLabelTester<a class="headerlink" href="#withsameparentlabeltester" title="Permanent link">&para;</a></h2>
 <p>This assumes there is a label hierarchy. For each sample, the search space is narrowed by only looking at sibling samples, i.e. samples with the same parent label. For example, consider a dataset with 4 fine-grained classes {cat, dog, car, truck}, and 2 coarse-grained classes {animal, vehicle}. The nearest neighbor search for cats and dogs will consist of animals, and the nearest-neighbor search for cars and trucks will consist of vehicles.</p>
-<div class="codehilite"><pre><span></span><span class="n">testers</span><span class="o">.</span><span class="n">WithSameParentLabelTester</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><span class="n">testers</span><span class="o">.</span><span class="n">WithSameParentLabelTester</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
+
+
+<h2 id="globaltwostreamembeddingspacetester">GlobalTwoStreamEmbeddingSpaceTester<a class="headerlink" href="#globaltwostreamembeddingspacetester" title="Permanent link">&para;</a></h2>
+<p>This is the corresponding tester for <a href="../trainers/#twostreammetricloss">TwoStreamMetricLoss</a>. The supplied <strong>dataset</strong> must return <code>(anchor, positive, label)</code>.</p>
+<div class="codehilite"><pre><span></span><span class="n">testers</span><span class="o">.</span><span class="n">GlobalTwoStreamEmbeddingSpaceTester</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+
+<p><strong>Requirements</strong>:</p>
+<ul>
+<li><strong>reference_set</strong>: This must be left at the default value of <code>"compared_to_self"</code>.</li>
+</ul>
                 
                   
                 

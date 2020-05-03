@@ -350,6 +350,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#twostreammetricloss" class="md-nav__link">
+    TwoStreamMetricLoss
+  </a>
+  
+</li>
+      
       
       
       
@@ -447,6 +454,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#twostreammetricloss" class="md-nav__link">
+    TwoStreamMetricLoss
+  </a>
+  
+</li>
+      
       
       
       
@@ -470,7 +484,7 @@
 <p>Trainers exist in this library because some metric learning algorithms are more than just loss or mining functions. Some algorithms require additional networks, data augmentations, learning rate schedules etc. The goal of the trainers module is to provide access to these type of metric learning algorithms. </p>
 <p>In general, trainers are used as follows:</p>
 <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">trainers</span>
-<span class="n">t</span> <span class="o">=</span> <span class="n">trainers</span><span class="o">.</span><span class="n">SomeTrainingFunction</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<span class="n">t</span> <span class="o">=</span> <span class="n">trainers</span><span class="o">.</span><span class="n">SomeTrainingFunction</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 <span class="n">t</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">num_epochs</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 </pre></div>
 
@@ -572,8 +586,8 @@ If not specified, then the original labels are used.</li>
 </li>
 </ul>
 <h2 id="metriclossonly">MetricLossOnly<a class="headerlink" href="#metriclossonly" title="Permanent link">&para;</a></h2>
-<p>This trainer just computes a metric loss from the output of your embedder network.</p>
-<div class="codehilite"><pre><span></span><span class="n">trainers</span><span class="o">.</span><span class="n">MetricLossOnly</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<p>This trainer just computes a metric loss from the output of your embedder network. See <a href="https://colab.research.google.com/drive/1fwTC-GRW3X6QiJq6_abJ47On2f3s9e5e">the example notebook</a>.</p>
+<div class="codehilite"><pre><span></span><span class="n">trainers</span><span class="o">.</span><span class="n">MetricLossOnly</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
 
@@ -590,8 +604,8 @@ If not specified, then the original labels are used.</li>
 </li>
 </ul>
 <h2 id="trainwithclassifier">TrainWithClassifier<a class="headerlink" href="#trainwithclassifier" title="Permanent link">&para;</a></h2>
-<p>This trainer is for the case where your architecture is trunk -&gt; embedder -&gt; classifier. It applies a metric loss to the output of the embedder network, and a classification loss to the output of the classifier network.</p>
-<div class="codehilite"><pre><span></span><span class="n">trainers</span><span class="o">.</span><span class="n">TrainWithClassifier</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<p>This trainer is for the case where your architecture is trunk -&gt; embedder -&gt; classifier. It applies a metric loss to the output of the embedder network, and a classification loss to the output of the classifier network. See <a href="https://colab.research.google.com/drive/1o3VeS7lnpZudoxc6HU566LUvfdrbo5nC">the example notebook</a>.</p>
+<div class="codehilite"><pre><span></span><span class="n">trainers</span><span class="o">.</span><span class="n">TrainWithClassifier</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
 
@@ -608,8 +622,8 @@ If not specified, then the original labels are used.</li>
 </li>
 </ul>
 <h2 id="cascadedembeddings">CascadedEmbeddings<a class="headerlink" href="#cascadedembeddings" title="Permanent link">&para;</a></h2>
-<p>This trainer is a generalization of <a href="http://openaccess.thecvf.com/content_ICCV_2017/papers/Yuan_Hard-Aware_Deeply_Cascaded_ICCV_2017_paper.pdf">Hard-Aware Deeply Cascaded Embedding</a>. It splits the output of your embedder network, computing a separate loss for each section. In other words, the output of your embedder should be the concatenation of your cascaded models.</p>
-<div class="codehilite"><pre><span></span><span class="n">trainers</span><span class="o">.</span><span class="n">CascadedEmbeddings</span><span class="p">(</span><span class="n">embedding_sizes</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<p>This trainer is a generalization of <a href="http://openaccess.thecvf.com/content_ICCV_2017/papers/Yuan_Hard-Aware_Deeply_Cascaded_ICCV_2017_paper.pdf">Hard-Aware Deeply Cascaded Embedding</a>. It splits the output of your embedder network, computing a separate loss for each section. In other words, the output of your embedder should be the concatenation of your cascaded models. See <a href="https://colab.research.google.com/drive/1P2Zq-sE07xvVAHihwVWQKIZ25NQoeRts">the example notebook</a>.</p>
+<div class="codehilite"><pre><span></span><span class="n">trainers</span><span class="o">.</span><span class="n">CascadedEmbeddings</span><span class="p">(</span><span class="n">embedding_sizes</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
 
@@ -649,10 +663,11 @@ If not specified, then the original labels are used.</li>
 </li>
 </ul>
 <h2 id="deepadversarialmetriclearning">DeepAdversarialMetricLearning<a class="headerlink" href="#deepadversarialmetriclearning" title="Permanent link">&para;</a></h2>
-<p>This is an implementation of <a href="http://openaccess.thecvf.com/content_cvpr_2018/papers/Duan_Deep_Adversarial_Metric_CVPR_2018_paper.pdf">Deep Adversarial Metric Learning</a></p>
+<p>This is an implementation of <a href="http://openaccess.thecvf.com/content_cvpr_2018/papers/Duan_Deep_Adversarial_Metric_CVPR_2018_paper.pdf">Deep Adversarial Metric Learning</a>. See <a href="https://colab.research.google.com/drive/1qENr4zEoF_VfHw_2gv902ZuHZ657NGS8">the example notebook</a>.</p>
 <div class="codehilite"><pre><span></span><span class="n">trainers</span><span class="o">.</span><span class="n">DeepAdversarialMetricLearning</span><span class="p">(</span><span class="n">metric_alone_epochs</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                                     <span class="n">g_alone_epochs</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                                     <span class="n">g_triplets_per_anchor</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                                    <span class="o">*</span><span class="n">args</span><span class="p">,</span>
                                     <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 </pre></div>
 
@@ -704,7 +719,7 @@ If not specified, then the original labels are used.</li>
 <p>This is an implementation of a general approach that has been used in recent unsupervised learning papers, e.g. <a href="https://arxiv.org/pdf/1904.03436.pdf">Unsupervised Embedding Learning via Invariant and Spreading
 Instance Feature
 </a> and <a href="https://arxiv.org/abs/1911.07072">Unsupervised Deep Metric Learning via Auxiliary Rotation Loss</a>. The idea is that augmented versions of a datapoint should be close to each other in the embedding space.</p>
-<div class="codehilite"><pre><span></span><span class="n">trainers</span><span class="o">.</span><span class="n">UnsupervisedEmbeddingsUsingAugmentations</span><span class="p">(</span><span class="n">transforms</span><span class="p">,</span> <span class="n">data_and_label_setter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><span class="n">trainers</span><span class="o">.</span><span class="n">UnsupervisedEmbeddingsUsingAugmentations</span><span class="p">(</span><span class="n">transforms</span><span class="p">,</span> <span class="n">data_and_label_setter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
 
@@ -712,6 +727,27 @@ Instance Feature
 <ul>
 <li><strong>transforms</strong>: A list of transforms. For every sample in a batch, each transform will be applied to the sample. If there are N transforms and the batch size is B, then there will be a total of B*N augmented samples. </li>
 <li><strong>data_and_label_setter</strong>: A function that takes in a tuple of (augmented_data, pseudo_labels) and outputs whatever is expected by self.data_and_label_getter.</li>
+</ul>
+<h2 id="twostreammetricloss">TwoStreamMetricLoss<a class="headerlink" href="#twostreammetricloss" title="Permanent link">&para;</a></h2>
+<p>This trainer is the same as <a href="./#metriclossonly">MetricLossOnly</a> but operates on separate streams of anchors and positives/negatives.
+The supplied <strong>dataset</strong> must return <code>(anchor, positive, label)</code>.
+Given a batch of <code>(anchor, positive, label)</code>, triplets are formed using <code>anchor</code> as the anchor, and <code>positive</code> as either the positive or negative. See <a href="https://colab.research.google.com/drive/1moDUSeKY6teOrqSZPWUPJqjJcEGqqgKm">the example notebook</a>.</p>
+<div class="codehilite"><pre><span></span><span class="n">trainers</span><span class="o">.</span><span class="n">TwoStreamMetricLoss</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+
+<p><strong>Requirements</strong>:</p>
+<ul>
+<li><strong>models</strong>: Must have the following form:<ul>
+<li>{"trunk": trunk_model}</li>
+<li>Optionally include "embedder": embedder_model</li>
+</ul>
+</li>
+<li><strong>loss_funcs</strong>: Must have the following form:<ul>
+<li>{"metric_loss": loss_func}</li>
+</ul>
+</li>
+<li><strong>mining_funcs</strong>: Only tuple miners are supported</li>
 </ul>
                 
                   

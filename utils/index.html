@@ -469,7 +469,7 @@
 <h3 id="accuracycalculator">AccuracyCalculator<a class="headerlink" href="#accuracycalculator" title="Permanent link">&para;</a></h3>
 <p>This class computes several accuracy metrics given a query and reference embeddings. It can be easily extended to create custom accuracy metrics.</p>
 <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils</span> <span class="kn">import</span> <span class="n">AccuracyCalculator</span>
-<span class="n">AccuracyCalculator</span><span class="p">(</span><span class="n">include</span><span class="o">=</span><span class="p">(),</span> <span class="n">exclude</span><span class="o">=</span><span class="p">())</span>
+<span class="n">AccuracyCalculator</span><span class="p">(</span><span class="n">include</span><span class="o">=</span><span class="p">(),</span> <span class="n">exclude</span><span class="o">=</span><span class="p">(),</span> <span class="n">average_per_class</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 
 
@@ -477,6 +477,7 @@
 <ul>
 <li><strong>include</strong>: Optional. A list or tuple of strings, which are the names of metrics you want to calculate. If left empty, all default metrics will be calculated.</li>
 <li><strong>exclude</strong>: Optional. A list or tuple of strings, which are the names of metrics you <strong>do not</strong> want to calculate.</li>
+<li><strong>average_per_class</strong>: If True, the average accuracy per class is computed, and then the average of those averages is returned. This can be useful if your dataset has unbalanced classes. If False, the global average will be returned.</li>
 </ul>
 <p><strong>Getting accuracy</strong>:</p>
 <p>Call the <code>get_accuracy</code> method to obtain a dictionary of accuracies.</p>
@@ -586,7 +587,7 @@
 </pre></div>
 
 
-<p>With the provided hooks, data from both the training and validation stages will be saved in csv, sqlite, and tensorboard format, and models and optimizers will be saved in the specified model folder. See <a href="https://colab.research.google.com/drive/1fwTC-GRW3X6QiJq6_abJ47On2f3s9e5e">this Google Colab notebook</a> for a complete example. Read the next section to learn more about the provided hooks.</p>
+<p>With the provided hooks, data from both the training and validation stages will be saved in csv, sqlite, and tensorboard format, and models and optimizers will be saved in the specified model folder. See <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples">the example notebooks</a> for complete examples. Read the next section to learn more about the provided hooks.</p>
 <h3 id="hookcontainer">HookContainer<a class="headerlink" href="#hookcontainer" title="Permanent link">&para;</a></h3>
 <p>This class contains ready-to-use hooks to be used by trainers and testers.</p>
 <div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">pytorch_metric_learning.utils.logging_presets</span> <span class="k">as</span> <span class="nn">LP</span>
@@ -626,6 +627,29 @@
 </li>
 <li><strong>end_of_testing_hook</strong>: This function records accuracy metrics. You can pass this function directly into a tester object.</li>
 </ul>
+<p><strong>Useful methods</strong>:</p>
+<p>Getting loss history:</p>
+<div class="codehilite"><pre><span></span><span class="c1"># Get a dictionary mapping from loss names to lists</span>
+<span class="n">loss_histories</span> <span class="o">=</span> <span class="n">hooks</span><span class="o">.</span><span class="n">get_loss_history</span><span class="p">()</span> 
+
+<span class="c1"># You can also specify which loss histories you want</span>
+<span class="c1"># It will still return a dictionary. In this case, the dictionary will contain only &quot;total_loss&quot;</span>
+<span class="n">loss_histories</span> <span class="o">=</span> <span class="n">hooks</span><span class="o">.</span><span class="n">get_loss_history</span><span class="p">(</span><span class="n">loss_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;total_loss&quot;</span><span class="p">])</span>
+</pre></div>
+
+
+<p>Getting accuracy history</p>
+<div class="codehilite"><pre><span></span><span class="c1"># The first argument is the tester object. The second is the split name.</span>
+<span class="c1"># Get a dictionary containing the keys &quot;epoch&quot; and the primary metric</span>
+<span class="c1"># The values are lists</span>
+<span class="n">acc_histories</span> <span class="o">=</span> <span class="n">hooks</span><span class="o">.</span><span class="n">get_accuracy_history</span><span class="p">(</span><span class="n">tester</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">)</span>
+
+<span class="c1"># Get all accuracy histories</span>
+<span class="n">acc_histories</span> <span class="o">=</span> <span class="n">hooks</span><span class="o">.</span><span class="n">get_accuracy_history</span><span class="p">(</span><span class="n">tester</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">,</span> <span class="n">return_all_metrics</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Get a specific set of accuracy histories</span>
+<span class="n">acc_histories</span> <span class="o">=</span> <span class="n">hooks</span><span class="o">.</span><span class="n">get_accuracy_history</span><span class="p">(</span><span class="n">tester</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;AMI&quot;</span><span class="p">,</span> <span class="s2">&quot;NMI&quot;</span><span class="p">])</span>
+</pre></div>
                 
                   
                 

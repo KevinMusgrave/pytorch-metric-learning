@@ -1,10 +1,10 @@
 # PyTorch Metric Learning
 
-## Google Colab Example
-See [this notebook](https://colab.research.google.com/drive/1fwTC-GRW3X6QiJq6_abJ47On2f3s9e5e) for an example of a complete training and testing workflow. View other examples in the [examples folder](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/README.md)
+## Google Colab Examples
+See the [examples folder](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/README.md) for notebooks that show entire train/test workflows with logging and model saving.
 
 ## Installation
-###Pip
+### Pip
 ```
 pip install pytorch-metric-learning
 ```
@@ -30,7 +30,7 @@ pip install pytorch-metric-learning[with-hooks]
 pip install pytorch-metric-learning[with-hooks-cpu]
 ```
 
-###Conda
+### Conda
 ```
 conda install pytorch-metric-learning -c metric-learning
 ```

@@ -586,7 +586,7 @@ If not specified, then the original labels are used.</li>
 </li>
 </ul>
 <h2 id="metriclossonly">MetricLossOnly<a class="headerlink" href="#metriclossonly" title="Permanent link">&para;</a></h2>
-<p>This trainer just computes a metric loss from the output of your embedder network. See <a href="https://colab.research.google.com/drive/1fwTC-GRW3X6QiJq6_abJ47On2f3s9e5e">the example notebook</a>.</p>
+<p>This trainer just computes a metric loss from the output of your embedder network. See <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/MetricLossOnly.ipynb">the example notebook</a>.</p>
 <div class="codehilite"><pre><span></span><span class="n">trainers</span><span class="o">.</span><span class="n">MetricLossOnly</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
@@ -604,7 +604,7 @@ If not specified, then the original labels are used.</li>
 </li>
 </ul>
 <h2 id="trainwithclassifier">TrainWithClassifier<a class="headerlink" href="#trainwithclassifier" title="Permanent link">&para;</a></h2>
-<p>This trainer is for the case where your architecture is trunk -&gt; embedder -&gt; classifier. It applies a metric loss to the output of the embedder network, and a classification loss to the output of the classifier network. See <a href="https://colab.research.google.com/drive/1o3VeS7lnpZudoxc6HU566LUvfdrbo5nC">the example notebook</a>.</p>
+<p>This trainer is for the case where your architecture is trunk -&gt; embedder -&gt; classifier. It applies a metric loss to the output of the embedder network, and a classification loss to the output of the classifier network. See <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/TrainWithClassifier.ipynb">the example notebook</a>.</p>
 <div class="codehilite"><pre><span></span><span class="n">trainers</span><span class="o">.</span><span class="n">TrainWithClassifier</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
@@ -622,7 +622,7 @@ If not specified, then the original labels are used.</li>
 </li>
 </ul>
 <h2 id="cascadedembeddings">CascadedEmbeddings<a class="headerlink" href="#cascadedembeddings" title="Permanent link">&para;</a></h2>
-<p>This trainer is a generalization of <a href="http://openaccess.thecvf.com/content_ICCV_2017/papers/Yuan_Hard-Aware_Deeply_Cascaded_ICCV_2017_paper.pdf">Hard-Aware Deeply Cascaded Embedding</a>. It splits the output of your embedder network, computing a separate loss for each section. In other words, the output of your embedder should be the concatenation of your cascaded models. See <a href="https://colab.research.google.com/drive/1P2Zq-sE07xvVAHihwVWQKIZ25NQoeRts">the example notebook</a>.</p>
+<p>This trainer is a generalization of <a href="http://openaccess.thecvf.com/content_ICCV_2017/papers/Yuan_Hard-Aware_Deeply_Cascaded_ICCV_2017_paper.pdf">Hard-Aware Deeply Cascaded Embedding</a>. It splits the output of your embedder network, computing a separate loss for each section. In other words, the output of your embedder should be the concatenation of your cascaded models. See <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/CascadedEmbeddings.ipynb">the example notebook</a>.</p>
 <div class="codehilite"><pre><span></span><span class="n">trainers</span><span class="o">.</span><span class="n">CascadedEmbeddings</span><span class="p">(</span><span class="n">embedding_sizes</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
@@ -663,7 +663,7 @@ If not specified, then the original labels are used.</li>
 </li>
 </ul>
 <h2 id="deepadversarialmetriclearning">DeepAdversarialMetricLearning<a class="headerlink" href="#deepadversarialmetriclearning" title="Permanent link">&para;</a></h2>
-<p>This is an implementation of <a href="http://openaccess.thecvf.com/content_cvpr_2018/papers/Duan_Deep_Adversarial_Metric_CVPR_2018_paper.pdf">Deep Adversarial Metric Learning</a>. See <a href="https://colab.research.google.com/drive/1qENr4zEoF_VfHw_2gv902ZuHZ657NGS8">the example notebook</a>.</p>
+<p>This is an implementation of <a href="http://openaccess.thecvf.com/content_cvpr_2018/papers/Duan_Deep_Adversarial_Metric_CVPR_2018_paper.pdf">Deep Adversarial Metric Learning</a>. See <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/DeepAdversarialMetricLearning.ipynb">the example notebook</a>.</p>
 <div class="codehilite"><pre><span></span><span class="n">trainers</span><span class="o">.</span><span class="n">DeepAdversarialMetricLearning</span><span class="p">(</span><span class="n">metric_alone_epochs</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                                     <span class="n">g_alone_epochs</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                                     <span class="n">g_triplets_per_anchor</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
@@ -731,7 +731,7 @@ Instance Feature
 <h2 id="twostreammetricloss">TwoStreamMetricLoss<a class="headerlink" href="#twostreammetricloss" title="Permanent link">&para;</a></h2>
 <p>This trainer is the same as <a href="./#metriclossonly">MetricLossOnly</a> but operates on separate streams of anchors and positives/negatives.
 The supplied <strong>dataset</strong> must return <code>(anchor, positive, label)</code>.
-Given a batch of <code>(anchor, positive, label)</code>, triplets are formed using <code>anchor</code> as the anchor, and <code>positive</code> as either the positive or negative. See <a href="https://colab.research.google.com/drive/1moDUSeKY6teOrqSZPWUPJqjJcEGqqgKm">the example notebook</a>.</p>
+Given a batch of <code>(anchor, positive, label)</code>, triplets are formed using <code>anchor</code> as the anchor, and <code>positive</code> as either the positive or negative. See <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/TwoStreamMetricLoss.ipynb">the example notebook</a>.</p>
 <div class="codehilite"><pre><span></span><span class="n">trainers</span><span class="o">.</span><span class="n">TwoStreamMetricLoss</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 

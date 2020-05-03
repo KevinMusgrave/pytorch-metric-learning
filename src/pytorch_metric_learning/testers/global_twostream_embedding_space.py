@@ -4,9 +4,14 @@ from .base_tester import BaseTester
 from .global_embedding_space import GlobalEmbeddingSpaceTester
 import torch
 import tqdm
+import numpy as np
 
 class GlobalTwoStreamEmbeddingSpaceTester(GlobalEmbeddingSpaceTester):
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        assert self.reference_set == "compared_to_self", "compared_to_self is the only supported reference_set type for {}".format(self.__class__.__name__)
+        
     def compute_all_embeddings(self, dataloader, trunk_model, embedder_model):
         num_batches = len(dataloader)
         s, e = 0, 0
@@ -37,10 +42,15 @@ class GlobalTwoStreamEmbeddingSpaceTester(GlobalEmbeddingSpaceTester):
     def get_all_embeddings(self, dataset, trunk_model, embedder_model, collate_fn):
         dataloader = c_f.get_eval_dataloader(dataset, self.batch_size, self.dataloader_num_workers, collate_fn)
         anchor_embeddings, posneg_embeddings, labels = self.compute_all_embeddings(dataloader, trunk_model, embedder_model)
-        return self.maybe_normalize(anchor_embeddings), self.maybe_normalize(posneg_embeddings), labels
+        anchor_embeddings, posneg_embeddings = self.maybe_normalize(anchor_embeddings), self.maybe_normalize(posneg_embeddings)
+        return np.concatenate([anchor_embeddings, posneg_embeddings], axis=0), np.concatenate([labels, labels], axis=0)
     
     def set_reference_and_query(self, embeddings_and_labels, curr_split):
-        anchors_embeddings, posneg_embeddings, query_labels = embeddings_and_labels[curr_split]
+        embeddings, labels = embeddings_and_labels[curr_split]
+        half = int(embeddings.shape[0] / 2)
+        anchors_embeddings = embeddings[:half]
+        posneg_embeddings = embeddings[half:]
+        query_labels = labels[:half]
         return anchors_embeddings, query_labels, posneg_embeddings, query_labels
     
     def embeddings_come_from_same_source(self, embeddings_and_labels):

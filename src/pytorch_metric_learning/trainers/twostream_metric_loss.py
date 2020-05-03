@@ -2,23 +2,14 @@
 
 
 from .base_trainer import BaseTrainer
-from ..utils import common_functions as c_f
+from ..utils import common_functions as c_f, loss_and_miner_utils as lmu
 import logging
 import torch
 
 class TwoStreamMetricLoss(BaseTrainer):
 
-    def __init__(self, **kwargs):
-        if not "TwoStream" in str(kwargs["dataset"].__class__):
-            raise Exception("The provided dataset must be a TwoStream Dataset")
-
-        if "subset_batch_miner" in kwargs["mining_funcs"]:
-            raise Exception("Subset batch mining is not supported with TwoStream training")
-        
-        super().__init__(**kwargs)
-
     def calculate_loss(self, curr_batch):
-        ( anchors, posnegs), labels = curr_batch
+        (anchors, posnegs), labels = curr_batch
         embeddings = (self.compute_embeddings(anchors), self.compute_embeddings(posnegs))
 
         indices_tuple = self.maybe_mine_embeddings(embeddings, labels)
@@ -26,7 +17,7 @@ class TwoStreamMetricLoss(BaseTrainer):
     
     def get_batch(self):
         self.dataloader_iter, curr_batch = c_f.try_next_on_generator(self.dataloader_iter, self.dataloader)
-        anchors, posnegs,labels = self.data_and_label_getter(curr_batch)
+        anchors, posnegs, labels = self.data_and_label_getter(curr_batch)
         data = (anchors,posnegs)
         labels = c_f.process_label(labels, self.label_hierarchy_level, self.label_mapper)
         return self.maybe_do_batch_mining(data, labels)
@@ -43,4 +34,8 @@ class TwoStreamMetricLoss(BaseTrainer):
         if "tuple_miner" in self.mining_funcs:
             (anchors_embeddings, posnegs_embeddings) = embeddings
             return self.mining_funcs["tuple_miner"](anchors_embeddings, labels, posnegs_embeddings, labels)
-        return None
+        else:
+            return lmu.get_all_triplets_indices(labels)
+
+    def allowed_mining_funcs_keys(self):
+        return ["tuple_miner"]

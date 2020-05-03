@@ -128,10 +128,12 @@ See [powerful-benchmarker](https://github.com/KevinMusgrave/powerful-benchmarker
 - [**CascadedEmbeddings**](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#cascadedembeddings) ([Hard-Aware Deeply Cascaded Embedding](http://openaccess.thecvf.com/content_ICCV_2017/papers/Yuan_Hard-Aware_Deeply_Cascaded_ICCV_2017_paper.pdf))
 - [**DeepAdversarialMetricLearning**](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#deepadversarialmetriclearning) ([Deep Adversarial Metric Learning](http://openaccess.thecvf.com/content_cvpr_2018/papers/Duan_Deep_Adversarial_Metric_CVPR_2018_paper.pdf))
 - [**UnsupervisedEmbeddingsUsingAugmentations**](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#unsupervisedembeddingsusingaugmentations)
+- [**TwoStreamMetricLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#twostreammetricloss)
 
 ### [Testers](https://kevinmusgrave.github.io/pytorch-metric-learning/testers):
 - [**GlobalEmbeddingSpaceTester**](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#globalembeddingspacetester)
 - [**WithSameParentLabelTester**](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#withsameparentlabeltester)
+- [**GlobalTwoStreamEmbeddingSpaceTester**](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#globaltwostreamembeddingspacetester)
 
 ### [Utils](https://kevinmusgrave.github.io/pytorch-metric-learning/utils):
 - [**AccuracyCalculator**](https://kevinmusgrave.github.io/pytorch-metric-learning/utils/#accuracycalculator)
@@ -208,10 +210,15 @@ Thanks to the contributors who made pull requests!
 #### Algorithm implementations
 - [AlenUbuntu](https://github.com/AlenUbuntu):
 	- [CircleLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#circleloss)
+- [marijnl](https://github.com/marijnl)
+    - [TwoStreamMetricLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#twostreammetricloss)
+    - [GlobalTwoStreamEmbeddingSpaceTester](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#globaltwostreamembeddingspacetester)
 
 #### Example notebooks
 - [wconnell](https://github.com/wconnell)
 	- [Learning a scRNAseq Metric Embedding](https://colab.research.google.com/drive/1DhSLDv6qXiLFKkSXKUFRjCEK1V4kPy0a)
+- [marijnl](https://github.com/marijnl)
+    - [Example using trainers.TwoStreamMetricLoss](https://colab.research.google.com/drive/1moDUSeKY6teOrqSZPWUPJqjJcEGqqgKm)
 
 #### General improvements and bug fixes
 - [wconnell](https://github.com/wconnell)

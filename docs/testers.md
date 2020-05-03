@@ -4,7 +4,7 @@ Testers take your model and dataset, and compute nearest-neighbor based accuracy
 In general, testers are used as follows:
 ```python
 from pytorch_metric_learning import testers
-t = testers.SomeTestingFunction(**kwargs)
+t = testers.SomeTestingFunction(*args, **kwargs)
 dataset_dict = {"train": train_dataset, "val": val_dataset}
 tester.test(dataset_dict, epoch, model)
 
@@ -54,7 +54,7 @@ testers.BaseTester(reference_set="compared_to_self",
 * **dataset_labels**: The labels for your dataset. Can be 1-dimensional (1 label per datapoint) or 2-dimensional, where each row represents a datapoint, and the columns are the multiple labels that the datapoint has. Labels can be integers or strings. **This option needs to be specified only if ```set_min_label_to_zero``` is True.**
 * **set_min_label_to_zero**: If True, labels will be mapped such that they represent their rank in the label set. For example, if your dataset has labels 5, 10, 12, 13, then at each iteration, these would become 0, 1, 2, 3. You should also set this to True if you want to use string labels. In that case, 'dog', 'cat', 'monkey' would get mapped to 1, 0, 2. If True, you must pass in ```dataset_labels``` (see above). The default is False.
 * **accuracy_calculator**: Optional. An object that extends [AccuracyCalculator](utils.md#accuracycalculator). This will be used to compute the accuracy of your model. By default, AccuracyCalculator is used.
-* **visualizer**: Optional. An object that has implemented the ```fit``` and ```transform``` methods, as done by [UMAP](https://github.com/lmcinnes/umap) and many scikit-learn functions. For example, you can set ```visualizer = umap.UMAP()```. The object's ```fit``` function should take in a 2D array of embeddings, and reduce the dimensionality, such that calling ```visualizer.transform(embeddings)``` results in a 2D array of size (N, 2).
+* **visualizer**: Optional. An object that has implemented the ```fit_transform``` method, as done by [UMAP](https://github.com/lmcinnes/umap) and many scikit-learn functions. For example, you can set ```visualizer = umap.UMAP()```. The object's ```fit_transform``` function should take in a 2D array of embeddings, and reduce the dimensionality, such that calling ```visualizer.fit_transform(embeddings)``` results in a 2D array of size (N, 2).
 * **visualizer_hook**: Optional. This function will be passed the following args. You can do whatever you want in this function, but the reason it exists is to allow you to save a plot of the embeddings etc.
 	* visualizer: The visualizer object that you passed in.
 	* embeddings: The dimensionality reduced embeddings.
@@ -64,13 +64,22 @@ testers.BaseTester(reference_set="compared_to_self",
 
 
 ## GlobalEmbeddingSpaceTester
-Computes nearest neighbors by looking at all points in the embedding space. This is probably the tester you are looking for.
+Computes nearest neighbors by looking at all points in the embedding space. This is probably the tester you are looking for. To see it in action, check one of the [example notebooks](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples)
 ```python
-testers.GlobalEmbeddingSpaceTester(**kwargs)
+testers.GlobalEmbeddingSpaceTester(*args, **kwargs)
 ```
 
 ## WithSameParentLabelTester
 This assumes there is a label hierarchy. For each sample, the search space is narrowed by only looking at sibling samples, i.e. samples with the same parent label. For example, consider a dataset with 4 fine-grained classes {cat, dog, car, truck}, and 2 coarse-grained classes {animal, vehicle}. The nearest neighbor search for cats and dogs will consist of animals, and the nearest-neighbor search for cars and trucks will consist of vehicles.
 ```python
-testers.WithSameParentLabelTester(**kwargs)
+testers.WithSameParentLabelTester(*args, **kwargs)
 ``` 
+
+## GlobalTwoStreamEmbeddingSpaceTester
+This is the corresponding tester for [TwoStreamMetricLoss](trainers.md#twostreammetricloss). The supplied **dataset** must return ```(anchor, positive, label)```.
+```python
+testers.GlobalTwoStreamEmbeddingSpaceTester(*args, **kwargs)
+``` 
+**Requirements**:
+
+* **reference_set**: This must be left at the default value of ```"compared_to_self"```.

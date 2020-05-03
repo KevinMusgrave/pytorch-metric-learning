@@ -48,7 +48,7 @@ See [this notebook](https://colab.research.google.com/drive/1fwTC-GRW3X6QiJq6_ab
    - Mix and match losses, miners, and trainers in ways that other libraries don't allow.
 
 ## Installation
-**Pip**:
+###Pip
 ```
 pip install pytorch-metric-learning
 ```
@@ -64,7 +64,17 @@ pip install torch===1.4.0 torchvision===0.5.0 -f https://download.pytorch.org/wh
 pip install pytorch-metric-learning
 ```
 
-**Conda**:
+**To install with evaluation and logging capabilities**:
+```
+pip install pytorch-metric-learning[with-hooks]
+```
+
+**To install with evaluation and logging capabilities (CPU)**
+```
+pip install pytorch-metric-learning[with-hooks-cpu]
+```
+
+###Conda
 ```
 conda install pytorch-metric-learning -c metric-learning
 ```

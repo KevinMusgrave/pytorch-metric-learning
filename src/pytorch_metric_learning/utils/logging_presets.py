@@ -97,7 +97,7 @@ class HookContainer:
         trainer.step_lr_plateau_schedulers(curr_accuracy)
         self.save_models(trainer, model_folder, epoch, epoch-test_interval) # save latest model
         if is_new_best:
-            logging.info("New best accuracy!")
+            logging.info("New best accuracy! {}".format(curr_accuracy))
             self.save_models(trainer, model_folder, "best") # save best model    
         return best_epoch
 

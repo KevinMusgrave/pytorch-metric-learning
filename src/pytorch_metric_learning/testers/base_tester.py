@@ -54,9 +54,9 @@ class BaseTester:
         if self.accuracy_calculator is None:
             self.accuracy_calculator = AccuracyCalculator()
 
-    def visualizer_hook(self, visualizer, dim_reduced_embeddings, labels, split_name, keyname, epoch):
+    def visualizer_hook(self, *args, **kwargs):
         if self.original_visualizer_hook is not None:
-            self.original_visualizer_hook(visualizer, dim_reduced_embeddings, labels, split_name, keyname, epoch)
+            self.original_visualizer_hook(*args, **kwargs)
 
     def maybe_normalize(self, embeddings):
         if self.pca:

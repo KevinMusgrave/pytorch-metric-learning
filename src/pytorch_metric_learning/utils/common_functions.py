@@ -317,3 +317,6 @@ def angle_to_coord(angle):
     x = np.cos(np.radians(angle))
     y = np.sin(np.radians(angle))
     return x, y
+
+def assert_embeddings_and_labels_are_same_size(embeddings, labels):
+    assert embeddings.size(0) == labels.size(0), "Number of embeddings must equal number of labels"

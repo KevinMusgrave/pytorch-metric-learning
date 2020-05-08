@@ -26,8 +26,9 @@ class TwoStreamMetricLoss(BaseTrainer):
         if self.loss_weights.get("metric_loss", 0) > 0:
             current_batch_size = embeddings[0].shape[0]
             indices_tuple = c_f.shift_indices_tuple(indices_tuple, current_batch_size)
-            all_embeddings = torch.cat(embeddings)
-            return self.loss_funcs["metric_loss"](all_embeddings, labels, indices_tuple)
+            all_labels = torch.cat([labels, labels], dim=0)
+            all_embeddings = torch.cat(embeddings, dim=0)
+            return self.loss_funcs["metric_loss"](all_embeddings, all_labels, indices_tuple)
         return 0
 
     def maybe_mine_embeddings(self, embeddings, labels):

@@ -44,6 +44,7 @@ class BaseMetricLossFunction(torch.nn.Module):
                             Can also be left as None
         Returns: the loss (float)
         """
+        c_f.assert_embeddings_and_labels_are_same_size(embeddings, labels)
         labels = labels.to(embeddings.device)
         if self.normalize_embeddings:
             embeddings = torch.nn.functional.normalize(embeddings, p=2, dim=1)

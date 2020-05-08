@@ -79,7 +79,7 @@ class HookContainer:
         resume_epoch, model_suffix = c_f.latest_version(model_folder, "trunk_*.pth", best=best)
         if resume_epoch > 0:
             for obj_dict in [getattr(trainer, x, {}) for x in self.saveable_trainer_objects]:
-                c_f.load_dict_of_models(obj_dict, model_suffix, model_folder, device)
+                c_f.load_dict_of_models(obj_dict, model_suffix, model_folder, device, log_if_successful=True)
         return resume_epoch + 1
 
 

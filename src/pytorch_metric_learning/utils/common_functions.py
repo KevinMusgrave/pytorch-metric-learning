@@ -245,7 +245,7 @@ def load_model(model_def, model_filename, device):
         model_def.load_state_dict(new_state_dict)
 
 
-def operate_on_dict_of_models(input_dict, suffix, folder, operation, logging_string='', log_if_successful=False):
+def operate_on_dict_of_models(input_dict, suffix, folder, operation, logging_string='', log_if_successful=False, assert_success=False):
     for k, v in input_dict.items():
         model_path = modelpath_creator(folder, k, suffix)
         try:
@@ -254,23 +254,25 @@ def operate_on_dict_of_models(input_dict, suffix, folder, operation, logging_str
                 logging.info("%s %s"%(logging_string, model_path))
         except IOError:
             logging.warn("Could not %s %s"%(logging_string, model_path))
+            if assert_success:
+                raise IOError
 
-def save_dict_of_models(input_dict, suffix, folder):
+def save_dict_of_models(input_dict, suffix, folder, **kwargs):
     def operation(k, v, model_path):
         save_model(v, k, model_path)
-    operate_on_dict_of_models(input_dict, suffix, folder, operation, "SAVE")
+    operate_on_dict_of_models(input_dict, suffix, folder, operation, "SAVE", **kwargs)
 
 
-def load_dict_of_models(input_dict, suffix, folder, device):
+def load_dict_of_models(input_dict, suffix, folder, device, **kwargs):
     def operation(k, v, model_path):
         load_model(v, model_path, device)
-    operate_on_dict_of_models(input_dict, suffix, folder, operation, "LOAD", log_if_successful=True)
+    operate_on_dict_of_models(input_dict, suffix, folder, operation, "LOAD", **kwargs)
 
 
-def delete_dict_of_models(input_dict, suffix, folder):
+def delete_dict_of_models(input_dict, suffix, folder, **kwargs):
     def operation(k, v, model_path):
         if os.path.exists(model_path): os.remove(model_path)
-    operate_on_dict_of_models(input_dict, suffix, folder, operation, "DELETE")
+    operate_on_dict_of_models(input_dict, suffix, folder, operation, "DELETE", **kwargs)
 
 
 def regex_wrapper(x):
@@ -279,7 +281,7 @@ def regex_wrapper(x):
     return re.compile(x)
 
 
-def latest_version(folder, string_to_glob, best=False):
+def latest_version(folder, string_to_glob="trunk_*.pth", best=False):
     items = glob.glob(os.path.join(folder, string_to_glob))
     if items == []:
         return (0, None)

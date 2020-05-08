@@ -60,7 +60,7 @@ class CrossBatchMemory(torch.nn.Module):
         else:
         	indices_tuple = lmu.get_all_pairs_indices(labels, L_mem)
         
-        indices_tuple = self.shift_indices_tuple(indices_tuple, batch_size)
+        indices_tuple = c_f.shift_indices_tuple(indices_tuple, batch_size)
 
         if input_indices_tuple is not None:
             if len(input_indices_tuple) == 3 and len(indices_tuple) == 4:
@@ -69,12 +69,4 @@ class CrossBatchMemory(torch.nn.Module):
                 input_indices_tuple = lmu.convert_to_triplets(input_indices_tuple, labels)
             indices_tuple = tuple([torch.cat([x,y.to(x.device)], dim=0) for x,y in zip(indices_tuple, input_indices_tuple)])
 
-        return indices_tuple
-
-
-    def shift_indices_tuple(self, indices_tuple, batch_size):
-        if len(indices_tuple) == 3:
-            indices_tuple = (indices_tuple[0],) + tuple([x+batch_size if len(x) > 0 else x for x in indices_tuple[1:]])
-        elif len(indices_tuple) == 4:
-            indices_tuple = tuple([x+batch_size if len(x) > 0 and i%2==1 else x for i,x in enumerate(indices_tuple)])
         return indices_tuple

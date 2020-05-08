@@ -77,6 +77,23 @@ def set_requires_grad(model, requires_grad):
     for param in model.parameters():
         param.requires_grad = requires_grad
 
+def shift_indices_tuple(indices_tuple, batch_size):
+    """
+    Shifts indices of positives and negatives of pairs or triplets by batch_size
+    
+    if len(indices_tuple) != 3 or len(indices_tuple) != 4, it will return indices_tuple
+    Args:
+        indices_tuple is a tuple with torch.Tensor
+        batch_size is an int 
+    Returns:
+        A tuple with shifted indices
+    """
+
+    if len(indices_tuple) == 3:
+        indices_tuple = (indices_tuple[0],) + tuple([x+batch_size if len(x) > 0 else x for x in indices_tuple[1:]])
+    elif len(indices_tuple) == 4:
+        indices_tuple = tuple([x+batch_size if len(x) > 0 and i%2==1 else x for i,x in enumerate(indices_tuple)])
+    return indices_tuple
 
 def safe_random_choice(input_data, size):
     """

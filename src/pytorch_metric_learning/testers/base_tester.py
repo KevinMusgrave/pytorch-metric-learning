@@ -54,9 +54,9 @@ class BaseTester:
         if self.accuracy_calculator is None:
             self.accuracy_calculator = AccuracyCalculator()
 
-    def visualizer_hook(self, visualizer, dim_reduced_embeddings, labels, split_name, keyname):
+    def visualizer_hook(self, visualizer, dim_reduced_embeddings, labels, split_name, keyname, epoch):
         if self.original_visualizer_hook is not None:
-            self.original_visualizer_hook(visualizer, dim_reduced_embeddings, labels, split_name, keyname)
+            self.original_visualizer_hook(visualizer, dim_reduced_embeddings, labels, split_name, keyname, epoch)
 
     def maybe_normalize(self, embeddings):
         if self.pca:
@@ -88,7 +88,10 @@ class BaseTester:
 
         return all_q, labels
 
-    def get_all_embeddings(self, dataset, trunk_model, embedder_model, collate_fn):
+    def get_all_embeddings(self, dataset, trunk_model, embedder_model, collate_fn, eval=True):
+        if eval:
+            trunk_model.eval()
+            embedder_model.eval()
         dataloader = c_f.get_eval_dataloader(dataset, self.batch_size, self.dataloader_num_workers, collate_fn)
         embeddings, labels = self.compute_all_embeddings(dataloader, trunk_model, embedder_model)
         embeddings = self.maybe_normalize(embeddings)
@@ -112,7 +115,7 @@ class BaseTester:
                     label_scheme = labels[:, L]
                     keyname = self.accuracies_keyname(visualizer_name, label_hierarchy_level=L)
                     self.dim_reduced_embeddings[split_name][keyname] = (dim_reduced, label_scheme)
-                    self.visualizer_hook(self.visualizer, dim_reduced, label_scheme, split_name, keyname)
+                    self.visualizer_hook(self.visualizer, dim_reduced, label_scheme, split_name, keyname, epoch)
 
     def description_suffixes(self, base_name):
         if self.pca:

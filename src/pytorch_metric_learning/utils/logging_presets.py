@@ -74,12 +74,12 @@ class HookContainer:
     ############################################
     ############################################
 
-    def load_latest_saved_models(self, trainer, model_folder, device=None):
+    def load_latest_saved_models(self, trainer, model_folder, device=None, best=False):
         if device is None: device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        resume_epoch = c_f.latest_version(model_folder, "trunk_*.pth") or 0
+        resume_epoch, model_suffix = c_f.latest_version(model_folder, "trunk_*.pth", best=best)
         if resume_epoch > 0:
             for obj_dict in [getattr(trainer, x, {}) for x in self.saveable_trainer_objects]:
-                c_f.load_dict_of_models(obj_dict, resume_epoch, model_folder, device)
+                c_f.load_dict_of_models(obj_dict, model_suffix, model_folder, device)
         return resume_epoch + 1
 
 
@@ -92,13 +92,16 @@ class HookContainer:
     def save_models_and_eval(self, trainer, dataset_dict, model_folder, test_interval, tester, collate_fn):
         epoch = trainer.epoch
         tester.test(dataset_dict, epoch, trainer.models["trunk"], trainer.models["embedder"], list(dataset_dict.keys()), collate_fn)
+        prev_best_epoch, _ = self.get_best_epoch_and_accuracy(tester, self.validation_split_name)
         is_new_best, curr_accuracy, best_epoch, best_accuracy = self.is_new_best_accuracy(tester, self.validation_split_name, epoch)
         self.record_keeper.save_records()
         trainer.step_lr_plateau_schedulers(curr_accuracy)
         self.save_models(trainer, model_folder, epoch, epoch-test_interval) # save latest model
         if is_new_best:
             logging.info("New best accuracy! {}".format(curr_accuracy))
-            self.save_models(trainer, model_folder, "best") # save best model    
+            curr_suffix = "best%d"%best_epoch
+            prev_suffix = "best%d"%prev_best_epoch if prev_best_epoch is not None else None
+            self.save_models(trainer, model_folder, curr_suffix, prev_suffix) # save best model    
         return best_epoch
 
     def is_new_best_accuracy(self, tester, split_name, epoch):

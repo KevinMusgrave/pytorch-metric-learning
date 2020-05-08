@@ -37,8 +37,8 @@ PyTorch Metric Learning
 ## Documentation
 [**View the documentation here**](https://kevinmusgrave.github.io/pytorch-metric-learning/)
 
-## Google Colab Example
-See [this notebook](https://colab.research.google.com/drive/1fwTC-GRW3X6QiJq6_abJ47On2f3s9e5e) for an example of a complete training and testing workflow. View other examples in the [examples folder](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/README.md)
+## Google Colab Examples
+See the [examples folder](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/README.md) for notebooks that show entire train/test workflows with logging and model saving.
 
 ## Benefits of this library
 1. Ease of use
@@ -48,14 +48,14 @@ See [this notebook](https://colab.research.google.com/drive/1fwTC-GRW3X6QiJq6_ab
    - Mix and match losses, miners, and trainers in ways that other libraries don't allow.
 
 ## Installation
-**Pip**:
+### Pip
 ```
 pip install pytorch-metric-learning
 ```
 
 **To get the latest dev version**:
 ```
-pip install pytorch-metric-learning==0.9.84
+pip install pytorch-metric-learning==0.9.85
 ```
 
 **To install on Windows**:
@@ -64,7 +64,17 @@ pip install torch===1.4.0 torchvision===0.5.0 -f https://download.pytorch.org/wh
 pip install pytorch-metric-learning
 ```
 
-**Conda**:
+**To install with evaluation and logging capabilities**:
+```
+pip install pytorch-metric-learning[with-hooks]
+```
+
+**To install with evaluation and logging capabilities (CPU)**
+```
+pip install pytorch-metric-learning[with-hooks-cpu]
+```
+
+### Conda
 ```
 conda install pytorch-metric-learning -c metric-learning
 ```
@@ -128,10 +138,12 @@ See [powerful-benchmarker](https://github.com/KevinMusgrave/powerful-benchmarker
 - [**CascadedEmbeddings**](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#cascadedembeddings) ([Hard-Aware Deeply Cascaded Embedding](http://openaccess.thecvf.com/content_ICCV_2017/papers/Yuan_Hard-Aware_Deeply_Cascaded_ICCV_2017_paper.pdf))
 - [**DeepAdversarialMetricLearning**](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#deepadversarialmetriclearning) ([Deep Adversarial Metric Learning](http://openaccess.thecvf.com/content_cvpr_2018/papers/Duan_Deep_Adversarial_Metric_CVPR_2018_paper.pdf))
 - [**UnsupervisedEmbeddingsUsingAugmentations**](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#unsupervisedembeddingsusingaugmentations)
+- [**TwoStreamMetricLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#twostreammetricloss)
 
 ### [Testers](https://kevinmusgrave.github.io/pytorch-metric-learning/testers):
 - [**GlobalEmbeddingSpaceTester**](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#globalembeddingspacetester)
 - [**WithSameParentLabelTester**](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#withsameparentlabeltester)
+- [**GlobalTwoStreamEmbeddingSpaceTester**](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#globaltwostreamembeddingspacetester)
 
 ### [Utils](https://kevinmusgrave.github.io/pytorch-metric-learning/utils):
 - [**AccuracyCalculator**](https://kevinmusgrave.github.io/pytorch-metric-learning/utils/#accuracycalculator)
@@ -201,6 +213,28 @@ guide. Proceed to `pip install -e .[dev]` afterwards.
 
 
 ## Acknowledgements
+
+### Contributors
+Thanks to the contributors who made pull requests!
+
+#### Algorithm implementations
+- [AlenUbuntu](https://github.com/AlenUbuntu):
+	- [CircleLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#circleloss)
+- [marijnl](https://github.com/marijnl)
+    - [TwoStreamMetricLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#twostreammetricloss)
+    - [GlobalTwoStreamEmbeddingSpaceTester](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#globaltwostreamembeddingspacetester)
+
+#### Example notebooks
+- [wconnell](https://github.com/wconnell)
+	- [Learning a scRNAseq Metric Embedding](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/scRNAseq_MetricEmbedding.ipynb)
+- [marijnl](https://github.com/marijnl)
+    - [Example using trainers.TwoStreamMetricLoss](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/TwoStreamMetricLoss.ipynb)
+
+#### General improvements and bug fixes
+- [wconnell](https://github.com/wconnell)
+- [fralik](https://github.com/fralik)
+- [JoOkuma](https://github.com/JoOkuma)
+
 ### Facebook AI
 Thank you to [Ser-Nam Lim](https://research.fb.com/people/lim-ser-nam/) at [Facebook AI](https://ai.facebook.com/), and my research advisor, [Professor Serge Belongie](https://vision.cornell.edu/se3/people/serge-belongie/). This project began during my internship at Facebook AI where I received valuable feedback from Ser-Nam, and his team of computer vision and machine learning engineers and research scientists. In particular, thanks to [Ashish Shah](https://www.linkedin.com/in/ashish217/) and [Austin Reiter](https://www.linkedin.com/in/austin-reiter-3962aa7/) for reviewing my code during its early stages of development.
 
@@ -216,17 +250,7 @@ This library contains code that has been adapted and modified from the following
 - https://github.com/tjddus9597/Proxy-Anchor-CVPR2020
 - http://kaizhao.net/regularface
 
-### Contributors
-Thanks to the contributors who made pull requests!
 
-#### Algorithm implementations
-- [AlenUbuntu](https://github.com/AlenUbuntu):
-	- CircleLoss
-
-#### General improvements and bug fixes
-- [wconnell](https://github.com/wconnell)
-- [fralik](https://github.com/fralik)
-- [JoOkuma](https://github.com/JoOkuma)
 
 ## Citing this library
 If you'd like to cite pytorch-metric-learning in your paper, you can use this bibtex:

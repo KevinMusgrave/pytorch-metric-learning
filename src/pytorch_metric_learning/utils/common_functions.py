@@ -17,6 +17,10 @@ class Identity(torch.nn.Module):
         return x
 
 
+def is_list_or_tuple(x):
+    return isinstance(x, (list, tuple))
+
+
 def try_next_on_generator(gen, iterable):
     try:
         return gen, next(gen)
@@ -32,8 +36,8 @@ def numpy_to_torch(v):
         return v
 
 def to_numpy(v):
-    if isinstance(v, tuple):
-        return np.array(v)
+    if is_list_or_tuple(v):
+        return np.stack([to_numpy(sub_v) for sub_v in v], axis=1)
     try:
         return v.cpu().numpy()
     except AttributeError:
@@ -43,13 +47,15 @@ def to_numpy(v):
 def get_hierarchy_label(batch_labels, hierarchy_level):
     if hierarchy_level == "all":
         return batch_labels
-
-    try:
-        if batch_labels.ndim == 2:
-            batch_labels = batch_labels[:, hierarchy_level]
-        return batch_labels
-    except AttributeError:
-        return batch_labels
+    if is_list_or_tuple(hierarchy_level):
+        max_hierarchy_level = max(hierarchy_level)
+    else:
+        max_hierarchy_level = hierarchy_level
+    if max_hierarchy_level > 0:
+        assert (batch_labels.ndim == 2) and batch_labels.shape[1] > max_hierarchy_level
+    if batch_labels.ndim == 2:
+        batch_labels = batch_labels[:, hierarchy_level]
+    return batch_labels
 
 
 def map_labels(label_map, labels):
@@ -265,18 +271,6 @@ def delete_dict_of_models(input_dict, suffix, folder):
     def operation(k, v, model_path):
         if os.path.exists(model_path): os.remove(model_path)
     operate_on_dict_of_models(input_dict, suffix, folder, operation, "DELETE")
-            
-
-def latest_version(folder, string_to_glob):
-    items = glob.glob(os.path.join(folder, string_to_glob))
-    if items == []:
-        return None
-    items = [x for x in items if not x.endswith("best.pth")]
-    version = [int(x.split("_")[-1].split(".")[0]) for x in items]
-    return max(version)
-
-def return_input(x):
-    return x
 
 
 def regex_wrapper(x):
@@ -284,6 +278,21 @@ def regex_wrapper(x):
         return [re.compile(z) for z in x]
     return re.compile(x)
 
+
+def latest_version(folder, string_to_glob, best=False):
+    items = glob.glob(os.path.join(folder, string_to_glob))
+    if items == []:
+        return (0, None)
+    model_regex = regex_wrapper("best[0-9]+\.pth$") if best else regex_wrapper("[0-9]+\.pth$")
+    epoch_regex = regex_wrapper("[0-9]+\.pth$")
+    items = [x for x in items if model_regex.search(x)]
+    version = [int(epoch_regex.findall(x)[-1].split(".")[0]) for x in items]
+    resume_epoch = max(version)
+    suffix = "best%d"%resume_epoch if best else resume_epoch
+    return resume_epoch, suffix
+
+def return_input(x):
+    return x
 
 def angle_to_coord(angle):
     x = np.cos(np.radians(angle))

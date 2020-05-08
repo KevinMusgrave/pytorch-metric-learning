@@ -273,7 +273,7 @@ class BaseTrainer:
         return [x+"_grad_clipper" for x in self.allowed_model_keys() + self.allowed_loss_funcs_keys()]
 
     def verify_models_keys(self):
-        self._verify_dict_keys("models", self.allowed_model_keys(), warn_if_empty=True, essential_keys=["trunk"])
+        self._verify_dict_keys("models", self.allowed_model_keys(), warn_if_empty=True, essential_keys=["trunk"], important_keys = [x for x in self.allowed_model_keys() if x != "trunk"])
 
     def verify_optimizers_keys(self):
         self._verify_dict_keys("optimizers", self.allowed_optimizer_keys(), warn_if_empty=True, important_keys=[x+"_optimizer" for x in self.models.keys()])

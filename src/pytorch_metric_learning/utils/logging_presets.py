@@ -74,12 +74,12 @@ class HookContainer:
     ############################################
     ############################################
 
-    def load_latest_saved_models(self, trainer, model_folder, device=None):
+    def load_latest_saved_models(self, trainer, model_folder, device=None, best=False):
         if device is None: device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        resume_epoch = c_f.latest_version(model_folder, "trunk_*.pth") or 0
+        resume_epoch, model_suffix = c_f.latest_version(model_folder, "trunk_*.pth", best=best)
         if resume_epoch > 0:
             for obj_dict in [getattr(trainer, x, {}) for x in self.saveable_trainer_objects]:
-                c_f.load_dict_of_models(obj_dict, resume_epoch, model_folder, device)
+                c_f.load_dict_of_models(obj_dict, model_suffix, model_folder, device)
         return resume_epoch + 1
 
 
@@ -92,20 +92,23 @@ class HookContainer:
     def save_models_and_eval(self, trainer, dataset_dict, model_folder, test_interval, tester, collate_fn):
         epoch = trainer.epoch
         tester.test(dataset_dict, epoch, trainer.models["trunk"], trainer.models["embedder"], list(dataset_dict.keys()), collate_fn)
+        prev_best_epoch, _ = self.get_best_epoch_and_accuracy(tester, self.validation_split_name)
         is_new_best, curr_accuracy, best_epoch, best_accuracy = self.is_new_best_accuracy(tester, self.validation_split_name, epoch)
         self.record_keeper.save_records()
         trainer.step_lr_plateau_schedulers(curr_accuracy)
         self.save_models(trainer, model_folder, epoch, epoch-test_interval) # save latest model
         if is_new_best:
-            logging.info("New best accuracy!")
-            self.save_models(trainer, model_folder, "best") # save best model    
+            logging.info("New best accuracy! {}".format(curr_accuracy))
+            curr_suffix = "best%d"%best_epoch
+            prev_suffix = "best%d"%prev_best_epoch if prev_best_epoch is not None else None
+            self.save_models(trainer, model_folder, curr_suffix, prev_suffix) # save best model    
         return best_epoch
 
     def is_new_best_accuracy(self, tester, split_name, epoch):
         curr_accuracy = self.get_curr_primary_metric(tester, split_name)
         best_epoch, best_accuracy = self.get_best_epoch_and_accuracy(tester, split_name)
         is_new_best = False
-        if curr_accuracy > best_accuracy:
+        if (curr_accuracy > best_accuracy) or (best_epoch is None):
             best_epoch, best_accuracy = epoch, curr_accuracy
             is_new_best = True
         return is_new_best, curr_accuracy, best_epoch, best_accuracy 
@@ -117,19 +120,50 @@ class HookContainer:
     ############################################
     ############################################
 
+
+    def get_loss_history(self, loss_names=()):
+        columns = "*" if len(loss_names) == 0 else ", ".join(loss_names)
+        table_name = "loss_histories"
+        if not self.record_keeper.table_exists(table_name):
+            return {}
+        output = self.record_keeper.query("SELECT {} FROM {}".format(columns, table_name), return_dict=True)
+        output.pop("id", None)
+        return output
+
+
+    def get_accuracy_history(self, tester, split_name, return_all_metrics=False, metrics=()):
+        table_name = self.record_group_name(tester, split_name)
+
+        if not self.record_keeper.table_exists(table_name):
+            return {}
+
+        def get_accuracies(keys):
+            keys = "*" if return_all_metrics else "epoch, %s"%keys
+            query = "SELECT {} FROM {}".format(keys, table_name)
+            return self.record_keeper.query(query, return_dict=True)
+
+        keys = metrics if len(metrics) > 0 else [self.primary_metric]
+        output = self.try_keys(keys, tester, get_accuracies)
+        output.pop("id", None)
+        return output
+
+
     def get_curr_primary_metric(self, tester, split_name):
         def get_curr(key):
             return tester.all_accuracies[split_name][key]
         return self.try_primary_metric(tester, get_curr)
 
-    def try_primary_metric(self, tester, input_func):
+    def try_keys(self, input_keys, tester, input_func):
         for average in [True, False]:
-            key = tester.accuracies_keyname(self.primary_metric, average=average)
+            keys = ", ".join([tester.accuracies_keyname(k, average=average, label_hierarchy_level=tester.label_hierarchy_level) for k in input_keys])
             try:
-                return input_func(key)
+                return input_func(keys)
             except (KeyError, sqlite3.OperationalError):
                 pass
-        raise KeyError
+        raise KeyError        
+
+    def try_primary_metric(self, tester, input_func):
+        return self.try_keys([self.primary_metric], tester, input_func)
 
     # returns accuracies of a specified epoch
     def get_accuracies_of_epoch(self, tester, split_name, epoch, select_all=True):

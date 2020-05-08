@@ -9,12 +9,13 @@ This class computes several accuracy metrics given a query and reference embeddi
 
 ```python
 from pytorch_metric_learning.utils import AccuracyCalculator
-AccuracyCalculator(include=(), exclude=())
+AccuracyCalculator(include=(), exclude=(), average_per_class=False)
 ```
 **Parameters**:
 
 * **include**: Optional. A list or tuple of strings, which are the names of metrics you want to calculate. If left empty, all default metrics will be calculated.
 * **exclude**: Optional. A list or tuple of strings, which are the names of metrics you **do not** want to calculate.
+* **average_per_class**: If True, the average accuracy per class is computed, and then the average of those averages is returned. This can be useful if your dataset has unbalanced classes. If False, the global average will be returned.
 
 **Getting accuracy**:
 
@@ -127,7 +128,7 @@ trainer = trainers.MetricLossOnly(models,
 
 trainer.train(num_epochs=num_epochs)
 ```
-With the provided hooks, data from both the training and validation stages will be saved in csv, sqlite, and tensorboard format, and models and optimizers will be saved in the specified model folder. See [this Google Colab notebook](https://colab.research.google.com/drive/1fwTC-GRW3X6QiJq6_abJ47On2f3s9e5e) for a complete example. Read the next section to learn more about the provided hooks.
+With the provided hooks, data from both the training and validation stages will be saved in csv, sqlite, and tensorboard format, and models and optimizers will be saved in the specified model folder. See [the example notebooks](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples) for complete examples. Read the next section to learn more about the provided hooks.
 
 ### HookContainer
 This class contains ready-to-use hooks to be used by trainers and testers.
@@ -164,3 +165,29 @@ LP.HookContainer(record_keeper,
 	* **patience**: Optional. Default value is None. If not None, training will end early if ```epoch - best_epoch > patience```.
 	* **test_collate_fn**: Optional. Default value is None. This is the collate function used by the dataloader during testing. 
 * **end_of_testing_hook**: This function records accuracy metrics. You can pass this function directly into a tester object.
+
+**Useful methods**:
+
+Getting loss history:
+```python
+# Get a dictionary mapping from loss names to lists
+loss_histories = hooks.get_loss_history() 
+
+# You can also specify which loss histories you want
+# It will still return a dictionary. In this case, the dictionary will contain only "total_loss"
+loss_histories = hooks.get_loss_history(loss_names=["total_loss"])
+```
+
+Getting accuracy history
+```python
+# The first argument is the tester object. The second is the split name.
+# Get a dictionary containing the keys "epoch" and the primary metric
+# The values are lists
+acc_histories = hooks.get_accuracy_history(tester, "val")
+
+# Get all accuracy histories
+acc_histories = hooks.get_accuracy_history(tester, "val", return_all_metrics=True)
+
+# Get a specific set of accuracy histories
+acc_histories = hooks.get_accuracy_history(tester, "val", metrics=["AMI", "NMI"])
+``` 

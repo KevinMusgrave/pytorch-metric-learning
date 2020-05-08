@@ -13,9 +13,10 @@ class DeepAdversarialMetricLearning(TrainWithClassifier):
         metric_alone_epochs=0,
         g_alone_epochs=0,
         g_triplets_per_anchor=100,
+        *args,
         **kwargs
     ):
-        super().__init__(**kwargs)
+        super().__init__(*args, **kwargs)
         self.original_loss_weights = copy.deepcopy(self.loss_weights)
         self.metric_alone_epochs = metric_alone_epochs
         self.g_alone_epochs = g_alone_epochs

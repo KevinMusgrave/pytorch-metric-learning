@@ -297,6 +297,9 @@ def regex_wrapper(x):
         return [re.compile(z) for z in x]
     return re.compile(x)
 
+def regex_replace(search, replace, contents):
+    return re.sub(search, replace, contents)
+
 
 def latest_version(folder, string_to_glob="trunk_*.pth", best=False):
     items = glob.glob(os.path.join(folder, string_to_glob))

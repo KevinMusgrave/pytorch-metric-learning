@@ -70,7 +70,6 @@ class DeepAdversarialMetricLearning(TrainWithClassifier):
 
     def maybe_exclude_networks_from_gradient(self):
         self.set_to_train()
-        self.maybe_freeze_trunk_batchnorm()
         if self.do_adv_alone:
             no_grad_list = ["trunk", "classifier"]
         elif self.do_metric_alone:

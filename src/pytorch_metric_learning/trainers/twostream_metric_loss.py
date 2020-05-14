@@ -22,12 +22,13 @@ class TwoStreamMetricLoss(BaseTrainer):
         labels = c_f.process_label(labels, self.label_hierarchy_level, self.label_mapper)
         return self.maybe_do_batch_mining(data, labels)
 
-
     def maybe_get_metric_loss(self, embeddings, labels, indices_tuple):
         if self.loss_weights.get("metric_loss", 0) > 0:
-            triplets = (indices_tuple[0],) + tuple([x+embeddings[0].shape[0] if len(x) > 0 else x for x in indices_tuple[1:]])
-            all_embeddings = torch.cat(embeddings)
-            return self.loss_funcs["metric_loss"](all_embeddings, labels, triplets)
+            current_batch_size = embeddings[0].shape[0]
+            indices_tuple = c_f.shift_indices_tuple(indices_tuple, current_batch_size)
+            all_labels = torch.cat([labels, labels], dim=0)
+            all_embeddings = torch.cat(embeddings, dim=0)
+            return self.loss_funcs["metric_loss"](all_embeddings, all_labels, indices_tuple)
         return 0
 
     def maybe_mine_embeddings(self, embeddings, labels):

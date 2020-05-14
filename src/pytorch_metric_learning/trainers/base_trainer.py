@@ -22,6 +22,7 @@ class BaseTrainer:
         collate_fn=None,
         lr_schedulers=None,
         gradient_clippers=None,
+        freeze_these=(),
         freeze_trunk_batchnorm=False,
         label_hierarchy_level=0,
         dataloader_num_workers=32,
@@ -43,6 +44,7 @@ class BaseTrainer:
         self.collate_fn = collate_fn
         self.lr_schedulers = lr_schedulers
         self.gradient_clippers = gradient_clippers
+        self.freeze_these = freeze_these
         self.freeze_trunk_batchnorm = freeze_trunk_batchnorm
         self.label_hierarchy_level = label_hierarchy_level
         self.dataloader_num_workers = dataloader_num_workers
@@ -176,8 +178,9 @@ class BaseTrainer:
                     v.step(validation_info)
 
     def step_optimizers(self):
-        for v in self.optimizers.values():
-            v.step()
+        for k, v in self.optimizers.items():
+            if c_f.regex_replace("_optimizer$", "", k) not in self.freeze_these:
+                v.step()
 
     def clip_gradients(self):
         if self.gradient_clippers is not None:
@@ -204,8 +207,14 @@ class BaseTrainer:
             self.data_and_label_getter = c_f.return_input
 
     def set_to_train(self):
-        for k, v in self.models.items():
-            v.train()
+        trainable = [self.models, self.loss_funcs]
+        for T in trainable:
+            for k, v in T.items():
+                if k in self.freeze_these:
+                    c_f.set_requires_grad(v, requires_grad=False)
+                    v.eval()
+                else:
+                    v.train()
         self.maybe_freeze_trunk_batchnorm()
 
     def set_to_eval(self):
@@ -239,6 +248,7 @@ class BaseTrainer:
         self.verify_lr_schedulers_keys()
         self.verify_loss_weights_keys()
         self.verify_gradient_clippers_keys()
+        self.verify_freeze_these_keys()
 
     def _verify_dict_keys(self, obj_name, allowed_keys, warn_if_empty, important_keys=(), essential_keys=()):
         obj = getattr(self, obj_name, None)
@@ -272,6 +282,9 @@ class BaseTrainer:
     def allowed_gradient_clippers_keys(self):
         return [x+"_grad_clipper" for x in self.allowed_model_keys() + self.allowed_loss_funcs_keys()]
 
+    def allowed_freeze_these_keys(self):
+        return self.allowed_model_keys() + self.allowed_loss_funcs_keys()
+
     def verify_models_keys(self):
         self._verify_dict_keys("models", self.allowed_model_keys(), warn_if_empty=True, essential_keys=["trunk"], important_keys = [x for x in self.allowed_model_keys() if x != "trunk"])
 
@@ -292,3 +305,9 @@ class BaseTrainer:
 
     def verify_gradient_clippers_keys(self):
         self._verify_dict_keys("gradient_clippers", self.allowed_gradient_clippers_keys(), warn_if_empty=False)
+
+    def verify_freeze_these_keys(self):
+        for k in self.freeze_these:
+            assert k in self.allowed_freeze_these_keys(), "freeze_these keys must be one of {}".format(", ".join(self.allowed_freeze_these_keys()))
+            if k+"_optimizer" in self.optimizers.keys():
+                logging.warn("You have passed in an optimizer for {}, but are freezing its parameters.".format(k))

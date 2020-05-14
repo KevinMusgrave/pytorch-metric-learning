@@ -29,6 +29,7 @@ class BaseMiner(torch.nn.Module):
         shape of the mining output before returning it
         """
         with torch.no_grad():
+            c_f.assert_embeddings_and_labels_are_same_size(embeddings, labels)
             labels = labels.to(embeddings.device)
             if self.normalize_embeddings:
                 embeddings = torch.nn.functional.normalize(embeddings, p=2, dim=1)
@@ -44,6 +45,7 @@ class BaseMiner(torch.nn.Module):
             ref_labels = ref_labels.to(ref_emb.device)
         else:
             ref_emb, ref_labels = embeddings, labels
+        c_f.assert_embeddings_and_labels_are_same_size(ref_emb, ref_labels)
         return ref_emb, ref_labels
 
 

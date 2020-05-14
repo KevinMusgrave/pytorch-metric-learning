@@ -77,6 +77,23 @@ def set_requires_grad(model, requires_grad):
     for param in model.parameters():
         param.requires_grad = requires_grad
 
+def shift_indices_tuple(indices_tuple, batch_size):
+    """
+    Shifts indices of positives and negatives of pairs or triplets by batch_size
+    
+    if len(indices_tuple) != 3 or len(indices_tuple) != 4, it will return indices_tuple
+    Args:
+        indices_tuple is a tuple with torch.Tensor
+        batch_size is an int 
+    Returns:
+        A tuple with shifted indices
+    """
+
+    if len(indices_tuple) == 3:
+        indices_tuple = (indices_tuple[0],) + tuple([x+batch_size if len(x) > 0 else x for x in indices_tuple[1:]])
+    elif len(indices_tuple) == 4:
+        indices_tuple = tuple([x+batch_size if len(x) > 0 and i%2==1 else x for i,x in enumerate(indices_tuple)])
+    return indices_tuple
 
 def safe_random_choice(input_data, size):
     """
@@ -245,7 +262,7 @@ def load_model(model_def, model_filename, device):
         model_def.load_state_dict(new_state_dict)
 
 
-def operate_on_dict_of_models(input_dict, suffix, folder, operation, logging_string='', log_if_successful=False):
+def operate_on_dict_of_models(input_dict, suffix, folder, operation, logging_string='', log_if_successful=False, assert_success=False):
     for k, v in input_dict.items():
         model_path = modelpath_creator(folder, k, suffix)
         try:
@@ -254,23 +271,25 @@ def operate_on_dict_of_models(input_dict, suffix, folder, operation, logging_str
                 logging.info("%s %s"%(logging_string, model_path))
         except IOError:
             logging.warn("Could not %s %s"%(logging_string, model_path))
+            if assert_success:
+                raise IOError
 
-def save_dict_of_models(input_dict, suffix, folder):
+def save_dict_of_models(input_dict, suffix, folder, **kwargs):
     def operation(k, v, model_path):
         save_model(v, k, model_path)
-    operate_on_dict_of_models(input_dict, suffix, folder, operation, "SAVE")
+    operate_on_dict_of_models(input_dict, suffix, folder, operation, "SAVE", **kwargs)
 
 
-def load_dict_of_models(input_dict, suffix, folder, device):
+def load_dict_of_models(input_dict, suffix, folder, device, **kwargs):
     def operation(k, v, model_path):
         load_model(v, model_path, device)
-    operate_on_dict_of_models(input_dict, suffix, folder, operation, "LOAD", log_if_successful=True)
+    operate_on_dict_of_models(input_dict, suffix, folder, operation, "LOAD", **kwargs)
 
 
-def delete_dict_of_models(input_dict, suffix, folder):
+def delete_dict_of_models(input_dict, suffix, folder, **kwargs):
     def operation(k, v, model_path):
         if os.path.exists(model_path): os.remove(model_path)
-    operate_on_dict_of_models(input_dict, suffix, folder, operation, "DELETE")
+    operate_on_dict_of_models(input_dict, suffix, folder, operation, "DELETE", **kwargs)
 
 
 def regex_wrapper(x):
@@ -278,8 +297,11 @@ def regex_wrapper(x):
         return [re.compile(z) for z in x]
     return re.compile(x)
 
+def regex_replace(search, replace, contents):
+    return re.sub(search, replace, contents)
 
-def latest_version(folder, string_to_glob, best=False):
+
+def latest_version(folder, string_to_glob="trunk_*.pth", best=False):
     items = glob.glob(os.path.join(folder, string_to_glob))
     if items == []:
         return (0, None)
@@ -298,3 +320,6 @@ def angle_to_coord(angle):
     x = np.cos(np.radians(angle))
     y = np.sin(np.radians(angle))
     return x, y
+
+def assert_embeddings_and_labels_are_same_size(embeddings, labels):
+    assert embeddings.size(0) == labels.size(0), "Number of embeddings must equal number of labels"

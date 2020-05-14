@@ -1,6 +1,7 @@
 import unittest
 import torch
 from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
+from pytorch_metric_learning.utils import common_functions as c_f
 from pytorch_metric_learning.losses import CrossBatchMemory, ContrastiveLoss
 from pytorch_metric_learning.miners import PairMarginMiner, TripletMarginMiner
 
@@ -47,7 +48,7 @@ class TestCrossBatchMemory(unittest.TestCase):
             all_labels = torch.cat([labels, self.loss.label_memory], dim=0)
 
             indices_tuple = lmu.get_all_pairs_indices(labels, self.loss.label_memory)
-            shifted = self.loss.shift_indices_tuple(indices_tuple, batch_size)
+            shifted = c_f.shift_indices_tuple(indices_tuple, batch_size)
             self.assertTrue(torch.equal(indices_tuple[0], shifted[0]))
             self.assertTrue(torch.equal(indices_tuple[2], shifted[2]))
             self.assertTrue(torch.equal(indices_tuple[1], shifted[1]-batch_size))
@@ -57,7 +58,7 @@ class TestCrossBatchMemory(unittest.TestCase):
             self.assertTrue(torch.all((all_labels[a2]-all_labels[n]).bool()))
             
             indices_tuple = pair_miner(embeddings, labels, self.loss.embedding_memory, self.loss.label_memory)
-            shifted = self.loss.shift_indices_tuple(indices_tuple, batch_size)
+            shifted = c_f.shift_indices_tuple(indices_tuple, batch_size)
             self.assertTrue(torch.equal(indices_tuple[0], shifted[0]))
             self.assertTrue(torch.equal(indices_tuple[2], shifted[2]))
             self.assertTrue(torch.equal(indices_tuple[1], shifted[1]-batch_size))
@@ -67,7 +68,7 @@ class TestCrossBatchMemory(unittest.TestCase):
             self.assertTrue(torch.all((all_labels[a2]-all_labels[n]).bool()))
 
             indices_tuple = triplet_miner(embeddings, labels, self.loss.embedding_memory, self.loss.label_memory)
-            shifted = self.loss.shift_indices_tuple(indices_tuple, batch_size)
+            shifted = c_f.shift_indices_tuple(indices_tuple, batch_size)
             self.assertTrue(torch.equal(indices_tuple[0], shifted[0]))
             self.assertTrue(torch.equal(indices_tuple[1], shifted[1]-batch_size))
             self.assertTrue(torch.equal(indices_tuple[2], shifted[2]-batch_size))

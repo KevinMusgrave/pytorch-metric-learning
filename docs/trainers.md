@@ -25,6 +25,7 @@ trainers.BaseTrainer(models,
 			        collate_fn=None,
 			        lr_schedulers=None,
 			        gradient_clippers=None,
+			        freeze_these=(),
 			        freeze_trunk_batchnorm=False,
 			        label_hierarchy_level=0,
 			        dataloader_num_workers=32,
@@ -67,6 +68,7 @@ If not specified, then the original labels are used.
 		* ```metric_loss_scheduler_by_epoch```
 		* ```embedder_scheduler_by_plateau```
 * **gradient_clippers**: A dictionary of gradient clipping functions. Each function will be called before the optimizers.
+* **freeze_these**: Optional. A list or tuple of the names of models or loss functions that should have their parameters frozen during training. These models will have ```requires_grad``` set to False, and their optimizers will not be stepped. 
 * **freeze_trunk_batchnorm**: If True, then the BatchNorm parameters of the trunk model will be frozen during training.
 * **label_hierarchy_level**: If each sample in your dataset has multiple labels, then this integer argument can be used to select which "level" to use. This assumes that your labels are "2-dimensional" with shape (num_samples, num_hierarchy_levels). Leave this at the default value, 0, if your data does not have multiple labels per sample.
 * **dataloader_num_workers**: The number of processes your dataloader will use to load data.

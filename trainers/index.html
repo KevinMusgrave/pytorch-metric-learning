@@ -504,6 +504,7 @@
                     <span class="n">collate_fn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">lr_schedulers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">gradient_clippers</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">freeze_these</span><span class="o">=</span><span class="p">(),</span>
                     <span class="n">freeze_trunk_batchnorm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                     <span class="n">label_hierarchy_level</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                     <span class="n">dataloader_num_workers</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
@@ -563,6 +564,7 @@ If not specified, then the original labels are used.</li>
 </ul>
 </li>
 <li><strong>gradient_clippers</strong>: A dictionary of gradient clipping functions. Each function will be called before the optimizers.</li>
+<li><strong>freeze_these</strong>: Optional. A list or tuple of the names of models or loss functions that should have their parameters frozen during training. These models will have <code>requires_grad</code> set to False, and their optimizers will not be stepped. </li>
 <li><strong>freeze_trunk_batchnorm</strong>: If True, then the BatchNorm parameters of the trunk model will be frozen during training.</li>
 <li><strong>label_hierarchy_level</strong>: If each sample in your dataset has multiple labels, then this integer argument can be used to select which "level" to use. This assumes that your labels are "2-dimensional" with shape (num_samples, num_hierarchy_levels). Leave this at the default value, 0, if your data does not have multiple labels per sample.</li>
 <li><strong>dataloader_num_workers</strong>: The number of processes your dataloader will use to load data.</li>

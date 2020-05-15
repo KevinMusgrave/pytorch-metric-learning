@@ -13,17 +13,6 @@ PyTorch Metric Learning
 
 </p>
  <p align="center">
-<a href="https://anaconda.org/metric-learning/pytorch-metric-learning">
-     <img alt="Anaconda version" src="https://img.shields.io/conda/v/metric-learning/pytorch-metric-learning?color=bright-green">
- </a>
-
-<a href="https://anaconda.org/metric-learning/pytorch-metric-learning">
-     <img alt="Anaconda downloads" src="https://img.shields.io/conda/dn/metric-learning/pytorch-metric-learning?color=bright-green">
- </a>
-</p>
-
-</p>
- <p align="center">
 <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/commits/master">
      <img alt="Commit activity" src="https://img.shields.io/github/commit-activity/m/KevinMusgrave/pytorch-metric-learning">
  </a>

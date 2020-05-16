@@ -495,18 +495,11 @@
 
 
 <h3 id="conda">Conda<a class="headerlink" href="#conda" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><span class="err">conda install pytorch-metric-learning -c metric-learning</span>
+<div class="codehilite"><pre><span></span><span class="err">conda install pytorch-metric-learning -c metric-learning -c pytorch</span>
 </pre></div>
 
 
 <p><strong>To use the testing module, you'll need faiss, which can be installed via conda as well. See the <a href="https://github.com/facebookresearch/faiss/blob/master/INSTALL.md">installation instructions for faiss</a>.</strong></p>
-<p>We have recently noticed some sporadic issues with the conda installation, so we recommend installing with pip. You can use pip inside of conda:</p>
-<div class="codehilite"><pre><span></span><span class="err">conda install pip</span>
-<span class="err">pip install pytorch-metric-learning</span>
-</pre></div>
-
-
-<p>If you run into problems during installation, please post in <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/issues/55#issue-600601602">this issue</a>.</p>
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
 <p>Let’s try the vanilla <a href="losses/#tripletmarginloss">triplet margin loss</a>. In all examples, <em>embeddings</em> is assumed to be of size (N, embedding_size), and <em>labels</em> is of size (N).</p>
 <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">losses</span>

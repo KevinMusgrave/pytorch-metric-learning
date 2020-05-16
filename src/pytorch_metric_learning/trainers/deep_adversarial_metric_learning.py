@@ -133,18 +133,10 @@ class DeepAdversarialMetricLearning(TrainWithClassifier):
             torch.nn.functional.normalize(real_negatives, p=2, dim=1),
         )
 
-
-    def allowed_model_keys(self):
-        return super().allowed_model_keys()+["generator"]
-
-    def allowed_loss_funcs_keys(self):
-        return super().allowed_loss_funcs_keys()+["synth_loss", "g_adv_loss"]
-
-    def allowed_mining_funcs_keys(self):
-        return super().allowed_mining_funcs_keys()+["synth_packaged_as_triplets"]
-
-    def verify_models_keys(self):
-        self._verify_dict_keys("models", self.allowed_model_keys(), True, essential_keys=["trunk", "generator"])
-
-    def verify_loss_funcs_keys(self):
-        self._verify_dict_keys("loss_funcs", self.allowed_loss_funcs_keys(), True, important_keys=self.allowed_loss_funcs_keys(), essential_keys=["synth_loss", "g_adv_loss"])
+    def modify_schema(self):
+        super().modify_schema()
+        self.schema['models'].keys += ['generator']
+        self.schema['models'].essential += ['generator']
+        self.schema['loss_funcs'].keys += ['synth_loss', 'g_adv_loss']
+        self.schema['loss_funcs'].essential += ['synth_loss', 'g_adv_loss']
+        self.schema['mining_funcs'].keys += ['synth_packaged_as_triplets']

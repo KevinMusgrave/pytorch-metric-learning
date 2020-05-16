@@ -323,3 +323,9 @@ def angle_to_coord(angle):
 
 def assert_embeddings_and_labels_are_same_size(embeddings, labels):
     assert embeddings.size(0) == labels.size(0), "Number of embeddings must equal number of labels"
+
+def exclude(it, targets):
+    return [x for x in it if x not in targets]
+
+def append_map(it, suf):
+    return [x + suf for x in it]

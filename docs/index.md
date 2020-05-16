@@ -32,17 +32,10 @@ pip install pytorch-metric-learning[with-hooks-cpu]
 
 ### Conda
 ```
-conda install pytorch-metric-learning -c metric-learning
+conda install pytorch-metric-learning -c metric-learning -c pytorch
 ```
+
 **To use the testing module, you'll need faiss, which can be installed via conda as well. See the [installation instructions for faiss](https://github.com/facebookresearch/faiss/blob/master/INSTALL.md).**
-
-We have recently noticed some sporadic issues with the conda installation, so we recommend installing with pip. You can use pip inside of conda:
-```
-conda install pip
-pip install pytorch-metric-learning
-```
-If you run into problems during installation, please post in [this issue](https://github.com/KevinMusgrave/pytorch-metric-learning/issues/55#issue-600601602).
-
 
 
 ## Overview

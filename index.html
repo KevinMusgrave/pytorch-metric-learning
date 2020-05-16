@@ -474,7 +474,7 @@
 
 
 <p><strong>To get the latest dev version</strong>:</p>
-<div class="codehilite"><pre><span></span><span class="err">pip install pytorch-metric-learning==0.9.86.dev1</span>
+<div class="codehilite"><pre><span></span><span class="err">pip install pytorch-metric-learning==0.9.86</span>
 </pre></div>
 
 
@@ -484,12 +484,12 @@
 </pre></div>
 
 
-<p><strong>To install with evaluation and logging capabilities</strong>:</p>
+<p><strong>To install with evaluation and logging capabilities (This will install the unofficial pypi version of faiss-gpu)</strong>:</p>
 <div class="codehilite"><pre><span></span><span class="err">pip install pytorch-metric-learning[with-hooks]</span>
 </pre></div>
 
 
-<p><strong>To install with evaluation and logging capabilities (CPU)</strong></p>
+<p><strong>To install with evaluation and logging capabilities (CPU) (This will install the unofficial pypi version of faiss-cpu)</strong>:</p>
 <div class="codehilite"><pre><span></span><span class="err">pip install pytorch-metric-learning[with-hooks-cpu]</span>
 </pre></div>
 
@@ -499,6 +499,7 @@
 </pre></div>
 
 
+<p><strong>To use the testing module, you'll need faiss, which can be installed via conda as well. See the <a href="https://github.com/facebookresearch/faiss/blob/master/INSTALL.md">installation instructions for faiss</a>.</strong></p>
 <p>We have recently noticed some sporadic issues with the conda installation, so we recommend installing with pip. You can use pip inside of conda:</p>
 <div class="codehilite"><pre><span></span><span class="err">conda install pip</span>
 <span class="err">pip install pytorch-metric-learning</span>

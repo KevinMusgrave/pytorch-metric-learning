@@ -58,7 +58,7 @@ pip install pytorch-metric-learning
 pip install pytorch-metric-learning[with-hooks]
 ```
 
-**To install with evaluation and logging capabilities (CPU) (This will install the unofficial pypi version of faiss-cpu)**
+**To install with evaluation and logging capabilities (CPU) (This will install the unofficial pypi version of faiss-cpu)**:
 ```
 pip install pytorch-metric-learning[with-hooks-cpu]
 ```

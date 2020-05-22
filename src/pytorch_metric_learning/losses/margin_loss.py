@@ -36,7 +36,7 @@ class MarginLoss(BaseMetricLossFunction):
 
         pair_count = self.num_pos_pairs + self.num_neg_pairs 
 
-        if pair_count >= 1:
+        if pair_count > 0:
             self.margin_loss = torch.sum(pos_loss + neg_loss) / pair_count
             self.beta_reg_loss = self.beta_reg_loss / pair_count
         else:

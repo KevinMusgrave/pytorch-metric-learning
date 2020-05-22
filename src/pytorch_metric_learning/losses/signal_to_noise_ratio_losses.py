@@ -38,7 +38,10 @@ class SignalToNoiseRatioContrastiveLoss(BaseMetricLossFunction):
         d = torch.nn.functional.relu((d-margin)*before_relu_multiplier)
         num_non_zero_pairs = (d > 0).nonzero().size(0)
         if self.avg_non_zero_only:
-            d = torch.sum(d) / (num_non_zero_pairs + 1e-16)
+            if num_non_zero_pairs > 0:
+                d = torch.sum(d) / num_non_zero_pairs
+            else:
+                d = 0
         else:
             d = torch.mean(d)
         return d, num_non_zero_pairs

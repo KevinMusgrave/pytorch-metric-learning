@@ -47,7 +47,10 @@ class ContrastiveLoss(GenericPairLoss):
         per_pair_loss = loss_calc_func(pair_dists, margin) ** self.power
         num_non_zero_pairs = (per_pair_loss > 0).nonzero().size(0)
         if self.avg_non_zero_only:
-            loss = torch.sum(per_pair_loss) / (num_non_zero_pairs + 1e-16)
+            if num_non_zero_pairs > 0:
+                loss = torch.sum(per_pair_loss) / num_non_zero_pairs
+            else:
+                loss = 0
         else:
             loss = torch.mean(per_pair_loss)
         return loss, num_non_zero_pairs

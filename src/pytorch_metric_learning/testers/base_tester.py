@@ -5,7 +5,7 @@ import torch
 import numpy as np
 from ..utils import stat_utils
 from ..utils import common_functions as c_f
-from ..utils import AccuracyCalculator
+from ..utils.accuracy_calculator import AccuracyCalculator
 import logging
 from sklearn.preprocessing import normalize, StandardScaler
 from collections import defaultdict

@@ -63,7 +63,9 @@ class TripletMarginLoss(BaseMetricLossFunction):
             relued = torch.nn.functional.relu(loss_modified)
             self.num_non_zero_triplets = (relued > 0).nonzero().size(0)
             if self.avg_non_zero_only:
-                return torch.sum(relued) / (self.num_non_zero_triplets + 1e-16)
+                if self.num_non_zero_triplets > 0:
+                    return torch.sum(relued) / self.num_non_zero_triplets
+                return 0
             return torch.mean(relued)
 
     def maybe_modify_loss(self, x):

@@ -11,7 +11,7 @@ pip install pytorch-metric-learning
 
 **To get the latest dev version**:
 ```
-pip install pytorch-metric-learning==0.9.86.dev1
+pip install pytorch-metric-learning==0.9.87.dev0
 ```
 
 **To install on Windows**:
@@ -20,27 +20,22 @@ pip install torch===1.4.0 torchvision===0.5.0 -f https://download.pytorch.org/wh
 pip install pytorch-metric-learning
 ```
 
-**To install with evaluation and logging capabilities**:
+**To install with evaluation and logging capabilities (This will install the unofficial pypi version of faiss-gpu)**:
 ```
 pip install pytorch-metric-learning[with-hooks]
 ```
 
-**To install with evaluation and logging capabilities (CPU)**
+**To install with evaluation and logging capabilities (CPU) (This will install the unofficial pypi version of faiss-cpu)**:
 ```
 pip install pytorch-metric-learning[with-hooks-cpu]
 ```
 
 ### Conda
 ```
-conda install pytorch-metric-learning -c metric-learning
+conda install pytorch-metric-learning -c metric-learning -c pytorch
 ```
-We have recently noticed some sporadic issues with the conda installation, so we recommend installing with pip. You can use pip inside of conda:
-```
-conda install pip
-pip install pytorch-metric-learning
-```
-If you run into problems during installation, please post in [this issue](https://github.com/KevinMusgrave/pytorch-metric-learning/issues/55#issue-600601602).
 
+**To use the testing module, you'll need faiss, which can be installed via conda as well. See the [installation instructions for faiss](https://github.com/facebookresearch/faiss/blob/master/INSTALL.md).**
 
 
 ## Overview

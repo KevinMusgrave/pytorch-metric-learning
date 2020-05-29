@@ -36,7 +36,9 @@ class TwoStreamMetricLoss(BaseTrainer):
             (anchors_embeddings, posnegs_embeddings) = embeddings
             return self.mining_funcs["tuple_miner"](anchors_embeddings, labels, posnegs_embeddings, labels)
         else:
-            return lmu.get_all_triplets_indices(labels)
+            # we need to clone labels and pass them as ref_labels 
+            # to ensure triplets are generated between anchors and posnegs
+            return lmu.get_all_triplets_indices(labels, labels.clone())
 
     def allowed_mining_funcs_keys(self):
         return ["tuple_miner"]

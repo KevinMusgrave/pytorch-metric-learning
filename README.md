@@ -180,7 +180,7 @@ And (almost) all mining functions take in embeddings and labels:
 def forward(self, embeddings, labels)
 ```
 
-Here's how the above examples look like in a typical training loop:
+Here's what the above examples look like in a typical training loop:
 ```python
 from pytorch_metric_learning import miners, losses
 miner = miners.MultiSimilarityMiner(epsilon=0.1)

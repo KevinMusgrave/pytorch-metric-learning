@@ -58,7 +58,7 @@ def get_lone_query_labels(query_labels, reference_labels, reference_label_counts
         return np.setdiff1d(query_labels, reference_labels)
 
 class AccuracyCalculator:
-    def __init__(self, include=(), exclude=(), average_per_class=False):
+    def __init__(self, include=(), exclude=(), average_per_class=False, k=None):
         self.function_keyword = "calculate_"
         function_names = [x for x in dir(self) if x.startswith(self.function_keyword)]
         metrics = [x.replace(self.function_keyword, "", 1) for x in function_names]
@@ -67,6 +67,7 @@ class AccuracyCalculator:
         self.original_function_dict = self.get_function_dict(include, exclude)
         self.curr_function_dict = self.get_function_dict()
         self.average_per_class = average_per_class
+        self.k = k
 
     def get_function_dict(self, include=(), exclude=()):
         if len(include) == 0:
@@ -118,6 +119,7 @@ class AccuracyCalculator:
 
         if any(x in self.requires_knn() for x in self.get_curr_metrics()):
             label_counts, num_k = get_label_counts(reference_labels)
+            if self.k is not None: num_k = self.k
             knn_indices = stat_utils.get_knn(reference, query, num_k, embeddings_come_from_same_source)
             knn_labels = reference_labels[knn_indices]
             lone_query_labels = get_lone_query_labels(query_labels, reference_labels, label_counts, embeddings_come_from_same_source)

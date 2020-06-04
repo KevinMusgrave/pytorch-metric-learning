@@ -37,7 +37,12 @@ class GenericPairLoss(BaseMetricLossFunction):
             embedding_norms_mat = self.embedding_norms.unsqueeze(0)*self.embedding_norms.unsqueeze(1)
             mat = mat / (embedding_norms_mat)
         indices_tuple = lmu.convert_to_pairs(indices_tuple, labels)
-        return self.loss_method(mat, labels, indices_tuple)
+        losses = self.loss_method(mat, labels, indices_tuple)
+        if self.loss_method == self.mat_based_loss:
+            loss_indices = self.element_indices(embeddings)
+        elif self.loss_method == self.pair_based_loss:
+            loss_indices = indices_tuple
+        return losses, loss_indices 
 
     def _compute_loss(self):
         raise NotImplementedError

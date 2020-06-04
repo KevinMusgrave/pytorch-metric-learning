@@ -39,21 +39,14 @@ class ContrastiveLoss(GenericPairLoss):
             pos_loss, self.num_non_zero_pos_pairs = self.mask_margin_and_calculate_loss(pos_pair_dist, "pos")
         if len(neg_pair_dist) > 0:
             neg_loss, self.num_non_zero_neg_pairs = self.mask_margin_and_calculate_loss(neg_pair_dist, "neg")
-        return pos_loss + neg_loss
+        return pos_loss, neg_loss
 
     def mask_margin_and_calculate_loss(self, pair_dists, pos_or_neg):
         loss_calc_func = self.pos_calc if pos_or_neg == "pos" else self.neg_calc
         margin = self.pos_margin if pos_or_neg == "pos" else self.neg_margin
         per_pair_loss = loss_calc_func(pair_dists, margin) ** self.power
         num_non_zero_pairs = (per_pair_loss > 0).nonzero().size(0)
-        if self.avg_non_zero_only:
-            if num_non_zero_pairs > 0:
-                loss = torch.sum(per_pair_loss) / num_non_zero_pairs
-            else:
-                loss = 0
-        else:
-            loss = torch.mean(per_pair_loss)
-        return loss, num_non_zero_pairs
+        return per_pair_loss, num_non_zero_pairs
 
     def pos_calc(self, pos_pair_dist, margin):
         return (
@@ -68,3 +61,14 @@ class ContrastiveLoss(GenericPairLoss):
             if self.use_similarity
             else torch.nn.functional.relu(margin - neg_pair_dist)
         )
+
+
+
+    def default_reducer(self, losses, loss_indices, labels):
+        if self.avg_non_zero_only:
+            if num_non_zero_pairs > 0:
+                loss = torch.sum(per_pair_loss) / num_non_zero_pairs
+            else:
+                loss = 0
+        else:
+            loss = torch.mean(per_pair_loss)

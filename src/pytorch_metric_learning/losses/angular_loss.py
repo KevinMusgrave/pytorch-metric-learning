@@ -18,7 +18,8 @@ class AngularLoss(BaseMetricLossFunction):
         
     def compute_loss(self, embeddings, labels, indices_tuple):
         anchors, positives, keep_mask = self.set_stats_get_pairs(embeddings, labels, indices_tuple)
-        if anchors is None: return 0
+        if anchors is None: 
+            return self.create_zero_loss(embeddings)
 
         sq_tan_alpha = torch.tan(self.alpha) ** 2
         ap_dot = torch.sum(anchors * positives, dim=1, keepdim=True)
@@ -27,7 +28,8 @@ class AngularLoss(BaseMetricLossFunction):
 
         final_form = (4 * sq_tan_alpha * ap_matmul_embeddings) - (2 * (1 + sq_tan_alpha) * ap_dot)
         final_form = self.maybe_modify_loss(final_form)
-        return torch.mean(lmu.logsumexp(final_form, keep_mask=keep_mask, add_one=True))
+        losses = lmu.logsumexp(final_form, keep_mask=keep_mask, add_one=True)
+        return losses, self.element_indices(embeddings)
 
     def set_stats_get_pairs(self, embeddings, labels, indices_tuple):
         a1, p, a2, _ = lmu.convert_to_pairs(indices_tuple, labels)

@@ -2,6 +2,7 @@
 
 import torch
 from ..utils import common_functions as c_f
+from ..reducers import MeanReducer
 
 class BaseMetricLossFunction(torch.nn.Module):
     """
@@ -20,11 +21,13 @@ class BaseMetricLossFunction(torch.nn.Module):
         normalize_embeddings=True,
         num_class_per_param=None,
         learnable_param_names=None,
+        reducer=None
     ):
         super().__init__()
         self.normalize_embeddings = normalize_embeddings
         self.num_class_per_param = num_class_per_param
         self.learnable_param_names = learnable_param_names
+        self.reducer = MeanReducer() if reducer is None else reducer
         self.initialize_learnable_parameters()
         self.add_to_recordable_attributes(name="avg_embedding_norm")
 
@@ -51,10 +54,9 @@ class BaseMetricLossFunction(torch.nn.Module):
         self.embedding_norms = torch.norm(embeddings, p=2, dim=1)
         self.avg_embedding_norm = torch.mean(self.embedding_norms)
 
-        loss = self.compute_loss(embeddings, labels, indices_tuple)
-        if loss == 0:
-            loss = torch.sum(embeddings*0)
-        return loss
+        losses, loss_indices = self.compute_loss(embeddings, labels, indices_tuple)
+        self.assert_losses_size(losses, loss_indices)
+        return self.reducer(losses, loss_indices, labels)
 
     def initialize_learnable_parameters(self):
         """
@@ -90,6 +92,14 @@ class BaseMetricLossFunction(torch.nn.Module):
 
     def add_to_recordable_attributes(self, name=None, list_of_names=None):
         c_f.add_to_recordable_attributes(self, name=name, list_of_names=list_of_names)
+
+    def element_indices(self, embeddings):
+        return torch.arange(len(embeddings)).to(embeddings.device)
+
+    def create_zero_loss(self, embeddings):
+        losses = torch.sum(embeddings*0, dim=1)
+        loss_indices = self.element_indices(embeddings)
+        return losses, loss_indices
 
 
 

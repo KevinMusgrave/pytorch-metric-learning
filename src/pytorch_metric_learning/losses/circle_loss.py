@@ -45,7 +45,7 @@ class CircleLoss(BaseMetricLossFunction):
         self.num_triplets = len(anchor_idx)
         if self.num_triplets == 0:
             self.num_unique_anchors = 0
-            return 0
+            return self.create_zero_loss(embeddings)
         anchors, positives, negatives = embeddings[anchor_idx], embeddings[positive_idx], embeddings[negative_idx]
         
         # compute cosine similarities
@@ -54,7 +54,6 @@ class CircleLoss(BaseMetricLossFunction):
         sn = torch.sum(anchors * negatives, dim=1)
         
         # compute some constants
-        loss = 0.
         op = 1 + self.m 
         on = -self.m
         delta_p = 1-self.m 
@@ -64,6 +63,7 @@ class CircleLoss(BaseMetricLossFunction):
         # for each unique anchor index, we have (sp1, sp2, ..., spK) (sn1, sn2, ..., snL)
         unique_anchor_idx = torch.unique(anchor_idx)
         self.num_unique_anchors = len(unique_anchor_idx)
+        losses = torch.zeros(len(embeddings)).to(embeddings.device)
 
         for anchor in unique_anchor_idx:
             mask = anchor_idx == anchor 
@@ -75,15 +75,11 @@ class CircleLoss(BaseMetricLossFunction):
             logit_p = -self.gamma * alpha_p * (sp_for_this_anchor - delta_p)
             logit_n = self.gamma * alpha_n * (sn_for_this_anchor - delta_n)
 
-            loss_for_this_anchor = self.soft_plus(
-                torch.logsumexp(logit_n, dim=0) + torch.logsumexp(logit_p, dim=0))
-            loss += loss_for_this_anchor
+            losses[anchor] = self.soft_plus(torch.logsumexp(logit_n, dim=0) + torch.logsumexp(logit_p, dim=0))
         
-        loss /= len(unique_anchor_idx)
-        return loss
+        return losses, self.element_indices(embeddings)
 
 
-
-
-
+    def default_reducer(self, losses, loss_indices, labels):
+        return torch.sum(losses) / self.num_unique_anchors
 

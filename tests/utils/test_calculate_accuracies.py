@@ -102,9 +102,9 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
         self.assertTrue(acc["mean_average_precision_at_r"] == (1 + 2./2 + 3./5 + 4./7 + 5./9) / 10)
 
 
-    def test_accuracy_calculator_and_faiss_average_per_class(self):
-        AC_global_average = accuracy_calculator.AccuracyCalculator(exclude=("NMI", "AMI"), average_per_class=False)
-        AC_per_class_average = accuracy_calculator.AccuracyCalculator(exclude=("NMI", "AMI"), average_per_class=True)
+    def test_accuracy_calculator_and_faiss_avg_of_avgs(self):
+        AC_global_average = accuracy_calculator.AccuracyCalculator(exclude=("NMI", "AMI"), avg_of_avgs=False)
+        AC_per_class_average = accuracy_calculator.AccuracyCalculator(exclude=("NMI", "AMI"), avg_of_avgs=True)
         query = np.arange(10)[:,None].astype(np.float32)
         reference = np.arange(10)[:,None].astype(np.float32)
         query[-1] = 100

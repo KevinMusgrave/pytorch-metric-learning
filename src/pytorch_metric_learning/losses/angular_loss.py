@@ -17,9 +17,9 @@ class AngularLoss(BaseMetricLossFunction):
         self.add_to_recordable_attributes(list_of_names=["average_angle"])
         
     def compute_loss(self, embeddings, labels, indices_tuple):
-        anchors, positives, keep_mask = self.set_stats_get_pairs(embeddings, labels, indices_tuple)
+        anchors, positives, keep_mask, anchor_idx = self.set_stats_get_pairs(embeddings, labels, indices_tuple)
         if anchors is None: 
-            return self.create_zero_loss(embeddings)
+            return self.zero_loss()
 
         sq_tan_alpha = torch.tan(self.alpha) ** 2
         ap_dot = torch.sum(anchors * positives, dim=1, keepdim=True)
@@ -29,12 +29,12 @@ class AngularLoss(BaseMetricLossFunction):
         final_form = (4 * sq_tan_alpha * ap_matmul_embeddings) - (2 * (1 + sq_tan_alpha) * ap_dot)
         final_form = self.maybe_modify_loss(final_form)
         losses = lmu.logsumexp(final_form, keep_mask=keep_mask, add_one=True)
-        return losses, self.element_indices(embeddings)
+        return losses, anchor_idx
 
     def set_stats_get_pairs(self, embeddings, labels, indices_tuple):
         a1, p, a2, _ = lmu.convert_to_pairs(indices_tuple, labels)
         if len(a1) == 0 or len(a2) == 0:
-            return [None]*3
+            return [None]*4
         anchors, positives = embeddings[a1], embeddings[p]
         keep_mask = (labels[a1].unsqueeze(1) != labels.unsqueeze(0)).float()
 
@@ -44,7 +44,7 @@ class AngularLoss(BaseMetricLossFunction):
         angles = torch.atan(ap_dist.unsqueeze(1) / (2*nc_dist))
         average_angle = torch.sum(angles*keep_mask) / torch.sum(keep_mask)
         self.average_angle = np.degrees(average_angle.item())
-        return anchors, positives, keep_mask
+        return anchors, positives, keep_mask, a1
 
     def maybe_modify_loss(self, x):
         return x

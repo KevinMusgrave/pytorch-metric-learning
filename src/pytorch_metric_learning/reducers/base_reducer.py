@@ -4,27 +4,36 @@ from ..utils import common_functions as c_f
 
 class BaseReducer(torch.nn.Module):
     
-    def forward(self, losses, loss_indices, labels):
+    def forward(self, losses, loss_indices, embeddings, labels):
+        if self.input_is_zero_loss(losses):
+            return self.zero_loss(embeddings)
         reduction_type = self.assert_losses_size(losses, loss_indices)
         reduction_func = self.get_reduction_func(reduction_type)
-        return reduction_func(losses, loss_indices, labels)
+        return reduction_func(losses, loss_indices, embeddings, labels)
 
-    def per_element_reduction(self, losses, loss_indices, labels):
+    def per_element_reduction(self, losses, loss_indices, embeddings, labels):
         raise NotImplementedError
 
-    def per_pair_reduction(self, losses, loss_indices, labels):
+    def per_pair_reduction(self, losses, loss_indices, embeddings, labels):
         raise NotImplementedError
     
-    def per_triplet_reduction(self, losses, loss_indices, labels):
+    def per_triplet_reduction(self, losses, loss_indices, embeddings, labels):
         raise NotImplementedError
 
     def get_reduction_func(self, reduction_type):
-        return self.get_reduction_func_dict(reduction_type)
+        return getattr(self, "{}_reduction".format(reduction_type))
 
-    def get_reduction_func_dict(self):
-        return {"per_element": self.per_element_reduction,
-                "per_pair": self.per_pair_reduction,
-                "per_triplet": self.per_triplet_reduction}
+    def zero_loss(self, embeddings):
+        return torch.sum(embeddings*0)
+
+    def input_is_zero_loss(self, losses):
+        if not torch.is_tensor(losses):
+            if losses == 0:
+                return True
+            if c_f.is_list_or_tuple(losses):
+                return all(not torch.is_tensor(L) and L == 0 for L in losses)
+        return False
+        
 
     def assert_losses_size(self, losses, loss_indices):
         # element indices
@@ -50,3 +59,7 @@ class BaseReducer(torch.nn.Module):
                 assert all(len(x) == loss_length for x in loss_indices)
                 return "per_triplet"
         raise TypeError("losses and loss_indices should be type torch.tensor or list or tuple")
+
+
+    def add_to_recordable_attributes(self, name=None, list_of_names=None):
+        c_f.add_to_recordable_attributes(self, name=name, list_of_names=list_of_names)

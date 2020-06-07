@@ -2,8 +2,7 @@ import unittest
 import torch
 import numpy as np
 from pytorch_metric_learning.losses import ContrastiveLoss
-from pytorch_metric_learning.utils import common_functions as c_f, loss_and_miner_utils as lmu
-torch.set_printoptions(precision=10)
+from pytorch_metric_learning.utils import common_functions as c_f
 
 class TestContrastiveLoss(unittest.TestCase):
     def test_contrastive_loss(self):

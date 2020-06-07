@@ -35,10 +35,10 @@ class TestMarginLoss(unittest.TestCase):
         self.assertTrue(torch.isclose(loss, correct_total_loss))
 
 
-    def test_with_no_valid_pairs(self):
+    def test_with_no_valid_triplets(self):
         margin, nu, beta = 0.1, 0, 1
         loss_func = MarginLoss(margin=margin, nu=nu, beta=beta)
-        embedding_angles = [0]
+        embedding_angles = [0, 20, 40, 60, 80]
         embeddings = torch.FloatTensor([c_f.angle_to_coord(a) for a in embedding_angles]) #2D embeddings
-        labels = torch.LongTensor([0])
+        labels = torch.LongTensor([0, 1, 2, 3, 4])
         self.assertEqual(loss_func(embeddings, labels), 0)

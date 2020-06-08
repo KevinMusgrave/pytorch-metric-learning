@@ -245,7 +245,7 @@ def get_record_keeper(csv_folder, tensorboard_folder, global_db_path=None, exper
         from torch.utils.tensorboard import SummaryWriter
         record_writer = record_keeper_package.RecordWriter(csv_folder, global_db_path, experiment_name, is_new_experiment)
         tensorboard_writer = SummaryWriter(log_dir=tensorboard_folder)
-        record_keeper = record_keeper_package.RecordKeeper(tensorboard_writer, record_writer, ["record_these"], save_figures=save_figures)
+        record_keeper = record_keeper_package.RecordKeeper(tensorboard_writer, record_writer, c_f.list_of_recordable_attributes_list_names(), save_figures=save_figures)
         return record_keeper, record_writer, tensorboard_writer
 
     except ModuleNotFoundError as e:

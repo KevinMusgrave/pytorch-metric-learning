@@ -4,13 +4,14 @@ from ..utils import common_functions as c_f
 
 class BaseReducer(torch.nn.Module):
     def forward(self, loss_dict, embeddings, labels):
-        self.add_to_recordable_attributes(list_of_names=list(loss_dict.keys()))
+        c_f.reset_stats(self)
         sub_losses = torch.zeros(len(loss_dict)).to(embeddings.device)
         loss_count = 0
-        for loss_name, loss_info in loss_dict.items():
+        for self.curr_loss_name, loss_info in loss_dict.items():
+            self.add_to_recordable_attributes(name=self.curr_loss_name, prepend_loss_name=False)
             losses, loss_indices, reduction_type = self.unpack_loss_info(loss_info)
             loss_val = self.reduce_the_loss(losses, loss_indices, reduction_type, embeddings, labels)
-            setattr(self, loss_name, loss_val)
+            setattr(self, self.curr_loss_name, loss_val)
             sub_losses[loss_count] = loss_val
             loss_count += 1
         return self.sub_loss_reduction(sub_losses, embeddings, labels)
@@ -57,6 +58,11 @@ class BaseReducer(torch.nn.Module):
             return True
         return False
         
+    def reset_stats(self):
+        for attr_list in ["record_these_stats", "record_these_optional_stats"]:
+            for r in getattr(self, attr_list, []):
+                setattr(self, r, 0)
+    
     def assert_sizes_already_reduced(self, losses, loss_indices):
         pass
 
@@ -84,5 +90,27 @@ class BaseReducer(torch.nn.Module):
         assert len(loss_indices) == 3
         assert all(len(x) == len(losses) for x in loss_indices)
 
-    def add_to_recordable_attributes(self, name=None, list_of_names=None):
-        c_f.add_to_recordable_attributes(self, name=name, list_of_names=list_of_names)
+    def add_to_recordable_attributes(self, name=None, list_of_names=None, is_stat=False, optional=False, prepend_loss_name=True):
+        if name is not None:
+            if prepend_loss_name:
+                name = self.attribute_namer(name)
+            c_f.add_to_recordable_attributes(self, name=name, is_stat=is_stat, optional=optional)
+        if list_of_names is not None:
+            for name in list_of_names:
+                self.add_to_recordable_attributes(name=name, is_stat=is_stat, optional=optional, prepend_loss_name=prepend_loss_name)
+
+    def get_recordable_attribute(self, name=None, list_of_names=None, prepend_loss_name=True):
+        if name is not None:
+            if prepend_loss_name:
+                name = self.attribute_namer(name)
+            return getattr(self, name)
+        if list_of_names is not None:
+            return [self.get_recordable_attributes(name=name, prepend_loss_name=prepend_loss_name) for name in list_of_names]
+
+    def set_recordable_attribute(self, name, value, prepend_loss_name=True):
+        if prepend_loss_name:
+            name = self.attribute_namer(name)
+        return setattr(self, name, value)
+
+    def attribute_namer(self, name):
+        return "{}_{}".format(self.curr_loss_name, name)

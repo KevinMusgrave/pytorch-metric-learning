@@ -218,17 +218,35 @@ class LabelMapper:
         
 
 
-def add_to_recordable_attributes(input_obj, name=None, list_of_names=None):
-    if not hasattr(input_obj, "record_these"):
-        input_obj.record_these = []
+def add_to_recordable_attributes(input_obj, name=None, list_of_names=None, is_stat=False, optional=False):
+    if is_stat:
+        if optional:
+            attr_name_list_name = "record_these_optional_stats" 
+        else:
+            attr_name_list_name = "record_these_stats"
+    else:
+        attr_name_list_name = "record_these"
+    if not hasattr(input_obj, attr_name_list_name):
+        setattr(input_obj, attr_name_list_name, [])
+    attr_name_list = getattr(input_obj, attr_name_list_name)
     if name is not None:
-        if name not in input_obj.record_these:
-            input_obj.record_these.append(name)
+        if name not in attr_name_list:
+            attr_name_list.append(name)
         if not hasattr(input_obj, name):
             setattr(input_obj, name, 0)
     if list_of_names is not None and isinstance(list_of_names, list):
         for n in list_of_names:
             add_to_recordable_attributes(input_obj, name=n)
+
+
+def reset_stats(input_obj):
+    for attr_list in ["record_these_stats", "record_these_optional_stats"]:
+        for r in getattr(input_obj, attr_list, []):
+            setattr(input_obj, r, 0)
+
+
+def list_of_recordable_attributes_list_names():
+    return ["record_these", "record_these_stats", "record_these_optional_stats"]
 
 
 def modelpath_creator(folder, basename, identifier, extension=".pth"):

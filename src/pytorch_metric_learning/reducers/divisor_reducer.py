@@ -4,16 +4,16 @@ import torch
 class DivisorReducer(BaseReducer):
     def unpack_loss_info(self, loss_info):
         losses, loss_indices, reduction_type, divisor_components = loss_info
-        self.divisor = 0
+        self.total_divisor = 0
         for name, value in divisor_components.items():
-            self.divisor += value
-            self.add_to_recordable_attributes(name=name)
-            setattr(self, name, value)
+            self.total_divisor += value
+            self.add_to_recordable_attributes(name=name, is_stat=True, optional=True)
+            self.set_recordable_attribute(name, value)
         return losses, loss_indices, reduction_type
 
     def sum_and_divide(self, losses):
-        if self.divisor != 0:
-            return torch.sum(losses) / self.divisor
+        if self.total_divisor != 0:
+            return torch.sum(losses) / self.total_divisor
         return torch.sum(losses*0)
 
     def element_reduction(self, losses, *_):

@@ -34,7 +34,7 @@ class CircleLoss(BaseMetricLossFunction):
         self.m = m 
         self.gamma = gamma 
         self.triplets_per_anchor = triplets_per_anchor
-        self.add_to_recordable_attributes(list_of_names=["num_unique_anchors", "num_triplets"])
+        self.add_to_recordable_attributes(list_of_names=["num_unique_anchors", "num_triplets"], is_stat=True)
         self.soft_plus = torch.nn.Softplus(beta=1)
 
         assert self.normalize_embeddings, "Embeddings must be normalized in circle loss!"
@@ -44,7 +44,6 @@ class CircleLoss(BaseMetricLossFunction):
         anchor_idx, positive_idx, negative_idx = indices_tuple 
         self.num_triplets = len(anchor_idx)
         if self.num_triplets == 0:
-            self.num_unique_anchors = 0
             return self.zero_losses()
         anchors, positives, negatives = embeddings[anchor_idx], embeddings[positive_idx], embeddings[negative_idx]
         

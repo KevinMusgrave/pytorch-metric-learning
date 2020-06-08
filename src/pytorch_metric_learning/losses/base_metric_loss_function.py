@@ -13,7 +13,7 @@ class BaseMetricLossFunction(torch.nn.Module):
         super().__init__()
         self.normalize_embeddings = normalize_embeddings
         self.reducer = self.get_default_reducer() if reducer is None else reducer
-        self.add_to_recordable_attributes(name="avg_embedding_norm")
+        self.add_to_recordable_attributes(name="avg_embedding_norm", is_stat=True, optional=True)
 
     def compute_loss(self, embeddings, labels, indices_tuple=None):
         """
@@ -31,6 +31,7 @@ class BaseMetricLossFunction(torch.nn.Module):
                             Can also be left as None
         Returns: the loss (float)
         """
+        c_f.reset_stats(self)
         c_f.assert_embeddings_and_labels_are_same_size(embeddings, labels)
         labels = labels.to(embeddings.device)
         if self.normalize_embeddings:
@@ -41,8 +42,8 @@ class BaseMetricLossFunction(torch.nn.Module):
         loss_dict = self.compute_loss(embeddings, labels, indices_tuple)
         return self.reducer(loss_dict, embeddings, labels)
 
-    def add_to_recordable_attributes(self, name=None, list_of_names=None):
-        c_f.add_to_recordable_attributes(self, name=name, list_of_names=list_of_names)
+    def add_to_recordable_attributes(self, name=None, list_of_names=None, is_stat=False, optional=False):
+        c_f.add_to_recordable_attributes(self, name=name, list_of_names=list_of_names, is_stat=is_stat, optional=optional)
 
     def zero_loss(self):
         return (0, None, None)

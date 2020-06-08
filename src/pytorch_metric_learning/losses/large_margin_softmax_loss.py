@@ -2,7 +2,7 @@
 
 from .weight_regularizer_mixin import WeightRegularizerMixin
 from .base_metric_loss_function import BaseMetricLossFunction
-from ..utils import loss_and_miner_utils as lmu
+from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
 import scipy.special
 import torch
 import math
@@ -82,5 +82,7 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         diff = (modified_cosine_of_target_classes - cosine_of_target_classes).unsqueeze(1)
         cosine = cosine + (mask*diff)
         unweighted_loss = self.cross_entropy(cosine * self.scale, labels)
-        miner_weighted_loss = (unweighted_loss*miner_weights) + self.regularization_loss(self.W.t())
-        return miner_weighted_loss, torch.arange(embeddings).to(labels.device)
+        miner_weighted_loss = unweighted_loss*miner_weights
+        loss_dict = {"loss": (miner_weighted_loss, c_f.torch_arange_from_size(embeddings), "element")}
+        loss_dict["reg_loss"] = (self.regularization_loss(self.W.t()), None, "already_reduced")
+        return loss_dict

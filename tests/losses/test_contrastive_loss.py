@@ -1,8 +1,7 @@
 import unittest
 import torch
-import numpy as np
 from pytorch_metric_learning.losses import ContrastiveLoss
-from pytorch_metric_learning.utils import common_functions as c_f, loss_and_miner_utils as lmu
+from pytorch_metric_learning.utils import common_functions as c_f
 from pytorch_metric_learning.reducers import MeanReducer
 
 class TestContrastiveLoss(unittest.TestCase):

@@ -16,11 +16,13 @@ class MarginLoss(BaseMetricLossFunction):
         self.add_to_recordable_attributes(list_of_names=["beta"])
         
     def compute_loss(self, embeddings, labels, indices_tuple):
-        anchor_idx, positive_idx, negative_idx = lmu.convert_to_triplets(indices_tuple, labels, self.triplets_per_anchor)
+        indices_tuple = lmu.convert_to_triplets(indices_tuple, labels, self.triplets_per_anchor)
+        anchor_idx, positive_idx, negative_idx = indices_tuple
         if len(anchor_idx) == 0:
             return self.zero_losses()
         anchors, positives, negatives = embeddings[anchor_idx], embeddings[positive_idx], embeddings[negative_idx]
-        beta = self.maybe_mask_param(self.beta, labels[anchor_idx])
+
+        beta = self.beta[labels[anchor_idx]] if len(self.beta) > 1 else self.beta
         beta_reg_loss = self.compute_reg_loss(beta)
 
         d_ap = torch.nn.functional.pairwise_distance(positives, anchors, p=2)
@@ -37,13 +39,13 @@ class MarginLoss(BaseMetricLossFunction):
         margin_loss = pos_loss + neg_loss
 
         loss_dict = {"margin_loss": (margin_loss, indices_tuple, "triplet", divisor_components)}
-        if self.num_class_per_param:
+        if len(beta) > 1:
             beta_idx = anchor_idx
             beta_reduction_type = "element"
         else:
             beta_idx = None
             beta_reduction_type = "already_reduced"
-        loss_dict["beta_reg_loss"] = (beta_reg_loss, beta_idx, "element", divisor_components)
+        loss_dict["beta_reg_loss"] = (beta_reg_loss, beta_idx, beta_reduction_type, divisor_components)
 
         return loss_dict
 
@@ -67,3 +69,8 @@ class MarginLoss(BaseMetricLossFunction):
             self.beta = torch.ones(num_classes) * self.beta
         if learn_beta:
             self.beta = torch.nn.Parameter(self.beta)
+        self.beta = self.beta.float()
+
+
+    def zero_loss(self):
+        return (0, None, None, {"num_pos_pairs": 0, "num_neg_pairs": 0})

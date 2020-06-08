@@ -1,7 +1,7 @@
-from .threshold_reducer import ThresholdReducer
+from .base_reducer import BaseReducer
 import torch
 
-class DivisorReducer(ThresholdReducer):
+class DivisorReducer(BaseReducer):
     def unpack_loss_info(self, loss_info):
         losses, loss_indices, reduction_type, divisor_components = loss_info
         self.divisor = 0
@@ -9,7 +9,7 @@ class DivisorReducer(ThresholdReducer):
             self.divisor += value
             self.add_to_recordable_attributes(name=name)
             setattr(self, name, value)
-        return loss_name, (losses, loss_indices, reduction_type)
+        return losses, loss_indices, reduction_type
 
     def sum_and_divide(self, losses):
         if self.divisor != 0:

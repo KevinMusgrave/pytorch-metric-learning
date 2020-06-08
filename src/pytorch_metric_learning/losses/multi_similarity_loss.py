@@ -22,4 +22,4 @@ class MultiSimilarityLoss(GenericPairLoss):
     def _compute_loss(self, mat, pos_mask, neg_mask):
         pos_loss = (1.0/self.alpha) * lmu.logsumexp(-self.alpha * (mat - self.base), keep_mask=pos_mask, add_one=True)
         neg_loss = (1.0/self.beta) * lmu.logsumexp(self.beta * (mat - self.base), keep_mask=neg_mask, add_one=True)
-        return torch.mean(pos_loss + neg_loss)
+        return {"loss": (pos_loss + neg_loss, c_f.torch_arange_from_size(mat), "element")}

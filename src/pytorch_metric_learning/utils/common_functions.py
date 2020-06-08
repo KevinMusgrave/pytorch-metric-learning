@@ -323,3 +323,7 @@ def angle_to_coord(angle):
 
 def assert_embeddings_and_labels_are_same_size(embeddings, labels):
     assert embeddings.size(0) == labels.size(0), "Number of embeddings must equal number of labels"
+
+
+def torch_arange_from_size(input, size_dim=0):
+    return torch.arange(input.size(size_dim)).to(input.device)

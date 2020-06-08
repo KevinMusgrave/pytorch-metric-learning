@@ -1,6 +1,5 @@
 import unittest
 import torch
-import numpy as np
 from pytorch_metric_learning.losses import NTXentLoss
 from pytorch_metric_learning.utils import common_functions as c_f
 

@@ -120,12 +120,13 @@ class AccuracyCalculator:
         if any(x in self.requires_knn() for x in self.get_curr_metrics()):
             label_counts, num_k = get_label_counts(reference_labels)
             if self.k is not None: num_k = self.k
-            knn_indices = stat_utils.get_knn(reference, query, num_k, embeddings_come_from_same_source)
+            knn_indices, knn_distances = stat_utils.get_knn(reference, query, num_k, embeddings_come_from_same_source)
             knn_labels = reference_labels[knn_indices]
             lone_query_labels = get_lone_query_labels(query_labels, reference_labels, label_counts, embeddings_come_from_same_source)
             not_lone_query_idx = ~np.isin(query_labels, lone_query_labels)
             kwargs["label_counts"] = label_counts
             kwargs["knn_labels"] = knn_labels
+            kwargs["knn_distances"] = knn_distances
             kwargs["lone_query_labels"] = lone_query_labels
             kwargs["not_lone_query_idx"] = not_lone_query_idx
 

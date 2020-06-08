@@ -23,6 +23,9 @@ def get_knn(
         embeddings_come_from_same_source: if True, then the nearest neighbor of
                                          each element (which is actually itself)
                                          will be ignored.
+    Returns:
+        numpy array: indices of nearest k neighbors
+        numpy array: corresponding distances
     """
     d = reference_embeddings.shape[1]
     logging.info("running k-nn with k=%d"%k)
@@ -31,10 +34,10 @@ def get_knn(
     if faiss.get_num_gpus() > 0:
         index = faiss.index_cpu_to_all_gpus(index)
     index.add(reference_embeddings)
-    _, indices = index.search(test_embeddings, k + 1)
+    distances, indices = index.search(test_embeddings, k + 1)
     if embeddings_come_from_same_source:
-        return indices[:, 1:]
-    return indices[:, :k]
+        return indices[:, 1:], distances[:, 1:]
+    return indices[:, :k], distances[:, :k]
 
 
 # modified from https://raw.githubusercontent.com/facebookresearch/deepcluster/

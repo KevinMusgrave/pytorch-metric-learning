@@ -3,27 +3,25 @@
 from .base_metric_loss_function import BaseMetricLossFunction
 import torch
 from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
-
+from ..reducers import DivisorReducer
 
 class MarginLoss(BaseMetricLossFunction):
 
-    def __init__(self, margin, nu, beta, triplets_per_anchor="all", **kwargs):
+    def __init__(self, margin, nu, beta, triplets_per_anchor="all", learn_beta=False, num_classes=None, **kwargs):
+        super().__init__(**kwargs)
         self.margin = margin
         self.nu = nu
-        self.beta = beta
+        self.initialize_beta(beta, learn_beta, num_classes)
         self.triplets_per_anchor = triplets_per_anchor
-        self.add_to_recordable_attributes(list_of_names=["num_pos_pairs", "num_neg_pairs", "margin_loss", "beta_reg_loss"])
-        super().__init__(**kwargs)
-
+        self.add_to_recordable_attributes(list_of_names=["beta"])
+        
     def compute_loss(self, embeddings, labels, indices_tuple):
         anchor_idx, positive_idx, negative_idx = lmu.convert_to_triplets(indices_tuple, labels, self.triplets_per_anchor)
         if len(anchor_idx) == 0:
-            self.num_pos_pairs = 0
-            self.num_neg_pairs = 0
-            return 0
+            return self.zero_losses()
         anchors, positives, negatives = embeddings[anchor_idx], embeddings[positive_idx], embeddings[negative_idx]
         beta = self.maybe_mask_param(self.beta, labels[anchor_idx])
-        self.beta_reg_loss = self.compute_reg_loss(beta)
+        beta_reg_loss = self.compute_reg_loss(beta)
 
         d_ap = torch.nn.functional.pairwise_distance(positives, anchors, p=2)
         d_an = torch.nn.functional.pairwise_distance(negatives, anchors, p=2)
@@ -31,21 +29,41 @@ class MarginLoss(BaseMetricLossFunction):
         pos_loss = torch.nn.functional.relu(d_ap - beta + self.margin)
         neg_loss = torch.nn.functional.relu(beta - d_an + self.margin)
 
-        self.num_pos_pairs = (pos_loss > 0.0).nonzero().size(0)
-        self.num_neg_pairs = (neg_loss > 0.0).nonzero().size(0)
+        num_pos_pairs = (pos_loss > 0.0).nonzero().size(0)
+        num_neg_pairs = (neg_loss > 0.0).nonzero().size(0)
 
-        pair_count = self.num_pos_pairs + self.num_neg_pairs 
+        divisor_components = {"num_pos_pairs": num_pos_pairs, "num_neg_pairs": num_neg_pairs}
 
-        if pair_count > 0:
-            self.margin_loss = torch.sum(pos_loss + neg_loss) / pair_count
-            self.beta_reg_loss = self.beta_reg_loss / pair_count
+        margin_loss = pos_loss + neg_loss
+
+        loss_dict = {"margin_loss": (margin_loss, indices_tuple, "triplet", divisor_components)}
+        if self.num_class_per_param:
+            beta_idx = anchor_idx
+            beta_reduction_type = "element"
         else:
-            self.margin_loss, self.beta_reg_loss = 0, 0
-            
-        return self.margin_loss + self.beta_reg_loss
+            beta_idx = None
+            beta_reduction_type = "already_reduced"
+        loss_dict["beta_reg_loss"] = (beta_reg_loss, beta_idx, "element", divisor_components)
+
+        return loss_dict
 
     def compute_reg_loss(self, beta):
         if self.nu > 0:
-            beta_sum = c_f.try_torch_operation(torch.sum, beta)
-            return beta_sum * self.nu
+            return beta * self.nu
         return 0
+
+    def sub_loss_names(self):
+        return ["margin_loss", "beta_reg_loss"]
+
+    def get_default_reducer(self):
+        return DivisorReducer()
+
+    def initialize_beta(self, beta, learn_beta, num_classes):
+        if not torch.is_tensor(beta):
+            self.beta = torch.tensor(beta)
+        if self.beta.dim() == 0:
+            self.beta = torch.tensor([self.beta])
+        if num_classes:
+            self.beta = torch.ones(num_classes) * self.beta
+        if learn_beta:
+            self.beta = torch.nn.Parameter(self.beta)

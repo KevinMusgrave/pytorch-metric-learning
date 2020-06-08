@@ -3,6 +3,7 @@
 import torch
 
 from .generic_pair_loss import GenericPairLoss
+from ..utils import loss_and_miner_utils as lmu
 from ..reducers import AvgNonZeroReducer
 
 
@@ -34,7 +35,9 @@ class ContrastiveLoss(GenericPairLoss):
             pos_loss = self.get_per_pair_loss(pos_pair_dist, "pos")
         if len(neg_pair_dist) > 0:
             neg_loss = self.get_per_pair_loss(neg_pair_dist, "neg")
-        return (pos_loss, neg_loss), indices_tuple
+        pos_pairs = lmu.pos_pairs_from_tuple(indices_tuple)
+        neg_pairs = lmu.neg_pairs_from_tuple(indices_tuple)
+        return {"pos_loss": (pos_loss, pos_pairs, "pos_pair"), "neg_loss": (neg_loss, neg_pairs, "neg_pair")}
 
     def get_per_pair_loss(self, pair_dists, pos_or_neg):
         loss_calc_func = self.pos_calc if pos_or_neg == "pos" else self.neg_calc
@@ -57,4 +60,7 @@ class ContrastiveLoss(GenericPairLoss):
         )
 
     def get_default_reducer(self):
-        return AvgNonZeroReducer(reduction_type="per_pair")
+        return AvgNonZeroReducer()
+
+    def sub_loss_names(self):
+        return ["pos_loss", "neg_loss"]

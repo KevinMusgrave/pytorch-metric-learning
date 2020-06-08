@@ -3,14 +3,14 @@ import torch
 
 class MeanReducer(BaseReducer):
     
-    def per_element_reduction(self, losses, *_):
+    def element_reduction(self, losses, *_):
         return torch.mean(losses)
     
-    def per_pair_reduction(self, losses, *args):
-        total_loss = 0
-        for sub_loss in losses:
-            total_loss += self.per_element_reduction(sub_loss, *args)
-        return total_loss     
+    def pos_pair_reduction(self, losses, *args):
+        return self.element_reduction(losses, *args)  
 
-    def per_triplet_reduction(self, losses, *args):
-        return self.per_element_reduction(losses, *args)
+    def neg_pair_reduction(self, losses, *args):
+        return self.element_reduction(losses, *args) 
+
+    def triplet_reduction(self, losses, *args):
+        return self.element_reduction(losses, *args)

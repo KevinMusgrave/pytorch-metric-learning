@@ -17,4 +17,4 @@ class GeneralizedLiftedStructureLoss(GenericPairLoss):
     def _compute_loss(self, mat, pos_mask, neg_mask):
         pos_loss = lmu.logsumexp(mat, keep_mask=pos_mask, add_one=False)
         neg_loss = lmu.logsumexp(self.neg_margin - mat, keep_mask=neg_mask, add_one=False)
-        return torch.mean(torch.relu(pos_loss+neg_loss))
+        return {"loss": (torch.relu(pos_loss+neg_loss), torch.arange(mat.size(0)).to(mat.device), "element")}

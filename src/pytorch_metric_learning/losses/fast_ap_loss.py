@@ -20,6 +20,9 @@ class FastAPLoss(BaseMetricLossFunction):
         I_pos[a1_idx, p_idx] = 1
         I_neg[a2_idx, n_idx] = 1
         N_pos = torch.sum(I_pos, dim=1)
+        safe_N = (N_pos > 0)
+        if torch.sum(safe_N) == 0:
+            return self.zero_losses()
         dist_mat = lmu.dist_mat(embeddings, squared=True)
 
         histogram_max = 4. if self.normalize_embeddings else torch.max(dist_mat).item()
@@ -32,17 +35,15 @@ class FastAPLoss(BaseMetricLossFunction):
         total_pos_hist = torch.cumsum(pos_hist, dim=1)
         total_hist = torch.cumsum(pos_hist + neg_hist, dim=1)
         
-        loss = 0
         h_pos_product = pos_hist * total_pos_hist
         safe_H = (h_pos_product > 0) & (total_hist > 0)
         if torch.sum(safe_H) > 0:
             FastAP = torch.zeros_like(pos_hist).to(embeddings.device)
             FastAP[safe_H] = h_pos_product[safe_H] / total_hist[safe_H]
             FastAP = torch.sum(FastAP, dim=1)
-            safe_N = (N_pos > 0)
-            if torch.sum(safe_N) > 0:
-                FastAP = FastAP[safe_N] / N_pos[safe_N]
-                FastAP = (1-FastAP)*miner_weights[safe_N]
-                loss = torch.mean(FastAP)
-        return loss
+            FastAP = FastAP[safe_N] / N_pos[safe_N]
+            FastAP = (1-FastAP)*miner_weights[safe_N]
+            return {"loss": (FastAP, safe_N.nonzero().squeeze(), "element")}
+        return self.zero_losses()
+        
 

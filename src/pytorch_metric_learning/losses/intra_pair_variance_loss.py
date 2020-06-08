@@ -10,18 +10,21 @@ class IntraPairVarianceLoss(GenericPairLoss):
         super().__init__(**kwargs, use_similarity=True, mat_based_loss=False)        
         self.pos_eps = pos_eps
         self.neg_eps = neg_eps
-        self.add_to_recordable_attributes(list_of_names=["pos_loss", "neg_loss"])
-    
+
     # pos_pairs and neg_pairs already represent cos(theta)
     def _compute_loss(self, pos_pairs, neg_pairs, indices_tuple):
-        self.pos_loss, self.neg_loss = 0, 0
+        pos_loss, neg_loss = 0, 0
         if len(pos_pairs) > 0:
             mean_pos_sim = torch.mean(pos_pairs)
             pos_var = (1-self.pos_eps)*mean_pos_sim - pos_pairs
-            self.pos_loss = torch.mean(torch.nn.functional.relu(pos_var)**2)
+            pos_loss = torch.nn.functional.relu(pos_var)**2
         if len(neg_pairs) > 0:
             mean_neg_sim = torch.mean(neg_pairs)
             neg_var = neg_pairs - (1+self.neg_eps)*mean_neg_sim
-            self.neg_loss = torch.mean(torch.nn.functional.relu(neg_var)**2)
-        return self.pos_loss+self.neg_loss
+            neg_loss = torch.nn.functional.relu(neg_var)**2
+        pos_pairs = lmu.pos_pairs_from_tuple(indices_tuple)
+        neg_pairs = lmu.neg_pairs_from_tuple(indices_tuple)
+        return {"pos_loss": (pos_loss, pos_pairs, "pos_pair"), "neg_loss": (neg_loss, neg_pairs, "neg_pair")}
 
+    def sub_loss_names(self):
+        return ["pos_loss", "neg_loss"]

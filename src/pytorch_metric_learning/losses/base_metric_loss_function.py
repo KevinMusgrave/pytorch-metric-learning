@@ -5,30 +5,14 @@ from ..utils import common_functions as c_f
 from ..reducers import MeanReducer
 
 class BaseMetricLossFunction(torch.nn.Module):
-    """
-    All loss functions extend this class
-    Args:
-        normalize_embeddings: type boolean. If True then normalize embeddins
-                                to have norm = 1 before computing the loss
-        num_class_per_param: type int. The number of classes for each parameter.
-                            If your parameters don't have a separate value for each class,
-                            then leave this at None
-        learnable_param_names: type list of strings. Each element is the name of
-                            attributes that should be converted to nn.Parameter 
-    """
     def __init__(
         self,
         normalize_embeddings=True,
-        num_class_per_param=None,
-        learnable_param_names=None,
         reducer=None
     ):
         super().__init__()
         self.normalize_embeddings = normalize_embeddings
-        self.num_class_per_param = num_class_per_param
-        self.learnable_param_names = learnable_param_names
         self.reducer = self.get_default_reducer() if reducer is None else reducer
-        self.initialize_learnable_parameters()
         self.add_to_recordable_attributes(name="avg_embedding_norm")
 
     def compute_loss(self, embeddings, labels, indices_tuple=None):
@@ -54,50 +38,23 @@ class BaseMetricLossFunction(torch.nn.Module):
         self.embedding_norms = torch.norm(embeddings, p=2, dim=1)
         self.avg_embedding_norm = torch.mean(self.embedding_norms)
 
-        losses, loss_indices = self.compute_loss(embeddings, labels, indices_tuple)
-        return self.reducer(losses, loss_indices, embeddings, labels)
-
-    def initialize_learnable_parameters(self):
-        """
-        To learn hyperparams, create an attribute called learnable_param_names.
-        This should be a list of strings which are the names of the
-        hyperparameters to be learned
-        """
-        if self.learnable_param_names is not None:
-            for k in self.learnable_param_names:
-                v = getattr(self, k)
-                setattr(self, k, self.create_learnable_parameter(v))
-
-    def create_learnable_parameter(self, init_value, unsqueeze=False):
-        """
-        Returns nn.Parameter with an initial value of init_value
-        and size of num_labels
-        """
-        vec_len = self.num_class_per_param if self.num_class_per_param else 1
-        if unsqueeze:
-            vec_len = (vec_len, 1)
-        p = torch.nn.Parameter(torch.ones(vec_len) * init_value)
-        return p
-
-    def maybe_mask_param(self, param, labels):
-        """
-        This returns the hyperparameters corresponding to class labels (if applicable).
-        If there is a hyperparameter for each class, then when computing the loss,
-        the class hyperparameter has to be matched to the corresponding embedding.
-        """
-        if self.num_class_per_param:
-            return param[labels]
-        return param
+        loss_dict = self.compute_loss(embeddings, labels, indices_tuple)
+        return self.reducer(loss_dict, embeddings, labels)
 
     def add_to_recordable_attributes(self, name=None, list_of_names=None):
         c_f.add_to_recordable_attributes(self, name=name, list_of_names=list_of_names)
 
-    # return losses, loss_indices for the 0 loss case
     def zero_loss(self):
-        return 0, None
+        return (0, None, None)
+
+    def zero_losses(self):
+        return {loss_name: self.zero_loss() for loss_name in self.sub_loss_names()}
 
     def get_default_reducer(self):
         return MeanReducer()
+
+    def sub_loss_names(self):
+        return ["loss"]
 
 
 class MultipleLosses(torch.nn.Module):

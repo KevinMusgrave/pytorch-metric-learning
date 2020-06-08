@@ -40,7 +40,7 @@ class TripletMarginLoss(BaseMetricLossFunction):
         indices_tuple = lmu.convert_to_triplets(indices_tuple, labels, t_per_anchor=self.triplets_per_anchor)
         anchor_idx, positive_idx, negative_idx = indices_tuple
         if len(anchor_idx) == 0:
-            return self.zero_loss()
+            return self.zero_losses()
         anchors, positives, negatives = embeddings[anchor_idx], embeddings[positive_idx], embeddings[negative_idx]
         a_p_dist = F.pairwise_distance(anchors, positives, self.distance_norm)
         a_n_dist = F.pairwise_distance(anchors, negatives, self.distance_norm)
@@ -52,15 +52,15 @@ class TripletMarginLoss(BaseMetricLossFunction):
         if self.smooth_loss:
             inside_exp = a_p_dist - a_n_dist
             inside_exp = self.maybe_modify_loss(inside_exp)
-            return torch.log(1 + torch.exp(inside_exp)), indices_tuple
+            loss = torch.log(1 + torch.exp(inside_exp))
         else:
             dist = a_p_dist - a_n_dist
             loss_modified = self.maybe_modify_loss(dist + self.margin)
-            relued = torch.nn.functional.relu(loss_modified)
-            return relued, indices_tuple
+            loss = torch.nn.functional.relu(loss_modified)
+        return {"loss": (loss, indices_tuple, "triplet")}
 
     def maybe_modify_loss(self, x):
         return x
 
     def get_default_reducer(self):
-        return AvgNonZeroReducer(reduction_type="per_triplet")
+        return AvgNonZeroReducer()

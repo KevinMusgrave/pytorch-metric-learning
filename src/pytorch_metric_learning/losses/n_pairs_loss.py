@@ -15,7 +15,7 @@ class NPairsLoss(BaseMetricLossFunction):
         super().__init__(**kwargs)
         self.l2_reg_weight = l2_reg_weight
         self.add_to_recordable_attributes(name="num_pairs", is_stat=True)
-        self.cross_entropy = torch.nn.CrossEntropyLoss()
+        self.cross_entropy = torch.nn.CrossEntropyLoss(reduction='none')
 
     def compute_loss(self, embeddings, labels, indices_tuple):
         self.avg_embedding_norm = torch.mean(torch.norm(embeddings, p=2, dim=1))
@@ -26,8 +26,8 @@ class NPairsLoss(BaseMetricLossFunction):
         anchors, positives = embeddings[anchor_idx], embeddings[positive_idx]
         targets = torch.arange(self.num_pairs).to(embeddings.device)
         sim_mat = torch.matmul(anchors, positives.t())
-        s_loss = self.cross_entropy(sim_mat, targets)
+        loss_dict = {"loss": (self.cross_entropy(sim_mat, targets), anchor_idx, "element")}
         if self.l2_reg_weight > 0:
             l2_reg = torch.mean(torch.norm(embeddings, p=2, dim=1))
-            return s_loss + l2_reg * self.l2_reg_weight
-        return s_loss
+            loss_dict["l2_reg"] = (l2_reg * self.l2_reg_weight, None, "already_reduced")
+        return loss_dict

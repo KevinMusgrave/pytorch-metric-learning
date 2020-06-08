@@ -8,7 +8,7 @@ The ```accuracy_calculator``` module contains functions for determining the qual
 This class computes several accuracy metrics given a query and reference embeddings. It can be easily extended to create custom accuracy metrics.
 
 ```python
-from pytorch_metric_learning.utils.accuracy_calculator import AccuracyCalculator
+from pytorch_metric_learning.utils import AccuracyCalculator
 AccuracyCalculator(include=(), exclude=(), average_per_class=False)
 ```
 **Parameters**:
@@ -51,9 +51,9 @@ def get_accuracy(self,
 Let's say you want to use the existing metrics but also compute precision @ 2, and a fancy mutual info method. You can extend the existing class, and write methods that start with the keyword ```calculate_```
 
 ```python
-from pytorch_metric_learning.utils import accuracy_calculator
+from pytorch_metric_learning.utils import accuracy_calculator, AccuracyCalculator
 
-class YourCalculator(accuracy_calculator.AccuracyCalculator):
+class YourCalculator(AccuracyCalculator):
     def calculate_precision_at_2(self, knn_labels, query_labels, **kwargs):
         return accuracy_calculator.precision_at_k(knn_labels, query_labels[:, None], 2)
 

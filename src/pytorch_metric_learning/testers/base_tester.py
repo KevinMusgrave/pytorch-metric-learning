@@ -45,7 +45,7 @@ class BaseTester:
         self.visualizer = visualizer
         self.original_visualizer_hook = visualizer_hook
         self.initialize_label_mapper()
-        self.initialize_accuracy_calculator()         
+        self.initialize_accuracy_calculator()
 
     def initialize_label_mapper(self):
         self.label_mapper = c_f.LabelMapper(self.set_min_label_to_zero, self.dataset_labels).map
@@ -205,7 +205,7 @@ class BaseTester:
         raise NotImplementedError
 
     def test(self, dataset_dict, epoch, trunk_model, embedder_model=None, splits_to_eval=None, collate_fn=None, **kwargs):
-        logging.info("Evaluating epoch %d" % epoch)
+        logging.info("Evaluating epoch {}".format(epoch))
         if embedder_model is None: embedder_model = c_f.Identity()
         trunk_model.eval()
         embedder_model.eval()

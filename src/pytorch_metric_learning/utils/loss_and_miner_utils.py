@@ -188,8 +188,9 @@ def convert_to_triplets(indices_tuple, labels, t_per_anchor=100):
     else:
         a_out, p_out, n_out = [], [], []
         a1, p, a2, n = indices_tuple
+        empty_output = [torch.tensor([]).to(labels.device)] * 3
         if len(a1) == 0 or len(a2) == 0:
-            return [torch.tensor([]).to(labels.device)] * 3
+            return empty_output
         for i in range(len(labels)):
             pos_idx = (a1 == i).nonzero().flatten()
             neg_idx = (a2 == i).nonzero().flatten()
@@ -201,7 +202,13 @@ def convert_to_triplets(indices_tuple, labels, t_per_anchor=100):
                 a_out.append(a_idx)
                 p_out.append(p_idx)
                 n_out.append(n_idx)
-        return [torch.cat(x, dim=0) for x in [a_out, p_out, n_out]]
+        try:
+            return [torch.cat(x, dim=0) for x in [a_out, p_out, n_out]]
+        except RuntimeError:
+            # assert that the exception was caused by disjoint a1 and a2
+            # otherwise something has gone wrong
+            assert len(np.intersect1d(a1, a2)) == 0
+            return empty_output
 
 
 

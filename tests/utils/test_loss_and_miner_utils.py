@@ -47,6 +47,18 @@ class TestLossAndMinerUtils(unittest.TestCase):
             self.assertTrue(len(a) == len(p) == len(n) == correct_num_triplets)
 
 
+    def test_convert_to_triplets(self):
+        a1 = torch.LongTensor([0,1,2,3])
+        p = torch.LongTensor([4,4,4,4])
+        a2 = torch.LongTensor([4,5,6,7])
+        n = torch.LongTensor([5,5,6,6])
+        triplets = lmu.convert_to_triplets((a1,p,a2,n), labels=torch.arange(7))
+        self.assertTrue(all(len(x)==0 for x in triplets))
+
+        a2 = torch.LongTensor([0,4,5,6])
+        triplets = lmu.convert_to_triplets((a1,p,a2,n), labels=torch.arange(7))
+        self.assertTrue(triplets==[torch.LongTensor([0]),torch.LongTensor([4]), torch.LongTensor([5])])
+
     def test_convert_to_weights(self):
         a = torch.LongTensor([0,1,2,3])
         p = torch.LongTensor([4,4,4,4])

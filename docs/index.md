@@ -11,7 +11,7 @@ pip install pytorch-metric-learning
 
 **To get the latest dev version**:
 ```
-pip install pytorch-metric-learning==0.9.87.dev0
+pip install pytorch-metric-learning==0.9.87.dev2
 ```
 
 **To install on Windows**:
@@ -43,7 +43,7 @@ Let’s try the vanilla [triplet margin loss](losses/#tripletmarginloss). In all
 ```python
 from pytorch_metric_learning import losses
 loss_func = losses.TripletMarginLoss(margin=0.1)
-loss = loss_func(embeddings, labels)
+loss = loss_func(embeddings, labels) # in your training loop
 ```
 Loss functions typically come with a variety of parameters. For example, with the TripletMarginLoss, you can control how many triplets per sample to use in each batch. You can also use all possible triplets within each batch:
 ```python
@@ -54,7 +54,7 @@ Sometimes it can help to add a mining function:
 from pytorch_metric_learning import miners, losses
 miner = miners.MultiSimilarityMiner(epsilon=0.1)
 loss_func = losses.TripletMarginLoss(margin=0.1)
-hard_pairs = miner(embeddings, labels)
+hard_pairs = miner(embeddings, labels) # in your training loop
 loss = loss_func(embeddings, labels, hard_pairs)
 ```
 In the above code, the miner finds positive and negative pairs that it thinks are particularly difficult. Note that even though the TripletMarginLoss operates on triplets, it’s still possible to pass in pairs. This is because the library automatically converts pairs to triplets and triplets to pairs, when necessary.
@@ -68,6 +68,26 @@ And (almost) all [mining functions](miners) take in embeddings and labels:
 ```python
 # From BaseMiner
 def forward(self, embeddings, labels)
+```
+
+Here's what the above examples look like in a typical training loop:
+```python
+from pytorch_metric_learning import miners, losses
+miner = miners.MultiSimilarityMiner(epsilon=0.1)
+loss_func = losses.TripletMarginLoss(margin=0.1)
+
+# borrowed from https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
+for i, data in enumerate(trainloader, 0):
+    inputs, labels = data
+    # zero the parameter gradients
+    optimizer.zero_grad()
+
+    # forward + backward + optimize
+    embeddings = net(inputs)
+    hard_pairs = miner(embeddings, labels)
+    loss = loss_func(embeddings, labels, hard_pairs)
+    loss.backward()
+    optimizer.step()
 ```
 
 For more complex approaches, like deep adversarial metric learning, use one of the [trainers](trainers).

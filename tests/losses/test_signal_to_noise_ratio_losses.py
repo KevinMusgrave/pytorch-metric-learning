@@ -3,7 +3,7 @@ import torch
 from pytorch_metric_learning.losses import SignalToNoiseRatioContrastiveLoss
 from pytorch_metric_learning.utils import common_functions as c_f
 
-class TestMultiSimilarityLoss(unittest.TestCase):
+class TestSNRContrastiveLoss(unittest.TestCase):
     def test_snr_contrastive_loss(self):
         pos_margin, neg_margin, regularizer_weight = 0, 0.5, 0.1
         loss_func = SignalToNoiseRatioContrastiveLoss(pos_margin=pos_margin, neg_margin=neg_margin, regularizer_weight=regularizer_weight)

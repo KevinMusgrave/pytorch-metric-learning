@@ -9,11 +9,11 @@ class TupletMarginLoss(GenericPairLoss):
         super().__init__(**kwargs, use_similarity=True, mat_based_loss=False)
         self.margin = np.radians(margin)
         self.scale = scale
-        self.add_to_recordable_attributes(list_of_names=["avg_pos_angle", "avg_neg_angle"])
+        self.add_to_recordable_attributes(list_of_names=["avg_pos_angle", "avg_neg_angle"], is_stat=True, optional=True)
 
     # pos_pairs and neg_pairs already represent cos(theta)
     def _compute_loss(self, pos_pairs, neg_pairs, indices_tuple):
-        a1, _, a2, _ = indices_tuple
+        a1, p, a2, _ = indices_tuple
 
         if len(a1) > 0 and len(a2) > 0:
             pos_angles = torch.acos(pos_pairs)
@@ -25,8 +25,9 @@ class TupletMarginLoss(GenericPairLoss):
             neg_pairs = neg_pairs.repeat(pos_pairs.size(0), 1)
             inside_exp = self.scale*(neg_pairs - pos_pairs)
             keep_mask = (a2.unsqueeze(0) == a1.unsqueeze(1)).float()
-            return torch.mean(lmu.logsumexp(inside_exp, keep_mask=keep_mask, add_one=True, dim=1))
-        return 0
+            loss = lmu.logsumexp(inside_exp, keep_mask=keep_mask, add_one=True, dim=1)
+            return {"loss": (loss, (a1, p), "pos_pair")}
+        return self.zero_losses()
 
 
 

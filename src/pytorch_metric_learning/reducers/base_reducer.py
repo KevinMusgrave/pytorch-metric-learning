@@ -8,7 +8,7 @@ class BaseReducer(torch.nn.Module):
         sub_losses = torch.zeros(len(loss_dict)).to(embeddings.device)
         loss_count = 0
         for self.curr_loss_name, loss_info in loss_dict.items():
-            self.add_to_recordable_attributes(name=self.curr_loss_name, prepend_loss_name=False)
+            self.add_to_recordable_attributes(name=self.curr_loss_name, is_stat=True, prepend_loss_name=False)
             losses, loss_indices, reduction_type = self.unpack_loss_info(loss_info)
             loss_val = self.reduce_the_loss(losses, loss_indices, reduction_type, embeddings, labels)
             setattr(self, self.curr_loss_name, loss_val)

@@ -3,9 +3,12 @@ import torch
 
 class DivisorReducer(BaseReducer):
     def unpack_loss_info(self, loss_info):
-        losses, loss_indices, reduction_type, divisor_components = loss_info
+        losses, loss_indices, reduction_type = super().unpack_loss_info(loss_info)
+        if reduction_type == "already_reduced":
+            return losses, loss_indices, reduction_type
+        divisor_summands = loss_info["divisor_summands"]
         self.total_divisor = 0
-        for name, value in divisor_components.items():
+        for name, value in divisor_summands.items():
             self.total_divisor += value
             self.add_to_recordable_attributes(name=name, is_stat=True, optional=True)
             self.set_recordable_attribute(name, value)

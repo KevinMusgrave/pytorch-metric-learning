@@ -57,7 +57,7 @@ class TripletMarginLoss(BaseMetricLossFunction):
             dist = a_p_dist - a_n_dist
             loss_modified = self.maybe_modify_loss(dist + self.margin)
             loss = torch.nn.functional.relu(loss_modified)
-        return {"loss": (loss, indices_tuple, "triplet")}
+        return {"loss": {"losses": loss, "indices": indices_tuple, "reduction_type": "triplet"}}
 
     def maybe_modify_loss(self, x):
         return x

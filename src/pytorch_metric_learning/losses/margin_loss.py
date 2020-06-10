@@ -34,18 +34,18 @@ class MarginLoss(BaseMetricLossFunction):
         num_pos_pairs = (pos_loss > 0.0).nonzero().size(0)
         num_neg_pairs = (neg_loss > 0.0).nonzero().size(0)
 
-        divisor_components = {"num_pos_pairs": num_pos_pairs, "num_neg_pairs": num_neg_pairs}
+        divisor_summands = {"num_pos_pairs": num_pos_pairs, "num_neg_pairs": num_neg_pairs}
 
         margin_loss = pos_loss + neg_loss
 
-        loss_dict = {"margin_loss": (margin_loss, indices_tuple, "triplet", divisor_components)}
+        loss_dict = {"margin_loss": {"losses": margin_loss, "indices": indices_tuple, "reduction_type": "triplet", "divisor_summands": divisor_summands}}
         if len(beta) > 1:
             beta_idx = anchor_idx
             beta_reduction_type = "element"
         else:
             beta_idx = None
             beta_reduction_type = "already_reduced"
-        loss_dict["beta_reg_loss"] = (beta_reg_loss, beta_idx, beta_reduction_type, divisor_components)
+        loss_dict["beta_reg_loss"] = {"losses": beta_reg_loss, "indices": beta_idx, "reduction_type": beta_reduction_type, "divisor_summands": divisor_summands}
 
         return loss_dict
 
@@ -70,7 +70,3 @@ class MarginLoss(BaseMetricLossFunction):
         if learn_beta:
             self.beta = torch.nn.Parameter(self.beta)
         self.beta = self.beta.float()
-
-
-    def zero_loss(self):
-        return (0, None, None, {"num_pos_pairs": 0, "num_neg_pairs": 0})

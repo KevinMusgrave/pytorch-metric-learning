@@ -21,7 +21,7 @@ class NTXentLoss(GenericPairLoss):
             numerator = torch.exp(pos_pairs - max_val).squeeze(1)
             denominator = torch.sum(torch.exp(neg_pairs - max_val), dim=1) + numerator
             log_exp = torch.log((numerator/denominator) + 1e-20)
-            return {"loss": (-log_exp, (a1, p), "pos_pair")}
+            return {"loss": {"losses": -log_exp, "indices": (a1, p), "reduction_type": "pos_pair"}}
         return self.zero_losses()
 
 

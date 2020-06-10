@@ -76,5 +76,5 @@ class CircleLoss(BaseMetricLossFunction):
 
             losses[i] = self.soft_plus(torch.logsumexp(logit_n, dim=0) + torch.logsumexp(logit_p, dim=0))
         
-        return {"loss": (losses, unique_anchor_idx, "element")}
+        return {"loss": {"losses": losses, "indices": unique_anchor_idx, "reduction_type": "element"}}
 

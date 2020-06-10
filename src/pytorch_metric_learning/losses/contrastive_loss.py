@@ -37,7 +37,8 @@ class ContrastiveLoss(GenericPairLoss):
             neg_loss = self.get_per_pair_loss(neg_pair_dist, "neg")
         pos_pairs = lmu.pos_pairs_from_tuple(indices_tuple)
         neg_pairs = lmu.neg_pairs_from_tuple(indices_tuple)
-        return {"pos_loss": (pos_loss, pos_pairs, "pos_pair"), "neg_loss": (neg_loss, neg_pairs, "neg_pair")}
+        return {"pos_loss": {"losses": pos_loss, "indices": pos_pairs, "reduction_type": "pos_pair"}, 
+                "neg_loss": {"losses": neg_loss, "indices": neg_pairs, "reduction_type": "neg_pair"}}
 
     def get_per_pair_loss(self, pair_dists, pos_or_neg):
         loss_calc_func = self.pos_calc if pos_or_neg == "pos" else self.neg_calc

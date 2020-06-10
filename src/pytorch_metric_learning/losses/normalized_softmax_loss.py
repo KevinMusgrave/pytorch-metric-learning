@@ -16,6 +16,9 @@ class NormalizedSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         exponent = torch.matmul(embeddings, normalized_W) / self.temperature
         unweighted_loss = self.cross_entropy(exponent, labels)
         miner_weighted_loss = unweighted_loss*miner_weights
-        loss_dict = {"loss": (miner_weighted_loss, c_f.torch_arange_from_size(embeddings), "element")}
-        loss_dict["reg_loss"] = (self.regularization_loss(self.W.t()), None, "already_reduced")
+        loss_dict = {"loss": {"losses": miner_weighted_loss, "indices": c_f.torch_arange_from_size(embeddings), "reduction_type": "element"}}
+        loss_dict["reg_loss"] = {"losses": self.regularization_loss(self.W.t()), "indices": None, "reduction_type": "already_reduced"}
         return loss_dict
+
+    def sub_loss_names(self):
+        return ["loss", "reg_loss"]

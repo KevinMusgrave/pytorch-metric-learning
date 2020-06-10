@@ -46,7 +46,7 @@ class BaseMetricLossFunction(torch.nn.Module):
         c_f.add_to_recordable_attributes(self, name=name, list_of_names=list_of_names, is_stat=is_stat, optional=optional)
 
     def zero_loss(self):
-        return (0, None, None)
+        return {"losses": 0, "indices": None, "reduction_type": "already_reduced"}
 
     def zero_losses(self):
         return {loss_name: self.zero_loss() for loss_name in self.sub_loss_names()}
@@ -61,11 +61,19 @@ class BaseMetricLossFunction(torch.nn.Module):
 class MultipleLosses(torch.nn.Module):
     def __init__(self, losses, weights=None):
         super().__init__()
-        self.losses = torch.nn.ModuleList(losses)
-        self.weights = weights if weights is not None else [1]*len(self.losses)
+        self.is_dict = isinstance(losses, dict)
+        self.losses = torch.nn.ModuleDict(losses) if self.is_dict else torch.nn.ModuleList(losses)
+        if weights is not None:
+            assert isinstance(weights, dict) if self.is_dict else c_f.is_list_or_tuple(weights)
+            self.weights = weights
+        else:
+            self.weights = {k:1 for k in self.losses.keys()} if self.is_dict else [1]*len(losses)
+
 
     def forward(self, embeddings, labels, indices_tuple=None):
         total_loss = 0
-        for i, loss in enumerate(self.losses):
-            total_loss += loss(embeddings, labels, indices_tuple)*self.weights[i]
+        iterable = self.losses.items() if self.is_dict else enumerate(self.losses)
+        if self.is_dict:
+            for i, loss_func in iterable:
+                total_loss += loss_func(embeddings, labels, indices_tuple)*self.weights[i]
         return total_loss

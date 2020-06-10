@@ -29,7 +29,7 @@ class AngularLoss(BaseMetricLossFunction):
         final_form = (4 * sq_tan_alpha * ap_matmul_embeddings) - (2 * (1 + sq_tan_alpha) * ap_dot)
         final_form = self.maybe_modify_loss(final_form)
         losses = lmu.logsumexp(final_form, keep_mask=keep_mask, add_one=True)
-        return {"loss": (losses, anchor_idx, "element")}
+        return {"loss": {"losses": losses, "indices": anchor_idx, "reduction_type": "element"}}
 
     def set_stats_get_pairs(self, embeddings, labels, indices_tuple):
         a1, p, a2, _ = lmu.convert_to_pairs(indices_tuple, labels)

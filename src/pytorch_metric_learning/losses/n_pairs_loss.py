@@ -26,8 +26,11 @@ class NPairsLoss(BaseMetricLossFunction):
         anchors, positives = embeddings[anchor_idx], embeddings[positive_idx]
         targets = torch.arange(self.num_pairs).to(embeddings.device)
         sim_mat = torch.matmul(anchors, positives.t())
-        loss_dict = {"loss": (self.cross_entropy(sim_mat, targets), anchor_idx, "element")}
+        loss_dict = {"loss": {"losses": self.cross_entropy(sim_mat, targets), "indices": anchor_idx, "reduction_type": "element"}}
         if self.l2_reg_weight > 0:
             l2_reg = torch.mean(torch.norm(embeddings, p=2, dim=1))
-            loss_dict["l2_reg"] = (l2_reg * self.l2_reg_weight, None, "already_reduced")
+            loss_dict["l2_reg"] = {"losses": l2_reg * self.l2_reg_weight, "indices": None, "reduction_type": "already_reduced"}
         return loss_dict
+
+    def sub_loss_names(self):
+        return ["loss", "l2_reg"]

@@ -28,9 +28,9 @@ class SignalToNoiseRatioContrastiveLoss(BaseMetricLossFunction):
         if self.regularizer_weight > 0:
             reg_loss = self.regularizer_weight * self.feature_distance_from_zero_mean_distribution
         
-        loss_dict = {"pos_loss": (pos_loss, (a1, p), "pos_pair"), 
-                    "neg_loss": (neg_loss, (a2, n), "neg_pair"),
-                    "reg_loss": (reg_loss, c_f.torch_arange_from_size(embeddings), "already_reduced")}
+        loss_dict = {"pos_loss": {"losses": pos_loss, "indices": (a1, p), "reduction_type": "pos_pair"}, 
+                    "neg_loss": {"losses": neg_loss, "indices": (a2, n), "reduction_type": "neg_pair"},
+                    "reg_loss": {"losses": reg_loss, "indices": c_f.torch_arange_from_size(embeddings), "reduction_type": "already_reduced"}}
 
         return loss_dict
 

@@ -17,7 +17,7 @@ class BaseReducer(torch.nn.Module):
         return self.sub_loss_reduction(sub_losses, embeddings, labels)
 
     def unpack_loss_info(self, loss_info):
-        return loss_info[:3]
+        return loss_info["losses"], loss_info["indices"], loss_info["reduction_type"]
 
     def reduce_the_loss(self, losses, loss_indices, reduction_type, embeddings, labels):
         if self.input_is_zero_loss(losses):

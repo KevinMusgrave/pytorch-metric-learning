@@ -36,4 +36,12 @@ class ProxyAnchorLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         pos_term = torch.sum(pos_term) / len(with_pos_proxies)
         neg_term = torch.sum(neg_term) / self.num_classes
            
+        # loss_dict = {"pos_loss": (pos_term,)}
+
         return pos_term + neg_term + self.regularization_loss(self.proxies)
+
+    def get_default_reducer(self):
+        return DivisorReducer()
+
+    def sub_loss_names(self):
+        return ["pos_loss", "neg_loss", "reg_loss"]

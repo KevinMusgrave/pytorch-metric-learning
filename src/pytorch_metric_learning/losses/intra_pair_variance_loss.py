@@ -22,9 +22,10 @@ class IntraPairVarianceLoss(GenericPairLoss):
             mean_neg_sim = torch.mean(neg_pairs)
             neg_var = neg_pairs - (1+self.neg_eps)*mean_neg_sim
             neg_loss = torch.nn.functional.relu(neg_var)**2
-        pos_pairs = lmu.pos_pairs_from_tuple(indices_tuple)
-        neg_pairs = lmu.neg_pairs_from_tuple(indices_tuple)
-        return {"pos_loss": (pos_loss, pos_pairs, "pos_pair"), "neg_loss": (neg_loss, neg_pairs, "neg_pair")}
+        pos_pairs_idx = lmu.pos_pairs_from_tuple(indices_tuple)
+        neg_pairs_idx = lmu.neg_pairs_from_tuple(indices_tuple)
+        return {"pos_loss": {"losses": pos_loss, "indices": pos_pairs_idx, "reduction_type": "pos_pair"}, 
+                "neg_loss": {"losses": neg_loss, "indices": neg_pairs_idx, "reduction_type": "neg_pair"}}
 
     def sub_loss_names(self):
         return ["pos_loss", "neg_loss"]

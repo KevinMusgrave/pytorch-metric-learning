@@ -1,7 +1,7 @@
 import torch
 from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
 from .base_metric_loss_function import BaseMetricLossFunction
-from ..reducers import AvgNonZeroReducer
+from ..reducers import AvgNonZeroReducer, MultipleReducers, MeanReducer
 
 
 def SNR_dist(x, y, dim):
@@ -24,13 +24,13 @@ class SignalToNoiseRatioContrastiveLoss(BaseMetricLossFunction):
             pos_loss = self.get_per_pair_loss(embeddings[a1], embeddings[p], self.pos_margin, 1)
         if len(a2) > 0:
             neg_loss = self.get_per_pair_loss(embeddings[a2], embeddings[n], self.neg_margin, -1)
-        self.feature_distance_from_zero_mean_distribution = torch.mean(torch.abs(torch.sum(embeddings, dim=1)))
+        self.feature_distance_from_zero_mean_distribution = torch.abs(torch.sum(embeddings, dim=1))
         if self.regularizer_weight > 0:
             reg_loss = self.regularizer_weight * self.feature_distance_from_zero_mean_distribution
         
         loss_dict = {"pos_loss": {"losses": pos_loss, "indices": (a1, p), "reduction_type": "pos_pair"}, 
                     "neg_loss": {"losses": neg_loss, "indices": (a2, n), "reduction_type": "neg_pair"},
-                    "reg_loss": {"losses": reg_loss, "indices": c_f.torch_arange_from_size(embeddings), "reduction_type": "already_reduced"}}
+                    "reg_loss": {"losses": reg_loss, "indices": c_f.torch_arange_from_size(embeddings), "reduction_type": "element"}}
 
         return loss_dict
 
@@ -40,7 +40,7 @@ class SignalToNoiseRatioContrastiveLoss(BaseMetricLossFunction):
         return torch.nn.functional.relu((d-margin)*before_relu_multiplier)
 
     def get_default_reducer(self):
-        return AvgNonZeroReducer()
+        return MultipleReducers({"reg_loss": MeanReducer()}, default_reducer=AvgNonZeroReducer())
 
     def sub_loss_names(self):
         return ["pos_loss", "neg_loss", "reg_loss"]

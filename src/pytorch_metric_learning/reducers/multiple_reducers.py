@@ -12,10 +12,11 @@ class MultipleReducers(BaseReducer):
         sub_losses = torch.zeros(len(loss_dict)).to(embeddings.device)
         loss_count = 0
         for loss_name, loss_info in loss_dict.items():
+            input_dict = {loss_name: loss_info}
             if loss_name in self.reducers:
-                loss_val = self.reducers[loss_name]({loss_name: loss_info}, embeddings, labels)
+                loss_val = self.reducers[loss_name](input_dict, embeddings, labels)
             else:
-                loss_val = self.default_reducer({loss_name: loss_info}, embeddings, labels)
+                loss_val = self.default_reducer(input_dict, embeddings, labels)
             sub_losses[loss_count] = loss_val
             loss_count += 1
         return self.sub_loss_reduction(sub_losses, embeddings, labels)            

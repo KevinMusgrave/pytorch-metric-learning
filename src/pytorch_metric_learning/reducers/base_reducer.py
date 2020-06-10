@@ -27,6 +27,7 @@ class BaseReducer(torch.nn.Module):
         return reduction_func(losses, loss_indices, embeddings, labels)
 
     def already_reduced_reduction(self, losses, loss_indices, embeddings, labels):
+        assert len(losses) == 1 or losses.ndim == 0
         return losses
 
     def element_reduction(self, losses, loss_indices, embeddings, labels):

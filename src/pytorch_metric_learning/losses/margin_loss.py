@@ -38,14 +38,15 @@ class MarginLoss(BaseMetricLossFunction):
 
         margin_loss = pos_loss + neg_loss
 
-        loss_dict = {"margin_loss": {"losses": margin_loss, "indices": indices_tuple, "reduction_type": "triplet", "divisor_summands": divisor_summands}}
         if len(beta) > 1:
             beta_idx = anchor_idx
             beta_reduction_type = "element"
         else:
             beta_idx = None
             beta_reduction_type = "already_reduced"
-        loss_dict["beta_reg_loss"] = {"losses": beta_reg_loss, "indices": beta_idx, "reduction_type": beta_reduction_type, "divisor_summands": divisor_summands}
+
+        loss_dict = {"margin_loss": {"losses": margin_loss, "indices": indices_tuple, "reduction_type": "triplet", "divisor_summands": divisor_summands}, 
+                    "beta_reg_loss": {"losses": beta_reg_loss, "indices": beta_idx, "reduction_type": beta_reduction_type, "divisor_summands": divisor_summands}}
 
         return loss_dict
 

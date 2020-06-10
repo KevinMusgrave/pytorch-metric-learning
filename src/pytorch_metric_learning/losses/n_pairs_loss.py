@@ -2,7 +2,7 @@
 
 from .base_metric_loss_function import BaseMetricLossFunction
 import torch
-from ..utils import loss_and_miner_utils as lmu
+from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
 
 
 class NPairsLoss(BaseMetricLossFunction):
@@ -28,8 +28,8 @@ class NPairsLoss(BaseMetricLossFunction):
         sim_mat = torch.matmul(anchors, positives.t())
         loss_dict = {"loss": {"losses": self.cross_entropy(sim_mat, targets), "indices": anchor_idx, "reduction_type": "element"}}
         if self.l2_reg_weight > 0:
-            l2_reg = torch.mean(torch.norm(embeddings, p=2, dim=1))
-            loss_dict["l2_reg"] = {"losses": l2_reg * self.l2_reg_weight, "indices": None, "reduction_type": "already_reduced"}
+            l2_reg = torch.norm(embeddings, p=2, dim=1)
+            loss_dict["l2_reg"] = {"losses": l2_reg * self.l2_reg_weight, "indices": c_f.torch_arange_from_size(embeddings), "reduction_type": "element"}
         return loss_dict
 
     def sub_loss_names(self):

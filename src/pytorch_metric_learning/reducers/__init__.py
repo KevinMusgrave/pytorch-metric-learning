@@ -5,3 +5,4 @@ from .threshold_reducer import ThresholdReducer
 from .do_nothing_reducer import DoNothingReducer
 from .divisor_reducer import DivisorReducer
 from .class_weighted_reducer import ClassWeightedReducer
+from .multiple_reducers import MultipleReducers

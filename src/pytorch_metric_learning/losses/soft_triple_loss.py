@@ -38,7 +38,7 @@ class SoftTripleLoss(BaseMetricLossFunction):
         reg = 0
         if self.reg_weight > 0 and self.centers_per_class > 1:
             center_similarities = centers.t().matmul(centers)
-            reg = torch.sum(torch.sqrt(2.0+1e-5-2.*center_similarities[self.same_class_mask]))/(torch.sum(self.same_class_mask))
+            reg = torch.sum(torch.sqrt(2.0+1e-5-2.*center_similarities[self.same_class_mask]))/(2*torch.sum(self.same_class_mask))
             self.set_stats(center_similarities)
             
         return {"loss": {"losses": loss, "indices": c_f.torch_arange_from_size(embeddings), "reduction_type": "element"},

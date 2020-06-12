@@ -1,7 +1,8 @@
 from .weight_regularizer_mixin import WeightRegularizerMixin
 from .base_metric_loss_function import BaseMetricLossFunction
 import torch
-from ..utils import loss_and_miner_utils as lmu
+from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
+from ..reducers import DivisorReducer
 
 # adapted from 
 # https://github.com/tjddus9597/Proxy-Anchor-CVPR2020/blob/master/code/losses.py
@@ -32,13 +33,12 @@ class ProxyAnchorLoss(WeightRegularizerMixin, BaseMetricLossFunction):
 
         pos_term = lmu.logsumexp(-self.alpha * (cos - self.margin), keep_mask=pos_mask*miner_weights, add_one=True, dim=0)
         neg_term = lmu.logsumexp(self.alpha * (cos + self.margin), keep_mask=neg_mask*miner_weights, add_one=True, dim=0)
-        
-        pos_term = torch.sum(pos_term) / len(with_pos_proxies)
-        neg_term = torch.sum(neg_term) / self.num_classes
-           
-        # loss_dict = {"pos_loss": (pos_term,)}
 
-        return pos_term + neg_term + self.regularization_loss(self.proxies)
+        loss_dict = {"pos_loss": {"losses": pos_term.squeeze(0), "indices": c_f.torch_arange_from_size(self.proxies), "reduction_type": "element", "divisor_summands": {"num_pos_proxies": len(with_pos_proxies)}},
+                    "neg_loss": {"losses": neg_term.squeeze(0), "indices": c_f.torch_arange_from_size(self.proxies), "reduction_type": "element", "divisor_summands": {"num_classes": self.num_classes}},
+                    "reg_loss": {"losses": self.regularization_loss(self.proxies), "indices": None, "reduction_type": "already_reduced", "divisor_summands": {}}}
+
+        return loss_dict
 
     def get_default_reducer(self):
         return DivisorReducer()

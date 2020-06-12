@@ -5,7 +5,7 @@
 # This code is copied directly from the official implementation
 # so that we can make sure our implementation returns the same result.
 # It's copied under the Apache license.
-# No changes have been made
+# No changes have been made, except removal of .cuda() calls
 # Implementation of SoftTriple Loss
 import math
 import torch
@@ -69,7 +69,7 @@ class TestSoftTripleLoss(unittest.TestCase):
 
             loss_func.fc = original_loss_func.fc
 
-            embedding_angles = torch.arange(0, 180, 1)
+            embedding_angles = torch.arange(0, 180)
             embeddings = torch.FloatTensor([c_f.angle_to_coord(a) for a in embedding_angles]) #2D embeddings
             labels = torch.randint(low=0, high=10, size=(180,))
 

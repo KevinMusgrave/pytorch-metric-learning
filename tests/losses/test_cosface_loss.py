@@ -10,9 +10,9 @@ class TestCosFaceLoss(unittest.TestCase):
         scale = 64
         loss_func = CosFaceLoss(margin=margin, scale=scale, num_classes=10, embedding_size=2)
 
-        embedding_angles = [0, 20, 40, 60, 80]
+        embedding_angles = torch.arange(0, 180)
         embeddings = torch.FloatTensor([c_f.angle_to_coord(a) for a in embedding_angles]) #2D embeddings
-        labels = torch.LongTensor([0, 0, 1, 1, 2])
+        labels = torch.randint(low=0, high=10, size=(180,))
 
         loss = loss_func(embeddings, labels)
 

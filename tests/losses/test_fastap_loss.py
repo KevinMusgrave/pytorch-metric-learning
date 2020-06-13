@@ -206,11 +206,13 @@ class TestCosFaceLoss(unittest.TestCase):
         num_bins = 5
         loss_func = FastAPLoss(num_bins)
         original_loss_func = OriginalImplementationFastAPLoss(num_bins)
+        device = torch.device("cuda")
 
         embedding_angles = torch.arange(0, 180)
-        embeddings = torch.FloatTensor([c_f.angle_to_coord(a) for a in embedding_angles]).to(torch.device("cuda")) #2D embeddings
-        labels = torch.randint(low=0, high=10, size=(180,)).to(torch.device("cuda"))
+        embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=torch.float).to(device) #2D embeddings
+        labels = torch.randint(low=0, high=10, size=(180,)).to(device)
 
         loss = loss_func(embeddings, labels)
+        loss.backward()
         original_loss = original_loss_func(embeddings, labels)
         self.assertTrue(torch.isclose(loss, original_loss))

@@ -70,10 +70,11 @@ class TestSoftTripleLoss(unittest.TestCase):
             loss_func.fc = original_loss_func.fc
 
             embedding_angles = torch.arange(0, 180)
-            embeddings = torch.FloatTensor([c_f.angle_to_coord(a) for a in embedding_angles]) #2D embeddings
+            embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=torch.float) #2D embeddings
             labels = torch.randint(low=0, high=10, size=(180,))
 
             loss = loss_func(embeddings, labels)
+            loss.backward()
             correct_loss = original_loss_func(embeddings, labels)
 
             self.assertTrue(torch.isclose(loss, correct_loss))

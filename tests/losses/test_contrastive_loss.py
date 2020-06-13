@@ -12,13 +12,18 @@ class TestContrastiveLoss(unittest.TestCase):
         loss_funcD = ContrastiveLoss(pos_margin=1.5, neg_margin=0.6, use_similarity=True, reducer=MeanReducer())
 
         embedding_angles = [0, 20, 40, 60, 80]
-        embeddings = torch.FloatTensor([c_f.angle_to_coord(a) for a in embedding_angles]) #2D embeddings
+        embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=torch.float) #2D embeddings
         labels = torch.LongTensor([0, 0, 1, 1, 2])
 
         lossA = loss_funcA(embeddings, labels)
         lossB = loss_funcB(embeddings, labels)
         lossC = loss_funcC(embeddings, labels)
         lossD = loss_funcD(embeddings, labels)
+
+        lossA.backward()
+        lossB.backward()
+        lossC.backward()
+        lossD.backward()
 
         pos_pairs = [(0,1), (1,0), (2,3), (3,2)]
         neg_pairs = [(0,2), (0,3), (0,4), (1,2), (1,3), (1,4), (2,0), (2,1), (2,4), (3,0), (3,1), (3,4), (4,0), (4,1), (4,2), (4,3)]

@@ -83,9 +83,10 @@ class TestProxyAnchorLoss(unittest.TestCase):
         loss_func.proxies = original_loss_func.proxies
 
         embedding_angles = list(range(0, 180))
-        embeddings = torch.FloatTensor([c_f.angle_to_coord(a) for a in embedding_angles]).to(device) #2D embeddings
+        embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=torch.float).to(device) #2D embeddings
         labels = torch.randint(low=0, high=5, size=(180,)).to(device)
 
         loss = loss_func(embeddings, labels)
+        loss.backward()
         correct_loss = original_loss_func(embeddings, labels)
         self.assertTrue(torch.isclose(loss, correct_loss))

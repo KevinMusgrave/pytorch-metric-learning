@@ -37,7 +37,11 @@ class TestTripletMarginLoss(unittest.TestCase):
         loss_funcA = TripletMarginLoss(margin=0.2)
         loss_funcB = TripletMarginLoss(margin=0.2, reducer=MeanReducer())
         embedding_angles = [0, 20, 40, 60, 80]
-        embeddings = torch.FloatTensor([c_f.angle_to_coord(a) for a in embedding_angles]) #2D embeddings
+        embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=torch.float) #2D embeddings
         labels = torch.LongTensor([0, 1, 2, 3, 4])
-        self.assertEqual(loss_funcA(embeddings, labels), 0)
-        self.assertEqual(loss_funcB(embeddings, labels), 0)
+        lossA = loss_funcA(embeddings, labels)
+        lossA.backward()
+        lossB = loss_funcB(embeddings, labels)
+        lossB.backward()
+        self.assertEqual(lossA, 0)
+        self.assertEqual(lossB, 0)

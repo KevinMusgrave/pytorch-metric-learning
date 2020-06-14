@@ -39,6 +39,8 @@ class TestNTXentLoss(unittest.TestCase):
     def test_with_no_valid_pairs(self):
         loss = NTXentLoss(temperature=0.1)
         embedding_angles = [0]
-        embeddings = torch.FloatTensor([c_f.angle_to_coord(a) for a in embedding_angles]) #2D embeddings
+        embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=torch.float) #2D embeddings
         labels = torch.LongTensor([0])
-        self.assertEqual(loss(embeddings, labels), 0)
+        loss = loss(embeddings, labels)
+        loss.backward()
+        self.assertEqual(loss, 0)

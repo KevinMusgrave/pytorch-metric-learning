@@ -83,10 +83,14 @@ class TestContrastiveLoss(unittest.TestCase):
 
 
     def test_with_no_valid_pairs(self):
-        lossA = ContrastiveLoss(use_similarity=False)
-        lossB = ContrastiveLoss(use_similarity=True)
+        loss_funcA = ContrastiveLoss(use_similarity=False)
+        loss_funcB = ContrastiveLoss(use_similarity=True)
         embedding_angles = [0]
-        embeddings = torch.FloatTensor([c_f.angle_to_coord(a) for a in embedding_angles]) #2D embeddings
+        embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=torch.float) #2D embeddings
         labels = torch.LongTensor([0])
-        self.assertEqual(lossA(embeddings, labels), 0)
-        self.assertEqual(lossB(embeddings, labels), 0)
+        lossA = loss_funcA(embeddings, labels)
+        lossA.backward()
+        lossB = loss_funcB(embeddings, labels)
+        lossB.backward()
+        self.assertEqual(lossA, 0)
+        self.assertEqual(lossB, 0)

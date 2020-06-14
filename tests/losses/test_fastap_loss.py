@@ -90,8 +90,6 @@ class OriginalImplementationFastAP(torch.autograd.Function):
         FastAP = torch.sum(FastAP,1)/N_pos
         FastAP = FastAP[ ~torch.isnan(FastAP) ]
         loss   = 1 - torch.mean(FastAP)
-        if torch.rand(1) > 0.99:
-            print("loss value (1-mean(FastAP)): ", loss.item())
 
         # 6. save for backward
         ctx.save_for_backward(input, target)

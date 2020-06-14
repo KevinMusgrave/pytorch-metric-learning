@@ -31,7 +31,8 @@ class TestAngularLoss(unittest.TestCase):
     def test_with_no_valid_triplets(self):
         loss_func = AngularLoss(alpha=40)
         embedding_angles = [0, 20, 40, 60, 80]
-        embeddings = torch.FloatTensor([c_f.angle_to_coord(a) for a in embedding_angles]) #2D embeddings
+        embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=torch.float) #2D embeddings
         labels = torch.LongTensor([0, 1, 2, 3, 4])
         loss = loss_func(embeddings, labels)
+        loss.backward()
         self.assertEqual(loss, 0)

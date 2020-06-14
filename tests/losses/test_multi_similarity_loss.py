@@ -45,6 +45,8 @@ class TestMultiSimilarityLoss(unittest.TestCase):
         alpha, beta, base = 0.1, 40, 0.5
         loss_func = MultiSimilarityLoss(alpha=alpha, beta=beta, base=base)
         embedding_angles = [0]
-        embeddings = torch.FloatTensor([c_f.angle_to_coord(a) for a in embedding_angles]) #2D embeddings
+        embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=torch.float) #2D embeddings
         labels = torch.LongTensor([0])
-        self.assertEqual(loss_func(embeddings, labels), 0)
+        loss = loss_func(embeddings, labels)
+        loss.backward()
+        self.assertEqual(loss, 0)

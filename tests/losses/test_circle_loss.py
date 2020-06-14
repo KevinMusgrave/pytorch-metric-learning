@@ -50,9 +50,11 @@ class TestCircleLoss(unittest.TestCase):
         margin, gamma = 0.4, 80
         loss_func = CircleLoss(m=margin, gamma=gamma)
         embedding_angles = [0]
-        embeddings = torch.FloatTensor([c_f.angle_to_coord(a) for a in embedding_angles]) #2D embeddings
+        embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=torch.float) #2D embeddings
         labels = torch.LongTensor([0])
-        self.assertEqual(loss_func(embeddings, labels), 0)
+        loss = loss_func(embeddings, labels)
+        loss.backward()
+        self.assertEqual(loss, 0)
     
     def test_overflow(self):
         margin, gamma = 0.4, 300

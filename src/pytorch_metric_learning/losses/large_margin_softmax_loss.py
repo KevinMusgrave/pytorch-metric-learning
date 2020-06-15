@@ -12,12 +12,13 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
     """
     Implementation of https://arxiv.org/pdf/1612.02295.pdf
     """
-    def __init__(self, margin, num_classes, embedding_size, scale=1, normalize_weights=False, **kwargs):
+    def __init__(self, margin, num_classes, embedding_size, scale=1, normalize_weights=False, scale_logits_by_magnitudes=True, **kwargs):
         super().__init__(**kwargs)
         self.margin = margin
         self.num_classes = num_classes
         self.scale = scale
         self.normalize_weights = normalize_weights
+        self.scale_logits_by_magnitudes = scale_logits_by_magnitudes
         self.add_to_recordable_attributes(name="avg_angle", is_stat=True, optional=True)
         self.init_margin()
         self.W = torch.nn.Parameter(torch.randn(embedding_size, num_classes))
@@ -69,9 +70,7 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         angles = self.get_angles(cosine_of_target_classes)
         with torch.no_grad():
             k = (angles / (math.pi / self.margin)).floor() # Equation 6: angles needs to be between [k*pi/m and (k+1)*pi/m]
-        phi = ((-1)**k)*cos_with_margin - (2*k)
-        target_weight_norms = self.weight_norms[labels]
-        return phi*target_weight_norms*self.embedding_norms
+        return ((-1)**k)*cos_with_margin - (2*k)
 
     def compute_loss(self, embeddings, labels, indices_tuple):
         miner_weights = lmu.convert_to_weights(indices_tuple, labels)
@@ -80,8 +79,10 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         cosine_of_target_classes = cosine[mask == 1]
         modified_cosine_of_target_classes = self.modify_cosine_of_target_classes(cosine_of_target_classes, cosine, embeddings, labels, mask)
         diff = (modified_cosine_of_target_classes - cosine_of_target_classes).unsqueeze(1)
-        cosine = cosine + (mask*diff)
-        unweighted_loss = self.cross_entropy(cosine * self.scale, labels)
+        logits = cosine + (mask*diff)
+        if self.scale_logits_by_magnitudes:
+            logits = logits * (self.weight_norms.unsqueeze(0)*self.embedding_norms.unsqueeze(1))
+        unweighted_loss = self.cross_entropy(logits * self.scale, labels)
         miner_weighted_loss = unweighted_loss*miner_weights
         loss_dict = {"loss": {"losses": miner_weighted_loss, "indices": c_f.torch_arange_from_size(embeddings), "reduction_type": "element"}}
         loss_dict["reg_loss"] = {"losses": self.regularization_loss(self.W.t()), "indices": None, "reduction_type": "already_reduced"}

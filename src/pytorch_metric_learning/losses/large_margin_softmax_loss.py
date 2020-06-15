@@ -51,7 +51,8 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         weights = self.get_weights()
         self.weight_norms = torch.norm(weights, p=2, dim=0)
         # self.embedding_norms is computed in BaseMetricLossFunction
-        return torch.matmul(embeddings, weights) / (self.weight_norms.unsqueeze(0)*self.embedding_norms.unsqueeze(1)) 
+        self.product_of_magnitudes = self.weight_norms.unsqueeze(0)*self.embedding_norms.unsqueeze(1)
+        return torch.matmul(embeddings, weights) / self.product_of_magnitudes
 
     def get_angles(self, cosine_of_target_classes):
         angles = torch.acos(torch.clamp(cosine_of_target_classes, -1 + 1e-7, 1 - 1e-7))
@@ -81,7 +82,7 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         diff = (modified_cosine_of_target_classes - cosine_of_target_classes).unsqueeze(1)
         logits = cosine + (mask*diff)
         if self.scale_logits_by_magnitudes:
-            logits = logits * (self.weight_norms.unsqueeze(0)*self.embedding_norms.unsqueeze(1))
+            logits = logits * self.product_of_magnitudes
         unweighted_loss = self.cross_entropy(logits * self.scale, labels)
         miner_weighted_loss = unweighted_loss*miner_weights
         loss_dict = {"loss": {"losses": miner_weighted_loss, "indices": c_f.torch_arange_from_size(embeddings), "reduction_type": "element"}}

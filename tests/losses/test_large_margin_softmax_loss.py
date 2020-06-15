@@ -4,17 +4,19 @@ from pytorch_metric_learning.losses import LargeMarginSoftmaxLoss, SphereFaceLos
 from pytorch_metric_learning.utils import common_functions as c_f
 import math
 import scipy
+import numpy as np
 
 class TestLargeMarginSoftmaxLoss(unittest.TestCase):
     def test_large_margin_softmax_and_sphereface_loss(self):
         margin = 10
         scale = 2
-        loss_funcA = LargeMarginSoftmaxLoss(margin=margin, scale=scale, num_classes=10, embedding_size=2)
-        loss_funcB = SphereFaceLoss(margin=margin, scale=scale, num_classes=10, embedding_size=2)
+        loss_funcA = LargeMarginSoftmaxLoss(margin=margin, scale=scale, num_classes=10, embedding_size=2, normalize_embeddings=False)
+        loss_funcB = SphereFaceLoss(margin=margin, scale=scale, num_classes=10, embedding_size=2, normalize_embeddings=False)
 
-        embedding_angles = torch.arange(0, 10)
-        embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=torch.float) #2D embeddings
-        labels = torch.randint(low=0, high=10, size=(10,))
+        embedding_angles = torch.arange(0, 180)
+        # multiply by 10 to make the embeddings unnormalized
+        embeddings = torch.tensor(np.array([c_f.angle_to_coord(a) for a in embedding_angles])*10, requires_grad=True, dtype=torch.float) #2D embeddings
+        labels = torch.randint(low=0, high=10, size=(180,))
 
         lossA = loss_funcA(embeddings, labels)
         lossB = loss_funcB(embeddings, labels)

@@ -120,7 +120,3 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
         self.assertTrue(acc["precision_at_1"] == 0.5)
         self.assertTrue(acc["r_precision"] == 0.5)
         self.assertTrue(acc["mean_average_precision_at_r"] == 0.5)
-
-
-if __name__ == '__main__':
-    unittest.main()

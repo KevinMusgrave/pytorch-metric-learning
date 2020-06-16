@@ -7,9 +7,9 @@ class TestMultiSimilarityMiner(unittest.TestCase):
     def test_multi_similarity_miner(self):
         epsilon = 0.1
         miner = MultiSimilarityMiner(epsilon)
-        angles = [0, 20, 40, 60, 80, 100, 120, 140, 160]
-        embeddings = torch.FloatTensor([c_f.angle_to_coord(a) for a in angles])
-        labels = torch.LongTensor([0, 0, 1, 1, 0, 2, 1, 1, 1])
+        embedding_angles = torch.arange(0, 64)
+        embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=torch.float) #2D embeddings
+        labels = torch.randint(low=0, high=10, size=(64,))
         pos_pairs = []
         neg_pairs = []
         for i in range(len(embeddings)):
@@ -44,22 +44,15 @@ class TestMultiSimilarityMiner(unittest.TestCase):
                 correct_a2.append(a2)
                 correct_n.append(n)
 
-        correct_a1 = torch.LongTensor(correct_a1)
-        correct_p = torch.LongTensor(correct_p)
-        correct_a2 = torch.LongTensor(correct_a2)
-        correct_n = torch.LongTensor(correct_n)
+        correct_pos_pairs = set([(a,p) for a,p in zip(correct_a1, correct_p)])
+        correct_neg_pairs = set([(a,n) for a,n in zip(correct_a2, correct_n)])
 
-        a1, p, a2, n = miner(embeddings, labels)
+        a1, p1, a2, n2 = miner(embeddings, labels)
+        pos_pairs = set([(a.item(),p.item()) for a,p in zip(a1,p1)])
+        neg_pairs = set([(a.item(),n.item()) for a,n in zip(a2,n2)])
 
-        for unique_a1 in torch.unique(correct_a1):
-            positives = p[torch.where(a1==unique_a1)[0]].cpu().numpy()
-            correct_positives = correct_p[torch.where(correct_a1==unique_a1)[0]].cpu().numpy()
-            self.assertTrue(set(positives) == set(correct_positives))
-
-        for unique_a2 in torch.unique(correct_a2):
-            negatives = n[torch.where(a2==unique_a2)[0]].cpu().numpy()
-            correct_negatives = correct_n[torch.where(correct_a2==unique_a2)[0]].cpu().numpy()
-            self.assertTrue(set(negatives) == set(correct_negatives))
+        self.assertTrue(pos_pairs == correct_pos_pairs)
+        self.assertTrue(neg_pairs == correct_neg_pairs)
 
 
     def test_empty_output(self):
@@ -70,6 +63,3 @@ class TestMultiSimilarityMiner(unittest.TestCase):
         a1, p, _, _ = miner(embeddings, labels)
         self.assertTrue(len(a1)==0)
         self.assertTrue(len(p)==0)
-
-if __name__ == '__main__':
-    unittest.main()

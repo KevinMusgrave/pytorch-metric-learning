@@ -12,7 +12,6 @@ class DistanceWeightedMiner(BaseTupleMiner):
         super().__init__(**kwargs)
         self.cutoff = float(cutoff)
         self.nonzero_loss_cutoff = float(nonzero_loss_cutoff)
-        self.mat_type = "dist"
 
     def mine(self, embeddings, labels, ref_emb, ref_labels):
         d = embeddings.size(1)

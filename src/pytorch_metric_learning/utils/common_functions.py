@@ -218,12 +218,9 @@ class LabelMapper:
         
 
 
-def add_to_recordable_attributes(input_obj, name=None, list_of_names=None, is_stat=False, optional=False):
+def add_to_recordable_attributes(input_obj, name=None, list_of_names=None, is_stat=False):
     if is_stat:
-        if optional:
-            attr_name_list_name = "record_these_optional_stats" 
-        else:
-            attr_name_list_name = "record_these_stats"
+        attr_name_list_name = "record_these_stats"
     else:
         attr_name_list_name = "record_these"
     if not hasattr(input_obj, attr_name_list_name):

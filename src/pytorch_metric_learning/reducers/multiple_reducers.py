@@ -3,8 +3,8 @@ from .mean_reducer import MeanReducer
 import torch
 
 class MultipleReducers(BaseReducer):
-    def __init__(self, reducers, default_reducer=None):
-        super().__init__()
+    def __init__(self, reducers, default_reducer=None, **kwargs):
+        super().__init__(**kwargs)
         self.reducers = reducers
         self.default_reducer = MeanReducer() if default_reducer is None else default_reducer
 

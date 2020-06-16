@@ -3,8 +3,8 @@ import torch
 
 
 class ClassWeightedReducer(BaseReducer):
-    def __init__(self, weights):
-        super().__init__()
+    def __init__(self, weights, **kwargs):
+        super().__init__(**kwargs)
         self.weights = weights
 
     def element_reduction(self, losses, loss_indices, embeddings, labels):

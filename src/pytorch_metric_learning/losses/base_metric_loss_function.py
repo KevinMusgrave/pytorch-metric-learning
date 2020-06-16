@@ -8,11 +8,13 @@ class BaseMetricLossFunction(torch.nn.Module):
     def __init__(
         self,
         normalize_embeddings=True,
-        reducer=None
+        reducer=None,
+        collect_stats=True
     ):
         super().__init__()
         self.normalize_embeddings = normalize_embeddings
         self.reducer = self.get_default_reducer() if reducer is None else reducer
+        self.collect_stats = collect_stats
         self.add_to_recordable_attributes(name="avg_embedding_norm", is_stat=True, optional=True)
 
     def compute_loss(self, embeddings, labels, indices_tuple=None):
@@ -43,7 +45,8 @@ class BaseMetricLossFunction(torch.nn.Module):
         return self.reducer(loss_dict, embeddings, labels)
 
     def add_to_recordable_attributes(self, name=None, list_of_names=None, is_stat=False, optional=False):
-        c_f.add_to_recordable_attributes(self, name=name, list_of_names=list_of_names, is_stat=is_stat, optional=optional)
+        if not optional or self.collect_stats: 
+            c_f.add_to_recordable_attributes(self, name=name, list_of_names=list_of_names, is_stat=is_stat)
 
     def zero_loss(self):
         return {"losses": 0, "indices": None, "reduction_type": "already_reduced"}

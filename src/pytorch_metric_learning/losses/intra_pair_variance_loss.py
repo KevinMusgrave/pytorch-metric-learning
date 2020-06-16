@@ -7,7 +7,7 @@ from ..utils import loss_and_miner_utils as lmu
 class IntraPairVarianceLoss(GenericPairLoss):
 
     def __init__(self, pos_eps=0.01, neg_eps=0.01, **kwargs):
-        super().__init__(**kwargs, use_similarity=True, mat_based_loss=False)        
+        super().__init__(use_similarity=True, mat_based_loss=False, **kwargs)        
         self.pos_eps = pos_eps
         self.neg_eps = neg_eps
 

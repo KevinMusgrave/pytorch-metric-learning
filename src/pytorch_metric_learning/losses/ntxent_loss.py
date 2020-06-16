@@ -4,7 +4,7 @@ from .generic_pair_loss import GenericPairLoss
 class NTXentLoss(GenericPairLoss):
 
     def __init__(self, temperature, **kwargs):
-        super().__init__(**kwargs, use_similarity=True, mat_based_loss=False)
+        super().__init__(use_similarity=True, mat_based_loss=False, **kwargs)
         self.temperature = temperature
 
     def _compute_loss(self, pos_pairs, neg_pairs, indices_tuple):

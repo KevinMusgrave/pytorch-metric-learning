@@ -8,7 +8,7 @@ from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
 
 class LiftedStructureLoss(GenericPairLoss):
     def __init__(self, neg_margin, pos_margin=0, **kwargs):
-        super().__init__(**kwargs, use_similarity=False, mat_based_loss=False)
+        super().__init__(use_similarity=False, mat_based_loss=False, **kwargs)
         self.neg_margin = neg_margin
         self.pos_margin = pos_margin
 

@@ -3,8 +3,8 @@ import torch
 
 
 class ThresholdReducer(BaseReducer):
-    def __init__(self, threshold):
-        super().__init__()
+    def __init__(self, threshold, **kwargs):
+        super().__init__(**kwargs)
         self.threshold = threshold
         self.add_to_recordable_attributes(name="threshold", prepend_loss_name=False)
 

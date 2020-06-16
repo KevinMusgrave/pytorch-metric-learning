@@ -11,7 +11,7 @@ class DivisorReducer(BaseReducer):
         for name, value in divisor_summands.items():
             self.total_divisor += value
             self.add_to_recordable_attributes(name=name, is_stat=True, optional=True)
-            self.set_recordable_attribute(name, value)
+            self.set_recordable_attribute(name, value, optional=True)
         return losses, loss_indices, reduction_type
 
     def sum_and_divide(self, losses):

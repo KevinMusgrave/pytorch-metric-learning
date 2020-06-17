@@ -25,9 +25,7 @@ class DistanceWeightedMiner(BaseTupleMiner):
 
         # Subtract max(log(distance)) for stability.
         # See the first equation from Section 4 of the paper
-        log_weights = (2.0 - float(d)) * torch.log(dist_mat) - (
-            float(d - 3) / 2
-        ) * torch.log(1.0 - 0.25 * (dist_mat ** 2.0))
+        log_weights = (2.0 - float(d)) * torch.log(dist_mat) - (float(d - 3) / 2) * torch.log(1.0 - 0.25 * (dist_mat ** 2.0))
         weights = torch.exp(log_weights - torch.max(log_weights))
 
         # Sample only negative examples by setting weights of

@@ -5,7 +5,7 @@ from pytorch_metric_learning.miners import AngularMiner
 from pytorch_metric_learning.utils import common_functions as c_f
 
 class TestAngularMiner(unittest.TestCase):
-    def test_triplet_margin_miner(self):
+    def test_angular_miner(self):
         embedding_angles = torch.arange(0, 16)
         embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=torch.float) #2D embeddings
         labels = torch.randint(low=0, high=2, size=(16,))

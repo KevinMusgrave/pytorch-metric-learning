@@ -1,20 +1,12 @@
 #! /usr/bin/env python3
 
 import torch
-from ..utils import common_functions as c_f
-from ..reducers import MeanReducer, MultipleReducers
+from ..utils import common_functions as c_f, base_nn_modules
 
-class BaseMetricLossFunction(torch.nn.Module):
-    def __init__(
-        self,
-        normalize_embeddings=True,
-        reducer=None,
-        collect_stats=True
-    ):
-        super().__init__()
+class BaseMetricLossFunction(base_nn_modules.ModuleWithStatsAndReducer):
+    def __init__(self, normalize_embeddings=True, **kwargs):
+        super().__init__(**kwargs)
         self.normalize_embeddings = normalize_embeddings
-        self.reducer = self.get_reducer() if reducer is None else reducer
-        self.collect_stats = collect_stats
         self.add_to_recordable_attributes(name="avg_embedding_norm", is_stat=True, optional=True)
 
     def compute_loss(self, embeddings, labels, indices_tuple=None):
@@ -44,27 +36,11 @@ class BaseMetricLossFunction(torch.nn.Module):
         loss_dict = self.compute_loss(embeddings, labels, indices_tuple)
         return self.reducer(loss_dict, embeddings, labels)
 
-    def add_to_recordable_attributes(self, name=None, list_of_names=None, is_stat=False, optional=False):
-        if not optional or self.collect_stats: 
-            c_f.add_to_recordable_attributes(self, name=name, list_of_names=list_of_names, is_stat=is_stat)
-
     def zero_loss(self):
         return {"losses": 0, "indices": None, "reduction_type": "already_reduced"}
 
     def zero_losses(self):
         return {loss_name: self.zero_loss() for loss_name in self.sub_loss_names()}
-
-    def get_default_reducer(self):
-        return MeanReducer()
-
-    def get_reducer(self):
-        reducer = self.get_default_reducer()
-        if isinstance(reducer, MultipleReducers) or len(self.sub_loss_names()) == 1:
-            return reducer
-        return MultipleReducers({k:self.get_default_reducer() for k in self.sub_loss_names()})
-
-    def sub_loss_names(self):
-        return ["loss"]
 
     # def set_stats(self, *args, **kwargs):
     #     if self.collect_stats:

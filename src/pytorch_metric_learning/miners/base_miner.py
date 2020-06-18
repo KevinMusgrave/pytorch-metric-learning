@@ -1,13 +1,12 @@
 #! /usr/bin/env python3
 
 import torch
-from ..utils import common_functions as c_f
+from ..utils import common_functions as c_f, base_nn_modules
 
-class BaseMiner(torch.nn.Module):
-    def __init__(self, normalize_embeddings=True, collect_stats=True):
-        super().__init__()
+class BaseMiner(base_nn_modules.ModuleWithStats):
+    def __init__(self, normalize_embeddings=True, **kwargs):
+        super().__init__(**kwargs)
         self.normalize_embeddings = normalize_embeddings
-        self.collect_stats = collect_stats
 
     def mine(self, embeddings, labels, ref_emb, ref_labels):
         """
@@ -50,11 +49,6 @@ class BaseMiner(torch.nn.Module):
         c_f.assert_embeddings_and_labels_are_same_size(ref_emb, ref_labels)
         return ref_emb, ref_labels
 
-
-    def add_to_recordable_attributes(self, name=None, list_of_names=None, is_stat=False, optional=False):
-        if not optional or self.collect_stats: 
-            c_f.add_to_recordable_attributes(self, name=name, list_of_names=list_of_names, is_stat=is_stat)
-        
 
 class BaseTupleMiner(BaseMiner):
     """

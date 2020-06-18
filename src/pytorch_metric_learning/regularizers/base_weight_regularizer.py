@@ -1,15 +1,12 @@
 #! /usr/bin/env python3
 
 import torch
-from ..utils import common_functions as c_f
-from ..reducers import MeanReducer
+from ..utils import common_functions as c_f, base_nn_modules
 
-class BaseWeightRegularizer(torch.nn.Module):
-    def __init__(self, normalize_weights=True, reducer=None, collect_stats=True):
-        super().__init__()
+class BaseWeightRegularizer(base_nn_modules.ModuleWithStatsAndReducer):
+    def __init__(self, normalize_weights=True, **kwargs):
+        super().__init__(**kwargs)
         self.normalize_weights = normalize_weights
-        self.reducer = self.get_default_reducer() if reducer is None else reducer
-        self.collect_stats = collect_stats
         self.add_to_recordable_attributes(name="avg_weight_norm", is_stat=True, optional=True)
 
     def compute_loss(self, weights):
@@ -26,19 +23,3 @@ class BaseWeightRegularizer(torch.nn.Module):
         self.avg_weight_norm = torch.mean(self.weight_norms)
         loss_dict = self.compute_loss(weights)
         return self.reducer(loss_dict, weights, c_f.torch_arange_from_size(weights))
-
-    def add_to_recordable_attributes(self, name=None, list_of_names=None, is_stat=False, optional=False):
-        if not optional or self.collect_stats: 
-            c_f.add_to_recordable_attributes(self, name=name, list_of_names=list_of_names, is_stat=is_stat)
-
-    def get_default_reducer(self):
-        return MeanReducer()
-
-    def get_reducer(self):
-        reducer = self.get_default_reducer()
-        if isinstance(reducer, MultipleReducers) or len(self.sub_loss_names()) == 1:
-            return reducer
-        return MultipleReducers({k:self.get_default_reducer() for k in self.sub_loss_names()})
-
-    def sub_loss_names(self):
-        return ["loss"]

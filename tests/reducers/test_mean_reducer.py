@@ -1,11 +1,10 @@
 import unittest
 import torch
-from pytorch_metric_learning.reducers import ThresholdReducer
+from pytorch_metric_learning.reducers import MeanReducer
 
-class TestThresholdReducer(unittest.TestCase):
-    def test_threshold_reducer(self):
-        threshold = 0.5
-        reducer = ThresholdReducer(threshold)
+class TestMeanReducer(unittest.TestCase):
+    def test_mean_reducer(self):
+        reducer = MeanReducer()
         batch_size = 100
         embedding_size = 64
         embeddings = torch.randn(batch_size, embedding_size)
@@ -20,5 +19,5 @@ class TestThresholdReducer(unittest.TestCase):
                                         (triplet_indices, "triplet")]:
             loss_dict = {"loss": {"losses": losses, "indices": indices, "reduction_type": reduction_type}}
             output = reducer(loss_dict, embeddings, labels)
-            correct_output = torch.mean(losses[losses>threshold])
+            correct_output = torch.mean(losses)
             self.assertTrue(output == correct_output)

@@ -22,4 +22,4 @@ class ClassWeightedReducer(BaseReducer):
         return self.element_reduction_helper(losses, loss_indices[0], labels)
 
     def element_reduction_helper(self, losses, indices, labels):
-        return torch.sum(losses*self.weights[labels[indices]])
+        return torch.mean(losses*self.weights[labels[indices]])

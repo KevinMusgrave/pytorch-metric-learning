@@ -1,11 +1,10 @@
 import unittest
 import torch
-from pytorch_metric_learning.reducers import ThresholdReducer
+from pytorch_metric_learning.reducers import DivisorReducer
 
-class TestThresholdReducer(unittest.TestCase):
-    def test_threshold_reducer(self):
-        threshold = 0.5
-        reducer = ThresholdReducer(threshold)
+class TestDivisorReducer(unittest.TestCase):
+    def test_mean_reducer(self):
+        reducer = DivisorReducer()
         batch_size = 100
         embedding_size = 64
         embeddings = torch.randn(batch_size, embedding_size)
@@ -18,7 +17,7 @@ class TestThresholdReducer(unittest.TestCase):
                                         (pair_indices, "pos_pair"),
                                         (pair_indices, "neg_pair"),
                                         (triplet_indices, "triplet")]:
-            loss_dict = {"loss": {"losses": losses, "indices": indices, "reduction_type": reduction_type}}
+            loss_dict = {"loss": {"losses": losses, "indices": indices, "reduction_type": reduction_type, "divisor_summands": {"partA": 32, "partB": 15}}}
             output = reducer(loss_dict, embeddings, labels)
-            correct_output = torch.mean(losses[losses>threshold])
+            correct_output = torch.sum(losses) / (32+15)
             self.assertTrue(output == correct_output)

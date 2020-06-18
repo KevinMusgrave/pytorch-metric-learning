@@ -19,7 +19,7 @@ class PairMarginMiner(BaseTupleMiner):
         self.neg_margin = neg_margin
         self.use_similarity = use_similarity
         self.squared_distances = squared_distances
-        self.add_to_recordable_attributes(list_of_names=["pos_pair_dist", "neg_pair_dist"], is_stat=True, optional=True)
+        self.add_to_recordable_attributes(list_of_names=["pos_pair_dist", "neg_pair_dist"], is_stat=True)
 
     def mine(self, embeddings, labels, ref_emb, ref_labels):
         mat = lmu.get_pairwise_mat(embeddings, ref_emb, self.use_similarity, self.squared_distances)

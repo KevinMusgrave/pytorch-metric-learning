@@ -3,7 +3,7 @@
 import torch
 from ..utils import common_functions as c_f, base_nn_modules
 
-class BaseMiner(base_nn_modules.ModuleWithStats):
+class BaseMiner(base_nn_modules.ModuleWithRecords):
     def __init__(self, normalize_embeddings=True, **kwargs):
         super().__init__(**kwargs)
         self.normalize_embeddings = normalize_embeddings
@@ -28,7 +28,7 @@ class BaseMiner(base_nn_modules.ModuleWithStats):
         Does any necessary preprocessing, then does mining, and then checks the
         shape of the mining output before returning it
         """
-        c_f.reset_stats(self)
+        self.reset_stats()
         with torch.no_grad():
             c_f.assert_embeddings_and_labels_are_same_size(embeddings, labels)
             labels = labels.to(embeddings.device)
@@ -59,7 +59,7 @@ class BaseTupleMiner(BaseMiner):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.add_to_recordable_attributes(list_of_names=["num_pos_pairs", "num_neg_pairs", "num_triplets"], is_stat=True, optional=True)
+        self.add_to_recordable_attributes(list_of_names=["num_pos_pairs", "num_neg_pairs", "num_triplets"], is_stat=True)
 
     def output_assertion(self, output):
         """

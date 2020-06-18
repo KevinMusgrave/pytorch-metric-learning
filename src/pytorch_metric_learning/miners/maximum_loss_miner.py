@@ -12,7 +12,7 @@ class MaximumLossMiner(BaseSubsetBatchMiner):
         self.loss = loss
         self.miner = miner
         self.num_trials = num_trials
-        self.add_to_recordable_attributes(list_of_names=["avg_loss", "max_loss"], is_stat=True, optional=True)
+        self.add_to_recordable_attributes(list_of_names=["avg_loss", "max_loss"], is_stat=True)
 
     def mine(self, embeddings, labels, *_):
         losses = []

@@ -19,7 +19,7 @@ class TripletMarginMiner(BaseTupleMiner):
     def __init__(self, margin, type_of_triplets="all", **kwargs):
         super().__init__(**kwargs)
         self.margin = margin
-        self.add_to_recordable_attributes(list_of_names=["avg_triplet_margin", "pos_pair_dist", "neg_pair_dist"], is_stat=True, optional=True)
+        self.add_to_recordable_attributes(list_of_names=["avg_triplet_margin", "pos_pair_dist", "neg_pair_dist"], is_stat=True)
         self.type_of_triplets = type_of_triplets
 
     def mine(self, embeddings, labels, ref_emb, ref_labels):

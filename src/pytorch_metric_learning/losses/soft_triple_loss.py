@@ -20,7 +20,7 @@ class SoftTripleLoss(BaseMetricLossFunction):
         self.fc = torch.nn.Parameter(torch.Tensor(embedding_size, self.total_num_centers))
         self.set_class_masks(num_classes, centers_per_class)
         torch.nn.init.kaiming_uniform_(self.fc, a=math.sqrt(5))
-        self.add_to_recordable_attributes(list_of_names=["same_class_center_sim", "diff_class_center_sim"], is_stat=True, optional=True)
+        self.add_to_recordable_attributes(list_of_names=["same_class_center_sim", "diff_class_center_sim"], is_stat=True)
 
     def compute_loss(self, embeddings, labels, indices_tuple):
         miner_weights = lmu.convert_to_weights(indices_tuple, labels)
@@ -57,9 +57,10 @@ class SoftTripleLoss(BaseMetricLossFunction):
             self.diff_class_mask[s:e, s:e] = 0
 
     def set_stats(self, center_similarities):
-        if self.centers_per_class > 1:
-            self.same_class_center_sim = torch.mean(center_similarities[self.same_class_mask])
-        self.diff_class_center_sim = torch.mean(center_similarities[self.diff_class_mask])
+        with torch.no_grad():
+            if self.centers_per_class > 1:
+                self.same_class_center_sim = torch.mean(center_similarities[self.same_class_mask])
+            self.diff_class_center_sim = torch.mean(center_similarities[self.diff_class_mask])
 
 
     def sub_loss_names(self):

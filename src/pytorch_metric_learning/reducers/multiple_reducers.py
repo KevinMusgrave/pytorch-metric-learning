@@ -1,6 +1,7 @@
 from .base_reducer import BaseReducer
 from .mean_reducer import MeanReducer
 import torch
+from ..utils import common_functions as c_f
 
 class MultipleReducers(BaseReducer):
     def __init__(self, reducers, default_reducer=None, **kwargs):
@@ -9,6 +10,7 @@ class MultipleReducers(BaseReducer):
         self.default_reducer = MeanReducer() if default_reducer is None else default_reducer
 
     def forward(self, loss_dict, embeddings, labels):
+        c_f.reset_stats(self)
         sub_losses = torch.zeros(len(loss_dict)).to(embeddings.device)
         loss_count = 0
         for loss_name, loss_info in loss_dict.items():

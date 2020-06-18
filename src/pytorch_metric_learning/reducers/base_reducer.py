@@ -1,14 +1,11 @@
 import torch
 from ..utils import common_functions as c_f
+from ..utils import base_nn_modules
 
 
-class BaseReducer(torch.nn.Module):
-    def __init__(self, collect_stats=True):
-        super().__init__()
-        self.collect_stats = collect_stats
-
+class BaseReducer(base_nn_modules.ModuleWithRecords):
     def forward(self, loss_dict, embeddings, labels):
-        c_f.reset_stats(self)
+        self.reset_stats()
         sub_losses = torch.zeros(len(loss_dict)).to(embeddings.device)
         loss_count = 0
         for loss_name, loss_info in loss_dict.items():
@@ -89,7 +86,3 @@ class BaseReducer(torch.nn.Module):
         assert c_f.is_list_or_tuple(loss_indices)
         assert len(loss_indices) == 3
         assert all(len(x) == len(losses) for x in loss_indices)
-
-    def add_to_recordable_attributes(self, name=None, list_of_names=None, is_stat=False, optional=False):
-        if not optional or self.collect_stats: 
-            c_f.add_to_recordable_attributes(self, name=name, list_of_names=list_of_names, is_stat=is_stat)

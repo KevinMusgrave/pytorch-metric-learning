@@ -9,7 +9,7 @@ class TupletMarginLoss(GenericPairLoss):
         super().__init__(**kwargs, use_similarity=True, mat_based_loss=False)
         self.margin = np.radians(margin)
         self.scale = scale
-        self.add_to_recordable_attributes(list_of_names=["avg_pos_angle", "avg_neg_angle"], is_stat=True, optional=True)
+        self.add_to_recordable_attributes(list_of_names=["avg_pos_angle", "avg_neg_angle"], is_stat=True)
 
     # pos_pairs and neg_pairs already represent cos(theta)
     def _compute_loss(self, pos_pairs, neg_pairs, indices_tuple):

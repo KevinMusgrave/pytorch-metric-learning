@@ -237,13 +237,13 @@ def add_to_recordable_attributes(input_obj, name=None, list_of_names=None, is_st
 
 
 def reset_stats(input_obj):
-    for attr_list in ["record_these_stats", "record_these_optional_stats"]:
+    for attr_list in ["record_these_stats"]:
         for r in getattr(input_obj, attr_list, []):
             setattr(input_obj, r, 0)
 
 
 def list_of_recordable_attributes_list_names():
-    return ["record_these", "record_these_stats", "record_these_optional_stats"]
+    return ["record_these", "record_these_stats"]
 
 
 def modelpath_creator(folder, basename, identifier, extension=".pth"):

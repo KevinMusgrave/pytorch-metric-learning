@@ -19,7 +19,7 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         self.scale = scale
         self.normalize_weights = normalize_weights
         self.scale_logits_by_magnitudes = scale_logits_by_magnitudes
-        self.add_to_recordable_attributes(name="avg_angle", is_stat=True, optional=True)
+        self.add_to_recordable_attributes(name="avg_angle", is_stat=True)
         self.init_margin()
         self.W = torch.nn.Parameter(torch.randn(embedding_size, num_classes))
         self.cross_entropy = torch.nn.CrossEntropyLoss(reduction='none')

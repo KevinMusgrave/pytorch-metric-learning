@@ -14,7 +14,7 @@ class AngularLoss(BaseMetricLossFunction):
     def __init__(self, alpha, **kwargs):
         super().__init__(**kwargs)
         self.alpha = torch.tensor(np.radians(alpha))
-        self.add_to_recordable_attributes(list_of_names=["average_angle"], is_stat=True, optional=True)
+        self.add_to_recordable_attributes(list_of_names=["average_angle"], is_stat=True)
         
     def compute_loss(self, embeddings, labels, indices_tuple):
         anchors, positives, keep_mask, anchor_idx = self.set_stats_get_pairs(embeddings, labels, indices_tuple)

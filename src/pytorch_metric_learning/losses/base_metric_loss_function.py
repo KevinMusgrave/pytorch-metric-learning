@@ -3,11 +3,11 @@
 import torch
 from ..utils import common_functions as c_f, base_nn_modules
 
-class BaseMetricLossFunction(base_nn_modules.ModuleWithStatsAndReducer):
+class BaseMetricLossFunction(base_nn_modules.ModuleWithRecordsAndReducer):
     def __init__(self, normalize_embeddings=True, **kwargs):
         super().__init__(**kwargs)
         self.normalize_embeddings = normalize_embeddings
-        self.add_to_recordable_attributes(name="avg_embedding_norm", is_stat=True, optional=True)
+        self.add_to_recordable_attributes(name="avg_embedding_norm", is_stat=True)
 
     def compute_loss(self, embeddings, labels, indices_tuple=None):
         """
@@ -25,7 +25,7 @@ class BaseMetricLossFunction(base_nn_modules.ModuleWithStatsAndReducer):
                             Can also be left as None
         Returns: the loss (float)
         """
-        c_f.reset_stats(self)
+        self.reset_stats()
         c_f.assert_embeddings_and_labels_are_same_size(embeddings, labels)
         labels = labels.to(embeddings.device)
         if self.normalize_embeddings:
@@ -41,14 +41,6 @@ class BaseMetricLossFunction(base_nn_modules.ModuleWithStatsAndReducer):
 
     def zero_losses(self):
         return {loss_name: self.zero_loss() for loss_name in self.sub_loss_names()}
-
-    # def set_stats(self, *args, **kwargs):
-    #     if self.collect_stats:
-    #         with torch.no_grad():
-    #             self._set_stats(*args, **kwargs)
-    
-    # def _set_stats(self, *args, **kwargs):
-    #     pass 
 
 
 class MultipleLosses(torch.nn.Module):

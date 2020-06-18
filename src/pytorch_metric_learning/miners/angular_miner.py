@@ -18,8 +18,7 @@ class AngularMiner(BaseTupleMiner):
                                                         "average_angle_above_threshold", 
                                                         "average_angle_below_threshold",
                                                         "min_angle", "max_angle", "std_of_angle"], 
-                                        is_stat=True,
-                                        optional=True)
+                                        is_stat=True)
 
     def mine(self, embeddings, labels, ref_emb, ref_labels):
         anchor_idx, positive_idx, negative_idx = lmu.get_all_triplets_indices(labels, ref_labels)

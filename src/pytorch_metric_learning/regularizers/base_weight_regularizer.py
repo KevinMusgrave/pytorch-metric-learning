@@ -3,11 +3,11 @@
 import torch
 from ..utils import common_functions as c_f, base_nn_modules
 
-class BaseWeightRegularizer(base_nn_modules.ModuleWithStatsAndReducer):
+class BaseWeightRegularizer(base_nn_modules.ModuleWithRecordsAndReducer):
     def __init__(self, normalize_weights=True, **kwargs):
         super().__init__(**kwargs)
         self.normalize_weights = normalize_weights
-        self.add_to_recordable_attributes(name="avg_weight_norm", is_stat=True, optional=True)
+        self.add_to_recordable_attributes(name="avg_weight_norm", is_stat=True)
 
     def compute_loss(self, weights):
         raise NotImplementedError
@@ -16,7 +16,7 @@ class BaseWeightRegularizer(base_nn_modules.ModuleWithStatsAndReducer):
         """
         weights should have shape (num_classes, embedding_size)
         """
-        c_f.reset_stats(self)
+        self.reset_stats()
         if self.normalize_weights:
             weights = torch.nn.functional.normalize(weights, p=2, dim=1)
         self.weight_norms = torch.norm(weights, p=2, dim=1)

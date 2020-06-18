@@ -17,7 +17,7 @@ class ProxyNCALoss(WeightRegularizerMixin, NCALoss):
         else:
             prox = self.proxies
         loss_dict = self.nca_computation(embeddings, prox, labels, self.proxy_labels.to(labels.device), indices_tuple)
-        loss_dict["reg_loss"] = {"losses": self.regularization_loss(self.proxies), "indices": None, "reduction_type": "already_reduced"}
+        loss_dict["reg_loss"] = self.regularization_loss(self.proxies)
         return loss_dict
 
 

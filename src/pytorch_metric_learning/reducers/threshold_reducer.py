@@ -6,7 +6,7 @@ class ThresholdReducer(BaseReducer):
     def __init__(self, threshold, **kwargs):
         super().__init__(**kwargs)
         self.threshold = threshold
-        self.add_to_recordable_attributes(name="threshold", prepend_loss_name=False)
+        self.add_to_recordable_attributes(name="threshold")
 
     def element_reduction(self, losses, *_):
         return self.element_reduction_helper(losses, "elements_above_threshold")
@@ -21,11 +21,12 @@ class ThresholdReducer(BaseReducer):
         return self.element_reduction_helper(losses, "triplets_above_threshold")
 
     def element_reduction_helper(self, losses, attr_name):
-        num_above_threshold = len((losses > self.threshold).nonzero())
+        threshold_condition = losses > self.threshold
+        num_above_threshold = torch.sum(threshold_condition)
         if num_above_threshold >= 1:
-            loss = torch.sum(losses) / num_above_threshold
+            loss = torch.mean(losses[threshold_condition])
         else:
             loss = torch.mean(losses)*0 # set loss to 0
         self.add_to_recordable_attributes(name=attr_name, is_stat=True)
-        self.set_recordable_attribute(attr_name, num_above_threshold)
+        setattr(self, attr_name, num_above_threshold)
         return loss

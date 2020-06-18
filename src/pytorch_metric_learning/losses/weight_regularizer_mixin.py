@@ -6,5 +6,7 @@ class WeightRegularizerMixin:
 
     def regularization_loss(self, weights):
         if self.regularizer is None:
-            return 0
-        return self.regularizer(weights) * self.reg_weight
+            loss = 0
+        else:
+            loss = self.regularizer(weights) * self.reg_weight
+        return {"losses": loss, "indices": None, "reduction_type": "already_reduced"}

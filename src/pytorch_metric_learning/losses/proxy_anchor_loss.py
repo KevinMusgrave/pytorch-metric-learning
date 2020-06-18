@@ -38,7 +38,7 @@ class ProxyAnchorLoss(WeightRegularizerMixin, BaseMetricLossFunction):
 
         loss_dict = {"pos_loss": {"losses": pos_term.squeeze(0), "indices": loss_indices, "reduction_type": "element", "divisor_summands": {"num_pos_proxies": len(with_pos_proxies)}},
                     "neg_loss": {"losses": neg_term.squeeze(0), "indices": loss_indices, "reduction_type": "element", "divisor_summands": {"num_classes": self.num_classes}},
-                    "reg_loss": {"losses": self.regularization_loss(self.proxies), "indices": None, "reduction_type": "already_reduced", "divisor_summands": {}}}
+                    "reg_loss": self.regularization_loss(self.proxies)}
 
         return loss_dict
 

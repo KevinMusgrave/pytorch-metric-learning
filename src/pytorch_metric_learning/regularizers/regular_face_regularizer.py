@@ -1,5 +1,6 @@
 from .base_weight_regularizer import BaseWeightRegularizer
 import torch
+from ..utils import common_functions as c_f
 
 # modified from http://kaizhao.net/regularface
 class RegularFaceRegularizer(BaseWeightRegularizer):
@@ -19,4 +20,4 @@ class RegularFaceRegularizer(BaseWeightRegularizer):
             mask = torch.zeros((num_classes, num_classes)).to(weights.device)
             mask[row_nums, indices] = 1
         
-        return torch.sum(cos*mask) / num_classes
+        return {"loss": {"losses": torch.sum(cos*mask, dim=1), "indices": c_f.torch_arange_from_size(weights), "reduction_type": "element"}}

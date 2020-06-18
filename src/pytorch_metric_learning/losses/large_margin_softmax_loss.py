@@ -86,7 +86,7 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         unweighted_loss = self.cross_entropy(logits * self.scale, labels)
         miner_weighted_loss = unweighted_loss*miner_weights
         loss_dict = {"loss": {"losses": miner_weighted_loss, "indices": c_f.torch_arange_from_size(embeddings), "reduction_type": "element"}}
-        loss_dict["reg_loss"] = {"losses": self.regularization_loss(self.W.t()), "indices": None, "reduction_type": "already_reduced"}
+        loss_dict["reg_loss"] = self.regularization_loss(self.W.t())
         return loss_dict
 
 

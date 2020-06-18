@@ -7,11 +7,11 @@ class DivisorReducer(BaseReducer):
         if reduction_type == "already_reduced":
             return losses, loss_indices, reduction_type
         divisor_summands = loss_info["divisor_summands"]
-        self.total_divisor = 0
+        self.add_to_recordable_attributes(name="total_divisor", is_stat=True)
         for name, value in divisor_summands.items():
             self.total_divisor += value
-            self.add_to_recordable_attributes(name=name, is_stat=True, optional=True)
-            self.set_recordable_attribute(name, value, optional=True)
+            self.add_to_recordable_attributes(name=name, is_stat=True)
+            setattr(self, name, value)
         return losses, loss_indices, reduction_type
 
     def sum_and_divide(self, losses):

@@ -2,7 +2,7 @@
 
 import torch
 from ..utils import common_functions as c_f
-from ..reducers import MeanReducer
+from ..reducers import MeanReducer, MultipleReducers
 
 class BaseMetricLossFunction(torch.nn.Module):
     def __init__(
@@ -13,7 +13,7 @@ class BaseMetricLossFunction(torch.nn.Module):
     ):
         super().__init__()
         self.normalize_embeddings = normalize_embeddings
-        self.reducer = self.get_default_reducer() if reducer is None else reducer
+        self.reducer = self.get_reducer() if reducer is None else reducer
         self.collect_stats = collect_stats
         self.add_to_recordable_attributes(name="avg_embedding_norm", is_stat=True, optional=True)
 
@@ -57,8 +57,22 @@ class BaseMetricLossFunction(torch.nn.Module):
     def get_default_reducer(self):
         return MeanReducer()
 
+    def get_reducer(self):
+        reducer = self.get_default_reducer()
+        if isinstance(reducer, MultipleReducers) or len(self.sub_loss_names()) == 1:
+            return reducer
+        return MultipleReducers({k:self.get_default_reducer() for k in self.sub_loss_names()})
+
     def sub_loss_names(self):
         return ["loss"]
+
+    # def set_stats(self, *args, **kwargs):
+    #     if self.collect_stats:
+    #         with torch.no_grad():
+    #             self._set_stats(*args, **kwargs)
+    
+    # def _set_stats(self, *args, **kwargs):
+    #     pass 
 
 
 class MultipleLosses(torch.nn.Module):

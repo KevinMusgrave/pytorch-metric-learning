@@ -1,10 +1,10 @@
 import unittest
 import torch
 from pytorch_metric_learning.losses import NormalizedSoftmaxLoss
-from pytorch_metric_learning.regularizers import CenterInvariantRegularizer
+from pytorch_metric_learning.regularizers import RegularFaceRegularizer
 
-class TestCenterInvariantRegularizer(unittest.TestCase):
-    def test_center_invariant_regularizer(self):
+class TestRegularFaceRegularizer(unittest.TestCase):
+    def test_regular_face_regularizer(self):
         temperature = 0.1
         num_classes = 10
         embedding_size = 512
@@ -12,7 +12,7 @@ class TestCenterInvariantRegularizer(unittest.TestCase):
         loss_func = NormalizedSoftmaxLoss(temperature=temperature, 
                                             num_classes=num_classes, 
                                             embedding_size=embedding_size,
-                                            regularizer=CenterInvariantRegularizer(),
+                                            regularizer=RegularFaceRegularizer(),
                                             reg_weight=reg_weight)
 
         embeddings = torch.nn.functional.normalize(torch.randn((180, embedding_size), requires_grad=True, dtype=torch.float))
@@ -25,14 +25,11 @@ class TestCenterInvariantRegularizer(unittest.TestCase):
         logits = torch.matmul(embeddings, weights)
         correct_class_loss = torch.nn.functional.cross_entropy(logits/temperature, labels)
 
+        weight_cos_matrix = torch.matmul(weights.t(), weights)
+        weight_cos_matrix.fill_diagonal_(float('-inf'))
         correct_reg_loss = 0
-        average_squared_weight_norms = 0
         for i in range(num_classes):
-            average_squared_weight_norms += torch.norm(loss_func.W[:,i], p=2)**2
-        average_squared_weight_norms /= num_classes
-        for i in range(num_classes):
-            deviation = torch.norm(loss_func.W[:,i], p=2)**2 - average_squared_weight_norms
-            correct_reg_loss += (deviation**2) / 4
+            correct_reg_loss += torch.max(weight_cos_matrix[i])
         correct_reg_loss /= num_classes
 
         correct_total_loss = correct_class_loss+(correct_reg_loss*reg_weight)

@@ -107,6 +107,13 @@ def convert_to_pos_pairs_with_unique_labels(indices_tuple, labels):
     return a[unique_idx], p[unique_idx]
 
 
+def pos_pairs_from_tuple(indices_tuple):
+    return indices_tuple[:2]
+
+def neg_pairs_from_tuple(indices_tuple):
+    return indices_tuple[2:]
+
+
 def get_all_triplets_indices(labels, ref_labels=None):
     if ref_labels is None:
         ref_labels = labels

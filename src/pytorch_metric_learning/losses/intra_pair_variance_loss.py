@@ -7,21 +7,25 @@ from ..utils import loss_and_miner_utils as lmu
 class IntraPairVarianceLoss(GenericPairLoss):
 
     def __init__(self, pos_eps=0.01, neg_eps=0.01, **kwargs):
-        super().__init__(**kwargs, use_similarity=True, mat_based_loss=False)        
+        super().__init__(use_similarity=True, mat_based_loss=False, **kwargs)        
         self.pos_eps = pos_eps
         self.neg_eps = neg_eps
-        self.add_to_recordable_attributes(list_of_names=["pos_loss", "neg_loss"])
-    
+
     # pos_pairs and neg_pairs already represent cos(theta)
     def _compute_loss(self, pos_pairs, neg_pairs, indices_tuple):
-        self.pos_loss, self.neg_loss = 0, 0
+        pos_loss, neg_loss = 0, 0
         if len(pos_pairs) > 0:
             mean_pos_sim = torch.mean(pos_pairs)
             pos_var = (1-self.pos_eps)*mean_pos_sim - pos_pairs
-            self.pos_loss = torch.mean(torch.nn.functional.relu(pos_var)**2)
+            pos_loss = torch.nn.functional.relu(pos_var)**2
         if len(neg_pairs) > 0:
             mean_neg_sim = torch.mean(neg_pairs)
             neg_var = neg_pairs - (1+self.neg_eps)*mean_neg_sim
-            self.neg_loss = torch.mean(torch.nn.functional.relu(neg_var)**2)
-        return self.pos_loss+self.neg_loss
+            neg_loss = torch.nn.functional.relu(neg_var)**2
+        pos_pairs_idx = lmu.pos_pairs_from_tuple(indices_tuple)
+        neg_pairs_idx = lmu.neg_pairs_from_tuple(indices_tuple)
+        return {"pos_loss": {"losses": pos_loss, "indices": pos_pairs_idx, "reduction_type": "pos_pair"}, 
+                "neg_loss": {"losses": neg_loss, "indices": neg_pairs_idx, "reduction_type": "neg_pair"}}
 
+    def sub_loss_names(self):
+        return ["pos_loss", "neg_loss"]

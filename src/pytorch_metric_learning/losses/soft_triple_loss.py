@@ -1,5 +1,5 @@
 from .base_metric_loss_function import BaseMetricLossFunction
-from ..utils import loss_and_miner_utils as lmu
+from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
 import math
 import torch
 import torch.nn.functional as F
@@ -20,7 +20,7 @@ class SoftTripleLoss(BaseMetricLossFunction):
         self.fc = torch.nn.Parameter(torch.Tensor(embedding_size, self.total_num_centers))
         self.set_class_masks(num_classes, centers_per_class)
         torch.nn.init.kaiming_uniform_(self.fc, a=math.sqrt(5))
-        self.add_to_recordable_attributes(list_of_names=["same_class_center_similarity", "diff_class_center_similarity"])
+        self.add_to_recordable_attributes(list_of_names=["same_class_center_sim", "diff_class_center_sim"], is_stat=True)
 
     def compute_loss(self, embeddings, labels, indices_tuple):
         miner_weights = lmu.convert_to_weights(indices_tuple, labels)
@@ -32,16 +32,17 @@ class SoftTripleLoss(BaseMetricLossFunction):
         margin = torch.zeros(sim_to_classes.shape).to(embeddings.device)
         margin[torch.arange(0, margin.shape[0]), labels] = self.margin
         loss = F.cross_entropy(self.la*(sim_to_classes-margin), labels, reduction='none')
-        loss = torch.mean(loss*miner_weights)
+        loss = loss*miner_weights
 
         #regularization which encourages the centers of a class to be close to each other
         reg = 0
         if self.reg_weight > 0 and self.centers_per_class > 1:
             center_similarities = centers.t().matmul(centers)
-            reg = torch.sum(torch.sqrt(2.0+1e-5-2.*center_similarities[self.same_class_mask]))/(torch.sum(self.same_class_mask))
+            reg = torch.sum(torch.sqrt(2.0+1e-5-2.*center_similarities[self.same_class_mask]))/(2*torch.sum(self.same_class_mask))
             self.set_stats(center_similarities)
             
-        return loss+self.reg_weight*reg
+        return {"loss": {"losses": loss, "indices": c_f.torch_arange_from_size(embeddings), "reduction_type": "element"},
+                "reg_loss": {"losses": self.reg_weight*reg, "indices": None, "reduction_type": "already_reduced"}}
 
     def set_class_masks(self, num_classes, centers_per_class):
         self.diff_class_mask = torch.ones(self.total_num_centers, self.total_num_centers, dtype=torch.bool)
@@ -56,6 +57,11 @@ class SoftTripleLoss(BaseMetricLossFunction):
             self.diff_class_mask[s:e, s:e] = 0
 
     def set_stats(self, center_similarities):
-        if self.centers_per_class > 1:
-            self.same_class_center_similarity = torch.mean(center_similarities[self.same_class_mask])
-        self.diff_class_center_similarity = torch.mean(center_similarities[self.diff_class_mask])
+        with torch.no_grad():
+            if self.centers_per_class > 1:
+                self.same_class_center_sim = torch.mean(center_similarities[self.same_class_mask])
+            self.diff_class_center_sim = torch.mean(center_similarities[self.diff_class_mask])
+
+
+    def sub_loss_names(self):
+        return ["loss", "reg_loss"]

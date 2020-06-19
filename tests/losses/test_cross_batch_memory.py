@@ -99,7 +99,3 @@ class TestCrossBatchMemory(unittest.TestCase):
                 self.assertTrue(len(a2) == len(a2i)+len(a2ii))
                 self.assertTrue(len(n) == len(ni)+len(nii))
 
-
-
-if __name__ == '__main__':
-    unittest.main()

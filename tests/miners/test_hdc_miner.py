@@ -70,7 +70,3 @@ class TestHDCMiner(unittest.TestCase):
             a1, p, _, _ = miner(embeddings, labels)
             self.assertTrue(len(a1)==0)
             self.assertTrue(len(p)==0)
-
-
-if __name__ == '__main__':
-    unittest.main()

@@ -9,12 +9,12 @@ extras_require_dev = [
     "pytest-cov ~= 2.8",
 ]
 
-extras_require_with_hooks = ["record-keeper >= 0.9.25", "faiss-gpu >= 1.6.3", "tensorboard"]
-extras_require_with_hooks_cpu = ["record-keeper >= 0.9.25", "faiss-cpu >= 1.6.3", "tensorboard"]
+extras_require_with_hooks = ["record-keeper >= 0.9.27", "faiss-gpu >= 1.6.3", "tensorboard"]
+extras_require_with_hooks_cpu = ["record-keeper >= 0.9.27", "faiss-cpu >= 1.6.3", "tensorboard"]
 
 setuptools.setup(
     name="pytorch-metric-learning",
-    version="0.9.87.dev4",
+    version="0.9.87.dev5",
     author="Kevin Musgrave",
     author_email="tkm45@cornell.edu",
     description="The easiest way to use deep metric learning in your application. Modular, flexible, and extensible. Written in PyTorch.",

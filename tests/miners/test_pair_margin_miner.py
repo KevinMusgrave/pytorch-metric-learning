@@ -57,6 +57,3 @@ class TestPairMarginMiner(unittest.TestCase):
             self.assertTrue(len(a1)==0)
             self.assertTrue(len(p)==0)
             self.assertTrue(miner.pos_pair_dist==0)
-
-if __name__ == '__main__':
-    unittest.main()

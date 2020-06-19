@@ -24,6 +24,7 @@ class MultiSimilarityMiner(BaseTupleMiner):
         sim_mat_pos_sorting[a2, n] = float('inf')
         sim_mat_neg_sorting[a1, p] = -float('inf')
         if embeddings is ref_emb:
+            sim_mat_pos_sorting[range(len(labels)), range(len(labels))] = float('inf')
             sim_mat_neg_sorting[range(len(labels)), range(len(labels))] = -float('inf')
 
         pos_sorted, pos_sorted_idx = torch.sort(sim_mat_pos_sorting, dim=1)

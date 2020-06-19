@@ -46,7 +46,6 @@ class HookContainer:
         if not os.path.exists(model_folder): os.makedirs(model_folder)
         def actual_hook(trainer):
             continue_training = True
-            self.record_keeper.maybe_add_multi_line_plots_to_tensorboard(trainer.get_global_iteration())
             if trainer.epoch % test_interval == 0:
                 best_epoch = self.save_models_and_eval(trainer, dataset_dict, model_folder, test_interval, tester, test_collate_fn)
                 continue_training = self.patience_remaining(trainer.epoch, best_epoch, patience)
@@ -239,13 +238,20 @@ class EmptyContainer:
 
 
 
-def get_record_keeper(csv_folder, tensorboard_folder, global_db_path=None, experiment_name=None, is_new_experiment=True, save_figures=False):
+def get_record_keeper(csv_folder, tensorboard_folder, global_db_path=None, experiment_name=None, is_new_experiment=True, save_figures=False, save_lists=False):
     try:
         import record_keeper as record_keeper_package
         from torch.utils.tensorboard import SummaryWriter
-        record_writer = record_keeper_package.RecordWriter(csv_folder, global_db_path, experiment_name, is_new_experiment)
+        record_writer = record_keeper_package.RecordWriter(folder = csv_folder, 
+                                                            global_db_path = global_db_path, 
+                                                            experiment_name = experiment_name, 
+                                                            is_new_experiment = is_new_experiment, 
+                                                            save_lists = save_lists)
         tensorboard_writer = SummaryWriter(log_dir=tensorboard_folder)
-        record_keeper = record_keeper_package.RecordKeeper(tensorboard_writer, record_writer, c_f.list_of_recordable_attributes_list_names(), save_figures=save_figures)
+        record_keeper = record_keeper_package.RecordKeeper(tensorboard_writer = tensorboard_writer, 
+                                                            record_writer = record_writer, 
+                                                            attributes_to_search_for = c_f.list_of_recordable_attributes_list_names(),
+                                                            save_figures=save_figures)
         return record_keeper, record_writer, tensorboard_writer
 
     except ModuleNotFoundError as e:

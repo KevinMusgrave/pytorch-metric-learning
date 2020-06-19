@@ -35,7 +35,7 @@ class TestMarginLoss(unittest.TestCase):
                 correct_total_loss /= num_non_zero
                 if learn_beta:
                     if num_classes is None:
-                        correct_beta_reg_loss = torch.sum(loss_func.beta*nu) / num_non_zero
+                        correct_beta_reg_loss = (loss_func.beta*nu)
                     else:
                         anchor_idx = [x[0] for x in triplets]
                         correct_beta_reg_loss = torch.sum(loss_func.beta[labels[anchor_idx]]*nu) / num_non_zero

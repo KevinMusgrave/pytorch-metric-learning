@@ -24,6 +24,7 @@ class MarginLoss(BaseMetricLossFunction):
         anchors, positives, negatives = embeddings[anchor_idx], embeddings[positive_idx], embeddings[negative_idx]
 
         beta = self.beta if len(self.beta) == 1 else self.beta[labels[anchor_idx]]
+        beta = beta.to(embeddings.device)
         
         d_ap = torch.nn.functional.pairwise_distance(positives, anchors, p=2)
         d_an = torch.nn.functional.pairwise_distance(negatives, anchors, p=2)
@@ -47,12 +48,9 @@ class MarginLoss(BaseMetricLossFunction):
         if self.learn_beta:
             loss = beta * self.nu
             if len(self.beta) == 1:
-                beta_idx = None
-                beta_reduction_type = "already_reduced"
+                return {"losses": loss, "indices": None, "reduction_type": "already_reduced"}
             else:
-                beta_idx = anchor_idx   
-                beta_reduction_type = "element"
-            return {"losses": loss, "indices": beta_idx, "reduction_type": beta_reduction_type, "divisor_summands": divisor_summands}
+                return {"losses": loss, "indices": anchor_idx, "reduction_type": "element", "divisor_summands": divisor_summands}
         return self.zero_loss()
 
     def sub_loss_names(self):

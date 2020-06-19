@@ -11,7 +11,8 @@ class MarginLoss(BaseMetricLossFunction):
         super().__init__(**kwargs)
         self.margin = margin
         self.nu = nu
-        self.initialize_beta(beta, learn_beta, num_classes)
+        self.learn_beta = learn_beta
+        self.initialize_beta(beta, num_classes)
         self.triplets_per_anchor = triplets_per_anchor
         self.add_to_recordable_attributes(list_of_names=["beta"])
         
@@ -22,9 +23,8 @@ class MarginLoss(BaseMetricLossFunction):
             return self.zero_losses()
         anchors, positives, negatives = embeddings[anchor_idx], embeddings[positive_idx], embeddings[negative_idx]
 
-        beta = self.beta[labels[anchor_idx]] if len(self.beta) > 1 else self.beta
-        beta_reg_loss = self.compute_reg_loss(beta)
-
+        beta = self.beta if len(self.beta) == 1 else self.beta[labels[anchor_idx]]
+        
         d_ap = torch.nn.functional.pairwise_distance(positives, anchors, p=2)
         d_an = torch.nn.functional.pairwise_distance(negatives, anchors, p=2)
 
@@ -38,22 +38,22 @@ class MarginLoss(BaseMetricLossFunction):
 
         margin_loss = pos_loss + neg_loss
 
-        if len(beta) > 1:
-            beta_idx = anchor_idx
-            beta_reduction_type = "element"
-        else:
-            beta_idx = None
-            beta_reduction_type = "already_reduced"
-
         loss_dict = {"margin_loss": {"losses": margin_loss, "indices": indices_tuple, "reduction_type": "triplet", "divisor_summands": divisor_summands}, 
-                    "beta_reg_loss": {"losses": beta_reg_loss, "indices": beta_idx, "reduction_type": beta_reduction_type, "divisor_summands": divisor_summands}}
+                    "beta_reg_loss": self.compute_reg_loss(beta, anchor_idx, divisor_summands)}
 
         return loss_dict
 
-    def compute_reg_loss(self, beta):
-        if self.nu > 0:
-            return beta * self.nu
-        return 0
+    def compute_reg_loss(self, beta, anchor_idx, divisor_summands):
+        if self.learn_beta:
+            loss = beta * self.nu
+            if len(self.beta) == 1:
+                beta_idx = None
+                beta_reduction_type = "already_reduced"
+            else:
+                beta_idx = anchor_idx   
+                beta_reduction_type = "element"
+            return {"losses": loss, "indices": beta_idx, "reduction_type": beta_reduction_type, "divisor_summands": divisor_summands}
+        return self.zero_loss()
 
     def sub_loss_names(self):
         return ["margin_loss", "beta_reg_loss"]
@@ -61,13 +61,9 @@ class MarginLoss(BaseMetricLossFunction):
     def get_default_reducer(self):
         return DivisorReducer()
 
-    def initialize_beta(self, beta, learn_beta, num_classes):
-        if not torch.is_tensor(beta):
-            self.beta = torch.tensor(beta)
-        if self.beta.dim() == 0:
-            self.beta = torch.tensor([self.beta])
+    def initialize_beta(self, beta, num_classes):
+        self.beta = torch.tensor([float(beta)])
         if num_classes:
             self.beta = torch.ones(num_classes) * self.beta
-        if learn_beta:
+        if self.learn_beta:
             self.beta = torch.nn.Parameter(self.beta)
-        self.beta = self.beta.float()

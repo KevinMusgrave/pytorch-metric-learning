@@ -10,7 +10,7 @@ class MultipleReducers(BaseReducer):
         self.default_reducer = MeanReducer() if default_reducer is None else default_reducer
 
     def forward(self, loss_dict, embeddings, labels):
-        c_f.reset_stats(self)
+        self.reset_stats()
         sub_losses = torch.zeros(len(loss_dict)).to(embeddings.device)
         loss_count = 0
         for loss_name, loss_info in loss_dict.items():

@@ -13,12 +13,18 @@ class TestThresholdReducer(unittest.TestCase):
         pair_indices = (torch.randint(0,batch_size,(batch_size,)), torch.randint(0,batch_size,(batch_size,)))
         triplet_indices = pair_indices + (torch.randint(0,batch_size,(batch_size,)),)
         losses = torch.randn(batch_size)
+        zero_losses = torch.zeros(batch_size)
 
         for indices, reduction_type in [(torch.arange(batch_size), "element"),
                                         (pair_indices, "pos_pair"),
                                         (pair_indices, "neg_pair"),
                                         (triplet_indices, "triplet")]:
-            loss_dict = {"loss": {"losses": losses, "indices": indices, "reduction_type": reduction_type}}
-            output = reducer(loss_dict, embeddings, labels)
-            correct_output = torch.mean(losses[losses>threshold])
-            self.assertTrue(output == correct_output)
+            for L in [losses, zero_losses]:
+                loss_dict = {"loss": {"losses": L, "indices": indices, "reduction_type": reduction_type}}
+                output = reducer(loss_dict, embeddings, labels)
+                filtered_L = L[L>threshold]
+                if len(filtered_L) > threshold:
+                    correct_output = torch.mean(filtered_L)
+                else:
+                    correct_output = torch.mean(L)*0
+                self.assertTrue(output == correct_output)

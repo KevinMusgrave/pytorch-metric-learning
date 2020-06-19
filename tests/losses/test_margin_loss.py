@@ -5,7 +5,6 @@ from pytorch_metric_learning.utils import common_functions as c_f
 
 class TestMarginLoss(unittest.TestCase):
     def test_margin_loss(self):
-
         for learn_beta, num_classes in [(False, None), (True, None), (False, 3), (True, 3)]:
             margin, nu, beta = 0.1, 0.1, 1
             loss_func = MarginLoss(margin=margin, nu=nu, beta=beta, learn_beta=learn_beta, num_classes=num_classes)
@@ -63,4 +62,3 @@ class TestMarginLoss(unittest.TestCase):
         self.assertTrue(len(loss_func.beta) == 1)
         loss_func = MarginLoss(margin=margin, nu=nu, beta=beta, learn_beta=True, num_classes=35)
         self.assertTrue(len(loss_func.beta) == 35)
-

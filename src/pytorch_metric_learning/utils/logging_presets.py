@@ -220,9 +220,13 @@ class HookContainer:
                 splits_to_eval.append(split)
         return splits_to_eval
 
-    def record_group_name(self, tester, split_name):
+    def base_record_group_name(self, tester):
         base_record_group_name = "%s_"%self.record_group_name_prefix if self.record_group_name_prefix else ''
         base_record_group_name += tester.description_suffixes("accuracies")
+        return base_record_group_name
+
+    def record_group_name(self, tester, split_name):
+        base_record_group_name = self.base_record_group_name(tester)
         return "%s_%s"%(base_record_group_name, split_name.upper())
 
     def optimizer_custom_attr_func(self, optimizer):

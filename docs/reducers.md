@@ -10,7 +10,7 @@ reducer = reducers.SomeReducer()
 loss_func = losses.SomeLoss(reducer=reducer)
 loss = loss_func(embeddings, labels) # in your training for-loop
 ```
-Internally, the loss function creates a dictionary that contains the losses, associated indices, and reduction type. The reducer takes this dictionary, performs the reduction, and returns a single value on which ```.backward()``` can be called.
+Internally, the loss function creates a dictionary that contains the losses and other information. The reducer takes this dictionary, performs the reduction, and returns a single value on which ```.backward()``` can be called. Most reducers are written such that they can be passed into any loss function.
 
 
 ## AvgNonZeroReducer
@@ -38,7 +38,7 @@ reducers.ClassWeightedReducer(weights, **kwargs)
 
 
 ## DivisorReducer
-This divides each loss by a custom value specified inside the loss function. 
+This divides each loss by a custom value specified inside the loss function. This is useful if you want to hardcode a reduction behavior in your loss function (i.e. by using DivisorReducer), while still having the option to use other reducers.
 ```python
 reducers.DivisorReducer(**kwargs)
 ```
@@ -50,8 +50,8 @@ To use this reducer, the loss function must include ```divisor_summands``` in it
 			"reduction_type": "element", 
 			"divisor_summands": {"num_pos_proxies": len(with_pos_proxies)}},
 "neg_loss": {"losses": neg_term.squeeze(0), 
-			"indices": loss_indices, "reduction_type": 
-			"element", 
+			"indices": loss_indices, 
+			"reduction_type": "element", 
 			"divisor_summands": {"num_classes": self.num_classes}},
 "reg_loss": self.regularization_loss(self.proxies)
 }

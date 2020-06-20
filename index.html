@@ -619,18 +619,6 @@
 
 
 <p>In the above code, the miner finds positive and negative pairs that it thinks are particularly difficult. Note that even though the TripletMarginLoss operates on triplets, it’s still possible to pass in pairs. This is because the library automatically converts pairs to triplets and triplets to pairs, when necessary.</p>
-<p>In general, all <a href="losses">loss functions</a> take in embeddings and labels, with an optional indices_tuple argument (i.e. the output of a miner):</p>
-<div class="codehilite"><pre><span></span><span class="c1"># From BaseMetricLossFunction</span>
-<span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">indices_tuple</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-</pre></div>
-
-
-<p>And (almost) all <a href="miners">mining functions</a> take in embeddings and labels:</p>
-<div class="codehilite"><pre><span></span><span class="c1"># From BaseMiner</span>
-<span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
-</pre></div>
-
-
 <p>Here's what the above examples look like in a typical training loop:</p>
 <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">miners</span><span class="p">,</span> <span class="n">losses</span>
 <span class="n">miner</span> <span class="o">=</span> <span class="n">miners</span><span class="o">.</span><span class="n">MultiSimilarityMiner</span><span class="p">(</span><span class="n">epsilon</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>

@@ -1,9 +1,10 @@
 #! /usr/bin/env python3
 
 import torch
-from ..utils import common_functions as c_f, base_nn_modules
+from ..utils import common_functions as c_f
+from ..utils.module_with_records_and_reducer import ModuleWithRecordsAndReducer
 
-class BaseMetricLossFunction(base_nn_modules.ModuleWithRecordsAndReducer):
+class BaseMetricLossFunction(ModuleWithRecordsAndReducer):
     def __init__(self, normalize_embeddings=True, **kwargs):
         super().__init__(**kwargs)
         self.normalize_embeddings = normalize_embeddings

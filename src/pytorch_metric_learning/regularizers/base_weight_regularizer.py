@@ -1,9 +1,10 @@
 #! /usr/bin/env python3
 
 import torch
-from ..utils import common_functions as c_f, base_nn_modules
+from ..utils import common_functions as c_f
+from ..utils.module_with_records_and_reducer import ModuleWithRecordsAndReducer
 
-class BaseWeightRegularizer(base_nn_modules.ModuleWithRecordsAndReducer):
+class BaseWeightRegularizer(ModuleWithRecordsAndReducer):
     def __init__(self, normalize_weights=True, **kwargs):
         super().__init__(**kwargs)
         self.normalize_weights = normalize_weights

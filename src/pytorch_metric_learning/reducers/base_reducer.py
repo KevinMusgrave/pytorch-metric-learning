@@ -1,9 +1,9 @@
 import torch
 from ..utils import common_functions as c_f
-from ..utils import base_nn_modules
+from ..utils.module_with_records import ModuleWithRecords
 
 
-class BaseReducer(base_nn_modules.ModuleWithRecords):
+class BaseReducer(ModuleWithRecords):
     def forward(self, loss_dict, embeddings, labels):
         self.reset_stats()
         sub_losses = torch.zeros(len(loss_dict)).to(embeddings.device)

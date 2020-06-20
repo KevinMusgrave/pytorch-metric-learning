@@ -58,14 +58,12 @@ loss_optimizer.step()
 All loss functions extend this class and therefore inherit its ```__init__``` parameters.
 
 ```python
-losses.BaseMetricLossFunction(normalize_embeddings=True, num_class_per_param=None, learnable_param_names=None)
+losses.BaseMetricLossFunction(normalize_embeddings=True, reducer=None)
 ```
 
 **Parameters**:
 
 * **normalize_embeddings**: If True, embeddings will be normalized to have a Euclidean norm of 1 before the loss is computed.
-* **num_class_per_param**: If _learnable_param_names_ is set, then this represents the number of classes for each parameter. If your parameters don't have a separate value for each class, then you can leave this at None.
-* **learnable_param_names**: A list of strings where each element is the name of attributes that should be converted to nn.Parameter. If None, then no parameters are converted. 
 
 **Required Implementations**:
 ```python
@@ -93,8 +91,7 @@ losses.CircleLoss(m=0.4, gamma=80, triplets_per_anchor='all', **kwargs)
 losses.ContrastiveLoss(pos_margin=0, 
 					neg_margin=1, 
 					use_similarity=False, 
-					power=1, 
-					avg_non_zero_only=True, 
+					power=1,
 					**kwargs):
 ```
 
@@ -105,7 +102,6 @@ losses.ContrastiveLoss(pos_margin=0,
 * **neg_margin**: The distance (or similarity) under (over) which negative pairs will contribute to the loss.  
 * **use_similarity**: If True, will use dot product between vectors instead of euclidean distance.
 * **power**: Each pair's loss will be raised to this power.
-* **avg_non_zero_only**: Only pairs that contribute non-zero loss will be used in the final loss. 
 
 Note that the default values for ```pos_margin``` and ```neg_margin``` are suitable if ```use_similarity = False```. If you set ```use_similarity = True```, then more appropriate values would be ```pos_margin = 1``` and ```neg_margin = 0```.
 
@@ -236,7 +232,7 @@ loss_optimizer.step()
 ## MarginLoss
 [Sampling Matters in Deep Embedding Learning](https://arxiv.org/pdf/1706.07567.pdf)
 ```python
-losses.MarginLoss(margin, nu, beta, triplets_per_anchor="all", **kwargs)
+losses.MarginLoss(margin, nu, beta, triplets_per_anchor="all", learn_beta=False, num_classes=None, **kwargs)
 ```
 
 **Parameters**:
@@ -245,12 +241,8 @@ losses.MarginLoss(margin, nu, beta, triplets_per_anchor="all", **kwargs)
 * **nu**: The regularization weight for the magnitude of beta.
 * **beta**: The center of the minimal buffer between positive and negative pairs.
 * **triplets_per_anchor**: The number of triplets per element to sample within a batch. Can be an integer or the string "all". For example, if your batch size is 128, and triplets_per_anchor is 100, then 12800 triplets will be sampled. If triplets_per_anchor is "all", then all possible triplets in the batch will be used.
-
-To make beta a learnable parameter (as done in the paper), pass in the keyword argument:
-```python
-learnable_param_names=["beta"]
-```
-You can then pass the loss function's parameters() to any PyTorch optimizer.
+* **learn_beta**: If True, beta will be a torch.nn.Parameter, which can be optimized using any PyTorch optimizer.
+* **num_classes**: If not None, then beta will be of size ```num_classes```, so that a separate beta is used for each class during training.
 
 ## MultipleLosses
 This is a simple wrapper for multiple losses. Pass in a list of already-initialized loss functions. Then, when you call forward on this object, it will return the sum of all wrapped losses.
@@ -379,7 +371,6 @@ loss_optimizer.step()
 losses.SignalToNoiseRatioContrastiveLoss(pos_margin, 
 										neg_margin, 
 										regularizer_weight, 
-										avg_non_zero_only=True, 
 										**kwargs)
 ```
 
@@ -388,7 +379,6 @@ losses.SignalToNoiseRatioContrastiveLoss(pos_margin,
 * **pos_margin**: The noise-to-signal ratio over which positive pairs will contribute to the loss.
 * **neg_margin**: The noise-to-signal ratio under which negative pairs will contribute to the loss.
 * **regularizer_weight**: The regularizer encourages the embeddings to have zero-mean distributions. 
-* **avg_non_zero_only**: Only pairs that contribute non-zero loss will be used in the final loss. 
 
 ## SoftTripleLoss   
 [SoftTriple Loss: Deep Metric Learning Without Triplet Sampling](http://openaccess.thecvf.com/content_ICCV_2019/papers/Qian_SoftTriple_Loss_Deep_Metric_Learning_Without_Triplet_Sampling_ICCV_2019_paper.pdf)
@@ -456,7 +446,6 @@ losses.TripletMarginLoss(margin=0.05,
 						power=1, 
 						swap=False, 
 						smooth_loss=False, 
-						avg_non_zero_only=True, 
 						triplets_per_anchor="all", 
 						**kwargs)
 ```
@@ -468,7 +457,6 @@ losses.TripletMarginLoss(margin=0.05,
 * **power**: Each pair's loss will be raised to this power.
 * **swap**: Use the positive-negative distance instead of anchor-negative distance, if it violates the margin more.
 * **smooth_loss**: Use the log-exp version of the triplet loss
-* **avg_non_zero_only**: Only triplets that contribute non-zero loss will be used in the final loss.
 * **triplets_per_anchor**: The number of triplets per element to sample within a batch. Can be an integer or the string "all". For example, if your batch size is 128, and triplets_per_anchor is 100, then 12800 triplets will be sampled. If triplets_per_anchor is "all", then all possible triplets in the batch will be used.
 
 ## TupletMarginLoss

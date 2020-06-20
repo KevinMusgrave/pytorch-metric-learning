@@ -601,7 +601,7 @@
 </pre></div>
 
 
-<p>Internally, the loss function creates a dictionary that contains the losses, associated indices, and reduction type. The reducer takes this dictionary, performs the reduction, and returns a single value on which <code>.backward()</code> can be called.</p>
+<p>Internally, the loss function creates a dictionary that contains the losses and other information. The reducer takes this dictionary, performs the reduction, and returns a single value on which <code>.backward()</code> can be called. Most reducers are written such that they can be passed into any loss function.</p>
 <h2 id="avgnonzeroreducer">AvgNonZeroReducer<a class="headerlink" href="#avgnonzeroreducer" title="Permanent link">&para;</a></h2>
 <p>This computes the average loss, using only the losses that are greater than 0. For example, if the losses are <code>[0, 2, 0, 3]</code>, then this reducer will return <code>2.5</code>.</p>
 <div class="codehilite"><pre><span></span><span class="n">reducers</span><span class="o">.</span><span class="n">AvgNonZeroReducer</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -626,7 +626,7 @@
 <li><strong>weights</strong>: A tensor of weights, where <code>weights[i]</code> is the weight for the ith class.</li>
 </ul>
 <h2 id="divisorreducer">DivisorReducer<a class="headerlink" href="#divisorreducer" title="Permanent link">&para;</a></h2>
-<p>This divides each loss by a custom value specified inside the loss function. </p>
+<p>This divides each loss by a custom value specified inside the loss function. This is useful if you want to hardcode a reduction behavior in your loss function (i.e. by using DivisorReducer), while still having the option to use other reducers.</p>
 <div class="codehilite"><pre><span></span><span class="n">reducers</span><span class="o">.</span><span class="n">DivisorReducer</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
@@ -637,8 +637,8 @@
             <span class="s2">&quot;reduction_type&quot;</span><span class="p">:</span> <span class="s2">&quot;element&quot;</span><span class="p">,</span> 
             <span class="s2">&quot;divisor_summands&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;num_pos_proxies&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">with_pos_proxies</span><span class="p">)}},</span>
 <span class="s2">&quot;neg_loss&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;losses&quot;</span><span class="p">:</span> <span class="n">neg_term</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> 
-            <span class="s2">&quot;indices&quot;</span><span class="p">:</span> <span class="n">loss_indices</span><span class="p">,</span> <span class="s2">&quot;reduction_type&quot;</span><span class="p">:</span> 
-            <span class="s2">&quot;element&quot;</span><span class="p">,</span> 
+            <span class="s2">&quot;indices&quot;</span><span class="p">:</span> <span class="n">loss_indices</span><span class="p">,</span> 
+            <span class="s2">&quot;reduction_type&quot;</span><span class="p">:</span> <span class="s2">&quot;element&quot;</span><span class="p">,</span> 
             <span class="s2">&quot;divisor_summands&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;num_classes&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span><span class="p">}},</span>
 <span class="s2">&quot;reg_loss&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">regularization_loss</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proxies</span><span class="p">)</span>
 <span class="p">}</span>

@@ -1,0 +1,631 @@
+
+
+
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      <meta http-equiv="x-ua-compatible" content="ie=edge">
+      
+      
+      
+      
+        <meta name="lang:clipboard.copy" content="Copy to clipboard">
+      
+        <meta name="lang:clipboard.copied" content="Copied to clipboard">
+      
+        <meta name="lang:search.language" content="en">
+      
+        <meta name="lang:search.pipeline.stopwords" content="True">
+      
+        <meta name="lang:search.pipeline.trimmer" content="True">
+      
+        <meta name="lang:search.result.none" content="No matching documents">
+      
+        <meta name="lang:search.result.one" content="1 matching document">
+      
+        <meta name="lang:search.result.other" content="# matching documents">
+      
+        <meta name="lang:search.tokenizer" content="[\s\-]+">
+      
+      <link rel="shortcut icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.1.dev0, mkdocs-material-4.6.0">
+    
+    
+      
+        <title>Accuracy Calculation - PyTorch Metric Learning</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/application.1b62728e.css">
+      
+        <link rel="stylesheet" href="../assets/stylesheets/application-palette.a8b3c06d.css">
+      
+      
+        
+        
+        <meta name="theme-color" content="#ef5350">
+      
+    
+    
+      <script src="../assets/javascripts/modernizr.268332fc.js"></script>
+    
+    
+      
+        <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
+      
+    
+    <link rel="stylesheet" href="../assets/fonts/material-icons.css">
+    
+    
+    
+      
+    
+    
+  </head>
+  
+    
+    
+    <body dir="ltr" data-md-color-primary="red" data-md-color-accent="red">
+  
+    <svg class="md-svg">
+      <defs>
+        
+        
+          <svg xmlns="http://www.w3.org/2000/svg" width="416" height="448" viewBox="0 0 416 448" id="__github"><path fill="currentColor" d="M160 304q0 10-3.125 20.5t-10.75 19T128 352t-18.125-8.5-10.75-19T96 304t3.125-20.5 10.75-19T128 256t18.125 8.5 10.75 19T160 304zm160 0q0 10-3.125 20.5t-10.75 19T288 352t-18.125-8.5-10.75-19T256 304t3.125-20.5 10.75-19T288 256t18.125 8.5 10.75 19T320 304zm40 0q0-30-17.25-51T296 232q-10.25 0-48.75 5.25Q229.5 240 208 240t-39.25-2.75Q130.75 232 120 232q-29.5 0-46.75 21T56 304q0 22 8 38.375t20.25 25.75 30.5 15 35 7.375 37.25 1.75h42q20.5 0 37.25-1.75t35-7.375 30.5-15 20.25-25.75T360 304zm56-44q0 51.75-15.25 82.75-9.5 19.25-26.375 33.25t-35.25 21.5-42.5 11.875-42.875 5.5T212 416q-19.5 0-35.5-.75t-36.875-3.125-38.125-7.5-34.25-12.875T37 371.5t-21.5-28.75Q0 312 0 260q0-59.25 34-99-6.75-20.5-6.75-42.5 0-29 12.75-54.5 27 0 47.5 9.875t47.25 30.875Q171.5 96 212 96q37 0 70 8 26.25-20.5 46.75-30.25T376 64q12.75 25.5 12.75 54.5 0 21.75-6.75 42 34 40 34 99.5z"/></svg>
+        
+      </defs>
+    </svg>
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
+    
+      <a href="#accuracy-calculation" tabindex="1" class="md-skip">
+        Skip to content
+      </a>
+    
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header-nav md-grid">
+    <div class="md-flex">
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <a href=".." title="PyTorch Metric Learning" class="md-header-nav__button md-logo">
+          
+            <i class="md-icon"></i>
+          
+        </a>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <label class="md-icon md-icon--menu md-header-nav__button" for="__drawer"></label>
+      </div>
+      <div class="md-flex__cell md-flex__cell--stretch">
+        <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
+          
+            <span class="md-header-nav__topic">
+              PyTorch Metric Learning
+            </span>
+            <span class="md-header-nav__topic">
+              
+                Accuracy Calculation
+              
+            </span>
+          
+        </div>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        
+          <label class="md-icon md-icon--search md-header-nav__button" for="__search"></label>
+          
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
+      <label class="md-icon md-search__icon" for="__search"></label>
+      <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
+        &#xE5CD;
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="result">
+          <div class="md-search-result__meta">
+            Type to start searching
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+        
+      </div>
+      
+        <div class="md-flex__cell md-flex__cell--shrink">
+          <div class="md-header-nav__source">
+            
+
+
+  
+
+<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/" title="Go to repository" class="md-source" data-md-source="github">
+  
+    <div class="md-source__icon">
+      <svg viewBox="0 0 24 24" width="24" height="24">
+        <use xlink:href="#__github" width="24" height="24"></use>
+      </svg>
+    </div>
+  
+  <div class="md-source__repository">
+    KevinMusgrave/pytorch-metric-learning
+  </div>
+</a>
+          </div>
+        </div>
+      
+    </div>
+  </nav>
+</header>
+    
+    <div class="md-container">
+      
+        
+      
+      
+      <main class="md-main" role="main">
+        <div class="md-main__inner md-grid" data-md-component="container">
+          
+            
+              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    <nav class="md-nav md-nav--primary" data-md-level="0">
+  <label class="md-nav__title md-nav__title--site" for="__drawer">
+    <a href=".." title="PyTorch Metric Learning" class="md-nav__button md-logo">
+      
+        <i class="md-icon"></i>
+      
+    </a>
+    PyTorch Metric Learning
+  </label>
+  
+    <div class="md-nav__source">
+      
+
+
+  
+
+<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/" title="Go to repository" class="md-source" data-md-source="github">
+  
+    <div class="md-source__icon">
+      <svg viewBox="0 0 24 24" width="24" height="24">
+        <use xlink:href="#__github" width="24" height="24"></use>
+      </svg>
+    </div>
+  
+  <div class="md-source__repository">
+    KevinMusgrave/pytorch-metric-learning
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href=".." title="Home" class="md-nav__link">
+      Home
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../losses/" title="Losses" class="md-nav__link">
+      Losses
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../miners/" title="Miners" class="md-nav__link">
+      Miners
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../reducers/" title="Reducers" class="md-nav__link">
+      Reducers
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../regularizers/" title="Regularizers" class="md-nav__link">
+      Regularizers
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../samplers/" title="Samplers" class="md-nav__link">
+      Samplers
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../trainers/" title="Trainers" class="md-nav__link">
+      Trainers
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../testers/" title="Testers" class="md-nav__link">
+      Testers
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-9" type="checkbox" id="nav-9" checked>
+    
+    <label class="md-nav__link" for="nav-9">
+      Utils
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-9">
+        Utils
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+      
+    
+    
+    <a href="./" title="Accuracy Calculation" class="md-nav__link md-nav__link--active">
+      Accuracy Calculation
+    </a>
+    
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../inference_model/" title="Inference Models" class="md-nav__link">
+      Inference Models
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../hook_container/" title="Logging Presets" class="md-nav__link">
+      Logging Presets
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-10" type="checkbox" id="nav-10">
+    
+    <label class="md-nav__link" for="nav-10">
+      How to extend this library
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-10">
+        How to extend this library
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../losses_dev/" title="Custom losses" class="md-nav__link">
+      Custom losses
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                  <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/edit/master/docs/accuracy_calculator.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
+                
+                
+                <h1 id="accuracy-calculation">Accuracy Calculation<a class="headerlink" href="#accuracy-calculation" title="Permanent link">&para;</a></h1>
+<p>The AccuracyCalculator class computes several accuracy metrics given a query and reference embeddings. It can be easily extended to create custom accuracy metrics.</p>
+<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils.accuracy_calculator</span> <span class="kn">import</span> <span class="n">AccuracyCalculator</span>
+<span class="n">AccuracyCalculator</span><span class="p">(</span><span class="n">include</span><span class="o">=</span><span class="p">(),</span> <span class="n">exclude</span><span class="o">=</span><span class="p">(),</span> <span class="n">avg_of_avgs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</pre></div>
+
+
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>include</strong>: Optional. A list or tuple of strings, which are the names of metrics you want to calculate. If left empty, all default metrics will be calculated.</li>
+<li><strong>exclude</strong>: Optional. A list or tuple of strings, which are the names of metrics you <strong>do not</strong> want to calculate.</li>
+<li><strong>avg_of_avgs</strong>: If True, the average accuracy per class is computed, and then the average of those averages is returned. This can be useful if your dataset has unbalanced classes. If False, the global average will be returned.</li>
+<li><strong>k</strong>: If set, this number of nearest neighbors will be retrieved for metrics that require k-nearest neighbors. If None, the value of k will be determined automatically.</li>
+</ul>
+<p><strong>Getting accuracy</strong>:</p>
+<p>Call the <code>get_accuracy</code> method to obtain a dictionary of accuracies.</p>
+<div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">get_accuracy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+    <span class="n">query</span><span class="p">,</span>      
+    <span class="n">reference</span><span class="p">,</span> 
+    <span class="n">query_labels</span><span class="p">,</span> 
+    <span class="n">reference_labels</span><span class="p">,</span> 
+    <span class="n">embeddings_come_from_same_source</span><span class="p">,</span> 
+    <span class="n">include</span><span class="o">=</span><span class="p">(),</span>
+    <span class="n">exclude</span><span class="o">=</span><span class="p">()</span>
+<span class="p">):</span>
+<span class="c1"># returns a dictionary mapping from metric names to accuracy values</span>
+<span class="c1"># The default metrics are:</span>
+<span class="c1"># &quot;NMI&quot; (Normalized Mutual Information)</span>
+<span class="c1"># &quot;AMI&quot; (Adjusted Mutual Information)</span>
+<span class="c1"># &quot;precision_at_1&quot;</span>
+<span class="c1"># &quot;r_precision&quot;</span>
+<span class="c1"># &quot;mean_average_precision_at_r&quot;</span>
+</pre></div>
+
+
+<ul>
+<li><strong>query</strong>: A 2D numpy array of size <code>(Nq, D)</code>, where Nq is the number of query samples. For each query sample, nearest neighbors are retrieved and accuracy is computed.</li>
+<li><strong>reference</strong>: A 2D numpy array of size <code>(Nr, D)</code>, where Nr is the number of reference samples. This is where nearest neighbors are retrieved from.</li>
+<li><strong>query_labels</strong>: A 1D numpy array of size <code>(Nq)</code>. Each element should be an integer representing the sample's label.</li>
+<li><strong>reference_labels</strong>: A 1D numpy array of size <code>(Nr)</code>. Each element should be an integer representing the sample's label. </li>
+<li><strong>embeddings_come_from_same_source</strong>: Set to True if <code>query</code> is a subset of <code>reference</code> or if <code>query is reference</code>. Set to False otherwise.</li>
+<li><strong>include</strong>: Optional. A list or tuple of strings, which are the names of metrics you want to calculate. If left empty, all metrics specified during initialization will be calculated.</li>
+<li><strong>exclude</strong>: Optional. A list or tuple of strings, which are the names of metrics you do not want to calculate.</li>
+</ul>
+<p><strong>Adding custom accuracy metrics</strong></p>
+<p>Let's say you want to use the existing metrics but also compute precision @ 2, and a fancy mutual info method. You can extend the existing class, and write methods that start with the keyword <code>calculate_</code></p>
+<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils</span> <span class="kn">import</span> <span class="n">accuracy_calculator</span>
+
+<span class="k">class</span> <span class="nc">YourCalculator</span><span class="p">(</span><span class="n">accuracy_calculator</span><span class="o">.</span><span class="n">AccuracyCalculator</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">calculate_precision_at_2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">knn_labels</span><span class="p">,</span> <span class="n">query_labels</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">accuracy_calculator</span><span class="o">.</span><span class="n">precision_at_k</span><span class="p">(</span><span class="n">knn_labels</span><span class="p">,</span> <span class="n">query_labels</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">],</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">calculate_fancy_mutual_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query_labels</span><span class="p">,</span> <span class="n">cluster_labels</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">fancy_computations</span>
+
+    <span class="k">def</span> <span class="nf">requires_clustering</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">requires_clustering</span><span class="p">()</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;fancy_mutual_info&quot;</span><span class="p">]</span> 
+
+    <span class="k">def</span> <span class="nf">requires_knn</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">requires_knn</span><span class="p">()</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;precision_at_2&quot;</span><span class="p">]</span> 
+</pre></div>
+
+
+<p>Any method that starts with "calculate_" will be passed the following kwargs:</p>
+<div class="codehilite"><pre><span></span><span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;query&quot;</span><span class="p">:</span> <span class="n">query</span><span class="p">,</span>                    <span class="c1"># query embeddings</span>
+    <span class="s2">&quot;reference&quot;</span><span class="p">:</span> <span class="n">reference</span><span class="p">,</span>                  <span class="c1"># reference embeddings</span>
+    <span class="s2">&quot;query_labels&quot;</span><span class="p">:</span> <span class="n">query_labels</span><span class="p">,</span>        
+    <span class="s2">&quot;reference_labels&quot;</span><span class="p">:</span> <span class="n">reference_labels</span><span class="p">,</span>
+    <span class="s2">&quot;embeddings_come_from_same_source&quot;</span><span class="p">:</span> <span class="n">e</span><span class="p">}</span>  <span class="c1"># True if query is reference, or if query is a subset of reference.</span>
+</pre></div>
+
+
+<p>If your method requires a k-nearest neighbors search, then append your method's name to the <code>requires_knn</code> list, as shown in the above example. If any of your accuracy methods require k-nearest neighbors, they will also receive the following kwargs:</p>
+<div class="codehilite"><pre><span></span>    <span class="p">{</span><span class="s2">&quot;label_counts&quot;</span><span class="p">:</span> <span class="n">label_counts</span><span class="p">,</span>           <span class="c1"># A dictionary mapping from reference labels to the number of times they occur</span>
+    <span class="s2">&quot;knn_labels&quot;</span><span class="p">:</span> <span class="n">knn_labels</span><span class="p">,</span>                <span class="c1"># A 2d array where each row is the labels of the nearest neighbors of each query. The neighbors are retrieved from the reference set</span>
+    <span class="s2">&quot;knn_distances&quot;</span><span class="p">:</span> <span class="n">knn_distances</span>           <span class="c1"># The euclidean distance corresponding to each k-nearest neighbor in knn_labels</span>
+    <span class="s2">&quot;lone_query_labels&quot;</span><span class="p">:</span> <span class="n">lone_query_labels</span>   <span class="c1"># The set of labels (in the form of a numpy array) that have only 1 occurrence in reference_labels</span>
+    <span class="s2">&quot;not_lone_query_idx&quot;</span><span class="p">:</span> <span class="n">not_lone_query_idx</span><span class="p">}</span> <span class="c1"># The set of labels (in the form of a numpy array) that have more than 1 occurrence in the reference_labels               </span>
+</pre></div>
+
+
+<p>If your method requires cluster labels, then append your method's name to the <code>requires_clustering</code> list, as shown in the above example. Then, if any of your methods need cluster labels, <code>self.get_cluster_labels()</code> will be called, and the kwargs will include:</p>
+<div class="codehilite"><pre><span></span>    <span class="p">{</span><span class="s2">&quot;cluster_labels&quot;</span><span class="p">:</span> <span class="n">cluster_labels</span><span class="p">}</span> <span class="c1"># A 1D array with a cluster label for each element in the query embeddings.</span>
+</pre></div>
+
+
+<p>Now when <code>get_accuracy</code> is called, the returned dictionary will contain <code>precision_at_2</code> and <code>fancy_mutual_info</code>:</p>
+<div class="codehilite"><pre><span></span><span class="n">calculator</span> <span class="o">=</span> <span class="n">YourCalculator</span><span class="p">()</span>
+<span class="n">acc_dict</span> <span class="o">=</span> <span class="n">calculator</span><span class="o">.</span><span class="n">get_accuracy</span><span class="p">(</span><span class="n">query_embeddings</span><span class="p">,</span>
+    <span class="n">reference_embeddings</span><span class="p">,</span>
+    <span class="n">query_labels</span><span class="p">,</span>
+    <span class="n">reference_labels</span><span class="p">,</span>
+    <span class="n">embeddings_come_from_same_source</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+<span class="c1"># Now acc_dict contains the metrics &quot;precision_at_2&quot; and &quot;fancy_mutual_info&quot;</span>
+<span class="c1"># in addition to the original metrics from AccuracyCalculator</span>
+</pre></div>
+
+
+<p>You can use your custom calculator with the <a href="../testers/">tester</a> classes as well, by passing it in as an init argument. (By default, the testers use AccuracyCalculator.)</p>
+<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">testers</span>
+<span class="n">t</span> <span class="o">=</span> <span class="n">testers</span><span class="o">.</span><span class="n">GlobalEmbeddingSpaceTester</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">accuracy_calculator</span><span class="o">=</span><span class="n">YourCalculator</span><span class="p">())</span>
+</pre></div>
+                
+                  
+                
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid">
+        
+          <a href="../testers/" title="Testers" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
+            </div>
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Previous
+                </span>
+                Testers
+              </span>
+            </div>
+          </a>
+        
+        
+          <a href="../inference_model/" title="Inference Models" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Next
+                </span>
+                Inference Models
+              </span>
+            </div>
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
+            </div>
+          </a>
+        
+      </nav>
+    </div>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+        powered by
+        <a href="https://www.mkdocs.org">MkDocs</a>
+        and
+        <a href="https://squidfunk.github.io/mkdocs-material/">
+          Material for MkDocs</a>
+      </div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    
+      <script src="../assets/javascripts/application.808e90bb.js"></script>
+      
+      <script>app.initialize({version:"1.1.dev0",url:{base:".."}})</script>
+      
+    
+  </body>
+</html>

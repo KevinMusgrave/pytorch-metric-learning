@@ -258,6 +258,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../reducers/" title="Reducers" class="md-nav__link">
+      Reducers
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
     <a href="../regularizers/" title="Regularizers" class="md-nav__link">
       Regularizers
     </a>
@@ -385,10 +397,94 @@
       
 
 
-  <li class="md-nav__item">
-    <a href="../utils/" title="Utils" class="md-nav__link">
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-9" type="checkbox" id="nav-9">
+    
+    <label class="md-nav__link" for="nav-9">
       Utils
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-9">
+        Utils
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../accuracy_calculator/" title="Accuracy Calculation" class="md-nav__link">
+      Accuracy Calculation
     </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../inference_model/" title="Inference Models" class="md-nav__link">
+      Inference Models
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../hook_container/" title="Logging Presets" class="md-nav__link">
+      Logging Presets
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-10" type="checkbox" id="nav-10">
+    
+    <label class="md-nav__link" for="nav-10">
+      How to extend this library
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-10">
+        How to extend this library
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../losses_dev/" title="Custom losses" class="md-nav__link">
+      Custom losses
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
   </li>
 
     
@@ -554,7 +650,7 @@ If not specified, then the original labels are used.</li>
 <li><strong>lr_scheduers</strong>: A dictionary of PyTorch learning rate schedulers. Your keys should be strings of the form <code>&lt;model&gt;_&lt;step_type&gt;</code>, where <code>&lt;model&gt;</code> is a key that comes from either the <code>models</code> or <code>loss_funcs</code> dictionary, and <code>&lt;step_type&gt;</code> is one of the following:<ul>
 <li>"scheduler_by_iteration" (will be stepped at every iteration)</li>
 <li>"scheduler_by_epoch" (will be stepped at the end of each epoch)</li>
-<li>"scheduler_by_plateau" (will step if accuracy plateaus. This requires you to write your own end-of-epoch hook, compute validation accuracy, and call <code>trainer.step_lr_plateau_schedulers(validation_accuracy)</code>. Or you can use <a href="../utils/#logging_presets">HookContainer</a>.)</li>
+<li>"scheduler_by_plateau" (will step if accuracy plateaus. This requires you to write your own end-of-epoch hook, compute validation accuracy, and call <code>trainer.step_lr_plateau_schedulers(validation_accuracy)</code>. Or you can use <a href="utils.md#logging_presets">HookContainer</a>.)</li>
 <li>Here are some example valid <code>lr_scheduler</code> keys: <ul>
 <li><code>trunk_scheduler_by_iteration</code></li>
 <li><code>metric_loss_scheduler_by_epoch</code></li>
@@ -577,13 +673,13 @@ If not specified, then the original labels are used.</li>
 <li>All loss and mining functions in pytorch-metric-learning have an attribute called <code>record_these</code>. This attribute is a list of strings, which are the names of other attributes that are worth recording for the purpose of analysis. For example, the <code>record_these</code> list for TripletMarginLoss is <code>["avg_embedding_norm, "num_non_zero_triplets"]</code>, so at each iteration you could log the value of <code>trainer.loss_funcs["metric_loss"].avg_embedding_norm</code> and <code>trainer.loss_funcs["metric_loss"].num_non_zero_triplets</code>. To accomplish this programmatically, you can loop through <code>record_these</code> and use the python function <code>getattr</code> to retrieve the attribute value.</li>
 </ul>
 </li>
-<li>If you want ready-to-use hooks, take a look at the <a href="../utils/#logging_presets">logging_presets module</a>.</li>
+<li>If you want ready-to-use hooks, take a look at the <a href="utils.md#logging_presets">logging_presets module</a>.</li>
 </ul>
 </li>
 <li><strong>end_of_epoch_hook</strong>: This is an optional function that operates like <code>end_of_iteration_hook</code>, except this occurs at the end of every epoch, so this might be a suitable place to run validation and save models. <ul>
 <li>To end training early, your hook should return the boolean value False. Note, it must specifically <code>return False</code>, not <code>None</code>, <code>0</code>, <code>[]</code> etc.</li>
 <li>For this hook, you might want to access the following dictionaries: <code>trainer.models</code>, <code>trainer.optimizers</code>, <code>trainer.lr_schedulers</code>, <code>trainer.loss_funcs</code>, and <code>trainer.mining_funcs</code>.</li>
-<li>If you want ready-to-use hooks, take a look at the <a href="../utils/#logging_presets">logging_presets module</a>.</li>
+<li>If you want ready-to-use hooks, take a look at the <a href="utils.md#logging_presets">logging_presets module</a>.</li>
 </ul>
 </li>
 </ul>

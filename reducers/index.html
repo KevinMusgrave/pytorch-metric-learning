@@ -36,7 +36,7 @@
     
     
       
-        <title>Regularizers - PyTorch Metric Learning</title>
+        <title>Reducers - PyTorch Metric Learning</title>
       
     
     
@@ -85,7 +85,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#regularizers" tabindex="1" class="md-skip">
+      <a href="#reducers" tabindex="1" class="md-skip">
         Skip to content
       </a>
     
@@ -111,7 +111,7 @@
             </span>
             <span class="md-header-nav__topic">
               
-                Regularizers
+                Reducers
               
             </span>
           
@@ -256,18 +256,6 @@
       
       
 
-
-  <li class="md-nav__item">
-    <a href="../reducers/" title="Reducers" class="md-nav__link">
-      Reducers
-    </a>
-  </li>
-
-    
-      
-      
-      
-
   
 
 
@@ -279,11 +267,11 @@
     
     
       <label class="md-nav__link md-nav__link--active" for="__toc">
-        Regularizers
+        Reducers
       </label>
     
-    <a href="./" title="Regularizers" class="md-nav__link md-nav__link--active">
-      Regularizers
+    <a href="./" title="Reducers" class="md-nav__link md-nav__link--active">
+      Reducers
     </a>
     
       
@@ -297,22 +285,57 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#baseweightregularizer" class="md-nav__link">
-    BaseWeightRegularizer
+  <a href="#avgnonzeroreducer" class="md-nav__link">
+    AvgNonZeroReducer
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#centerinvariantregularizer" class="md-nav__link">
-    CenterInvariantRegularizer
+  <a href="#basereducer" class="md-nav__link">
+    BaseReducer
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#regularfaceregularizer" class="md-nav__link">
-    RegularFaceRegularizer
+  <a href="#classweightedreducer" class="md-nav__link">
+    ClassWeightedReducer
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#divisorreducer" class="md-nav__link">
+    DivisorReducer
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#donothingreducer" class="md-nav__link">
+    DoNothingReducer
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#meanreducer" class="md-nav__link">
+    MeanReducer
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#multiplereducers" class="md-nav__link">
+    MultipleReducers
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#thresholdreducer" class="md-nav__link">
+    ThresholdReducer
   </a>
   
 </li>
@@ -325,6 +348,18 @@
   
 </nav>
     
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../regularizers/" title="Regularizers" class="md-nav__link">
+      Regularizers
+    </a>
   </li>
 
     
@@ -481,22 +516,57 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#baseweightregularizer" class="md-nav__link">
-    BaseWeightRegularizer
+  <a href="#avgnonzeroreducer" class="md-nav__link">
+    AvgNonZeroReducer
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#centerinvariantregularizer" class="md-nav__link">
-    CenterInvariantRegularizer
+  <a href="#basereducer" class="md-nav__link">
+    BaseReducer
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#regularfaceregularizer" class="md-nav__link">
-    RegularFaceRegularizer
+  <a href="#classweightedreducer" class="md-nav__link">
+    ClassWeightedReducer
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#divisorreducer" class="md-nav__link">
+    DivisorReducer
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#donothingreducer" class="md-nav__link">
+    DoNothingReducer
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#meanreducer" class="md-nav__link">
+    MeanReducer
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#multiplereducers" class="md-nav__link">
+    MultipleReducers
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#thresholdreducer" class="md-nav__link">
+    ThresholdReducer
   </a>
   
 </li>
@@ -517,45 +587,107 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/edit/master/docs/regularizers.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
+                  <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/edit/master/docs/reducers.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="regularizers">Regularizers<a class="headerlink" href="#regularizers" title="Permanent link">&para;</a></h1>
-<p>Regularizers are like helper-loss functions. They might not require any labels or embeddings as input, and might instead operate on weights that are learned by a network or loss function.</p>
-<p>Here is an example when used in conjunction with a compatible loss function:</p>
-<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">losses</span><span class="p">,</span> <span class="n">regularizers</span>
-<span class="n">R</span> <span class="o">=</span> <span class="n">regularizers</span><span class="o">.</span><span class="n">RegularFaceRegularizer</span><span class="p">()</span>
-<span class="n">loss</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">ArcFaceLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">num_classes</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">embedding_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">regularizer</span><span class="o">=</span><span class="n">R</span><span class="p">)</span>
+                <h1 id="reducers">Reducers<a class="headerlink" href="#reducers" title="Permanent link">&para;</a></h1>
+<p>Reducers specify how to go from many loss values to a single loss value. For example, the <a href="../losses/#contrastiveloss">ContrastiveLoss</a> computes a loss for every positive and negative pair in a batch. A reducer will take all these per-pair losses, and reduce them to a single value. Here's where reducers fit in this library's flow of filters and computations:</p>
+<p><code>Your Data --&gt; Sampler --&gt; Miner --&gt; Loss --&gt; Reducer --&gt; Final loss value</code></p>
+<p>Reducers are passed into loss functions like this:</p>
+<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">losses</span><span class="p">,</span> <span class="n">reducers</span>
+<span class="n">reducer</span> <span class="o">=</span> <span class="n">reducers</span><span class="o">.</span><span class="n">SomeReducer</span><span class="p">()</span>
+<span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">SomeLoss</span><span class="p">(</span><span class="n">reducer</span><span class="o">=</span><span class="n">reducer</span><span class="p">)</span>
+<span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span> <span class="c1"># in your training for-loop</span>
 </pre></div>
 
 
-<h2 id="baseweightregularizer">BaseWeightRegularizer<a class="headerlink" href="#baseweightregularizer" title="Permanent link">&para;</a></h2>
-<p>Weight regularizers take in a 2-D tensor of weights of size (num_classes, embedding_size).</p>
-<div class="codehilite"><pre><span></span><span class="n">regularizers</span><span class="o">.</span><span class="n">BaseWeightRegularizer</span><span class="p">(</span><span class="n">normalize_weights</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">reducer</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<p>Internally, the loss function creates a dictionary that contains the losses, associated indices, and reduction type. The reducer takes this dictionary, performs the reduction, and returns a single value on which <code>.backward()</code> can be called.</p>
+<h2 id="avgnonzeroreducer">AvgNonZeroReducer<a class="headerlink" href="#avgnonzeroreducer" title="Permanent link">&para;</a></h2>
+<p>This computes the average loss, using only the losses that are greater than 0. For example, if the losses are <code>[0, 2, 0, 3]</code>, then this reducer will return <code>2.5</code>.</p>
+<div class="codehilite"><pre><span></span><span class="n">reducers</span><span class="o">.</span><span class="n">AvgNonZeroReducer</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
 
-<p><strong>Parameters</strong></p>
+<p>This class is equivalent to using <code>ThresholdReducer(threshold=0)</code>. See <a href="./#thresholdreducer">ThresholdReducer</a>.</p>
+<h2 id="basereducer">BaseReducer<a class="headerlink" href="#basereducer" title="Permanent link">&para;</a></h2>
+<p>All reducers extend this class.</p>
+<div class="codehilite"><pre><span></span><span class="n">reducers</span><span class="o">.</span><span class="n">BaseReducer</span><span class="p">()</span>
+</pre></div>
+
+
+<h2 id="classweightedreducer">ClassWeightedReducer<a class="headerlink" href="#classweightedreducer" title="Permanent link">&para;</a></h2>
+<p>This multiplies each loss by a class weight, and then takes the average.</p>
+<div class="codehilite"><pre><span></span><span class="n">reducers</span><span class="o">.</span><span class="n">ClassWeightedReducer</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+
+<p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>normalize_weights</strong>: If True, weights will be normalized to have a Euclidean norm of 1 before any regularization occurs.</li>
-<li><strong>reducer</strong>: A <a href="../reducers/">reducer</a> object. If None, then the default reducer will be used.</li>
+<li><strong>weights</strong>: A tensor of weights, where <code>weights[i]</code> is the weight for the ith class.</li>
 </ul>
-<p>An object of this class can be passed as the <code>regularizer</code> argument into any class that extends <a href="../losses/#weightregularizermixin">WeightRegularizerMixin</a>.</p>
-<h2 id="centerinvariantregularizer">CenterInvariantRegularizer<a class="headerlink" href="#centerinvariantregularizer" title="Permanent link">&para;</a></h2>
-<p><a href="http://www1.ece.neu.edu/~yuewu/files/2017/twu024.pdf">Deep Face Recognition with Center Invariant Loss</a></p>
-<div class="codehilite"><pre><span></span><span class="n">regularizers</span><span class="o">.</span><span class="n">CenterInvariantRegularizer</span><span class="p">(</span><span class="n">normalize_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<h2 id="divisorreducer">DivisorReducer<a class="headerlink" href="#divisorreducer" title="Permanent link">&para;</a></h2>
+<p>This divides each loss by a custom value specified inside the loss function. </p>
+<div class="codehilite"><pre><span></span><span class="n">reducers</span><span class="o">.</span><span class="n">DivisorReducer</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
 
-<p>Extends <a href="./#baseweightregularizer">BaseWeightRegularizer</a>.
-<code>normalize_weights</code> must be False.</p>
-<h2 id="regularfaceregularizer">RegularFaceRegularizer<a class="headerlink" href="#regularfaceregularizer" title="Permanent link">&para;</a></h2>
-<p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Zhao_RegularFace_Deep_Face_Recognition_via_Exclusive_Regularization_CVPR_2019_paper.pdf">RegularFace: Deep Face Recognition via Exclusive Regularization</a></p>
-<div class="codehilite"><pre><span></span><span class="n">regularizers</span><span class="o">.</span><span class="n">RegularFaceRegularizer</span><span class="p">(</span><span class="n">normalize_weights</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<p>To use this reducer, the loss function must include <code>divisor_summands</code> in its loss dictionary. For example, the <a href="../losses/#proxyanchorloss">ProxyAnchorLoss</a> uses <code>DivisorReducer</code> by default, and returns the following dictionary:</p>
+<div class="codehilite"><pre><span></span><span class="p">{</span><span class="s2">&quot;pos_loss&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;losses&quot;</span><span class="p">:</span> <span class="n">pos_term</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> 
+            <span class="s2">&quot;indices&quot;</span><span class="p">:</span> <span class="n">loss_indices</span><span class="p">,</span> 
+            <span class="s2">&quot;reduction_type&quot;</span><span class="p">:</span> <span class="s2">&quot;element&quot;</span><span class="p">,</span> 
+            <span class="s2">&quot;divisor_summands&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;num_pos_proxies&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">with_pos_proxies</span><span class="p">)}},</span>
+<span class="s2">&quot;neg_loss&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;losses&quot;</span><span class="p">:</span> <span class="n">neg_term</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> 
+            <span class="s2">&quot;indices&quot;</span><span class="p">:</span> <span class="n">loss_indices</span><span class="p">,</span> <span class="s2">&quot;reduction_type&quot;</span><span class="p">:</span> 
+            <span class="s2">&quot;element&quot;</span><span class="p">,</span> 
+            <span class="s2">&quot;divisor_summands&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;num_classes&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span><span class="p">}},</span>
+<span class="s2">&quot;reg_loss&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">regularization_loss</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proxies</span><span class="p">)</span>
+<span class="p">}</span>
 </pre></div>
 
 
-<p>Extends <a href="./#baseweightregularizer">BaseWeightRegularizer</a>.</p>
+<h2 id="donothingreducer">DoNothingReducer<a class="headerlink" href="#donothingreducer" title="Permanent link">&para;</a></h2>
+<p>This returns its input. In other words, no reduction is performed. The output will be the loss dictionary that is passed into it.</p>
+<div class="codehilite"><pre><span></span><span class="n">reducers</span><span class="o">.</span><span class="n">DivisorReducer</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+
+<h2 id="meanreducer">MeanReducer<a class="headerlink" href="#meanreducer" title="Permanent link">&para;</a></h2>
+<p>This will return the average of the losses.</p>
+<div class="codehilite"><pre><span></span><span class="n">reducers</span><span class="o">.</span><span class="n">MeanReducer</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+
+<h2 id="multiplereducers">MultipleReducers<a class="headerlink" href="#multiplereducers" title="Permanent link">&para;</a></h2>
+<p>This wraps multiple reducers. Each reducer is applied to a different sub-loss, as specified in the host loss function. Then the reducer outputs are summed to obtain the final loss.</p>
+<div class="codehilite"><pre><span></span><span class="n">reducers</span><span class="o">.</span><span class="n">MultipleReducers</span><span class="p">(</span><span class="n">reducers</span><span class="p">,</span> <span class="n">default_reducer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>reducers</strong>: A dictionary mapping from strings to reducers. The strings must match sub-loss names of the host loss function.</li>
+<li><strong>default_reducer</strong>: This reducer will be used for any sub-losses that are not included in the keys of <code>reducers</code>. If None, then MeanReducer() will be the default.</li>
+</ul>
+<p><strong>Example usage</strong>:</p>
+<p>The <a href="../losses/#contrastiveloss">ContrastiveLoss</a> has two sub-losses: <code>pos_loss</code> for the positive pairs, and <code>neg_loss</code> for the negative pairs. In this example, a <a href="./#thresholdreducer">ThresholdReducer</a> is used for the <code>pos_loss</code> and a <a href="./#meanreducer">MeanReducer</a> is used for the <code>neg_loss</code>.</p>
+<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_metric_learning.losses</span> <span class="kn">import</span> <span class="n">ContrastiveLoss</span>
+<span class="kn">from</span> <span class="nn">pytorch_metric_learning.reducers</span> <span class="kn">import</span> <span class="n">MultipleReducers</span><span class="p">,</span> <span class="n">ThresholdReducer</span><span class="p">,</span> <span class="n">MeanReducer</span>
+<span class="n">reducer_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;pos_loss&quot;</span><span class="p">:</span> <span class="n">ThresholdReducer</span><span class="p">(</span><span class="mf">0.1</span><span class="p">),</span> <span class="s2">&quot;neg_loss&quot;</span><span class="p">:</span> <span class="n">MeanReducer</span><span class="p">()}</span>
+<span class="n">reducer</span> <span class="o">=</span> <span class="n">MultipleReducers</span><span class="p">(</span><span class="n">reducer_dict</span><span class="p">)</span>
+<span class="n">loss_func</span> <span class="o">=</span> <span class="n">ContrastiveLoss</span><span class="p">(</span><span class="n">reducer</span><span class="o">=</span><span class="n">reducer</span><span class="p">)</span>
+</pre></div>
+
+
+<h2 id="thresholdreducer">ThresholdReducer<a class="headerlink" href="#thresholdreducer" title="Permanent link">&para;</a></h2>
+<p>This computes the average loss, using only the losses that are greater than <code>threshold</code>. For example, if the losses are <code>[3, 7, 1, 13, 5]</code>, and the threshold is 6, then this reducer will return <code>10</code>.</p>
+<div class="codehilite"><pre><span></span><span class="n">reducers</span><span class="o">.</span><span class="n">ThresholdReducer</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</pre></div>
+
+
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>threshold</strong>: All losses that fall below this value will be ignored.</li>
+</ul>
                 
                   
                 
@@ -577,7 +709,7 @@
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid">
         
-          <a href="../reducers/" title="Reducers" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../miners/" title="Miners" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-flex__cell md-flex__cell--shrink">
               <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
             </div>
@@ -586,19 +718,19 @@
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                Reducers
+                Miners
               </span>
             </div>
           </a>
         
         
-          <a href="../samplers/" title="Samplers" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../regularizers/" title="Regularizers" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
               <span class="md-flex__ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                Samplers
+                Regularizers
               </span>
             </div>
             <div class="md-flex__cell md-flex__cell--shrink">

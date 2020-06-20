@@ -478,6 +478,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../reducers/" title="Reducers" class="md-nav__link">
+      Reducers
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
     <a href="../regularizers/" title="Regularizers" class="md-nav__link">
       Regularizers
     </a>
@@ -525,10 +537,94 @@
       
 
 
-  <li class="md-nav__item">
-    <a href="../utils/" title="Utils" class="md-nav__link">
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-9" type="checkbox" id="nav-9">
+    
+    <label class="md-nav__link" for="nav-9">
       Utils
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-9">
+        Utils
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../accuracy_calculator/" title="Accuracy Calculation" class="md-nav__link">
+      Accuracy Calculation
     </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../inference_model/" title="Inference Models" class="md-nav__link">
+      Inference Models
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../hook_container/" title="Logging Presets" class="md-nav__link">
+      Logging Presets
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-10" type="checkbox" id="nav-10">
+    
+    <label class="md-nav__link" for="nav-10">
+      How to extend this library
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-10">
+        How to extend this library
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../losses_dev/" title="Custom losses" class="md-nav__link">
+      Custom losses
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
   </li>
 
     
@@ -764,16 +860,24 @@
 <p>All loss functions are used as follows:</p>
 <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">losses</span>
 <span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">SomeLoss</span><span class="p">()</span>
-<span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+<span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span> <span class="c1"># in your training for-loop</span>
 </pre></div>
 
 
-<p>Or if you are using a loss in conjunction with a miner:</p>
+<p>Or if you are using a loss in conjunction with a <a href="../miners/">miner</a>:</p>
 <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">miners</span><span class="p">,</span> <span class="n">losses</span>
 <span class="n">miner_func</span> <span class="o">=</span> <span class="n">miners</span><span class="o">.</span><span class="n">SomeMiner</span><span class="p">()</span>
 <span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">SomeLoss</span><span class="p">()</span>
-<span class="n">miner_output</span> <span class="o">=</span> <span class="n">miner_func</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
-<span class="n">losses</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">miner_output</span><span class="p">)</span>
+<span class="n">miner_output</span> <span class="o">=</span> <span class="n">miner_func</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span> <span class="c1"># in your training for-loop</span>
+<span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">miner_output</span><span class="p">)</span>
+</pre></div>
+
+
+<p>You can also specify how losses get reduced to a single value by using a <a href="../reducers/">reducer</a>:</p>
+<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">losses</span><span class="p">,</span> <span class="n">reducers</span>
+<span class="n">reducer</span> <span class="o">=</span> <span class="n">reducers</span><span class="o">.</span><span class="n">SomeReducer</span><span class="p">()</span>
+<span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">SomeLoss</span><span class="p">(</span><span class="n">reducer</span><span class="o">=</span><span class="n">reducer</span><span class="p">)</span>
+<span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span> <span class="c1"># in your training for-loop</span>
 </pre></div>
 
 
@@ -814,15 +918,14 @@
 
 <h2 id="basemetriclossfunction">BaseMetricLossFunction<a class="headerlink" href="#basemetriclossfunction" title="Permanent link">&para;</a></h2>
 <p>All loss functions extend this class and therefore inherit its <code>__init__</code> parameters.</p>
-<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">BaseMetricLossFunction</span><span class="p">(</span><span class="n">normalize_embeddings</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">num_class_per_param</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">learnable_param_names</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">BaseMetricLossFunction</span><span class="p">(</span><span class="n">normalize_embeddings</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">reducer</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </pre></div>
 
 
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>normalize_embeddings</strong>: If True, embeddings will be normalized to have a Euclidean norm of 1 before the loss is computed.</li>
-<li><strong>num_class_per_param</strong>: If <em>learnable_param_names</em> is set, then this represents the number of classes for each parameter. If your parameters don't have a separate value for each class, then you can leave this at None.</li>
-<li><strong>learnable_param_names</strong>: A list of strings where each element is the name of attributes that should be converted to nn.Parameter. If None, then no parameters are converted. </li>
+<li><strong>reducer</strong>: A <a href="../reducers/">reducer</a> object. If None, then the default reducer will be used.</li>
 </ul>
 <p><strong>Required Implementations</strong>:</p>
 <div class="codehilite"><pre><span></span><span class="k">def</span> <span class="nf">compute_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">indices_tuple</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -846,8 +949,7 @@
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">ContrastiveLoss</span><span class="p">(</span><span class="n">pos_margin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> 
                     <span class="n">neg_margin</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
                     <span class="n">use_similarity</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
-                    <span class="n">power</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
-                    <span class="n">avg_non_zero_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+                    <span class="n">power</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                     <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 </pre></div>
 
@@ -858,7 +960,6 @@
 <li><strong>neg_margin</strong>: The distance (or similarity) under (over) which negative pairs will contribute to the loss.  </li>
 <li><strong>use_similarity</strong>: If True, will use dot product between vectors instead of euclidean distance.</li>
 <li><strong>power</strong>: Each pair's loss will be raised to this power.</li>
-<li><strong>avg_non_zero_only</strong>: Only pairs that contribute non-zero loss will be used in the final loss. </li>
 </ul>
 <p>Note that the default values for <code>pos_margin</code> and <code>neg_margin</code> are suitable if <code>use_similarity = False</code>. If you set <code>use_similarity = True</code>, then more appropriate values would be <code>pos_margin = 1</code> and <code>neg_margin = 0</code>.</p>
 <h2 id="cosfaceloss">CosFaceLoss<a class="headerlink" href="#cosfaceloss" title="Permanent link">&para;</a></h2>
@@ -983,7 +1084,7 @@
 
 <h2 id="marginloss">MarginLoss<a class="headerlink" href="#marginloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1706.07567.pdf">Sampling Matters in Deep Embedding Learning</a></p>
-<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">MarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">triplets_per_anchor</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">MarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">triplets_per_anchor</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="n">learn_beta</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">num_classes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
 
@@ -993,13 +1094,9 @@
 <li><strong>nu</strong>: The regularization weight for the magnitude of beta.</li>
 <li><strong>beta</strong>: The center of the minimal buffer between positive and negative pairs.</li>
 <li><strong>triplets_per_anchor</strong>: The number of triplets per element to sample within a batch. Can be an integer or the string "all". For example, if your batch size is 128, and triplets_per_anchor is 100, then 12800 triplets will be sampled. If triplets_per_anchor is "all", then all possible triplets in the batch will be used.</li>
+<li><strong>learn_beta</strong>: If True, beta will be a torch.nn.Parameter, which can be optimized using any PyTorch optimizer.</li>
+<li><strong>num_classes</strong>: If not None, then beta will be of size <code>num_classes</code>, so that a separate beta is used for each class during training.</li>
 </ul>
-<p>To make beta a learnable parameter (as done in the paper), pass in the keyword argument:</p>
-<div class="codehilite"><pre><span></span><span class="n">learnable_param_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;beta&quot;</span><span class="p">]</span>
-</pre></div>
-
-
-<p>You can then pass the loss function's parameters() to any PyTorch optimizer.</p>
 <h2 id="multiplelosses">MultipleLosses<a class="headerlink" href="#multiplelosses" title="Permanent link">&para;</a></h2>
 <p>This is a simple wrapper for multiple losses. Pass in a list of already-initialized loss functions. Then, when you call forward on this object, it will return the sum of all wrapped losses.</p>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">MultipleLosses</span><span class="p">(</span><span class="n">losses</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
@@ -1008,8 +1105,8 @@
 
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>losses</strong>: A list of initialized loss functions. On the forward call of MultipleLosses, each wrapped loss will be computed, and then the average will be returned.</li>
-<li><strong>weights</strong>: Optional. A list of loss weights, which will be multiplied by the corresponding losses obtained by the loss functions. The default is to multiply each loss by 1.</li>
+<li><strong>losses</strong>: A list or dictionary of initialized loss functions. On the forward call of MultipleLosses, each wrapped loss will be computed, and then the average will be returned.</li>
+<li><strong>weights</strong>: Optional. A list or dictionary of loss weights, which will be multiplied by the corresponding losses obtained by the loss functions. The default is to multiply each loss by 1. If <code>losses</code> is a list, then <code>weights</code> must be a list. If <code>losses</code> is a dictionary, <code>weights</code> must contain the same keys as <code>losses</code>. </li>
 </ul>
 <h2 id="multisimilarityloss">MultiSimilarityLoss<a class="headerlink" href="#multisimilarityloss" title="Permanent link">&para;</a></h2>
 <p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf">Multi-Similarity Loss with General Pair Weighting for Deep Metric Learning</a></p>
@@ -1131,7 +1228,6 @@
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">SignalToNoiseRatioContrastiveLoss</span><span class="p">(</span><span class="n">pos_margin</span><span class="p">,</span> 
                                         <span class="n">neg_margin</span><span class="p">,</span> 
                                         <span class="n">regularizer_weight</span><span class="p">,</span> 
-                                        <span class="n">avg_non_zero_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
                                         <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
@@ -1141,7 +1237,6 @@
 <li><strong>pos_margin</strong>: The noise-to-signal ratio over which positive pairs will contribute to the loss.</li>
 <li><strong>neg_margin</strong>: The noise-to-signal ratio under which negative pairs will contribute to the loss.</li>
 <li><strong>regularizer_weight</strong>: The regularizer encourages the embeddings to have zero-mean distributions. </li>
-<li><strong>avg_non_zero_only</strong>: Only pairs that contribute non-zero loss will be used in the final loss. </li>
 </ul>
 <h2 id="softtripleloss">SoftTripleLoss<a class="headerlink" href="#softtripleloss" title="Permanent link">&para;</a></h2>
 <p><a href="http://openaccess.thecvf.com/content_ICCV_2019/papers/Qian_SoftTriple_Loss_Deep_Metric_Learning_Without_Triplet_Sampling_ICCV_2019_paper.pdf">SoftTriple Loss: Deep Metric Learning Without Triplet Sampling</a></p>
@@ -1208,7 +1303,6 @@
                         <span class="n">power</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
                         <span class="n">swap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
                         <span class="n">smooth_loss</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
-                        <span class="n">avg_non_zero_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
                         <span class="n">triplets_per_anchor</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> 
                         <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
@@ -1221,7 +1315,6 @@
 <li><strong>power</strong>: Each pair's loss will be raised to this power.</li>
 <li><strong>swap</strong>: Use the positive-negative distance instead of anchor-negative distance, if it violates the margin more.</li>
 <li><strong>smooth_loss</strong>: Use the log-exp version of the triplet loss</li>
-<li><strong>avg_non_zero_only</strong>: Only triplets that contribute non-zero loss will be used in the final loss.</li>
 <li><strong>triplets_per_anchor</strong>: The number of triplets per element to sample within a batch. Can be an integer or the string "all". For example, if your batch size is 128, and triplets_per_anchor is 100, then 12800 triplets will be sampled. If triplets_per_anchor is "all", then all possible triplets in the batch will be used.</li>
 </ul>
 <h2 id="tupletmarginloss">TupletMarginLoss<a class="headerlink" href="#tupletmarginloss" title="Permanent link">&para;</a></h2>

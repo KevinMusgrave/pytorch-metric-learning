@@ -22,6 +22,8 @@ PyTorch Metric Learning
  </a>
 </p>
 
+## News
+June 20: v0.9.87 comes with some major changes that may cause your existing code to break. See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.87) for details.
 
 ## Documentation
 [**View the documentation here**](https://kevinmusgrave.github.io/pytorch-metric-learning/)
@@ -70,8 +72,54 @@ conda install pytorch-metric-learning -c metric-learning -c pytorch
 
 **To use the testing module, you'll need faiss, which can be installed via conda as well. See the [installation instructions for faiss](https://github.com/facebookresearch/faiss/blob/master/INSTALL.md).**
 
-## Benchmark results
-See [powerful-benchmarker](https://github.com/KevinMusgrave/powerful-benchmarker/) to view benchmark results and to use the benchmarking tool.
+
+## Overview
+Let’s try the vanilla triplet margin loss. In all examples, embeddings is assumed to be of size (N, embedding_size), and labels is of size (N).
+```python
+from pytorch_metric_learning import losses
+loss_func = losses.TripletMarginLoss(margin=0.1)
+loss = loss_func(embeddings, labels) # in your training loop
+```
+Loss functions typically come with a variety of parameters. For example, with the TripletMarginLoss, you can control how many triplets per sample to use in each batch. You can also use all possible triplets within each batch:
+```python
+loss_func = losses.TripletMarginLoss(triplets_per_anchor="all")
+```
+Sometimes it can help to add a mining function:
+```python
+from pytorch_metric_learning import miners, losses
+miner = miners.MultiSimilarityMiner(epsilon=0.1)
+loss_func = losses.TripletMarginLoss(margin=0.1)
+hard_pairs = miner(embeddings, labels) # in your training loop
+loss = loss_func(embeddings, labels, hard_pairs)
+```
+In the above code, the miner finds positive and negative pairs that it thinks are particularly difficult. Note that even though the TripletMarginLoss operates on triplets, it’s still possible to pass in pairs. This is because the library automatically converts pairs to triplets and triplets to pairs, when necessary.
+
+Here's what the above examples look like in a typical training loop:
+```python
+from pytorch_metric_learning import miners, losses
+miner = miners.MultiSimilarityMiner(epsilon=0.1)
+loss_func = losses.TripletMarginLoss(margin=0.1)
+
+# borrowed from https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
+for i, data in enumerate(trainloader, 0):
+    inputs, labels = data
+    # zero the parameter gradients
+    optimizer.zero_grad()
+
+    # forward + backward + optimize
+    embeddings = net(inputs)
+    hard_pairs = miner(embeddings, labels)
+    loss = loss_func(embeddings, labels, hard_pairs)
+    loss.backward()
+    optimizer.step()
+```
+For more complex approaches, like deep adversarial metric learning, use one of the [trainers](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers).
+
+To check the accuracy of your model, use one of the [testers](https://kevinmusgrave.github.io/pytorch-metric-learning/testers). Which tester should you use? Almost definitely [GlobalEmbeddingSpaceTester](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#globalembeddingspacetester), because it does what most metric-learning papers do. 
+
+Also check out the [example Google Colab notebooks](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples/README.md).
+
+To learn more about all of the above, [see the documentation](https://kevinmusgrave.github.io/pytorch-metric-learning). 
 
 ## Library contents
 ### [Losses](https://kevinmusgrave.github.io/pytorch-metric-learning/losses):
@@ -109,6 +157,14 @@ See [powerful-benchmarker](https://github.com/KevinMusgrave/powerful-benchmarker
 - [**PairMarginMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#pairmarginminer)
 - [**TripletMarginMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#tripletmarginminer) ([FaceNet: A Unified Embedding for Face Recognition and Clustering](https://arxiv.org/pdf/1503.03832.pdf))
 
+### [Reducers](https://kevinmusgrave.github.io/pytorch-metric-learning/reducers):
+- [**AvgNonZeroReducer**](https://kevinmusgrave.github.io/pytorch-metric-learning/reducers/#avgnonzeroreducer)
+- [**ClassWeightedReducer**](https://kevinmusgrave.github.io/pytorch-metric-learning/reducers/#classweightedreducer)
+- [**DivisorReducer**](https://kevinmusgrave.github.io/pytorch-metric-learning/reducers/#divisorreducer)
+- [**DoNothingReducer**](https://kevinmusgrave.github.io/pytorch-metric-learning/reducers/#donothingreducer)
+- [**MeanReducer**](https://kevinmusgrave.github.io/pytorch-metric-learning/reducers/#meanreducer)
+- [**ThresholdReducer**](https://kevinmusgrave.github.io/pytorch-metric-learning/reducers/#thresholdreducer)
+
 ### [Regularizers](https://kevinmusgrave.github.io/pytorch-metric-learning/regularizers):
 - [**CenterInvariantRegularizer**](https://kevinmusgrave.github.io/pytorch-metric-learning/regularizers/#centerinvariantregularizer) ([Deep Face Recognition with Center Invariant Loss](http://www1.ece.neu.edu/~yuewu/files/2017/twu024.pdf))
 - [**RegularFaceRegularizer**](https://kevinmusgrave.github.io/pytorch-metric-learning/regularizers/#regularfaceregularizer) ([RegularFace: Deep Face Recognition via Exclusive Regularization](http://openaccess.thecvf.com/content_CVPR_2019/papers/Zhao_RegularFace_Deep_Face_Recognition_via_Exclusive_Regularization_CVPR_2019_paper.pdf))
@@ -130,82 +186,30 @@ See [powerful-benchmarker](https://github.com/KevinMusgrave/powerful-benchmarker
 - [**WithSameParentLabelTester**](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#withsameparentlabeltester)
 - [**GlobalTwoStreamEmbeddingSpaceTester**](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#globaltwostreamembeddingspacetester)
 
-### [Utils](https://kevinmusgrave.github.io/pytorch-metric-learning/utils):
-- [**AccuracyCalculator**](https://kevinmusgrave.github.io/pytorch-metric-learning/utils/#accuracycalculator)
-- [**HookContainer**](https://kevinmusgrave.github.io/pytorch-metric-learning/utils/#hookcontainer)
+### Utils:
+- [**AccuracyCalculator**](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation)
+- [**HookContainer**](https://kevinmusgrave.github.io/pytorch-metric-learning/logging_presets)
+- [**InferenceModel**](https://kevinmusgrave.github.io/pytorch-metric-learning/inference_models)
 
 ### Base Classes, Mixins, and Wrappers:
 - [**BaseMetricLossFunction**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#basemetriclossfunction)
 - [**BaseMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#baseminer)
 - [**BaseTupleMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#basetupleminer)
 - [**BaseSubsetBatchMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#basesubsetbatchminer)
+- [**BaseReducer**](https://kevinmusgrave.github.io/pytorch-metric-learning/reducers/#basereducer)
 - [**BaseWeightRegularizer**](https://kevinmusgrave.github.io/pytorch-metric-learning/regularizers/#baseweightregularizer)
 - [**BaseTrainer**](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#basetrainer)
 - [**BaseTester**](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#basetester)
 - [**CrossBatchMemory**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#crossbatchmemory) ([Cross-Batch Memory for Embedding Learning](https://arxiv.org/pdf/1912.06798.pdf))
 - [**GenericPairLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#genericpairloss)
 - [**MultipleLosses**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#multiplelosses)
+- [**MultipleReducers**](https://kevinmusgrave.github.io/pytorch-metric-learning/reducers/#multiplereducers)
 - [**WeightRegularizerMixin**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#weightregularizermixin)
 
 
-## Overview
-Let’s try the vanilla triplet margin loss. In all examples, embeddings is assumed to be of size (N, embedding_size), and labels is of size (N).
-```python
-from pytorch_metric_learning import losses
-loss_func = losses.TripletMarginLoss(margin=0.1)
-loss = loss_func(embeddings, labels) # in your training loop
-```
-Loss functions typically come with a variety of parameters. For example, with the TripletMarginLoss, you can control how many triplets per sample to use in each batch. You can also use all possible triplets within each batch:
-```python
-loss_func = losses.TripletMarginLoss(triplets_per_anchor="all")
-```
-Sometimes it can help to add a mining function:
-```python
-from pytorch_metric_learning import miners, losses
-miner = miners.MultiSimilarityMiner(epsilon=0.1)
-loss_func = losses.TripletMarginLoss(margin=0.1)
-hard_pairs = miner(embeddings, labels) # in your training loop
-loss = loss_func(embeddings, labels, hard_pairs)
-```
-In the above code, the miner finds positive and negative pairs that it thinks are particularly difficult. Note that even though the TripletMarginLoss operates on triplets, it’s still possible to pass in pairs. This is because the library automatically converts pairs to triplets and triplets to pairs, when necessary.
+## Benchmark results
+See [powerful-benchmarker](https://github.com/KevinMusgrave/powerful-benchmarker/) to view benchmark results and to use the benchmarking tool.
 
-In general, all loss functions take in embeddings and labels, with an optional indices_tuple argument (i.e. the output of a miner):
-```python
-# From BaseMetricLossFunction
-def forward(self, embeddings, labels, indices_tuple=None)
-```
-And (almost) all mining functions take in embeddings and labels:
-```python
-# From BaseMiner
-def forward(self, embeddings, labels)
-```
-
-Here's what the above examples look like in a typical training loop:
-```python
-from pytorch_metric_learning import miners, losses
-miner = miners.MultiSimilarityMiner(epsilon=0.1)
-loss_func = losses.TripletMarginLoss(margin=0.1)
-
-# borrowed from https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
-for i, data in enumerate(trainloader, 0):
-    inputs, labels = data
-    # zero the parameter gradients
-    optimizer.zero_grad()
-
-    # forward + backward + optimize
-    embeddings = net(inputs)
-    hard_pairs = miner(embeddings, labels)
-    loss = loss_func(embeddings, labels, hard_pairs)
-    loss.backward()
-    optimizer.step()
-```
-For more complex approaches, like deep adversarial metric learning, use one of the [trainers](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers).
-
-To check the accuracy of your model, use one of the [testers](https://kevinmusgrave.github.io/pytorch-metric-learning/testers). Which tester should you use? Almost definitely [GlobalEmbeddingSpaceTester](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#globalembeddingspacetester), because it does what most metric-learning papers do. 
-
-Also check out the [example Google Colab notebooks](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples/README.md).
-
-To learn more about all of the above, [see the documentation](https://kevinmusgrave.github.io/pytorch-metric-learning). 
 
 ## Development
 In order to run unit tests do:
@@ -237,6 +241,7 @@ Thanks to the contributors who made pull requests!
 
 #### General improvements and bug fixes
 - [wconnell](https://github.com/wconnell)
+- [marijnl](https://github.com/marijnl)
 - [fralik](https://github.com/fralik)
 - [JoOkuma](https://github.com/JoOkuma)
 

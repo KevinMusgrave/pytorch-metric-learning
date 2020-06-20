@@ -62,7 +62,7 @@ If not specified, then the original labels are used.
 * **lr_scheduers**: A dictionary of PyTorch learning rate schedulers. Your keys should be strings of the form ```<model>_<step_type>```, where ```<model>``` is a key that comes from either the ```models``` or ```loss_funcs``` dictionary, and ```<step_type>``` is one of the following:
 	* "scheduler_by_iteration" (will be stepped at every iteration)
 	* "scheduler_by_epoch" (will be stepped at the end of each epoch)
-	* "scheduler_by_plateau" (will step if accuracy plateaus. This requires you to write your own end-of-epoch hook, compute validation accuracy, and call ```trainer.step_lr_plateau_schedulers(validation_accuracy)```. Or you can use [HookContainer](utils.md#logging_presets).)
+	* "scheduler_by_plateau" (will step if accuracy plateaus. This requires you to write your own end-of-epoch hook, compute validation accuracy, and call ```trainer.step_lr_plateau_schedulers(validation_accuracy)```. Or you can use [HookContainer](logging_presets.md).)
 	* Here are some example valid ```lr_scheduler``` keys: 
 		* ```trunk_scheduler_by_iteration```
 		* ```metric_loss_scheduler_by_epoch```
@@ -79,11 +79,11 @@ If not specified, then the original labels are used.
 	* ```trainer.losses```: this dictionary contains all loss values at the current iteration. 
 	* ```trainer.loss_funcs``` and ```trainer.mining_funcs```: these dictionaries contain the loss and mining functions. 
 		* All loss and mining functions in pytorch-metric-learning have an attribute called ```record_these```. This attribute is a list of strings, which are the names of other attributes that are worth recording for the purpose of analysis. For example, the ```record_these``` list for TripletMarginLoss is ```["avg_embedding_norm, "num_non_zero_triplets"]```, so at each iteration you could log the value of ```trainer.loss_funcs["metric_loss"].avg_embedding_norm``` and ```trainer.loss_funcs["metric_loss"].num_non_zero_triplets```. To accomplish this programmatically, you can loop through ```record_these``` and use the python function ```getattr``` to retrieve the attribute value.
-	* If you want ready-to-use hooks, take a look at the [logging_presets module](utils.md#logging_presets).
+	* If you want ready-to-use hooks, take a look at the [logging_presets module](logging_presets.md).
 * **end_of_epoch_hook**: This is an optional function that operates like ```end_of_iteration_hook```, except this occurs at the end of every epoch, so this might be a suitable place to run validation and save models. 
 	* To end training early, your hook should return the boolean value False. Note, it must specifically ```return False```, not ```None```, ```0```, ```[]``` etc.
 	* For this hook, you might want to access the following dictionaries: ```trainer.models```, ```trainer.optimizers```, ```trainer.lr_schedulers```, ```trainer.loss_funcs```, and ```trainer.mining_funcs```.
-	* If you want ready-to-use hooks, take a look at the [logging_presets module](utils.md#logging_presets).
+	* If you want ready-to-use hooks, take a look at the [logging_presets module](logging_presets.md).
 
 ## MetricLossOnly
 This trainer just computes a metric loss from the output of your embedder network. See [the example notebook](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/MetricLossOnly.ipynb).

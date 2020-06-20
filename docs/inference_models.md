@@ -11,7 +11,7 @@ InferenceModel(trunk, embedder=None, match_finder=None, normalize_embeddings=Tru
 
 * **trunk**: Your trained model for computing embeddings.
 * **embedder**: Optional. This is if your model is split into two components (trunk and embedder). If None, then the embedder will simply return the trunk's output.
-* **match_finder**: A [MatchFinder](inference_model.md#matchfinder) object.
+* **match_finder**: A [MatchFinder](inference_models.md#matchfinder) object.
 * **normalize_embeddings**: If True, embeddings will be normalized to have Euclidean norm of 1.
 
 

@@ -9,9 +9,9 @@ nav:
     - Trainers: trainers.md
     - Testers: testers.md
     - Utils: 
-      - Accuracy Calculation: accuracy_calculator.md
-      - Inference Models: inference_model.md
-      - Logging Presets: hook_container.md
+      - Accuracy Calculation: accuracy_calculation.md
+      - Inference Models: inference_models.md
+      - Logging Presets: logging_presets.md
     - How to extend this library:
       - Custom losses: losses_dev.md
 theme:

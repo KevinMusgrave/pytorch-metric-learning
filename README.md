@@ -22,6 +22,8 @@ PyTorch Metric Learning
  </a>
 </p>
 
+## News
+June 20: v0.9.87 comes with some major changes that may cause your existing code to break. See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.87) for details.
 
 ## Documentation
 [**View the documentation here**](https://kevinmusgrave.github.io/pytorch-metric-learning/)

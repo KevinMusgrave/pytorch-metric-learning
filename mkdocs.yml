@@ -12,6 +12,8 @@ nav:
       - Accuracy Calculation: accuracy_calculator.md
       - Inference Models: inference_model.md
       - Logging Presets: hook_container.md
+    - How to extend this library:
+      - Custom losses: losses_dev.md
 theme:
   name: 'material'
   palette:

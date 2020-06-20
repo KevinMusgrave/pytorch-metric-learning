@@ -36,7 +36,7 @@
     
     
       
-        <title>Inference Models - PyTorch Metric Learning</title>
+        <title>Logging Presets - PyTorch Metric Learning</title>
       
     
     
@@ -85,7 +85,7 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
-      <a href="#inference-models" tabindex="1" class="md-skip">
+      <a href="#logging-presets" tabindex="1" class="md-skip">
         Skip to content
       </a>
     
@@ -111,7 +111,7 @@
             </span>
             <span class="md-header-nav__topic">
               
-                Inference Models
+                Logging Presets
               
             </span>
           
@@ -339,8 +339,20 @@
 
 
   <li class="md-nav__item">
-    <a href="../accuracy_calculator/" title="Accuracy Calculation" class="md-nav__link">
+    <a href="../accuracy_calculation/" title="Accuracy Calculation" class="md-nav__link">
       Accuracy Calculation
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../inference_models/" title="Inference Models" class="md-nav__link">
+      Inference Models
     </a>
   </li>
 
@@ -360,11 +372,11 @@
     
     
       <label class="md-nav__link md-nav__link--active" for="__toc">
-        Inference Models
+        Logging Presets
       </label>
     
-    <a href="./" title="Inference Models" class="md-nav__link md-nav__link--active">
-      Inference Models
+    <a href="./" title="Logging Presets" class="md-nav__link md-nav__link--active">
+      Logging Presets
     </a>
     
       
@@ -378,15 +390,8 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#inferencemodel" class="md-nav__link">
-    InferenceModel
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#matchfinder" class="md-nav__link">
-    MatchFinder
+  <a href="#hookcontainer" class="md-nav__link">
+    HookContainer
   </a>
   
 </li>
@@ -399,18 +404,6 @@
   
 </nav>
     
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
-    <a href="../hook_container/" title="Logging Presets" class="md-nav__link">
-      Logging Presets
-    </a>
   </li>
 
         
@@ -476,15 +469,8 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#inferencemodel" class="md-nav__link">
-    InferenceModel
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#matchfinder" class="md-nav__link">
-    MatchFinder
+  <a href="#hookcontainer" class="md-nav__link">
+    HookContainer
   </a>
   
 </li>
@@ -505,40 +491,100 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/edit/master/docs/inference_model.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
+                  <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/edit/master/docs/logging_presets.md" title="Edit this page" class="md-icon md-content__icon">&#xE3C9;</a>
                 
                 
-                <h1 id="inference-models">Inference Models<a class="headerlink" href="#inference-models" title="Permanent link">&para;</a></h1>
-<p>utils.inference contains classes that make it convenient to find matching pairs within a batch, or from a set of pairs. Take a look at <a href="https://colab.research.google.com/github/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/Inference.ipynb">this notebook</a> to see example usage.</p>
-<h2 id="inferencemodel">InferenceModel<a class="headerlink" href="#inferencemodel" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils.inference</span> <span class="kn">import</span> <span class="n">InferenceModel</span>
-<span class="n">InferenceModel</span><span class="p">(</span><span class="n">trunk</span><span class="p">,</span> <span class="n">embedder</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">match_finder</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">normalize_embeddings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <h1 id="logging-presets">Logging Presets<a class="headerlink" href="#logging-presets" title="Permanent link">&para;</a></h1>
+<p>The <code>logging_presets</code> module contains ready-to-use hooks for logging data, validating and saving your models, and early stoppage during training. It requires the record-keeper and tensorboard packages, which can be installed with pip:</p>
+<p><code>pip install record-keeper tensorboard</code></p>
+<p>Here's how you can use it in conjunction with a trainer and tester:</p>
+<div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">pytorch_metric_learning.utils.logging_presets</span> <span class="k">as</span> <span class="nn">LP</span>
+<span class="n">log_folder</span><span class="p">,</span> <span class="n">tensorboard_folder</span> <span class="o">=</span> <span class="s2">&quot;example_logs&quot;</span><span class="p">,</span> <span class="s2">&quot;example_tensorboard&quot;</span>
+<span class="n">record_keeper</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">LP</span><span class="o">.</span><span class="n">get_record_keeper</span><span class="p">(</span><span class="n">log_folder</span><span class="p">,</span> <span class="n">tensorboard_folder</span><span class="p">)</span>
+<span class="n">hooks</span> <span class="o">=</span> <span class="n">LP</span><span class="o">.</span><span class="n">get_hook_container</span><span class="p">(</span><span class="n">record_keeper</span><span class="p">)</span>
+<span class="n">dataset_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;val&quot;</span><span class="p">:</span> <span class="n">val_dataset</span><span class="p">}</span>
+<span class="n">model_folder</span> <span class="o">=</span> <span class="s2">&quot;example_saved_models&quot;</span>
+
+<span class="c1"># Create the tester</span>
+<span class="n">tester</span> <span class="o">=</span> <span class="n">testers</span><span class="o">.</span><span class="n">GlobalEmbeddingSpaceTester</span><span class="p">(</span><span class="n">end_of_testing_hook</span><span class="o">=</span><span class="n">hooks</span><span class="o">.</span><span class="n">end_of_testing_hook</span><span class="p">)</span>
+<span class="n">end_of_epoch_hook</span> <span class="o">=</span> <span class="n">hooks</span><span class="o">.</span><span class="n">end_of_epoch_hook</span><span class="p">(</span><span class="n">tester</span><span class="p">,</span> <span class="n">dataset_dict</span><span class="p">,</span> <span class="n">model_folder</span><span class="p">)</span>
+<span class="n">trainer</span> <span class="o">=</span> <span class="n">trainers</span><span class="o">.</span><span class="n">MetricLossOnly</span><span class="p">(</span><span class="n">models</span><span class="p">,</span>
+                                <span class="n">optimizers</span><span class="p">,</span>
+                                <span class="n">batch_size</span><span class="p">,</span>
+                                <span class="n">loss_funcs</span><span class="p">,</span>
+                                <span class="n">mining_funcs</span><span class="p">,</span>
+                                <span class="n">train_dataset</span><span class="p">,</span>
+                                <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">,</span>
+                                <span class="n">end_of_iteration_hook</span><span class="o">=</span><span class="n">hooks</span><span class="o">.</span><span class="n">end_of_iteration_hook</span><span class="p">,</span>
+                                <span class="n">end_of_epoch_hook</span><span class="o">=</span><span class="n">end_of_epoch_hook</span><span class="p">)</span>
+
+<span class="n">trainer</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">num_epochs</span><span class="o">=</span><span class="n">num_epochs</span><span class="p">)</span>
+</pre></div>
+
+
+<p>With the provided hooks, data from both the training and validation stages will be saved in csv, sqlite, and tensorboard format, and models and optimizers will be saved in the specified model folder. See <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples">the example notebooks</a> for complete examples. Read the next section to learn more about the provided hooks.</p>
+<h3 id="hookcontainer">HookContainer<a class="headerlink" href="#hookcontainer" title="Permanent link">&para;</a></h3>
+<p>This class contains ready-to-use hooks to be used by trainers and testers.</p>
+<div class="codehilite"><pre><span></span><span class="kn">import</span> <span class="nn">pytorch_metric_learning.utils.logging_presets</span> <span class="k">as</span> <span class="nn">LP</span>
+<span class="n">LP</span><span class="o">.</span><span class="n">HookContainer</span><span class="p">(</span><span class="n">record_keeper</span><span class="p">,</span> 
+    <span class="n">record_group_name_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+    <span class="n">primary_metric</span><span class="o">=</span><span class="s2">&quot;mean_average_precision_at_r&quot;</span><span class="p">,</span> 
+    <span class="n">validation_split_name</span><span class="o">=</span><span class="s2">&quot;val&quot;</span><span class="p">,</span>
+    <span class="n">save_custom_figures</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 
 
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>trunk</strong>: Your trained model for computing embeddings.</li>
-<li><strong>embedder</strong>: Optional. This is if your model is split into two components (trunk and embedder). If None, then the embedder will simply return the trunk's output.</li>
-<li><strong>match_finder</strong>: A <a href="./#matchfinder">MatchFinder</a> object.</li>
-<li><strong>normalize_embeddings</strong>: If True, embeddings will be normalized to have Euclidean norm of 1.</li>
-</ul>
-<h2 id="matchfinder">MatchFinder<a class="headerlink" href="#matchfinder" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils.inference</span> <span class="kn">import</span> <span class="n">MatchFinder</span>
-<span class="n">MatchFinder</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;dist&quot;</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-</pre></div>
-
-
-<p><strong>Parameters</strong>:</p>
-<ul>
-<li><strong>mode</strong>: One of:<ul>
-<li><code>dist</code>: Use the Euclidean distance between vectors</li>
-<li><code>squared_dist</code>: Use the squared Euclidean distance between vectors</li>
-<li><code>sim</code>: Use the dot product of vectors</li>
+<li><strong>record_keeper</strong>: A <code>record-keeper</code> object. Install: <code>pip install record-keeper tensorboard</code>.</li>
+<li><strong>record_group_name_prefix</strong>: A string which will be prepended to all record names and tensorboard tags.</li>
+<li><strong>primary_metric</strong>: A string that specifies the accuracy metric which will be used to determine the best checkpoint. Must be one of:<ul>
+<li>mean_average_precision_at_r</li>
+<li>r_precision</li>
+<li>precision_at_1</li>
+<li>NMI</li>
 </ul>
 </li>
-<li><strong>threshold</strong>: Optional. Pairs will be a match if they fall under this threshold for distance modes, or over this value for the similarity mode. If not provided, then a threshold must be provided during function calls.</li>
+<li><strong>validation_split_name</strong>: Optional. Default value is "val". The name of your validation set in <code>dataset_dict</code>.</li>
+<li><strong>save_custom_figures</strong>: Optional. If True, records that consist of a tensor at each iteration (rather than just a scalar), will be plotted on tensorboard.</li>
 </ul>
+<p><strong>Important functions</strong>:</p>
+<ul>
+<li><strong>end_of_iteration_hook</strong>: This function records data about models, optimizers, and loss and mining functions. You can pass this function directly into a trainer object.</li>
+<li><strong>end_of_epoch_hook</strong>: This function runs validation and saves models. This function returns the actual hook, i.e. you must pass in the following arguments to obtain the hook.<ul>
+<li><strong>tester</strong>: A <a href="../testers/">tester</a> object.</li>
+<li><strong>dataset_dict</strong>: A dictionary mapping from split names to PyTorch datasets. For example: <code>{"train": train_dataset, "val": val_dataset}</code></li>
+<li><strong>model_folder</strong>: A string which is the folder path where models, optimizers etc. will be saved. </li>
+<li><strong>test_interval</strong>: Optional. Default value is 1. Validation will be run every <code>test_interval</code> epochs.</li>
+<li><strong>patience</strong>: Optional. Default value is None. If not None, training will end early if <code>epoch - best_epoch &gt; patience</code>.</li>
+<li><strong>test_collate_fn</strong>: Optional. Default value is None. This is the collate function used by the dataloader during testing. </li>
+</ul>
+</li>
+<li><strong>end_of_testing_hook</strong>: This function records accuracy metrics. You can pass this function directly into a tester object.</li>
+</ul>
+<p><strong>Useful methods</strong>:</p>
+<p>Getting loss history:</p>
+<div class="codehilite"><pre><span></span><span class="c1"># Get a dictionary mapping from loss names to lists</span>
+<span class="n">loss_histories</span> <span class="o">=</span> <span class="n">hooks</span><span class="o">.</span><span class="n">get_loss_history</span><span class="p">()</span> 
+
+<span class="c1"># You can also specify which loss histories you want</span>
+<span class="c1"># It will still return a dictionary. In this case, the dictionary will contain only &quot;total_loss&quot;</span>
+<span class="n">loss_histories</span> <span class="o">=</span> <span class="n">hooks</span><span class="o">.</span><span class="n">get_loss_history</span><span class="p">(</span><span class="n">loss_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;total_loss&quot;</span><span class="p">])</span>
+</pre></div>
+
+
+<p>Getting accuracy history</p>
+<div class="codehilite"><pre><span></span><span class="c1"># The first argument is the tester object. The second is the split name.</span>
+<span class="c1"># Get a dictionary containing the keys &quot;epoch&quot; and the primary metric</span>
+<span class="c1"># The values are lists</span>
+<span class="n">acc_histories</span> <span class="o">=</span> <span class="n">hooks</span><span class="o">.</span><span class="n">get_accuracy_history</span><span class="p">(</span><span class="n">tester</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">)</span>
+
+<span class="c1"># Get all accuracy histories</span>
+<span class="n">acc_histories</span> <span class="o">=</span> <span class="n">hooks</span><span class="o">.</span><span class="n">get_accuracy_history</span><span class="p">(</span><span class="n">tester</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">,</span> <span class="n">return_all_metrics</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Get a specific set of accuracy histories</span>
+<span class="n">acc_histories</span> <span class="o">=</span> <span class="n">hooks</span><span class="o">.</span><span class="n">get_accuracy_history</span><span class="p">(</span><span class="n">tester</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;AMI&quot;</span><span class="p">,</span> <span class="s2">&quot;NMI&quot;</span><span class="p">])</span>
+</pre></div>
                 
                   
                 
@@ -560,7 +606,7 @@
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid">
         
-          <a href="../accuracy_calculator/" title="Accuracy Calculation" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../inference_models/" title="Inference Models" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-flex__cell md-flex__cell--shrink">
               <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
             </div>
@@ -569,19 +615,19 @@
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                Accuracy Calculation
+                Inference Models
               </span>
             </div>
           </a>
         
         
-          <a href="../hook_container/" title="Logging Presets" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../losses_dev/" title="Custom losses" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
               <span class="md-flex__ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                Logging Presets
+                Custom losses
               </span>
             </div>
             <div class="md-flex__cell md-flex__cell--shrink">

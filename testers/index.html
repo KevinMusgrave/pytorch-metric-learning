@@ -396,7 +396,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../accuracy_calculator/" title="Accuracy Calculation" class="md-nav__link">
+    <a href="../accuracy_calculation/" title="Accuracy Calculation" class="md-nav__link">
       Accuracy Calculation
     </a>
   </li>
@@ -408,7 +408,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../inference_model/" title="Inference Models" class="md-nav__link">
+    <a href="../inference_models/" title="Inference Models" class="md-nav__link">
       Inference Models
     </a>
   </li>
@@ -420,7 +420,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../hook_container/" title="Logging Presets" class="md-nav__link">
+    <a href="../logging_presets/" title="Logging Presets" class="md-nav__link">
       Logging Presets
     </a>
   </li>
@@ -587,12 +587,12 @@
 <li><strong>end_of_testing_hook</strong>: This is an optional function that has one input argument (the tester object) and performs some action (e.g. logging data) at the end of testing.<ul>
 <li>You'll probably want to access the accuracy metrics, which are stored in <code>tester.all_accuracies</code>. This is a nested dictionary with the following format: <code>tester.all_accuracies[split_name][metric_name] = metric_value</code></li>
 <li>If you set <code>size_of_tsne</code> to be greater than 0, then the T-SNE embeddings will be stored in <code>tester.tsne_embeddings</code> which is a dictionary with the following format: <code>tester.tsne_embeddings[split_name]["tsne_level%d"] = (embeddings, labels)</code>. (Note that <code>"tsne_level%d"</code> refers to the label hierarchy level. If you use the default label hierarchy level, then the string will be <code>"tsne_level0"</code>.)</li>
-<li>If you want ready-to-use hooks, take a look at the <a href="utils.md#logging_presets">logging_presets module</a>.</li>
+<li>If you want ready-to-use hooks, take a look at the <a href="../logging_presets/">logging_presets module</a>.</li>
 </ul>
 </li>
 <li><strong>dataset_labels</strong>: The labels for your dataset. Can be 1-dimensional (1 label per datapoint) or 2-dimensional, where each row represents a datapoint, and the columns are the multiple labels that the datapoint has. Labels can be integers or strings. <strong>This option needs to be specified only if <code>set_min_label_to_zero</code> is True.</strong></li>
 <li><strong>set_min_label_to_zero</strong>: If True, labels will be mapped such that they represent their rank in the label set. For example, if your dataset has labels 5, 10, 12, 13, then at each iteration, these would become 0, 1, 2, 3. You should also set this to True if you want to use string labels. In that case, 'dog', 'cat', 'monkey' would get mapped to 1, 0, 2. If True, you must pass in <code>dataset_labels</code> (see above). The default is False.</li>
-<li><strong>accuracy_calculator</strong>: Optional. An object that extends <a href="utils.md#accuracycalculator">AccuracyCalculator</a>. This will be used to compute the accuracy of your model. By default, AccuracyCalculator is used.</li>
+<li><strong>accuracy_calculator</strong>: Optional. An object that extends <a href="../accuracy_calculation/">AccuracyCalculator</a>. This will be used to compute the accuracy of your model. By default, AccuracyCalculator is used.</li>
 <li><strong>visualizer</strong>: Optional. An object that has implemented the <code>fit_transform</code> method, as done by <a href="https://github.com/lmcinnes/umap">UMAP</a> and many scikit-learn functions. For example, you can set <code>visualizer = umap.UMAP()</code>. The object's <code>fit_transform</code> function should take in a 2D array of embeddings, and reduce the dimensionality, such that calling <code>visualizer.fit_transform(embeddings)</code> results in a 2D array of size (N, 2).</li>
 <li><strong>visualizer_hook</strong>: Optional. This function will be passed the following args. You can do whatever you want in this function, but the reason it exists is to allow you to save a plot of the embeddings etc.<ul>
 <li>visualizer: The visualizer object that you passed in.</li>
@@ -662,7 +662,7 @@
           </a>
         
         
-          <a href="../accuracy_calculator/" title="Accuracy Calculation" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../accuracy_calculation/" title="Accuracy Calculation" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
               <span class="md-flex__ellipsis">
                 <span class="md-footer-nav__direction">

@@ -59,17 +59,6 @@ loss = loss_func(embeddings, labels, hard_pairs)
 ```
 In the above code, the miner finds positive and negative pairs that it thinks are particularly difficult. Note that even though the TripletMarginLoss operates on triplets, it’s still possible to pass in pairs. This is because the library automatically converts pairs to triplets and triplets to pairs, when necessary.
 
-In general, all [loss functions](losses) take in embeddings and labels, with an optional indices_tuple argument (i.e. the output of a miner):
-```python
-# From BaseMetricLossFunction
-def forward(self, embeddings, labels, indices_tuple=None)
-```
-And (almost) all [mining functions](miners) take in embeddings and labels:
-```python
-# From BaseMiner
-def forward(self, embeddings, labels)
-```
-
 Here's what the above examples look like in a typical training loop:
 ```python
 from pytorch_metric_learning import miners, losses

@@ -12,12 +12,13 @@ loss = losses.ArcFaceLoss(margin=30, num_classes=100, embedding_size=128, regula
 ## BaseWeightRegularizer
 Weight regularizers take in a 2-D tensor of weights of size (num_classes, embedding_size).
 ```python
-regularizers.BaseWeightRegularizer(normalize_weights=True)
+regularizers.BaseWeightRegularizer(normalize_weights=True, reducer=None)
 ```
 
 **Parameters**
 
 * **normalize_weights**: If True, weights will be normalized to have a Euclidean norm of 1 before any regularization occurs.
+* **reducer**: A [reducer](reducers.md) object. If None, then the default reducer will be used.
 
 An object of this class can be passed as the ```regularizer``` argument into any class that extends [WeightRegularizerMixin](losses.md#weightregularizermixin).
 

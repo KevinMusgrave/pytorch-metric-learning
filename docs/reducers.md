@@ -1,5 +1,7 @@
 # Reducers
-Reducers specify how to go from many loss values to a single loss value. For example, the [ContrastiveLoss](losses.md#contrastiveloss) computes a loss for every positive and negative pair in a batch. A reducer will take all these per-pair losses, and reduce them to a single value.
+Reducers specify how to go from many loss values to a single loss value. For example, the [ContrastiveLoss](losses.md#contrastiveloss) computes a loss for every positive and negative pair in a batch. A reducer will take all these per-pair losses, and reduce them to a single value. Here's where reducers fit in this library's flow of filters and computations:
+
+```Your Data --> Sampler --> Miner --> Loss --> Reducer --> Final loss value```
 
 Reducers are passed into loss functions like this:
 ```python

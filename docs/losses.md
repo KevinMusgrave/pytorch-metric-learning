@@ -4,18 +4,27 @@ All loss functions are used as follows:
 ```python
 from pytorch_metric_learning import losses
 loss_func = losses.SomeLoss()
-loss = loss_func(embeddings, labels)
+loss = loss_func(embeddings, labels) # in your training for-loop
 ```
 
-Or if you are using a loss in conjunction with a miner:
+Or if you are using a loss in conjunction with a [miner](miners.md):
 
 ```python
 from pytorch_metric_learning import miners, losses
 miner_func = miners.SomeMiner()
 loss_func = losses.SomeLoss()
-miner_output = miner_func(embeddings, labels)
-losses = loss_func(embeddings, labels, miner_output)
+miner_output = miner_func(embeddings, labels) # in your training for-loop
+loss = loss_func(embeddings, labels, miner_output)
 ```
+
+You can also specify how losses get reduced to a single value by using a [reducer](reducers.md):
+```python
+from pytorch_metric_learning import losses, reducers
+reducer = reducers.SomeReducer()
+loss_func = losses.SomeLoss(reducer=reducer)
+loss = loss_func(embeddings, labels) # in your training for-loop
+```
+
 
 ## AngularLoss 
 [Deep Metric Learning with Angular Loss](https://arxiv.org/pdf/1708.01682.pdf)
@@ -64,6 +73,7 @@ losses.BaseMetricLossFunction(normalize_embeddings=True, reducer=None)
 **Parameters**:
 
 * **normalize_embeddings**: If True, embeddings will be normalized to have a Euclidean norm of 1 before the loss is computed.
+* **reducer**: A [reducer](reducers.md) object. If None, then the default reducer will be used.
 
 **Required Implementations**:
 ```python
@@ -251,8 +261,8 @@ losses.MultipleLosses(losses, weights=None)
 ```
 **Parameters**:
 
-* **losses**: A list of initialized loss functions. On the forward call of MultipleLosses, each wrapped loss will be computed, and then the average will be returned.
-* **weights**: Optional. A list of loss weights, which will be multiplied by the corresponding losses obtained by the loss functions. The default is to multiply each loss by 1.
+* **losses**: A list or dictionary of initialized loss functions. On the forward call of MultipleLosses, each wrapped loss will be computed, and then the average will be returned.
+* **weights**: Optional. A list or dictionary of loss weights, which will be multiplied by the corresponding losses obtained by the loss functions. The default is to multiply each loss by 1. If ```losses``` is a list, then ```weights``` must be a list. If ```losses``` is a dictionary, ```weights``` must contain the same keys as ```losses```. 
 
 ## MultiSimilarityLoss
 [Multi-Similarity Loss with General Pair Weighting for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf)

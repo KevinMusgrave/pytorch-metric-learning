@@ -3,11 +3,15 @@ nav:
     - Home: index.md
     - Losses: losses.md
     - Miners: miners.md
+    - Reducers: reducers.md
     - Regularizers: regularizers.md
     - Samplers: samplers.md
     - Trainers: trainers.md
     - Testers: testers.md
-    - Utils: utils.md
+    - Utils: 
+      - Accuracy Calculation: accuracy_calculator.md
+      - Inference Models: inference_model.md
+      - Logging Presets: hook_container.md
 theme:
   name: 'material'
   palette:

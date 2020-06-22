@@ -345,6 +345,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#liftedstructureloss" class="md-nav__link">
+    LiftedStructureLoss
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#marginloss" class="md-nav__link">
     MarginLoss
   </a>
@@ -733,6 +740,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#liftedstructureloss" class="md-nav__link">
+    LiftedStructureLoss
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#marginloss" class="md-nav__link">
     MarginLoss
   </a>
@@ -1030,12 +1044,14 @@
 
 
 <h2 id="generalizedliftedstructureloss">GeneralizedLiftedStructureLoss<a class="headerlink" href="#generalizedliftedstructureloss" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">GeneralizedLiftedStructureLoss</span><span class="p">(</span><span class="n">neg_margin</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<p>This was presented in <a href="https://arxiv.org/pdf/1703.07737.pdf">In Defense of the Triplet Loss for Person Re-Identification</a>. It is a modification of the original <a href="./#liftedstructureloss">LiftedStructureLoss</a></p>
+<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">GeneralizedLiftedStructureLoss</span><span class="p">(</span><span class="n">neg_margin</span><span class="p">,</span> <span class="n">pos_margin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
 
 <p><strong>Parameters</strong>:</p>
 <ul>
+<li><strong>pos_margin</strong>: The margin in the expression <code>e^(positive_distance - margin)</code></li>
 <li><strong>neg_margin</strong>: The margin in the expression <code>e^(margin - negative_distance)</code></li>
 </ul>
 <h2 id="intrapairvarianceloss">IntraPairVarianceLoss<a class="headerlink" href="#intrapairvarianceloss" title="Permanent link">&para;</a></h2>
@@ -1082,6 +1098,17 @@
 </pre></div>
 
 
+<h2 id="liftedstructureloss">LiftedStructureLoss<a class="headerlink" href="#liftedstructureloss" title="Permanent link">&para;</a></h2>
+<p>The original lifted structure loss as presented in <a href="https://arxiv.org/pdf/1511.06452.pdf">Deep Metric Learning via Lifted Structured Feature Embedding</a></p>
+<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">LiftedStructureLoss</span><span class="p">(</span><span class="n">neg_margin</span><span class="p">,</span> <span class="n">pos_margin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</pre></div>
+
+
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>pos_margin</strong>: The margin in the expression <code>positive_distance - margin</code></li>
+<li><strong>neg_margin</strong>: The margin in the expression <code>e^(margin - negative_distance)</code></li>
+</ul>
 <h2 id="marginloss">MarginLoss<a class="headerlink" href="#marginloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1706.07567.pdf">Sampling Matters in Deep Embedding Learning</a></p>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">MarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">triplets_per_anchor</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="n">learn_beta</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">num_classes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>

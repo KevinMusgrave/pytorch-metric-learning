@@ -25,7 +25,7 @@ class TestAngularLoss(unittest.TestCase):
         for c in correct_losses:
             total_loss += torch.log(1+c)
         total_loss /= len(correct_losses)
-        self.assertTrue(torch.isclose(loss, total_loss))
+        self.assertTrue(torch.isclose(loss, total_loss.to(torch.float32)))
 
 
     def test_with_no_valid_triplets(self):

@@ -3,7 +3,7 @@ import torch
 from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
 from pytorch_metric_learning.utils import common_functions as c_f
 from pytorch_metric_learning.losses import CrossBatchMemory, ContrastiveLoss
-from pytorch_metric_learning.miners import PairMarginMiner, TripletMarginMiner
+from pytorch_metric_learning.miners import PairMarginMiner, TripletMarginMiner, MultiSimilarityMiner
 
 class TestCrossBatchMemory(unittest.TestCase):
 
@@ -11,6 +11,54 @@ class TestCrossBatchMemory(unittest.TestCase):
     def setUpClass(self):
         self.embedding_size = 128
         self.memory_size = 321
+
+    def test_loss(self):
+        num_labels = 10
+        num_iter = 10
+        batch_size = 32
+        inner_loss = ContrastiveLoss()
+        inner_miner = MultiSimilarityMiner(0.3)
+        outer_miner = MultiSimilarityMiner(0.2)
+        self.loss = CrossBatchMemory(loss=inner_loss, embedding_size=self.embedding_size, memory_size=self.memory_size)
+        self.loss_with_miner = CrossBatchMemory(loss=inner_loss, miner=inner_miner, embedding_size=self.embedding_size, memory_size=self.memory_size)
+        self.loss_with_miner2 = CrossBatchMemory(loss=inner_loss, miner=inner_miner, embedding_size=self.embedding_size, memory_size=self.memory_size)
+        all_embeddings = torch.FloatTensor([])
+        all_labels = torch.LongTensor([])
+        for i in range(num_iter):
+            embeddings = torch.randn(batch_size, self.embedding_size)
+            labels = torch.randint(0,num_labels,(batch_size,))
+            loss = self.loss(embeddings, labels)
+            loss_with_miner = self.loss_with_miner(embeddings, labels)
+            oa1, op, oa2, on = outer_miner(embeddings, labels)
+            loss_with_miner_and_input_indices = self.loss_with_miner2(embeddings, labels, (oa1, op, oa2, on))
+            all_embeddings = torch.cat([embeddings, all_embeddings])
+            all_labels = torch.cat([labels, all_labels])
+
+            # loss with no inner miner
+            a1,p,a2,n = lmu.get_all_pairs_indices(labels, all_labels)
+            p = p+batch_size
+            n = n+batch_size
+            correct_loss = inner_loss(torch.cat([embeddings, all_embeddings], dim=0), torch.cat([labels, all_labels], dim=0), (a1,p,a2,n))
+            self.assertTrue(torch.isclose(loss, correct_loss))
+
+            # loss with inner miner
+            a1,p,a2,n = inner_miner(embeddings, labels, all_embeddings, all_labels)
+            p = p+batch_size
+            n = n+batch_size
+            correct_loss_with_miner = inner_loss(torch.cat([embeddings, all_embeddings], dim=0), torch.cat([labels, all_labels], dim=0), (a1,p,a2,n))
+            self.assertTrue(torch.isclose(loss_with_miner, correct_loss_with_miner))
+
+            # loss with inner and outer miner
+            a1,p,a2,n = inner_miner(embeddings, labels, all_embeddings, all_labels)
+            p = p+batch_size
+            n = n+batch_size
+            a1 = torch.cat([oa1, a1])
+            p = torch.cat([op, p])
+            a2 = torch.cat([oa2, a2])
+            n = torch.cat([on, n])
+            correct_loss_with_miner_and_input_indice = inner_loss(torch.cat([embeddings, all_embeddings], dim=0), torch.cat([labels, all_labels], dim=0), (a1,p,a2,n))
+            self.assertTrue(torch.isclose(loss_with_miner_and_input_indices, correct_loss_with_miner_and_input_indice))
+
 
     def test_queue(self):
         batch_size = 32

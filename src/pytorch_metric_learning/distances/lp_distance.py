@@ -9,12 +9,12 @@ class LpDistance(BaseDistance):
         self.p = p
         self.power = 1 if power is None else power
 
-    def get_dist_mat(self, query_emb, ref_emb):
-        if self.p == 2:
-            if self.power == 2:
-                return lmu.dist_mat(query_emb, ref_emb, squared=True)
-            else:
-                return lmu.dist_mat(query_emb, ref_emb, squared=False) ** self.power
+    # def get_dist_mat(self, query_emb, ref_emb):
+    #     if self.p == 2:
+    #         if self.power == 2:
+    #             return lmu.dist_mat(query_emb, ref_emb, squared=True)
+    #         else:
+    #             return lmu.dist_mat(query_emb, ref_emb, squared=False) ** self.power
             
     
 

@@ -60,7 +60,7 @@ To use this reducer, the loss function must include ```divisor_summands``` in it
 ## DoNothingReducer
 This returns its input. In other words, no reduction is performed. The output will be the loss dictionary that is passed into it.
 ```python
-reducers.DivisorReducer(**kwargs)
+reducers.DoNothingReducer(**kwargs)
 ```
 
 ## MeanReducer

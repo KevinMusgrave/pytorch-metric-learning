@@ -186,13 +186,15 @@ def _compute_loss(self):
 ```
 
 ## GeneralizedLiftedStructureLoss
+This was presented in [In Defense of the Triplet Loss for Person Re-Identification](https://arxiv.org/pdf/1703.07737.pdf). It is a modification of the original [LiftedStructureLoss](losses.md#liftedstructureloss)
 
 ```python
-losses.GeneralizedLiftedStructureLoss(neg_margin, **kwargs)
+losses.GeneralizedLiftedStructureLoss(neg_margin, pos_margin=0, **kwargs)
 ```
 
 **Parameters**:
 
+* **pos_margin**: The margin in the expression ```e^(positive_distance - margin)```
 * **neg_margin**: The margin in the expression ```e^(margin - negative_distance)```
 
 ## IntraPairVarianceLoss
@@ -238,6 +240,19 @@ loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
 # then during training:
 loss_optimizer.step()
 ```
+
+## LiftedStructureLoss
+The original lifted structure loss as presented in [Deep Metric Learning via Lifted Structured Feature Embedding](https://arxiv.org/pdf/1511.06452.pdf)
+
+```python
+losses.LiftedStructureLoss(neg_margin, pos_margin=0, **kwargs):
+```
+
+**Parameters**:
+
+* **pos_margin**: The margin in the expression ```positive_distance - margin```
+* **neg_margin**: The margin in the expression ```e^(margin - negative_distance)```
+
 
 ## MarginLoss
 [Sampling Matters in Deep Embedding Learning](https://arxiv.org/pdf/1706.07567.pdf)

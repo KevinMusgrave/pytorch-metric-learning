@@ -4,9 +4,9 @@ from ..utils.module_with_records import ModuleWithRecords
 
 
 class BaseDistance(ModuleWithRecords):
-    def __init__(self, small_for_high_similarity=True, **kwargs):
+    def __init__(self, small_values_for_large_similarity=True, **kwargs):
         super().__init__(**kwargs)
-        self.small_for_high_similarity = small_for_high_similarity
+        self.small_values_for_large_similarity = small_values_for_large_similarity
 
     def forward(self, query_emb, ref_emb, indices_tuple=None):
         if self.should_compute_dist_mat(query_emb, ref_emb, indices_tuple):

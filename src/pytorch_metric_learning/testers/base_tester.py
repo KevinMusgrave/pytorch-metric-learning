@@ -192,7 +192,9 @@ class BaseTester:
         if self.reference_set in ["compared_to_self", "compared_to_sets_combined"]:
             return splits_to_eval, splits_to_eval
         if self.reference_set == "compared_to_training_set":
-            return splits_to_eval, list(set(splits_to_eval).add("train"))
+            splits_to_compute_embeddings = set(splits_to_eval)
+            splits_to_compute_embeddings.add('train')
+            return splits_to_eval, list(splits_to_compute_embeddings)
 
     def get_all_embeddings_for_all_splits(self, dataset_dict, trunk_model, embedder_model, splits_to_compute_embeddings, collate_fn):
         embeddings_and_labels = {}

@@ -1,5 +1,11 @@
 from .base_distance import BaseDistance
+import torch
 
 class CosineSimilarity(BaseDistance):
     def __init__(self, **kwargs):
-        super().__init__(small_values_for_large_similarity=True, **kwargs)
+        super().__init__(is_inverted=True, **kwargs)
+
+    def compute_mat(self, query_emb, ref_emb):
+        query_emb = torch.nn.functional.normalize(query_emb, p=2, dim=1)
+        ref_emb = torch.nn.functional.normalize(ref_emb, p=2, dim=1)
+        return torch.matmul(query_emb, ref_emb)

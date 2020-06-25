@@ -1,7 +1,6 @@
 #! /usr/bin/env python3
 
 import torch
-
 from .generic_pair_loss import GenericPairLoss
 from ..utils import loss_and_miner_utils as lmu
 from ..reducers import AvgNonZeroReducer
@@ -13,21 +12,11 @@ class ContrastiveLoss(GenericPairLoss):
     Args:
         pos_margin: The distance (or similarity) over (under) which positive pairs will contribute to the loss.
         neg_margin: The distance (or similarity) under (over) which negative pairs will contribute to the loss.  
-        use_similarity: If True, will use dot product between vectors instead of euclidean distance
-        power: Each pair's loss will be raised to this power.
     """
-    def __init__(
-        self,
-        pos_margin=0,
-        neg_margin=1,
-        use_similarity=False,
-        power=1,
-        **kwargs
-    ):
-        super().__init__(use_similarity=use_similarity, mat_based_loss=False, **kwargs)
+    def __init__(self, pos_margin=0, neg_margin=1, **kwargs):
+        super().__init__(mat_based_loss=False, **kwargs)
         self.pos_margin = pos_margin
         self.neg_margin = neg_margin
-        self.power = power
         
     def _compute_loss(self, pos_pair_dist, neg_pair_dist, indices_tuple):
         pos_loss, neg_loss = 0, 0
@@ -43,22 +32,16 @@ class ContrastiveLoss(GenericPairLoss):
     def get_per_pair_loss(self, pair_dists, pos_or_neg):
         loss_calc_func = self.pos_calc if pos_or_neg == "pos" else self.neg_calc
         margin = self.pos_margin if pos_or_neg == "pos" else self.neg_margin
-        per_pair_loss = loss_calc_func(pair_dists, margin) ** self.power
+        per_pair_loss = loss_calc_func(pair_dists, margin)
         return per_pair_loss
 
     def pos_calc(self, pos_pair_dist, margin):
-        return (
-            torch.nn.functional.relu(margin - pos_pair_dist)
-            if self.use_similarity
-            else torch.nn.functional.relu(pos_pair_dist - margin)
-        )
+        # how much bigger is pos_pair_dist than the margin
+        return torch.nn.functional.relu(self.distance.pos_neg_margin(margin, pos_pair_dist))
 
     def neg_calc(self, neg_pair_dist, margin):
-        return (
-            torch.nn.functional.relu(neg_pair_dist - margin)
-            if self.use_similarity
-            else torch.nn.functional.relu(margin - neg_pair_dist)
-        )
+        # how much bigger is the margin than the neg_pair_dist
+        return torch.nn.functional.relu(self.distance.pos_neg_margin(neg_pair_dist, margin))
 
     def get_default_reducer(self):
         return AvgNonZeroReducer()

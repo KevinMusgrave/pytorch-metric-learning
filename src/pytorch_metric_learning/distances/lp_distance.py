@@ -2,7 +2,7 @@ from .base_distance import BaseDistance
 import torch
 
 class LpDistance(BaseDistance):
-    def __init__(self, p, power=1, **kwargs):
+    def __init__(self, p=2, power=1, **kwargs):
         super().__init__(**kwargs)
         self.p = p
         self.power =  power

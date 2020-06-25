@@ -1,16 +1,22 @@
 import torch
 from .generic_pair_loss import GenericPairLoss
+from ..distances import CosineSimilarity
 
 class NTXentLoss(GenericPairLoss):
 
     def __init__(self, temperature, **kwargs):
-        super().__init__(use_similarity=True, mat_based_loss=False, **kwargs)
+        super().__init__(mat_based_loss=False, **kwargs)
         self.temperature = temperature
 
     def _compute_loss(self, pos_pairs, neg_pairs, indices_tuple):
         a1, p, a2, _ = indices_tuple
 
         if len(a1) > 0 and len(a2) > 0:
+            # if dealing with actual distances, use negative distances
+            if not self.distance.is_inverted:
+                pos_pairs = -pos_pairs
+                neg_pairs = -neg_pairs
+
             pos_pairs = pos_pairs.unsqueeze(1) / self.temperature
             neg_pairs = neg_pairs / self.temperature
             n_per_p = (a2.unsqueeze(0) == a1.unsqueeze(1)).float()
@@ -24,5 +30,6 @@ class NTXentLoss(GenericPairLoss):
             return {"loss": {"losses": -log_exp, "indices": (a1, p), "reduction_type": "pos_pair"}}
         return self.zero_losses()
 
-
+    def get_default_distance(self):
+        return CosineSimilarity()
 

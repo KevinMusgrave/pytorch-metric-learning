@@ -8,4 +8,4 @@ class CosineSimilarity(BaseDistance):
     def compute_mat(self, query_emb, ref_emb):
         query_emb = torch.nn.functional.normalize(query_emb, p=2, dim=1)
         ref_emb = torch.nn.functional.normalize(ref_emb, p=2, dim=1)
-        return torch.matmul(query_emb, ref_emb)
+        return torch.matmul(query_emb, ref_emb.t())

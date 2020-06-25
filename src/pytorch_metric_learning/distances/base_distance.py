@@ -26,7 +26,8 @@ class BaseDistance(ModuleWithRecords):
             return torch.min(*args, **kwargs)
         return torch.max(*args, **kwargs)        
 
-    def triplet_margin(self, pos, neg):
+    # This measures how much bigger the neg distance is compared to the positive distance.
+    def pos_neg_margin(self, pos, neg):
         if self.is_inverted:
             return pos - neg
         return neg - pos

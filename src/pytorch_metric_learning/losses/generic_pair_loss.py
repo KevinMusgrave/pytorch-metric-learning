@@ -15,30 +15,17 @@ class GenericPairLoss(BaseMetricLossFunction):
     or pairs can be passed iteratively (self.loss_loop) by going through each
     sample in a batch, and selecting just the positive and negative pairs
     containing that sample.
-    Args:
-        use_similarity: set to True if the loss function uses pairwise similarity
-                        (dot product of each embedding pair). Otherwise,
-                        euclidean distance will be used
-        iterate_through_loss: set to True to use self.loss_loop and False otherwise
-        squared_distances: if True, then the euclidean distance will be squared.
     """
 
-    def __init__(
-        self, use_similarity, mat_based_loss, squared_distances=False, **kwargs
-    ):
+    def __init__(self, mat_based_loss, **kwargs):
         super().__init__(**kwargs)
-        self.use_similarity = use_similarity
-        self.squared_distances = squared_distances
         self.loss_method = self.mat_based_loss if mat_based_loss else self.pair_based_loss
         
     def compute_loss(self, embeddings, labels, indices_tuple):
         indices_tuple = lmu.convert_to_pairs(indices_tuple, labels)
         if all(len(x) <= 1 for x in indices_tuple):
             return self.zero_losses()
-        mat = lmu.get_pairwise_mat(embeddings, embeddings, self.use_similarity, self.squared_distances)
-        if self.use_similarity and not self.normalize_embeddings:
-            embedding_norms_mat = self.embedding_norms.unsqueeze(0)*self.embedding_norms.unsqueeze(1)
-            mat = mat / (embedding_norms_mat)
+        mat = self.distance(embeddings, embeddings)
         return self.loss_method(mat, labels, indices_tuple)
 
     def _compute_loss(self):

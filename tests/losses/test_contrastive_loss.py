@@ -3,13 +3,14 @@ import torch
 from pytorch_metric_learning.losses import ContrastiveLoss
 from pytorch_metric_learning.utils import common_functions as c_f
 from pytorch_metric_learning.reducers import MeanReducer
+from pytorch_metric_learning.distances import CosineSimilarity, LpDistance
 
 class TestContrastiveLoss(unittest.TestCase):
     def test_contrastive_loss(self):
-        loss_funcA = ContrastiveLoss(pos_margin=0.25, neg_margin=1.5, use_similarity=False, squared_distances=True)
-        loss_funcB = ContrastiveLoss(pos_margin=1.5, neg_margin=0.6, use_similarity=True)
-        loss_funcC = ContrastiveLoss(pos_margin=0.25, neg_margin=1.5, use_similarity=False, squared_distances=True, reducer=MeanReducer())
-        loss_funcD = ContrastiveLoss(pos_margin=1.5, neg_margin=0.6, use_similarity=True, reducer=MeanReducer())
+        loss_funcA = ContrastiveLoss(pos_margin=0.25, neg_margin=1.5, distance=LpDistance(power=2))
+        loss_funcB = ContrastiveLoss(pos_margin=1.5, neg_margin=0.6, distance=CosineSimilarity())
+        loss_funcC = ContrastiveLoss(pos_margin=0.25, neg_margin=1.5, distance=LpDistance(power=2), reducer=MeanReducer())
+        loss_funcD = ContrastiveLoss(pos_margin=1.5, neg_margin=0.6, distance=CosineSimilarity(), reducer=MeanReducer())
 
         embedding_angles = [0, 20, 40, 60, 80]
         embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=torch.float) #2D embeddings
@@ -83,8 +84,8 @@ class TestContrastiveLoss(unittest.TestCase):
 
 
     def test_with_no_valid_pairs(self):
-        loss_funcA = ContrastiveLoss(use_similarity=False)
-        loss_funcB = ContrastiveLoss(use_similarity=True)
+        loss_funcA = ContrastiveLoss()
+        loss_funcB = ContrastiveLoss(distance=CosineSimilarity())
         embedding_angles = [0]
         embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=torch.float) #2D embeddings
         labels = torch.LongTensor([0])

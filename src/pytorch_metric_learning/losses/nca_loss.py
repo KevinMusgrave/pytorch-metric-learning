@@ -3,6 +3,7 @@
 from .base_metric_loss_function import BaseMetricLossFunction
 from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
 import torch
+from ..distances import LpDistance
 
 class NCALoss(BaseMetricLossFunction):
     def __init__(self, softmax_scale=1, **kwargs):
@@ -17,13 +18,18 @@ class NCALoss(BaseMetricLossFunction):
 
     def nca_computation(self, query, reference, query_labels, reference_labels, indices_tuple):
         miner_weights = lmu.convert_to_weights(indices_tuple, query_labels)
-        x = -lmu.dist_mat(query, reference, squared=True)
+        mat = self.distance(query, reference)
+        if not self.distance.is_inverted:
+            mat = -mat
         if query is reference:
             diag_idx = torch.arange(query.size(0))
-            x[diag_idx, diag_idx] = float('-inf')
+            mat[diag_idx, diag_idx] = float('-inf')
         same_labels = (query_labels.unsqueeze(1) == reference_labels.unsqueeze(0)).float()
-        exp = torch.nn.functional.softmax(self.softmax_scale*x, dim=1)
+        exp = torch.nn.functional.softmax(self.softmax_scale*mat, dim=1)
         exp = torch.sum(exp * same_labels, dim=1)
         non_zero = exp!=0
         loss = -torch.log(exp[non_zero])*miner_weights[non_zero]
         return {"loss": {"losses": loss, "indices": c_f.torch_arange_from_size(query)[non_zero], "reduction_type": "element"}}
+
+    def get_default_distance(self):
+        return LpDistance(power=2)

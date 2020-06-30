@@ -1,12 +1,14 @@
 import torch
 from .base_metric_loss_function import BaseMetricLossFunction
 from ..utils import loss_and_miner_utils as lmu
+from ..distances import LpDistance
 
 class FastAPLoss(BaseMetricLossFunction):
     def __init__(self, num_bins, **kwargs):
         super().__init__(**kwargs)
         self.num_bins = int(num_bins)
         self.num_edges = self.num_bins + 1
+        assert isinstance(self.distance, LpDistance), "FastAPLoss requires the distance metric to be LpDistance"
 
     """
     Adapted from https://github.com/kunhe/FastAP-metric-learning
@@ -23,7 +25,7 @@ class FastAPLoss(BaseMetricLossFunction):
         safe_N = (N_pos > 0)
         if torch.sum(safe_N) == 0:
             return self.zero_losses()
-        dist_mat = lmu.dist_mat(embeddings, squared=True)
+        dist_mat = self.distance(embeddings)
 
         histogram_max = 4. if self.normalize_embeddings else torch.max(dist_mat).item()
         histogram_delta = histogram_max / self.num_bins
@@ -46,4 +48,6 @@ class FastAPLoss(BaseMetricLossFunction):
             return {"loss": {"losses": FastAP, "indices": safe_N.nonzero().squeeze(), "reduction_type": "element"}}
         return self.zero_losses()
         
+    def get_default_distance(self):
+        return LpDistance(power=2)
 

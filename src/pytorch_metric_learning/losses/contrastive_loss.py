@@ -36,11 +36,9 @@ class ContrastiveLoss(GenericPairLoss):
         return per_pair_loss
 
     def pos_calc(self, pos_pair_dist, margin):
-        # how much bigger is pos_pair_dist than the margin
         return torch.nn.functional.relu(self.distance.pos_neg_margin(margin, pos_pair_dist))
 
     def neg_calc(self, neg_pair_dist, margin):
-        # how much bigger is the margin than the neg_pair_dist
         return torch.nn.functional.relu(self.distance.pos_neg_margin(neg_pair_dist, margin))
 
     def get_default_reducer(self):

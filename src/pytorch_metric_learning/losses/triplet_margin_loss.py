@@ -35,7 +35,7 @@ class TripletMarginLoss(BaseMetricLossFunction):
         anchor_idx, positive_idx, negative_idx = indices_tuple
         if len(anchor_idx) == 0:
             return self.zero_losses()
-        mat = self.distance(embeddings, embeddings)
+        mat = self.distance(embeddings)
         ap_dists = mat[anchor_idx, positive_idx]
         an_dists = mat[anchor_idx, negative_idx]
         if self.swap:

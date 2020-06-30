@@ -199,8 +199,8 @@ import numpy as np
 from pytorch_metric_learning.losses import FastAPLoss
 from pytorch_metric_learning.utils import common_functions as c_f
 
-class TestCosFaceLoss(unittest.TestCase):
-    def test_cosface_loss(self):
+class TestFastAPLoss(unittest.TestCase):
+    def test_fastap_loss(self):
         num_bins = 5
         loss_func = FastAPLoss(num_bins)
         original_loss_func = OriginalImplementationFastAPLoss(num_bins)

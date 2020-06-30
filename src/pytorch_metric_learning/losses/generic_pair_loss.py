@@ -7,16 +7,6 @@ from .base_metric_loss_function import BaseMetricLossFunction
 
 
 class GenericPairLoss(BaseMetricLossFunction):
-    """
-    The function pair_based_loss has to be implemented by the child class.
-    By default, this class extracts every positive and negative pair within a
-    batch (based on labels) and passes the pairs to the loss function.
-    The pairs can be passed to the loss function all at once (self.loss_once)
-    or pairs can be passed iteratively (self.loss_loop) by going through each
-    sample in a batch, and selecting just the positive and negative pairs
-    containing that sample.
-    """
-
     def __init__(self, mat_based_loss, **kwargs):
         super().__init__(**kwargs)
         self.loss_method = self.mat_based_loss if mat_based_loss else self.pair_based_loss
@@ -25,7 +15,7 @@ class GenericPairLoss(BaseMetricLossFunction):
         indices_tuple = lmu.convert_to_pairs(indices_tuple, labels)
         if all(len(x) <= 1 for x in indices_tuple):
             return self.zero_losses()
-        mat = self.distance(embeddings, embeddings)
+        mat = self.distance(embeddings)
         return self.loss_method(mat, labels, indices_tuple)
 
     def _compute_loss(self):

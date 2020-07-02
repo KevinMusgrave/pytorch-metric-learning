@@ -38,7 +38,7 @@ class TestCrossBatchMemory(unittest.TestCase):
 
     def test_shift_indices_tuple(self):
         batch_size = 32
-        pair_miner = PairMarginMiner(pos_margin=0, neg_margin=1, use_similarity=False)
+        pair_miner = PairMarginMiner(pos_margin=0, neg_margin=1)
         triplet_miner = TripletMarginMiner(margin=1)
         self.loss = CrossBatchMemory(loss=ContrastiveLoss(), embedding_size=self.embedding_size, memory_size=self.memory_size)
         for i in range(30):
@@ -79,7 +79,7 @@ class TestCrossBatchMemory(unittest.TestCase):
 
     def test_input_indices_tuple(self):
         batch_size = 32
-        pair_miner = PairMarginMiner(pos_margin=0, neg_margin=1, use_similarity=False)
+        pair_miner = PairMarginMiner(pos_margin=0, neg_margin=1)
         triplet_miner = TripletMarginMiner(margin=1)
         self.loss = CrossBatchMemory(loss=ContrastiveLoss(), embedding_size=self.embedding_size, memory_size=self.memory_size)
         for i in range(30):

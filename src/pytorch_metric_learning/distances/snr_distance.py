@@ -3,6 +3,10 @@ import torch
 
 # Signal to Noise Ratio
 class SNRDistance(BaseDistance):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        assert not self.is_inverted
+
     def compute_mat(self, query_emb, ref_emb):
         anchor_variances = torch.var(query_emb, dim=1)
         pairwise_diffs = query_emb.unsqueeze(1) - ref_emb

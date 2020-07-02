@@ -38,11 +38,11 @@ class TripletMarginMiner(BaseTupleMiner):
         triplet_margin[torch.abs(triplet_margin) < self.tol] = 0
 
         if self.type_of_triplets == "easy":
-            threshold_condition = self.distance.x_less_similar_than_y(triplet_margin, self.margin, or_equal=False)
+            threshold_condition = self.distance.x_greater_than_y(triplet_margin, self.margin, or_equal=False)
         else:
-            threshold_condition = self.distance.x_more_similar_than_y(triplet_margin, self.margin, or_equal=True)
+            threshold_condition = self.distance.x_less_than_y(triplet_margin, self.margin, or_equal=True)
             if self.type_of_triplets == "hard":
-                threshold_condition &= self.distance.x_more_similar_than_y(triplet_margin, 0, or_equal=True)
+                threshold_condition &= self.distance.x_less_than_y(triplet_margin, 0, or_equal=True)
             elif self.type_of_triplets == "semihard":
-                threshold_condition &= self.distance.x_less_similar_than_y(triplet_margin, 0, or_equal=False)
+                threshold_condition &= self.distance.x_greater_than_y(triplet_margin, 0, or_equal=False)
         return anchor_idx[threshold_condition], positive_idx[threshold_condition], negative_idx[threshold_condition]

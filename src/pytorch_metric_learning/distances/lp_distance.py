@@ -6,6 +6,7 @@ class LpDistance(BaseDistance):
         super().__init__(**kwargs)
         self.p = p
         self.power =  power
+        assert not self.is_inverted
 
     def compute_mat(self, query_emb, ref_emb):
         mat = torch.cdist(query_emb, ref_emb, p=self.p)

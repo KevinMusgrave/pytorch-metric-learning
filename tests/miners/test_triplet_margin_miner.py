@@ -9,6 +9,7 @@ class TestTripletMarginMiner(unittest.TestCase):
         embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=torch.float) #2D embeddings
         labels = torch.randint(low=0, high=2, size=(16,))
         triplets = []
+        tolerance = 1e-5
         for i in range(len(embeddings)):
             anchor, anchor_label = embeddings[i], labels[i]
             for j in range(len(embeddings)):
@@ -25,12 +26,16 @@ class TestTripletMarginMiner(unittest.TestCase):
                             an_dist = torch.nn.functional.pairwise_distance(anchor.unsqueeze(0), negative.unsqueeze(0), 2)
                             triplets.append((i,j,k,an_dist - ap_dist))
         
+        for iii, (i,j,k,distance_diff) in enumerate(triplets):
+            if torch.abs(distance_diff) < tolerance:
+                triplets[iii] = (i,j,k,0)
+
         for margin_int in range(-1, 11):
             margin = float(margin_int) * 0.05
-            minerA = TripletMarginMiner(margin, type_of_triplets="all")
-            minerB = TripletMarginMiner(margin, type_of_triplets="hard")
-            minerC = TripletMarginMiner(margin, type_of_triplets="semihard")
-            minerD = TripletMarginMiner(margin, type_of_triplets="easy")
+            minerA = TripletMarginMiner(margin, type_of_triplets="all", tol=tolerance)
+            minerB = TripletMarginMiner(margin, type_of_triplets="hard", tol=tolerance)
+            minerC = TripletMarginMiner(margin, type_of_triplets="semihard", tol=tolerance)
+            minerD = TripletMarginMiner(margin, type_of_triplets="easy", tol=tolerance)
 
             correctA, correctB, correctC, correctD = [], [], [], []
             for i,j,k,distance_diff in triplets:
@@ -43,7 +48,7 @@ class TestTripletMarginMiner(unittest.TestCase):
                     if distance_diff <= 0:
                         correctB.append((i,j,k))
 
-            for correct, miner in [(correctA, minerA),(correctC, minerC),(correctB, minerB),(correctD, minerD)]:
+            for correct, miner in [(correctA, minerA),(correctB, minerB),(correctC, minerC),(correctD, minerD)]:
                 correct_triplets = set(correct)
                 a1, p1, n1 = miner(embeddings, labels)
                 mined_triplets = set([(a.item(),p.item(),n.item()) for a,p,n in zip(a1,p1,n1)])

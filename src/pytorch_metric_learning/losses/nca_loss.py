@@ -22,8 +22,7 @@ class NCALoss(BaseMetricLossFunction):
         if not self.distance.is_inverted:
             mat = -mat
         if query is reference:
-            diag_idx = torch.arange(query.size(0))
-            mat[diag_idx, diag_idx] = float('-inf')
+            mat.fill_diagonal_(float('-inf'))
         same_labels = (query_labels.unsqueeze(1) == reference_labels.unsqueeze(0)).float()
         exp = torch.nn.functional.softmax(self.softmax_scale*mat, dim=1)
         exp = torch.sum(exp * same_labels, dim=1)

@@ -42,6 +42,8 @@ class TestInference(unittest.TestCase):
         self.assertTrue(inference_model.indexer.index.is_trained)
 
         indices, distances = inference_model.get_nearest_neighbors([train_vectors[0]], k=10)
+        # The closest image is the query itself
+        self.assertTrue(indices[0][0] == 0)
         self.assertTrue(len(indices) == 1)
         self.assertTrue(len(distances) == 1)
         self.assertTrue(len(indices[0]) == 10)

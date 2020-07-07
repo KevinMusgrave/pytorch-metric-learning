@@ -46,7 +46,7 @@ pip install pytorch-metric-learning
 
 **To get the latest dev version**:
 ```
-pip install pytorch-metric-learning==0.9.88
+pip install pytorch-metric-learning==0.9.89.dev1
 ```
 
 **To install on Windows**:

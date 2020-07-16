@@ -75,7 +75,7 @@ def get_all_pairs_indices(labels, ref_labels=None):
     matches = (labels1 == labels2).byte()
     diffs = matches ^ 1
     if ref_labels is labels:
-        matches -= torch.eye(matches.size(0)).byte().to(labels.device)
+        matches.fill_diagonal_(0)
     a1_idx = matches.nonzero()[:, 0].flatten()
     p_idx = matches.nonzero()[:, 1].flatten()
     a2_idx = diffs.nonzero()[:, 0].flatten()
@@ -122,7 +122,7 @@ def get_all_triplets_indices(labels, ref_labels=None):
     matches = (labels1 == labels2).byte()
     diffs = matches ^ 1
     if ref_labels is labels:
-        matches -= torch.eye(matches.size(0)).byte().to(labels.device)
+        matches.fill_diagonal_(0)
     triplets = matches.unsqueeze(2)*diffs.unsqueeze(1)
     a_idx = triplets.nonzero()[:, 0].flatten()
     p_idx = triplets.nonzero()[:, 1].flatten()

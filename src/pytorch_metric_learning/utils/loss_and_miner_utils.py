@@ -134,14 +134,19 @@ def get_all_triplets_indices(labels, ref_labels=None):
 # sample triplets, with a weighted distribution if weights is specified.
 def get_random_triplet_indices(labels, ref_labels=None, t_per_anchor=None, weights=None):
     a_idx, p_idx, n_idx = [], [], []
+    labels_device = labels.device
+    ref_labels = labels if ref_labels is None else ref_labels
+    ref_labels_is_labels = ref_labels is labels
     labels = labels.cpu().numpy()
-    ref_labels = labels if ref_labels is None else ref_labels.cpu().numpy()
+    ref_labels = ref_labels.cpu().numpy()
     batch_size = ref_labels.shape[0]
-    label_count = dict(zip(*np.unique(ref_labels, return_counts=True)))
     indices = np.arange(batch_size)
     for i, label in enumerate(labels):
-        curr_label_count = label_count[label]
-        if ref_labels is labels: curr_label_count -= 1
+        all_pos_pair_mask = ref_labels == label
+        if ref_labels_is_labels:
+            all_pos_pair_mask &= indices != i
+        all_pos_pair_idx = np.where(all_pos_pair_mask)[0]
+        curr_label_count = len(all_pos_pair_idx)
         if curr_label_count == 0:
             continue
         k = curr_label_count if t_per_anchor is None else t_per_anchor
@@ -153,14 +158,13 @@ def get_random_triplet_indices(labels, ref_labels=None, t_per_anchor=None, weigh
             n_idx += c_f.NUMPY_RANDOM.choice(possible_n_idx, k).tolist()
 
         a_idx.extend([i] * k)
-        curr_p_idx = c_f.safe_random_choice(np.where((ref_labels == label) & (indices != i))[0], k)
+        curr_p_idx = c_f.safe_random_choice(all_pos_pair_idx, k)
         p_idx.extend(curr_p_idx.tolist())
 
-    return (
-        torch.LongTensor(a_idx),
-        torch.LongTensor(p_idx),
-        torch.LongTensor(n_idx),
-    )
+    a_idx = torch.LongTensor(a_idx).to(labels_device)
+    p_idx = torch.LongTensor(p_idx).to(labels_device)
+    n_idx = torch.LongTensor(n_idx).to(labels_device)
+    return a_idx, p_idx, n_idx
 
 
 def repeat_to_match_size(smaller_set, larger_size, smaller_size):

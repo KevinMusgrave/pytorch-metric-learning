@@ -17,16 +17,15 @@ class DistanceWeightedMiner(BaseTupleMiner):
         d = embeddings.size(1)
         dist_mat = lmu.dist_mat(embeddings, ref_emb)
         
-        if embeddings is ref_emb:
-            # so that we don't get log(0). We mask the diagonal out later anyway
-            dist_mat = dist_mat + torch.eye(dist_mat.size(0)).to(embeddings.device)  
         # Cut off to avoid high variance.
         dist_mat = torch.max(dist_mat, torch.tensor(self.cutoff).to(dist_mat.device))
 
         # Subtract max(log(distance)) for stability.
         # See the first equation from Section 4 of the paper
         log_weights = (2.0 - float(d)) * torch.log(dist_mat) - (float(d - 3) / 2) * torch.log(1.0 - 0.25 * (dist_mat ** 2.0))
-        weights = torch.exp(log_weights - torch.max(log_weights))
+
+        inf_or_nan = torch.isinf(log_weights) | torch.isnan(log_weights)
+        weights = torch.exp(log_weights - torch.max(log_weights[~inf_or_nan]))
 
         # Sample only negative examples by setting weights of
         # the same-class examples to 0.
@@ -35,7 +34,8 @@ class DistanceWeightedMiner(BaseTupleMiner):
         mask[same_class] = 0
 
         weights = weights * mask * ((dist_mat < self.nonzero_loss_cutoff).float())
+        weights[inf_or_nan] = 0
         weights = weights / torch.sum(weights, dim=1, keepdim=True)
 
         np_weights = weights.cpu().numpy()
-        return lmu.get_random_triplet_indices(labels, weights=np_weights)
+        return lmu.get_random_triplet_indices(labels, ref_labels=ref_labels, weights=np_weights)

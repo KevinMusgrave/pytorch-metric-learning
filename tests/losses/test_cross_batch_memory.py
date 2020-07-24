@@ -3,7 +3,7 @@ import torch
 from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
 from pytorch_metric_learning.utils import common_functions as c_f
 from pytorch_metric_learning.losses import CrossBatchMemory, ContrastiveLoss, NTXentLoss
-from pytorch_metric_learning.miners import PairMarginMiner, TripletMarginMiner, MultiSimilarityMiner
+from pytorch_metric_learning.miners import PairMarginMiner, TripletMarginMiner, MultiSimilarityMiner, DistanceWeightedMiner
 
 class TestCrossBatchMemory(unittest.TestCase):
 
@@ -84,6 +84,20 @@ class TestCrossBatchMemory(unittest.TestCase):
                 inner_loss_val = inner_loss(embeddings, labels, triplets)
                 loss_val = loss_with_miner(embeddings, labels)
                 self.assertTrue(torch.isclose(inner_loss_val, loss_val))
+
+
+    def test_with_distance_weighted_miner(self):
+        memory_size = 256
+        inner_loss = NTXentLoss(temperature=0.1)
+        inner_miner = DistanceWeightedMiner(cutoff=0.5, nonzero_loss_cutoff=1.4)
+        loss_with_miner = CrossBatchMemory(loss=inner_loss, embedding_size=2, memory_size=memory_size, miner=inner_miner)
+        for i in range(20):
+            embedding_angles = torch.arange(0, 32)
+            embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=torch.float).to(self.device) #2D embeddings
+            labels = torch.randint(low=0, high=10, size=(32,)).to(self.device)
+            loss_val = loss_with_miner(embeddings, labels)
+            loss_val.backward()
+            self.assertTrue(True) # just check if we got here without an exception
 
 
     def test_loss(self):

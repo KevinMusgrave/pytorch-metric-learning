@@ -624,7 +624,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../losses_dev/" title="Custom losses" class="md-nav__link">
+    <a href="../extend/losses/" title="Custom losses" class="md-nav__link">
       Custom losses
     </a>
   </li>
@@ -897,13 +897,17 @@
 
 <h2 id="angularloss">AngularLoss<a class="headerlink" href="#angularloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1708.01682.pdf">Deep Metric Learning with Angular Loss</a></p>
-<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">AngularLoss</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">AngularLoss</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
 
 
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>alpha</strong>: The angle (as described in the paper), specified in degrees.</li>
+</ul>
+<p><strong>Reducer input</strong>:</p>
+<ul>
+<li><strong>loss</strong>: The loss for every <code>a1</code>, where <code>(a1,p)</code> represents every positive pair in the batch. Reduction type is <code>"element"</code>.</li>
 </ul>
 <h2 id="arcfaceloss">ArcFaceLoss<a class="headerlink" href="#arcfaceloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1801.07698.pdf">ArcFace: Additive Angular Margin Loss for Deep Face Recognition</a></p>
@@ -923,13 +927,18 @@
 <li>This also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts a <code>regularizer</code> and <code>reg_weight</code> as optional init arguments.</li>
 <li>This loss <strong>requires an optimizer</strong>. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:</li>
 </ul>
-<div class="codehilite"><pre><span></span><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">ArcFaceLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">ArcFaceLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span><span class="p">))</span>
 <span class="n">loss_optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">SGD</span><span class="p">(</span><span class="n">loss_func</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
 <span class="c1"># then during training:</span>
 <span class="n">loss_optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
 </pre></div>
 
 
+<p><strong>Reducer input</strong>:</p>
+<ul>
+<li><strong>loss</strong>: The loss per element in the batch. Reduction type is <code>"element"</code>.</li>
+<li><strong>reg_loss</strong>: The weight regularization loss, if any. Reduction type is <code>"already_reduced"</code>.</li>
+</ul>
 <h2 id="basemetriclossfunction">BaseMetricLossFunction<a class="headerlink" href="#basemetriclossfunction" title="Permanent link">&para;</a></h2>
 <p>All loss functions extend this class and therefore inherit its <code>__init__</code> parameters.</p>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">BaseMetricLossFunction</span><span class="p">(</span><span class="n">normalize_embeddings</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">reducer</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
@@ -959,6 +968,10 @@
 <li><strong>gamma</strong>: The scale factor that determines the largest scale of each similarity score.</li>
 <li><strong>triplets_per_anchor</strong>: The number of triplets per element to sample within a batch. Can be an integer or the string "all". For example, if your batch size is 128, and triplets_per_anchor is 100, then 12800 triplets will be sampled. If triplets_per_anchor is "all", then all possible triplets in the batch will be used.</li>
 </ul>
+<p><strong>Reducer input</strong>:</p>
+<ul>
+<li><strong>loss</strong>: The loss per element in the batch. Reduction type is <code>"element"</code>.</li>
+</ul>
 <h2 id="contrastiveloss">ContrastiveLoss<a class="headerlink" href="#contrastiveloss" title="Permanent link">&para;</a></h2>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">ContrastiveLoss</span><span class="p">(</span><span class="n">pos_margin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> 
                     <span class="n">neg_margin</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
@@ -976,6 +989,11 @@
 <li><strong>power</strong>: Each pair's loss will be raised to this power.</li>
 </ul>
 <p>Note that the default values for <code>pos_margin</code> and <code>neg_margin</code> are suitable if <code>use_similarity = False</code>. If you set <code>use_similarity = True</code>, then more appropriate values would be <code>pos_margin = 1</code> and <code>neg_margin = 0</code>.</p>
+<p><strong>Reducer input</strong>:</p>
+<ul>
+<li><strong>pos_loss</strong>: The loss per positive pair in the batch. Reduction type is <code>"pos_pair"</code>.</li>
+<li><strong>neg_loss</strong>: The loss per negative pair in the batch. Reduction type is <code>"neg_pair"</code>.</li>
+</ul>
 <h2 id="cosfaceloss">CosFaceLoss<a class="headerlink" href="#cosfaceloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1801.09414.pdf">CosFace: Large Margin Cosine Loss for Deep Face Recognition</a></p>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">CosFaceLoss</span><span class="p">(</span><span class="n">margin</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -994,13 +1012,18 @@
 <li>This also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts a <code>regularizer</code> and <code>reg_weight</code> as optional init arguments.</li>
 <li>This loss <strong>requires an optimizer</strong>. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:</li>
 </ul>
-<div class="codehilite"><pre><span></span><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">CosFaceLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">CosFaceLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span><span class="p">))</span>
 <span class="n">loss_optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">SGD</span><span class="p">(</span><span class="n">loss_func</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
 <span class="c1"># then during training:</span>
 <span class="n">loss_optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
 </pre></div>
 
 
+<p><strong>Reducer input</strong>:</p>
+<ul>
+<li><strong>loss</strong>: The loss per element in the batch. Reduction type is <code>"element"</code>.</li>
+<li><strong>reg_loss</strong>: The weight regularization loss, if any. Reduction type is <code>"already_reduced"</code>.</li>
+</ul>
 <h2 id="crossbatchmemory">CrossBatchMemory<a class="headerlink" href="#crossbatchmemory" title="Permanent link">&para;</a></h2>
 <p>This wraps a loss function, and implements <a href="https://arxiv.org/pdf/1912.06798.pdf">Cross-Batch Memory for Embedding Learning</a>. It stores embeddings from previous iterations in a queue, and uses them to form more pairs/triplets with the current iteration's embeddings.</p>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">CrossBatchMemory</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">memory_size</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">miner</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
@@ -1024,6 +1047,10 @@
 <ul>
 <li><strong>num_bins</strong>: The number of soft histogram bins for calculating average precision</li>
 </ul>
+<p><strong>Reducer input</strong>:</p>
+<ul>
+<li><strong>loss</strong>: The loss per element that has at least 1 positive in the batch. Reduction type is <code>"element"</code>.</li>
+</ul>
 <h2 id="genericpairloss">GenericPairLoss<a class="headerlink" href="#genericpairloss" title="Permanent link">&para;</a></h2>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">GenericPairLoss</span><span class="p">(</span><span class="n">use_similarity</span><span class="p">,</span> <span class="n">mat_based_loss</span><span class="p">,</span> <span class="n">squared_distances</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </pre></div>
@@ -1036,8 +1063,8 @@
 <li><strong>squared_distances</strong>: If True, then the euclidean distance will be squared.</li>
 </ul>
 <p><strong>Required Implementations</strong>:</p>
-<div class="codehilite"><pre><span></span><span class="c1"># If mat_based_loss is True, then this takes in mat, pos_mask, and neg_mask</span>
-<span class="c1"># If False, this takes in pos_pairs and neg_pairs</span>
+<div class="codehilite"><pre><span></span><span class="c1"># If mat_based_loss is True, then this takes in mat, pos_mask, neg_mask</span>
+<span class="c1"># If False, this takes in pos_pair, neg_pair, indices_tuple</span>
 <span class="k">def</span> <span class="nf">_compute_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
     <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 </pre></div>
@@ -1053,6 +1080,10 @@
 <ul>
 <li><strong>pos_margin</strong>: The margin in the expression <code>e^(positive_distance - margin)</code></li>
 <li><strong>neg_margin</strong>: The margin in the expression <code>e^(margin - negative_distance)</code></li>
+</ul>
+<p><strong>Reducer input</strong>:</p>
+<ul>
+<li><strong>loss</strong>: The loss per element in the batch. Reduction type is <code>"element"</code>.</li>
 </ul>
 <h2 id="intrapairvarianceloss">IntraPairVarianceLoss<a class="headerlink" href="#intrapairvarianceloss" title="Permanent link">&para;</a></h2>
 <p><a href="http://openaccess.thecvf.com/content_ICCV_2019/papers/Yu_Deep_Metric_Learning_With_Tuplet_Margin_Loss_ICCV_2019_paper.pdf">Deep Metric Learning with Tuplet Margin Loss</a></p>
@@ -1072,6 +1103,11 @@
 </pre></div>
 
 
+<p><strong>Reducer input</strong>:</p>
+<ul>
+<li><strong>pos_loss</strong>: The loss per positive pair in the batch. Reduction type is <code>"pos_pair"</code>.</li>
+<li><strong>neg_loss</strong>: The loss per negative pair in the batch. Reduction type is <code>"neg_pair"</code>.</li>
+</ul>
 <h2 id="largemarginsoftmaxloss">LargeMarginSoftmaxLoss<a class="headerlink" href="#largemarginsoftmaxloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1612.02295.pdf">Large-Margin Softmax Loss for Convolutional Neural Networks</a></p>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">LargeMarginSoftmaxLoss</span><span class="p">(</span><span class="n">margin</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">normalize_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -1091,13 +1127,18 @@
 <li>This also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts a <code>regularizer</code> and <code>reg_weight</code> as optional init arguments.</li>
 <li>This loss <strong>requires an optimizer</strong>. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:</li>
 </ul>
-<div class="codehilite"><pre><span></span><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">LargeMarginSoftmaxLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">LargeMarginSoftmaxLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span><span class="p">))</span>
 <span class="n">loss_optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">SGD</span><span class="p">(</span><span class="n">loss_func</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
 <span class="c1"># then during training:</span>
 <span class="n">loss_optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
 </pre></div>
 
 
+<p><strong>Reducer input</strong>:</p>
+<ul>
+<li><strong>loss</strong>: The loss per element in the batch. Reduction type is <code>"element"</code>.</li>
+<li><strong>reg_loss</strong>: The weight regularization loss, if any. Reduction type is <code>"already_reduced"</code>.</li>
+</ul>
 <h2 id="liftedstructureloss">LiftedStructureLoss<a class="headerlink" href="#liftedstructureloss" title="Permanent link">&para;</a></h2>
 <p>The original lifted structure loss as presented in <a href="https://arxiv.org/pdf/1511.06452.pdf">Deep Metric Learning via Lifted Structured Feature Embedding</a></p>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">LiftedStructureLoss</span><span class="p">(</span><span class="n">neg_margin</span><span class="p">,</span> <span class="n">pos_margin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -1108,6 +1149,10 @@
 <ul>
 <li><strong>pos_margin</strong>: The margin in the expression <code>positive_distance - margin</code></li>
 <li><strong>neg_margin</strong>: The margin in the expression <code>e^(margin - negative_distance)</code></li>
+</ul>
+<p><strong>Reducer input</strong>:</p>
+<ul>
+<li><strong>loss</strong>: The loss per positive pair in the batch. Reduction type is <code>"pos_pair"</code>.</li>
 </ul>
 <h2 id="marginloss">MarginLoss<a class="headerlink" href="#marginloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1706.07567.pdf">Sampling Matters in Deep Embedding Learning</a></p>
@@ -1123,6 +1168,11 @@
 <li><strong>triplets_per_anchor</strong>: The number of triplets per element to sample within a batch. Can be an integer or the string "all". For example, if your batch size is 128, and triplets_per_anchor is 100, then 12800 triplets will be sampled. If triplets_per_anchor is "all", then all possible triplets in the batch will be used.</li>
 <li><strong>learn_beta</strong>: If True, beta will be a torch.nn.Parameter, which can be optimized using any PyTorch optimizer.</li>
 <li><strong>num_classes</strong>: If not None, then beta will be of size <code>num_classes</code>, so that a separate beta is used for each class during training.</li>
+</ul>
+<p><strong>Reducer input</strong>:</p>
+<ul>
+<li><strong>margin_loss</strong>: The loss per triplet in the batch. Reduction type is <code>"triplet"</code>.</li>
+<li><strong>beta_reg_loss</strong>: The regularization loss per element in <code>self.beta</code>. Reduction type is <code>"already_reduced"</code> if <code>self.num_classes = None</code>. Otherwise it is <code>"element"</code>.</li>
 </ul>
 <h2 id="multiplelosses">MultipleLosses<a class="headerlink" href="#multiplelosses" title="Permanent link">&para;</a></h2>
 <p>This is a simple wrapper for multiple losses. Pass in a list of already-initialized loss functions. Then, when you call forward on this object, it will return the sum of all wrapped losses.</p>
@@ -1147,6 +1197,10 @@
 <li><strong>beta</strong>: The weight applied to negative pairs.</li>
 <li><strong>base</strong>: The offset applied to the exponent in the loss.</li>
 </ul>
+<p><strong>Reducer input</strong>:</p>
+<ul>
+<li><strong>loss</strong>: The loss per element in the batch. Reduction type is <code>"element"</code>.</li>
+</ul>
 <h2 id="ncaloss">NCALoss<a class="headerlink" href="#ncaloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://www.cs.toronto.edu/~hinton/absps/nca.pdf">Neighbourhood Components Analysis</a></p>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">NCALoss</span><span class="p">(</span><span class="n">softmax_scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -1156,6 +1210,10 @@
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>softmax_scale</strong>: The exponent multiplier in the loss's softmax expression. (This is the inverse of the softmax temperature.)</li>
+</ul>
+<p><strong>Reducer input</strong>:</p>
+<ul>
+<li><strong>loss</strong>: The loss per element in the batch, that results in a non zero exponent in the cross entropy expression. Reduction type is <code>"element"</code>.</li>
 </ul>
 <h2 id="normalizedsoftmaxloss">NormalizedSoftmaxLoss<a class="headerlink" href="#normalizedsoftmaxloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1811.12649.pdf">Classification is a Strong Baseline for Deep Metric Learning</a></p>
@@ -1174,13 +1232,18 @@
 <li>This also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts a <code>regularizer</code> and <code>reg_weight</code> as optional init arguments.</li>
 <li>This loss <strong>requires an optimizer</strong>. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:</li>
 </ul>
-<div class="codehilite"><pre><span></span><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">NormalizedSoftmaxLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">NormalizedSoftmaxLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span><span class="p">))</span>
 <span class="n">loss_optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">SGD</span><span class="p">(</span><span class="n">loss_func</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
 <span class="c1"># then during training:</span>
 <span class="n">loss_optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
 </pre></div>
 
 
+<p><strong>Reducer input</strong>:</p>
+<ul>
+<li><strong>loss</strong>: The loss per element in the batch. Reduction type is <code>"element"</code>.</li>
+<li><strong>reg_loss</strong>: The weight regularization loss, if any. Reduction type is <code>"already_reduced"</code>.</li>
+</ul>
 <h2 id="npairsloss">NPairsLoss<a class="headerlink" href="#npairsloss" title="Permanent link">&para;</a></h2>
 <p><a href="http://www.nec-labs.com/uploads/images/Department-Images/MediaAnalytics/papers/nips16_npairmetriclearning.pdf">Improved Deep Metric Learning with Multi-class N-pair Loss Objective</a></p>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">NPairsLoss</span><span class="p">(</span><span class="n">l2_reg_weight</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -1191,6 +1254,11 @@
 <ul>
 <li><strong>l2_reg_weight</strong>: The regularization weight for the L2 norm of the embeddings.</li>
 </ul>
+<p><strong>Reducer input</strong>:</p>
+<ul>
+<li><strong>loss</strong>: The loss per element in the batch. Reduction type is <code>"element"</code>.</li>
+<li><strong>l2_reg</strong>: The L2 regularization loss per element in the batch. This key exists only if <code>self.l2_reg_weight &gt; 0</code>. Reduction type is <code>"element"</code>.</li>
+</ul>
 <h2 id="ntxentloss">NTXentLoss<a class="headerlink" href="#ntxentloss" title="Permanent link">&para;</a></h2>
 <p>This is the normalized temperature-scaled cross entropy loss used in <a href="https://arxiv.org/abs/2002.05709">A Simple Framework for Contrastive Learning of Visual Representations</a>.</p>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">NTXentLoss</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -1200,6 +1268,10 @@
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>temperature</strong>: The exponent divisor in the softmax funtion.</li>
+</ul>
+<p><strong>Reducer input</strong>:</p>
+<ul>
+<li><strong>loss</strong>: The loss per positive pair in the batch. Reduction type is <code>"pos_pair"</code>.</li>
 </ul>
 <h2 id="proxyanchorloss">ProxyAnchorLoss<a class="headerlink" href="#proxyanchorloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/2003.13911.pdf">Proxy Anchor Loss for Deep Metric Learning</a></p>
@@ -1219,13 +1291,19 @@
 <li>This also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts a <code>regularizer</code> and <code>reg_weight</code> as optional init arguments.</li>
 <li>This loss <strong>requires an optimizer</strong>. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:</li>
 </ul>
-<div class="codehilite"><pre><span></span><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">ProxyAnchorLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">ProxyAnchorLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span><span class="p">))</span>
 <span class="n">loss_optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">SGD</span><span class="p">(</span><span class="n">loss_func</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
 <span class="c1"># then during training:</span>
 <span class="n">loss_optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
 </pre></div>
 
 
+<p><strong>Reducer input</strong>:</p>
+<ul>
+<li><strong>pos_loss</strong>: The positive pair loss per proxy. Reduction type is <code>"element"</code>.</li>
+<li><strong>neg_loss</strong>: The negative pair loss per proxy. Reduction type is <code>"element"</code>.</li>
+<li><strong>reg_loss</strong>: The weight regularization loss, if any. Reduction type is <code>"already_reduced"</code>.</li>
+</ul>
 <h2 id="proxyncaloss">ProxyNCALoss<a class="headerlink" href="#proxyncaloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1703.07464.pdf">No Fuss Distance Metric Learning using Proxies</a></p>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">ProxyNCALoss</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -1243,13 +1321,18 @@
 <li>This also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts a <code>regularizer</code> and <code>reg_weight</code> as optional init arguments.</li>
 <li>This loss <strong>requires an optimizer</strong>. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:</li>
 </ul>
-<div class="codehilite"><pre><span></span><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">ProxyNCALoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">ProxyNCALoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span><span class="p">))</span>
 <span class="n">loss_optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">SGD</span><span class="p">(</span><span class="n">loss_func</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
 <span class="c1"># then during training:</span>
 <span class="n">loss_optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
 </pre></div>
 
 
+<p><strong>Reducer input</strong>:</p>
+<ul>
+<li><strong>loss</strong>: The loss per element in the batch, that results in a non zero exponent in the cross entropy expression. Reduction type is <code>"element"</code>.</li>
+<li><strong>reg_loss</strong>: The weight regularization loss, if any. Reduction type is <code>"already_reduced"</code>.</li>
+</ul>
 <h2 id="signaltonoiseratiocontrastiveloss">SignalToNoiseRatioContrastiveLoss<a class="headerlink" href="#signaltonoiseratiocontrastiveloss" title="Permanent link">&para;</a></h2>
 <p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Yuan_Signal-To-Noise_Ratio_A_Robust_Distance_Metric_for_Deep_Metric_Learning_CVPR_2019_paper.pdf">Signal-to-Noise Ratio: A Robust Distance Metric for Deep Metric Learning</a></p>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">SignalToNoiseRatioContrastiveLoss</span><span class="p">(</span><span class="n">pos_margin</span><span class="p">,</span> 
@@ -1264,6 +1347,12 @@
 <li><strong>pos_margin</strong>: The noise-to-signal ratio over which positive pairs will contribute to the loss.</li>
 <li><strong>neg_margin</strong>: The noise-to-signal ratio under which negative pairs will contribute to the loss.</li>
 <li><strong>regularizer_weight</strong>: The regularizer encourages the embeddings to have zero-mean distributions. </li>
+</ul>
+<p><strong>Reducer input</strong>:</p>
+<ul>
+<li><strong>pos_loss</strong>: The loss per positive pair in the batch. Reduction type is <code>"pos_pair"</code>.</li>
+<li><strong>neg_loss</strong>: The loss per negative pair in the batch. Reduction type is <code>"neg_pair"</code>.</li>
+<li><strong>reg_loss</strong>: The regularization loss per element in the batch. Reduction type is <code>"element"</code>.</li>
 </ul>
 <h2 id="softtripleloss">SoftTripleLoss<a class="headerlink" href="#softtripleloss" title="Permanent link">&para;</a></h2>
 <p><a href="http://openaccess.thecvf.com/content_ICCV_2019/papers/Qian_SoftTriple_Loss_Deep_Metric_Learning_Without_Triplet_Sampling_ICCV_2019_paper.pdf">SoftTriple Loss: Deep Metric Learning Without Triplet Sampling</a></p>
@@ -1292,13 +1381,18 @@
 <ul>
 <li>This loss <strong>requires an optimizer</strong>. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:</li>
 </ul>
-<div class="codehilite"><pre><span></span><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">SoftTripleLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">SoftTripleLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span><span class="p">))</span>
 <span class="n">loss_optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">SGD</span><span class="p">(</span><span class="n">loss_func</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
 <span class="c1"># then during training:</span>
 <span class="n">loss_optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
 </pre></div>
 
 
+<p><strong>Reducer input</strong>:</p>
+<ul>
+<li><strong>loss</strong>: The loss per element in the batch. Reduction type is <code>"element"</code>.</li>
+<li><strong>reg_loss</strong>: The weight regularization loss, if any. Reduction type is <code>"already_reduced"</code>.</li>
+</ul>
 <h2 id="spherefaceloss">SphereFaceLoss<a class="headerlink" href="#spherefaceloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1704.08063.pdf">SphereFace: Deep Hypersphere Embedding for Face Recognition</a></p>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">SphereFaceLoss</span><span class="p">(</span><span class="n">margin</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -1317,13 +1411,18 @@
 <li>This also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts a <code>regularizer</code> and <code>reg_weight</code> as optional init arguments.</li>
 <li>This loss <strong>requires an optimizer</strong>. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:</li>
 </ul>
-<div class="codehilite"><pre><span></span><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">SphereFaceLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">SphereFaceLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span><span class="p">))</span>
 <span class="n">loss_optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">SGD</span><span class="p">(</span><span class="n">loss_func</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
 <span class="c1"># then during training:</span>
 <span class="n">loss_optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
 </pre></div>
 
 
+<p><strong>Reducer input</strong>:</p>
+<ul>
+<li><strong>loss</strong>: The loss per element in the batch. Reduction type is <code>"element"</code>.</li>
+<li><strong>reg_loss</strong>: The weight regularization loss, if any. Reduction type is <code>"already_reduced"</code>.</li>
+</ul>
 <h2 id="tripletmarginloss">TripletMarginLoss<a class="headerlink" href="#tripletmarginloss" title="Permanent link">&para;</a></h2>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">TripletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> 
                         <span class="n">distance_norm</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> 
@@ -1344,6 +1443,10 @@
 <li><strong>smooth_loss</strong>: Use the log-exp version of the triplet loss</li>
 <li><strong>triplets_per_anchor</strong>: The number of triplets per element to sample within a batch. Can be an integer or the string "all". For example, if your batch size is 128, and triplets_per_anchor is 100, then 12800 triplets will be sampled. If triplets_per_anchor is "all", then all possible triplets in the batch will be used.</li>
 </ul>
+<p><strong>Reducer input</strong>:</p>
+<ul>
+<li><strong>loss</strong>: The loss per triplet in the batch. Reduction type is <code>"triplet"</code>.</li>
+</ul>
 <h2 id="tupletmarginloss">TupletMarginLoss<a class="headerlink" href="#tupletmarginloss" title="Permanent link">&para;</a></h2>
 <p><a href="http://openaccess.thecvf.com/content_ICCV_2019/papers/Yu_Deep_Metric_Learning_With_Tuplet_Margin_Loss_ICCV_2019_paper.pdf">Deep Metric Learning with Tuplet Margin Loss</a></p>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">TupletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -1362,6 +1465,10 @@
 </pre></div>
 
 
+<p><strong>Reducer input</strong>:</p>
+<ul>
+<li><strong>loss</strong>: The loss per positive pair in the batch. Reduction type is <code>"pos_pair"</code>.</li>
+</ul>
 <h2 id="weightregularizermixin">WeightRegularizerMixin<a class="headerlink" href="#weightregularizermixin" title="Permanent link">&para;</a></h2>
 <p>Losses can extend this class in addition to BaseMetricLossFunction. You should extend this class if your loss function can make use of a <a href="../regularizers/">weight regularizer</a>.</p>
 <div class="codehilite"><pre><span></span><span class="n">losses</span><span class="o">.</span><span class="n">WeightRegularizerMixin</span><span class="p">(</span><span class="n">regularizer</span><span class="p">,</span> <span class="n">reg_weight</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>

@@ -408,7 +408,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../losses_dev/" title="Custom losses" class="md-nav__link">
+    <a href="../extend/losses/" title="Custom losses" class="md-nav__link">
       Custom losses
     </a>
   </li>
@@ -526,7 +526,7 @@
     <span class="s2">&quot;knn_labels&quot;</span><span class="p">:</span> <span class="n">knn_labels</span><span class="p">,</span>                <span class="c1"># A 2d array where each row is the labels of the nearest neighbors of each query. The neighbors are retrieved from the reference set</span>
     <span class="s2">&quot;knn_distances&quot;</span><span class="p">:</span> <span class="n">knn_distances</span>           <span class="c1"># The euclidean distance corresponding to each k-nearest neighbor in knn_labels</span>
     <span class="s2">&quot;lone_query_labels&quot;</span><span class="p">:</span> <span class="n">lone_query_labels</span>   <span class="c1"># The set of labels (in the form of a numpy array) that have only 1 occurrence in reference_labels</span>
-    <span class="s2">&quot;not_lone_query_idx&quot;</span><span class="p">:</span> <span class="n">not_lone_query_idx</span><span class="p">}</span> <span class="c1"># The set of labels (in the form of a numpy array) that have more than 1 occurrence in the reference_labels               </span>
+    <span class="s2">&quot;not_lone_query_mask&quot;</span><span class="p">:</span> <span class="n">not_lone_query_mask</span><span class="p">}</span> <span class="c1"># A boolean mask, where True means that a query element has at least 1 possible neighbor in reference.           </span>
 </pre></div>
 
 

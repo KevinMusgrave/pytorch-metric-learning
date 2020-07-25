@@ -391,6 +391,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#faissindexer" class="md-nav__link">
+    FaissIndexer
+  </a>
+  
+</li>
+      
       
       
       
@@ -444,7 +451,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../losses_dev/" title="Custom losses" class="md-nav__link">
+    <a href="../extend/losses/" title="Custom losses" class="md-nav__link">
       Custom losses
     </a>
   </li>
@@ -489,6 +496,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#faissindexer" class="md-nav__link">
+    FaissIndexer
+  </a>
+  
+</li>
+      
       
       
       
@@ -512,7 +526,12 @@
 <p>utils.inference contains classes that make it convenient to find matching pairs within a batch, or from a set of pairs. Take a look at <a href="https://colab.research.google.com/github/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/Inference.ipynb">this notebook</a> to see example usage.</p>
 <h2 id="inferencemodel">InferenceModel<a class="headerlink" href="#inferencemodel" title="Permanent link">&para;</a></h2>
 <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils.inference</span> <span class="kn">import</span> <span class="n">InferenceModel</span>
-<span class="n">InferenceModel</span><span class="p">(</span><span class="n">trunk</span><span class="p">,</span> <span class="n">embedder</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">match_finder</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">normalize_embeddings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">InferenceModel</span><span class="p">(</span><span class="n">trunk</span><span class="p">,</span> 
+                <span class="n">embedder</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                <span class="n">match_finder</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                <span class="n">indexer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">normalize_embeddings</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">batch_size</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
 </pre></div>
 
 
@@ -520,8 +539,10 @@
 <ul>
 <li><strong>trunk</strong>: Your trained model for computing embeddings.</li>
 <li><strong>embedder</strong>: Optional. This is if your model is split into two components (trunk and embedder). If None, then the embedder will simply return the trunk's output.</li>
-<li><strong>match_finder</strong>: A <a href="./#matchfinder">MatchFinder</a> object.</li>
+<li><strong>match_finder</strong>: A <a href="./#matchfinder">MatchFinder</a> object. If <code>None</code>, it will be set to <code>MatchFinder(mode="sim", threshold=0.9)</code>.</li>
+<li><strong>indexer</strong>: The object used for computing k-nearest-neighbors. If <code>None</code>, it will be set to <code>FaissIndexer()</code>.</li>
 <li><strong>normalize_embeddings</strong>: If True, embeddings will be normalized to have Euclidean norm of 1.</li>
+<li><strong>batch_size</strong>: The batch size used to compute embeddings, when training the indexer for k-nearest-neighbor retrieval.</li>
 </ul>
 <h2 id="matchfinder">MatchFinder<a class="headerlink" href="#matchfinder" title="Permanent link">&para;</a></h2>
 <div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils.inference</span> <span class="kn">import</span> <span class="n">MatchFinder</span>
@@ -539,6 +560,11 @@
 </li>
 <li><strong>threshold</strong>: Optional. Pairs will be a match if they fall under this threshold for distance modes, or over this value for the similarity mode. If not provided, then a threshold must be provided during function calls.</li>
 </ul>
+<h2 id="faissindexer">FaissIndexer<a class="headerlink" href="#faissindexer" title="Permanent link">&para;</a></h2>
+<p>This will create a faiss index, specifically <code>IndexFlatL2</code>, which can be used for nearest neighbor retrieval.</p>
+<div class="codehilite"><pre><span></span><span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils.inference</span> <span class="kn">import</span> <span class="n">FaissIndexer</span>
+<span class="n">FaissIndexer</span><span class="p">()</span>
+</pre></div>
                 
                   
                 

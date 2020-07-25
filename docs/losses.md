@@ -37,6 +37,8 @@ losses.AngularLoss(alpha, **kwargs)
 
 * **alpha**: The angle (as described in the paper), specified in degrees.
 
+**Default reducer**: [MeanReducer](reducers.md#meanreducer)
+
 **Reducer input**:
 
 * **loss**: The loss for every ```a1```, where ```(a1,p)``` represents every positive pair in the batch. Reduction type is ```"element"```.
@@ -67,6 +69,8 @@ loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
 loss_optimizer.step()
 ```
 
+**Default reducer**: [MeanReducer](reducers.md#meanreducer)
+
 **Reducer input**:
 
 * **loss**: The loss per element in the batch. Reduction type is ```"element"```.
@@ -85,6 +89,8 @@ losses.BaseMetricLossFunction(normalize_embeddings=True, reducer=None)
 
 * **normalize_embeddings**: If True, embeddings will be normalized to have a Euclidean norm of 1 before the loss is computed.
 * **reducer**: A [reducer](reducers.md) object. If None, then the default reducer will be used.
+
+**Default reducer**: [MeanReducer](reducers.md#meanreducer)
 
 **Required Implementations**:
 ```python
@@ -105,6 +111,8 @@ losses.CircleLoss(m=0.4, gamma=80, triplets_per_anchor='all', **kwargs)
 * **m**:  The relaxation factor that controls the radious of the decision boundary.
 * **gamma**: The scale factor that determines the largest scale of each similarity score.
 * **triplets_per_anchor**: The number of triplets per element to sample within a batch. Can be an integer or the string "all". For example, if your batch size is 128, and triplets_per_anchor is 100, then 12800 triplets will be sampled. If triplets_per_anchor is "all", then all possible triplets in the batch will be used.
+
+**Default reducer**: [AvgNonZeroReducer](reducers.md#avgnonzeroreducer)
 
 **Reducer input**:
 
@@ -128,6 +136,8 @@ losses.ContrastiveLoss(pos_margin=0,
 * **power**: Each pair's loss will be raised to this power.
 
 Note that the default values for ```pos_margin``` and ```neg_margin``` are suitable if ```use_similarity = False```. If you set ```use_similarity = True```, then more appropriate values would be ```pos_margin = 1``` and ```neg_margin = 0```.
+
+**Default reducer**: [AvgNonZeroReducer](reducers.md#avgnonzeroreducer)
 
 **Reducer input**:
 
@@ -160,6 +170,8 @@ loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
 loss_optimizer.step()
 ```
 
+**Default reducer**: [MeanReducer](reducers.md#meanreducer)
+
 **Reducer input**:
 
 * **loss**: The loss per element in the batch. Reduction type is ```"element"```.
@@ -191,6 +203,8 @@ losses.FastAPLoss(num_bins, **kwargs)
 **Parameters**:
 
 * **num_bins**: The number of soft histogram bins for calculating average precision
+
+**Default reducer**: [MeanReducer](reducers.md#meanreducer)
 
 **Reducer input**:
 
@@ -228,6 +242,8 @@ losses.GeneralizedLiftedStructureLoss(neg_margin, pos_margin=0, **kwargs)
 * **pos_margin**: The margin in the expression ```e^(positive_distance - margin)```
 * **neg_margin**: The margin in the expression ```e^(margin - negative_distance)```
 
+**Default reducer**: [MeanReducer](reducers.md#meanreducer)
+
 **Reducer input**:
 
 * **loss**: The loss per element in the batch. Reduction type is ```"element"```.
@@ -249,6 +265,8 @@ main_loss = losses.TupletMarginLoss(margin=5)
 var_loss = losses.IntraPairVarianceLoss()
 complete_loss = losses.MultipleLosses([main_loss, var_loss], weights=[1, 0.5])
 ```
+
+**Default reducer**: [MeanReducer](reducers.md#meanreducer)
 
 **Reducer input**:
 
@@ -283,6 +301,8 @@ loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
 loss_optimizer.step()
 ```
 
+**Default reducer**: [MeanReducer](reducers.md#meanreducer)
+
 **Reducer input**:
 
 * **loss**: The loss per element in the batch. Reduction type is ```"element"```.
@@ -300,6 +320,8 @@ losses.LiftedStructureLoss(neg_margin, pos_margin=0, **kwargs):
 
 * **pos_margin**: The margin in the expression ```positive_distance - margin```
 * **neg_margin**: The margin in the expression ```e^(margin - negative_distance)```
+
+**Default reducer**: [MeanReducer](reducers.md#meanreducer)
 
 **Reducer input**:
 
@@ -320,6 +342,8 @@ losses.MarginLoss(margin, nu, beta, triplets_per_anchor="all", learn_beta=False,
 * **triplets_per_anchor**: The number of triplets per element to sample within a batch. Can be an integer or the string "all". For example, if your batch size is 128, and triplets_per_anchor is 100, then 12800 triplets will be sampled. If triplets_per_anchor is "all", then all possible triplets in the batch will be used.
 * **learn_beta**: If True, beta will be a torch.nn.Parameter, which can be optimized using any PyTorch optimizer.
 * **num_classes**: If not None, then beta will be of size ```num_classes```, so that a separate beta is used for each class during training.
+
+**Default reducer**: [DivisorReducer](reducers.md#divisorreducer)
 
 **Reducer input**:
 
@@ -348,6 +372,8 @@ losses.MultiSimilarityLoss(alpha, beta, base=0.5, **kwargs)
 * **beta**: The weight applied to negative pairs.
 * **base**: The offset applied to the exponent in the loss.
 
+**Default reducer**: [MeanReducer](reducers.md#meanreducer)
+
 **Reducer input**:
 
 * **loss**: The loss per element in the batch. Reduction type is ```"element"```.
@@ -361,6 +387,8 @@ losses.NCALoss(softmax_scale=1, **kwargs)
 **Parameters**:
 
 * **softmax_scale**: The exponent multiplier in the loss's softmax expression. (This is the inverse of the softmax temperature.)
+
+**Default reducer**: [MeanReducer](reducers.md#meanreducer)
 
 **Reducer input**:
 
@@ -390,6 +418,8 @@ loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
 loss_optimizer.step()
 ```
 
+**Default reducer**: [MeanReducer](reducers.md#meanreducer)
+
 **Reducer input**:
 
 * **loss**: The loss per element in the batch. Reduction type is ```"element"```.
@@ -406,6 +436,8 @@ losses.NPairsLoss(l2_reg_weight=0, **kwargs)
 
 * **l2_reg_weight**: The regularization weight for the L2 norm of the embeddings.
 
+**Default reducer**: [MeanReducer](reducers.md#meanreducer)
+
 **Reducer input**:
 
 * **loss**: The loss per element in the batch. Reduction type is ```"element"```.
@@ -421,6 +453,8 @@ losses.NTXentLoss(temperature, **kwargs)
 **Parameters**:
 
 * **temperature**: The exponent divisor in the softmax funtion.
+
+**Default reducer**: [MeanReducer](reducers.md#meanreducer)
 
 **Reducer input**:
 
@@ -449,6 +483,8 @@ loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
 # then during training:
 loss_optimizer.step()
 ```
+
+**Default reducer**: [DivisorReducer](reducers.md#divisorreducer)
 
 **Reducer input**:
 
@@ -480,6 +516,8 @@ loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
 loss_optimizer.step()
 ```
 
+**Default reducer**: [MeanReducer](reducers.md#meanreducer)
+
 **Reducer input**:
 
 * **loss**: The loss per element in the batch, that results in a non zero exponent in the cross entropy expression. Reduction type is ```"element"```.
@@ -500,6 +538,11 @@ losses.SignalToNoiseRatioContrastiveLoss(pos_margin,
 * **pos_margin**: The noise-to-signal ratio over which positive pairs will contribute to the loss.
 * **neg_margin**: The noise-to-signal ratio under which negative pairs will contribute to the loss.
 * **regularizer_weight**: The regularizer encourages the embeddings to have zero-mean distributions. 
+
+**Default reducer**: 
+
+* [MeanReducer](reducers.md#meanreducer) for ```reg_loss```
+* [AvgNonZeroReducer](reducers.md#avgnonzeroreducer) for ```pos_loss``` and ```neg_loss```
 
 **Reducer input**:
 
@@ -540,6 +583,8 @@ loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
 loss_optimizer.step()
 ```
 
+**Default reducer**: [MeanReducer](reducers.md#meanreducer)
+
 **Reducer input**:
 
 * **loss**: The loss per element in the batch. Reduction type is ```"element"```.
@@ -572,6 +617,8 @@ loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
 loss_optimizer.step()
 ```
 
+**Default reducer**: [MeanReducer](reducers.md#meanreducer)
+
 **Reducer input**:
 
 * **loss**: The loss per element in the batch. Reduction type is ```"element"```.
@@ -599,6 +646,8 @@ losses.TripletMarginLoss(margin=0.05,
 * **smooth_loss**: Use the log-exp version of the triplet loss
 * **triplets_per_anchor**: The number of triplets per element to sample within a batch. Can be an integer or the string "all". For example, if your batch size is 128, and triplets_per_anchor is 100, then 12800 triplets will be sampled. If triplets_per_anchor is "all", then all possible triplets in the batch will be used.
 
+**Default reducer**: [AvgNonZeroReducer](reducers.md#avgnonzeroreducer)
+
 **Reducer input**:
 
 * **loss**: The loss per triplet in the batch. Reduction type is ```"triplet"```.
@@ -620,6 +669,8 @@ main_loss = losses.TupletMarginLoss(margin=5)
 var_loss = losses.IntraPairVarianceLoss()
 complete_loss = losses.MultipleLosses([main_loss, var_loss], weights=[1, 0.5])
 ```
+
+**Default reducer**: [MeanReducer](reducers.md#meanreducer)
 
 **Reducer input**:
 

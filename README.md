@@ -243,6 +243,10 @@ Thanks to the contributors who made pull requests!
 - [marijnl](https://github.com/marijnl)
     - [Example using trainers.TwoStreamMetricLoss](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/TwoStreamMetricLoss.ipynb)
 
+#### New features
+- [btseytlin](https://github.com/btseytlin)
+    - ```get_nearest_neighbors``` in [InferenceModel](https://kevinmusgrave.github.io/pytorch-metric-learning/inference_models)
+
 #### General improvements and bug fixes
 - [wconnell](https://github.com/wconnell)
 - [marijnl](https://github.com/marijnl)

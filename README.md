@@ -23,7 +23,10 @@ PyTorch Metric Learning
 </p>
 
 ## News
-June 20: v0.9.87 comes with some major changes that may cause your existing code to break. See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.87) for details.
+
+**July 25**: v0.9.89 comes with some bug fixes for CrossBatchMemory, AccuracyCalculator, BaseTester, and a new feature for InferenceModel. See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.89) for details
+
+**June 20**: v0.9.87 comes with some major changes that may cause your existing code to break. See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.87) for details.
 
 ## Documentation
 [**View the documentation here**](https://kevinmusgrave.github.io/pytorch-metric-learning/)
@@ -239,6 +242,10 @@ Thanks to the contributors who made pull requests!
 	- [Learning a scRNAseq Metric Embedding](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/scRNAseq_MetricEmbedding.ipynb)
 - [marijnl](https://github.com/marijnl)
     - [Example using trainers.TwoStreamMetricLoss](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/TwoStreamMetricLoss.ipynb)
+
+#### New features
+- [btseytlin](https://github.com/btseytlin)
+    - ```get_nearest_neighbors``` in [InferenceModel](https://kevinmusgrave.github.io/pytorch-metric-learning/inference_models)
 
 #### General improvements and bug fixes
 - [wconnell](https://github.com/wconnell)

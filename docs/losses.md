@@ -30,12 +30,16 @@ loss = loss_func(embeddings, labels) # in your training for-loop
 [Deep Metric Learning with Angular Loss](https://arxiv.org/pdf/1708.01682.pdf)
 
 ```python
-losses.AngularLoss(alpha,**kwargs)
+losses.AngularLoss(alpha, **kwargs)
 ```
 
 **Parameters**:
 
 * **alpha**: The angle (as described in the paper), specified in degrees.
+
+**Reducer input**:
+
+* **loss**: The loss for every ```a1```, where ```(a1,p)``` represents every positive pair in the batch. Reduction type is ```"element"```.
 
 
 ## ArcFaceLoss 
@@ -57,11 +61,18 @@ losses.ArcFaceLoss(margin, num_classes, embedding_size, scale=64, **kwargs)
 * This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts a ```regularizer``` and ```reg_weight``` as optional init arguments.
 * This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
 ```python
-loss_func = losses.ArcFaceLoss(...)
+loss_func = losses.ArcFaceLoss(...).to(torch.device('cuda'))
 loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
 # then during training:
 loss_optimizer.step()
 ```
+
+**Reducer input**:
+
+* **loss**: The loss per element in the batch. Reduction type is ```"element"```.
+* **reg_loss**: The weight regularization loss, if any. Reduction type is ```"already_reduced"```.
+
+
 
 ## BaseMetricLossFunction
 All loss functions extend this class and therefore inherit its ```__init__``` parameters.
@@ -95,6 +106,9 @@ losses.CircleLoss(m=0.4, gamma=80, triplets_per_anchor='all', **kwargs)
 * **gamma**: The scale factor that determines the largest scale of each similarity score.
 * **triplets_per_anchor**: The number of triplets per element to sample within a batch. Can be an integer or the string "all". For example, if your batch size is 128, and triplets_per_anchor is 100, then 12800 triplets will be sampled. If triplets_per_anchor is "all", then all possible triplets in the batch will be used.
 
+**Reducer input**:
+
+* **loss**: The loss per element in the batch. Reduction type is ```"element"```.
 
 ## ContrastiveLoss
 ```python
@@ -115,6 +129,12 @@ losses.ContrastiveLoss(pos_margin=0,
 
 Note that the default values for ```pos_margin``` and ```neg_margin``` are suitable if ```use_similarity = False```. If you set ```use_similarity = True```, then more appropriate values would be ```pos_margin = 1``` and ```neg_margin = 0```.
 
+**Reducer input**:
+
+* **pos_loss**: The loss per positive pair in the batch. Reduction type is ```"pos_pair"```.
+* **neg_loss**: The loss per negative pair in the batch. Reduction type is ```"neg_pair"```.
+
+
 ## CosFaceLoss 
 [CosFace: Large Margin Cosine Loss for Deep Face Recognition](https://arxiv.org/pdf/1801.09414.pdf)
 
@@ -134,11 +154,17 @@ losses.CosFaceLoss(margin, num_classes, embedding_size, scale=64, **kwargs)
 * This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts a ```regularizer``` and ```reg_weight``` as optional init arguments.
 * This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
 ```python
-loss_func = losses.CosFaceLoss(...)
+loss_func = losses.CosFaceLoss(...).to(torch.device('cuda'))
 loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
 # then during training:
 loss_optimizer.step()
 ```
+
+**Reducer input**:
+
+* **loss**: The loss per element in the batch. Reduction type is ```"element"```.
+* **reg_loss**: The weight regularization loss, if any. Reduction type is ```"already_reduced"```.
+
 
 ## CrossBatchMemory 
 This wraps a loss function, and implements [Cross-Batch Memory for Embedding Learning](https://arxiv.org/pdf/1912.06798.pdf). It stores embeddings from previous iterations in a queue, and uses them to form more pairs/triplets with the current iteration's embeddings.
@@ -166,6 +192,11 @@ losses.FastAPLoss(num_bins, **kwargs)
 
 * **num_bins**: The number of soft histogram bins for calculating average precision
 
+**Reducer input**:
+
+* **loss**: The loss per element that has at least 1 positive in the batch. Reduction type is ```"element"```.
+
+
 ## GenericPairLoss
 ```python
 losses.GenericPairLoss(use_similarity, mat_based_loss, squared_distances=False, **kwargs)
@@ -179,8 +210,8 @@ losses.GenericPairLoss(use_similarity, mat_based_loss, squared_distances=False, 
 
 **Required Implementations**:
 ```python
-# If mat_based_loss is True, then this takes in mat, pos_mask, and neg_mask
-# If False, this takes in pos_pairs and neg_pairs
+# If mat_based_loss is True, then this takes in mat, pos_mask, neg_mask
+# If False, this takes in pos_pair, neg_pair, indices_tuple
 def _compute_loss(self):
     raise NotImplementedError
 ```
@@ -196,6 +227,10 @@ losses.GeneralizedLiftedStructureLoss(neg_margin, pos_margin=0, **kwargs)
 
 * **pos_margin**: The margin in the expression ```e^(positive_distance - margin)```
 * **neg_margin**: The margin in the expression ```e^(margin - negative_distance)```
+
+**Reducer input**:
+
+* **loss**: The loss per element in the batch. Reduction type is ```"element"```.
 
 ## IntraPairVarianceLoss
 [Deep Metric Learning with Tuplet Margin Loss](http://openaccess.thecvf.com/content_ICCV_2019/papers/Yu_Deep_Metric_Learning_With_Tuplet_Margin_Loss_ICCV_2019_paper.pdf)
@@ -214,6 +249,13 @@ main_loss = losses.TupletMarginLoss(margin=5)
 var_loss = losses.IntraPairVarianceLoss()
 complete_loss = losses.MultipleLosses([main_loss, var_loss], weights=[1, 0.5])
 ```
+
+**Reducer input**:
+
+* **pos_loss**: The loss per positive pair in the batch. Reduction type is ```"pos_pair"```.
+* **neg_loss**: The loss per negative pair in the batch. Reduction type is ```"neg_pair"```.
+
+
 
 ## LargeMarginSoftmaxLoss
 [Large-Margin Softmax Loss for Convolutional Neural Networks](https://arxiv.org/pdf/1612.02295.pdf)
@@ -235,11 +277,17 @@ losses.LargeMarginSoftmaxLoss(margin, num_classes, embedding_size, scale=1, norm
 * This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts a ```regularizer``` and ```reg_weight``` as optional init arguments.
 * This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
 ```python
-loss_func = losses.LargeMarginSoftmaxLoss(...)
+loss_func = losses.LargeMarginSoftmaxLoss(...).to(torch.device('cuda'))
 loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
 # then during training:
 loss_optimizer.step()
 ```
+
+**Reducer input**:
+
+* **loss**: The loss per element in the batch. Reduction type is ```"element"```.
+* **reg_loss**: The weight regularization loss, if any. Reduction type is ```"already_reduced"```.
+
 
 ## LiftedStructureLoss
 The original lifted structure loss as presented in [Deep Metric Learning via Lifted Structured Feature Embedding](https://arxiv.org/pdf/1511.06452.pdf)
@@ -252,6 +300,10 @@ losses.LiftedStructureLoss(neg_margin, pos_margin=0, **kwargs):
 
 * **pos_margin**: The margin in the expression ```positive_distance - margin```
 * **neg_margin**: The margin in the expression ```e^(margin - negative_distance)```
+
+**Reducer input**:
+
+* **loss**: The loss per positive pair in the batch. Reduction type is ```"pos_pair"```.
 
 
 ## MarginLoss
@@ -268,6 +320,12 @@ losses.MarginLoss(margin, nu, beta, triplets_per_anchor="all", learn_beta=False,
 * **triplets_per_anchor**: The number of triplets per element to sample within a batch. Can be an integer or the string "all". For example, if your batch size is 128, and triplets_per_anchor is 100, then 12800 triplets will be sampled. If triplets_per_anchor is "all", then all possible triplets in the batch will be used.
 * **learn_beta**: If True, beta will be a torch.nn.Parameter, which can be optimized using any PyTorch optimizer.
 * **num_classes**: If not None, then beta will be of size ```num_classes```, so that a separate beta is used for each class during training.
+
+**Reducer input**:
+
+* **margin_loss**: The loss per triplet in the batch. Reduction type is ```"triplet"```.
+* **beta_reg_loss**: The regularization loss per element in ```self.beta```. Reduction type is ```"already_reduced"``` if ```self.num_classes = None```. Otherwise it is ```"element"```.
+
 
 ## MultipleLosses
 This is a simple wrapper for multiple losses. Pass in a list of already-initialized loss functions. Then, when you call forward on this object, it will return the sum of all wrapped losses.
@@ -290,6 +348,9 @@ losses.MultiSimilarityLoss(alpha, beta, base=0.5, **kwargs)
 * **beta**: The weight applied to negative pairs.
 * **base**: The offset applied to the exponent in the loss.
 
+**Reducer input**:
+
+* **loss**: The loss per element in the batch. Reduction type is ```"element"```.
 
 ## NCALoss
 [Neighbourhood Components Analysis](https://www.cs.toronto.edu/~hinton/absps/nca.pdf)
@@ -300,6 +361,12 @@ losses.NCALoss(softmax_scale=1, **kwargs)
 **Parameters**:
 
 * **softmax_scale**: The exponent multiplier in the loss's softmax expression. (This is the inverse of the softmax temperature.)
+
+**Reducer input**:
+
+* **loss**: The loss per element in the batch, that results in a non zero exponent in the cross entropy expression. Reduction type is ```"element"```.
+
+
 
 ## NormalizedSoftmaxLoss
 [Classification is a Strong Baseline for Deep Metric Learning](https://arxiv.org/pdf/1811.12649.pdf)
@@ -317,11 +384,17 @@ losses.NormalizedSoftmaxLoss(temperature, embedding_size, num_classes, **kwargs)
 * This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts a ```regularizer``` and ```reg_weight``` as optional init arguments.
 * This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
 ```python
-loss_func = losses.NormalizedSoftmaxLoss(...)
+loss_func = losses.NormalizedSoftmaxLoss(...).to(torch.device('cuda'))
 loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
 # then during training:
 loss_optimizer.step()
 ```
+
+**Reducer input**:
+
+* **loss**: The loss per element in the batch. Reduction type is ```"element"```.
+* **reg_loss**: The weight regularization loss, if any. Reduction type is ```"already_reduced"```.
+
 
 ## NPairsLoss
 [Improved Deep Metric Learning with Multi-class N-pair Loss Objective](http://www.nec-labs.com/uploads/images/Department-Images/MediaAnalytics/papers/nips16_npairmetriclearning.pdf)
@@ -333,6 +406,12 @@ losses.NPairsLoss(l2_reg_weight=0, **kwargs)
 
 * **l2_reg_weight**: The regularization weight for the L2 norm of the embeddings.
 
+**Reducer input**:
+
+* **loss**: The loss per element in the batch. Reduction type is ```"element"```.
+* **l2_reg**: The L2 regularization loss per element in the batch. This key exists only if ```self.l2_reg_weight > 0```. Reduction type is ```"element"```.
+
+
 ## NTXentLoss
 This is the normalized temperature-scaled cross entropy loss used in [A Simple Framework for Contrastive Learning of Visual Representations](https://arxiv.org/abs/2002.05709).
 ```python
@@ -342,6 +421,10 @@ losses.NTXentLoss(temperature, **kwargs)
 **Parameters**:
 
 * **temperature**: The exponent divisor in the softmax funtion.
+
+**Reducer input**:
+
+* **loss**: The loss per positive pair in the batch. Reduction type is ```"pos_pair"```.
 
 ## ProxyAnchorLoss
 [Proxy Anchor Loss for Deep Metric Learning](https://arxiv.org/pdf/2003.13911.pdf)
@@ -361,11 +444,18 @@ losses.ProxyAnchorLoss(num_classes, embedding_size, margin = 0.1, alpha = 32, **
 * This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts a ```regularizer``` and ```reg_weight``` as optional init arguments.
 * This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
 ```python
-loss_func = losses.ProxyAnchorLoss(...)
+loss_func = losses.ProxyAnchorLoss(...).to(torch.device('cuda'))
 loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
 # then during training:
 loss_optimizer.step()
 ```
+
+**Reducer input**:
+
+* **pos_loss**: The positive pair loss per proxy. Reduction type is ```"element"```.
+* **neg_loss**: The negative pair loss per proxy. Reduction type is ```"element"```.
+* **reg_loss**: The weight regularization loss, if any. Reduction type is ```"already_reduced"```.
+
 
 ## ProxyNCALoss
 [No Fuss Distance Metric Learning using Proxies](https://arxiv.org/pdf/1703.07464.pdf)
@@ -384,11 +474,17 @@ losses.ProxyNCALoss(num_classes, embedding_size, **kwargs)
 * This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts a ```regularizer``` and ```reg_weight``` as optional init arguments.
 * This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
 ```python
-loss_func = losses.ProxyNCALoss(...)
+loss_func = losses.ProxyNCALoss(...).to(torch.device('cuda'))
 loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
 # then during training:
 loss_optimizer.step()
 ```
+
+**Reducer input**:
+
+* **loss**: The loss per element in the batch, that results in a non zero exponent in the cross entropy expression. Reduction type is ```"element"```.
+* **reg_loss**: The weight regularization loss, if any. Reduction type is ```"already_reduced"```.
+
 
 ## SignalToNoiseRatioContrastiveLoss
 [Signal-to-Noise Ratio: A Robust Distance Metric for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Yuan_Signal-To-Noise_Ratio_A_Robust_Distance_Metric_for_Deep_Metric_Learning_CVPR_2019_paper.pdf)
@@ -404,6 +500,12 @@ losses.SignalToNoiseRatioContrastiveLoss(pos_margin,
 * **pos_margin**: The noise-to-signal ratio over which positive pairs will contribute to the loss.
 * **neg_margin**: The noise-to-signal ratio under which negative pairs will contribute to the loss.
 * **regularizer_weight**: The regularizer encourages the embeddings to have zero-mean distributions. 
+
+**Reducer input**:
+
+* **pos_loss**: The loss per positive pair in the batch. Reduction type is ```"pos_pair"```.
+* **neg_loss**: The loss per negative pair in the batch. Reduction type is ```"neg_pair"```.
+* **reg_loss**: The regularization loss per element in the batch. Reduction type is ```"element"```.
 
 ## SoftTripleLoss   
 [SoftTriple Loss: Deep Metric Learning Without Triplet Sampling](http://openaccess.thecvf.com/content_ICCV_2019/papers/Qian_SoftTriple_Loss_Deep_Metric_Learning_Without_Triplet_Sampling_ICCV_2019_paper.pdf)
@@ -432,11 +534,18 @@ losses.SoftTripleLoss(embedding_size,
 
 * This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
 ```python
-loss_func = losses.SoftTripleLoss(...)
+loss_func = losses.SoftTripleLoss(...).to(torch.device('cuda'))
 loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
 # then during training:
 loss_optimizer.step()
 ```
+
+**Reducer input**:
+
+* **loss**: The loss per element in the batch. Reduction type is ```"element"```.
+* **reg_loss**: The weight regularization loss, if any. Reduction type is ```"already_reduced"```.
+
+
 
 ## SphereFaceLoss 
 [SphereFace: Deep Hypersphere Embedding for Face Recognition](https://arxiv.org/pdf/1704.08063.pdf)
@@ -457,11 +566,17 @@ losses.SphereFaceLoss(margin, num_classes, embedding_size, scale=1, **kwargs)
 * This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts a ```regularizer``` and ```reg_weight``` as optional init arguments.
 * This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
 ```python
-loss_func = losses.SphereFaceLoss(...)
+loss_func = losses.SphereFaceLoss(...).to(torch.device('cuda'))
 loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
 # then during training:
 loss_optimizer.step()
 ```
+
+**Reducer input**:
+
+* **loss**: The loss per element in the batch. Reduction type is ```"element"```.
+* **reg_loss**: The weight regularization loss, if any. Reduction type is ```"already_reduced"```.
+
 
 ## TripletMarginLoss
 
@@ -484,6 +599,10 @@ losses.TripletMarginLoss(margin=0.05,
 * **smooth_loss**: Use the log-exp version of the triplet loss
 * **triplets_per_anchor**: The number of triplets per element to sample within a batch. Can be an integer or the string "all". For example, if your batch size is 128, and triplets_per_anchor is 100, then 12800 triplets will be sampled. If triplets_per_anchor is "all", then all possible triplets in the batch will be used.
 
+**Reducer input**:
+
+* **loss**: The loss per triplet in the batch. Reduction type is ```"triplet"```.
+
 ## TupletMarginLoss
 [Deep Metric Learning with Tuplet Margin Loss](http://openaccess.thecvf.com/content_ICCV_2019/papers/Yu_Deep_Metric_Learning_With_Tuplet_Margin_Loss_ICCV_2019_paper.pdf)
 ```python
@@ -501,6 +620,10 @@ main_loss = losses.TupletMarginLoss(margin=5)
 var_loss = losses.IntraPairVarianceLoss()
 complete_loss = losses.MultipleLosses([main_loss, var_loss], weights=[1, 0.5])
 ```
+
+**Reducer input**:
+
+* **loss**: The loss per positive pair in the batch. Reduction type is ```"pos_pair"```.
 
 ## WeightRegularizerMixin
 Losses can extend this class in addition to BaseMetricLossFunction. You should extend this class if your loss function can make use of a [weight regularizer](regularizers.md).

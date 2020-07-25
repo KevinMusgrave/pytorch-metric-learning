@@ -13,7 +13,7 @@ nav:
       - Inference Models: inference_models.md
       - Logging Presets: logging_presets.md
     - How to extend this library:
-      - Custom losses: losses_dev.md
+      - Custom losses: extend/losses.md
 theme:
   name: 'material'
   palette:

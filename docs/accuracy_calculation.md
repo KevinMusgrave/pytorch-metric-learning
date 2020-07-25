@@ -79,7 +79,7 @@ If your method requires a k-nearest neighbors search, then append your method's 
     "knn_labels": knn_labels,                # A 2d array where each row is the labels of the nearest neighbors of each query. The neighbors are retrieved from the reference set
     "knn_distances": knn_distances           # The euclidean distance corresponding to each k-nearest neighbor in knn_labels
     "lone_query_labels": lone_query_labels   # The set of labels (in the form of a numpy array) that have only 1 occurrence in reference_labels
-    "not_lone_query_idx": not_lone_query_idx} # The set of labels (in the form of a numpy array) that have more than 1 occurrence in the reference_labels               
+    "not_lone_query_mask": not_lone_query_mask} # A boolean mask, where True means that a query element has at least 1 possible neighbor in reference.           
 ```
 
 If your method requires cluster labels, then append your method's name to the ```requires_clustering``` list, as shown in the above example. Then, if any of your methods need cluster labels, ```self.get_cluster_labels()``` will be called, and the kwargs will include:

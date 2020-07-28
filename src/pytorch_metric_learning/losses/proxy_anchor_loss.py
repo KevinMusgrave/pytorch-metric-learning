@@ -18,7 +18,7 @@ class ProxyAnchorLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         self.alpha = alpha
         
     def compute_loss(self, embeddings, labels, indices_tuple):
-        miner_weights = lmu.convert_to_weights(indices_tuple, labels).unsqueeze(1)
+        miner_weights = lmu.convert_to_weights(indices_tuple, labels, dtype=embeddings.dtype).unsqueeze(1)
         prox = torch.nn.functional.normalize(self.proxies, p=2, dim=1) if self.normalize_embeddings else self.proxies
         cos = lmu.sim_mat(embeddings, prox)
 

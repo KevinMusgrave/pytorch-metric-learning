@@ -36,7 +36,7 @@ class AngularLoss(BaseMetricLossFunction):
         if len(a1) == 0 or len(a2) == 0:
             return [None]*4
         anchors, positives = embeddings[a1], embeddings[p]
-        keep_mask = (labels[a1].unsqueeze(1) != labels.unsqueeze(0)).float()
+        keep_mask = (labels[a1].unsqueeze(1) != labels.unsqueeze(0)).type(embeddings.dtype)
 
         centers = (anchors + positives) / 2
         ap_dist = torch.nn.functional.pairwise_distance(anchors, positives, 2)

@@ -63,6 +63,6 @@ class TestLossAndMinerUtils(unittest.TestCase):
         a = torch.LongTensor([0,1,2,3])
         p = torch.LongTensor([4,4,4,4])
         n = torch.LongTensor([5,5,6,6])
-        weights = lmu.convert_to_weights((a,p,n), labels=torch.arange(7))
+        weights = lmu.convert_to_weights((a,p,n), labels=torch.arange(7), dtype=torch.float32)
         correct_weights = torch.FloatTensor([0.25,0.25,0.25,0.25,1,0.5,0.5])
         self.assertTrue(torch.all(weights==correct_weights))

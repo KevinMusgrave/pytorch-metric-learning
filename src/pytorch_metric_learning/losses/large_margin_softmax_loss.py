@@ -12,7 +12,7 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
     """
     Implementation of https://arxiv.org/pdf/1612.02295.pdf
     """
-    def __init__(self, margin, num_classes, embedding_size, scale=1, normalize_weights=False, scale_logits_by_magnitudes=True, **kwargs):
+    def __init__(self, margin, num_classes, embedding_size, scale=1, normalize_weights=False, scale_logits_by_magnitudes=True, dtype=torch.float32, **kwargs):
         super().__init__(**kwargs)
         self.margin = margin
         self.num_classes = num_classes
@@ -21,7 +21,7 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         self.scale_logits_by_magnitudes = scale_logits_by_magnitudes
         self.add_to_recordable_attributes(name="avg_angle", is_stat=True)
         self.init_margin()
-        self.W = torch.nn.Parameter(torch.randn(embedding_size, num_classes))
+        self.W = torch.nn.Parameter(torch.randn(embedding_size, num_classes).type(dtype))
         self.cross_entropy = torch.nn.CrossEntropyLoss(reduction='none')
 
     def init_margin(self):
@@ -61,7 +61,7 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
 
     def get_target_mask(self, embeddings, labels):
         batch_size = labels.size(0)
-        mask = torch.zeros(batch_size, self.num_classes).to(embeddings.device)
+        mask = torch.zeros(batch_size, self.num_classes, dtype=embeddings.dtype).to(embeddings.device)
         mask[torch.arange(batch_size), labels] = 1
         return mask
 
@@ -74,7 +74,7 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         return ((-1)**k)*cos_with_margin - (2*k)
 
     def compute_loss(self, embeddings, labels, indices_tuple):
-        miner_weights = lmu.convert_to_weights(indices_tuple, labels)
+        miner_weights = lmu.convert_to_weights(indices_tuple, labels, dtype=embeddings.dtype)
         mask = self.get_target_mask(embeddings, labels)
         cosine = self.get_cosine(embeddings)
         cosine_of_target_classes = cosine[mask == 1]

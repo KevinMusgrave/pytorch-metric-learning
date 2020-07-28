@@ -16,7 +16,7 @@ class NCALoss(BaseMetricLossFunction):
         return self.nca_computation(embeddings, embeddings, labels, labels, indices_tuple)
 
     def nca_computation(self, query, reference, query_labels, reference_labels, indices_tuple):
-        miner_weights = lmu.convert_to_weights(indices_tuple, query_labels)
+        miner_weights = lmu.convert_to_weights(indices_tuple, query_labels, dtype=query.dtype)
         x = -lmu.dist_mat(query, reference, squared=True)
         if query is reference:
             diag_idx = torch.arange(query.size(0))

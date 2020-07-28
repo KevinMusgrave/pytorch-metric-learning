@@ -51,7 +51,7 @@ def dist_mat(x, y=None, eps=1e-16, squared=False):
         dist = dist - torch.diag(dist.diag())
     dist = torch.clamp(dist, 0.0, np.inf)
     if not squared:
-        mask = (dist == 0).float()
+        mask = (dist == 0).type(x.dtype)
         dist = dist + mask * eps
         dist = torch.sqrt(dist)
         dist = dist * (1.0 - mask)

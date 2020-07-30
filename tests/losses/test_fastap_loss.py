@@ -217,4 +217,5 @@ class TestFastAPLoss(unittest.TestCase):
             loss = loss_func(embeddings, labels)
             loss.backward()
             original_loss = original_loss_func(embeddings, labels)
-            self.assertTrue(torch.isclose(loss, original_loss))
+            rtol = 1e-2 if dtype == torch.float16 else 1e-5
+            self.assertTrue(torch.isclose(loss, original_loss, rtol=rtol))

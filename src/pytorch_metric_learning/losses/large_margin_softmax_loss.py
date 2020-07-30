@@ -12,34 +12,26 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
     """
     Implementation of https://arxiv.org/pdf/1612.02295.pdf
     """
-    def __init__(self, margin, num_classes, embedding_size, scale=1, normalize_weights=False, scale_logits_by_magnitudes=True, dtype=torch.float32, **kwargs):
+    def __init__(self, margin, num_classes, embedding_size, scale=1, normalize_weights=False, scale_logits_by_magnitudes=True, **kwargs):
         super().__init__(**kwargs)
         self.margin = margin
         self.num_classes = num_classes
         self.scale = scale
         self.normalize_weights = normalize_weights
         self.scale_logits_by_magnitudes = scale_logits_by_magnitudes
-        self.dtype = dtype
         self.add_to_recordable_attributes(name="avg_angle", is_stat=True)
         self.init_margin()
-        self.W = torch.nn.Parameter(torch.randn(embedding_size, num_classes).type(dtype))
+        self.W = torch.nn.Parameter(torch.randn(embedding_size, num_classes))
         self.cross_entropy = torch.nn.CrossEntropyLoss(reduction='none')
 
     def init_margin(self):
         self.margin = int(self.margin)
         self.max_n = (self.margin // 2)
-
         ## For the trigonometric multiple-angle formula ##
         self.n_range = torch.tensor([n for n in range(0, self.max_n+1)])
         self.margin_choose_n = torch.tensor([scipy.special.binom(self.margin, 2*n) for n in self.n_range])
         self.cos_powers = torch.tensor([self.margin-(2*n) for n in self.n_range])
         self.alternating = torch.tensor([(-1)**n for n in self.n_range])
-
-        self.n_range = self.n_range.type(self.dtype)
-        self.margin_choose_n = self.margin_choose_n.type(self.dtype)
-        self.cos_powers = self.cos_powers.type(self.dtype)
-        self.alternating = self.alternating.type(self.dtype)
-
 
     def get_cos_with_margin(self, cosine):
         cosine = cosine.unsqueeze(1)
@@ -81,7 +73,15 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
             k = (angles / (math.pi / self.margin)).floor() # Equation 6: angles needs to be between [k*pi/m and (k+1)*pi/m]
         return ((-1)**k)*cos_with_margin - (2*k)
 
+    def cast_types(self, embeddings):
+        self.W.data = self.W.data.type(embeddings.dtype)
+        self.n_range = self.n_range.type(embeddings.dtype)
+        self.margin_choose_n = self.margin_choose_n.type(embeddings.dtype)
+        self.cos_powers = self.cos_powers.type(embeddings.dtype)
+        self.alternating = self.alternating.type(embeddings.dtype)
+
     def compute_loss(self, embeddings, labels, indices_tuple):
+        self.cast_types(embeddings)
         miner_weights = lmu.convert_to_weights(indices_tuple, labels, dtype=embeddings.dtype)
         mask = self.get_target_mask(embeddings, labels)
         cosine = self.get_cosine(embeddings)

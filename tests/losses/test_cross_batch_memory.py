@@ -16,8 +16,8 @@ class TestCrossBatchMemory(unittest.TestCase):
     def test_remove_self_comparisons(self):
         for dtype in [torch.float16, torch.float32, torch.float64]:
             batch_size = 32
-            loss = CrossBatchMemory(loss=None, embedding_size=self.embedding_size, memory_size=self.memory_size, dtype=dtype)
-            loss.embedding_memory = loss.embedding_memory.to(self.device)
+            loss = CrossBatchMemory(loss=None, embedding_size=self.embedding_size, memory_size=self.memory_size)
+            loss.embedding_memory = loss.embedding_memory.to(self.device).type(dtype)
             loss.label_memory = loss.label_memory.to(self.device)
             embeddings = torch.randn(batch_size, self.embedding_size).to(self.device).type(dtype)
             labels = torch.randint(0, 10, (batch_size,)).to(self.device)
@@ -75,8 +75,8 @@ class TestCrossBatchMemory(unittest.TestCase):
             for memory_size in range(20, 40, 5):
                 inner_loss = NTXentLoss(temperature=0.1)
                 inner_miner = TripletMarginMiner(margin=0.1)
-                loss = CrossBatchMemory(loss=inner_loss, embedding_size=self.embedding_size, memory_size=memory_size, dtype=dtype)
-                loss_with_miner = CrossBatchMemory(loss=inner_loss, embedding_size=self.embedding_size, memory_size=memory_size, miner=inner_miner, dtype=dtype)
+                loss = CrossBatchMemory(loss=inner_loss, embedding_size=self.embedding_size, memory_size=memory_size)
+                loss_with_miner = CrossBatchMemory(loss=inner_loss, embedding_size=self.embedding_size, memory_size=memory_size, miner=inner_miner)
                 for i in range(10):
                     embeddings = torch.randn(memory_size, self.embedding_size).to(self.device).type(dtype)
                     labels = torch.randint(0, 4, (memory_size,)).to(self.device)
@@ -95,7 +95,7 @@ class TestCrossBatchMemory(unittest.TestCase):
             memory_size = 256
             inner_loss = NTXentLoss(temperature=0.1)
             inner_miner = DistanceWeightedMiner(cutoff=0.5, nonzero_loss_cutoff=1.4)
-            loss_with_miner = CrossBatchMemory(loss=inner_loss, embedding_size=2, memory_size=memory_size, miner=inner_miner, dtype=dtype)
+            loss_with_miner = CrossBatchMemory(loss=inner_loss, embedding_size=2, memory_size=memory_size, miner=inner_miner)
             for i in range(20):
                 embedding_angles = torch.arange(0, 32)
                 embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=dtype).to(self.device) #2D embeddings
@@ -113,9 +113,9 @@ class TestCrossBatchMemory(unittest.TestCase):
             inner_loss = ContrastiveLoss()
             inner_miner = MultiSimilarityMiner(0.3)
             outer_miner = MultiSimilarityMiner(0.2)
-            self.loss = CrossBatchMemory(loss=inner_loss, embedding_size=self.embedding_size, memory_size=self.memory_size, dtype=dtype)
-            self.loss_with_miner = CrossBatchMemory(loss=inner_loss, miner=inner_miner, embedding_size=self.embedding_size, memory_size=self.memory_size, dtype=dtype)
-            self.loss_with_miner2 = CrossBatchMemory(loss=inner_loss, miner=inner_miner, embedding_size=self.embedding_size, memory_size=self.memory_size, dtype=dtype)
+            self.loss = CrossBatchMemory(loss=inner_loss, embedding_size=self.embedding_size, memory_size=self.memory_size)
+            self.loss_with_miner = CrossBatchMemory(loss=inner_loss, miner=inner_miner, embedding_size=self.embedding_size, memory_size=self.memory_size)
+            self.loss_with_miner2 = CrossBatchMemory(loss=inner_loss, miner=inner_miner, embedding_size=self.embedding_size, memory_size=self.memory_size)
             all_embeddings = torch.tensor([], dtype=dtype).to(self.device)
             all_labels = torch.LongTensor([]).to(self.device)
             for i in range(num_iter):
@@ -160,7 +160,7 @@ class TestCrossBatchMemory(unittest.TestCase):
     def test_queue(self):
         for dtype in [torch.float16, torch.float32, torch.float64]:
             batch_size = 32
-            self.loss = CrossBatchMemory(loss=ContrastiveLoss(), embedding_size=self.embedding_size, memory_size=self.memory_size, dtype=dtype)
+            self.loss = CrossBatchMemory(loss=ContrastiveLoss(), embedding_size=self.embedding_size, memory_size=self.memory_size)
             for i in range(30):
                 embeddings = torch.randn(batch_size, self.embedding_size).to(self.device).type(dtype)
                 labels = torch.arange(batch_size).to(self.device)
@@ -187,7 +187,7 @@ class TestCrossBatchMemory(unittest.TestCase):
             batch_size = 32
             pair_miner = PairMarginMiner(pos_margin=0, neg_margin=1, use_similarity=False)
             triplet_miner = TripletMarginMiner(margin=1)
-            self.loss = CrossBatchMemory(loss=ContrastiveLoss(), embedding_size=self.embedding_size, memory_size=self.memory_size, dtype=dtype)
+            self.loss = CrossBatchMemory(loss=ContrastiveLoss(), embedding_size=self.embedding_size, memory_size=self.memory_size)
             for i in range(30):
                 embeddings = torch.randn(batch_size, self.embedding_size).to(self.device).type(dtype)
                 labels = torch.arange(batch_size).to(self.device)
@@ -229,7 +229,7 @@ class TestCrossBatchMemory(unittest.TestCase):
             batch_size = 32
             pair_miner = PairMarginMiner(pos_margin=0, neg_margin=1, use_similarity=False)
             triplet_miner = TripletMarginMiner(margin=1)
-            self.loss = CrossBatchMemory(loss=ContrastiveLoss(), embedding_size=self.embedding_size, memory_size=self.memory_size, dtype=dtype)
+            self.loss = CrossBatchMemory(loss=ContrastiveLoss(), embedding_size=self.embedding_size, memory_size=self.memory_size)
             for i in range(30):
                 embeddings = torch.randn(batch_size, self.embedding_size).to(self.device).type(dtype)
                 labels = torch.arange(batch_size).to(self.device)

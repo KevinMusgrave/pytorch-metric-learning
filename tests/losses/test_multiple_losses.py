@@ -4,18 +4,23 @@ from pytorch_metric_learning.losses import MultipleLosses, ContrastiveLoss, Trip
 from pytorch_metric_learning.utils import common_functions as c_f
 
 class TestMultipleLosses(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        self.device = torch.device('cuda')
+
     def test_multiple_losses(self):
         lossA = ContrastiveLoss()
         lossB = TripletMarginLoss(0.1)
         loss_func = MultipleLosses(losses={"lossA": lossA, "lossB": lossB},
                                     weights={"lossA": 1, "lossB": 0.23})
 
-        embedding_angles = torch.arange(0, 180)
-        embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=torch.float) #2D embeddings
-        labels = torch.randint(low=0, high=10, size=(180,))
+        for dtype in [torch.float16, torch.float32, torch.float64]:
+            embedding_angles = torch.arange(0, 180)
+            embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=dtype).to(self.device) #2D embeddings
+            labels = torch.randint(low=0, high=10, size=(180,))
 
-        loss = loss_func(embeddings, labels)
-        loss.backward()
+            loss = loss_func(embeddings, labels)
+            loss.backward()
 
-        correct_loss = lossA(embeddings, labels) + lossB(embeddings, labels)*0.23
-        self.assertTrue(torch.isclose(loss, correct_loss))
+            correct_loss = lossA(embeddings, labels) + lossB(embeddings, labels)*0.23
+            self.assertTrue(torch.isclose(loss, correct_loss))

@@ -64,8 +64,9 @@ class TestLargeMarginSoftmaxLoss(unittest.TestCase):
             correct_lossA = torch.nn.functional.cross_entropy(cosinesA*scale, labels)
             correct_lossB = torch.nn.functional.cross_entropy(cosinesB*scale, labels)
 
-            self.assertTrue(torch.isclose(lossA, correct_lossA))
-            self.assertTrue(torch.isclose(lossB, correct_lossB))
+            rtol = 1e-2 if dtype == torch.float16 else 1e-5
+            self.assertTrue(torch.isclose(lossA, correct_lossA, rtol=rtol))
+            self.assertTrue(torch.isclose(lossB, correct_lossB, rtol=rtol))
 
 
     def test_backward(self):

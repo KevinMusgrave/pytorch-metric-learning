@@ -20,8 +20,8 @@ class NCALoss(BaseMetricLossFunction):
         x = -lmu.dist_mat(query, reference, squared=True)
         if query is reference:
             diag_idx = torch.arange(query.size(0))
-            x[diag_idx, diag_idx] = float('-inf')
-        same_labels = (query_labels.unsqueeze(1) == reference_labels.unsqueeze(0)).float()
+            x[diag_idx, diag_idx] = c_f.neg_inf(query.dtype)
+        same_labels = (query_labels.unsqueeze(1) == reference_labels.unsqueeze(0)).type(query.dtype)
         exp = torch.nn.functional.softmax(self.softmax_scale*x, dim=1)
         exp = torch.sum(exp * same_labels, dim=1)
         non_zero = exp!=0

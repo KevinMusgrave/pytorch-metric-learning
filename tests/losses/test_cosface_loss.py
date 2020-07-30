@@ -29,4 +29,5 @@ class TestCosFaceLoss(unittest.TestCase):
                 logits[i, c] -= margin
             
             correct_loss = torch.nn.functional.cross_entropy(logits*scale, labels.to(self.device))
-            self.assertTrue(torch.isclose(loss, correct_loss))
+            rtol = 1e-2 if dtype == torch.float16 else 1e-5
+            self.assertTrue(torch.isclose(loss, correct_loss, rtol=rtol))

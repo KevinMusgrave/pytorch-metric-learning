@@ -19,7 +19,7 @@ class TestCrossBatchMemory(unittest.TestCase):
             loss = CrossBatchMemory(loss=None, embedding_size=self.embedding_size, memory_size=self.memory_size, dtype=dtype)
             loss.embedding_memory = loss.embedding_memory.to(self.device)
             loss.label_memory = loss.label_memory.to(self.device)
-            embeddings = torch.randn(batch_size, self.embedding_size).type(dtype).to(self.device)
+            embeddings = torch.randn(batch_size, self.embedding_size).to(self.device).type(dtype)
             labels = torch.randint(0, 10, (batch_size,)).to(self.device)
             num_tuples = 1000
             num_non_identical = 147
@@ -78,7 +78,7 @@ class TestCrossBatchMemory(unittest.TestCase):
                 loss = CrossBatchMemory(loss=inner_loss, embedding_size=self.embedding_size, memory_size=memory_size, dtype=dtype)
                 loss_with_miner = CrossBatchMemory(loss=inner_loss, embedding_size=self.embedding_size, memory_size=memory_size, miner=inner_miner, dtype=dtype)
                 for i in range(10):
-                    embeddings = torch.randn(memory_size, self.embedding_size).type(dtype).to(self.device)
+                    embeddings = torch.randn(memory_size, self.embedding_size).to(self.device).type(dtype)
                     labels = torch.randint(0, 4, (memory_size,)).to(self.device)
                     inner_loss_val = inner_loss(embeddings, labels)
                     loss_val = loss(embeddings, labels)
@@ -119,7 +119,7 @@ class TestCrossBatchMemory(unittest.TestCase):
             all_embeddings = torch.tensor([], dtype=dtype).to(self.device)
             all_labels = torch.LongTensor([]).to(self.device)
             for i in range(num_iter):
-                embeddings = torch.randn(batch_size, self.embedding_size).type(dtype).to(self.device)
+                embeddings = torch.randn(batch_size, self.embedding_size).to(self.device).type(dtype)
                 labels = torch.randint(0,num_labels,(batch_size,)).to(self.device)
                 loss = self.loss(embeddings, labels)
                 loss_with_miner = self.loss_with_miner(embeddings, labels)
@@ -162,7 +162,7 @@ class TestCrossBatchMemory(unittest.TestCase):
             batch_size = 32
             self.loss = CrossBatchMemory(loss=ContrastiveLoss(), embedding_size=self.embedding_size, memory_size=self.memory_size, dtype=dtype)
             for i in range(30):
-                embeddings = torch.randn(batch_size, self.embedding_size).type(dtype).to(self.device)
+                embeddings = torch.randn(batch_size, self.embedding_size).to(self.device).type(dtype)
                 labels = torch.arange(batch_size).to(self.device)
                 q = self.loss.queue_idx
                 self.assertTrue(q==(i*batch_size)%self.memory_size)
@@ -189,7 +189,7 @@ class TestCrossBatchMemory(unittest.TestCase):
             triplet_miner = TripletMarginMiner(margin=1)
             self.loss = CrossBatchMemory(loss=ContrastiveLoss(), embedding_size=self.embedding_size, memory_size=self.memory_size, dtype=dtype)
             for i in range(30):
-                embeddings = torch.randn(batch_size, self.embedding_size).type(dtype).to(self.device)
+                embeddings = torch.randn(batch_size, self.embedding_size).to(self.device).type(dtype)
                 labels = torch.arange(batch_size).to(self.device)
                 loss = self.loss(embeddings, labels)
                 all_labels = torch.cat([labels, self.loss.label_memory], dim=0)
@@ -231,7 +231,7 @@ class TestCrossBatchMemory(unittest.TestCase):
             triplet_miner = TripletMarginMiner(margin=1)
             self.loss = CrossBatchMemory(loss=ContrastiveLoss(), embedding_size=self.embedding_size, memory_size=self.memory_size, dtype=dtype)
             for i in range(30):
-                embeddings = torch.randn(batch_size, self.embedding_size).type(dtype).to(self.device)
+                embeddings = torch.randn(batch_size, self.embedding_size).to(self.device).type(dtype)
                 labels = torch.arange(batch_size).to(self.device)
                 self.loss(embeddings, labels)
                 for curr_miner in [pair_miner, triplet_miner]:

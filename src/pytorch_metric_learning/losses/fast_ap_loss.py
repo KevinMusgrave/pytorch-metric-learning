@@ -15,8 +15,8 @@ class FastAPLoss(BaseMetricLossFunction):
         miner_weights = lmu.convert_to_weights(indices_tuple, labels, dtype=embeddings.dtype)
         N = labels.size(0)
         a1_idx, p_idx, a2_idx, n_idx = lmu.get_all_pairs_indices(labels)
-        I_pos = torch.zeros(N, N).to(embeddings.device)
-        I_neg = torch.zeros(N, N).to(embeddings.device)
+        I_pos = torch.zeros(N, N, dtype=embeddings.dtype).to(embeddings.device)
+        I_neg = torch.zeros(N, N, dtype=embeddings.dtype).to(embeddings.device)
         I_pos[a1_idx, p_idx] = 1
         I_neg[a2_idx, n_idx] = 1
         N_pos = torch.sum(I_pos, dim=1)
@@ -27,7 +27,7 @@ class FastAPLoss(BaseMetricLossFunction):
 
         histogram_max = 4. if self.normalize_embeddings else torch.max(dist_mat).item()
         histogram_delta = histogram_max / self.num_bins
-        mid_points = torch.linspace(0., histogram_max, steps=self.num_edges).view(-1,1,1).to(embeddings.device)
+        mid_points = torch.linspace(0., histogram_max, steps=self.num_edges).view(-1,1,1).to(embeddings.device).type(embeddings.dtype)
         pulse = torch.nn.functional.relu(1 - torch.abs(dist_mat-mid_points)/histogram_delta)
         pos_hist = torch.t(torch.sum(pulse * I_pos, dim=2))
         neg_hist = torch.t(torch.sum(pulse * I_neg, dim=2))

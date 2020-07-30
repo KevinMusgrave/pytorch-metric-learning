@@ -73,16 +73,17 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
             k = (angles / (math.pi / self.margin)).floor() # Equation 6: angles needs to be between [k*pi/m and (k+1)*pi/m]
         return ((-1)**k)*cos_with_margin - (2*k)
 
-    def cast_types(self, embeddings):
-        self.W.data = self.W.data.type(embeddings.dtype)
-        self.n_range = self.n_range.type(embeddings.dtype)
-        self.margin_choose_n = self.margin_choose_n.type(embeddings.dtype)
-        self.cos_powers = self.cos_powers.type(embeddings.dtype)
-        self.alternating = self.alternating.type(embeddings.dtype)
+    def cast_types(self, dtype):
+        self.W.data = self.W.data.type(dtype)
+        self.n_range = self.n_range.type(dtype)
+        self.margin_choose_n = self.margin_choose_n.type(dtype)
+        self.cos_powers = self.cos_powers.type(dtype)
+        self.alternating = self.alternating.type(dtype)
 
     def compute_loss(self, embeddings, labels, indices_tuple):
-        self.cast_types(embeddings)
-        miner_weights = lmu.convert_to_weights(indices_tuple, labels, dtype=embeddings.dtype)
+        dtype = embeddings.dtype
+        self.cast_types(dtype)
+        miner_weights = lmu.convert_to_weights(indices_tuple, labels, dtype=dtype)
         mask = self.get_target_mask(embeddings, labels)
         cosine = self.get_cosine(embeddings)
         cosine_of_target_classes = cosine[mask == 1]

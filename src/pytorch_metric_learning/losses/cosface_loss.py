@@ -14,8 +14,8 @@ class CosFaceLoss(LargeMarginSoftmaxLoss):
     def init_margin(self):
         pass
 
-    def cast_types(self, embeddings):
-        self.W.data = self.W.data.type(embeddings.dtype)
+    def cast_types(self, dtype):
+        self.W.data = self.W.data.type(dtype)
 
     def modify_cosine_of_target_classes(self, cosine_of_target_classes, *args):
         self.get_angles(cosine_of_target_classes) # For the purpose of collecting stats

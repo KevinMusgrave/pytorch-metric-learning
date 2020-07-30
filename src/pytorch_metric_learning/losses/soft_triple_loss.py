@@ -22,14 +22,19 @@ class SoftTripleLoss(BaseMetricLossFunction):
         torch.nn.init.kaiming_uniform_(self.fc, a=math.sqrt(5))
         self.add_to_recordable_attributes(list_of_names=["same_class_center_sim", "diff_class_center_sim"], is_stat=True)
 
+    def cast_types(self, dtype):
+        self.fc.data = self.fc.data.type(dtype)
+
     def compute_loss(self, embeddings, labels, indices_tuple):
-        miner_weights = lmu.convert_to_weights(indices_tuple, labels, dtype=embeddings.dtype)
+        dtype = embeddings.dtype
+        self.cast_types(dtype)
+        miner_weights = lmu.convert_to_weights(indices_tuple, labels, dtype=dtype)
         centers = F.normalize(self.fc, p=2, dim=0) if self.normalize_embeddings else self.fc
         sim_to_centers = torch.matmul(embeddings, centers)
         sim_to_centers = sim_to_centers.view(-1, self.num_classes, self.centers_per_class)
         prob = F.softmax(sim_to_centers*self.gamma, dim=2)
         sim_to_classes = torch.sum(prob*sim_to_centers, dim=2)
-        margin = torch.zeros(sim_to_classes.shape).to(embeddings.device)
+        margin = torch.zeros(sim_to_classes.shape, dtype=dtype).to(embeddings.device)
         margin[torch.arange(0, margin.shape[0]), labels] = self.margin
         loss = F.cross_entropy(self.la*(sim_to_classes-margin), labels, reduction='none')
         loss = loss*miner_weights
@@ -38,7 +43,9 @@ class SoftTripleLoss(BaseMetricLossFunction):
         reg = 0
         if self.reg_weight > 0 and self.centers_per_class > 1:
             center_similarities = centers.t().matmul(centers)
-            reg = torch.sum(torch.sqrt(2.0+1e-5-2.*center_similarities[self.same_class_mask]))/(2*torch.sum(self.same_class_mask))
+            small_val = c_f.small_val(dtype)
+            center_similarities_masked = torch.clamp(2.*center_similarities[self.same_class_mask], max=2)
+            reg = torch.sum(torch.sqrt(2.0 + small_val - center_similarities_masked))/(2*torch.sum(self.same_class_mask))
             self.set_stats(center_similarities)
             
         return {"loss": {"losses": loss, "indices": c_f.torch_arange_from_size(embeddings), "reduction_type": "element"},

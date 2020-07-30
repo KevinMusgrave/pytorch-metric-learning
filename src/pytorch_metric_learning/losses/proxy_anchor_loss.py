@@ -17,12 +17,13 @@ class ProxyAnchorLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         self.margin = margin
         self.alpha = alpha
         
-    def cast_types(self, embeddings):
-        self.proxies.data = self.proxies.data.type(embeddings.dtype)
+    def cast_types(self, dtype):
+        self.proxies.data = self.proxies.data.type(dtype)
 
     def compute_loss(self, embeddings, labels, indices_tuple):
-        self.cast_types(embeddings)
-        miner_weights = lmu.convert_to_weights(indices_tuple, labels, dtype=embeddings.dtype).unsqueeze(1)
+        dtype = embeddings.dtype
+        self.cast_types(dtype)
+        miner_weights = lmu.convert_to_weights(indices_tuple, labels, dtype=dtype).unsqueeze(1)
         prox = torch.nn.functional.normalize(self.proxies, p=2, dim=1) if self.normalize_embeddings else self.proxies
         cos = lmu.sim_mat(embeddings, prox)
 
@@ -30,7 +31,7 @@ class ProxyAnchorLoss(WeightRegularizerMixin, BaseMetricLossFunction):
             embedding_norms_mat = self.embedding_norms.unsqueeze(0)*torch.norm(prox, p=2, dim=1, keepdim=True)
             cos = cos / (embedding_norms_mat.t())
 
-        pos_mask = torch.nn.functional.one_hot(labels, self.num_classes).type(embeddings.dtype)
+        pos_mask = torch.nn.functional.one_hot(labels, self.num_classes).type(dtype)
         neg_mask = 1 - pos_mask
 
         with_pos_proxies = torch.nonzero(torch.sum(pos_mask, dim=0) != 0).squeeze(1)

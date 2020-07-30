@@ -18,7 +18,7 @@ class DistanceWeightedMiner(BaseTupleMiner):
         dist_mat = lmu.dist_mat(embeddings, ref_emb)
         
         # Cut off to avoid high variance.
-        dist_mat = torch.max(dist_mat, torch.tensor(self.cutoff, dtype=embeddings.dtype).to(dist_mat.device))
+        dist_mat = torch.clamp(dist_mat, min=self.cutoff)
 
         # Subtract max(log(distance)) for stability.
         # See the first equation from Section 4 of the paper

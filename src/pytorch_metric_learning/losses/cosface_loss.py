@@ -15,5 +15,5 @@ class CosFaceLoss(LargeMarginSoftmaxLoss):
         pass
 
     def modify_cosine_of_target_classes(self, cosine_of_target_classes, *args):
-        self.get_angles(cosine_of_target_classes) # For analysis purposes
+        self.get_angles(cosine_of_target_classes) # For the purpose of collecting stats
         return cosine_of_target_classes - self.margin

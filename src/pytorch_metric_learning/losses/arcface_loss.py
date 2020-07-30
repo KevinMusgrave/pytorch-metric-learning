@@ -16,5 +16,5 @@ class ArcFaceLoss(LargeMarginSoftmaxLoss):
 
     def modify_cosine_of_target_classes(self, cosine_of_target_classes, *args):
         angles = self.get_angles(cosine_of_target_classes)
-        return torch.cos(angles + self.margin).type(cosine_of_target_classes.dtype)
+        return torch.cos(angles + self.margin)
 

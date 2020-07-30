@@ -17,7 +17,7 @@ class TestArcFaceLoss(unittest.TestCase):
             loss_func = ArcFaceLoss(margin=margin, scale=scale, num_classes=10, embedding_size=2, dtype=dtype).to(self.device)
             embedding_angles = torch.arange(0, 180)
             embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=dtype).to(self.device) #2D embeddings
-            labels = torch.randint(low=0, high=10, size=(180,)).to(self.device)
+            labels = torch.randint(low=0, high=10, size=(180,))
 
             loss = loss_func(embeddings, labels)
             loss.backward()
@@ -27,5 +27,5 @@ class TestArcFaceLoss(unittest.TestCase):
             for i, c in enumerate(labels):
                 logits[i, c] = torch.cos(torch.acos(logits[i, c]) + torch.tensor(np.radians(margin), dtype=dtype).to(self.device))
             
-            correct_loss = torch.nn.functional.cross_entropy(logits*scale, labels)
+            correct_loss = torch.nn.functional.cross_entropy(logits*scale, labels.to(self.device))
             self.assertTrue(torch.isclose(loss, correct_loss))

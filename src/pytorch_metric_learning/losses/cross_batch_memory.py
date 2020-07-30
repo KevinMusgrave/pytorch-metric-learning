@@ -2,12 +2,12 @@ import torch
 from ..utils import common_functions as c_f, loss_and_miner_utils as lmu
 
 class CrossBatchMemory(torch.nn.Module):
-    def __init__(self, loss, embedding_size, memory_size=1024, miner=None):
+    def __init__(self, loss, embedding_size, memory_size=1024, miner=None, dtype=torch.float32):
         super().__init__()
         self.loss = loss
         self.miner = miner
         self.memory_size = memory_size
-        self.embedding_memory = torch.zeros(self.memory_size, embedding_size)
+        self.embedding_memory = torch.zeros(self.memory_size, embedding_size, dtype=dtype)
         self.label_memory = torch.zeros(self.memory_size).long()
         self.has_been_filled = False
         self.queue_idx = 0

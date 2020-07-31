@@ -24,7 +24,7 @@ class BaseMetricLossFunction(ModuleWithRecordsReducerAndDistance):
             indices_tuple: tuple of size 3 for triplets (anchors, positives, negatives)
                             or size 4 for pairs (anchor1, postives, anchor2, negatives)
                             Can also be left as None
-        Returns: the loss (float)
+        Returns: the loss
         """
         self.reset_stats()
         c_f.assert_embeddings_and_labels_are_same_size(embeddings, labels)

@@ -5,56 +5,91 @@ import numpy as np
 class TestCalculateAccuracies(unittest.TestCase):
 
     def test_accuracy_calculator(self):
-        query_labels = np.array([0, 1, 2, 3, 4])
-        knn_labels = np.array([[0, 1, 1, 2, 2],
+        query_labels = np.array([1, 1, 2, 3, 4])
+
+        knn_labels1 = np.array([[0, 1, 1, 2, 2],
                                     [1, 0, 1, 1, 3],
                                     [4, 4, 4, 4, 2],
                                     [3, 1, 3, 1, 3],
                                     [0, 0, 4, 2, 2]])
-        label_counts = {0:2, 1:3, 2:5, 3:4, 4:5}
-        AC = accuracy_calculator.AccuracyCalculator(exclude=("NMI", "AMI"))
-        kwargs = {"query_labels": query_labels,
-                "label_counts": label_counts,
-                "knn_labels": knn_labels,
-                "not_lone_query_idx": range(5)}
+        label_counts1 = {1:3, 2:5, 3:4, 4:5}
 
-        function_dict = AC.get_function_dict()
+        knn_labels2 = knn_labels1+5
+        label_counts2 = {k+5:v for k,v in label_counts1.items()}
 
-        for ecfss in [False, True]:
-            if ecfss:
-                kwargs["knn_labels"] = kwargs["knn_labels"][:, 1:]
-            kwargs["embeddings_come_from_same_source"] = ecfss
-            acc = AC._get_accuracy(function_dict, **kwargs)
-            self.assertTrue(acc["precision_at_1"]==self.correct_precision_at_1(ecfss))
-            self.assertTrue(acc["r_precision"]==self.correct_r_precision(ecfss))
-            self.assertTrue(acc["mean_average_precision_at_r"]==self.correct_mean_average_precision_at_r(ecfss))
+        for avg_of_avgs in [False, True]:
+            for i, (knn_labels, label_counts) in enumerate([(knn_labels1, label_counts1), (knn_labels2, label_counts2)]):
+                
+                AC = accuracy_calculator.AccuracyCalculator(exclude=("NMI", "AMI"), avg_of_avgs=avg_of_avgs)
+                kwargs = {"query_labels": query_labels,
+                        "label_counts": label_counts,
+                        "knn_labels": knn_labels,
+                        "not_lone_query_mask": np.ones(5).astype(np.bool) if i==0 else np.zeros(5).astype(np.bool)}
+
+                function_dict = AC.get_function_dict()
+
+                for ecfss in [False, True]:
+                    if ecfss:
+                        kwargs["knn_labels"] = kwargs["knn_labels"][:, 1:]
+                    kwargs["embeddings_come_from_same_source"] = ecfss
+                    acc = AC._get_accuracy(function_dict, **kwargs)
+                    if i == 1:
+                        self.assertTrue(acc["precision_at_1"]==0)
+                        self.assertTrue(acc["r_precision"]==0)
+                        self.assertTrue(acc["mean_average_precision_at_r"]==0)
+                    else:
+                        self.assertTrue(acc["precision_at_1"]==self.correct_precision_at_1(ecfss, avg_of_avgs))
+                        self.assertTrue(acc["r_precision"]==self.correct_r_precision(ecfss, avg_of_avgs))
+                        self.assertTrue(acc["mean_average_precision_at_r"]==self.correct_mean_average_precision_at_r(ecfss, avg_of_avgs))
 
 
-    def correct_precision_at_1(self, embeddings_come_from_same_source):
+    def correct_precision_at_1(self, embeddings_come_from_same_source, avg_of_avgs):
         if not embeddings_come_from_same_source:
-            return 0.6
-        return 0
+            if not avg_of_avgs:
+                return 0.4
+            else:
+                return (0.5+0+1+0) / 4
+        else:
+            if not avg_of_avgs:
+                return 1./5
+            else:
+                return (0.5+0+0+0)/4           
         
-    def correct_r_precision(self, embeddings_come_from_same_source):
+    def correct_r_precision(self, embeddings_come_from_same_source, avg_of_avgs):
         if not embeddings_come_from_same_source:
-            return np.mean([1./2, 2./3, 1./5, 2./4, 1./5])
-        return np.mean([0./1, 1./2, 1./4, 1./3, 1./4])
+            acc0 = 2./3
+            acc1 = 2./3
+            acc2 = 1./5
+            acc3 = 2./4
+            acc4 = 1./5
+        else:
+            acc0 = 1./1
+            acc1 = 1./2
+            acc2 = 1./4
+            acc3 = 1./3
+            acc4 = 1./4
+        if not avg_of_avgs:
+            return np.mean([acc0, acc1, acc2, acc3, acc4])
+        else:
+            return np.mean([(acc0 + acc1)/2, acc2, acc3, acc4])
 
-    def correct_mean_average_precision_at_r(self, embeddings_come_from_same_source):
+    def correct_mean_average_precision_at_r(self, embeddings_come_from_same_source, avg_of_avgs):
         if not embeddings_come_from_same_source:
-            acc0 = (1) / 2
+            acc0 = (0 + 1./2 + 2./3) / 3
             acc1 = (1 + 2./3) / 3
             acc2 = (1./5) / 5
             acc3 = (1 + 2./3) / 4
             acc4 = (1./3) / 5
-            return np.mean([acc0, acc1, acc2, acc3, acc4])
         else:
-            acc0 = 0
+            acc0 = 1
             acc1 = (1./2) / 2
             acc2 = (1./4) / 4
             acc3 = (1./2) / 3
             acc4 = (1./2) / 4
+        if not avg_of_avgs:
             return np.mean([acc0, acc1, acc2, acc3, acc4])
+        else:
+            return np.mean([(acc0 + acc1)/2, acc2, acc3, acc4])
 
     def test_get_label_counts(self):
         label_counts, num_k = accuracy_calculator.get_label_counts([0,1,3,2,3,1,3,3,4,6,5,10,4,4,4,4,6,6,5])

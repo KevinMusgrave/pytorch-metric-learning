@@ -13,7 +13,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.parameter import Parameter
 from torch.nn import init
-
+from pytorch_metric_learning.utils import common_functions as c_f
 
 class OriginalImplementationSoftTriple(nn.Module):
     def __init__(self, la, gamma, tau, margin, dim, cN, K):
@@ -38,12 +38,14 @@ class OriginalImplementationSoftTriple(nn.Module):
         simStruc = simInd.reshape(-1, self.cN, self.K)
         prob = F.softmax(simStruc*self.gamma, dim=2)
         simClass = torch.sum(prob*simStruc, dim=2)
-        marginM = torch.zeros(simClass.shape)
+        marginM = torch.zeros(simClass.shape, dtype=input.dtype).to(input.device)
         marginM[torch.arange(0, marginM.shape[0]), target] = self.margin
         lossClassify = F.cross_entropy(self.la*(simClass-marginM), target)
         if self.tau > 0 and self.K > 1:
             simCenter = centers.t().matmul(centers)
-            reg = torch.sum(torch.sqrt(2.0+1e-5-2.*simCenter[self.weight]))/(self.cN*self.K*(self.K-1.))
+            small_val = c_f.small_val(input.dtype)
+            simCenterMasked = torch.clamp(2.*simCenter[self.weight], max=2)
+            reg = torch.sum(torch.sqrt(2.0+small_val-simCenterMasked))/(self.cN*self.K*(self.K-1.))
             return lossClassify+self.tau*reg
         else:
             return lossClassify
@@ -54,27 +56,31 @@ from pytorch_metric_learning.losses import SoftTripleLoss
 from pytorch_metric_learning.utils import common_functions as c_f
 
 class TestSoftTripleLoss(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        self.device = torch.device('cuda')
+
     def test_soft_triple_loss(self):
         embedding_size = 2
         num_classes = 11
-        la = 20
-        gamma = 0.1
         reg_weight = 0.2
         margin = 0.01
 
-        for centers_per_class in range(1, 12):
+        for dtype in [torch.float16, torch.float32, torch.float64]:
+            la = 1 if dtype == torch.float16 else 20
+            gamma = 1 if dtype == torch.float16 else 0.1
+            for centers_per_class in range(1, 12):
+                loss_func = SoftTripleLoss(embedding_size, num_classes, centers_per_class=centers_per_class, la=la, gamma=gamma, reg_weight=reg_weight, margin=margin).to(self.device)
+                original_loss_func = OriginalImplementationSoftTriple(la, gamma, reg_weight, margin, embedding_size, num_classes, centers_per_class).to(self.device)
 
-            loss_func = SoftTripleLoss(embedding_size, num_classes, centers_per_class=centers_per_class, la=la, gamma=gamma, reg_weight=reg_weight, margin=margin)
-            original_loss_func = OriginalImplementationSoftTriple(la, gamma, reg_weight, margin, embedding_size, num_classes, centers_per_class)
+                original_loss_func.fc.data = original_loss_func.fc.data.type(dtype)
+                loss_func.fc = original_loss_func.fc
 
-            loss_func.fc = original_loss_func.fc
+                embedding_angles = torch.arange(0, 180)
+                embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=dtype).to(self.device) #2D embeddings
+                labels = torch.randint(low=0, high=10, size=(180,)).to(self.device)
 
-            embedding_angles = torch.arange(0, 180)
-            embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=torch.float) #2D embeddings
-            labels = torch.randint(low=0, high=10, size=(180,))
-
-            loss = loss_func(embeddings, labels)
-            loss.backward()
-            correct_loss = original_loss_func(embeddings, labels)
-
-            self.assertTrue(torch.isclose(loss, correct_loss))
+                loss = loss_func(embeddings, labels)
+                loss.backward()
+                correct_loss = original_loss_func(embeddings, labels)
+                self.assertTrue(torch.isclose(loss, correct_loss))

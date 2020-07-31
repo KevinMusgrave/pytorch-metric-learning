@@ -5,7 +5,6 @@ from pytorch_metric_learning.utils import common_functions as c_f
 from pytorch_metric_learning.distances import CosineSimilarity
 
 class TestPairMarginMiner(unittest.TestCase):
-
     def test_pair_margin_miner(self):
         for use_similarity in [False, True]:
             embedding_angles = torch.arange(0, 16)

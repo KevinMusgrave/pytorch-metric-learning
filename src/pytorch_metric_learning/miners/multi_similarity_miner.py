@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 
 from .base_miner import BaseTupleMiner
-from ..utils import loss_and_miner_utils as lmu
+from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
 import torch
 from ..distances import CosineSimilarity
 
@@ -23,8 +23,8 @@ class MultiSimilarityMiner(BaseTupleMiner):
         mat_neg_sorting = mat
         mat_pos_sorting = mat.clone()
 
-        pos_ignore = float('inf') if self.distance.is_inverted else -float('inf')
-        neg_ignore = -float('inf') if self.distance.is_inverted else float('inf')
+        pos_ignore = c_f.pos_inf(embeddings.dtype) if self.distance.is_inverted else c_f.neg_inf(embeddings.dtype)
+        neg_ignore = c_f.neg_inf(embeddings.dtype) if self.distance.is_inverted else c_f.pos_inf(embeddings.dtype)
 
         mat_pos_sorting[a2, n] = pos_ignore
         mat_neg_sorting[a1, p] = neg_ignore

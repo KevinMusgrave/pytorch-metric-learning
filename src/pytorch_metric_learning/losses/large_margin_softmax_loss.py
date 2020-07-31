@@ -28,10 +28,10 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         self.margin = int(self.margin)
         self.max_n = (self.margin // 2)
         ## For the trigonometric multiple-angle formula ##
-        self.n_range = torch.FloatTensor([n for n in range(0, self.max_n+1)])
-        self.margin_choose_n = torch.FloatTensor([scipy.special.binom(self.margin, 2*n) for n in self.n_range])
-        self.cos_powers = torch.FloatTensor([self.margin-(2*n) for n in self.n_range])
-        self.alternating = torch.FloatTensor([(-1)**n for n in self.n_range])
+        self.n_range = torch.tensor([n for n in range(0, self.max_n+1)])
+        self.margin_choose_n = torch.tensor([scipy.special.binom(self.margin, 2*n) for n in self.n_range])
+        self.cos_powers = torch.tensor([self.margin-(2*n) for n in self.n_range])
+        self.alternating = torch.tensor([(-1)**n for n in self.n_range])
 
     def get_cos_with_margin(self, cosine):
         cosine = cosine.unsqueeze(1)
@@ -61,7 +61,7 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
 
     def get_target_mask(self, embeddings, labels):
         batch_size = labels.size(0)
-        mask = torch.zeros(batch_size, self.num_classes).to(embeddings.device)
+        mask = torch.zeros(batch_size, self.num_classes, dtype=embeddings.dtype).to(embeddings.device)
         mask[torch.arange(batch_size), labels] = 1
         return mask
 
@@ -73,8 +73,17 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
             k = (angles / (math.pi / self.margin)).floor() # Equation 6: angles needs to be between [k*pi/m and (k+1)*pi/m]
         return ((-1)**k)*cos_with_margin - (2*k)
 
+    def cast_types(self, dtype, device):
+        self.W.data = self.W.data.to(device).type(dtype)
+        self.n_range = self.n_range.to(device).type(dtype)
+        self.margin_choose_n = self.margin_choose_n.to(device).type(dtype)
+        self.cos_powers = self.cos_powers.to(device).type(dtype)
+        self.alternating = self.alternating.to(device).type(dtype)
+
     def compute_loss(self, embeddings, labels, indices_tuple):
-        miner_weights = lmu.convert_to_weights(indices_tuple, labels)
+        dtype, device = embeddings.dtype, embeddings.device
+        self.cast_types(dtype, device)
+        miner_weights = lmu.convert_to_weights(indices_tuple, labels, dtype=dtype)
         mask = self.get_target_mask(embeddings, labels)
         cosine = self.get_cosine(embeddings)
         cosine_of_target_classes = cosine[mask == 1]

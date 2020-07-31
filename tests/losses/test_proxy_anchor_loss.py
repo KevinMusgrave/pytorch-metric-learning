@@ -71,22 +71,27 @@ from pytorch_metric_learning.losses import ProxyAnchorLoss
 from pytorch_metric_learning.utils import common_functions as c_f
 
 class TestProxyAnchorLoss(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        self.device = torch.device('cuda')
+
     def test_proxyanchor_loss(self):
         num_classes = 10
         embedding_size = 2
         margin = 0.5
-        alpha = 32
-        device = torch.device("cuda")
-        loss_func = ProxyAnchorLoss(num_classes, embedding_size, margin = margin, alpha = alpha).to(device)
-        original_loss_func = OriginalImplementationProxyAnchor(num_classes, embedding_size, mrg = margin, alpha = alpha).to(device)
+        for dtype in [torch.float16, torch.float32, torch.float64]:
+            alpha = 1 if dtype == torch.float16 else 32
+            loss_func = ProxyAnchorLoss(num_classes, embedding_size, margin = margin, alpha = alpha).to(self.device)
+            original_loss_func = OriginalImplementationProxyAnchor(num_classes, embedding_size, mrg = margin, alpha = alpha).to(self.device)
+            original_loss_func.proxies.data = original_loss_func.proxies.data.type(dtype) 
+            loss_func.proxies = original_loss_func.proxies 
 
-        loss_func.proxies = original_loss_func.proxies
+            embedding_angles = list(range(0, 180))
+            embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=dtype).to(self.device) #2D embeddings
+            labels = torch.randint(low=0, high=5, size=(180,)).to(self.device)
 
-        embedding_angles = list(range(0, 180))
-        embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=torch.float).to(device) #2D embeddings
-        labels = torch.randint(low=0, high=5, size=(180,)).to(device)
-
-        loss = loss_func(embeddings, labels)
-        loss.backward()
-        correct_loss = original_loss_func(embeddings, labels)
-        self.assertTrue(torch.isclose(loss, correct_loss))
+            loss = loss_func(embeddings, labels)
+            loss.backward()
+            correct_loss = original_loss_func(embeddings, labels)
+            rtol = 1e-2 if dtype == torch.float16 else 1e-5
+            self.assertTrue(torch.isclose(loss, correct_loss, rtol=rtol))

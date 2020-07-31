@@ -199,3 +199,4 @@ miners.TripletMarginMiner(margin, type_of_triplets="all", **kwargs)
 	* "all" means all triplets that violate the margin
 	* "hard" is a subset of "all", but the negative is closer to the anchor than the positive
 	* "semihard" is a subset of "all", but the negative is further from the anchor than the positive
+	* "easy" means all triplets that do **not** violate the margin.

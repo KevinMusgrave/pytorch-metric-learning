@@ -23,7 +23,7 @@ class MarginLoss(BaseMetricLossFunction):
             return self.zero_losses()
 
         beta = self.beta if len(self.beta) == 1 else self.beta[labels[anchor_idx]]
-        beta = beta.to(embeddings.device)
+        beta = beta.to(embeddings.device).type(embeddings.dtype)
         
         mat = self.distance(embeddings)
 

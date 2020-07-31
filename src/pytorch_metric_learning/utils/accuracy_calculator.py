@@ -3,6 +3,7 @@
 import numpy as np
 from sklearn.metrics import normalized_mutual_info_score, adjusted_mutual_info_score
 from . import stat_utils
+import logging
 
 def maybe_get_avg_of_avgs(accuracy_per_sample, sample_labels, avg_of_avgs):
     if avg_of_avgs:
@@ -22,14 +23,14 @@ def get_relevance_mask(shape, gt_labels, embeddings_come_from_same_source, label
         relevance_mask[matching_rows, :max_column] = 1
     return relevance_mask
 
-def r_precision(knn_labels, gt_labels, embeddings_come_from_same_source, label_counts, average_per_class):
+def r_precision(knn_labels, gt_labels, embeddings_come_from_same_source, label_counts, avg_of_avgs):
     relevance_mask = get_relevance_mask(knn_labels.shape, gt_labels, embeddings_come_from_same_source, label_counts)
     matches_per_row = np.sum((knn_labels == gt_labels) * relevance_mask.astype(bool), axis=1) 
     max_possible_matches_per_row = np.sum(relevance_mask, axis=1)
     accuracy_per_sample = matches_per_row / max_possible_matches_per_row
-    return maybe_get_avg_of_avgs(accuracy_per_sample, gt_labels, average_per_class)
+    return maybe_get_avg_of_avgs(accuracy_per_sample, gt_labels, avg_of_avgs)
 
-def mean_average_precision_at_r(knn_labels, gt_labels, embeddings_come_from_same_source, label_counts, average_per_class):
+def mean_average_precision_at_r(knn_labels, gt_labels, embeddings_come_from_same_source, label_counts, avg_of_avgs):
     relevance_mask = get_relevance_mask(knn_labels.shape, gt_labels, embeddings_come_from_same_source, label_counts)
     num_samples, num_k = knn_labels.shape
     equality = (knn_labels == gt_labels) * relevance_mask.astype(bool)
@@ -39,12 +40,12 @@ def mean_average_precision_at_r(knn_labels, gt_labels, embeddings_come_from_same
     summed_precision_per_row = np.sum(precision_at_ks * relevance_mask, axis=1)
     max_possible_matches_per_row = np.sum(relevance_mask, axis=1)
     accuracy_per_sample = summed_precision_per_row / max_possible_matches_per_row
-    return maybe_get_avg_of_avgs(accuracy_per_sample, gt_labels, average_per_class)
+    return maybe_get_avg_of_avgs(accuracy_per_sample, gt_labels, avg_of_avgs)
 
-def precision_at_k(knn_labels, gt_labels, k, average_per_class):
+def precision_at_k(knn_labels, gt_labels, k, avg_of_avgs):
     curr_knn_labels = knn_labels[:, :k]
     accuracy_per_sample = np.sum(curr_knn_labels == gt_labels, axis=1) / k
-    return maybe_get_avg_of_avgs(accuracy_per_sample, gt_labels, average_per_class)
+    return maybe_get_avg_of_avgs(accuracy_per_sample, gt_labels, avg_of_avgs)
 
 def get_label_counts(reference_labels):
     unique_labels, label_counts = np.unique(reference_labels, return_counts=True)
@@ -94,16 +95,22 @@ class AccuracyCalculator:
     def calculate_AMI(self, query_labels, cluster_labels, **kwargs):
         return adjusted_mutual_info_score(query_labels, cluster_labels)
 
-    def calculate_precision_at_1(self, knn_labels, query_labels, not_lone_query_idx, **kwargs):
-        knn_labels, query_labels = knn_labels[not_lone_query_idx], query_labels[not_lone_query_idx]
+    def calculate_precision_at_1(self, knn_labels, query_labels, not_lone_query_mask, **kwargs):
+        if not any(not_lone_query_mask):
+            return 0
+        knn_labels, query_labels = knn_labels[not_lone_query_mask], query_labels[not_lone_query_mask]
         return precision_at_k(knn_labels, query_labels[:, None], 1, self.avg_of_avgs)
         
-    def calculate_mean_average_precision_at_r(self, knn_labels, query_labels, not_lone_query_idx, embeddings_come_from_same_source, label_counts, **kwargs):
-        knn_labels, query_labels = knn_labels[not_lone_query_idx], query_labels[not_lone_query_idx]
+    def calculate_mean_average_precision_at_r(self, knn_labels, query_labels, not_lone_query_mask, embeddings_come_from_same_source, label_counts, **kwargs):
+        if not any(not_lone_query_mask):
+            return 0
+        knn_labels, query_labels = knn_labels[not_lone_query_mask], query_labels[not_lone_query_mask]
         return mean_average_precision_at_r(knn_labels, query_labels[:, None], embeddings_come_from_same_source, label_counts, self.avg_of_avgs)
 
-    def calculate_r_precision(self, knn_labels, query_labels, not_lone_query_idx, embeddings_come_from_same_source, label_counts, **kwargs):
-        knn_labels, query_labels = knn_labels[not_lone_query_idx], query_labels[not_lone_query_idx]
+    def calculate_r_precision(self, knn_labels, query_labels, not_lone_query_mask, embeddings_come_from_same_source, label_counts, **kwargs):
+        if not any(not_lone_query_mask):
+            return 0
+        knn_labels, query_labels = knn_labels[not_lone_query_mask], query_labels[not_lone_query_mask]
         return r_precision(knn_labels, query_labels[:, None], embeddings_come_from_same_source, label_counts, self.avg_of_avgs)
 
     def get_accuracy(self, query, reference, query_labels, reference_labels, embeddings_come_from_same_source, include=(), exclude=()):
@@ -123,12 +130,14 @@ class AccuracyCalculator:
             knn_indices, knn_distances = stat_utils.get_knn(reference, query, num_k, embeddings_come_from_same_source)
             knn_labels = reference_labels[knn_indices]
             lone_query_labels = get_lone_query_labels(query_labels, reference_labels, label_counts, embeddings_come_from_same_source)
-            not_lone_query_idx = ~np.isin(query_labels, lone_query_labels)
+            not_lone_query_mask = ~np.isin(query_labels, lone_query_labels)
+            if not any(not_lone_query_mask):
+                logging.warning("None of the query labels are in the reference set.")
             kwargs["label_counts"] = label_counts
             kwargs["knn_labels"] = knn_labels
             kwargs["knn_distances"] = knn_distances
             kwargs["lone_query_labels"] = lone_query_labels
-            kwargs["not_lone_query_idx"] = not_lone_query_idx
+            kwargs["not_lone_query_mask"] = not_lone_query_mask
 
         if any(x in self.requires_clustering() for x in self.get_curr_metrics()):
             kwargs["cluster_labels"] = self.get_cluster_labels(**kwargs)                

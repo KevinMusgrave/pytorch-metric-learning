@@ -14,12 +14,13 @@ class LiftedStructureLoss(GenericPairLoss):
 
     def _compute_loss(self, pos_pairs, neg_pairs, indices_tuple):
         a1, p, a2, _ = indices_tuple
+        dtype = pos_pairs.dtype
 
         if len(a1) > 0 and len(a2) > 0:
             pos_pairs = pos_pairs.unsqueeze(1)
-            n_per_p = ((a2.unsqueeze(0) == a1.unsqueeze(1)) | (a2.unsqueeze(0) == p.unsqueeze(1))).float()
+            n_per_p = ((a2.unsqueeze(0) == a1.unsqueeze(1)) | (a2.unsqueeze(0) == p.unsqueeze(1))).type(dtype)
             neg_pairs = neg_pairs*n_per_p
-            keep_mask = (~(n_per_p==0)).float()
+            keep_mask = (~(n_per_p==0)).type(dtype)
 
             remaining_pos_margin = self.distance.pos_neg_margin(self.pos_margin, pos_pairs)
             remaining_neg_margin = self.distance.pos_neg_margin(neg_pairs, self.neg_margin)

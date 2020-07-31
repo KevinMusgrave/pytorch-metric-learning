@@ -17,13 +17,14 @@ class NCALoss(BaseMetricLossFunction):
         return self.nca_computation(embeddings, embeddings, labels, labels, indices_tuple)
 
     def nca_computation(self, query, reference, query_labels, reference_labels, indices_tuple):
-        miner_weights = lmu.convert_to_weights(indices_tuple, query_labels)
+        dtype = query.dtype
+        miner_weights = lmu.convert_to_weights(indices_tuple, query_labels, dtype=dtype)
         mat = self.distance(query, reference)
         if not self.distance.is_inverted:
             mat = -mat
         if query is reference:
-            mat.fill_diagonal_(float('-inf'))
-        same_labels = (query_labels.unsqueeze(1) == reference_labels.unsqueeze(0)).float()
+            mat.fill_diagonal_(c_f.neg_inf(dtype))
+        same_labels = (query_labels.unsqueeze(1) == reference_labels.unsqueeze(0)).type(dtype)
         exp = torch.nn.functional.softmax(self.softmax_scale*mat, dim=1)
         exp = torch.sum(exp * same_labels, dim=1)
         non_zero = exp!=0

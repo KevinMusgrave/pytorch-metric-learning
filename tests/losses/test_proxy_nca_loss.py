@@ -11,7 +11,7 @@ class TestProxyNCALoss(unittest.TestCase):
     def test_proxy_nca_loss(self):
         for dtype in [torch.float16, torch.float32, torch.float64]:
             softmax_scale = 1 if dtype == torch.float16 else 10
-            loss_func = ProxyNCALoss(softmax_scale=softmax_scale, num_classes=10, embedding_size=2).to(self.device)
+            loss_func = ProxyNCALoss(softmax_scale=softmax_scale, num_classes=10, embedding_size=2)
 
             embedding_angles = torch.arange(0, 180)
             embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=dtype).to(self.device) #2D embeddings

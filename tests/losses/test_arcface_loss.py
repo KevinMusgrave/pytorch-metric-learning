@@ -14,7 +14,7 @@ class TestArcFaceLoss(unittest.TestCase):
         scale = 64
 
         for dtype in [torch.float16, torch.float32, torch.float64]:
-            loss_func = ArcFaceLoss(margin=margin, scale=scale, num_classes=10, embedding_size=2).to(self.device)
+            loss_func = ArcFaceLoss(margin=margin, scale=scale, num_classes=10, embedding_size=2)
             embedding_angles = torch.arange(0, 180)
             embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=dtype).to(self.device) #2D embeddings
             labels = torch.randint(low=0, high=10, size=(180,))

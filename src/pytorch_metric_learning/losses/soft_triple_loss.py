@@ -22,12 +22,12 @@ class SoftTripleLoss(BaseMetricLossFunction):
         torch.nn.init.kaiming_uniform_(self.fc, a=math.sqrt(5))
         self.add_to_recordable_attributes(list_of_names=["same_class_center_sim", "diff_class_center_sim"], is_stat=True)
 
-    def cast_types(self, dtype):
-        self.fc.data = self.fc.data.type(dtype)
+    def cast_types(self, dtype, device):
+        self.fc.data = self.fc.data.to(device).type(dtype)
 
     def compute_loss(self, embeddings, labels, indices_tuple):
-        dtype = embeddings.dtype
-        self.cast_types(dtype)
+        dtype, device = embeddings.dtype, embeddings.device
+        self.cast_types(dtype, device)
         miner_weights = lmu.convert_to_weights(indices_tuple, labels, dtype=dtype)
         centers = F.normalize(self.fc, p=2, dim=0) if self.normalize_embeddings else self.fc
         sim_to_centers = torch.matmul(embeddings, centers)

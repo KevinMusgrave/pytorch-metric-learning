@@ -15,8 +15,8 @@ class TestLargeMarginSoftmaxLoss(unittest.TestCase):
         margin = 10
         scale = 2
         for dtype in [torch.float16, torch.float32, torch.float64]:
-            loss_funcA = LargeMarginSoftmaxLoss(margin=margin, scale=scale, num_classes=10, embedding_size=2, normalize_embeddings=False).to(self.device)
-            loss_funcB = SphereFaceLoss(margin=margin, scale=scale, num_classes=10, embedding_size=2, normalize_embeddings=False).to(self.device)
+            loss_funcA = LargeMarginSoftmaxLoss(margin=margin, scale=scale, num_classes=10, embedding_size=2, normalize_embeddings=False)
+            loss_funcB = SphereFaceLoss(margin=margin, scale=scale, num_classes=10, embedding_size=2, normalize_embeddings=False)
 
             embedding_angles = torch.arange(0, 180)
             # multiply by 10 to make the embeddings unnormalized
@@ -73,8 +73,8 @@ class TestLargeMarginSoftmaxLoss(unittest.TestCase):
         margin = 10
         scale = 2
         for dtype in [torch.float16, torch.float32, torch.float64]:
-            loss_funcA = LargeMarginSoftmaxLoss(margin=margin, scale=scale, num_classes=10, embedding_size=2, normalize_embeddings=False).to(self.device)
-            loss_funcB = SphereFaceLoss(margin=margin, scale=scale, num_classes=10, embedding_size=2, normalize_embeddings=False).to(self.device)
+            loss_funcA = LargeMarginSoftmaxLoss(margin=margin, scale=scale, num_classes=10, embedding_size=2, normalize_embeddings=False)
+            loss_funcB = SphereFaceLoss(margin=margin, scale=scale, num_classes=10, embedding_size=2, normalize_embeddings=False)
             for loss_func in [loss_funcA, loss_funcB]:
                 embedding_angles = torch.arange(0, 180)
                 # multiply by 10 to make the embeddings unnormalized

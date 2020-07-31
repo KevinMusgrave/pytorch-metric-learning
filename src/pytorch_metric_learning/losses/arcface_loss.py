@@ -14,8 +14,8 @@ class ArcFaceLoss(LargeMarginSoftmaxLoss):
     def init_margin(self):
         self.margin = np.radians(self.margin)
 
-    def cast_types(self, dtype):
-        self.W.data = self.W.data.type(dtype)
+    def cast_types(self, dtype, device):
+        self.W.data = self.W.data.to(device).type(dtype)
 
     def modify_cosine_of_target_classes(self, cosine_of_target_classes, *args):
         angles = self.get_angles(cosine_of_target_classes)

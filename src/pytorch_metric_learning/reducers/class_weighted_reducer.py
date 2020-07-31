@@ -22,4 +22,5 @@ class ClassWeightedReducer(BaseReducer):
         return self.element_reduction_helper(losses, loss_indices[0], labels)
 
     def element_reduction_helper(self, losses, indices, labels):
+        self.weights = self.weights.type(losses.dtype).to(losses.device)
         return torch.mean(losses*self.weights[labels[indices]])

@@ -27,13 +27,49 @@ def sim_mat(x, y=None):
     return torch.matmul(x, y.t())
 
 
-def dist_mat(x, y=None, squared=False):
+# https://discuss.pytorch.org/t/efficient-distance-matrix-computation/9065/
+def manual_dist_mat(x, y=None, squared=False):
+    """
+    Input: x is a Nxd matrix
+           y is an optional Mxd matirx
+    Output: dist is a NxM matrix where dist[i,j]
+    is the square norm between x[i,:] and y[j,:]
+            if y is not given then use 'y=x'.
+    i.e. dist[i,j] = ||x[i,:]-y[j,:]||
+    """
+    dtype = x.dtype
+    x_norm = (x ** 2).sum(1).view(-1, 1)
+    if y is not None:
+        y_t = torch.transpose(y, 0, 1)
+        y_norm = (y ** 2).sum(1).view(1, -1)
+    else:
+        y_t = torch.transpose(x, 0, 1)
+        y_norm = x_norm.view(1, -1)
+
+    dist = x_norm + y_norm - 2.0 * torch.mm(x, y_t)
+    # Ensure diagonal is zero if x=y
     if y is None:
-        y = x
-    dist = torch.cdist(x,y)
-    if squared:
-        dist = dist**2
+        dist = dist - torch.diag(dist.diag())
+    dist = torch.clamp(dist, 0.0, c_f.pos_inf(dtype))
+    if not squared:
+        mask = (dist == 0).type(dtype)
+        dist = dist + mask * c_f.small_val(dtype)
+        dist = torch.sqrt(dist)
+        dist = dist * (1.0 - mask)
     return dist
+
+
+def dist_mat(x, y=None, squared=False):
+    try:
+        if y is None:
+            y = x
+        dist = torch.cdist(x,y)
+        if squared:
+            dist = dist**2
+        return dist
+    except RuntimeError: # cdist isn't supported for half-precision
+        return manual_dist_mat(x, y, squared)
+
 
 def get_pairwise_mat(x, y, use_similarity, squared):
     if x is y:

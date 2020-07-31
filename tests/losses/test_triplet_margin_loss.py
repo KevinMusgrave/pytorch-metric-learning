@@ -1,4 +1,5 @@
-import unittest
+import unittest 
+from .. import TEST_DTYPES
 import torch
 from pytorch_metric_learning.losses import TripletMarginLoss
 from pytorch_metric_learning.utils import common_functions as c_f
@@ -13,7 +14,7 @@ class TestTripletMarginLoss(unittest.TestCase):
         margin = 0.2
         loss_funcA = TripletMarginLoss(margin=margin)
         loss_funcB = TripletMarginLoss(margin=margin, reducer=MeanReducer())
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             embedding_angles = [0, 20, 40, 60, 80]
             embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=dtype).to(self.device) #2D embeddings
             labels = torch.LongTensor([0, 0, 1, 1, 2])
@@ -39,7 +40,7 @@ class TestTripletMarginLoss(unittest.TestCase):
     def test_with_no_valid_triplets(self):
         loss_funcA = TripletMarginLoss(margin=0.2)
         loss_funcB = TripletMarginLoss(margin=0.2, reducer=MeanReducer())
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             embedding_angles = [0, 20, 40, 60, 80]
             embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=dtype).to(self.device) #2D embeddings
             labels = torch.LongTensor([0, 1, 2, 3, 4])
@@ -52,7 +53,7 @@ class TestTripletMarginLoss(unittest.TestCase):
         margin = 0.2
         loss_funcA = TripletMarginLoss(margin=margin)
         loss_funcB = TripletMarginLoss(margin=margin, reducer=MeanReducer())
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             for loss_func in [loss_funcA, loss_funcB]:
                 embedding_angles = [0, 20, 40, 60, 80]
                 embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=dtype).to(self.device) #2D embeddings

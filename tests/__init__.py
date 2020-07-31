@@ -1,0 +1,1 @@
+TEST_DTYPES = [torch.float32, torch.float64]

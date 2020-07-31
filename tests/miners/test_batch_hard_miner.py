@@ -1,4 +1,5 @@
-import unittest
+import unittest 
+from .. import TEST_DTYPES
 import torch
 from pytorch_metric_learning.miners import BatchHardMiner
 from pytorch_metric_learning.utils import common_functions as c_f
@@ -19,7 +20,7 @@ class TestBatchHardMiner(unittest.TestCase):
         self.correct_n = [torch.LongTensor([2, 2, 1, 4, 3, 5, 5, 5]).to(self.device), torch.LongTensor([2, 2, 1, 4, 5, 5, 5, 5]).to(self.device)]
 
     def test_dist_mining(self):
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             embeddings = torch.arange(9).type(dtype).unsqueeze(1).to(self.device)
             a, p, n = self.dist_miner(embeddings, self.labels)
             self.helper(a, p, n)
@@ -27,7 +28,7 @@ class TestBatchHardMiner(unittest.TestCase):
             self.assertTrue(self.dist_miner.hardest_neg_pair_dist == 1)
 
     def test_normalized_dist_mining(self):
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             angles = [0, 20, 40, 60, 80, 100, 120, 140, 160]
             embeddings = torch.tensor([c_f.angle_to_coord(a) for a in angles], dtype=dtype).to(self.device)
             a, p, n = self.normalized_dist_miner(embeddings, self.labels)
@@ -39,7 +40,7 @@ class TestBatchHardMiner(unittest.TestCase):
             self.assertAlmostEqual(self.normalized_dist_miner.hardest_neg_pair_dist, correct_hardest_neg_pair_dist, places=places)
 
     def test_normalized_dist_squared_mining(self):
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             angles = [0, 20, 40, 60, 80, 100, 120, 140, 160]
             embeddings = torch.tensor([c_f.angle_to_coord(a) for a in angles], dtype=dtype).to(self.device)
             a, p, n = self.normalized_dist_miner_squared(embeddings, self.labels)
@@ -51,7 +52,7 @@ class TestBatchHardMiner(unittest.TestCase):
             self.assertAlmostEqual(self.normalized_dist_miner_squared.hardest_neg_pair_dist, correct_hardest_neg_pair_dist, places=places)            
 
     def test_sim_mining(self):
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             angles = [0, 20, 40, 60, 80, 100, 120, 140, 160]
             embeddings = torch.tensor([c_f.angle_to_coord(a) for a in angles], dtype=dtype).to(self.device)
             a, p, n = self.sim_miner(embeddings, self.labels)
@@ -67,7 +68,7 @@ class TestBatchHardMiner(unittest.TestCase):
 
     def test_empty_output(self):
         batch_size = 32
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             embeddings = torch.randn(batch_size, 64).type(dtype).to(self.device)
             labels = torch.arange(batch_size)
             for miner in [self.dist_miner, self.normalized_dist_miner, self.normalized_dist_miner_squared, self.sim_miner]:

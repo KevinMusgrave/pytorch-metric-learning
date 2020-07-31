@@ -1,4 +1,5 @@
-import unittest
+import unittest 
+from .. import TEST_DTYPES
 import torch
 from pytorch_metric_learning.losses import ProxyNCALoss
 from pytorch_metric_learning.utils import common_functions as c_f
@@ -9,7 +10,7 @@ class TestProxyNCALoss(unittest.TestCase):
         self.device = torch.device('cuda')
 
     def test_proxy_nca_loss(self):
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             softmax_scale = 1 if dtype == torch.float16 else 10
             loss_func = ProxyNCALoss(softmax_scale=softmax_scale, num_classes=10, embedding_size=2)
 

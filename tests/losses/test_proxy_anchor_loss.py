@@ -65,7 +65,8 @@ class OriginalImplementationProxyAnchor(torch.nn.Module):
 
 
 
-import unittest
+import unittest 
+from .. import TEST_DTYPES
 import torch
 from pytorch_metric_learning.losses import ProxyAnchorLoss
 from pytorch_metric_learning.utils import common_functions as c_f
@@ -79,7 +80,7 @@ class TestProxyAnchorLoss(unittest.TestCase):
         num_classes = 10
         embedding_size = 2
         margin = 0.5
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             alpha = 1 if dtype == torch.float16 else 32
             loss_func = ProxyAnchorLoss(num_classes, embedding_size, margin = margin, alpha = alpha).to(self.device)
             original_loss_func = OriginalImplementationProxyAnchor(num_classes, embedding_size, mrg = margin, alpha = alpha).to(self.device)

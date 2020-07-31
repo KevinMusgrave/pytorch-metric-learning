@@ -1,4 +1,5 @@
-import unittest
+import unittest 
+from .. import TEST_DTYPES
 from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
 import torch
 
@@ -8,7 +9,7 @@ class TestLossAndMinerUtils(unittest.TestCase):
         self.device = torch.device('cuda')
 
     def test_logsumexp(self):
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             division_factor = 10 if dtype == torch.float16 else 1
             mat = torch.tensor([[-1, 0, 1, 10, 50],
                                     [-30, -20, 0, 20, 30],
@@ -74,7 +75,7 @@ class TestLossAndMinerUtils(unittest.TestCase):
         a = torch.LongTensor([0,1,2,3]).to(self.device)
         p = torch.LongTensor([4,4,4,4]).to(self.device)
         n = torch.LongTensor([5,5,6,6]).to(self.device)
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             weights = lmu.convert_to_weights((a,p,n), labels=torch.arange(7).to(self.device), dtype=dtype)
             correct_weights = torch.tensor([0.25,0.25,0.25,0.25,1,0.5,0.5], dtype=dtype).to(self.device)
             self.assertTrue(torch.all(weights==correct_weights))

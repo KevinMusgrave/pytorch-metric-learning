@@ -1,4 +1,5 @@
-import unittest
+import unittest 
+from .. import TEST_DTYPES
 import torch
 from pytorch_metric_learning.miners import MultiSimilarityMiner
 from pytorch_metric_learning.utils import common_functions as c_f
@@ -11,7 +12,7 @@ class TestMultiSimilarityMiner(unittest.TestCase):
     def test_multi_similarity_miner(self):
         epsilon = 0.1
         miner = MultiSimilarityMiner(epsilon)
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             embedding_angles = torch.arange(0, 64)
             embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=dtype).to(self.device) #2D embeddings
             labels = torch.randint(low=0, high=10, size=(64,))
@@ -63,7 +64,7 @@ class TestMultiSimilarityMiner(unittest.TestCase):
     def test_empty_output(self):
         miner = MultiSimilarityMiner(0.1)
         batch_size = 32
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             embeddings = torch.randn(batch_size, 64).type(dtype).to(self.device)
             labels = torch.arange(batch_size)
             a1, p, _, _ = miner(embeddings, labels)

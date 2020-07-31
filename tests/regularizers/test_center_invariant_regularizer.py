@@ -1,4 +1,5 @@
 import unittest
+from .. import TEST_DTYPES
 import torch
 from pytorch_metric_learning.losses import NormalizedSoftmaxLoss
 from pytorch_metric_learning.regularizers import CenterInvariantRegularizer
@@ -13,7 +14,7 @@ class TestCenterInvariantRegularizer(unittest.TestCase):
         num_classes = 10
         embedding_size = 512
         reg_weight = 0.1
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             loss_func = NormalizedSoftmaxLoss(temperature=temperature, 
                                                 num_classes=num_classes, 
                                                 embedding_size=embedding_size,

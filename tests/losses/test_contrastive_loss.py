@@ -1,4 +1,5 @@
-import unittest
+import unittest 
+from .. import TEST_DTYPES
 import torch
 from pytorch_metric_learning.losses import ContrastiveLoss
 from pytorch_metric_learning.utils import common_functions as c_f
@@ -17,7 +18,7 @@ class TestContrastiveLoss(unittest.TestCase):
         loss_funcC = ContrastiveLoss(pos_margin=0.25, neg_margin=1.5, distance=LpDistance(power=2), reducer=MeanReducer())
         loss_funcD = ContrastiveLoss(pos_margin=1.5, neg_margin=0.6, distance=CosineSimilarity(), reducer=MeanReducer())
 
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             embedding_angles = [0, 20, 40, 60, 80]
             embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=dtype).to(self.device) #2D embeddings
             labels = torch.LongTensor([0, 0, 1, 1, 2])
@@ -88,7 +89,7 @@ class TestContrastiveLoss(unittest.TestCase):
     def test_with_no_valid_pairs(self):
         loss_funcA = ContrastiveLoss()
         loss_funcB = ContrastiveLoss(distance=CosineSimilarity())
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             embedding_angles = [0]
             embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=dtype).to(self.device) #2D embeddings
             labels = torch.LongTensor([0])
@@ -100,7 +101,7 @@ class TestContrastiveLoss(unittest.TestCase):
     def test_backward(self):
         loss_funcA = ContrastiveLoss()
         loss_funcB = ContrastiveLoss(distance=CosineSimilarity())
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             for loss_func in [loss_funcA, loss_funcB]:
                 embedding_angles = [0]
                 embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=dtype).to(self.device) #2D embeddings

@@ -1,4 +1,5 @@
-import unittest
+import unittest 
+from .. import TEST_DTYPES
 import torch
 from pytorch_metric_learning.losses import LiftedStructureLoss, GeneralizedLiftedStructureLoss
 from pytorch_metric_learning.utils import common_functions as c_f
@@ -14,7 +15,7 @@ class TestLiftedStructure(unittest.TestCase):
         neg_margin = 0.5
         loss_func = LiftedStructureLoss(neg_margin=neg_margin)
 
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             embedding_angles = [0, 20, 40, 60, 80]
             embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=dtype).to(self.device) #2D embeddings
             labels = torch.LongTensor([0, 0, 1, 1, 2])
@@ -48,7 +49,7 @@ class TestLiftedStructure(unittest.TestCase):
 
     def test_with_no_valid_pairs(self):
         loss_func = LiftedStructureLoss(neg_margin=0.5)
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             embedding_angles = [0]
             embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=dtype).to(self.device) #2D embeddings
             labels = torch.LongTensor([0])
@@ -68,7 +69,7 @@ class TestGeneralizedLiftedStructureLoss(unittest.TestCase):
         neg_margin = 0.5
         loss_func = GeneralizedLiftedStructureLoss(neg_margin=neg_margin)
 
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             embedding_angles = [0, 20, 40, 60, 80]
             embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=dtype).to(self.device) #2D embeddings
             labels = torch.LongTensor([0, 0, 1, 1, 2])
@@ -106,7 +107,7 @@ class TestGeneralizedLiftedStructureLoss(unittest.TestCase):
 
     def test_with_no_valid_pairs(self):
         loss_func = GeneralizedLiftedStructureLoss(neg_margin=0.5)
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             embedding_angles = [0]
             embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=dtype).to(self.device) #2D embeddings
             labels = torch.LongTensor([0])

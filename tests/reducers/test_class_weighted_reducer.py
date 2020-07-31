@@ -1,4 +1,5 @@
-import unittest
+import unittest 
+from .. import TEST_DTYPES
 import torch
 from pytorch_metric_learning.reducers import ClassWeightedReducer
 
@@ -9,7 +10,7 @@ class TestClassWeightedReducer(unittest.TestCase):
 
     def test_class_weighted_reducer(self):
         class_weights = torch.tensor([1, 0.9, 1, 0.1, 0, 0, 0, 0, 0, 0])
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             reducer = ClassWeightedReducer(class_weights)
             batch_size = 100
             num_classes = 10

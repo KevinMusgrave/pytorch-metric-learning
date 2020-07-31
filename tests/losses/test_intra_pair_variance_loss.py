@@ -1,4 +1,5 @@
-import unittest
+import unittest 
+from .. import TEST_DTYPES
 import torch
 from pytorch_metric_learning.losses import IntraPairVarianceLoss
 from pytorch_metric_learning.utils import common_functions as c_f
@@ -12,7 +13,7 @@ class TestIntraPairVarianceLoss(unittest.TestCase):
         pos_eps, neg_eps = 0.01, 0.02
         loss_func = IntraPairVarianceLoss(pos_eps, neg_eps)
 
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             embedding_angles = [0, 20, 40, 60, 80]
             embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=dtype).to(self.device) #2D embeddings
             labels = torch.LongTensor([0, 0, 1, 1, 2])
@@ -47,7 +48,7 @@ class TestIntraPairVarianceLoss(unittest.TestCase):
 
     def test_with_no_valid_pairs(self):
         loss_func = IntraPairVarianceLoss(0.01,0.01)
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             embedding_angles = [0]
             embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=dtype).to(self.device) #2D embeddings
             labels = torch.LongTensor([0])

@@ -1,4 +1,5 @@
-import unittest
+import unittest 
+from .. import TEST_DTYPES
 import torch
 from pytorch_metric_learning.losses import MarginLoss
 from pytorch_metric_learning.utils import common_functions as c_f
@@ -9,7 +10,7 @@ class TestMarginLoss(unittest.TestCase):
         self.device = torch.device('cuda')
 
     def test_margin_loss(self):
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             for learn_beta, num_classes in [(False, None), (True, None), (False, 3), (True, 3)]:
                 margin, nu, beta = 0.1, 0.1, 1
                 loss_func = MarginLoss(margin=margin, nu=nu, beta=beta, learn_beta=learn_beta, num_classes=num_classes)
@@ -45,13 +46,14 @@ class TestMarginLoss(unittest.TestCase):
                             correct_beta_reg_loss = torch.sum(loss_func.beta[labels[anchor_idx]]*nu) / num_non_zero
                         correct_total_loss += correct_beta_reg_loss.item()
 
-                self.assertTrue(torch.isclose(loss, correct_total_loss))
+                rtol = 1e-2 if dtype == torch.float16 else 1e-5
+                self.assertTrue(torch.isclose(loss, correct_total_loss, rtol=rtol))
 
 
     def test_with_no_valid_triplets(self):
         margin, nu, beta = 0.1, 0, 1
         loss_func = MarginLoss(margin=margin, nu=nu, beta=beta)
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             embedding_angles = [0, 20, 40, 60, 80]
             embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=dtype).to(self.device) #2D embeddings
             labels = torch.LongTensor([0, 1, 2, 3, 4])

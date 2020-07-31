@@ -51,7 +51,8 @@ class OriginalImplementationSoftTriple(nn.Module):
             return lossClassify
 
 
-import unittest
+import unittest 
+from .. import TEST_DTYPES
 from pytorch_metric_learning.losses import SoftTripleLoss
 from pytorch_metric_learning.utils import common_functions as c_f
 
@@ -66,7 +67,7 @@ class TestSoftTripleLoss(unittest.TestCase):
         reg_weight = 0.2
         margin = 0.01
 
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             la = 1 if dtype == torch.float16 else 20
             gamma = 1 if dtype == torch.float16 else 0.1
             for centers_per_class in range(1, 12):

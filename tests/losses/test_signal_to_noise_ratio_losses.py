@@ -1,4 +1,5 @@
-import unittest
+import unittest 
+from .. import TEST_DTYPES
 import torch
 from pytorch_metric_learning.losses import SignalToNoiseRatioContrastiveLoss
 from pytorch_metric_learning.utils import common_functions as c_f
@@ -12,7 +13,7 @@ class TestSNRContrastiveLoss(unittest.TestCase):
         pos_margin, neg_margin, regularizer_weight = 0, 0.1, 0.1
         loss_func = SignalToNoiseRatioContrastiveLoss(pos_margin=pos_margin, neg_margin=neg_margin, regularizer_weight=regularizer_weight)
 
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             embedding_angles = [0, 20, 40, 60, 80]
             embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=dtype).to(self.device) #2D embeddings
             labels = torch.LongTensor([0, 0, 1, 1, 2])
@@ -55,7 +56,7 @@ class TestSNRContrastiveLoss(unittest.TestCase):
     def test_with_no_valid_pairs(self):
         reg_weight = 0.1
         loss_func = SignalToNoiseRatioContrastiveLoss(0, 0.5, reg_weight)
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             embedding_angles = [0]
             embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=dtype).to(self.device) #2D embeddings
             labels = torch.LongTensor([0])

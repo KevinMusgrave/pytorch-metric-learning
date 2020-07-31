@@ -1,4 +1,5 @@
-import unittest
+import unittest 
+from .. import TEST_DTYPES
 import torch
 from pytorch_metric_learning.miners import TripletMarginMiner
 from pytorch_metric_learning.utils import common_functions as c_f
@@ -9,7 +10,7 @@ class TestTripletMarginMiner(unittest.TestCase):
         self.device = torch.device('cuda')
 
     def test_triplet_margin_miner(self):
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             embedding_angles = torch.arange(0, 16)
             embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=dtype).to(self.device) #2D embeddings
             labels = torch.randint(low=0, high=2, size=(16,))
@@ -61,7 +62,7 @@ class TestTripletMarginMiner(unittest.TestCase):
 
     def test_empty_output(self):
         miner = TripletMarginMiner(0.5, type_of_triplets="all")
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             batch_size = 32
             embeddings = torch.randn(batch_size, 64).type(dtype).to(self.device)
             labels = torch.arange(batch_size)

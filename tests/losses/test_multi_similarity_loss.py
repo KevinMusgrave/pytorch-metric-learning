@@ -1,4 +1,5 @@
-import unittest
+import unittest 
+from .. import TEST_DTYPES
 import torch
 from pytorch_metric_learning.losses import MultiSimilarityLoss
 from pytorch_metric_learning.utils import common_functions as c_f
@@ -9,7 +10,7 @@ class TestMultiSimilarityLoss(unittest.TestCase):
         self.device = torch.device('cuda')
 
     def test_multi_similarity_loss(self):
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             if dtype == torch.float16:
                 alpha, beta, base = 0.1, 10, 0.5
             else:
@@ -52,7 +53,7 @@ class TestMultiSimilarityLoss(unittest.TestCase):
     def test_with_no_valid_pairs(self):
         alpha, beta, base = 0.1, 40, 0.5
         loss_func = MultiSimilarityLoss(alpha=alpha, beta=beta, base=base)
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             embedding_angles = [0]
             embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=dtype).to(self.device) #2D embeddings
             labels = torch.LongTensor([0])

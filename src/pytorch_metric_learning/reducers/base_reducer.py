@@ -6,16 +6,14 @@ from ..utils.module_with_records import ModuleWithRecords
 class BaseReducer(ModuleWithRecords):
     def forward(self, loss_dict, embeddings, labels):
         self.reset_stats()
-        sub_losses = torch.zeros(len(loss_dict), dtype=embeddings.dtype).to(embeddings.device)
-        loss_count = 0
-        for loss_name, loss_info in loss_dict.items():
-            self.add_to_recordable_attributes(name=loss_name, is_stat=True)
-            losses, loss_indices, reduction_type = self.unpack_loss_info(loss_info)
-            loss_val = self.reduce_the_loss(losses, loss_indices, reduction_type, embeddings, labels)
-            setattr(self, loss_name, loss_val)
-            sub_losses[loss_count] = loss_val
-            loss_count += 1
-        return self.sub_loss_reduction(sub_losses, embeddings, labels)
+        assert len(loss_dict) == 1
+        loss_name = list(loss_dict.keys())[0]
+        loss_info = loss_dict[loss_name]
+        self.add_to_recordable_attributes(name=loss_name, is_stat=True)
+        losses, loss_indices, reduction_type = self.unpack_loss_info(loss_info)
+        loss_val = self.reduce_the_loss(losses, loss_indices, reduction_type, embeddings, labels)
+        setattr(self, loss_name, loss_val)
+        return loss_val
 
     def unpack_loss_info(self, loss_info):
         return loss_info["losses"], loss_info["indices"], loss_info["reduction_type"]
@@ -42,10 +40,7 @@ class BaseReducer(ModuleWithRecords):
     
     def triplet_reduction(self, losses, loss_indices, embeddings, labels):
         raise NotImplementedError
-
-    def sub_loss_reduction(self, sub_losses, embeddings=None, labels=None):
-        return torch.sum(sub_losses)
-
+        
     def get_reduction_func(self, reduction_type):
         return getattr(self, "{}_reduction".format(reduction_type))
 

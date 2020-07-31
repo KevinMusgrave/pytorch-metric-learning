@@ -22,3 +22,6 @@ class MultipleReducers(BaseReducer):
             sub_losses[loss_count] = loss_val
             loss_count += 1
         return self.sub_loss_reduction(sub_losses, embeddings, labels)            
+
+    def sub_loss_reduction(self, sub_losses, embeddings=None, labels=None):
+        return torch.sum(sub_losses)

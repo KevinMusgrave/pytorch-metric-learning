@@ -41,4 +41,5 @@ class TestCenterInvariantRegularizer(unittest.TestCase):
             correct_reg_loss /= num_classes
 
             correct_total_loss = correct_class_loss+(correct_reg_loss*reg_weight)
-            self.assertTrue(torch.isclose(loss, correct_total_loss))
+            rtol = 1e-2 if dtype == torch.float16 else 1e-5
+            self.assertTrue(torch.isclose(loss, correct_total_loss, rtol=rtol))

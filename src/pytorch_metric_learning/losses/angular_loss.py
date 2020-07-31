@@ -27,7 +27,6 @@ class AngularLoss(BaseMetricLossFunction):
         ap_matmul_embeddings = ap_matmul_embeddings.squeeze(2).t()
 
         final_form = (4 * sq_tan_alpha * ap_matmul_embeddings) - (2 * (1 + sq_tan_alpha) * ap_dot)
-        final_form = self.maybe_modify_loss(final_form)
         losses = lmu.logsumexp(final_form, keep_mask=keep_mask, add_one=True)
         return {"loss": {"losses": losses, "indices": anchor_idx, "reduction_type": "element"}}
 
@@ -45,6 +44,3 @@ class AngularLoss(BaseMetricLossFunction):
         average_angle = torch.sum(angles*keep_mask) / torch.sum(keep_mask)
         self.average_angle = np.degrees(average_angle.item())
         return anchors, positives, keep_mask, a1
-
-    def maybe_modify_loss(self, x):
-        return x

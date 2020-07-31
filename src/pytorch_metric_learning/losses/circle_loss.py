@@ -4,6 +4,7 @@ from .generic_pair_loss import GenericPairLoss
 import torch 
 from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
 from ..reducers import AvgNonZeroReducer
+from ..distances import CosineSimilarity
 
 
 class CircleLoss(GenericPairLoss):
@@ -23,13 +24,8 @@ class CircleLoss(GenericPairLoss):
 
     By default, we set m = 0.4 and gamma = 80
     """
-    def __init__(
-        self, 
-        m=0.4,
-        gamma=80,
-        **kwargs
-    ):
-        super().__init__(use_similarity=True, mat_based_loss=True, **kwargs)
+    def __init__(self, m=0.4, gamma=80, **kwargs):
+        super().__init__(mat_based_loss=True, **kwargs)
         self.m = m 
         self.gamma = gamma 
         self.soft_plus = torch.nn.Softplus(beta=1)
@@ -37,6 +33,7 @@ class CircleLoss(GenericPairLoss):
         self.on = -self.m
         self.delta_p = 1-self.m 
         self.delta_n = self.m 
+        assert isinstance(self.distance, CosineSimilarity), "CircleLoss requires the distance metric to be CosineSimilarity"
 
     def _compute_loss(self, mat, pos_mask, neg_mask):
         pos_mask_bool = pos_mask.bool()
@@ -58,3 +55,6 @@ class CircleLoss(GenericPairLoss):
 
     def get_default_reducer(self):
         return AvgNonZeroReducer()
+
+    def get_default_distance(self):
+        return CosineSimilarity()

@@ -2,64 +2,75 @@ import unittest
 import torch
 from pytorch_metric_learning.miners import PairMarginMiner
 from pytorch_metric_learning.utils import common_functions as c_f
+from pytorch_metric_learning.distances import CosineSimilarity
 
 class TestPairMarginMiner(unittest.TestCase):
+    def test_pair_margin_miner(self):
+        for use_similarity in [False, True]:
+            embedding_angles = torch.arange(0, 16)
+            embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=torch.float) #2D embeddings
+            labels = torch.randint(low=0, high=2, size=(16,))
+            pos_pairs = []
+            neg_pairs = []
+            for i in range(len(embeddings)):
+                anchor, anchor_label = embeddings[i], labels[i]
+                for j in range(len(embeddings)):
+                    if j == i:
+                        continue
+                    positive, positive_label = embeddings[j], labels[j]
+                    if positive_label == anchor_label:
+                        if use_similarity:
+                            ap_dist = torch.sum(anchor*positive)
+                        else:
+                            ap_dist = torch.nn.functional.pairwise_distance(anchor.unsqueeze(0), positive.unsqueeze(0), 2)
+                        pos_pairs.append((i, j, ap_dist))
 
-    @classmethod
-    def setUpClass(self):
-        self.device = torch.device('cuda')
-        self.dist_miner = PairMarginMiner(pos_margin=4, neg_margin=4, use_similarity=False, normalize_embeddings=False)
-        self.normalized_dist_miner = PairMarginMiner(pos_margin=1.29, neg_margin=1.28, use_similarity=False, normalize_embeddings=True)
-        self.normalized_dist_miner_squared = PairMarginMiner(pos_margin=1.66, neg_margin=1.64, use_similarity=False, normalize_embeddings=True, squared_distances=True)
-        self.sim_miner = PairMarginMiner(pos_margin=0.17, neg_margin=0.18, use_similarity=True, normalize_embeddings=True)
-        self.labels = torch.LongTensor([0, 0, 1, 1, 0, 2, 1, 1, 1])
-        self.correct_a1 = torch.LongTensor([2, 2, 3, 7, 8, 8]).to(self.device)
-        self.correct_p = torch.LongTensor([7, 8, 8, 2, 2, 3]).to(self.device)
-        self.correct_a2 = torch.LongTensor([0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 6, 6, 7, 7, 8]).to(self.device)
-        self.correct_n = torch.LongTensor([2, 3, 2, 3, 0, 1, 4, 5, 0, 1, 4, 5, 2, 3, 5, 6, 7, 2, 3, 4, 6, 7, 8, 4, 5, 4, 5, 5]).to(self.device)
+            for i in range(len(embeddings)):
+                anchor, anchor_label = embeddings[i], labels[i]
+                for j in range(len(embeddings)):
+                    if j == i:
+                        continue
+                    negative, negative_label = embeddings[j], labels[j]
+                    if negative_label != anchor_label:
+                        if use_similarity:
+                            an_dist = torch.sum(anchor*negative)
+                        else:
+                            an_dist = torch.nn.functional.pairwise_distance(anchor.unsqueeze(0), negative.unsqueeze(0), 2)
+                        neg_pairs.append((i, j, an_dist))
 
-    def test_dist_mining(self):
-        for dtype in [torch.float16, torch.float32, torch.float64]:
-            embeddings = torch.arange(9).type(dtype).to(self.device).unsqueeze(1)
-            a1, p, a2, n = self.dist_miner(embeddings, self.labels)
-            self.helper(a1, p, a2, n, self.dist_miner)
+            for pos_margin_int in range(-1, 4):
+                pos_margin = float(pos_margin_int) * 0.05
+                for neg_margin_int in range(2, 7):
+                    neg_margin = float(neg_margin_int) * 0.05
+                    if use_similarity:
+                        miner = PairMarginMiner(pos_margin, neg_margin, distance=CosineSimilarity())
+                    else:
+                        miner = PairMarginMiner(pos_margin, neg_margin)
+                    correct_pos_pairs = []
+                    correct_neg_pairs = []
+                    for i,j,k in pos_pairs:
+                        condition = (k < pos_margin) if use_similarity else (k > pos_margin)
+                        if condition:
+                            correct_pos_pairs.append((i,j))
+                    for i,j,k in neg_pairs:
+                        condition = (k > neg_margin) if use_similarity else (k < neg_margin)
+                        if condition:                        
+                            correct_neg_pairs.append((i,j))
 
-    def test_normalized_dist_mining(self):
-        for dtype in [torch.float16, torch.float32, torch.float64]:
-            angles = [0, 20, 40, 60, 80, 100, 120, 140, 160]
-            embeddings = torch.tensor([c_f.angle_to_coord(a) for a in angles], dtype=dtype).to(self.device)
-            a1, p, a2, n = self.normalized_dist_miner(embeddings, self.labels)
-            self.helper(a1, p, a2, n, self.normalized_dist_miner)
+                    correct_pos = set(correct_pos_pairs)
+                    correct_neg = set(correct_neg_pairs)
+                    a1, p1, a2, n2 = miner(embeddings, labels)
+                    mined_pos = set([(a.item(),p.item()) for a,p in zip(a1,p1)])
+                    mined_neg = set([(a.item(),n.item()) for a,n in zip(a2,n2)])
+                    self.assertTrue(mined_pos == correct_pos)
+                    self.assertTrue(mined_neg == correct_neg)
 
-    def test_normalized_dist_squared_mining(self):
-        for dtype in [torch.float16, torch.float32, torch.float64]:
-            angles = [0, 20, 40, 60, 80, 100, 120, 140, 160]
-            embeddings = torch.tensor([c_f.angle_to_coord(a) for a in angles], dtype=dtype).to(self.device)
-            a1, p, a2, n = self.normalized_dist_miner_squared(embeddings, self.labels)
-            self.helper(a1, p, a2, n, self.normalized_dist_miner_squared)    
-
-    def test_sim_mining(self):
-        for dtype in [torch.float16, torch.float32, torch.float64]:
-            angles = [0, 20, 40, 60, 80, 100, 120, 140, 160]
-            embeddings = torch.tensor([c_f.angle_to_coord(a) for a in angles], dtype=dtype).to(self.device)
-            a1, p, a2, n = self.sim_miner(embeddings, self.labels)
-            self.helper(a1, p, a2, n, self.sim_miner)
-
-    def helper(self, a1, p, a2, n, miner):
-        self.assertTrue(torch.equal(a1, self.correct_a1))
-        self.assertTrue(torch.equal(p, self.correct_p))
-        self.assertTrue(torch.equal(a2, self.correct_a2))
-        self.assertTrue(torch.equal(n, self.correct_n))
-        self.assertTrue(miner.pos_pair_dist>0)
-        self.assertTrue(miner.neg_pair_dist>0)
 
     def test_empty_output(self):
-        for dtype in [torch.float16, torch.float32, torch.float64]:
-            batch_size = 32
-            embeddings = torch.randn(batch_size, 64).type(dtype).to(self.device)
-            labels = torch.arange(batch_size)
-            for miner in [self.dist_miner, self.normalized_dist_miner, self.normalized_dist_miner_squared, self.sim_miner]:
-                a1, p, _, _ = miner(embeddings, labels)
-                self.assertTrue(len(a1)==0)
-                self.assertTrue(len(p)==0)
-                self.assertTrue(miner.pos_pair_dist==0)
+        miner = PairMarginMiner(0, 1)
+        batch_size = 32
+        embeddings = torch.randn(batch_size, 64)
+        labels = torch.arange(batch_size)
+        a, p, _, _ = miner(embeddings, labels)
+        self.assertTrue(len(a)==0)
+        self.assertTrue(len(p)==0)

@@ -27,34 +27,12 @@ def sim_mat(x, y=None):
     return torch.matmul(x, y.t())
 
 
-# https://discuss.pytorch.org/t/efficient-distance-matrix-computation/9065/7
-def dist_mat(x, y=None, eps=1e-16, squared=False):
-    """
-    Input: x is a Nxd matrix
-           y is an optional Mxd matirx
-    Output: dist is a NxM matrix where dist[i,j]
-    is the square norm between x[i,:] and y[j,:]
-            if y is not given then use 'y=x'.
-    i.e. dist[i,j] = ||x[i,:]-y[j,:]||
-    """
-    x_norm = (x ** 2).sum(1).view(-1, 1)
-    if y is not None:
-        y_t = torch.transpose(y, 0, 1)
-        y_norm = (y ** 2).sum(1).view(1, -1)
-    else:
-        y_t = torch.transpose(x, 0, 1)
-        y_norm = x_norm.view(1, -1)
-
-    dist = x_norm + y_norm - 2.0 * torch.mm(x, y_t)
-    # Ensure diagonal is zero if x=y
+def dist_mat(x, y=None, squared=False):
     if y is None:
-        dist = dist - torch.diag(dist.diag())
-    dist = torch.clamp(dist, 0.0, np.inf)
-    if not squared:
-        mask = (dist == 0).type(x.dtype)
-        dist = dist + mask * eps
-        dist = torch.sqrt(dist)
-        dist = dist * (1.0 - mask)
+        y = x
+    dist = torch.cdist(x,y)
+    if squared:
+        dist = dist**2
     return dist
 
 def get_pairwise_mat(x, y, use_similarity, squared):

@@ -26,7 +26,6 @@ class TestCrossBatchMemory(unittest.TestCase):
 
             for i in range(30):
                 loss.add_to_memory(embeddings, labels, batch_size)
-
                 for identical in [True, False]:
                     # triplets
                     a = torch.randint(0,batch_size,(num_tuples,)).to(self.device)

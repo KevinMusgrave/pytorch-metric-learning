@@ -1,4 +1,5 @@
 from ..reducers import MeanReducer, MultipleReducers
+from ..distances import LpDistance
 from .module_with_records import ModuleWithRecords
 
 class ModuleWithRecordsAndReducer(ModuleWithRecords):
@@ -17,3 +18,20 @@ class ModuleWithRecordsAndReducer(ModuleWithRecords):
 
     def sub_loss_names(self):
         return ["loss"]
+
+
+class ModuleWithRecordsAndDistance(ModuleWithRecords):
+    def __init__(self, distance=None, **kwargs):
+        super().__init__(**kwargs)
+        self.distance = self.get_distance() if distance is None else distance
+
+    def get_default_distance(self):
+        return LpDistance(p=2)
+
+    def get_distance(self):
+        return self.get_default_distance()
+
+
+class ModuleWithRecordsReducerAndDistance(ModuleWithRecordsAndReducer, ModuleWithRecordsAndDistance):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)

@@ -2,9 +2,9 @@
 
 import torch
 from ..utils import common_functions as c_f
-from ..utils.module_with_records import ModuleWithRecords
+from ..utils.module_with_records_and_reducer import ModuleWithRecordsAndDistance
 
-class BaseMiner(ModuleWithRecords):
+class BaseMiner(ModuleWithRecordsAndDistance):
     def __init__(self, normalize_embeddings=True, **kwargs):
         super().__init__(**kwargs)
         self.normalize_embeddings = normalize_embeddings

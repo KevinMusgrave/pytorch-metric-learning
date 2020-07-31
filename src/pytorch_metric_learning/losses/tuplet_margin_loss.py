@@ -2,14 +2,16 @@ import torch
 from .generic_pair_loss import GenericPairLoss
 import numpy as np
 from ..utils import loss_and_miner_utils as lmu
+from ..distances import CosineSimilarity
 
 class TupletMarginLoss(GenericPairLoss):
 
     def __init__(self, margin, scale=64, **kwargs):
-        super().__init__(**kwargs, use_similarity=True, mat_based_loss=False)
+        super().__init__(mat_based_loss=False, **kwargs)
         self.margin = np.radians(margin)
         self.scale = scale
         self.add_to_recordable_attributes(list_of_names=["avg_pos_angle", "avg_neg_angle"], is_stat=True)
+        assert isinstance(self.distance, CosineSimilarity), "TupletMarginLoss requires the distance metric to be CosineSimilarity"
 
     # pos_pairs and neg_pairs already represent cos(theta)
     def _compute_loss(self, pos_pairs, neg_pairs, indices_tuple):
@@ -28,6 +30,10 @@ class TupletMarginLoss(GenericPairLoss):
             loss = lmu.logsumexp(inside_exp, keep_mask=keep_mask, add_one=True, dim=1)
             return {"loss": {"losses": loss, "indices": (a1, p), "reduction_type": "pos_pair"}}
         return self.zero_losses()
+
+
+    def get_default_distance(self):
+        return CosineSimilarity()
 
 
 

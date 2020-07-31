@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 
 from .base_miner import BaseTupleMiner
-from ..utils import loss_and_miner_utils as lmu
+from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
 import torch
 
 
@@ -21,11 +21,11 @@ class MultiSimilarityMiner(BaseTupleMiner):
         sim_mat_neg_sorting = sim_mat.clone()
         sim_mat_pos_sorting = sim_mat.clone()
 
-        sim_mat_pos_sorting[a2, n] = float('inf')
-        sim_mat_neg_sorting[a1, p] = -float('inf')
+        sim_mat_pos_sorting[a2, n] = c_f.pos_inf(embeddings.dtype)
+        sim_mat_neg_sorting[a1, p] = c_f.neg_inf(embeddings.dtype)
         if embeddings is ref_emb:
-            sim_mat_pos_sorting[range(len(labels)), range(len(labels))] = float('inf')
-            sim_mat_neg_sorting[range(len(labels)), range(len(labels))] = -float('inf')
+            sim_mat_pos_sorting[range(len(labels)), range(len(labels))] = c_f.pos_inf(embeddings.dtype)
+            sim_mat_neg_sorting[range(len(labels)), range(len(labels))] = c_f.neg_inf(embeddings.dtype)
 
         pos_sorted, pos_sorted_idx = torch.sort(sim_mat_pos_sorting, dim=1)
         neg_sorted, neg_sorted_idx = torch.sort(sim_mat_neg_sorting, dim=1)

@@ -24,7 +24,7 @@ class TupletMarginLoss(GenericPairLoss):
             pos_pairs = pos_pairs.unsqueeze(1)
             neg_pairs = neg_pairs.repeat(pos_pairs.size(0), 1)
             inside_exp = self.scale*(neg_pairs - pos_pairs)
-            keep_mask = (a2.unsqueeze(0) == a1.unsqueeze(1)).float()
+            keep_mask = (a2.unsqueeze(0) == a1.unsqueeze(1)).type(pos_pairs.dtype)
             loss = lmu.logsumexp(inside_exp, keep_mask=keep_mask, add_one=True, dim=1)
             return {"loss": {"losses": loss, "indices": (a1, p), "reduction_type": "pos_pair"}}
         return self.zero_losses()

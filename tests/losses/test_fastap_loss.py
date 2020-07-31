@@ -11,15 +11,15 @@ from torch.autograd import Variable, Function
 
 def softBinning(D, mid, Delta):
     y = 1 - torch.abs(D-mid)/Delta
-    return torch.max(torch.Tensor([0]).cuda(), y)
+    return torch.max(torch.tensor([0], dtype=D.dtype).to(D.device), y)
 
 def dSoftBinning(D, mid, Delta):
-    side1 = (D > (mid - Delta)).type(torch.float)
-    side2 = (D <= mid).type(torch.float)
+    side1 = (D > (mid - Delta)).type(D.dtype)
+    side2 = (D <= mid).type(D.dtype)
     ind1 = (side1 * side2) #.type(torch.uint8)
 
-    side1 = (D > mid).type(torch.float)
-    side2 = (D <= (mid + Delta)).type(torch.float)
+    side1 = (D > mid).type(D.dtype)
+    side2 = (D <= (mid + Delta)).type(D.dtype)
     ind2 = (side1 * side2) #.type(torch.uint8)
 
     return (ind1 - ind2)/Delta
@@ -58,11 +58,11 @@ class OriginalImplementationFastAP(torch.autograd.Function):
         
         # 1. get affinity matrix
         Y   = target.unsqueeze(1)
-        Aff = 2 * (Y == Y.t()).type(torch.float) - 1
-        Aff.masked_fill_(torch.eye(N, N).bool().cuda(), 0)  # set diagonal to 0
+        Aff = 2 * (Y == Y.t()).type(input.dtype) - 1
+        Aff.masked_fill_(torch.eye(N, N).bool().to(input.device), 0)  # set diagonal to 0
 
-        I_pos = (Aff > 0).type(torch.float).cuda()
-        I_neg = (Aff < 0).type(torch.float).cuda()
+        I_pos = (Aff > 0).type(input.dtype).to(input.device)
+        I_neg = (Aff < 0).type(input.dtype).to(input.device)
         N_pos = torch.sum(I_pos, 1)
 
         # 2. compute distances from embeddings
@@ -70,11 +70,11 @@ class OriginalImplementationFastAP(torch.autograd.Function):
         dist2 = 2 - 2 * torch.mm(input, input.t())
 
         # 3. estimate discrete histograms
-        Delta = torch.tensor(4. / num_bins).cuda()
-        Z     = torch.linspace(0., 4., steps=num_bins+1).cuda()
+        Delta = torch.tensor(4. / num_bins).to(input.device)
+        Z     = torch.linspace(0., 4., steps=num_bins+1).to(input.device)
         L     = Z.size()[0]
-        h_pos = torch.zeros((N, L)).cuda()
-        h_neg = torch.zeros((N, L)).cuda()
+        h_pos = torch.zeros((N, L), dtype=input.dtype).to(input.device)
+        h_neg = torch.zeros((N, L), dtype=input.dtype).to(input.device)
         for l in range(L):
             pulse    = softBinning(dist2, Z[l], Delta)
             h_pos[:,l] = torch.sum(pulse * I_pos, 1)
@@ -199,18 +199,23 @@ import numpy as np
 from pytorch_metric_learning.losses import FastAPLoss
 from pytorch_metric_learning.utils import common_functions as c_f
 
-class TestCosFaceLoss(unittest.TestCase):
-    def test_cosface_loss(self):
+class TestFastAPLoss(unittest.TestCase):
+    @classmethod
+    def setUpClass(self):
+        self.device = torch.device('cuda')
+
+    def test_fast_ap_loss(self):
         num_bins = 5
         loss_func = FastAPLoss(num_bins)
         original_loss_func = OriginalImplementationFastAPLoss(num_bins)
-        device = torch.device("cuda")
 
-        embedding_angles = torch.arange(0, 180)
-        embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=torch.float).to(device) #2D embeddings
-        labels = torch.randint(low=0, high=10, size=(180,)).to(device)
+        for dtype in [torch.float16, torch.float32, torch.float64]:
+            embedding_angles = torch.arange(0, 180)
+            embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=dtype).to(self.device) #2D embeddings
+            labels = torch.randint(low=0, high=10, size=(180,)).to(self.device)
 
-        loss = loss_func(embeddings, labels)
-        loss.backward()
-        original_loss = original_loss_func(embeddings, labels)
-        self.assertTrue(torch.isclose(loss, original_loss))
+            loss = loss_func(embeddings, labels)
+            loss.backward()
+            original_loss = original_loss_func(embeddings, labels)
+            rtol = 1e-2 if dtype == torch.float16 else 1e-5
+            self.assertTrue(torch.isclose(loss, original_loss, rtol=rtol))

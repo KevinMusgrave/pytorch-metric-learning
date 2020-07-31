@@ -2,7 +2,7 @@
 
 from .base_miner import BaseTupleMiner
 import torch
-from ..utils import loss_and_miner_utils as lmu
+from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
 
 
 class BatchHardMiner(BaseTupleMiner):
@@ -37,12 +37,13 @@ class BatchHardMiner(BaseTupleMiner):
         return torch.max(mat_masked, dim=1), non_zero_rows
 
     def get_min_per_row(self, mat, anchor_idx, other_idx):
-        mask = torch.ones_like(mat) * float('inf')
+        pos_inf = c_f.pos_inf(mat.dtype)
+        mask = torch.ones_like(mat) * pos_inf
         mask[anchor_idx, other_idx] = 1
-        non_inf_rows = torch.any(mask!=float('inf'), dim=1)
-        mat_masked = mat * mask
-        mat_masked[torch.isnan(mat_masked) | torch.isinf(mat_masked)] = float('inf')
-        return torch.min(mat_masked, dim=1), non_inf_rows
+        non_inf_rows = torch.any(mask!=pos_inf, dim=1)
+        mat = mat.clone()
+        mat[mask==pos_inf] = pos_inf
+        return torch.min(mat, dim=1), non_inf_rows
         
     def set_stats(self, hardest_positive_dist, hardest_negative_dist):
         pos_func = torch.min if self.use_similarity else torch.max

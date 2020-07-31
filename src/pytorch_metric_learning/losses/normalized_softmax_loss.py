@@ -10,8 +10,13 @@ class NormalizedSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         self.W = torch.nn.Parameter(torch.randn(embedding_size, num_classes))
         self.cross_entropy = torch.nn.CrossEntropyLoss(reduction='none')
         
+    def cast_types(self, dtype, device):
+        self.W.data = self.W.data.to(device).type(dtype)
+
     def compute_loss(self, embeddings, labels, indices_tuple):
-        miner_weights = lmu.convert_to_weights(indices_tuple, labels)
+        dtype, device = embeddings.dtype, embeddings.device
+        self.cast_types(dtype, device)
+        miner_weights = lmu.convert_to_weights(indices_tuple, labels, dtype=dtype)
         normalized_W = torch.nn.functional.normalize(self.W, p=2, dim=0)
         exponent = torch.matmul(embeddings, normalized_W) / self.temperature
         unweighted_loss = self.cross_entropy(exponent, labels)

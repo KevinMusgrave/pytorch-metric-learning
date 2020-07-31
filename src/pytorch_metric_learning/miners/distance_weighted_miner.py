@@ -18,7 +18,7 @@ class DistanceWeightedMiner(BaseTupleMiner):
         dist_mat = lmu.dist_mat(embeddings, ref_emb)
         
         # Cut off to avoid high variance.
-        dist_mat = torch.max(dist_mat, torch.tensor(self.cutoff).to(dist_mat.device))
+        dist_mat = torch.clamp(dist_mat, min=self.cutoff)
 
         # Subtract max(log(distance)) for stability.
         # See the first equation from Section 4 of the paper
@@ -29,11 +29,11 @@ class DistanceWeightedMiner(BaseTupleMiner):
 
         # Sample only negative examples by setting weights of
         # the same-class examples to 0.
-        mask = torch.ones(weights.size()).to(embeddings.device)
+        mask = torch.ones(weights.size(), dtype=embeddings.dtype).to(embeddings.device)
         same_class = labels.unsqueeze(1) == ref_labels.unsqueeze(0)
         mask[same_class] = 0
 
-        weights = weights * mask * ((dist_mat < self.nonzero_loss_cutoff).float())
+        weights = weights * mask * ((dist_mat < self.nonzero_loss_cutoff).type(embeddings.dtype))
         weights[inf_or_nan] = 0
         weights = weights / torch.sum(weights, dim=1, keepdim=True)
 

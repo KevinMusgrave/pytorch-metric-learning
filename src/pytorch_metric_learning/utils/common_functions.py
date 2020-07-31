@@ -16,6 +16,15 @@ class Identity(torch.nn.Module):
     def forward(self, x):
         return x
 
+def pos_inf(dtype):
+    return torch.finfo(dtype).max
+
+def neg_inf(dtype):
+    return torch.finfo(dtype).min
+
+def small_val(dtype):
+    return torch.finfo(dtype).tiny
+
 
 def is_list_or_tuple(x):
     return isinstance(x, (list, tuple))

@@ -16,8 +16,8 @@ class CrossBatchMemory(torch.nn.Module):
         assert embeddings.size(0) <= self.embedding_memory.size(0)
         batch_size = embeddings.size(0)
         labels = labels.to(embeddings.device)
-        self.embedding_memory = self.embedding_memory.to(embeddings.device)
-        self.label_memory = self.label_memory.to(labels.device)
+        self.embedding_memory = self.embedding_memory.to(embeddings.device).type(embeddings.dtype)
+        self.label_memory = self.label_memory.to(labels.device).type(labels.dtype)
         self.add_to_memory(embeddings, labels, batch_size)
         
         if not self.has_been_filled:

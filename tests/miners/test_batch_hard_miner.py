@@ -4,16 +4,17 @@ import torch
 from pytorch_metric_learning.miners import BatchHardMiner
 from pytorch_metric_learning.utils import common_functions as c_f
 import numpy as np
+from pytorch_metric_learning.distances import CosineSimilarity, LpDistance
 
 class TestBatchHardMiner(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
         self.device = torch.device('cuda')
-        self.dist_miner = BatchHardMiner(use_similarity=False, normalize_embeddings=False)
-        self.normalized_dist_miner = BatchHardMiner(use_similarity=False, normalize_embeddings=True)
-        self.normalized_dist_miner_squared = BatchHardMiner(use_similarity=False, normalize_embeddings=True, squared_distances=True)
-        self.sim_miner = BatchHardMiner(use_similarity=True, normalize_embeddings=True)
+        self.dist_miner = BatchHardMiner(distance=LpDistance(normalize_embeddings=False))
+        self.normalized_dist_miner = BatchHardMiner(distance=LpDistance(normalize_embeddings=True))
+        self.normalized_dist_miner_squared = BatchHardMiner(distance=LpDistance(normalize_embeddings=True, power=2))
+        self.sim_miner = BatchHardMiner(distance=CosineSimilarity())
         self.labels = torch.LongTensor([0, 0, 1, 1, 0, 2, 1, 1, 1])
         self.correct_a = torch.LongTensor([0, 1, 2, 3, 4, 6, 7, 8]).to(self.device)
         self.correct_p = torch.LongTensor([4, 4, 8, 8, 0, 2, 2, 2]).to(self.device)

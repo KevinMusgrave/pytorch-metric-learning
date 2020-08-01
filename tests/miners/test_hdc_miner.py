@@ -3,16 +3,17 @@ from .. import TEST_DTYPES
 import torch
 from pytorch_metric_learning.miners import HDCMiner
 from pytorch_metric_learning.utils import common_functions as c_f
+from pytorch_metric_learning.distances import LpDistance, CosineSimilarity
 
 class TestHDCMiner(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
         self.device = torch.device('cuda')
-        self.dist_miner = HDCMiner(filter_percentage=0.3, use_similarity=False, normalize_embeddings=False)
-        self.normalized_dist_miner = HDCMiner(filter_percentage=0.3, use_similarity=False, normalize_embeddings=True)
-        self.normalized_dist_miner_squared = HDCMiner(filter_percentage=0.3, use_similarity=False, normalize_embeddings=True, squared_distances=True)
-        self.sim_miner = HDCMiner(filter_percentage=0.3, use_similarity=True, normalize_embeddings=True)
+        self.dist_miner = HDCMiner(filter_percentage=0.3, distance=LpDistance(normalize_embeddings=False))
+        self.normalized_dist_miner = HDCMiner(filter_percentage=0.3, distance=LpDistance(normalize_embeddings=True))
+        self.normalized_dist_miner_squared = HDCMiner(filter_percentage=0.3, distance=LpDistance(normalize_embeddings=True, power=2))
+        self.sim_miner = HDCMiner(filter_percentage=0.3, distance=CosineSimilarity())
         self.labels = torch.LongTensor([0, 0, 1, 1, 1, 0])
         correct_a1 = torch.LongTensor([0, 5, 1, 5])
         correct_p = torch.LongTensor([5, 0, 5, 1])

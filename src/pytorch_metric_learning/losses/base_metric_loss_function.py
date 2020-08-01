@@ -5,11 +5,6 @@ from ..utils import common_functions as c_f
 from ..utils.module_with_records_and_reducer import ModuleWithRecordsReducerAndDistance
 
 class BaseMetricLossFunction(ModuleWithRecordsReducerAndDistance):
-    def __init__(self, normalize_embeddings=True, **kwargs):
-        super().__init__(**kwargs)
-        self.normalize_embeddings = normalize_embeddings
-        self.add_to_recordable_attributes(name="avg_embedding_norm", is_stat=True)
-
     def compute_loss(self, embeddings, labels, indices_tuple=None):
         """
         This has to be implemented and is what actually computes the loss.
@@ -29,11 +24,6 @@ class BaseMetricLossFunction(ModuleWithRecordsReducerAndDistance):
         self.reset_stats()
         c_f.assert_embeddings_and_labels_are_same_size(embeddings, labels)
         labels = labels.to(embeddings.device)
-        if self.normalize_embeddings:
-            embeddings = torch.nn.functional.normalize(embeddings, p=2, dim=1)
-        self.embedding_norms = torch.norm(embeddings, p=2, dim=1)
-        self.avg_embedding_norm = torch.mean(self.embedding_norms)
-
         loss_dict = self.compute_loss(embeddings, labels, indices_tuple)
         return self.reducer(loss_dict, embeddings, labels)
 

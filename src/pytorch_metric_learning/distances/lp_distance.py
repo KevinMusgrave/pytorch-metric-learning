@@ -3,9 +3,8 @@ import torch
 from ..utils import loss_and_miner_utils as lmu
 
 class LpDistance(BaseDistance):
-    def __init__(self, p=2, power=1, **kwargs):
+    def __init__(self, power=1, **kwargs):
         super().__init__(**kwargs)
-        self.p = p
         self.power =  power
         assert not self.is_inverted
 

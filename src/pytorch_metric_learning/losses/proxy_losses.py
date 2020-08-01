@@ -17,11 +17,7 @@ class ProxyNCALoss(WeightRegularizerMixin, NCALoss):
     def compute_loss(self, embeddings, labels, indices_tuple):
         dtype, device = embeddings.dtype, embeddings.device
         self.cast_types(dtype, device)
-        if self.normalize_embeddings:
-            prox = torch.nn.functional.normalize(self.proxies, p=2, dim=1)
-        else:
-            prox = self.proxies
-        loss_dict = self.nca_computation(embeddings, prox, labels, self.proxy_labels.to(labels.device), indices_tuple)
+        loss_dict = self.nca_computation(embeddings, self.proxies, labels, self.proxy_labels.to(labels.device), indices_tuple)
         loss_dict["reg_loss"] = self.regularization_loss(self.proxies)
         return loss_dict
 

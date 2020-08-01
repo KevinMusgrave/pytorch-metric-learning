@@ -1,12 +1,8 @@
-from .base_distance import BaseDistance
+from .dot_product_similarity import DotProductSimilarity
 import torch
 
-class CosineSimilarity(BaseDistance):
+class CosineSimilarity(DotProductSimilarity):
     def __init__(self, **kwargs):
-        super().__init__(is_inverted=True, **kwargs)
+        super().__init__(normalize_embeddings=True, **kwargs)
         assert self.is_inverted
-
-    def compute_mat(self, query_emb, ref_emb):
-        query_emb = torch.nn.functional.normalize(query_emb, p=2, dim=1)
-        ref_emb = torch.nn.functional.normalize(ref_emb, p=2, dim=1)
-        return torch.matmul(query_emb, ref_emb.t())
+        assert self.normalize_embeddings

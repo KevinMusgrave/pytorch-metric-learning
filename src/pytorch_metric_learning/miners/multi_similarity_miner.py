@@ -13,6 +13,7 @@ class MultiSimilarityMiner(BaseTupleMiner):
         self.add_to_recordable_attributes(name="epsilon", is_stat=False)
 
     def mine(self, embeddings, labels, ref_emb, ref_labels):
+        dtype = embeddings.dtype
         mat = self.distance(embeddings, ref_emb)
         a1, p, a2, n = lmu.get_all_pairs_indices(labels, ref_labels)
 
@@ -23,8 +24,8 @@ class MultiSimilarityMiner(BaseTupleMiner):
         mat_neg_sorting = mat
         mat_pos_sorting = mat.clone()
 
-        pos_ignore = c_f.pos_inf(embeddings.dtype) if self.distance.is_inverted else c_f.neg_inf(embeddings.dtype)
-        neg_ignore = c_f.neg_inf(embeddings.dtype) if self.distance.is_inverted else c_f.pos_inf(embeddings.dtype)
+        pos_ignore = c_f.pos_inf(dtype) if self.distance.is_inverted else c_f.neg_inf(dtype)
+        neg_ignore = c_f.neg_inf(dtype) if self.distance.is_inverted else c_f.pos_inf(dtype)
 
         mat_pos_sorting[a2, n] = pos_ignore
         mat_neg_sorting[a1, p] = neg_ignore

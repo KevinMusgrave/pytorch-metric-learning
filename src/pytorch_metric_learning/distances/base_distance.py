@@ -4,13 +4,20 @@ from ..utils.module_with_records import ModuleWithRecords
 
 
 class BaseDistance(ModuleWithRecords):
-    def __init__(self, is_inverted=False, **kwargs):
+    def __init__(self, normalize_embeddings=True, p=2, is_inverted=False, **kwargs):
         super().__init__(**kwargs)
+        self.normalize_embeddings = normalize_embeddings
+        self.p = p
         self.is_inverted = is_inverted
+        self.add_to_recordable_attributes(name="avg_embedding_norm", is_stat=True)
 
     def forward(self, query_emb, ref_emb=None):
+        self.reset_stats()
         if ref_emb is None:
             ref_emb = query_emb
+        if self.normalize_embeddings:
+            query_emb = torch.nn.functional.normalize(query_emb, p=self.p, dim=1)
+            ref_emb = torch.nn.functional.normalize(ref_emb, p=self.p, dim=1)
         mat = self.compute_mat(query_emb, ref_emb)
         assert mat.size() == torch.Size((query_emb.size(0), ref_emb.size(0)))
         return mat

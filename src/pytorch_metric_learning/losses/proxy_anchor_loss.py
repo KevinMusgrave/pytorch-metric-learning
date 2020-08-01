@@ -3,6 +3,7 @@ from .base_metric_loss_function import BaseMetricLossFunction
 import torch
 from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
 from ..reducers import DivisorReducer
+from ..distances import CosineSimilarity
 
 # adapted from 
 # https://github.com/tjddus9597/Proxy-Anchor-CVPR2020/blob/master/code/losses.py
@@ -24,12 +25,8 @@ class ProxyAnchorLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         dtype, device = embeddings.dtype, embeddings.device
         self.cast_types(dtype, device)
         miner_weights = lmu.convert_to_weights(indices_tuple, labels, dtype=dtype).unsqueeze(1)
-        prox = torch.nn.functional.normalize(self.proxies, p=2, dim=1) if self.normalize_embeddings else self.proxies
-        cos = lmu.sim_mat(embeddings, prox)
 
-        if not self.normalize_embeddings:
-            embedding_norms_mat = self.embedding_norms.unsqueeze(0)*torch.norm(prox, p=2, dim=1, keepdim=True)
-            cos = cos / (embedding_norms_mat.t())
+        cos = self.distance(embeddings, self.proxies)
 
         pos_mask = torch.nn.functional.one_hot(labels, self.num_classes).type(dtype)
         neg_mask = 1 - pos_mask
@@ -49,6 +46,9 @@ class ProxyAnchorLoss(WeightRegularizerMixin, BaseMetricLossFunction):
 
     def get_default_reducer(self):
         return DivisorReducer()
+
+    def get_default_distance(self):
+        return CosineSimilarity()
 
     def sub_loss_names(self):
         return ["pos_loss", "neg_loss", "reg_loss"]

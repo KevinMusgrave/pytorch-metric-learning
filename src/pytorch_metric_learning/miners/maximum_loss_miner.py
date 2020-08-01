@@ -12,7 +12,7 @@ class MaximumLossMiner(BaseSubsetBatchMiner):
         self.loss = loss
         self.miner = miner
         self.num_trials = num_trials
-        self.add_to_recordable_attributes(list_of_names=["avg_loss", "max_loss"], is_stat=True)
+        self.add_to_recordable_attributes(list_of_names=["min_loss", "avg_loss", "max_loss"], is_stat=True)
 
     def mine(self, embeddings, labels, *_):
         losses = []
@@ -25,6 +25,7 @@ class MaximumLossMiner(BaseSubsetBatchMiner):
             indices_tuple = self.inner_miner(curr_embeddings, curr_labels)
             losses.append(self.loss(curr_embeddings, curr_labels, indices_tuple).item())
         max_idx = np.argmax(losses)
+        self.min_loss = np.min(losses)
         self.avg_loss = np.mean(losses)
         self.max_loss = losses[max_idx]
         return all_subset_idx[max_idx]

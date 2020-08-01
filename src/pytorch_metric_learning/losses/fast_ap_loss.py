@@ -28,7 +28,7 @@ class FastAPLoss(BaseMetricLossFunction):
             return self.zero_losses()
         dist_mat = self.distance(embeddings)
 
-        histogram_max = 4. if self.normalize_embeddings else torch.max(dist_mat).item()
+        histogram_max = 4. if self.distance.normalize_embeddings else torch.max(dist_mat).item()
         histogram_delta = histogram_max / self.num_bins
         mid_points = torch.linspace(0., histogram_max, steps=self.num_edges).view(-1,1,1).to(device).type(dtype)
         pulse = torch.nn.functional.relu(1 - torch.abs(dist_mat-mid_points)/histogram_delta)

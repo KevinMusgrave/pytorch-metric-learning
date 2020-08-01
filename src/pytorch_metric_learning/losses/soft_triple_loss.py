@@ -3,6 +3,7 @@ from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
 import math
 import torch
 import torch.nn.functional as F
+from ..distances import CosineSimilarity
 
 ###### modified from https://github.com/idstcv/SoftTriple/blob/master/loss/SoftTriple.py ######
 ###### Original code is Copyright@Alibaba Group ######
@@ -29,8 +30,7 @@ class SoftTripleLoss(BaseMetricLossFunction):
         dtype, device = embeddings.dtype, embeddings.device
         self.cast_types(dtype, device)
         miner_weights = lmu.convert_to_weights(indices_tuple, labels, dtype=dtype)
-        centers = F.normalize(self.fc, p=2, dim=0) if self.normalize_embeddings else self.fc
-        sim_to_centers = torch.matmul(embeddings, centers)
+        sim_to_centers = self.distance(embeddings, self.fc.t())
         sim_to_centers = sim_to_centers.view(-1, self.num_classes, self.centers_per_class)
         prob = F.softmax(sim_to_centers*self.gamma, dim=2)
         sim_to_classes = torch.sum(prob*sim_to_centers, dim=2)
@@ -42,7 +42,7 @@ class SoftTripleLoss(BaseMetricLossFunction):
         #regularization which encourages the centers of a class to be close to each other
         reg = 0
         if self.reg_weight > 0 and self.centers_per_class > 1:
-            center_similarities = centers.t().matmul(centers)
+            center_similarities = self.distance(self.fc.t(), self.fc.t())
             small_val = c_f.small_val(dtype)
             center_similarities_masked = torch.clamp(2.*center_similarities[self.same_class_mask], max=2)
             reg = torch.sum(torch.sqrt(2.0 + small_val - center_similarities_masked))/(2*torch.sum(self.same_class_mask))
@@ -72,3 +72,6 @@ class SoftTripleLoss(BaseMetricLossFunction):
 
     def sub_loss_names(self):
         return ["loss", "reg_loss"]
+
+    def get_default_distance(self):
+        return CosineSimilarity()

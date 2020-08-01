@@ -7,6 +7,7 @@ import scipy.special
 import torch
 import math
 import numpy as np
+from ..distances import CosineSimilarity
 
 class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
     """
@@ -42,17 +43,8 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         terms = self.alternating*self.margin_choose_n*cos_powered*sin_powered # Equation 7 in the paper
         return torch.sum(terms, dim=1)
 
-    def get_weights(self):
-        if self.normalize_weights:
-            return torch.nn.functional.normalize(self.W, p=2, dim=0)
-        return self.W
-
     def get_cosine(self, embeddings):
-        weights = self.get_weights()
-        self.weight_norms = torch.norm(weights, p=2, dim=0)
-        # self.embedding_norms is computed in BaseMetricLossFunction
-        self.product_of_magnitudes = self.weight_norms.unsqueeze(0)*self.embedding_norms.unsqueeze(1)
-        return torch.matmul(embeddings, weights) / self.product_of_magnitudes
+        return self.distance(embeddings, self.W.t())
 
     def get_angles(self, cosine_of_target_classes):
         angles = torch.acos(torch.clamp(cosine_of_target_classes, -1 + 1e-7, 1 - 1e-7))
@@ -73,6 +65,17 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
             k = (angles / (math.pi / self.margin)).floor() # Equation 6: angles needs to be between [k*pi/m and (k+1)*pi/m]
         return ((-1)**k)*cos_with_margin - (2*k)
 
+    def maybe_scale_logits_by_magnitues(self, logits, embeddings):
+        if self.scale_logits_by_magnitudes:
+            embedding_norms = torch.norm(embeddings, p=2, dim=1)
+            if self.normalize_weights:
+                product_of_magnitudes = embedding_norms.unsqueeze(1)
+            else:
+                weight_norms = torch.norm(self.W, p=2, dim=0)
+                product_of_magnitudes = (weight_norms.unsqueeze(0)*embedding_norms.unsqueeze(1))
+            logits = logits * product_of_magnitudes
+        return logits
+
     def cast_types(self, dtype, device):
         self.W.data = self.W.data.to(device).type(dtype)
         self.n_range = self.n_range.to(device).type(dtype)
@@ -90,8 +93,7 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         modified_cosine_of_target_classes = self.modify_cosine_of_target_classes(cosine_of_target_classes, cosine, embeddings, labels, mask)
         diff = (modified_cosine_of_target_classes - cosine_of_target_classes).unsqueeze(1)
         logits = cosine + (mask*diff)
-        if self.scale_logits_by_magnitudes:
-            logits = logits * self.product_of_magnitudes
+        logits = self.maybe_scale_logits_by_magnitues(logits, embeddings)
         unweighted_loss = self.cross_entropy(logits * self.scale, labels)
         miner_weighted_loss = unweighted_loss*miner_weights
         loss_dict = {"loss": {"losses": miner_weighted_loss, "indices": c_f.torch_arange_from_size(embeddings), "reduction_type": "element"}}
@@ -101,3 +103,7 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
 
     def sub_loss_names(self):
         return ["loss", "reg_loss"]
+
+
+    def get_default_distance(self):
+        return CosineSimilarity()

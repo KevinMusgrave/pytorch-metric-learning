@@ -7,15 +7,13 @@ import math
 # mining method used in Hard Aware Deeply Cascaded Embeddings
 # https://arxiv.org/abs/1611.05720
 class HDCMiner(BaseTupleMiner):
-    def __init__(self, filter_percentage, use_similarity=False, squared_distances=False, **kwargs):
+    def __init__(self, filter_percentage, **kwargs):
         super().__init__(**kwargs)
         self.filter_percentage = filter_percentage
-        self.use_similarity = use_similarity
-        self.squared_distances = squared_distances
         self.reset_idx()
 
     def mine(self, embeddings, labels, ref_emb, ref_labels):
-        mat = lmu.get_pairwise_mat(embeddings, ref_emb, self.use_similarity, self.squared_distances)
+        mat = self.distance(embeddings, ref_emb)
         self.set_idx(labels, ref_labels)
 
         for name, (anchor, other) in {"pos": (self.a1, self.p), "neg": (self.a2, self.n)}.items():
@@ -30,7 +28,7 @@ class HDCMiner(BaseTupleMiner):
         return self.a1, self.p, self.a2, self.n
 
     def should_select_largest(self, name):
-        if self.use_similarity:
+        if self.distance.is_inverted:
             return False if name == "pos" else True
         return True if name == "pos" else False
 

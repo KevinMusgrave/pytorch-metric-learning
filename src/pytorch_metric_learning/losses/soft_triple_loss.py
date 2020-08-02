@@ -42,7 +42,7 @@ class SoftTripleLoss(BaseMetricLossFunction):
         #regularization which encourages the centers of a class to be close to each other
         reg = 0
         if self.reg_weight > 0 and self.centers_per_class > 1:
-            center_similarities = self.distance(self.fc.t(), self.fc.t())
+            center_similarities = self.distance(self.fc.t())
             small_val = c_f.small_val(dtype)
             center_similarities_masked = torch.clamp(2.*center_similarities[self.same_class_mask], max=2)
             reg = torch.sum(torch.sqrt(2.0 + small_val - center_similarities_masked))/(2*torch.sum(self.same_class_mask))

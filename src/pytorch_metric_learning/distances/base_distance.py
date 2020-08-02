@@ -16,8 +16,8 @@ class BaseDistance(ModuleWithRecords):
         if ref_emb is None:
             ref_emb = query_emb
         if self.normalize_embeddings:
-            query_emb = torch.nn.functional.normalize(query_emb, p=self.p, dim=1)
-            ref_emb = torch.nn.functional.normalize(ref_emb, p=self.p, dim=1)
+            query_emb = self.normalize(query_emb)
+            ref_emb = self.normalize(ref_emb)
         mat = self.compute_mat(query_emb, ref_emb)
         assert mat.size() == torch.Size((query_emb.size(0), ref_emb.size(0)))
         return mat
@@ -49,3 +49,9 @@ class BaseDistance(ModuleWithRecords):
         if self.is_inverted:
             return pos - neg
         return neg - pos
+
+    def normalize(self, embeddings):
+        return torch.nn.functional.normalize(embeddings, p=self.p, dim=1)
+
+    def get_norm(self, embeddings):
+        return torch.norm(embeddings, p=self.p, dim=1)

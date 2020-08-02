@@ -1,18 +1,14 @@
 from .base_weight_regularizer import BaseWeightRegularizer
 import torch
 from ..utils import common_functions as c_f
+from ..distances import CosineSimilarity
 
 # modified from http://kaizhao.net/regularface
 class RegularFaceRegularizer(BaseWeightRegularizer):
-  
     def compute_loss(self, weights):
         dtype, device = weights.dtype, weights.device
         num_classes = weights.size(0)
-        cos = torch.mm(weights, weights.t())
-        if not self.normalize_weights:
-            norms = self.weight_norms.unsqueeze(1)
-            cos = cos / (norms*norms.t())
-
+        cos = self.distance(weights)
         cos1 = cos.clone()
         with torch.no_grad():
             row_nums = torch.arange(num_classes).long().to(device)
@@ -22,3 +18,6 @@ class RegularFaceRegularizer(BaseWeightRegularizer):
             mask[row_nums, indices] = 1
         
         return {"loss": {"losses": torch.sum(cos*mask, dim=1), "indices": c_f.torch_arange_from_size(weights), "reduction_type": "element"}}
+
+    def get_default_distance(self):
+        return CosineSimilarity()

@@ -15,9 +15,8 @@ class BaseDistance(ModuleWithRecords):
         self.reset_stats()
         if ref_emb is None:
             ref_emb = query_emb
-        if self.normalize_embeddings:
-            query_emb = self.normalize(query_emb)
-            ref_emb = self.normalize(ref_emb)
+        query_emb = self.maybe_normalize(query_emb)
+        ref_emb = self.maybe_normalize(ref_emb)
         mat = self.compute_mat(query_emb, ref_emb)
         assert mat.size() == torch.Size((query_emb.size(0), ref_emb.size(0)))
         return mat
@@ -44,14 +43,16 @@ class BaseDistance(ModuleWithRecords):
     def x_greater_than_y(self, x, y, or_equal=False):
         return ~self.x_less_than_y(x, y, not or_equal)
 
-    # This measures how much bigger the neg distance is compared to the positive distance.
-    def pos_neg_margin(self, pos, neg):
+    # This measures the margin between x and y
+    def margin(self, x, y):
         if self.is_inverted:
-            return pos - neg
-        return neg - pos
+            return y - x
+        return x - y
 
-    def normalize(self, embeddings):
-        return torch.nn.functional.normalize(embeddings, p=self.p, dim=1)
+    def maybe_normalize(self, embeddings):
+        if self.normalize_embeddings:
+            return torch.nn.functional.normalize(embeddings, p=self.p, dim=1)
+        return embeddings
 
     def get_norm(self, embeddings):
         return torch.norm(embeddings, p=self.p, dim=1)

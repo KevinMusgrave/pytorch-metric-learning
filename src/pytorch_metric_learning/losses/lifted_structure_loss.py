@@ -22,8 +22,8 @@ class LiftedStructureLoss(GenericPairLoss):
             neg_pairs = neg_pairs*n_per_p
             keep_mask = (~(n_per_p==0)).type(dtype)
 
-            remaining_pos_margin = self.distance.pos_neg_margin(self.pos_margin, pos_pairs)
-            remaining_neg_margin = self.distance.pos_neg_margin(neg_pairs, self.neg_margin)
+            remaining_pos_margin = self.distance.margin(pos_pairs, self.pos_margin)
+            remaining_neg_margin = self.distance.margin(self.neg_margin, neg_pairs)
             
             neg_pairs_loss = lmu.logsumexp(remaining_neg_margin, keep_mask=keep_mask, add_one=False, dim=1)
             loss_per_pos_pair = neg_pairs_loss + remaining_pos_margin
@@ -44,8 +44,8 @@ class GeneralizedLiftedStructureLoss(GenericPairLoss):
         self.pos_margin = pos_margin
 
     def _compute_loss(self, mat, pos_mask, neg_mask):
-        remaining_pos_margin = self.distance.pos_neg_margin(self.pos_margin, mat)
-        remaining_neg_margin = self.distance.pos_neg_margin(mat, self.neg_margin)
+        remaining_pos_margin = self.distance.margin(mat, self.pos_margin)
+        remaining_neg_margin = self.distance.margin(self.neg_margin, mat)
 
         pos_loss = lmu.logsumexp(remaining_pos_margin, keep_mask=pos_mask, add_one=False)
         neg_loss = lmu.logsumexp(remaining_neg_margin, keep_mask=neg_mask, add_one=False)

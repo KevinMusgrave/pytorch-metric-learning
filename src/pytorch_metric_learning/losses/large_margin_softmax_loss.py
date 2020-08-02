@@ -15,6 +15,7 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
     """
     def __init__(self, margin, num_classes, embedding_size, scale=1, **kwargs):
         super().__init__(**kwargs)
+        assert isinstance(self.distance, CosineSimilarity)
         self.margin = margin
         self.num_classes = num_classes
         self.scale = scale

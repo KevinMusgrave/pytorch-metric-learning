@@ -33,8 +33,11 @@ class ProxyAnchorLoss(WeightRegularizerMixin, BaseMetricLossFunction):
 
         with_pos_proxies = torch.nonzero(torch.sum(pos_mask, dim=0) != 0).squeeze(1)
 
-        pos_term = lmu.logsumexp(-self.alpha * (cos - self.margin), keep_mask=pos_mask*miner_weights, add_one=True, dim=0)
-        neg_term = lmu.logsumexp(self.alpha * (cos + self.margin), keep_mask=neg_mask*miner_weights, add_one=True, dim=0)
+        pos_exp = self.distance.margin(cos, self.margin)
+        neg_exp = self.distance.margin(-self.margin, cos)
+
+        pos_term = lmu.logsumexp(self.alpha * pos_exp, keep_mask=pos_mask*miner_weights, add_one=True, dim=0)
+        neg_term = lmu.logsumexp(self.alpha * neg_exp, keep_mask=neg_mask*miner_weights, add_one=True, dim=0)
 
         loss_indices = c_f.torch_arange_from_size(self.proxies)
 

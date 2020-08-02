@@ -3,7 +3,7 @@
 from .base_metric_loss_function import BaseMetricLossFunction
 import torch
 from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
-
+from ..distances import DotProductSimilarity
 
 class NPairsLoss(BaseMetricLossFunction):
     """
@@ -25,7 +25,9 @@ class NPairsLoss(BaseMetricLossFunction):
             return self.zero_losses()
         anchors, positives = embeddings[anchor_idx], embeddings[positive_idx]
         targets = torch.arange(self.num_pairs).to(embeddings.device)
-        sim_mat = torch.matmul(anchors, positives.t())
+        sim_mat = self.distance(anchors, positives)
+        if not self.distance.is_inverted:
+            sim_mat = -sim_mat
         loss_dict = {"loss": {"losses": self.cross_entropy(sim_mat, targets), "indices": anchor_idx, "reduction_type": "element"}}
         if self.l2_reg_weight > 0:
             l2_reg = torch.norm(embeddings, p=2, dim=1)
@@ -34,3 +36,6 @@ class NPairsLoss(BaseMetricLossFunction):
 
     def sub_loss_names(self):
         return ["loss", "l2_reg"]
+
+    def get_default_distance(self):
+        return DotProductSimilarity()

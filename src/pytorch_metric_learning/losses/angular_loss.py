@@ -4,6 +4,7 @@ from .base_metric_loss_function import BaseMetricLossFunction
 import numpy as np
 import torch
 from ..utils import loss_and_miner_utils as lmu
+from ..distances import LpDistance
 
 class AngularLoss(BaseMetricLossFunction):
     """
@@ -15,6 +16,7 @@ class AngularLoss(BaseMetricLossFunction):
         super().__init__(**kwargs)
         self.alpha = torch.tensor(np.radians(alpha))
         self.add_to_recordable_attributes(list_of_names=["average_angle"], is_stat=True)
+        assert isinstance(self.distance, LpDistance), "AngularLoss requires the distance metric to be LpDistance"
         
     def compute_loss(self, embeddings, labels, indices_tuple):
         anchors, positives, keep_mask, anchor_idx = self.set_stats_get_pairs(embeddings, labels, indices_tuple)
@@ -34,7 +36,8 @@ class AngularLoss(BaseMetricLossFunction):
         a1, p, a2, _ = lmu.convert_to_pairs(indices_tuple, labels)
         if len(a1) == 0 or len(a2) == 0:
             return [None]*4
-        anchors, positives = embeddings[a1], embeddings[p]
+        anchors = self.distance.maybe_normalize(embeddings[a1])
+        positives = self.distance.maybe_normalize(embeddings[p])
         keep_mask = (labels[a1].unsqueeze(1) != labels.unsqueeze(0)).type(embeddings.dtype)
 
         centers = (anchors + positives) / 2

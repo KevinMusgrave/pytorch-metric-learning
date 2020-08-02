@@ -42,7 +42,7 @@ class TripletMarginLoss(BaseMetricLossFunction):
             pn_dists = mat[positive_idx, negative_idx]
             an_dists = self.distance.smallest_dist(an_dists, pn_dists)
         
-        current_margins = self.distance.pos_neg_margin(ap_dists, an_dists)
+        current_margins = self.distance.margin(an_dists, ap_dists)
         if self.smooth_loss:
             loss = torch.log(1 + torch.exp(-current_margins))
         else:

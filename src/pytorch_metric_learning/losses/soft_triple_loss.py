@@ -11,6 +11,7 @@ from ..distances import CosineSimilarity
 class SoftTripleLoss(BaseMetricLossFunction):
     def __init__(self, embedding_size, num_classes, centers_per_class, la=20, gamma=0.1, reg_weight=0.2, margin=0.01, **kwargs):
         super().__init__(**kwargs)
+        assert self.distance.is_inverted
         self.la = la
         self.gamma = 1./gamma
         self.reg_weight = reg_weight

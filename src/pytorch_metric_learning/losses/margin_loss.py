@@ -30,8 +30,8 @@ class MarginLoss(BaseMetricLossFunction):
         d_ap = mat[anchor_idx, positive_idx]
         d_an = mat[anchor_idx, negative_idx]
 
-        pos_loss = torch.nn.functional.relu(self.distance.pos_neg_margin(beta, d_ap) + self.margin)
-        neg_loss = torch.nn.functional.relu(self.distance.pos_neg_margin(d_an, beta) + self.margin)
+        pos_loss = torch.nn.functional.relu(self.distance.margin(d_ap, beta) + self.margin)
+        neg_loss = torch.nn.functional.relu(self.distance.margin(beta, d_an) + self.margin)
 
         num_pos_pairs = (pos_loss > 0.0).nonzero().size(0)
         num_neg_pairs = (neg_loss > 0.0).nonzero().size(0)

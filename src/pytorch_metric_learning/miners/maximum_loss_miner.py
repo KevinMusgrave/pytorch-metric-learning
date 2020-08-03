@@ -1,6 +1,3 @@
-#! /usr/bin/env python3
-
-
 from .base_miner import BaseSubsetBatchMiner
 from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
 import numpy as np

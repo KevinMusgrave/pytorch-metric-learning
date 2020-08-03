@@ -11,16 +11,16 @@ class ThresholdReducer(BaseReducer):
         self.add_to_recordable_attributes(list_of_names=["low", "high"], is_stat=False)
 
     def element_reduction(self, losses, *_):
-        return self.element_reduction_helper(losses, "elements_above_threshold")
+        return self.element_reduction_helper(losses, "elements")
     
     def pos_pair_reduction(self, losses, *args):
-        return self.element_reduction_helper(losses, "pos_pairs_above_threshold")
+        return self.element_reduction_helper(losses, "pos_pairs")
 
     def neg_pair_reduction(self, losses, *args):
-        return self.element_reduction_helper(losses, "neg_pairs_above_threshold")
+        return self.element_reduction_helper(losses, "neg_pairs")
 
     def triplet_reduction(self, losses, *args):
-        return self.element_reduction_helper(losses, "triplets_above_threshold")
+        return self.element_reduction_helper(losses, "triplets")
 
     def element_reduction_helper(self, losses, attr_name):
         low_condition = torch.ones_like(losses, dtype=torch.bool)
@@ -30,11 +30,25 @@ class ThresholdReducer(BaseReducer):
         if self.high is not None:
             high_condition &= losses < self.high
         threshold_condition = low_condition & high_condition 
-        num_above_threshold = torch.sum(threshold_condition)
-        if num_above_threshold >= 1:
+        num_past_filter = torch.sum(threshold_condition)
+        if num_past_filter >= 1:
             loss = torch.mean(losses[threshold_condition])
         else:
             loss = torch.mean(losses)*0 # set loss to 0
-        self.add_to_recordable_attributes(name=attr_name, is_stat=True)
-        setattr(self, attr_name, num_above_threshold)
+        self.set_stats(low_condition, high_condition, num_past_filter, attr_name)
         return loss
+
+    def set_stats(self, low_condition, high_condition, num_past_filter, attr_name):
+        curr_attr_name = "{}_past_filter".format(attr_name)
+        self.add_to_recordable_attributes(name=curr_attr_name, is_stat=True)
+        setattr(self, curr_attr_name, num_past_filter)
+        if self.collect_stats:
+            with torch.no_grad():
+                if self.low is not None:
+                    curr_attr_name = "{}_above_low".format(attr_name)
+                    self.add_to_recordable_attributes(name=curr_attr_name, is_stat=True)
+                    setattr(self, curr_attr_name, torch.sum(low_condition))
+                if self.high is not None:
+                    curr_attr_name = "{}_below_high".format(attr_name)
+                    self.add_to_recordable_attributes(name=curr_attr_name, is_stat=True)
+                    setattr(self, curr_attr_name, torch.sum(high_condition))

@@ -1,9 +1,6 @@
-#! /usr/bin/env python3
-
 from .base_miner import BaseTupleMiner
 import torch
 from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
-
 
 class BatchHardMiner(BaseTupleMiner):
     def __init__(self, **kwargs):

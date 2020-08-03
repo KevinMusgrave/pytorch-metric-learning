@@ -1,15 +1,14 @@
-#! /usr/bin/env python3
-
 from .base_miner import BaseTupleMiner
 import torch
-from ..utils import loss_and_miner_utils as lmu
-
+from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
+from ..distances import LpDistance
 
 # adapted from
 # https://github.com/chaoyuaw/incubator-mxnet/blob/master/example/gluon/embedding_learning/model.py
 class DistanceWeightedMiner(BaseTupleMiner):
     def __init__(self, cutoff, nonzero_loss_cutoff, **kwargs):
         super().__init__(**kwargs)
+        c_f.assert_distance_type(self, LpDistance, p=2, power=1, normalize_embeddings=True)
         self.cutoff = float(cutoff)
         self.nonzero_loss_cutoff = float(nonzero_loss_cutoff)
         self.add_to_recordable_attributes(list_of_names=["cutoff", "nonzero_loss_cutoff"], is_stat=False)

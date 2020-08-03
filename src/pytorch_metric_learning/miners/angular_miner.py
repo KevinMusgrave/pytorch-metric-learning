@@ -1,9 +1,8 @@
-#! /usr/bin/env python3
-
 from .base_miner import BaseTupleMiner
 import torch
-from ..utils import loss_and_miner_utils as lmu
+from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
 import numpy as np
+from ..distances import LpDistance
 
 class AngularMiner(BaseTupleMiner):
     """
@@ -13,6 +12,7 @@ class AngularMiner(BaseTupleMiner):
     """
     def __init__(self, angle, **kwargs):
         super().__init__(**kwargs)
+        c_f.assert_distance_type(self, LpDistance, p=2, power=1, normalize_embeddings=True)
         self.angle = np.radians(angle)
         self.add_to_recordable_attributes(list_of_names=["angle"], is_stat=False)
         self.add_to_recordable_attributes(list_of_names=["average_angle", 
@@ -24,8 +24,8 @@ class AngularMiner(BaseTupleMiner):
         anchor_idx, positive_idx, negative_idx = lmu.get_all_triplets_indices(labels, ref_labels)
         anchors, positives, negatives = embeddings[anchor_idx], ref_emb[positive_idx], ref_emb[negative_idx]
         centers = (anchors + positives) / 2
-        ap_dist = torch.nn.functional.pairwise_distance(anchors, positives, 2)
-        nc_dist = torch.nn.functional.pairwise_distance(negatives, centers, 2)
+        ap_dist = self.distance.pairwise_distance(anchors, positives)
+        nc_dist = self.distance.pairwise_distance(negatives, centers)
         angles = torch.atan(ap_dist / (2*nc_dist))
         threshold_condition = angles > self.angle
         self.set_stats(angles, threshold_condition)

@@ -9,5 +9,5 @@ class LpRegularizer(BaseRegularizer):
         self.add_to_recordable_attributes(list_of_names=["p"], is_stat=False)
 
     def compute_loss(self, embeddings):
-        l2_reg = torch.norm(embeddings, p=self.p, dim=1)
-        return {"loss": {"losses": l2_reg, "indices": c_f.torch_arange_from_size(embeddings), "reduction_type": "element"}}
+        reg = torch.norm(embeddings, p=self.p, dim=1)
+        return {"loss": {"losses": reg, "indices": c_f.torch_arange_from_size(embeddings), "reduction_type": "element"}}

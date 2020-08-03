@@ -10,6 +10,7 @@ class ProxyNCALoss(WeightRegularizerMixin, NCALoss):
         super().__init__(**kwargs)
         self.proxies = torch.nn.Parameter(torch.randn(num_classes, embedding_size))
         self.proxy_labels = torch.arange(num_classes)
+        self.add_to_recordable_attributes(list_of_names=["num_classes"], is_stat=False)
         
     def cast_types(self, dtype, device):
         self.proxies.data = self.proxies.data.to(device).type(dtype)

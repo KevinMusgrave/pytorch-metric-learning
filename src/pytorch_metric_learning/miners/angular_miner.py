@@ -14,11 +14,11 @@ class AngularMiner(BaseTupleMiner):
     def __init__(self, angle, **kwargs):
         super().__init__(**kwargs)
         self.angle = np.radians(angle)
+        self.add_to_recordable_attributes(list_of_names=["angle"], is_stat=False)
         self.add_to_recordable_attributes(list_of_names=["average_angle", 
                                                         "average_angle_above_threshold", 
                                                         "average_angle_below_threshold",
-                                                        "min_angle", "max_angle", "std_of_angle"], 
-                                        is_stat=True)
+                                                        "min_angle", "max_angle", "std_of_angle"], is_stat=True)
 
     def mine(self, embeddings, labels, ref_emb, ref_labels):
         anchor_idx, positive_idx, negative_idx = lmu.get_all_triplets_indices(labels, ref_labels)
@@ -32,14 +32,16 @@ class AngularMiner(BaseTupleMiner):
         return anchor_idx[threshold_condition], positive_idx[threshold_condition], negative_idx[threshold_condition]
 
     def set_stats(self, angles, threshold_condition):
-        if len(angles) > 0:
-            self.average_angle = np.degrees(torch.mean(angles).item())
-            self.min_angle = np.degrees(torch.min(angles).item())
-            self.max_angle = np.degrees(torch.max(angles).item())
-            self.std_of_angle = np.degrees(torch.std(angles).item())
-        if torch.sum(threshold_condition) > 0:
-            self.average_angle_above_threshold = np.degrees(torch.mean(angles[threshold_condition]).item())
-        negated_condition = ~threshold_condition
-        if torch.sum(negated_condition) > 0:
-            self.average_angle_below_threshold = np.degrees(torch.mean(angles[~threshold_condition]).item())
+        if self.collect_stats:
+            with torch.no_grad():
+                if len(angles) > 0:
+                    self.average_angle = np.degrees(torch.mean(angles).item())
+                    self.min_angle = np.degrees(torch.min(angles).item())
+                    self.max_angle = np.degrees(torch.max(angles).item())
+                    self.std_of_angle = np.degrees(torch.std(angles).item())
+                if torch.sum(threshold_condition) > 0:
+                    self.average_angle_above_threshold = np.degrees(torch.mean(angles[threshold_condition]).item())
+                negated_condition = ~threshold_condition
+                if torch.sum(negated_condition) > 0:
+                    self.average_angle_below_threshold = np.degrees(torch.mean(angles[~threshold_condition]).item())
 

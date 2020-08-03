@@ -12,7 +12,7 @@ class CrossBatchMemory(ModuleWithRecords):
         self.label_memory = torch.zeros(self.memory_size).long()
         self.has_been_filled = False
         self.queue_idx = 0
-        self.add_to_recordable_attributes(list_of_names=["memory_size", "queue_idx"], is_stat=False)
+        self.add_to_recordable_attributes(list_of_names=["embedding_size", "memory_size", "queue_idx"], is_stat=False)
 
     def forward(self, embeddings, labels, indices_tuple=None):
         assert embeddings.size(0) <= self.embedding_memory.size(0)

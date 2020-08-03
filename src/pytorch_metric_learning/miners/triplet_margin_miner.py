@@ -19,10 +19,10 @@ class TripletMarginMiner(BaseTupleMiner):
     def __init__(self, margin, type_of_triplets="all", tol=0, **kwargs):
         super().__init__(**kwargs)
         self.margin = margin
-        self.add_to_recordable_attributes(name="margin", is_stat=False)
-        self.add_to_recordable_attributes(list_of_names=["avg_triplet_margin", "pos_pair_dist", "neg_pair_dist"], is_stat=True)
         self.type_of_triplets = type_of_triplets
         self.tol = tol
+        self.add_to_recordable_attributes(list_of_names=["margin", "tol"], is_stat=False)
+        self.add_to_recordable_attributes(list_of_names=["avg_triplet_margin", "pos_pair_dist", "neg_pair_dist"], is_stat=True)
 
     def mine(self, embeddings, labels, ref_emb, ref_labels):
         anchor_idx, positive_idx, negative_idx  = lmu.get_all_triplets_indices(labels, ref_labels)
@@ -30,10 +30,6 @@ class TripletMarginMiner(BaseTupleMiner):
         ap_dist = mat[anchor_idx, positive_idx]
         an_dist = mat[anchor_idx, negative_idx]
         triplet_margin = an_dist - ap_dist
-
-        self.pos_pair_dist = torch.mean(ap_dist).item()
-        self.neg_pair_dist = torch.mean(an_dist).item()
-        self.avg_triplet_margin = torch.mean(triplet_margin).item()
 
         triplet_margin[torch.abs(triplet_margin) < self.tol] = 0
 
@@ -46,3 +42,11 @@ class TripletMarginMiner(BaseTupleMiner):
             elif self.type_of_triplets == "semihard":
                 threshold_condition &= self.distance.x_greater_than_y(triplet_margin, 0, or_equal=False)
         return anchor_idx[threshold_condition], positive_idx[threshold_condition], negative_idx[threshold_condition]
+
+
+    def set_stats(self, ap_dist, an_dist, triplet_margin):
+        if self.collect_stats:
+            with torch.no_grad():
+                self.pos_pair_dist = torch.mean(ap_dist).item()
+                self.neg_pair_dist = torch.mean(an_dist).item()
+                self.avg_triplet_margin = torch.mean(triplet_margin).item()

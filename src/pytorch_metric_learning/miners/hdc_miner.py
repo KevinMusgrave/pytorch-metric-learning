@@ -10,6 +10,7 @@ class HDCMiner(BaseTupleMiner):
     def __init__(self, filter_percentage, **kwargs):
         super().__init__(**kwargs)
         self.filter_percentage = filter_percentage
+        self.add_to_recordable_attributes(list_of_names=["filter_percentage"], is_stat=False)
         self.reset_idx()
 
     def mine(self, embeddings, labels, ref_emb, ref_labels):

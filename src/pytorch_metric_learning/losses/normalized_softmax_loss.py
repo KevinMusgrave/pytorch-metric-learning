@@ -10,7 +10,7 @@ class NormalizedSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         self.temperature = temperature
         self.W = torch.nn.Parameter(torch.randn(embedding_size, num_classes))
         self.cross_entropy = torch.nn.CrossEntropyLoss(reduction='none')
-        self.add_to_recordable_attributes(list_of_names=["temperature"], is_stat=False)
+        self.add_to_recordable_attributes(list_of_names=["embedding_size", "num_classes", "temperature"], is_stat=False)
         
     def cast_types(self, dtype, device):
         self.W.data = self.W.data.to(device).type(dtype)

@@ -17,7 +17,7 @@ class ProxyAnchorLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         self.num_classes = num_classes
         self.margin = margin
         self.alpha = alpha
-        self.add_to_recordable_attributes(list_of_names=["alpha", "margin"], is_stat=False)
+        self.add_to_recordable_attributes(list_of_names=["num_classes", "alpha", "margin"], is_stat=False)
         
     def cast_types(self, dtype, device):
         self.proxies.data = self.proxies.data.to(device).type(dtype)

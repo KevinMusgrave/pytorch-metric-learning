@@ -22,8 +22,13 @@ class PairMarginMiner(BaseTupleMiner):
         a1, p, a2, n = lmu.get_all_pairs_indices(labels, ref_labels)
         pos_pair = mat[a1, p]
         neg_pair = mat[a2, n]
-        self.pos_pair_dist = torch.mean(pos_pair).item() if len(pos_pair) > 0 else 0
-        self.neg_pair_dist = torch.mean(neg_pair).item() if len(neg_pair) > 0 else 0
+        self.set_stats(pos_pair, neg_pair)
         pos_mask = self.distance.x_greater_than_y(pos_pair, self.pos_margin, or_equal=False)
         neg_mask = self.distance.x_less_than_y(neg_pair, self.neg_margin, or_equal=False)
         return a1[pos_mask], p[pos_mask], a2[neg_mask], n[neg_mask]
+
+    def set_stats(self, pos_pair, neg_pair):
+        if self.collect_stats:
+            with torch.no_grad():
+                self.pos_pair_dist = torch.mean(pos_pair).item() if len(pos_pair) > 0 else 0
+                self.neg_pair_dist = torch.mean(neg_pair).item() if len(neg_pair) > 0 else 0

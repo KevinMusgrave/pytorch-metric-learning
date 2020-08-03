@@ -20,7 +20,7 @@ class SoftTripleLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         self.centers_per_class = centers_per_class
         self.fc = torch.nn.Parameter(torch.Tensor(embedding_size, num_classes * centers_per_class))
         torch.nn.init.kaiming_uniform_(self.fc, a=math.sqrt(5))
-        self.add_to_recordable_attributes(list_of_names=["la", "gamma", "margin", "centers_per_class"], is_stat=False)
+        self.add_to_recordable_attributes(list_of_names=["la", "gamma", "margin", "centers_per_class", "num_classes", "embedding_size"], is_stat=False)
 
     def cast_types(self, dtype, device):
         self.fc.data = self.fc.data.to(device).type(dtype)

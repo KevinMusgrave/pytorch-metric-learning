@@ -19,7 +19,7 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         self.margin = margin
         self.num_classes = num_classes
         self.scale = scale
-        self.add_to_recordable_attributes(list_of_names=["margin", "scale"], is_stat=False)
+        self.add_to_recordable_attributes(list_of_names=["num_classes", "margin", "scale"], is_stat=False)
         self.add_to_recordable_attributes(name="avg_angle", is_stat=True)
         self.init_margin()
         self.W = torch.nn.Parameter(torch.randn(embedding_size, num_classes))

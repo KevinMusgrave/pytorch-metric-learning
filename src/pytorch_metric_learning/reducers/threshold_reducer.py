@@ -3,10 +3,12 @@ import torch
 
 
 class ThresholdReducer(BaseReducer):
-    def __init__(self, threshold, **kwargs):
+    def __init__(self, low=None, high=None, **kwargs):
         super().__init__(**kwargs)
-        self.threshold = threshold
-        self.add_to_recordable_attributes(name="threshold")
+        assert (low is not None) or (high is not None), "At least one of low or high must be specified"
+        self.low = low
+        self.high = high
+        self.add_to_recordable_attributes(list_of_names=["low", "high"], is_stat=False)
 
     def element_reduction(self, losses, *_):
         return self.element_reduction_helper(losses, "elements_above_threshold")
@@ -21,7 +23,13 @@ class ThresholdReducer(BaseReducer):
         return self.element_reduction_helper(losses, "triplets_above_threshold")
 
     def element_reduction_helper(self, losses, attr_name):
-        threshold_condition = losses > self.threshold
+        low_condition = torch.ones_like(losses, dtype=torch.bool)
+        high_condition = torch.ones_like(losses, dtype=torch.bool)
+        if self.low is not None:
+            low_condition &= losses > self.low
+        if self.high is not None:
+            high_condition &= losses < self.high
+        threshold_condition = low_condition & high_condition 
         num_above_threshold = torch.sum(threshold_condition)
         if num_above_threshold >= 1:
             loss = torch.mean(losses[threshold_condition])

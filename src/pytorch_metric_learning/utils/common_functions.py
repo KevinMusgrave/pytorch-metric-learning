@@ -348,6 +348,14 @@ def angle_to_coord(angle):
 def assert_embeddings_and_labels_are_same_size(embeddings, labels):
     assert embeddings.size(0) == labels.size(0), "Number of embeddings must equal number of labels"
 
+def assert_distance_type(obj, distance_type):
+    if is_list_or_tuple(distance_type):
+        distance_type_str = ", ".join(x.__name__ for x in distance_type)
+        distance_type_str = "one of "+distance_type_str
+    else:
+        distance_type_str = distance_type.__name__
+    assert isinstance(obj.distance, distance_type), "{} requires the distance metric to be {}".format(obj.__class__.__name__, distance_type_str)
+
 
 def torch_arange_from_size(input, size_dim=0):
     return torch.arange(input.size(size_dim)).to(input.device)

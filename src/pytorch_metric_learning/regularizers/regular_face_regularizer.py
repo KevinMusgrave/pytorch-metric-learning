@@ -1,10 +1,10 @@
-from .base_regularizers import BaseWeightRegularizer
+from .base_regularizer import BaseRegularizer
 import torch
 from ..utils import common_functions as c_f
 from ..distances import CosineSimilarity
 
 # modified from http://kaizhao.net/regularface
-class RegularFaceRegularizer(BaseWeightRegularizer):
+class RegularFaceRegularizer(BaseRegularizer):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         assert self.distance.is_inverted

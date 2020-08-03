@@ -1,7 +1,7 @@
 import torch
 from .generic_pair_loss import GenericPairLoss
 import numpy as np
-from ..utils import loss_and_miner_utils as lmu
+from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
 from ..distances import CosineSimilarity
 
 class TupletMarginLoss(GenericPairLoss):
@@ -11,7 +11,7 @@ class TupletMarginLoss(GenericPairLoss):
         self.margin = np.radians(margin)
         self.scale = scale
         self.add_to_recordable_attributes(list_of_names=["avg_pos_angle", "avg_neg_angle"], is_stat=True)
-        assert isinstance(self.distance, CosineSimilarity), "TupletMarginLoss requires the distance metric to be CosineSimilarity"
+        c_f.assert_distance_type(self, CosineSimilarity)
 
     # pos_pairs and neg_pairs already represent cos(theta)
     def _compute_loss(self, pos_pairs, neg_pairs, indices_tuple):

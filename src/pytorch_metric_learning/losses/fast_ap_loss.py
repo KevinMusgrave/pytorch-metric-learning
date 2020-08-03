@@ -1,6 +1,6 @@
 import torch
 from .base_metric_loss_function import BaseMetricLossFunction
-from ..utils import loss_and_miner_utils as lmu
+from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
 from ..distances import LpDistance
 
 class FastAPLoss(BaseMetricLossFunction):
@@ -8,7 +8,7 @@ class FastAPLoss(BaseMetricLossFunction):
         super().__init__(**kwargs)
         self.num_bins = int(num_bins)
         self.num_edges = self.num_bins + 1
-        assert isinstance(self.distance, LpDistance), "FastAPLoss requires the distance metric to be LpDistance"
+        c_f.assert_distance_type(self, LpDistance)
 
     """
     Adapted from https://github.com/kunhe/FastAP-metric-learning

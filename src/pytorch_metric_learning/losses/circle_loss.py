@@ -33,7 +33,7 @@ class CircleLoss(GenericPairLoss):
         self.on = -self.m
         self.delta_p = 1-self.m 
         self.delta_n = self.m 
-        assert isinstance(self.distance, CosineSimilarity), "CircleLoss requires the distance metric to be CosineSimilarity"
+        c_f.assert_distance_type(self, CosineSimilarity)
 
     def _compute_loss(self, mat, pos_mask, neg_mask):
         pos_mask_bool = pos_mask.bool()

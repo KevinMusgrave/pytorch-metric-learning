@@ -55,6 +55,7 @@ import unittest
 from .. import TEST_DTYPES
 from pytorch_metric_learning.losses import SoftTripleLoss
 from pytorch_metric_learning.utils import common_functions as c_f
+from pytorch_metric_learning.regularizers import SparseCentersRegularizer
 
 class TestSoftTripleLoss(unittest.TestCase):
     @classmethod
@@ -71,7 +72,11 @@ class TestSoftTripleLoss(unittest.TestCase):
             la = 1 if dtype == torch.float16 else 20
             gamma = 1 if dtype == torch.float16 else 0.1
             for centers_per_class in range(1, 12):
-                loss_func = SoftTripleLoss(embedding_size, num_classes, centers_per_class=centers_per_class, la=la, gamma=gamma, reg_weight=reg_weight, margin=margin).to(self.device)
+                if centers_per_class > 1:
+                    weight_regularizer = SparseCentersRegularizer(num_classes, centers_per_class)
+                else:
+                    weight_regularizer = None
+                loss_func = SoftTripleLoss(embedding_size, num_classes, centers_per_class=centers_per_class, la=la, gamma=gamma, margin=margin, weight_regularizer=weight_regularizer, weight_reg_weight=reg_weight).to(self.device)
                 original_loss_func = OriginalImplementationSoftTriple(la, gamma, reg_weight, margin, embedding_size, num_classes, centers_per_class).to(self.device)
 
                 original_loss_func.fc.data = original_loss_func.fc.data.type(dtype)

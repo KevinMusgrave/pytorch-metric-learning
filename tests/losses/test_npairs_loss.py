@@ -2,6 +2,7 @@ import unittest
 from .. import TEST_DTYPES
 import torch
 from pytorch_metric_learning.losses import NPairsLoss
+from pytorch_metric_learning.regularizers import LpRegularizer
 from pytorch_metric_learning.utils import common_functions as c_f, loss_and_miner_utils as lmu
 
 class TestNPairsLoss(unittest.TestCase):
@@ -11,7 +12,7 @@ class TestNPairsLoss(unittest.TestCase):
 
     def test_npairs_loss(self):
         loss_funcA = NPairsLoss()
-        loss_funcB = NPairsLoss(l2_reg_weight=1)
+        loss_funcB = NPairsLoss(embedding_regularizer=LpRegularizer())
 
         for dtype in TEST_DTYPES:
             embedding_angles = list(range(0,180,20))[:7]
@@ -53,7 +54,7 @@ class TestNPairsLoss(unittest.TestCase):
 
     def test_backward(self):
         loss_funcA = NPairsLoss()
-        loss_funcB = NPairsLoss(l2_reg_weight=1)
+        loss_funcB = NPairsLoss(embedding_regularizer=LpRegularizer())
 
         for dtype in TEST_DTYPES:
             for loss_func in [loss_funcA, loss_funcB]:

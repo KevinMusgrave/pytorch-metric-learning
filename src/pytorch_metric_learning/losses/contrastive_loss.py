@@ -7,12 +7,6 @@ from ..reducers import AvgNonZeroReducer
 
 
 class ContrastiveLoss(GenericPairLoss):
-    """
-    Contrastive loss using either distance or similarity.
-    Args:
-        pos_margin: The distance (or similarity) over (under) which positive pairs will contribute to the loss.
-        neg_margin: The distance (or similarity) under (over) which negative pairs will contribute to the loss.  
-    """
     def __init__(self, pos_margin=0, neg_margin=1, **kwargs):
         super().__init__(mat_based_loss=False, **kwargs)
         self.pos_margin = pos_margin

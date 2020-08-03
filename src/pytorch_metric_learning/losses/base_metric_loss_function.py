@@ -27,7 +27,7 @@ class BaseMetricLossFunction(EmbeddingRegularizerMixin, ModuleWithRecordsReducer
         c_f.assert_embeddings_and_labels_are_same_size(embeddings, labels)
         labels = labels.to(embeddings.device)
         loss_dict = self.compute_loss(embeddings, labels, indices_tuple)
-        self.add_embedding_regularization_to_loss_dict(loss_dict, embeddings, labels, indices_tuple)
+        self.add_embedding_regularization_to_loss_dict(loss_dict, embeddings)
         return self.reducer(loss_dict, embeddings, labels)
 
     def zero_loss(self):

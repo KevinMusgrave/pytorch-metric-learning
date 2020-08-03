@@ -1,8 +1,8 @@
-from .base_regularizers import BaseWeightRegularizer
+from .base_regularizer import BaseRegularizer
 import torch
 from ..utils import common_functions as c_f
 
-class CenterInvariantRegularizer(BaseWeightRegularizer):
+class CenterInvariantRegularizer(BaseRegularizer):
     def compute_loss(self, weights):
         squared_weight_norms = self.distance.get_norm(weights)**2
         deviations_from_mean = squared_weight_norms - torch.mean(squared_weight_norms)

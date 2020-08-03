@@ -1,5 +1,3 @@
-#! /usr/bin/env python3
-
 from .base_metric_loss_function import BaseMetricLossFunction
 import torch
 import torch.nn.functional as F

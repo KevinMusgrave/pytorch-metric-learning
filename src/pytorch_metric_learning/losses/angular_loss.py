@@ -1,5 +1,3 @@
-#! /usr/bin/env python3
-
 from .base_metric_loss_function import BaseMetricLossFunction
 import numpy as np
 import torch
@@ -14,7 +12,7 @@ class AngularLoss(BaseMetricLossFunction):
     """
     def __init__(self, alpha, **kwargs):
         super().__init__(**kwargs)
-        c_f.assert_distance_type(self, LpDistance)
+        c_f.assert_distance_type(self, LpDistance, p=2, power=1, normalize_embeddings=True)
         self.alpha = torch.tensor(np.radians(alpha))
         self.add_to_recordable_attributes(list_of_names=["alpha"], is_stat=False)
         self.add_to_recordable_attributes(list_of_names=["average_angle"], is_stat=True)
@@ -37,8 +35,8 @@ class AngularLoss(BaseMetricLossFunction):
         a1, p, a2, _ = lmu.convert_to_pairs(indices_tuple, labels)
         if len(a1) == 0 or len(a2) == 0:
             return [None]*4
-        anchors = self.distance.maybe_normalize(embeddings[a1])
-        positives = self.distance.maybe_normalize(embeddings[p])
+        anchors = self.distance.normalize(embeddings[a1])
+        positives = self.distance.normalize(embeddings[p])
         keep_mask = (labels[a1].unsqueeze(1) != labels.unsqueeze(0)).type(embeddings.dtype)
         self.set_stats(anchors, positives, embeddings, keep_mask)
         return anchors, positives, keep_mask, a1

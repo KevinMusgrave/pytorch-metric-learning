@@ -1,3 +1,17 @@
+from ..utils import common_functions as c_f
+import torch
+
+class WeightMixin:
+    def __init__(self, weight_init_func=None, **kwargs):
+        super().__init__(**kwargs)
+        self.weight_init_func = weight_init_func
+        if self.weight_init_func is None:
+            self.weight_init_func = self.get_default_weight_init_func()
+            
+    def get_default_weight_init_func(self):
+        return c_f.TorchInitWrapper(torch.nn.init.normal_)
+
+
 class WeightRegularizerMixin:
     def __init__(self, weight_regularizer=None, weight_reg_weight=1, **kwargs):
         super().__init__(**kwargs)
@@ -17,6 +31,8 @@ class WeightRegularizerMixin:
 
     def regularization_loss_names(self):
         return ["weight_reg_loss"]
+
+
 
 class EmbeddingRegularizerMixin:
     def __init__(self, embedding_regularizer=None, embedding_reg_weight=1, **kwargs):

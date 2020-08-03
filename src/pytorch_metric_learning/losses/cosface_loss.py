@@ -1,5 +1,3 @@
-#! /usr/bin/env python3
-
 from .large_margin_softmax_loss import LargeMarginSoftmaxLoss
 import numpy as np
 import torch

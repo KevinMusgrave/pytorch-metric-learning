@@ -3,7 +3,7 @@
 import torch
 from ..utils import common_functions as c_f
 from ..utils.module_with_records_and_reducer import ModuleWithRecordsReducerAndDistance
-from .regularizer_mixins import EmbeddingRegularizerMixin
+from .mixins import EmbeddingRegularizerMixin
 import inspect
 
 class BaseMetricLossFunction(EmbeddingRegularizerMixin, ModuleWithRecordsReducerAndDistance):

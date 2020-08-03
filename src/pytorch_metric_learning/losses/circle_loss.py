@@ -1,5 +1,3 @@
-#! /usr/bin/env python3
-
 from .generic_pair_loss import GenericPairLoss
 import torch 
 from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
@@ -9,8 +7,7 @@ from ..distances import CosineSimilarity
 
 class CircleLoss(GenericPairLoss):
     """
-    Circle loss for pairwise labels only. Support for class-level labels will be added 
-    in the future.
+    Circle loss for pairwise labels only.
     
     Args:
     m:  The relaxation factor that controls the radious of the decision boundary.

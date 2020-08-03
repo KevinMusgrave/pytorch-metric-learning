@@ -1,6 +1,4 @@
-#! /usr/bin/env python3
-
-from .regularizer_mixins import WeightRegularizerMixin
+from .mixins import WeightMixin, WeightRegularizerMixin
 from .base_metric_loss_function import BaseMetricLossFunction
 from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
 import scipy.special
@@ -9,7 +7,7 @@ import math
 import numpy as np
 from ..distances import CosineSimilarity
 
-class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
+class LargeMarginSoftmaxLoss(WeightMixin, WeightRegularizerMixin, BaseMetricLossFunction):
     """
     Implementation of https://arxiv.org/pdf/1612.02295.pdf
     """
@@ -22,7 +20,8 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         self.add_to_recordable_attributes(list_of_names=["num_classes", "margin", "scale"], is_stat=False)
         self.add_to_recordable_attributes(name="avg_angle", is_stat=True)
         self.init_margin()
-        self.W = torch.nn.Parameter(torch.randn(embedding_size, num_classes))
+        self.W = torch.nn.Parameter(torch.Tensor(embedding_size, num_classes))
+        self.weight_init_func(self.W)
         self.cross_entropy = torch.nn.CrossEntropyLoss(reduction='none')
 
     def init_margin(self):
@@ -68,8 +67,8 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         return ((-1)**k)*cos_with_margin - (2*k)
 
     def scale_logits(self, logits, embeddings):
-        embedding_norms = torch.norm(embeddings, p=2, dim=1)
-        weight_norms = torch.norm(self.W, p=2, dim=0)
+        embedding_norms = self.distance.get_norm(embeddings)
+        weight_norms = self.distance.get_norm(self.W, dim=0)
         product_of_magnitudes = (weight_norms.unsqueeze(0)*embedding_norms.unsqueeze(1))
         return logits * product_of_magnitudes * self.scale
 

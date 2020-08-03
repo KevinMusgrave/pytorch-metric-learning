@@ -1,10 +1,6 @@
-#! /usr/bin/env python3
-
-
 import torch
 from ..utils import loss_and_miner_utils as lmu
 from .base_metric_loss_function import BaseMetricLossFunction
-
 
 class GenericPairLoss(BaseMetricLossFunction):
     def __init__(self, mat_based_loss, **kwargs):

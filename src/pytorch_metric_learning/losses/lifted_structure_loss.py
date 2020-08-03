@@ -1,7 +1,4 @@
-#! /usr/bin/env python3
-
 import torch
-
 from .generic_pair_loss import GenericPairLoss
 from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
 

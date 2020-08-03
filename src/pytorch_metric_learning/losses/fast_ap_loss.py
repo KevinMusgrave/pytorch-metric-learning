@@ -6,7 +6,7 @@ from ..distances import LpDistance
 class FastAPLoss(BaseMetricLossFunction):
     def __init__(self, num_bins, **kwargs):
         super().__init__(**kwargs)
-        c_f.assert_distance_type(self, LpDistance)
+        c_f.assert_distance_type(self, LpDistance, p=2)
         self.num_bins = int(num_bins)
         self.num_edges = self.num_bins + 1
         self.add_to_recordable_attributes(list_of_names=["num_bins"], is_stat=False)
@@ -29,7 +29,7 @@ class FastAPLoss(BaseMetricLossFunction):
             return self.zero_losses()
         dist_mat = self.distance(embeddings)
 
-        histogram_max = 4. if self.distance.normalize_embeddings else torch.max(dist_mat).item()
+        histogram_max = 2**self.distance.power
         histogram_delta = histogram_max / self.num_bins
         mid_points = torch.linspace(0., histogram_max, steps=self.num_edges).view(-1,1,1).to(device).type(dtype)
         pulse = torch.nn.functional.relu(1 - torch.abs(dist_mat-mid_points)/histogram_delta)

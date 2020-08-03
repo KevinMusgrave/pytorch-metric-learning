@@ -1,4 +1,4 @@
-from .regularizer_mixins import WeightRegularizerMixin
+from .mixins import WeightMixin, WeightRegularizerMixin
 from .base_metric_loss_function import BaseMetricLossFunction
 import torch
 from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
@@ -9,11 +9,11 @@ from ..distances import CosineSimilarity
 # https://github.com/tjddus9597/Proxy-Anchor-CVPR2020/blob/master/code/losses.py
 # https://github.com/geonm/proxy-anchor-loss/blob/master/pytorch-proxy-anchor.py
 # suggested in this issue: https://github.com/KevinMusgrave/pytorch-metric-learning/issues/32
-class ProxyAnchorLoss(WeightRegularizerMixin, BaseMetricLossFunction):
+class ProxyAnchorLoss(WeightMixin, WeightRegularizerMixin, BaseMetricLossFunction):
     def __init__(self, num_classes, embedding_size, margin = 0.1, alpha = 32, **kwargs):
         super().__init__(**kwargs)
-        self.proxies = torch.nn.Parameter(torch.randn(num_classes, embedding_size))
-        torch.nn.init.kaiming_normal_(self.proxies, mode='fan_out')
+        self.proxies = torch.nn.Parameter(torch.Tensor(num_classes, embedding_size))
+        self.weight_init_func(self.proxies)
         self.num_classes = num_classes
         self.margin = margin
         self.alpha = alpha
@@ -54,6 +54,9 @@ class ProxyAnchorLoss(WeightRegularizerMixin, BaseMetricLossFunction):
 
     def get_default_distance(self):
         return CosineSimilarity()
+
+    def get_default_weight_init_func(self):
+        return c_f.TorchInitWrapper(torch.nn.init.kaiming_normal_, mode='fan_out')
 
     def _sub_loss_names(self):
         return ["pos_loss", "neg_loss"]

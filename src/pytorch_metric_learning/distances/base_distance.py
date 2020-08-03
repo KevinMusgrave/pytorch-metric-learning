@@ -56,9 +56,12 @@ class BaseDistance(ModuleWithRecords):
             return y - x
         return x - y
 
-    def maybe_normalize(self, embeddings, dim=1,**kwargs):
+    def normalize(self, embeddings, dim=1, **kwargs):
+        return torch.nn.functional.normalize(embeddings, p=self.p, dim=dim, **kwargs)
+
+    def maybe_normalize(self, embeddings, dim=1, **kwargs):
         if self.normalize_embeddings:
-            return torch.nn.functional.normalize(embeddings, p=self.p, dim=dim, **kwargs)
+            return self.normalize(embeddings, dim=dim, **kwargs)
         return embeddings
 
     def get_norm(self, embeddings, dim=1, **kwargs):

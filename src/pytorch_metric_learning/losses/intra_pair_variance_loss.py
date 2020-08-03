@@ -1,5 +1,3 @@
-#! /usr/bin/env python3
-
 from ..losses import GenericPairLoss
 import torch
 from ..utils import loss_and_miner_utils as lmu

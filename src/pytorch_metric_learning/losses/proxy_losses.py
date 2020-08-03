@@ -1,14 +1,13 @@
-#! /usr/bin/env python3
-
 from .nca_loss import NCALoss
-from .regularizer_mixins import WeightRegularizerMixin
+from .mixins import WeightMixin, WeightRegularizerMixin
 from ..utils import loss_and_miner_utils as lmu
 import torch
 
-class ProxyNCALoss(WeightRegularizerMixin, NCALoss):
+class ProxyNCALoss(WeightMixin, WeightRegularizerMixin, NCALoss):
     def __init__(self, num_classes, embedding_size, **kwargs):
         super().__init__(**kwargs)
-        self.proxies = torch.nn.Parameter(torch.randn(num_classes, embedding_size))
+        self.proxies = torch.nn.Parameter(torch.Tensor(num_classes, embedding_size))
+        self.weight_init_func(self.proxies)
         self.proxy_labels = torch.arange(num_classes)
         self.add_to_recordable_attributes(list_of_names=["num_classes"], is_stat=False)
         

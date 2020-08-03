@@ -1,14 +1,15 @@
-from .regularizer_mixins import WeightRegularizerMixin
+from .mixins import WeightMixin, WeightRegularizerMixin
 from .base_metric_loss_function import BaseMetricLossFunction
 import torch
 from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
 from ..distances import DotProductSimilarity
 
-class NormalizedSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
+class NormalizedSoftmaxLoss(WeightMixin, WeightRegularizerMixin, BaseMetricLossFunction):
     def __init__(self, temperature, embedding_size, num_classes, **kwargs):
         super().__init__(**kwargs)
         self.temperature = temperature
-        self.W = torch.nn.Parameter(torch.randn(embedding_size, num_classes))
+        self.W = torch.nn.Parameter(torch.Tensor(embedding_size, num_classes))
+        self.weight_init_func(self.W)
         self.cross_entropy = torch.nn.CrossEntropyLoss(reduction='none')
         self.add_to_recordable_attributes(list_of_names=["embedding_size", "num_classes", "temperature"], is_stat=False)
         
@@ -19,7 +20,7 @@ class NormalizedSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         dtype, device = embeddings.dtype, embeddings.device
         self.cast_types(dtype, device)
         miner_weights = lmu.convert_to_weights(indices_tuple, labels, dtype=dtype)
-        normalized_W = torch.nn.functional.normalize(self.W, p=2, dim=0)
+        normalized_W = self.distance.normalize(self.W, dim=0)
         exponent = self.distance(embeddings, normalized_W.t()) / self.temperature
         if not self.distance.is_inverted:
             exponent = -exponent

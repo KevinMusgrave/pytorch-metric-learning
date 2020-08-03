@@ -1,4 +1,4 @@
-from .base_weight_regularizer import BaseWeightRegularizer
+from .base_regularizers import BaseWeightRegularizer
 import torch
 from ..utils import common_functions as c_f
 from ..distances import CosineSimilarity

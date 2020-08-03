@@ -18,8 +18,8 @@ class TestCenterInvariantRegularizer(unittest.TestCase):
             loss_func = NormalizedSoftmaxLoss(temperature=temperature, 
                                                 num_classes=num_classes, 
                                                 embedding_size=embedding_size,
-                                                regularizer=CenterInvariantRegularizer(),
-                                                reg_weight=reg_weight).to(self.device)
+                                                weight_regularizer=CenterInvariantRegularizer(),
+                                                weight_reg_weight=reg_weight).to(self.device)
 
             embeddings = torch.nn.functional.normalize(torch.randn((180, embedding_size), requires_grad=True).type(dtype).to(self.device))
             labels = torch.randint(low=0, high=10, size=(180,)).to(self.device)

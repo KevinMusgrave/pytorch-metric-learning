@@ -1,3 +1,3 @@
-from .base_weight_regularizer import BaseWeightRegularizer
+from .base_regularizers import BaseWeightRegularizer, BaseEmbeddingRegularizer
 from .center_invariant_regularizer import CenterInvariantRegularizer
 from .regular_face_regularizer import RegularFaceRegularizer

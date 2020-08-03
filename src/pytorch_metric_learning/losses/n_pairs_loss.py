@@ -34,7 +34,7 @@ class NPairsLoss(BaseMetricLossFunction):
             loss_dict["l2_reg"] = {"losses": l2_reg * self.l2_reg_weight, "indices": c_f.torch_arange_from_size(embeddings), "reduction_type": "element"}
         return loss_dict
 
-    def sub_loss_names(self):
+    def _sub_loss_names(self):
         return ["loss", "l2_reg"]
 
     def get_default_distance(self):

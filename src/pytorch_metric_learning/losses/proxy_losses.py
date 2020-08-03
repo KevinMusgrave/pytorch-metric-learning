@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 
 from .nca_loss import NCALoss
-from .weight_regularizer_mixin import WeightRegularizerMixin
+from .regularizer_mixins import WeightRegularizerMixin
 from ..utils import loss_and_miner_utils as lmu
 import torch
 
@@ -18,8 +18,5 @@ class ProxyNCALoss(WeightRegularizerMixin, NCALoss):
         dtype, device = embeddings.dtype, embeddings.device
         self.cast_types(dtype, device)
         loss_dict = self.nca_computation(embeddings, self.proxies, labels, self.proxy_labels.to(labels.device), indices_tuple)
-        loss_dict["reg_loss"] = self.regularization_loss(self.proxies)
+        self.add_weight_regularization_to_loss_dict(loss_dict, self.proxies)
         return loss_dict
-
-    def sub_loss_names(self):
-        return ["loss", "reg_loss"]

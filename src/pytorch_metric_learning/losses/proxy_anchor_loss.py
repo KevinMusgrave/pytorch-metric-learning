@@ -1,4 +1,4 @@
-from .weight_regularizer_mixin import WeightRegularizerMixin
+from .regularizer_mixins import WeightRegularizerMixin
 from .base_metric_loss_function import BaseMetricLossFunction
 import torch
 from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
@@ -42,8 +42,9 @@ class ProxyAnchorLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         loss_indices = c_f.torch_arange_from_size(self.proxies)
 
         loss_dict = {"pos_loss": {"losses": pos_term.squeeze(0), "indices": loss_indices, "reduction_type": "element", "divisor_summands": {"num_pos_proxies": len(with_pos_proxies)}},
-                    "neg_loss": {"losses": neg_term.squeeze(0), "indices": loss_indices, "reduction_type": "element", "divisor_summands": {"num_classes": self.num_classes}},
-                    "reg_loss": self.regularization_loss(self.proxies)}
+                    "neg_loss": {"losses": neg_term.squeeze(0), "indices": loss_indices, "reduction_type": "element", "divisor_summands": {"num_classes": self.num_classes}}}
+        
+        self.add_weight_regularization_to_loss_dict(loss_dict, self.proxies)
 
         return loss_dict
 
@@ -53,5 +54,5 @@ class ProxyAnchorLoss(WeightRegularizerMixin, BaseMetricLossFunction):
     def get_default_distance(self):
         return CosineSimilarity()
 
-    def sub_loss_names(self):
-        return ["pos_loss", "neg_loss", "reg_loss"]
+    def _sub_loss_names(self):
+        return ["pos_loss", "neg_loss"]

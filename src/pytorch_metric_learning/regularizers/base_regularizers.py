@@ -15,3 +15,13 @@ class BaseWeightRegularizer(ModuleWithRecordsReducerAndDistance):
         self.reset_stats()
         loss_dict = self.compute_loss(weights)
         return self.reducer(loss_dict, weights, c_f.torch_arange_from_size(weights))
+
+
+class BaseEmbeddingRegularizer(ModuleWithRecordsReducerAndDistance):
+    def compute_loss(self, embeddings):
+        raise NotImplementedError
+
+    def forward(self, embeddings, labels, indices_tuple):
+        self.reset_stats()
+        loss_dict = self.compute_loss(embeddings, labels, indices_tuple)
+        return self.reducer(loss_dict, embeddings, labels)

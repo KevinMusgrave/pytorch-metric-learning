@@ -3,8 +3,10 @@
 import torch
 from ..utils import common_functions as c_f
 from ..utils.module_with_records_and_reducer import ModuleWithRecordsReducerAndDistance
+from .regularizer_mixins import EmbeddingRegularizerMixin
+import inspect
 
-class BaseMetricLossFunction(ModuleWithRecordsReducerAndDistance):
+class BaseMetricLossFunction(EmbeddingRegularizerMixin, ModuleWithRecordsReducerAndDistance):
     def compute_loss(self, embeddings, labels, indices_tuple=None):
         """
         This has to be implemented and is what actually computes the loss.
@@ -25,6 +27,7 @@ class BaseMetricLossFunction(ModuleWithRecordsReducerAndDistance):
         c_f.assert_embeddings_and_labels_are_same_size(embeddings, labels)
         labels = labels.to(embeddings.device)
         loss_dict = self.compute_loss(embeddings, labels, indices_tuple)
+        self.add_embedding_regularization_to_loss_dict(loss_dict, embeddings, labels, indices_tuple)
         return self.reducer(loss_dict, embeddings, labels)
 
     def zero_loss(self):
@@ -32,6 +35,19 @@ class BaseMetricLossFunction(ModuleWithRecordsReducerAndDistance):
 
     def zero_losses(self):
         return {loss_name: self.zero_loss() for loss_name in self.sub_loss_names()}
+
+    def _sub_loss_names(self):
+        return ["loss"]
+
+    def sub_loss_names(self):
+        return self._sub_loss_names() + self.regularization_loss_names()
+
+    def regularization_loss_names(self):
+        reg_names = []
+        for base_class in inspect.getmro(self.__class__):
+            if base_class.__name__.endswith("RegularizerMixin"):
+                reg_names.extend(base_class.regularization_loss_names(self))
+        return reg_names
 
 
 class MultipleLosses(torch.nn.Module):

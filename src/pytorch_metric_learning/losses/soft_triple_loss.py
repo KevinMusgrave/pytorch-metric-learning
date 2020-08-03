@@ -71,7 +71,7 @@ class SoftTripleLoss(BaseMetricLossFunction):
             self.diff_class_center_sim = torch.mean(center_similarities[self.diff_class_mask])
 
 
-    def sub_loss_names(self):
+    def _sub_loss_names(self):
         return ["loss", "reg_loss"]
 
     def get_default_distance(self):

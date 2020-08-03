@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 
-from .weight_regularizer_mixin import WeightRegularizerMixin
+from .regularizer_mixins import WeightRegularizerMixin
 from .base_metric_loss_function import BaseMetricLossFunction
 from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
 import scipy.special
@@ -15,7 +15,7 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
     """
     def __init__(self, margin, num_classes, embedding_size, scale=1, **kwargs):
         super().__init__(**kwargs)
-        assert isinstance(self.distance, CosineSimilarity)
+        assert isinstance(self.distance, CosineSimilarity), "{}"
         self.margin = margin
         self.num_classes = num_classes
         self.scale = scale
@@ -91,13 +91,8 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         unweighted_loss = self.cross_entropy(logits, labels)
         miner_weighted_loss = unweighted_loss*miner_weights
         loss_dict = {"loss": {"losses": miner_weighted_loss, "indices": c_f.torch_arange_from_size(embeddings), "reduction_type": "element"}}
-        loss_dict["reg_loss"] = self.regularization_loss(self.W.t())
+        self.add_weight_regularization_to_loss_dict(loss_dict, self.W.t())
         return loss_dict
-
-
-    def sub_loss_names(self):
-        return ["loss", "reg_loss"]
-
 
     def get_default_distance(self):
         return CosineSimilarity()

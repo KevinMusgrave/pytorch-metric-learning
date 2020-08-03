@@ -6,6 +6,7 @@ class LpDistance(BaseDistance):
     def __init__(self, power=1, **kwargs):
         super().__init__(**kwargs)
         self.power =  power
+        self.add_to_recordable_attributes(list_of_names=["power"], is_stat=False)
         assert not self.is_inverted
 
     def compute_mat(self, query_emb, ref_emb):

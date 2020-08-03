@@ -9,7 +9,8 @@ class BaseDistance(ModuleWithRecords):
         self.normalize_embeddings = normalize_embeddings
         self.p = p
         self.is_inverted = is_inverted
-        self.add_to_recordable_attributes(name="avg_embedding_norm", is_stat=True)
+        self.add_to_recordable_attributes(list_of_names=["p"], is_stat=False)
+        self.add_to_recordable_attributes(list_of_names=["avg_query_norm", "avg_ref_norm"], is_stat=True)
 
     def forward(self, query_emb, ref_emb=None):
         self.reset_stats()
@@ -17,6 +18,7 @@ class BaseDistance(ModuleWithRecords):
             ref_emb = query_emb
         query_emb = self.maybe_normalize(query_emb)
         ref_emb = self.maybe_normalize(ref_emb)
+        self.set_stats(query_emb, ref_emb)
         mat = self.compute_mat(query_emb, ref_emb)
         assert mat.size() == torch.Size((query_emb.size(0), ref_emb.size(0)))
         return mat
@@ -56,3 +58,11 @@ class BaseDistance(ModuleWithRecords):
 
     def get_norm(self, embeddings):
         return torch.norm(embeddings, p=self.p, dim=1)
+
+    def set_stats(self, query_emb, ref_emb):
+        if self.collect_stats:
+            with torch.no_grad():
+                self.avg_query_norm = torch.mean(torch.norm(query_emb, p=self.p, dim=1))
+                self.avg_ref_norm = torch.mean(torch.norm(ref_emb, p=self.p, dim=1))
+
+    

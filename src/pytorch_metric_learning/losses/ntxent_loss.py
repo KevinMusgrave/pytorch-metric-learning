@@ -8,6 +8,7 @@ class NTXentLoss(GenericPairLoss):
     def __init__(self, temperature, **kwargs):
         super().__init__(mat_based_loss=False, **kwargs)
         self.temperature = temperature
+        self.add_to_recordable_attributes(list_of_names=["temperature"], is_stat=False)
 
     def _compute_loss(self, pos_pairs, neg_pairs, indices_tuple):
         a1, p, a2, _ = indices_tuple

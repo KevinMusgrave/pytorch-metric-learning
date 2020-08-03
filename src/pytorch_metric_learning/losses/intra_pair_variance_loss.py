@@ -11,6 +11,7 @@ class IntraPairVarianceLoss(GenericPairLoss):
         super().__init__(mat_based_loss=False, **kwargs)        
         self.pos_eps = pos_eps
         self.neg_eps = neg_eps
+        self.add_to_recordable_attributes(list_of_names=["pos_eps", "neg_eps"], is_stat=False)
 
     # pos_pairs and neg_pairs already represent cos(theta)
     def _compute_loss(self, pos_pairs, neg_pairs, indices_tuple):

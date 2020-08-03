@@ -11,6 +11,7 @@ class LiftedStructureLoss(GenericPairLoss):
         super().__init__(mat_based_loss=False, **kwargs)
         self.neg_margin = neg_margin
         self.pos_margin = pos_margin
+        self.add_to_recordable_attributes(list_of_names=["pos_margin", "neg_margin"], is_stat=False)
 
     def _compute_loss(self, pos_pairs, neg_pairs, indices_tuple):
         a1, p, a2, _ = indices_tuple
@@ -42,6 +43,7 @@ class GeneralizedLiftedStructureLoss(GenericPairLoss):
         super().__init__(mat_based_loss=True, **kwargs)
         self.neg_margin = neg_margin
         self.pos_margin = pos_margin
+        self.add_to_recordable_attributes(list_of_names=["pos_margin", "neg_margin"], is_stat=False)
 
     def _compute_loss(self, mat, pos_mask, neg_mask):
         remaining_pos_margin = self.distance.margin(mat, self.pos_margin)

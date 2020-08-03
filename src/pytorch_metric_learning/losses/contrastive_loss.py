@@ -11,7 +11,8 @@ class ContrastiveLoss(GenericPairLoss):
         super().__init__(mat_based_loss=False, **kwargs)
         self.pos_margin = pos_margin
         self.neg_margin = neg_margin
-        
+        self.add_to_recordable_attributes(list_of_names=["pos_margin", "neg_margin"], is_stat=False)
+
     def _compute_loss(self, pos_pair_dist, neg_pair_dist, indices_tuple):
         pos_loss, neg_loss = 0, 0
         if len(pos_pair_dist) > 0:

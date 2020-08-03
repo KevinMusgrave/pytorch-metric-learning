@@ -26,6 +26,7 @@ class CircleLoss(GenericPairLoss):
     """
     def __init__(self, m=0.4, gamma=80, **kwargs):
         super().__init__(mat_based_loss=True, **kwargs)
+        c_f.assert_distance_type(self, CosineSimilarity)
         self.m = m 
         self.gamma = gamma 
         self.soft_plus = torch.nn.Softplus(beta=1)
@@ -33,7 +34,7 @@ class CircleLoss(GenericPairLoss):
         self.on = -self.m
         self.delta_p = 1-self.m 
         self.delta_n = self.m 
-        c_f.assert_distance_type(self, CosineSimilarity)
+        self.add_to_recordable_attributes(list_of_names=["m", "gamma", "op", "on", "delta_p", "delta_n"], is_stat=False)
 
     def _compute_loss(self, mat, pos_mask, neg_mask):
         pos_mask_bool = pos_mask.bool()

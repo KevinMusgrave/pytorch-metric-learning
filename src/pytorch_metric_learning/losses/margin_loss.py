@@ -14,7 +14,7 @@ class MarginLoss(BaseMetricLossFunction):
         self.learn_beta = learn_beta
         self.initialize_beta(beta, num_classes)
         self.triplets_per_anchor = triplets_per_anchor
-        self.add_to_recordable_attributes(list_of_names=["beta"])
+        self.add_to_recordable_attributes(list_of_names=["margin", "nu", "beta"], is_stat=False)
         
     def compute_loss(self, embeddings, labels, indices_tuple):
         indices_tuple = lmu.convert_to_triplets(indices_tuple, labels, self.triplets_per_anchor)

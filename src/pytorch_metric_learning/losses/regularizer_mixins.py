@@ -3,6 +3,7 @@ class WeightRegularizerMixin:
         super().__init__(**kwargs)
         self.weight_regularizer = weight_regularizer
         self.weight_reg_weight = weight_reg_weight
+        self.add_to_recordable_attributes(list_of_names=["weight_reg_weight"], is_stat=False)
 
     def weight_regularization_loss(self, weights):
         if self.weight_regularizer is None:
@@ -22,6 +23,7 @@ class EmbeddingRegularizerMixin:
         super().__init__(**kwargs)
         self.embedding_regularizer = embedding_regularizer
         self.embedding_reg_weight = embedding_reg_weight
+        self.add_to_recordable_attributes(list_of_names=["embedding_reg_weight"], is_stat=False)
 
     def embedding_regularization_loss(self, embeddings):
         if self.embedding_regularizer is None:

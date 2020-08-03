@@ -19,6 +19,7 @@ class MultiSimilarityLoss(GenericPairLoss):
         self.alpha = alpha
         self.beta = beta
         self.base = base
+        self.add_to_recordable_attributes(list_of_names=["alpha", "beta", "base"], is_stat=False)
 
     def _compute_loss(self, mat, pos_mask, neg_mask):
         pos_exp = self.distance.margin(mat, self.base)

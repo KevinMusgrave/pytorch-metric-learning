@@ -10,7 +10,7 @@ class ArcFaceLoss(LargeMarginSoftmaxLoss):
     """
     def init_margin(self):
         self.margin = np.radians(self.margin)
-
+        
     def cast_types(self, dtype, device):
         self.W.data = self.W.data.to(device).type(dtype)
 

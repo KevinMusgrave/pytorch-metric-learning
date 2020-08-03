@@ -41,15 +41,6 @@ class BaseDistance(ModuleWithRecords):
             return torch.min(*args, **kwargs)
         return torch.max(*args, **kwargs)    
 
-    def x_less_than_y(self, x, y, or_equal=False):
-        condition = (x > y) if self.is_inverted else (x < y)
-        if or_equal:
-            condition |= x == y
-        return condition
-
-    def x_greater_than_y(self, x, y, or_equal=False):
-        return ~self.x_less_than_y(x, y, not or_equal)
-
     # This measures the margin between x and y
     def margin(self, x, y):
         if self.is_inverted:

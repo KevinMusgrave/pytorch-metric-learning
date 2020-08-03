@@ -21,8 +21,8 @@ class PairMarginMiner(BaseTupleMiner):
         pos_pair = mat[a1, p]
         neg_pair = mat[a2, n]
         self.set_stats(pos_pair, neg_pair)
-        pos_mask = self.distance.x_greater_than_y(pos_pair, self.pos_margin, or_equal=False)
-        neg_mask = self.distance.x_less_than_y(neg_pair, self.neg_margin, or_equal=False)
+        pos_mask = pos_pair < self.pos_margin if self.distance.is_inverted else pos_pair > self.pos_margin
+        neg_mask = neg_pair > self.neg_margin if self.distance.is_inverted else neg_pair < self.neg_margin
         return a1[pos_mask], p[pos_mask], a2[neg_mask], n[neg_mask]
 
     def set_stats(self, pos_pair, neg_pair):

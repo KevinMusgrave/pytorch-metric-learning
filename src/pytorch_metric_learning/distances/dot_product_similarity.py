@@ -8,3 +8,6 @@ class DotProductSimilarity(BaseDistance):
 
     def compute_mat(self, query_emb, ref_emb):
         return torch.matmul(query_emb, ref_emb.t())
+
+    def pairwise_distance(self, query_emb, ref_emb):
+        return torch.sum(query_emb*ref_emb, dim=1)

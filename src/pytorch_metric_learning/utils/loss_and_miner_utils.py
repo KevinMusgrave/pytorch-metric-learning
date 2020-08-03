@@ -18,17 +18,9 @@ def logsumexp(x, keep_mask=None, add_one=True, dim=1):
         inside_log[inside_log==0] = torch.exp(-max_vals[inside_log==0])
     return torch.log(inside_log) + max_vals
 
-def sim_mat(x, y=None):
-    """
-    returns a matrix where entry (i,j) is the dot product of x[i] and x[j]
-    """
-    if y is None:
-        y = x
-    return torch.matmul(x, y.t())
-
 
 # https://discuss.pytorch.org/t/efficient-distance-matrix-computation/9065/
-def manual_dist_mat(x, y=None, squared=False):
+def manual_dist_mat(x, y=None):
     """
     Input: x is a Nxd matrix
            y is an optional Mxd matirx
@@ -51,30 +43,12 @@ def manual_dist_mat(x, y=None, squared=False):
     if y is None:
         dist = dist - torch.diag(dist.diag())
     dist = torch.clamp(dist, 0.0, c_f.pos_inf(dtype))
-    if not squared:
-        mask = (dist == 0).type(dtype)
-        dist = dist + mask * c_f.small_val(dtype)
-        dist = torch.sqrt(dist)
-        dist = dist * (1.0 - mask)
+    mask = (dist == 0).type(dtype)
+    dist = dist + mask * c_f.small_val(dtype)
+    dist = torch.sqrt(dist)
+    dist = dist * (1.0 - mask)
     return dist
 
-
-def dist_mat(x, y=None, squared=False):
-    try:
-        if y is None:
-            y = x
-        dist = torch.cdist(x,y)
-        if squared:
-            dist = dist**2
-        return dist
-    except RuntimeError: # cdist isn't supported for half-precision
-        return manual_dist_mat(x, y, squared)
-
-
-def get_pairwise_mat(x, y, use_similarity, squared):
-    if x is y:
-        y = None
-    return sim_mat(x, y=y) if use_similarity else dist_mat(x, y=y, squared=squared)
 
 def get_all_pairs_indices(labels, ref_labels=None):
     """

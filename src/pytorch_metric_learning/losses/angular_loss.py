@@ -47,8 +47,8 @@ class AngularLoss(BaseMetricLossFunction):
         if self.collect_stats:
             with torch.no_grad():
                 centers = (anchors + positives) / 2
-                ap_dist = torch.nn.functional.pairwise_distance(anchors, positives, 2)
-                nc_dist = torch.norm(centers - embeddings.unsqueeze(1), p=2, dim=2).t()
+                ap_dist = self.distance.pairwise_distance(anchors, positives)
+                nc_dist = self.distance.get_norm(centers - embeddings.unsqueeze(1), dim=2).t()
                 angles = torch.atan(ap_dist.unsqueeze(1) / (2*nc_dist))
                 average_angle = torch.sum(angles*keep_mask) / torch.sum(keep_mask)
                 self.average_angle = np.degrees(average_angle.item())

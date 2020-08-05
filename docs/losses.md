@@ -158,7 +158,7 @@ losses.ContrastiveLoss(pos_margin=0,
 
 **Equation**:
 
-![contrastive_loss_equation](imgs/contrastive_loss_equation.png){: style="height:40px"}
+![contrastive_loss_equation](imgs/contrastive_loss_equation.png){: style="height:30px"}
 
 **Parameters**:
 
@@ -238,7 +238,7 @@ losses.FastAPLoss(num_bins, **kwargs)
 
 **Parameters**:
 
-* **num_bins**: The number of soft histogram bins for calculating average precision. The paper suggests using 10 bins.
+* **num_bins**: The number of soft histogram bins for calculating average precision. The paper suggests using 10.
 
 **Default reducer**: [MeanReducer](reducers.md#meanreducer)
 
@@ -278,7 +278,7 @@ losses.GeneralizedLiftedStructureLoss(neg_margin, pos_margin=0, **kwargs)
 
 **Parameters**:
 
-* **pos_margin**: The margin in the expression ```e^(D - margin)```. The paper set ```pos_margin = 0 ```, which is why this margin does not appear in the above equation.
+* **pos_margin**: The margin in the expression ```e^(D - margin)```. The paper uses ```pos_margin = 0 ```, which is why this margin does not appear in the above equation.
 * **neg_margin**: This is ```m``` in the above equation. The paper used values between 0.1 and 1.
 
 **Default reducer**: [MeanReducer](reducers.md#meanreducer)
@@ -288,15 +288,21 @@ losses.GeneralizedLiftedStructureLoss(neg_margin, pos_margin=0, **kwargs)
 * **loss**: The loss per element in the batch. Reduction type is ```"element"```.
 
 ## IntraPairVarianceLoss
-[Deep Metric Learning with Tuplet Margin Loss](http://openaccess.thecvf.com/content_ICCV_2019/papers/Yu_Deep_Metric_Learning_With_Tuplet_Margin_Loss_ICCV_2019_paper.pdf)
+[Deep Metric Learning with Tuplet Margin Loss](http://openaccess.thecvf.com/content_ICCV_2019/papers/Yu_Deep_Metric_Learning_With_Tuplet_Margin_Loss_ICCV_2019_paper.pdf){target=_blank}
 ```python
 losses.IntraPairVarianceLoss(pos_eps=0.01, neg_eps=0.01, **kwargs)
 ```
 
+**Equations**:
+
+![intra_pair_variance_loss_equation1](imgs/intra_pair_variance_loss_equation1.png){: style="height:39px"}
+
+![intra_pair_variance_loss_equation2](imgs/intra_pair_variance_loss_equation2.png){: style="height:34px"}
+
 **Parameters**:
 
-* **pos_eps**: The offset in the expression ```(1-pos_eps)*mu_ap - cos(theta_ap)```. See equation 15 in the paper.
-* **neg_eps**: The offset in the expression ```cos(theta_an) - (1+neg_eps)*mu_an```. See equation 16 in the paper.
+* **pos_eps**: The epsilon in the L<sub>pos</sub> equation. The paper uses 0.01.
+* **neg_eps**: The epsilon in the L<sub>neg</sub> equation. The paper uses 0.01.
 
 You should probably use this in conjunction with another loss, as described in the paper. You can accomplish this by using [MultipleLosses](losses.md#multiplelosses):
 ```python
@@ -315,18 +321,26 @@ complete_loss = losses.MultipleLosses([main_loss, var_loss], weights=[1, 0.5])
 
 
 ## LargeMarginSoftmaxLoss
-[Large-Margin Softmax Loss for Convolutional Neural Networks](https://arxiv.org/pdf/1612.02295.pdf)
+[Large-Margin Softmax Loss for Convolutional Neural Networks](https://arxiv.org/pdf/1612.02295.pdf){target=_blank}
 
 ```python
 losses.LargeMarginSoftmaxLoss(margin, num_classes, embedding_size, scale=1, normalize_weights=False, **kwargs)
 ```
 
+**Equations**:
+
+![large_margin_softmax_loss_equation1](imgs/large_margin_softmax_loss_equation1.png){: style="height:80px"}
+
+where
+
+![large_margin_softmax_loss_equation2](imgs/large_margin_softmax_loss_equation2.png){: style="height:90px"}
+
 **Parameters**:
 
-* **margin**: An integer which dictates the size of the angular margin. Specifically, it multiplies the angle between the embeddings and weights: ```cos(margin*theta)```. 
+* **margin**: An integer which dictates the size of the angular margin. This is ```m``` in the above equation. The paper finds ```m=4``` works best.
 * **num_classes**: The number of classes in your training dataset.
 * **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set ```embedding_size``` to 512.
-* **scale**: The exponent multiplier in the loss's softmax expression. (This is the inverse of the softmax temperature.)
+* **scale**: The exponent multiplier in the loss's softmax expression. The paper uses ```scale = 1 ```, which is why it does not appear in the above equation.
 * **normalize_weights**: If True, the learned weights will be normalized to have Euclidean norm of 1, before the loss is computed. Note that when this parameter is True, it becomes equivalent to [SphereFaceLoss](losses.md#spherefaceloss).
 
 **Other info**: 
@@ -349,16 +363,20 @@ loss_optimizer.step()
 
 
 ## LiftedStructureLoss
-The original lifted structure loss as presented in [Deep Metric Learning via Lifted Structured Feature Embedding](https://arxiv.org/pdf/1511.06452.pdf)
+The original lifted structure loss as presented in [Deep Metric Learning via Lifted Structured Feature Embedding](https://arxiv.org/pdf/1511.06452.pdf){target=_blank}
 
 ```python
 losses.LiftedStructureLoss(neg_margin, pos_margin=0, **kwargs):
 ```
 
+**Equation**:
+
+![lifted_structure_loss_equation](imgs/lifted_structure_loss_equation.png){: style="height:150px"}
+
 **Parameters**:
 
-* **pos_margin**: The margin in the expression ```positive_distance - margin```
-* **neg_margin**: The margin in the expression ```e^(margin - negative_distance)```
+* **pos_margin**: The margin in the expression ```D_(i,j) - margin```. The paper uses ```pos_margin = 0 ```, which is why it does not appear in the above equation.
+* **neg_margin**: This is ```alpha``` in the above equation. The paper uses 1.
 
 **Default reducer**: [MeanReducer](reducers.md#meanreducer)
 

@@ -517,7 +517,7 @@ loss_optimizer.step()
 
 
 ## NPairsLoss
-[Improved Deep Metric Learning with Multi-class N-pair Loss Objective](http://www.nec-labs.com/uploads/images/Department-Images/MediaAnalytics/papers/nips16_npairmetriclearning.pdf)
+[Improved Deep Metric Learning with Multi-class N-pair Loss Objective](http://www.nec-labs.com/uploads/images/Department-Images/MediaAnalytics/papers/nips16_npairmetriclearning.pdf){target=_blank}
 ```python
 losses.NPairsLoss(l2_reg_weight=0, **kwargs)
 ```
@@ -535,14 +535,22 @@ losses.NPairsLoss(l2_reg_weight=0, **kwargs)
 
 
 ## NTXentLoss
-This is the normalized temperature-scaled cross entropy loss used in [A Simple Framework for Contrastive Learning of Visual Representations](https://arxiv.org/abs/2002.05709).
+This is also known as InfoNCE, and is a generalization of the [NPairsLoss](losses.md#npairsloss). It has been used in self-supervision papers such as: 
+
+ - [Representation Learning with Contrastive Predictive Coding](https://arxiv.org/pdf/1807.03748.pdf){target=_blank}
+ - [Momentum Contrast for Unsupervised Visual Representation Learning](https://arxiv.org/pdf/1911.05722.pdf){target=_blank}
+ - [A Simple Framework for Contrastive Learning of Visual Representations](https://arxiv.org/pdf/2002.05709.pdf){target=_blank}
 ```python
 losses.NTXentLoss(temperature, **kwargs)
 ```
 
+**Equation**:
+
+![ntxent_loss_equation](imgs/ntxent_loss_equation.png){: style="height:70px"}
+
 **Parameters**:
 
-* **temperature**: The exponent divisor in the softmax funtion.
+* **temperature**: This is tau in the above equation. The MoCo paper uses 0.07, while SimCLR uses 0.5.
 
 **Default reducer**: [MeanReducer](reducers.md#meanreducer)
 
@@ -551,17 +559,22 @@ losses.NTXentLoss(temperature, **kwargs)
 * **loss**: The loss per positive pair in the batch. Reduction type is ```"pos_pair"```.
 
 ## ProxyAnchorLoss
-[Proxy Anchor Loss for Deep Metric Learning](https://arxiv.org/pdf/2003.13911.pdf)
+[Proxy Anchor Loss for Deep Metric Learning](https://arxiv.org/pdf/2003.13911.pdf){target=_blank}
 ```python
 losses.ProxyAnchorLoss(num_classes, embedding_size, margin = 0.1, alpha = 32, **kwargs)
 ```
+
+**Equation**:
+
+![proxy_anchor_loss_equation](imgs/proxy_anchor_loss_equation.png){: style="height:150px"}
+
 
 **Parameters**:
 
 * **num_classes**: The number of classes in your training dataset.
 * **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set ```embedding_size``` to 512.
-* **margin**: This is subtracted from the cosine similarity of positive pairs, and added to the cosine similarity of negative pairs. See delta in equation 4 of the paper.
-* **alpha**: This is the multiplier in the exponent of the LogSumExp expression. See equation 4 in the paper.
+* **margin**: This is delta in the above equation. The paper uses 0.1.
+* **alpha**: This is alpha in the above equation. The paper uses 32.
 
 **Other info**
 
@@ -584,7 +597,7 @@ loss_optimizer.step()
 
 
 ## ProxyNCALoss
-[No Fuss Distance Metric Learning using Proxies](https://arxiv.org/pdf/1703.07464.pdf)
+[No Fuss Distance Metric Learning using Proxies](https://arxiv.org/pdf/1703.07464.pdf){target=_blank}
 ```python
 losses.ProxyNCALoss(num_classes, embedding_size, **kwargs)
 ```
@@ -615,7 +628,7 @@ loss_optimizer.step()
 
 
 ## SignalToNoiseRatioContrastiveLoss
-[Signal-to-Noise Ratio: A Robust Distance Metric for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Yuan_Signal-To-Noise_Ratio_A_Robust_Distance_Metric_for_Deep_Metric_Learning_CVPR_2019_paper.pdf)
+[Signal-to-Noise Ratio: A Robust Distance Metric for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Yuan_Signal-To-Noise_Ratio_A_Robust_Distance_Metric_for_Deep_Metric_Learning_CVPR_2019_paper.pdf){target=_blank}
 ```python
 losses.SignalToNoiseRatioContrastiveLoss(pos_margin, 
 										neg_margin, 
@@ -641,7 +654,7 @@ losses.SignalToNoiseRatioContrastiveLoss(pos_margin,
 * **reg_loss**: The regularization loss per element in the batch. Reduction type is ```"element"```.
 
 ## SoftTripleLoss   
-[SoftTriple Loss: Deep Metric Learning Without Triplet Sampling](http://openaccess.thecvf.com/content_ICCV_2019/papers/Qian_SoftTriple_Loss_Deep_Metric_Learning_Without_Triplet_Sampling_ICCV_2019_paper.pdf)
+[SoftTriple Loss: Deep Metric Learning Without Triplet Sampling](http://openaccess.thecvf.com/content_ICCV_2019/papers/Qian_SoftTriple_Loss_Deep_Metric_Learning_Without_Triplet_Sampling_ICCV_2019_paper.pdf){target=_blank}
 ```python
 losses.SoftTripleLoss(embedding_size, 
 					num_classes, 
@@ -653,15 +666,24 @@ losses.SoftTripleLoss(embedding_size,
 					**kwargs)
 ```
 
+**Equations**:
+
+![soft_triple_loss_equation1](imgs/soft_triple_loss_equation1.png){: style="height:100px"}
+
+where
+
+![soft_triple_loss_equation2](imgs/soft_triple_loss_equation2.png){: style="height:80px"}
+
+
 **Parameters**:
 
 * **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set ```embedding_size``` to 512.
 * **num_classes**: The number of classes in your training dataset.
-* **centers_per_class**: The number of weight vectors per class. (The regular cross entropy loss has 1 center per class.)
-* **la**: The exponent multiplier in the loss's softmax expression. (This is the inverse of the softmax temperature.)
-* **gamma**: The similarity-to-centers multiplier.
-* **reg_weight**: The regularization weight which encourages class centers to be close to each other.
-* **margin**: The margin in the expression e^(similarities - margin).
+* **centers_per_class**: The number of weight vectors per class. (The regular cross entropy loss has 1 center per class.) The paper uses 10.
+* **la**: This is lambda in the above equation.
+* **gamma**: This is gamma in the above equation. The paper uses 0.1.
+* **reg_weight**: The regularization weight which encourages class centers to be close to each other. The paper uses 0.2.
+* **margin**: The is delta in the above equations. The paper uses 0.01.
 
 **Other info**
 
@@ -683,7 +705,7 @@ loss_optimizer.step()
 
 
 ## SphereFaceLoss 
-[SphereFace: Deep Hypersphere Embedding for Face Recognition](https://arxiv.org/pdf/1704.08063.pdf)
+[SphereFace: Deep Hypersphere Embedding for Face Recognition](https://arxiv.org/pdf/1704.08063.pdf){target=_blank}
 
 ```python
 losses.SphereFaceLoss(margin, num_classes, embedding_size, scale=1, **kwargs)
@@ -691,10 +713,7 @@ losses.SphereFaceLoss(margin, num_classes, embedding_size, scale=1, **kwargs)
 
 **Parameters**:
 
-* **margin**: An integer which dictates the size of the angular margin. Specifically, it multiplies the angle between the embeddings and weights: ```cos(margin*theta)```. 
-* **num_classes**: The number of classes in your training dataset.
-* **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set ```embedding_size``` to 512.
-* **scale**: The exponent multiplier in the loss's softmax expression. (This is the inverse of the softmax temperature.)
+See [LargeMarginSoftmaxLoss](losses.md#largemarginsoftmaxloss)
 
 **Other info**
 
@@ -727,9 +746,13 @@ losses.TripletMarginLoss(margin=0.05,
 						**kwargs)
 ```
 
+**Equation**:
+
+![triplet_margin_loss_equation](imgs/triplet_margin_loss_equation.png){: style="height:35px"}
+
 **Parameters**:
 
-* **margin**: The desired difference between the anchor-positive distance and the anchor-negative distance.
+* **margin**: The desired difference between the anchor-positive distance and the anchor-negative distance. This is ```m``` in the above equation.
 * **distance_norm**: The norm used when calculating distance between embeddings
 * **power**: Each pair's loss will be raised to this power.
 * **swap**: Use the positive-negative distance instead of anchor-negative distance, if it violates the margin more.
@@ -743,15 +766,19 @@ losses.TripletMarginLoss(margin=0.05,
 * **loss**: The loss per triplet in the batch. Reduction type is ```"triplet"```.
 
 ## TupletMarginLoss
-[Deep Metric Learning with Tuplet Margin Loss](http://openaccess.thecvf.com/content_ICCV_2019/papers/Yu_Deep_Metric_Learning_With_Tuplet_Margin_Loss_ICCV_2019_paper.pdf)
+[Deep Metric Learning with Tuplet Margin Loss](http://openaccess.thecvf.com/content_ICCV_2019/papers/Yu_Deep_Metric_Learning_With_Tuplet_Margin_Loss_ICCV_2019_paper.pdf){target=_blank}
 ```python
 losses.TupletMarginLoss(margin, scale=64, **kwargs)
 ```
 
+**Equation**:
+
+![tuplet_margin_loss_equation](imgs/tuplet_margin_loss_equation.png){: style="height:80px"}
+
 **Parameters**:
 
-* **margin**: The angular margin (in degrees) applied to positive pairs. The paper uses a value of 5.73 degrees (0.1 radians).
-* **scale**: The exponent multiplier in the logsumexp expression.
+* **margin**: The angular margin (in degrees) applied to positive pairs. This is beta in the above equation. The paper uses a value of 5.73 degrees (0.1 radians).
+* **scale**: This is ```s``` in the above equation.
 
 The paper combines this loss with [IntraPairVarianceLoss](losses.md#intrapairvarianceloss). You can accomplish this by using [MultipleLosses](losses.md#multiplelosses):
 ```python

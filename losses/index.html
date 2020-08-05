@@ -891,7 +891,7 @@
 <p><img alt="angular_loss_equation" src="../imgs/angular_loss_equation.png" style="height:200px" /></p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>alpha</strong>: The angle specified in degrees. The paper suggests values between 36 and 55.</li>
+<li><strong>alpha</strong>: The angle specified in degrees. The paper uses values between 36 and 55.</li>
 </ul>
 <p><strong>Default reducer</strong>: <a href="../reducers/#meanreducer">MeanReducer</a></p>
 <p><strong>Reducer input</strong>:</p>
@@ -969,7 +969,6 @@
 <ul>
 <li><strong>m</strong>: The relaxation factor that controls the radius of the decision boundary. The paper uses 0.25 for face recognition, and 0.4 for fine-grained image retrieval (images of birds, cars, and online products).</li>
 <li><strong>gamma</strong>: The scale factor that determines the largest scale of each similarity score. The paper uses 256 for face recognition, and 80 for fine-grained image retrieval.</li>
-<li><strong>triplets_per_anchor</strong>: The number of triplets per element to sample within a batch. Can be an integer or the string "all". For example, if your batch size is 128, and triplets_per_anchor is 100, then 12800 triplets will be sampled. If triplets_per_anchor is "all", then all possible triplets in the batch will be used.</li>
 </ul>
 <p><strong>Default reducer</strong>: <a href="../reducers/#avgnonzeroreducer">AvgNonZeroReducer</a></p>
 <p><strong>Reducer input</strong>:</p>
@@ -985,6 +984,8 @@
 </code></pre></div>
 
 
+<p><strong>Equation</strong>:</p>
+<p><img alt="contrastive_loss_equation" src="../imgs/contrastive_loss_equation.png" style="height:40px" /></p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>pos_margin</strong>: The distance (or similarity) over (under) which positive pairs will contribute to the loss.</li>
@@ -1000,17 +1001,19 @@
 <li><strong>neg_loss</strong>: The loss per negative pair in the batch. Reduction type is <code>"neg_pair"</code>.</li>
 </ul>
 <h2 id="cosfaceloss">CosFaceLoss<a class="headerlink" href="#cosfaceloss" title="Permanent link">&para;</a></h2>
-<p><a href="https://arxiv.org/pdf/1801.09414.pdf">CosFace: Large Margin Cosine Loss for Deep Face Recognition</a></p>
+<p><a href="https://arxiv.org/pdf/1801.09414.pdf" target="_blank">CosFace: Large Margin Cosine Loss for Deep Face Recognition</a></p>
 <div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">CosFaceLoss</span><span class="p">(</span><span class="n">margin</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
+<p><strong>Equation</strong>:</p>
+<p><img alt="cosface_loss_equation" src="../imgs/cosface_loss_equation.png" style="height:80px" /></p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>margin</strong>: The cosine margin penalty: <code>cos(theta) - margin</code>. The paper got optimal performance with margin values between 0.25 and 0.45.</li>
+<li><strong>margin</strong>: The cosine margin penalty (m in the above equation). The paper used values between 0.25 and 0.45.</li>
 <li><strong>num_classes</strong>: The number of classes in your training dataset.</li>
 <li><strong>embedding_size</strong>: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set <code>embedding_size</code> to 512.</li>
-<li><strong>scale</strong>: The exponent multiplier in the loss's softmax expression. (This is the inverse of the softmax temperature.)</li>
+<li><strong>scale</strong>: This is <code>s</code> in the above equation. The paper uses 64.</li>
 </ul>
 <p><strong>Other info</strong>: </p>
 <ul>
@@ -1031,7 +1034,7 @@
 <li><strong>reg_loss</strong>: The weight regularization loss, if any. Reduction type is <code>"already_reduced"</code>.</li>
 </ul>
 <h2 id="crossbatchmemory">CrossBatchMemory<a class="headerlink" href="#crossbatchmemory" title="Permanent link">&para;</a></h2>
-<p>This wraps a loss function, and implements <a href="https://arxiv.org/pdf/1912.06798.pdf">Cross-Batch Memory for Embedding Learning</a>. It stores embeddings from previous iterations in a queue, and uses them to form more pairs/triplets with the current iteration's embeddings.</p>
+<p>This wraps a loss function, and implements <a href="https://arxiv.org/pdf/1912.06798.pdf" target="_blank">Cross-Batch Memory for Embedding Learning</a>. It stores embeddings from previous iterations in a queue, and uses them to form more pairs/triplets with the current iteration's embeddings.</p>
 <div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">CrossBatchMemory</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">memory_size</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">miner</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
 
@@ -1044,14 +1047,14 @@
 <li><strong>miner</strong>: An optional <a href="../miners/">tuple miner</a>, which will be used to mine pairs/triplets from the memory queue.</li>
 </ul>
 <h2 id="fastaploss">FastAPLoss<a class="headerlink" href="#fastaploss" title="Permanent link">&para;</a></h2>
-<p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Cakir_Deep_Metric_Learning_to_Rank_CVPR_2019_paper.pdf">Deep Metric Learning to Rank</a></p>
+<p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Cakir_Deep_Metric_Learning_to_Rank_CVPR_2019_paper.pdf" target="_blank">Deep Metric Learning to Rank</a></p>
 <div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">FastAPLoss</span><span class="p">(</span><span class="n">num_bins</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>num_bins</strong>: The number of soft histogram bins for calculating average precision</li>
+<li><strong>num_bins</strong>: The number of soft histogram bins for calculating average precision. The paper suggests using 10 bins.</li>
 </ul>
 <p><strong>Default reducer</strong>: <a href="../reducers/#meanreducer">MeanReducer</a></p>
 <p><strong>Reducer input</strong>:</p>
@@ -1078,15 +1081,17 @@
 
 
 <h2 id="generalizedliftedstructureloss">GeneralizedLiftedStructureLoss<a class="headerlink" href="#generalizedliftedstructureloss" title="Permanent link">&para;</a></h2>
-<p>This was presented in <a href="https://arxiv.org/pdf/1703.07737.pdf">In Defense of the Triplet Loss for Person Re-Identification</a>. It is a modification of the original <a href="./#liftedstructureloss">LiftedStructureLoss</a></p>
+<p>This was presented in <a href="https://arxiv.org/pdf/1703.07737.pdf" target="_blank">In Defense of the Triplet Loss for Person Re-Identification</a>. It is a modification of the original <a href="./#liftedstructureloss">LiftedStructureLoss</a></p>
 <div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">GeneralizedLiftedStructureLoss</span><span class="p">(</span><span class="n">neg_margin</span><span class="p">,</span> <span class="n">pos_margin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
+<p><strong>Equation</strong>:</p>
+<p><img alt="generalized_lifted_structure_loss_equation" src="../imgs/generalized_lifted_structure_loss_equation.png" style="height:250px" /></p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>pos_margin</strong>: The margin in the expression <code>e^(positive_distance - margin)</code></li>
-<li><strong>neg_margin</strong>: The margin in the expression <code>e^(margin - negative_distance)</code></li>
+<li><strong>pos_margin</strong>: The margin in the expression <code>e^(D - margin)</code>. The paper set <code>pos_margin = 0</code>, which is why this margin does not appear in the above equation.</li>
+<li><strong>neg_margin</strong>: This is <code>m</code> in the above equation. The paper used values between 0.1 and 1.</li>
 </ul>
 <p><strong>Default reducer</strong>: <a href="../reducers/#meanreducer">MeanReducer</a></p>
 <p><strong>Reducer input</strong>:</p>

@@ -386,16 +386,25 @@ losses.LiftedStructureLoss(neg_margin, pos_margin=0, **kwargs):
 
 
 ## MarginLoss
-[Sampling Matters in Deep Embedding Learning](https://arxiv.org/pdf/1706.07567.pdf)
+[Sampling Matters in Deep Embedding Learning](https://arxiv.org/pdf/1706.07567.pdf){target=_blank}
 ```python
 losses.MarginLoss(margin, nu, beta, triplets_per_anchor="all", learn_beta=False, num_classes=None, **kwargs)
 ```
 
+**Equations**:
+
+![margin_loss_equation2](imgs/margin_loss_equation2.png){: style="height:60px"}
+
+where
+
+![margin_loss_equation1](imgs/margin_loss_equation1.png){: style="height:40px"}
+
+
 **Parameters**:
 
-* **margin**: The radius of the minimalbuffer between positive and negative pairs.
+* **margin**: This is alpha in the above equation. The paper uses 0.2.
 * **nu**: The regularization weight for the magnitude of beta.
-* **beta**: The center of the minimal buffer between positive and negative pairs.
+* **beta**: This is beta in the above equation. The paper uses 1.2 as the initial value.
 * **triplets_per_anchor**: The number of triplets per element to sample within a batch. Can be an integer or the string "all". For example, if your batch size is 128, and triplets_per_anchor is 100, then 12800 triplets will be sampled. If triplets_per_anchor is "all", then all possible triplets in the batch will be used.
 * **learn_beta**: If True, beta will be a torch.nn.Parameter, which can be optimized using any PyTorch optimizer.
 * **num_classes**: If not None, then beta will be of size ```num_classes```, so that a separate beta is used for each class during training.
@@ -419,15 +428,21 @@ losses.MultipleLosses(losses, weights=None)
 * **weights**: Optional. A list or dictionary of loss weights, which will be multiplied by the corresponding losses obtained by the loss functions. The default is to multiply each loss by 1. If ```losses``` is a list, then ```weights``` must be a list. If ```losses``` is a dictionary, ```weights``` must contain the same keys as ```losses```. 
 
 ## MultiSimilarityLoss
-[Multi-Similarity Loss with General Pair Weighting for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf)
+[Multi-Similarity Loss with General Pair Weighting for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf){target=_blank}
 ```python
 losses.MultiSimilarityLoss(alpha, beta, base=0.5, **kwargs)
 ```
+
+**Equation**:
+
+![multi_similarity_loss_equation](imgs/multi_similarity_loss_equation.png){: style="height:150px"}
+
+
 **Parameters**:
 
-* **alpha**: The weight applied to positive pairs.
-* **beta**: The weight applied to negative pairs.
-* **base**: The offset applied to the exponent in the loss.
+* **alpha**: The weight applied to positive pairs. The paper uses 2.
+* **beta**: The weight applied to negative pairs. The paper uses 50.
+* **base**: The offset applied to the exponent in the loss. This is lambda in the above equation. The paper uses 1. 
 
 **Default reducer**: [MeanReducer](reducers.md#meanreducer)
 
@@ -436,14 +451,26 @@ losses.MultiSimilarityLoss(alpha, beta, base=0.5, **kwargs)
 * **loss**: The loss per element in the batch. Reduction type is ```"element"```.
 
 ## NCALoss
-[Neighbourhood Components Analysis](https://www.cs.toronto.edu/~hinton/absps/nca.pdf)
+[Neighbourhood Components Analysis](https://www.cs.toronto.edu/~hinton/absps/nca.pdf){target=_blank}
 ```python
 losses.NCALoss(softmax_scale=1, **kwargs)
 ```
 
+**Equations**:
+
+![nca_loss_equation1](imgs/nca_loss_equation1.png){: style="height:50px"}
+
+where
+
+![nca_loss_equation2](imgs/nca_loss_equation2.png){: style="height:60px"}
+
+![nca_loss_equation3](imgs/nca_loss_equation3.png){: style="height:60px"}
+
+In this implementation, we use ```-g(A)``` as the loss.
+
 **Parameters**:
 
-* **softmax_scale**: The exponent multiplier in the loss's softmax expression. (This is the inverse of the softmax temperature.)
+* **softmax_scale**: The exponent multiplier in the loss's softmax expression. The paper uses ```softmax_scale = 1 ```, which is why it does not appear in the above equations.
 
 **Default reducer**: [MeanReducer](reducers.md#meanreducer)
 
@@ -454,13 +481,19 @@ losses.NCALoss(softmax_scale=1, **kwargs)
 
 
 ## NormalizedSoftmaxLoss
-[Classification is a Strong Baseline for Deep Metric Learning](https://arxiv.org/pdf/1811.12649.pdf)
+[Classification is a Strong Baseline for Deep Metric Learning](https://arxiv.org/pdf/1811.12649.pdf){target=_blank}
 ```python
 losses.NormalizedSoftmaxLoss(temperature, embedding_size, num_classes, **kwargs)
 ```
+
+**Equation**:
+
+![normalized_softmax_loss_equation](imgs/normalized_softmax_loss_equation.png){: style="height:80px"}
+
+
 **Parameters**:
 
-* **temperature**: The exponent divisor in the softmax funtion.
+* **temperature**: This is sigma in the above equation. The paper uses 0.05.
 * **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set ```embedding_size``` to 512.
 * **num_classes**: The number of classes in your training dataset.
 

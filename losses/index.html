@@ -1180,16 +1180,20 @@
 <li><strong>loss</strong>: The loss per positive pair in the batch. Reduction type is <code>"pos_pair"</code>.</li>
 </ul>
 <h2 id="marginloss">MarginLoss<a class="headerlink" href="#marginloss" title="Permanent link">&para;</a></h2>
-<p><a href="https://arxiv.org/pdf/1706.07567.pdf">Sampling Matters in Deep Embedding Learning</a></p>
+<p><a href="https://arxiv.org/pdf/1706.07567.pdf" target="_blank">Sampling Matters in Deep Embedding Learning</a></p>
 <div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">MarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">triplets_per_anchor</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="n">learn_beta</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">num_classes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
+<p><strong>Equations</strong>:</p>
+<p><img alt="margin_loss_equation2" src="../imgs/margin_loss_equation2.png" style="height:60px" /></p>
+<p>where</p>
+<p><img alt="margin_loss_equation1" src="../imgs/margin_loss_equation1.png" style="height:40px" /></p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>margin</strong>: The radius of the minimalbuffer between positive and negative pairs.</li>
+<li><strong>margin</strong>: This is alpha in the above equation. The paper uses 0.2.</li>
 <li><strong>nu</strong>: The regularization weight for the magnitude of beta.</li>
-<li><strong>beta</strong>: The center of the minimal buffer between positive and negative pairs.</li>
+<li><strong>beta</strong>: This is beta in the above equation. The paper uses 1.2 as the initial value.</li>
 <li><strong>triplets_per_anchor</strong>: The number of triplets per element to sample within a batch. Can be an integer or the string "all". For example, if your batch size is 128, and triplets_per_anchor is 100, then 12800 triplets will be sampled. If triplets_per_anchor is "all", then all possible triplets in the batch will be used.</li>
 <li><strong>learn_beta</strong>: If True, beta will be a torch.nn.Parameter, which can be optimized using any PyTorch optimizer.</li>
 <li><strong>num_classes</strong>: If not None, then beta will be of size <code>num_classes</code>, so that a separate beta is used for each class during training.</li>
@@ -1212,16 +1216,18 @@
 <li><strong>weights</strong>: Optional. A list or dictionary of loss weights, which will be multiplied by the corresponding losses obtained by the loss functions. The default is to multiply each loss by 1. If <code>losses</code> is a list, then <code>weights</code> must be a list. If <code>losses</code> is a dictionary, <code>weights</code> must contain the same keys as <code>losses</code>. </li>
 </ul>
 <h2 id="multisimilarityloss">MultiSimilarityLoss<a class="headerlink" href="#multisimilarityloss" title="Permanent link">&para;</a></h2>
-<p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf">Multi-Similarity Loss with General Pair Weighting for Deep Metric Learning</a></p>
+<p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf" target="_blank">Multi-Similarity Loss with General Pair Weighting for Deep Metric Learning</a></p>
 <div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">MultiSimilarityLoss</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
+<p><strong>Equation</strong>:</p>
+<p><img alt="multi_similarity_loss_equation" src="../imgs/multi_similarity_loss_equation.png" style="height:150px" /></p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>alpha</strong>: The weight applied to positive pairs.</li>
-<li><strong>beta</strong>: The weight applied to negative pairs.</li>
-<li><strong>base</strong>: The offset applied to the exponent in the loss.</li>
+<li><strong>alpha</strong>: The weight applied to positive pairs. The paper uses 2.</li>
+<li><strong>beta</strong>: The weight applied to negative pairs. The paper uses 50.</li>
+<li><strong>base</strong>: The offset applied to the exponent in the loss. This is lambda in the above equation. The paper uses 1. </li>
 </ul>
 <p><strong>Default reducer</strong>: <a href="../reducers/#meanreducer">MeanReducer</a></p>
 <p><strong>Reducer input</strong>:</p>
@@ -1229,14 +1235,20 @@
 <li><strong>loss</strong>: The loss per element in the batch. Reduction type is <code>"element"</code>.</li>
 </ul>
 <h2 id="ncaloss">NCALoss<a class="headerlink" href="#ncaloss" title="Permanent link">&para;</a></h2>
-<p><a href="https://www.cs.toronto.edu/~hinton/absps/nca.pdf">Neighbourhood Components Analysis</a></p>
+<p><a href="https://www.cs.toronto.edu/~hinton/absps/nca.pdf" target="_blank">Neighbourhood Components Analysis</a></p>
 <div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">NCALoss</span><span class="p">(</span><span class="n">softmax_scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
+<p><strong>Equations</strong>:</p>
+<p><img alt="nca_loss_equation1" src="../imgs/nca_loss_equation1.png" style="height:50px" /></p>
+<p>where</p>
+<p><img alt="nca_loss_equation2" src="../imgs/nca_loss_equation2.png" style="height:60px" /></p>
+<p><img alt="nca_loss_equation3" src="../imgs/nca_loss_equation3.png" style="height:60px" /></p>
+<p>In this implementation, we use <code>-g(A)</code> as the loss.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>softmax_scale</strong>: The exponent multiplier in the loss's softmax expression. (This is the inverse of the softmax temperature.)</li>
+<li><strong>softmax_scale</strong>: The exponent multiplier in the loss's softmax expression. The paper uses <code>softmax_scale = 1</code>, which is why it does not appear in the above equations.</li>
 </ul>
 <p><strong>Default reducer</strong>: <a href="../reducers/#meanreducer">MeanReducer</a></p>
 <p><strong>Reducer input</strong>:</p>
@@ -1244,14 +1256,16 @@
 <li><strong>loss</strong>: The loss per element in the batch, that results in a non zero exponent in the cross entropy expression. Reduction type is <code>"element"</code>.</li>
 </ul>
 <h2 id="normalizedsoftmaxloss">NormalizedSoftmaxLoss<a class="headerlink" href="#normalizedsoftmaxloss" title="Permanent link">&para;</a></h2>
-<p><a href="https://arxiv.org/pdf/1811.12649.pdf">Classification is a Strong Baseline for Deep Metric Learning</a></p>
+<p><a href="https://arxiv.org/pdf/1811.12649.pdf" target="_blank">Classification is a Strong Baseline for Deep Metric Learning</a></p>
 <div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">NormalizedSoftmaxLoss</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
+<p><strong>Equation</strong>:</p>
+<p><img alt="normalized_softmax_loss_equation" src="../imgs/normalized_softmax_loss_equation.png" style="height:80px" /></p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>temperature</strong>: The exponent divisor in the softmax funtion.</li>
+<li><strong>temperature</strong>: This is sigma in the above equation. The paper uses 0.05.</li>
 <li><strong>embedding_size</strong>: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set <code>embedding_size</code> to 512.</li>
 <li><strong>num_classes</strong>: The number of classes in your training dataset.</li>
 </ul>

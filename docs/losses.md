@@ -27,15 +27,18 @@ loss = loss_func(embeddings, labels) # in your training for-loop
 
 
 ## AngularLoss 
-[Deep Metric Learning with Angular Loss](https://arxiv.org/pdf/1708.01682.pdf)
-
+[Deep Metric Learning with Angular Loss](https://arxiv.org/pdf/1708.01682.pdf){target=_blank}
 ```python
 losses.AngularLoss(alpha, **kwargs)
 ```
+**Equation**:
+
+![angular_loss_equation](imgs/angular_loss_equation.png){: style="height:200px"}
+
 
 **Parameters**:
 
-* **alpha**: The angle (as described in the paper), specified in degrees.
+* **alpha**: The angle specified in degrees. The paper suggests values between 36 and 55.
 
 **Default reducer**: [MeanReducer](reducers.md#meanreducer)
 
@@ -45,18 +48,23 @@ losses.AngularLoss(alpha, **kwargs)
 
 
 ## ArcFaceLoss 
-[ArcFace: Additive Angular Margin Loss for Deep Face Recognition](https://arxiv.org/pdf/1801.07698.pdf)
+[ArcFace: Additive Angular Margin Loss for Deep Face Recognition](https://arxiv.org/pdf/1801.07698.pdf){target=_blank}
 
 ```python
 losses.ArcFaceLoss(margin, num_classes, embedding_size, scale=64, **kwargs)
 ```
 
+**Equation**:
+
+![arcface_loss_equation](imgs/arcface_loss_equation.png){: style="height:80px"}
+
+
 **Parameters**:
 
-* **margin**: The angular margin penalty in degrees. 
+* **margin**: The angular margin penalty in degrees. In the above equation, ```m = radians(margin)```. The paper uses 0.5 radians, which is 28.6 degrees.
 * **num_classes**: The number of classes in your training dataset.
 * **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set ```embedding_size``` to 512.
-* **scale**: The exponent multiplier in the loss's softmax expression. (This is the inverse of the softmax temperature.)
+* **scale**: This is ```s``` in the above equation. The paper uses 64.
 
 **Other info**: 
 
@@ -100,16 +108,38 @@ def compute_loss(self, embeddings, labels, indices_tuple=None):
 
 
 ## CircleLoss 
-[Circle Loss: A Unified Perspective of Pair Similarity Optimization](https://arxiv.org/pdf/2002.10857.pdf)
+[Circle Loss: A Unified Perspective of Pair Similarity Optimization](https://arxiv.org/pdf/2002.10857.pdf){target=_blank}
 
 ```python
-losses.CircleLoss(m=0.4, gamma=80, triplets_per_anchor='all', **kwargs)
+losses.CircleLoss(m=0.4, gamma=80, **kwargs)
 ```
+
+**Equations**:
+
+![circle_loss_equation1](imgs/circle_loss_equation1.png){: style="height:150px"}
+
+where
+
+![circle_loss_equation2](imgs/circle_loss_equation2.png){: style="height:70px"}
+
+![circle_loss_equation7](imgs/circle_loss_equation7.png){: style="height:25px"}
+
+![circle_loss_equation8](imgs/circle_loss_equation8.png){: style="height:25px"}
+
+![circle_loss_equation3](imgs/circle_loss_equation3.png){: style="height:25px"}
+
+![circle_loss_equation4](imgs/circle_loss_equation4.png){: style="height:25px"}
+
+![circle_loss_equation5](imgs/circle_loss_equation5.png){: style="height:25px"}
+
+![circle_loss_equation6](imgs/circle_loss_equation6.png){: style="height:25px"}
+
+
 
 **Parameters**:
 
-* **m**:  The relaxation factor that controls the radious of the decision boundary.
-* **gamma**: The scale factor that determines the largest scale of each similarity score.
+* **m**: The relaxation factor that controls the radius of the decision boundary. The paper uses 0.25 for face recognition, and 0.4 for fine-grained image retrieval (images of birds, cars, and online products).
+* **gamma**: The scale factor that determines the largest scale of each similarity score. The paper uses 256 for face recognition, and 80 for fine-grained image retrieval.
 * **triplets_per_anchor**: The number of triplets per element to sample within a batch. Can be an integer or the string "all". For example, if your batch size is 128, and triplets_per_anchor is 100, then 12800 triplets will be sampled. If triplets_per_anchor is "all", then all possible triplets in the batch will be used.
 
 **Default reducer**: [AvgNonZeroReducer](reducers.md#avgnonzeroreducer)

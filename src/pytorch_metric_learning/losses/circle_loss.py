@@ -18,7 +18,7 @@ class CircleLoss(GenericPairLoss):
     According to the paper, the suggested default values of m and gamma are:
 
     Face Recognition: m = 0.25, gamma = 256
-    Person Reidentification: m = 0.25, gamma = 256
+    Person Reidentification: m = 0.25, gamma = 128
     Fine-grained Image Retrieval: m = 0.4, gamma = 80
 
     By default, we set m = 0.4 and gamma = 80

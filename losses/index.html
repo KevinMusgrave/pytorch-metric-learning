@@ -985,7 +985,7 @@
 
 
 <p><strong>Equation</strong>:</p>
-<p><img alt="contrastive_loss_equation" src="../imgs/contrastive_loss_equation.png" style="height:40px" /></p>
+<p><img alt="contrastive_loss_equation" src="../imgs/contrastive_loss_equation.png" style="height:30px" /></p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>pos_margin</strong>: The distance (or similarity) over (under) which positive pairs will contribute to the loss.</li>
@@ -1054,7 +1054,7 @@
 
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>num_bins</strong>: The number of soft histogram bins for calculating average precision. The paper suggests using 10 bins.</li>
+<li><strong>num_bins</strong>: The number of soft histogram bins for calculating average precision. The paper suggests using 10.</li>
 </ul>
 <p><strong>Default reducer</strong>: <a href="../reducers/#meanreducer">MeanReducer</a></p>
 <p><strong>Reducer input</strong>:</p>
@@ -1090,7 +1090,7 @@
 <p><img alt="generalized_lifted_structure_loss_equation" src="../imgs/generalized_lifted_structure_loss_equation.png" style="height:250px" /></p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>pos_margin</strong>: The margin in the expression <code>e^(D - margin)</code>. The paper set <code>pos_margin = 0</code>, which is why this margin does not appear in the above equation.</li>
+<li><strong>pos_margin</strong>: The margin in the expression <code>e^(D - margin)</code>. The paper uses <code>pos_margin = 0</code>, which is why this margin does not appear in the above equation.</li>
 <li><strong>neg_margin</strong>: This is <code>m</code> in the above equation. The paper used values between 0.1 and 1.</li>
 </ul>
 <p><strong>Default reducer</strong>: <a href="../reducers/#meanreducer">MeanReducer</a></p>
@@ -1099,15 +1099,18 @@
 <li><strong>loss</strong>: The loss per element in the batch. Reduction type is <code>"element"</code>.</li>
 </ul>
 <h2 id="intrapairvarianceloss">IntraPairVarianceLoss<a class="headerlink" href="#intrapairvarianceloss" title="Permanent link">&para;</a></h2>
-<p><a href="http://openaccess.thecvf.com/content_ICCV_2019/papers/Yu_Deep_Metric_Learning_With_Tuplet_Margin_Loss_ICCV_2019_paper.pdf">Deep Metric Learning with Tuplet Margin Loss</a></p>
+<p><a href="http://openaccess.thecvf.com/content_ICCV_2019/papers/Yu_Deep_Metric_Learning_With_Tuplet_Margin_Loss_ICCV_2019_paper.pdf" target="_blank">Deep Metric Learning with Tuplet Margin Loss</a></p>
 <div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">IntraPairVarianceLoss</span><span class="p">(</span><span class="n">pos_eps</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">neg_eps</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
+<p><strong>Equations</strong>:</p>
+<p><img alt="intra_pair_variance_loss_equation1" src="../imgs/intra_pair_variance_loss_equation1.png" style="height:39px" /></p>
+<p><img alt="intra_pair_variance_loss_equation2" src="../imgs/intra_pair_variance_loss_equation2.png" style="height:34px" /></p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>pos_eps</strong>: The offset in the expression <code>(1-pos_eps)*mu_ap - cos(theta_ap)</code>. See equation 15 in the paper.</li>
-<li><strong>neg_eps</strong>: The offset in the expression <code>cos(theta_an) - (1+neg_eps)*mu_an</code>. See equation 16 in the paper.</li>
+<li><strong>pos_eps</strong>: The epsilon in the L<sub>pos</sub> equation. The paper uses 0.01.</li>
+<li><strong>neg_eps</strong>: The epsilon in the L<sub>neg</sub> equation. The paper uses 0.01.</li>
 </ul>
 <p>You should probably use this in conjunction with another loss, as described in the paper. You can accomplish this by using <a href="./#multiplelosses">MultipleLosses</a>:</p>
 <div class="codehilite"><pre><span></span><code><span class="n">main_loss</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">TupletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
@@ -1123,17 +1126,21 @@
 <li><strong>neg_loss</strong>: The loss per negative pair in the batch. Reduction type is <code>"neg_pair"</code>.</li>
 </ul>
 <h2 id="largemarginsoftmaxloss">LargeMarginSoftmaxLoss<a class="headerlink" href="#largemarginsoftmaxloss" title="Permanent link">&para;</a></h2>
-<p><a href="https://arxiv.org/pdf/1612.02295.pdf">Large-Margin Softmax Loss for Convolutional Neural Networks</a></p>
+<p><a href="https://arxiv.org/pdf/1612.02295.pdf" target="_blank">Large-Margin Softmax Loss for Convolutional Neural Networks</a></p>
 <div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">LargeMarginSoftmaxLoss</span><span class="p">(</span><span class="n">margin</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">normalize_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
+<p><strong>Equations</strong>:</p>
+<p><img alt="large_margin_softmax_loss_equation1" src="../imgs/large_margin_softmax_loss_equation1.png" style="height:80px" /></p>
+<p>where</p>
+<p><img alt="large_margin_softmax_loss_equation2" src="../imgs/large_margin_softmax_loss_equation2.png" style="height:90px" /></p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>margin</strong>: An integer which dictates the size of the angular margin. Specifically, it multiplies the angle between the embeddings and weights: <code>cos(margin*theta)</code>. </li>
+<li><strong>margin</strong>: An integer which dictates the size of the angular margin. This is <code>m</code> in the above equation. The paper finds <code>m=4</code> works best.</li>
 <li><strong>num_classes</strong>: The number of classes in your training dataset.</li>
 <li><strong>embedding_size</strong>: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set <code>embedding_size</code> to 512.</li>
-<li><strong>scale</strong>: The exponent multiplier in the loss's softmax expression. (This is the inverse of the softmax temperature.)</li>
+<li><strong>scale</strong>: The exponent multiplier in the loss's softmax expression. The paper uses <code>scale = 1</code>, which is why it does not appear in the above equation.</li>
 <li><strong>normalize_weights</strong>: If True, the learned weights will be normalized to have Euclidean norm of 1, before the loss is computed. Note that when this parameter is True, it becomes equivalent to <a href="./#spherefaceloss">SphereFaceLoss</a>.</li>
 </ul>
 <p><strong>Other info</strong>: </p>
@@ -1155,15 +1162,17 @@
 <li><strong>reg_loss</strong>: The weight regularization loss, if any. Reduction type is <code>"already_reduced"</code>.</li>
 </ul>
 <h2 id="liftedstructureloss">LiftedStructureLoss<a class="headerlink" href="#liftedstructureloss" title="Permanent link">&para;</a></h2>
-<p>The original lifted structure loss as presented in <a href="https://arxiv.org/pdf/1511.06452.pdf">Deep Metric Learning via Lifted Structured Feature Embedding</a></p>
+<p>The original lifted structure loss as presented in <a href="https://arxiv.org/pdf/1511.06452.pdf" target="_blank">Deep Metric Learning via Lifted Structured Feature Embedding</a></p>
 <div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">LiftedStructureLoss</span><span class="p">(</span><span class="n">neg_margin</span><span class="p">,</span> <span class="n">pos_margin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 </code></pre></div>
 
 
+<p><strong>Equation</strong>:</p>
+<p><img alt="lifted_structure_loss_equation" src="../imgs/lifted_structure_loss_equation.png" style="height:150px" /></p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>pos_margin</strong>: The margin in the expression <code>positive_distance - margin</code></li>
-<li><strong>neg_margin</strong>: The margin in the expression <code>e^(margin - negative_distance)</code></li>
+<li><strong>pos_margin</strong>: The margin in the expression <code>D_(i,j) - margin</code>. The paper uses <code>pos_margin = 0</code>, which is why it does not appear in the above equation.</li>
+<li><strong>neg_margin</strong>: This is <code>alpha</code> in the above equation. The paper uses 1.</li>
 </ul>
 <p><strong>Default reducer</strong>: <a href="../reducers/#meanreducer">MeanReducer</a></p>
 <p><strong>Reducer input</strong>:</p>

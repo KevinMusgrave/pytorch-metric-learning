@@ -38,7 +38,7 @@ losses.AngularLoss(alpha, **kwargs)
 
 **Parameters**:
 
-* **alpha**: The angle specified in degrees. The paper suggests values between 36 and 55.
+* **alpha**: The angle specified in degrees. The paper uses values between 36 and 55.
 
 **Default reducer**: [MeanReducer](reducers.md#meanreducer)
 
@@ -140,7 +140,6 @@ where
 
 * **m**: The relaxation factor that controls the radius of the decision boundary. The paper uses 0.25 for face recognition, and 0.4 for fine-grained image retrieval (images of birds, cars, and online products).
 * **gamma**: The scale factor that determines the largest scale of each similarity score. The paper uses 256 for face recognition, and 80 for fine-grained image retrieval.
-* **triplets_per_anchor**: The number of triplets per element to sample within a batch. Can be an integer or the string "all". For example, if your batch size is 128, and triplets_per_anchor is 100, then 12800 triplets will be sampled. If triplets_per_anchor is "all", then all possible triplets in the batch will be used.
 
 **Default reducer**: [AvgNonZeroReducer](reducers.md#avgnonzeroreducer)
 
@@ -157,6 +156,9 @@ losses.ContrastiveLoss(pos_margin=0,
 					**kwargs):
 ```
 
+**Equation**:
+
+![contrastive_loss_equation](imgs/contrastive_loss_equation.png){: style="height:40px"}
 
 **Parameters**:
 
@@ -176,18 +178,22 @@ Note that the default values for ```pos_margin``` and ```neg_margin``` are suita
 
 
 ## CosFaceLoss 
-[CosFace: Large Margin Cosine Loss for Deep Face Recognition](https://arxiv.org/pdf/1801.09414.pdf)
+[CosFace: Large Margin Cosine Loss for Deep Face Recognition](https://arxiv.org/pdf/1801.09414.pdf){target=_blank}
 
 ```python
 losses.CosFaceLoss(margin, num_classes, embedding_size, scale=64, **kwargs)
 ```
 
+**Equation**:
+
+![cosface_loss_equation](imgs/cosface_loss_equation.png){: style="height:80px"}
+
 **Parameters**:
 
-* **margin**: The cosine margin penalty: ```cos(theta) - margin```. The paper got optimal performance with margin values between 0.25 and 0.45.
+* **margin**: The cosine margin penalty (m in the above equation). The paper used values between 0.25 and 0.45.
 * **num_classes**: The number of classes in your training dataset.
 * **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set ```embedding_size``` to 512.
-* **scale**: The exponent multiplier in the loss's softmax expression. (This is the inverse of the softmax temperature.)
+* **scale**: This is ```s``` in the above equation. The paper uses 64.
 
 **Other info**: 
 
@@ -209,7 +215,7 @@ loss_optimizer.step()
 
 
 ## CrossBatchMemory 
-This wraps a loss function, and implements [Cross-Batch Memory for Embedding Learning](https://arxiv.org/pdf/1912.06798.pdf). It stores embeddings from previous iterations in a queue, and uses them to form more pairs/triplets with the current iteration's embeddings.
+This wraps a loss function, and implements [Cross-Batch Memory for Embedding Learning](https://arxiv.org/pdf/1912.06798.pdf){target=_blank}. It stores embeddings from previous iterations in a queue, and uses them to form more pairs/triplets with the current iteration's embeddings.
 
 ```python
 losses.CrossBatchMemory(loss, embedding_size, memory_size=1024, miner=None)
@@ -224,7 +230,7 @@ losses.CrossBatchMemory(loss, embedding_size, memory_size=1024, miner=None)
 
 
 ## FastAPLoss
-[Deep Metric Learning to Rank](http://openaccess.thecvf.com/content_CVPR_2019/papers/Cakir_Deep_Metric_Learning_to_Rank_CVPR_2019_paper.pdf)
+[Deep Metric Learning to Rank](http://openaccess.thecvf.com/content_CVPR_2019/papers/Cakir_Deep_Metric_Learning_to_Rank_CVPR_2019_paper.pdf){target=_blank}
 
 ```python
 losses.FastAPLoss(num_bins, **kwargs)
@@ -232,7 +238,7 @@ losses.FastAPLoss(num_bins, **kwargs)
 
 **Parameters**:
 
-* **num_bins**: The number of soft histogram bins for calculating average precision
+* **num_bins**: The number of soft histogram bins for calculating average precision. The paper suggests using 10 bins.
 
 **Default reducer**: [MeanReducer](reducers.md#meanreducer)
 
@@ -261,16 +267,19 @@ def _compute_loss(self):
 ```
 
 ## GeneralizedLiftedStructureLoss
-This was presented in [In Defense of the Triplet Loss for Person Re-Identification](https://arxiv.org/pdf/1703.07737.pdf). It is a modification of the original [LiftedStructureLoss](losses.md#liftedstructureloss)
+This was presented in [In Defense of the Triplet Loss for Person Re-Identification](https://arxiv.org/pdf/1703.07737.pdf){target=_blank}. It is a modification of the original [LiftedStructureLoss](losses.md#liftedstructureloss)
 
 ```python
 losses.GeneralizedLiftedStructureLoss(neg_margin, pos_margin=0, **kwargs)
 ```
+**Equation**:
+
+![generalized_lifted_structure_loss_equation](imgs/generalized_lifted_structure_loss_equation.png){: style="height:250px"}
 
 **Parameters**:
 
-* **pos_margin**: The margin in the expression ```e^(positive_distance - margin)```
-* **neg_margin**: The margin in the expression ```e^(margin - negative_distance)```
+* **pos_margin**: The margin in the expression ```e^(D - margin)```. The paper set ```pos_margin = 0 ```, which is why this margin does not appear in the above equation.
+* **neg_margin**: This is ```m``` in the above equation. The paper used values between 0.1 and 1.
 
 **Default reducer**: [MeanReducer](reducers.md#meanreducer)
 

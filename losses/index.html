@@ -1288,7 +1288,7 @@
 <li><strong>reg_loss</strong>: The weight regularization loss, if any. Reduction type is <code>"already_reduced"</code>.</li>
 </ul>
 <h2 id="npairsloss">NPairsLoss<a class="headerlink" href="#npairsloss" title="Permanent link">&para;</a></h2>
-<p><a href="http://www.nec-labs.com/uploads/images/Department-Images/MediaAnalytics/papers/nips16_npairmetriclearning.pdf">Improved Deep Metric Learning with Multi-class N-pair Loss Objective</a></p>
+<p><a href="http://www.nec-labs.com/uploads/images/Department-Images/MediaAnalytics/papers/nips16_npairmetriclearning.pdf" target="_blank">Improved Deep Metric Learning with Multi-class N-pair Loss Objective</a></p>
 <div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">NPairsLoss</span><span class="p">(</span><span class="n">l2_reg_weight</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
@@ -1304,14 +1304,21 @@
 <li><strong>l2_reg</strong>: The L2 regularization loss per element in the batch. This key exists only if <code>self.l2_reg_weight &gt; 0</code>. Reduction type is <code>"element"</code>.</li>
 </ul>
 <h2 id="ntxentloss">NTXentLoss<a class="headerlink" href="#ntxentloss" title="Permanent link">&para;</a></h2>
-<p>This is the normalized temperature-scaled cross entropy loss used in <a href="https://arxiv.org/abs/2002.05709">A Simple Framework for Contrastive Learning of Visual Representations</a>.</p>
+<p>This is also known as InfoNCE, and is a generalization of the <a href="./#npairsloss">NPairsLoss</a>. It has been used in self-supervision papers such as: </p>
+<ul>
+<li><a href="https://arxiv.org/pdf/1807.03748.pdf" target="_blank">Representation Learning with Contrastive Predictive Coding</a></li>
+<li><a href="https://arxiv.org/pdf/1911.05722.pdf" target="_blank">Momentum Contrast for Unsupervised Visual Representation Learning</a></li>
+<li><a href="https://arxiv.org/pdf/2002.05709.pdf" target="_blank">A Simple Framework for Contrastive Learning of Visual Representations</a></li>
+</ul>
 <div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">NTXentLoss</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
+<p><strong>Equation</strong>:</p>
+<p><img alt="ntxent_loss_equation" src="../imgs/ntxent_loss_equation.png" style="height:70px" /></p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>temperature</strong>: The exponent divisor in the softmax funtion.</li>
+<li><strong>temperature</strong>: This is tau in the above equation. The MoCo paper uses 0.07, while SimCLR uses 0.5.</li>
 </ul>
 <p><strong>Default reducer</strong>: <a href="../reducers/#meanreducer">MeanReducer</a></p>
 <p><strong>Reducer input</strong>:</p>
@@ -1319,17 +1326,19 @@
 <li><strong>loss</strong>: The loss per positive pair in the batch. Reduction type is <code>"pos_pair"</code>.</li>
 </ul>
 <h2 id="proxyanchorloss">ProxyAnchorLoss<a class="headerlink" href="#proxyanchorloss" title="Permanent link">&para;</a></h2>
-<p><a href="https://arxiv.org/pdf/2003.13911.pdf">Proxy Anchor Loss for Deep Metric Learning</a></p>
+<p><a href="https://arxiv.org/pdf/2003.13911.pdf" target="_blank">Proxy Anchor Loss for Deep Metric Learning</a></p>
 <div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">ProxyAnchorLoss</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">margin</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="mi">32</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
+<p><strong>Equation</strong>:</p>
+<p><img alt="proxy_anchor_loss_equation" src="../imgs/proxy_anchor_loss_equation.png" style="height:150px" /></p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>num_classes</strong>: The number of classes in your training dataset.</li>
 <li><strong>embedding_size</strong>: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set <code>embedding_size</code> to 512.</li>
-<li><strong>margin</strong>: This is subtracted from the cosine similarity of positive pairs, and added to the cosine similarity of negative pairs. See delta in equation 4 of the paper.</li>
-<li><strong>alpha</strong>: This is the multiplier in the exponent of the LogSumExp expression. See equation 4 in the paper.</li>
+<li><strong>margin</strong>: This is delta in the above equation. The paper uses 0.1.</li>
+<li><strong>alpha</strong>: This is alpha in the above equation. The paper uses 32.</li>
 </ul>
 <p><strong>Other info</strong></p>
 <ul>
@@ -1351,7 +1360,7 @@
 <li><strong>reg_loss</strong>: The weight regularization loss, if any. Reduction type is <code>"already_reduced"</code>.</li>
 </ul>
 <h2 id="proxyncaloss">ProxyNCALoss<a class="headerlink" href="#proxyncaloss" title="Permanent link">&para;</a></h2>
-<p><a href="https://arxiv.org/pdf/1703.07464.pdf">No Fuss Distance Metric Learning using Proxies</a></p>
+<p><a href="https://arxiv.org/pdf/1703.07464.pdf" target="_blank">No Fuss Distance Metric Learning using Proxies</a></p>
 <div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">ProxyNCALoss</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
@@ -1381,7 +1390,7 @@
 <li><strong>reg_loss</strong>: The weight regularization loss, if any. Reduction type is <code>"already_reduced"</code>.</li>
 </ul>
 <h2 id="signaltonoiseratiocontrastiveloss">SignalToNoiseRatioContrastiveLoss<a class="headerlink" href="#signaltonoiseratiocontrastiveloss" title="Permanent link">&para;</a></h2>
-<p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Yuan_Signal-To-Noise_Ratio_A_Robust_Distance_Metric_for_Deep_Metric_Learning_CVPR_2019_paper.pdf">Signal-to-Noise Ratio: A Robust Distance Metric for Deep Metric Learning</a></p>
+<p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Yuan_Signal-To-Noise_Ratio_A_Robust_Distance_Metric_for_Deep_Metric_Learning_CVPR_2019_paper.pdf" target="_blank">Signal-to-Noise Ratio: A Robust Distance Metric for Deep Metric Learning</a></p>
 <div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">SignalToNoiseRatioContrastiveLoss</span><span class="p">(</span><span class="n">pos_margin</span><span class="p">,</span> 
                                         <span class="n">neg_margin</span><span class="p">,</span> 
                                         <span class="n">regularizer_weight</span><span class="p">,</span> 
@@ -1407,7 +1416,7 @@
 <li><strong>reg_loss</strong>: The regularization loss per element in the batch. Reduction type is <code>"element"</code>.</li>
 </ul>
 <h2 id="softtripleloss">SoftTripleLoss<a class="headerlink" href="#softtripleloss" title="Permanent link">&para;</a></h2>
-<p><a href="http://openaccess.thecvf.com/content_ICCV_2019/papers/Qian_SoftTriple_Loss_Deep_Metric_Learning_Without_Triplet_Sampling_ICCV_2019_paper.pdf">SoftTriple Loss: Deep Metric Learning Without Triplet Sampling</a></p>
+<p><a href="http://openaccess.thecvf.com/content_ICCV_2019/papers/Qian_SoftTriple_Loss_Deep_Metric_Learning_Without_Triplet_Sampling_ICCV_2019_paper.pdf" target="_blank">SoftTriple Loss: Deep Metric Learning Without Triplet Sampling</a></p>
 <div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">SoftTripleLoss</span><span class="p">(</span><span class="n">embedding_size</span><span class="p">,</span> 
                     <span class="n">num_classes</span><span class="p">,</span> 
                     <span class="n">centers_per_class</span><span class="p">,</span> 
@@ -1419,15 +1428,19 @@
 </code></pre></div>
 
 
+<p><strong>Equations</strong>:</p>
+<p><img alt="soft_triple_loss_equation1" src="../imgs/soft_triple_loss_equation1.png" style="height:100px" /></p>
+<p>where</p>
+<p><img alt="soft_triple_loss_equation2" src="../imgs/soft_triple_loss_equation2.png" style="height:80px" /></p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>embedding_size</strong>: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set <code>embedding_size</code> to 512.</li>
 <li><strong>num_classes</strong>: The number of classes in your training dataset.</li>
-<li><strong>centers_per_class</strong>: The number of weight vectors per class. (The regular cross entropy loss has 1 center per class.)</li>
-<li><strong>la</strong>: The exponent multiplier in the loss's softmax expression. (This is the inverse of the softmax temperature.)</li>
-<li><strong>gamma</strong>: The similarity-to-centers multiplier.</li>
-<li><strong>reg_weight</strong>: The regularization weight which encourages class centers to be close to each other.</li>
-<li><strong>margin</strong>: The margin in the expression e^(similarities - margin).</li>
+<li><strong>centers_per_class</strong>: The number of weight vectors per class. (The regular cross entropy loss has 1 center per class.) The paper uses 10.</li>
+<li><strong>la</strong>: This is lambda in the above equation.</li>
+<li><strong>gamma</strong>: This is gamma in the above equation. The paper uses 0.1.</li>
+<li><strong>reg_weight</strong>: The regularization weight which encourages class centers to be close to each other. The paper uses 0.2.</li>
+<li><strong>margin</strong>: The is delta in the above equations. The paper uses 0.01.</li>
 </ul>
 <p><strong>Other info</strong></p>
 <ul>
@@ -1447,18 +1460,13 @@
 <li><strong>reg_loss</strong>: The weight regularization loss, if any. Reduction type is <code>"already_reduced"</code>.</li>
 </ul>
 <h2 id="spherefaceloss">SphereFaceLoss<a class="headerlink" href="#spherefaceloss" title="Permanent link">&para;</a></h2>
-<p><a href="https://arxiv.org/pdf/1704.08063.pdf">SphereFace: Deep Hypersphere Embedding for Face Recognition</a></p>
+<p><a href="https://arxiv.org/pdf/1704.08063.pdf" target="_blank">SphereFace: Deep Hypersphere Embedding for Face Recognition</a></p>
 <div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">SphereFaceLoss</span><span class="p">(</span><span class="n">margin</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
 <p><strong>Parameters</strong>:</p>
-<ul>
-<li><strong>margin</strong>: An integer which dictates the size of the angular margin. Specifically, it multiplies the angle between the embeddings and weights: <code>cos(margin*theta)</code>. </li>
-<li><strong>num_classes</strong>: The number of classes in your training dataset.</li>
-<li><strong>embedding_size</strong>: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set <code>embedding_size</code> to 512.</li>
-<li><strong>scale</strong>: The exponent multiplier in the loss's softmax expression. (This is the inverse of the softmax temperature.)</li>
-</ul>
+<p>See <a href="./#largemarginsoftmaxloss">LargeMarginSoftmaxLoss</a></p>
 <p><strong>Other info</strong></p>
 <ul>
 <li>This also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts a <code>regularizer</code> and <code>reg_weight</code> as optional init arguments.</li>
@@ -1488,9 +1496,11 @@
 </code></pre></div>
 
 
+<p><strong>Equation</strong>:</p>
+<p><img alt="triplet_margin_loss_equation" src="../imgs/triplet_margin_loss_equation.png" style="height:35px" /></p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>margin</strong>: The desired difference between the anchor-positive distance and the anchor-negative distance.</li>
+<li><strong>margin</strong>: The desired difference between the anchor-positive distance and the anchor-negative distance. This is <code>m</code> in the above equation.</li>
 <li><strong>distance_norm</strong>: The norm used when calculating distance between embeddings</li>
 <li><strong>power</strong>: Each pair's loss will be raised to this power.</li>
 <li><strong>swap</strong>: Use the positive-negative distance instead of anchor-negative distance, if it violates the margin more.</li>
@@ -1503,15 +1513,17 @@
 <li><strong>loss</strong>: The loss per triplet in the batch. Reduction type is <code>"triplet"</code>.</li>
 </ul>
 <h2 id="tupletmarginloss">TupletMarginLoss<a class="headerlink" href="#tupletmarginloss" title="Permanent link">&para;</a></h2>
-<p><a href="http://openaccess.thecvf.com/content_ICCV_2019/papers/Yu_Deep_Metric_Learning_With_Tuplet_Margin_Loss_ICCV_2019_paper.pdf">Deep Metric Learning with Tuplet Margin Loss</a></p>
+<p><a href="http://openaccess.thecvf.com/content_ICCV_2019/papers/Yu_Deep_Metric_Learning_With_Tuplet_Margin_Loss_ICCV_2019_paper.pdf" target="_blank">Deep Metric Learning with Tuplet Margin Loss</a></p>
 <div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">TupletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
+<p><strong>Equation</strong>:</p>
+<p><img alt="tuplet_margin_loss_equation" src="../imgs/tuplet_margin_loss_equation.png" style="height:80px" /></p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>margin</strong>: The angular margin (in degrees) applied to positive pairs. The paper uses a value of 5.73 degrees (0.1 radians).</li>
-<li><strong>scale</strong>: The exponent multiplier in the logsumexp expression.</li>
+<li><strong>margin</strong>: The angular margin (in degrees) applied to positive pairs. This is beta in the above equation. The paper uses a value of 5.73 degrees (0.1 radians).</li>
+<li><strong>scale</strong>: This is <code>s</code> in the above equation.</li>
 </ul>
 <p>The paper combines this loss with <a href="./#intrapairvarianceloss">IntraPairVarianceLoss</a>. You can accomplish this by using <a href="./#multiplelosses">MultipleLosses</a>:</p>
 <div class="codehilite"><pre><span></span><code><span class="n">main_loss</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">TupletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>

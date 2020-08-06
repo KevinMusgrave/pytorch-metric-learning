@@ -32,7 +32,7 @@ class ProxyAnchorLoss(WeightMixin, WeightRegularizerMixin, BaseMetricLossFunctio
         pos_mask = torch.nn.functional.one_hot(labels, self.num_classes).type(dtype)
         neg_mask = 1 - pos_mask
 
-        with_pos_proxies = torch.nonzero(torch.sum(pos_mask, dim=0) != 0).squeeze(1)
+        with_pos_proxies = torch.where(torch.sum(pos_mask, dim=0) != 0)[0]
 
         pos_exp = self.distance.margin(cos, self.margin)
         neg_exp = self.distance.margin(-self.margin, cos)

@@ -102,7 +102,8 @@ class TestGeneralizedLiftedStructureLoss(unittest.TestCase):
 
             correct_total /= embeddings.size(0)
 
-            self.assertTrue(torch.isclose(loss, correct_total))
+            rtol = 1e-2 if dtype == torch.float16 else 1e-5
+            self.assertTrue(torch.isclose(loss, correct_total, rtol=rtol))
 
 
     def test_with_no_valid_pairs(self):

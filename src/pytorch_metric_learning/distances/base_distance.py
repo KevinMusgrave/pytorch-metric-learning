@@ -14,10 +14,12 @@ class BaseDistance(ModuleWithRecords):
 
     def forward(self, query_emb, ref_emb=None):
         self.reset_stats()
+        query_emb_normalized = self.maybe_normalize(query_emb)
         if ref_emb is None:
             ref_emb = query_emb
-        query_emb_normalized = self.maybe_normalize(query_emb)
-        ref_emb_normalized = self.maybe_normalize(ref_emb)
+            ref_emb_normalized = query_emb_normalized
+        else:
+            ref_emb_normalized = self.maybe_normalize(ref_emb)
         self.set_default_stats(query_emb, ref_emb, query_emb_normalized, ref_emb_normalized)
         mat = self.compute_mat(query_emb_normalized, ref_emb_normalized)
         if self.power != 1:
@@ -59,17 +61,17 @@ class BaseDistance(ModuleWithRecords):
         return torch.norm(embeddings, p=self.p, dim=dim, **kwargs)
 
     def set_default_stats(self, query_emb, ref_emb, query_emb_normalized, ref_emb_normalized):
-        stats_dict = {"initial_avg_query_norm": torch.mean(self.get_norm(query_emb)),
-                    "initial_avg_ref_norm": torch.mean(self.get_norm(ref_emb)),
-                    "final_avg_query_norm": torch.mean(self.get_norm(query_emb_normalized)),
-                    "ref_emb_normalized": torch.mean(self.get_norm(ref_emb_normalized))}
-        self.set_stats(stats_dict)
-
-    def set_stats(self, stats_dict):
         if self.collect_stats:
             with torch.no_grad():
-                for k,v in stats_dict.items():
-                    self.add_to_recordable_attributes(name=k, is_stat=True)
-                    setattr(self, k, v)
+                stats_dict = {"initial_avg_query_norm": torch.mean(self.get_norm(query_emb)),
+                            "initial_avg_ref_norm": torch.mean(self.get_norm(ref_emb)),
+                            "final_avg_query_norm": torch.mean(self.get_norm(query_emb_normalized)),
+                            "ref_emb_normalized": torch.mean(self.get_norm(ref_emb_normalized))}
+                self.set_stats(stats_dict)
+
+    def set_stats(self, stats_dict):
+        for k,v in stats_dict.items():
+            self.add_to_recordable_attributes(name=k, is_stat=True)
+            setattr(self, k, v)
 
     

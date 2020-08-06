@@ -33,7 +33,7 @@ setuptools.setup(
           'numpy',
           'scikit-learn',
           'tqdm',
-          'torch >= 1.5.0',
+          'torch >= 1.6.0',
           'torchvision',
     ],
     extras_require={

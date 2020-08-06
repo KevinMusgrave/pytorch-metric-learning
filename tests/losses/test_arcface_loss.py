@@ -13,7 +13,6 @@ class TestArcFaceLoss(unittest.TestCase):
     def test_arcface_loss(self):
         margin = 30
         scale = 64
-
         for dtype in TEST_DTYPES:
             loss_func = ArcFaceLoss(margin=margin, scale=scale, num_classes=10, embedding_size=2)
             embedding_angles = torch.arange(0, 180)
@@ -25,8 +24,10 @@ class TestArcFaceLoss(unittest.TestCase):
 
             weights = torch.nn.functional.normalize(loss_func.W, p=2, dim=0)
             logits = torch.matmul(embeddings, weights)
+
             for i, c in enumerate(labels):
-                logits[i, c] = torch.cos(torch.acos(logits[i, c]) + torch.tensor(np.radians(margin), dtype=dtype).to(self.device))
+                acos = torch.acos(torch.clamp(logits[i, c], -1, 1))
+                logits[i, c] = torch.cos(acos + torch.tensor(np.radians(margin), dtype=dtype).to(self.device))
             
             correct_loss = torch.nn.functional.cross_entropy(logits*scale, labels.to(self.device))
 

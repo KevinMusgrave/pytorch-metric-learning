@@ -19,35 +19,10 @@ def logsumexp(x, keep_mask=None, add_one=True, dim=1):
     return torch.log(inside_log) + max_vals
 
 
-# https://discuss.pytorch.org/t/efficient-distance-matrix-computation/9065/
-def manual_dist_mat(x, y=None):
-    """
-    Input: x is a Nxd matrix
-           y is an optional Mxd matirx
-    Output: dist is a NxM matrix where dist[i,j]
-    is the square norm between x[i,:] and y[j,:]
-            if y is not given then use 'y=x'.
-    i.e. dist[i,j] = ||x[i,:]-y[j,:]||
-    """
-    dtype = x.dtype
-    x_norm = (x ** 2).sum(1).view(-1, 1)
-    if y is not None:
-        y_t = torch.transpose(y, 0, 1)
-        y_norm = (y ** 2).sum(1).view(1, -1)
-    else:
-        y_t = torch.transpose(x, 0, 1)
-        y_norm = x_norm.view(1, -1)
-
-    dist = x_norm + y_norm - 2.0 * torch.mm(x, y_t)
-    # Ensure diagonal is zero if x=y
-    if y is None:
-        dist = dist - torch.diag(dist.diag())
-    dist = torch.clamp(dist, 0.0, c_f.pos_inf(dtype))
-    mask = (dist == 0).type(dtype)
-    dist = dist + mask * c_f.small_val(dtype)
-    dist = torch.sqrt(dist)
-    dist = dist * (1.0 - mask)
-    return dist
+def meshgrid_from_sizes(x, y, dim=0):
+    a = torch.arange(x.size(dim)).to(x.device)
+    b = torch.arange(y.size(dim)).to(y.device)
+    return torch.meshgrid(a,b)
 
 
 def get_all_pairs_indices(labels, ref_labels=None):
@@ -64,10 +39,8 @@ def get_all_pairs_indices(labels, ref_labels=None):
     diffs = matches ^ 1
     if ref_labels is labels:
         matches.fill_diagonal_(0)
-    a1_idx = matches.nonzero()[:, 0].flatten()
-    p_idx = matches.nonzero()[:, 1].flatten()
-    a2_idx = diffs.nonzero()[:, 0].flatten()
-    n_idx = diffs.nonzero()[:, 1].flatten()
+    a1_idx, p_idx = torch.where(matches)
+    a2_idx, n_idx = torch.where(diffs)
     return a1_idx, p_idx, a2_idx, n_idx
 
 
@@ -112,10 +85,7 @@ def get_all_triplets_indices(labels, ref_labels=None):
     if ref_labels is labels:
         matches.fill_diagonal_(0)
     triplets = matches.unsqueeze(2)*diffs.unsqueeze(1)
-    a_idx = triplets.nonzero()[:, 0].flatten()
-    p_idx = triplets.nonzero()[:, 1].flatten()
-    n_idx = triplets.nonzero()[:, 2].flatten()
-    return a_idx, p_idx, n_idx
+    return torch.where(triplets)
 
 
 
@@ -191,8 +161,8 @@ def convert_to_triplets(indices_tuple, labels, t_per_anchor=100):
         if len(a1) == 0 or len(a2) == 0:
             return empty_output
         for i in range(len(labels)):
-            pos_idx = (a1 == i).nonzero().flatten()
-            neg_idx = (a2 == i).nonzero().flatten()
+            pos_idx = torch.where(a1 == i)[0]
+            neg_idx = torch.where(a2 == i)[0]
             if len(pos_idx) > 0 and len(neg_idx) > 0:
                 p_idx = p[pos_idx]
                 n_idx = n[neg_idx]

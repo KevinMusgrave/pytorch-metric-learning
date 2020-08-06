@@ -51,7 +51,7 @@ class OriginalImplementationProxyAnchor(torch.nn.Module):
         pos_exp = torch.exp(-self.alpha * (cos - self.mrg))
         neg_exp = torch.exp(self.alpha * (cos + self.mrg))
 
-        with_pos_proxies = torch.nonzero(P_one_hot.sum(dim = 0) != 0).squeeze(dim = 1)   # The set of positive proxies of data in the batch
+        with_pos_proxies = torch.where(P_one_hot.sum(dim = 0) != 0)[0]   # The set of positive proxies of data in the batch
         num_valid_proxies = len(with_pos_proxies)   # The number of positive proxies
         
         P_sim_sum = torch.where(P_one_hot == 1, pos_exp, torch.zeros_like(pos_exp)).sum(dim=0) 

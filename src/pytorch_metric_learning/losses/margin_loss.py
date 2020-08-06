@@ -31,8 +31,8 @@ class MarginLoss(BaseMetricLossFunction):
         pos_loss = torch.nn.functional.relu(self.distance.margin(d_ap, beta) + self.margin)
         neg_loss = torch.nn.functional.relu(self.distance.margin(beta, d_an) + self.margin)
 
-        num_pos_pairs = (pos_loss > 0.0).nonzero().size(0)
-        num_neg_pairs = (neg_loss > 0.0).nonzero().size(0)
+        num_pos_pairs = torch.sum(pos_loss > 0.0)
+        num_neg_pairs = torch.sum(neg_loss > 0.0)
 
         divisor_summands = {"num_pos_pairs": num_pos_pairs, "num_neg_pairs": num_neg_pairs}
 

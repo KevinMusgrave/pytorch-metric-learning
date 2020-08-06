@@ -229,9 +229,9 @@ class LabelMapper:
 
 def add_to_recordable_attributes(input_obj, name=None, list_of_names=None, is_stat=False):
     if is_stat:
-        attr_name_list_name = "record_these_stats"
+        attr_name_list_name = "_record_these_stats"
     else:
-        attr_name_list_name = "record_these"
+        attr_name_list_name = "_record_these"
     if not hasattr(input_obj, attr_name_list_name):
         setattr(input_obj, attr_name_list_name, [])
     attr_name_list = getattr(input_obj, attr_name_list_name)
@@ -246,13 +246,13 @@ def add_to_recordable_attributes(input_obj, name=None, list_of_names=None, is_st
 
 
 def reset_stats(input_obj):
-    for attr_list in ["record_these_stats"]:
+    for attr_list in ["_record_these_stats"]:
         for r in getattr(input_obj, attr_list, []):
             setattr(input_obj, r, 0)
 
 
 def list_of_recordable_attributes_list_names():
-    return ["record_these", "record_these_stats"]
+    return ["_record_these", "_record_these_stats"]
 
 
 def modelpath_creator(folder, basename, identifier, extension=".pth"):

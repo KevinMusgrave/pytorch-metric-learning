@@ -47,7 +47,7 @@ class FastAPLoss(BaseMetricLossFunction):
             FastAP = torch.sum(FastAP, dim=1)
             FastAP = FastAP[safe_N] / N_pos[safe_N]
             FastAP = (1-FastAP)*miner_weights[safe_N]
-            return {"loss": {"losses": FastAP, "indices": safe_N.nonzero().squeeze(), "reduction_type": "element"}}
+            return {"loss": {"losses": FastAP, "indices": torch.where(safe_N)[0], "reduction_type": "element"}}
         return self.zero_losses()
         
     def get_default_distance(self):

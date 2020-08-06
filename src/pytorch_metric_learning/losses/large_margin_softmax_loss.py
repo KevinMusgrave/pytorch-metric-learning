@@ -46,7 +46,7 @@ class LargeMarginSoftmaxLoss(WeightMixin, WeightRegularizerMixin, BaseMetricLoss
         return self.distance(embeddings, self.W.t())
 
     def get_angles(self, cosine_of_target_classes):
-        angles = torch.acos(torch.clamp(cosine_of_target_classes, -1 + 1e-7, 1 - 1e-7))
+        angles = torch.acos(torch.clamp(cosine_of_target_classes, -1, 1))
         if self.collect_stats:
             with torch.no_grad():
                 self.avg_angle = np.degrees(torch.mean(angles).item())

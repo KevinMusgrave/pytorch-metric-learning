@@ -11,12 +11,15 @@ class ModuleWithRecordsAndReducer(ModuleWithRecords):
         return MeanReducer()
 
     def set_reducer(self, reducer):
-        if reducer is None:
-            reducer = self.get_default_reducer()
-        if (isinstance(reducer, (MultipleReducers, DoNothingReducer)) or len(self.sub_loss_names()) == 1):
+        if isinstance(reducer, (MultipleReducers, DoNothingReducer)):
             self.reducer = reducer
+        elif len(self.sub_loss_names()) == 1:
+            self.reducer = self.get_default_reducer() if reducer is None else reducer
         else:
-            self.reducer = MultipleReducers({k:reducer for k in self.sub_loss_names()})
+            reducer_dict = {}
+            for k in self.sub_loss_names():
+                reducer_dict[k] = self.get_default_reducer() if reducer is None else reducer
+            self.reducer = MultipleReducers(reducer_dict)
 
     def sub_loss_names(self):
         return ["loss"]

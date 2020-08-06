@@ -242,7 +242,7 @@ class EmptyContainer:
 
 
 
-def get_record_keeper(csv_folder, tensorboard_folder, global_db_path=None, experiment_name=None, is_new_experiment=True, save_figures=False, save_lists=False):
+def get_record_keeper(csv_folder, tensorboard_folder=None, global_db_path=None, experiment_name=None, is_new_experiment=True, save_figures=False, save_lists=False):
     try:
         import record_keeper as record_keeper_package
         from torch.utils.tensorboard import SummaryWriter
@@ -251,7 +251,7 @@ def get_record_keeper(csv_folder, tensorboard_folder, global_db_path=None, exper
                                                             experiment_name = experiment_name, 
                                                             is_new_experiment = is_new_experiment, 
                                                             save_lists = save_lists)
-        tensorboard_writer = SummaryWriter(log_dir=tensorboard_folder)
+        tensorboard_writer = SummaryWriter(log_dir=tensorboard_folder) if tensorboard_folder is not None else None
         record_keeper = record_keeper_package.RecordKeeper(tensorboard_writer = tensorboard_writer, 
                                                             record_writer = record_writer, 
                                                             attributes_to_search_for = c_f.list_of_recordable_attributes_list_names(),

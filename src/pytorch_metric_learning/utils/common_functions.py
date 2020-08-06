@@ -240,9 +240,9 @@ def add_to_recordable_attributes(input_obj, name=None, list_of_names=None, is_st
             attr_name_list.append(name)
         if not hasattr(input_obj, name):
             setattr(input_obj, name, 0)
-    if list_of_names is not None and isinstance(list_of_names, list):
+    if list_of_names is not None and is_list_or_tuple(list_of_names):
         for n in list_of_names:
-            add_to_recordable_attributes(input_obj, name=n)
+            add_to_recordable_attributes(input_obj, name=n, is_stat=is_stat)
 
 
 def reset_stats(input_obj):

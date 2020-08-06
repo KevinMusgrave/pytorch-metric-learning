@@ -79,3 +79,4 @@ class TestBatchHardMiner(unittest.TestCase):
                 self.assertTrue(len(n)==0)
                 self.assertTrue(miner.hardest_pos_pair_dist == 0)
                 self.assertTrue(miner.hardest_neg_pair_dist == 0)
+                self.assertTrue(miner.hardest_triplet_dist == 0)

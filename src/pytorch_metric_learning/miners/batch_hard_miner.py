@@ -45,11 +45,11 @@ class BatchHardMiner(BaseTupleMiner):
             with torch.no_grad():
                 pos_func = torch.min if self.distance.is_inverted else torch.max
                 neg_func = torch.max if self.distance.is_inverted else torch.min
-                try:
+                len_pd = len(hardest_positive_dist)
+                len_pn = len(hardest_negative_dist)
+                if len_pd > 0 and len_pn > 0:
                     self.hardest_triplet_dist = pos_func(hardest_positive_dist - hardest_negative_dist).item()
+                if len_pd > 0:
                     self.hardest_pos_pair_dist = pos_func(hardest_positive_dist).item()
+                if len_pn > 0:
                     self.hardest_neg_pair_dist = neg_func(hardest_negative_dist).item()
-                except RuntimeError:
-                    self.hardest_triplet_dist = 0
-                    self.hardest_pos_pair_dist = 0
-                    self.hardest_neg_pair_dist = 0

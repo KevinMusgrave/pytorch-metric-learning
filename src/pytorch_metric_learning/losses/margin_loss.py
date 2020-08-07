@@ -5,7 +5,7 @@ from ..reducers import DivisorReducer
 
 class MarginLoss(BaseMetricLossFunction):
 
-    def __init__(self, margin, nu, beta, triplets_per_anchor="all", learn_beta=False, num_classes=None, **kwargs):
+    def __init__(self, margin=0.2, nu=0, beta=1.2, triplets_per_anchor="all", learn_beta=False, num_classes=None, **kwargs):
         super().__init__(**kwargs)
         self.margin = margin
         self.nu = nu

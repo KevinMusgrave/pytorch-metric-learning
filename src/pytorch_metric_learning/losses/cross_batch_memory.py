@@ -3,8 +3,8 @@ from ..utils import common_functions as c_f, loss_and_miner_utils as lmu
 from ..utils.module_with_records import ModuleWithRecords
 
 class CrossBatchMemory(ModuleWithRecords):
-    def __init__(self, loss, embedding_size, memory_size=1024, miner=None):
-        super().__init__()
+    def __init__(self, loss, embedding_size, memory_size=1024, miner=None, **kwargs):
+        super().__init__(**kwargs)
         self.loss = loss
         self.miner = miner
         self.memory_size = memory_size

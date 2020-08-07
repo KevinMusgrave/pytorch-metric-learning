@@ -10,7 +10,7 @@ class AngularMiner(BaseTupleMiner):
     The angle is computed as defined in the angular loss paper:
     https://arxiv.org/abs/1708.01682
     """
-    def __init__(self, angle, **kwargs):
+    def __init__(self, angle=20, **kwargs):
         super().__init__(**kwargs)
         c_f.assert_distance_type(self, LpDistance, p=2, power=1, normalize_embeddings=True)
         self.angle = np.radians(angle)

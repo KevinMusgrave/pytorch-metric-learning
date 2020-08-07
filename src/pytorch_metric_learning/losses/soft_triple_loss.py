@@ -10,7 +10,7 @@ from ..distances import CosineSimilarity
 ###### Original code is Copyright@Alibaba Group ######
 ###### ICCV'19: "SoftTriple Loss: Deep Metric Learning Without Triplet Sampling" ######
 class SoftTripleLoss(WeightMixin, WeightRegularizerMixin, BaseMetricLossFunction):
-    def __init__(self, embedding_size, num_classes, centers_per_class, la=20, gamma=0.1, margin=0.01, **kwargs):
+    def __init__(self, num_classes, embedding_size, centers_per_class=10, la=20, gamma=0.1, margin=0.01, **kwargs):
         super().__init__(**kwargs)
         assert self.distance.is_inverted
         self.la = la

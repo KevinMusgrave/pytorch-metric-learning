@@ -6,7 +6,7 @@ from ..distances import CosineSimilarity
 
 class TupletMarginLoss(GenericPairLoss):
 
-    def __init__(self, margin, scale=64, **kwargs):
+    def __init__(self, margin=5.73, scale=64, **kwargs):
         super().__init__(mat_based_loss=False, **kwargs)
         c_f.assert_distance_type(self, CosineSimilarity)
         self.margin = np.radians(margin)

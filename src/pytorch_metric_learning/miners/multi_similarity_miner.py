@@ -5,7 +5,7 @@ from ..distances import CosineSimilarity
 
 
 class MultiSimilarityMiner(BaseTupleMiner):
-    def __init__(self, epsilon, **kwargs):
+    def __init__(self, epsilon=0.1, **kwargs):
         super().__init__(**kwargs)
         self.epsilon = epsilon
         self.add_to_recordable_attributes(name="epsilon", is_stat=False)

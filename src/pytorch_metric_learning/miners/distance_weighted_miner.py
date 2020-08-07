@@ -6,7 +6,7 @@ from ..distances import LpDistance
 # adapted from
 # https://github.com/chaoyuaw/incubator-mxnet/blob/master/example/gluon/embedding_learning/model.py
 class DistanceWeightedMiner(BaseTupleMiner):
-    def __init__(self, cutoff, nonzero_loss_cutoff, **kwargs):
+    def __init__(self, cutoff=0.5, nonzero_loss_cutoff=1.4, **kwargs):
         super().__init__(**kwargs)
         c_f.assert_distance_type(self, LpDistance, p=2, power=1, normalize_embeddings=True)
         self.cutoff = float(cutoff)

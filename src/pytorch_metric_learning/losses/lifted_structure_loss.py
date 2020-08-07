@@ -4,7 +4,7 @@ from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
 
 
 class LiftedStructureLoss(GenericPairLoss):
-    def __init__(self, neg_margin, pos_margin=0, **kwargs):
+    def __init__(self, neg_margin=1, pos_margin=0, **kwargs):
         super().__init__(mat_based_loss=False, **kwargs)
         self.neg_margin = neg_margin
         self.pos_margin = pos_margin
@@ -36,7 +36,7 @@ class GeneralizedLiftedStructureLoss(GenericPairLoss):
     # The 'generalized' lifted structure loss shown on page 4
     # of the "in defense of triplet loss" paper
     # https://arxiv.org/pdf/1703.07737.pdf
-    def __init__(self, neg_margin, pos_margin=0, **kwargs):
+    def __init__(self, neg_margin=1, pos_margin=0, **kwargs):
         super().__init__(mat_based_loss=True, **kwargs)
         self.neg_margin = neg_margin
         self.pos_margin = pos_margin

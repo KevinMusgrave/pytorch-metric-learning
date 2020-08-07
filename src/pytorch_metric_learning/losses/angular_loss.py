@@ -10,7 +10,7 @@ class AngularLoss(BaseMetricLossFunction):
     Args:
         alpha: The angle (as described in the paper), specified in degrees.
     """
-    def __init__(self, alpha, **kwargs):
+    def __init__(self, alpha=40, **kwargs):
         super().__init__(**kwargs)
         c_f.assert_distance_type(self, LpDistance, p=2, power=1, normalize_embeddings=True)
         self.alpha = torch.tensor(np.radians(alpha))

@@ -5,7 +5,7 @@ from ..distances import CosineSimilarity
 
 class NTXentLoss(GenericPairLoss):
 
-    def __init__(self, temperature, **kwargs):
+    def __init__(self, temperature=0.07, **kwargs):
         super().__init__(mat_based_loss=False, **kwargs)
         self.temperature = temperature
         self.add_to_recordable_attributes(list_of_names=["temperature"], is_stat=False)

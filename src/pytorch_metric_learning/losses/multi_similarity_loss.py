@@ -11,7 +11,7 @@ class MultiSimilarityLoss(GenericPairLoss):
         beta: The exponential weight for negative pairs
         base: The shift in the exponent applied to both positive and negative pairs
     """
-    def __init__(self, alpha, beta, base=0.5, **kwargs):
+    def __init__(self, alpha=2, beta=50, base=0.5, **kwargs):
         super().__init__(mat_based_loss=True, **kwargs)
         self.alpha = alpha
         self.beta = beta

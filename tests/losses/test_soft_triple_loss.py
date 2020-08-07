@@ -76,7 +76,7 @@ class TestSoftTripleLoss(unittest.TestCase):
                     weight_regularizer = SparseCentersRegularizer(num_classes, centers_per_class)
                 else:
                     weight_regularizer = None
-                loss_func = SoftTripleLoss(embedding_size, num_classes, centers_per_class=centers_per_class, la=la, gamma=gamma, margin=margin, weight_regularizer=weight_regularizer, weight_reg_weight=reg_weight).to(self.device)
+                loss_func = SoftTripleLoss(num_classes, embedding_size, centers_per_class=centers_per_class, la=la, gamma=gamma, margin=margin, weight_regularizer=weight_regularizer, weight_reg_weight=reg_weight).to(self.device)
                 original_loss_func = OriginalImplementationSoftTriple(la, gamma, reg_weight, margin, embedding_size, num_classes, centers_per_class).to(self.device)
 
                 original_loss_func.fc.data = original_loss_func.fc.data.type(dtype)

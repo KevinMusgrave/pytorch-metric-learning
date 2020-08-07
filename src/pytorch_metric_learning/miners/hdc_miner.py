@@ -6,7 +6,7 @@ import math
 # mining method used in Hard Aware Deeply Cascaded Embeddings
 # https://arxiv.org/abs/1611.05720
 class HDCMiner(BaseTupleMiner):
-    def __init__(self, filter_percentage, **kwargs):
+    def __init__(self, filter_percentage=0.5, **kwargs):
         super().__init__(**kwargs)
         self.filter_percentage = filter_percentage
         self.add_to_recordable_attributes(list_of_names=["filter_percentage"], is_stat=False)

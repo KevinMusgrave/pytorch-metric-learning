@@ -5,7 +5,7 @@ from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
 from ..distances import DotProductSimilarity
 
 class NormalizedSoftmaxLoss(WeightMixin, WeightRegularizerMixin, BaseMetricLossFunction):
-    def __init__(self, temperature, embedding_size, num_classes, **kwargs):
+    def __init__(self, num_classes, embedding_size, temperature=0.05, **kwargs):
         super().__init__(**kwargs)
         self.temperature = temperature
         self.W = torch.nn.Parameter(torch.Tensor(embedding_size, num_classes))

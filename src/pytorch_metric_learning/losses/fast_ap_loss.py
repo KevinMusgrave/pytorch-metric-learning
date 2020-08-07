@@ -4,7 +4,7 @@ from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
 from ..distances import LpDistance
 
 class FastAPLoss(BaseMetricLossFunction):
-    def __init__(self, num_bins, **kwargs):
+    def __init__(self, num_bins=10, **kwargs):
         super().__init__(**kwargs)
         c_f.assert_distance_type(self, LpDistance, p=2)
         self.num_bins = int(num_bins)

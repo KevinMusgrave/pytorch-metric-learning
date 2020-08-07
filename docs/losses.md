@@ -952,7 +952,7 @@ losses.WeightRegularizerMixin(weight_init_func=None, weight_regularizer=None, we
 
 **Parameters**:
 
-* **weight_init_func**: An [TorchInitWrapper](utils/common_functions.md#torchinitwrapper) object, which will be used to initialize the weights of the loss function.
+* **weight_init_func**: An [TorchInitWrapper](common_functions.md#torchinitwrapper) object, which will be used to initialize the weights of the loss function.
 * **weight_regularizer**: The [regularizer](regularizers.md) to apply to the loss's learned weights.
 * **weight_reg_weight**: The amount the regularization loss will be multiplied by.
 

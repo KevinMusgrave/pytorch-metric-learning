@@ -1,6 +1,7 @@
 site_name: PyTorch Metric Learning
 nav:
     - Home: index.md
+    - Distances: distances.md
     - Losses: losses.md
     - Miners: miners.md
     - Reducers: reducers.md

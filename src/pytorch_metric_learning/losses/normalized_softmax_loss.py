@@ -1,10 +1,10 @@
-from .mixins import WeightMixin, WeightRegularizerMixin
+from .mixins import WeightRegularizerMixin
 from .base_metric_loss_function import BaseMetricLossFunction
 import torch
 from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
 from ..distances import DotProductSimilarity
 
-class NormalizedSoftmaxLoss(WeightMixin, WeightRegularizerMixin, BaseMetricLossFunction):
+class NormalizedSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
     def __init__(self, num_classes, embedding_size, temperature=0.05, **kwargs):
         super().__init__(**kwargs)
         self.temperature = temperature

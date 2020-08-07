@@ -63,10 +63,10 @@ class BaseDistance(ModuleWithRecords):
     def set_default_stats(self, query_emb, ref_emb, query_emb_normalized, ref_emb_normalized):
         if self.collect_stats:
             with torch.no_grad():
-                stats_dict = {"initial_avg_query_norm": torch.mean(self.get_norm(query_emb)),
-                            "initial_avg_ref_norm": torch.mean(self.get_norm(ref_emb)),
-                            "final_avg_query_norm": torch.mean(self.get_norm(query_emb_normalized)),
-                            "ref_emb_normalized": torch.mean(self.get_norm(ref_emb_normalized))}
+                stats_dict = {"initial_avg_query_norm": torch.mean(self.get_norm(query_emb)).item(),
+                            "initial_avg_ref_norm": torch.mean(self.get_norm(ref_emb)).item(),
+                            "final_avg_query_norm": torch.mean(self.get_norm(query_emb_normalized)).item(),
+                            "ref_emb_normalized": torch.mean(self.get_norm(ref_emb_normalized)).item()}
                 self.set_stats(stats_dict)
 
     def set_stats(self, stats_dict):

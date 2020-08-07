@@ -7,7 +7,7 @@ class TestSettingReducers(unittest.TestCase):
         for loss in [TripletMarginLoss, ContrastiveLoss]:
             for reducer in [ThresholdReducer(low=0), MeanReducer(), AvgNonZeroReducer()]:
                 L = loss(reducer=reducer)
-                if isinstance(loss, TripletMarginLoss):
+                if isinstance(L, TripletMarginLoss):
                     assert type(L.reducer) == type(reducer)
                 else:
                     for v in L.reducer.reducers.values():

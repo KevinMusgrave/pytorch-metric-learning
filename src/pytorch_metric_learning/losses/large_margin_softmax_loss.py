@@ -1,4 +1,4 @@
-from .mixins import WeightMixin, WeightRegularizerMixin
+from .mixins import WeightRegularizerMixin
 from .base_metric_loss_function import BaseMetricLossFunction
 from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
 import scipy.special
@@ -7,7 +7,7 @@ import math
 import numpy as np
 from ..distances import CosineSimilarity
 
-class LargeMarginSoftmaxLoss(WeightMixin, WeightRegularizerMixin, BaseMetricLossFunction):
+class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
     """
     Implementation of https://arxiv.org/pdf/1612.02295.pdf
     """

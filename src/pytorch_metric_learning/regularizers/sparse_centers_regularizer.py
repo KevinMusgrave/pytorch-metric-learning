@@ -37,9 +37,10 @@ class SparseCentersRegularizer(BaseRegularizer):
             self.diff_class_mask[s:e, s:e] = 0
 
     def set_stats(self, center_similarities):
-        with torch.no_grad():
-            self.same_class_center_sim = torch.mean(center_similarities[self.same_class_mask])
-            self.diff_class_center_sim = torch.mean(center_similarities[self.diff_class_mask])
+        if self.collect_stats:
+            with torch.no_grad():
+                self.same_class_center_sim = torch.mean(center_similarities[self.same_class_mask]).item()
+                self.diff_class_center_sim = torch.mean(center_similarities[self.diff_class_mask]).item()
 
     def get_default_distance(self):
         return CosineSimilarity()

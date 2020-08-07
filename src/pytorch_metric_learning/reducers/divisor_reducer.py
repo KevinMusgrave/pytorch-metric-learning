@@ -11,6 +11,8 @@ class DivisorReducer(BaseReducer):
             return losses, loss_indices, reduction_type
         divisor_summands = loss_info["divisor_summands"]
         for name, value in divisor_summands.items():
+            if torch.is_tensor(value):
+                value = value.item()
             self.total_divisor += value
             self.add_to_recordable_attributes(name=name, is_stat=True)
             setattr(self, name, value)

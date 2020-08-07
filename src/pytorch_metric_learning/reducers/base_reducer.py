@@ -12,7 +12,7 @@ class BaseReducer(ModuleWithRecords):
         self.add_to_recordable_attributes(name=loss_name, is_stat=True)
         losses, loss_indices, reduction_type = self.unpack_loss_info(loss_info)
         loss_val = self.reduce_the_loss(losses, loss_indices, reduction_type, embeddings, labels)
-        setattr(self, loss_name, loss_val)
+        setattr(self, loss_name, loss_val.item())
         return loss_val
 
     def unpack_loss_info(self, loss_info):

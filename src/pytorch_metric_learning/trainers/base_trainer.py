@@ -87,6 +87,7 @@ class BaseTrainer:
                 pbar.set_description("total_loss=%.5f" % self.losses["total_loss"])
                 self.step_lr_schedulers(end_of_epoch=False)
             self.step_lr_schedulers(end_of_epoch=True)
+            self.zero_losses()
             if self.end_of_epoch_hook(self) is False:
                 break
 

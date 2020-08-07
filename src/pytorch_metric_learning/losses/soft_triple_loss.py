@@ -1,5 +1,5 @@
 from .base_metric_loss_function import BaseMetricLossFunction
-from .mixins import WeightMixin, WeightRegularizerMixin
+from .mixins import WeightRegularizerMixin
 from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
 import math
 import torch
@@ -9,7 +9,7 @@ from ..distances import CosineSimilarity
 ###### modified from https://github.com/idstcv/SoftTriple/blob/master/loss/SoftTriple.py ######
 ###### Original code is Copyright@Alibaba Group ######
 ###### ICCV'19: "SoftTriple Loss: Deep Metric Learning Without Triplet Sampling" ######
-class SoftTripleLoss(WeightMixin, WeightRegularizerMixin, BaseMetricLossFunction):
+class SoftTripleLoss(WeightRegularizerMixin, BaseMetricLossFunction):
     def __init__(self, num_classes, embedding_size, centers_per_class=10, la=20, gamma=0.1, margin=0.01, **kwargs):
         super().__init__(**kwargs)
         assert self.distance.is_inverted

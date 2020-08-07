@@ -41,15 +41,15 @@ class ThresholdReducer(BaseReducer):
         if self.collect_stats:
             curr_attr_name = "{}_past_filter".format(attr_name)
             self.add_to_recordable_attributes(name=curr_attr_name, is_stat=True)
-            setattr(self, curr_attr_name, num_past_filter)
+            setattr(self, curr_attr_name, num_past_filter.item())
             with torch.no_grad():
                 if self.low is not None:
                     curr_attr_name = "{}_above_low".format(attr_name)
                     self.add_to_recordable_attributes(name=curr_attr_name, is_stat=True)
-                    setattr(self, curr_attr_name, torch.sum(low_condition))
+                    setattr(self, curr_attr_name, torch.sum(low_condition).item())
                 if self.high is not None:
                     curr_attr_name = "{}_below_high".format(attr_name)
                     self.add_to_recordable_attributes(name=curr_attr_name, is_stat=True)
-                    setattr(self, curr_attr_name, torch.sum(high_condition))
+                    setattr(self, curr_attr_name, torch.sum(high_condition).item())
 
     

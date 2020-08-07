@@ -40,13 +40,17 @@ class BaseMetricLossFunction(EmbeddingRegularizerMixin, ModuleWithRecordsReducer
         return ["loss"]
 
     def sub_loss_names(self):
-        return self._sub_loss_names() + self.regularization_loss_names()
+        return self._sub_loss_names() + self.all_regularization_loss_names()
 
-    def regularization_loss_names(self):
+    def all_regularization_loss_names(self):
         reg_names = []
         for base_class in inspect.getmro(self.__class__):
-            if base_class.__name__.endswith("RegularizerMixin"):
-                reg_names.extend(base_class.regularization_loss_names(self))
+            base_class_name = base_class.__name__
+            mixin_keyword = "RegularizerMixin"
+            if base_class_name.endswith(mixin_keyword):
+                descriptor = base_class_name.replace(mixin_keyword, "").lower()
+                if getattr(self, "{}_regularizer".format(descriptor)):
+                    reg_names.extend(base_class.regularization_loss_names(self))
         return reg_names
 
 

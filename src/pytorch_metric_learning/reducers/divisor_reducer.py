@@ -11,16 +11,20 @@ class DivisorReducer(BaseReducer):
             return losses, loss_indices, reduction_type
         divisor_summands = loss_info["divisor_summands"]
         for name, value in divisor_summands.items():
+            self.total_divisor += value
             if torch.is_tensor(value):
                 value = value.item()
-            self.total_divisor += value
             self.add_to_recordable_attributes(name=name, is_stat=True)
             setattr(self, name, value)
         return losses, loss_indices, reduction_type
 
     def sum_and_divide(self, losses):
         if self.total_divisor != 0:
-            return torch.sum(losses) / self.total_divisor
+            output = torch.sum(losses) / self.total_divisor
+            if torch.is_tensor(self.total_divisor):
+                #remove from autograd graph if necessary
+                self.total_divisor = self.total_divisor.item() 
+            return output
         return torch.sum(losses*0)
 
     def already_reduced_reduction(self, losses, *args):

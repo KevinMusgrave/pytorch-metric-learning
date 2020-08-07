@@ -18,13 +18,18 @@ This computes the average loss, using only the losses that are greater than 0. F
 ```python
 reducers.AvgNonZeroReducer(**kwargs)
 ```
-This class is equivalent to using ```ThresholdReducer(threshold=0)```. See [ThresholdReducer](reducers.md#thresholdreducer).
+This class is equivalent to using ```ThresholdReducer(low=0)```. See [ThresholdReducer](reducers.md#thresholdreducer).
 
 ## BaseReducer
 All reducers extend this class.
 ```python
-reducers.BaseReducer()
+reducers.BaseReducer(collect_stats=True)
 ```
+
+**Parameters**:
+
+* **collect_stats**: If True, will collect various statistics that may be useful to analyze during experiments. If False, these computations will be skipped.
+
 
 ## ClassWeightedReducer
 This multiplies each loss by a class weight, and then takes the average.
@@ -92,11 +97,26 @@ loss_func = ContrastiveLoss(reducer=reducer)
 ```
 
 ## ThresholdReducer
-This computes the average loss, using only the losses that are greater than ```threshold```. For example, if the losses are ```[3, 7, 1, 13, 5]```, and the threshold is 6, then this reducer will return ```10```.
+This computes the average loss, using only the losses that fall within a specified range.
+
 ```python
-reducers.ThresholdReducer(threshold, **kwargs)
+reducers.ThresholdReducer(low=None, high=None **kwargs)
 ```
+
+At least one of ```low``` or ```high``` must be specified.
 
 **Parameters**:
 
-* **threshold**: All losses that fall below this value will be ignored.
+* **low**: Losses less than this value will be ignored.
+* **high**: Losses greater than this value will be ignored.
+
+**Examples**:
+
+- ```ThresholdReducer(low=6)```: the filter is ```losses > 6```
+    - If the losses are ```[3, 7, 1, 13, 5]```, then this reducer will return ```(7+13)/2 = 10```.
+
+- ```ThresholdReducer(high=6)```: the filter is ```losses < 6```
+    - If the losses are ```[3, 7, 1, 13, 5]```, then this reducer will return ```(1+3+5)/3 = 3```.
+
+- ```ThresholdReducer(low=6, high=12)```: the filter is ```6 < losses < 12```
+    - If the losses are ```[3, 7, 1, 13, 5]```, then this reducer will return ```(7)/1 = 7```.

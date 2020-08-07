@@ -1,4 +1,5 @@
-import unittest
+import unittest 
+from .. import TEST_DTYPES
 import torch
 from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
 from pytorch_metric_learning.utils import common_functions as c_f
@@ -14,7 +15,7 @@ class TestCrossBatchMemory(unittest.TestCase):
         self.device = torch.device("cuda")
 
     def test_remove_self_comparisons(self):
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             batch_size = 32
             loss = CrossBatchMemory(loss=None, embedding_size=self.embedding_size, memory_size=self.memory_size)
             loss.embedding_memory = loss.embedding_memory.to(self.device).type(dtype)
@@ -26,7 +27,6 @@ class TestCrossBatchMemory(unittest.TestCase):
 
             for i in range(30):
                 loss.add_to_memory(embeddings, labels, batch_size)
-
                 for identical in [True, False]:
                     # triplets
                     a = torch.randint(0,batch_size,(num_tuples,)).to(self.device)
@@ -71,7 +71,7 @@ class TestCrossBatchMemory(unittest.TestCase):
 
     def test_sanity_check(self):
         # cross batch memory with batch_size == memory_size should be equivalent to just using the inner loss function
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             for memory_size in range(20, 40, 5):
                 inner_loss = NTXentLoss(temperature=0.1)
                 inner_miner = TripletMarginMiner(margin=0.1)
@@ -91,7 +91,7 @@ class TestCrossBatchMemory(unittest.TestCase):
 
 
     def test_with_distance_weighted_miner(self):
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             memory_size = 256
             inner_loss = NTXentLoss(temperature=0.1)
             inner_miner = DistanceWeightedMiner(cutoff=0.5, nonzero_loss_cutoff=1.4)
@@ -106,7 +106,7 @@ class TestCrossBatchMemory(unittest.TestCase):
 
 
     def test_loss(self):
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             num_labels = 10
             num_iter = 10
             batch_size = 32
@@ -158,7 +158,7 @@ class TestCrossBatchMemory(unittest.TestCase):
 
 
     def test_queue(self):
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             batch_size = 32
             self.loss = CrossBatchMemory(loss=ContrastiveLoss(), embedding_size=self.embedding_size, memory_size=self.memory_size)
             for i in range(30):
@@ -183,9 +183,9 @@ class TestCrossBatchMemory(unittest.TestCase):
                     self.assertTrue(torch.equal(labels, correct_labels))
 
     def test_shift_indices_tuple(self):
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             batch_size = 32
-            pair_miner = PairMarginMiner(pos_margin=0, neg_margin=1, use_similarity=False)
+            pair_miner = PairMarginMiner(pos_margin=0, neg_margin=1)
             triplet_miner = TripletMarginMiner(margin=1)
             self.loss = CrossBatchMemory(loss=ContrastiveLoss(), embedding_size=self.embedding_size, memory_size=self.memory_size)
             for i in range(30):
@@ -225,9 +225,9 @@ class TestCrossBatchMemory(unittest.TestCase):
 
 
     def test_input_indices_tuple(self):
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             batch_size = 32
-            pair_miner = PairMarginMiner(pos_margin=0, neg_margin=1, use_similarity=False)
+            pair_miner = PairMarginMiner(pos_margin=0, neg_margin=1)
             triplet_miner = TripletMarginMiner(margin=1)
             self.loss = CrossBatchMemory(loss=ContrastiveLoss(), embedding_size=self.embedding_size, memory_size=self.memory_size)
             for i in range(30):

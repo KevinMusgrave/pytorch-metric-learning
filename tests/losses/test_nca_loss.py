@@ -1,4 +1,5 @@
-import unittest
+import unittest 
+from .. import TEST_DTYPES
 import torch
 from pytorch_metric_learning.losses import NCALoss
 from pytorch_metric_learning.utils import common_functions as c_f
@@ -12,7 +13,7 @@ class TestNCALoss(unittest.TestCase):
         softmax_scale = 10
         loss_func = NCALoss(softmax_scale=softmax_scale)
 
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             embedding_angles = [0, 20, 40, 60, 80]
             embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=dtype).to(self.device) #2D embeddings
             labels = torch.LongTensor([0, 0, 1, 1, 2])
@@ -44,7 +45,7 @@ class TestNCALoss(unittest.TestCase):
 
     def test_zero_loss(self):
         loss_func = NCALoss(10)
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             for embedding_angles, labels in [([0,20], [0,0]), ([0], [0])]:
                 embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=dtype).to(self.device) #2D embeddings
                 labels = torch.LongTensor(labels)

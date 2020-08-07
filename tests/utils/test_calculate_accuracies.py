@@ -1,4 +1,5 @@
-import unittest
+import unittest 
+from .. import TEST_DTYPES
 from pytorch_metric_learning.utils import accuracy_calculator
 import numpy as np
 

@@ -1,8 +1,5 @@
-#! /usr/bin/env python3
-
 from .base_miner import BaseTupleMiner
 import torch
-
 
 class EmbeddingsAlreadyPackagedAsTriplets(BaseTupleMiner):
     # If the embeddings are grouped by triplet,

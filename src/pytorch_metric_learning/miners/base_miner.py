@@ -1,21 +1,9 @@
-#! /usr/bin/env python3
-
 import torch
 from ..utils import common_functions as c_f
-from ..utils.module_with_records import ModuleWithRecords
+from ..utils.module_with_records_and_reducer import ModuleWithRecordsAndDistance
 
-class BaseMiner(ModuleWithRecords):
-    def __init__(self, normalize_embeddings=True, **kwargs):
-        super().__init__(**kwargs)
-        self.normalize_embeddings = normalize_embeddings
-
+class BaseMiner(ModuleWithRecordsAndDistance):
     def mine(self, embeddings, labels, ref_emb, ref_labels):
-        """
-        Args:
-            embeddings: tensor of size (batch_size, embedding_size)
-            labels: tensor of size (batch_size)
-        Returns: a tuple where each element is an array of indices.
-        """
         raise NotImplementedError
 
     def output_assertion(self, output):
@@ -33,8 +21,6 @@ class BaseMiner(ModuleWithRecords):
         with torch.no_grad():
             c_f.assert_embeddings_and_labels_are_same_size(embeddings, labels)
             labels = labels.to(embeddings.device)
-            if self.normalize_embeddings:
-                embeddings = torch.nn.functional.normalize(embeddings, p=2, dim=1)
             ref_emb, ref_labels = self.set_ref_emb(embeddings, labels, ref_emb, ref_labels)
             mining_output = self.mine(embeddings, labels, ref_emb, ref_labels)
         self.output_assertion(mining_output)
@@ -42,8 +28,6 @@ class BaseMiner(ModuleWithRecords):
 
     def set_ref_emb(self, embeddings, labels, ref_emb, ref_labels):
         if ref_emb is not None:
-            if self.normalize_embeddings:
-                ref_emb = torch.nn.functional.normalize(ref_emb, p=2, dim=1)
             ref_labels = ref_labels.to(ref_emb.device)
         else:
             ref_emb, ref_labels = embeddings, labels
@@ -52,12 +36,6 @@ class BaseMiner(ModuleWithRecords):
 
 
 class BaseTupleMiner(BaseMiner):
-    """
-    Args:
-        normalize_embeddings: type boolean, if True then normalize embeddings
-                                to have norm = 1 before mining
-    """
-
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.add_to_recordable_attributes(list_of_names=["num_pos_pairs", "num_neg_pairs", "num_triplets"], is_stat=True)
@@ -89,8 +67,6 @@ class BaseSubsetBatchMiner(BaseMiner):
     Args:
         output_batch_size: type int. The size of the subset that the miner
                             will output.
-        normalize_embeddings: type boolean, if True then normalize embeddings
-                                to have norm = 1 before mining
     """
 
     def __init__(self, output_batch_size, **kwargs):

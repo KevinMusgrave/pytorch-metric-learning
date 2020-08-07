@@ -1,4 +1,5 @@
-import unittest
+import unittest 
+from .. import TEST_DTYPES
 import torch
 import numpy as np
 from pytorch_metric_learning.losses import CosFaceLoss
@@ -13,7 +14,7 @@ class TestCosFaceLoss(unittest.TestCase):
         margin = 0.5
         scale = 64
 
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             loss_func = CosFaceLoss(margin=margin, scale=scale, num_classes=10, embedding_size=2)
 
             embedding_angles = torch.arange(0, 180)

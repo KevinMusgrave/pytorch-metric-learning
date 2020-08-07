@@ -14,7 +14,7 @@ extras_require_with_hooks_cpu = ["record-keeper >= 0.9.27", "faiss-cpu >= 1.6.3"
 
 setuptools.setup(
     name="pytorch-metric-learning",
-    version="0.9.90.dev0",
+    version="0.9.90.dev1",
     author="Kevin Musgrave",
     author_email="tkm45@cornell.edu",
     description="The easiest way to use deep metric learning in your application. Modular, flexible, and extensible. Written in PyTorch.",
@@ -33,7 +33,7 @@ setuptools.setup(
           'numpy',
           'scikit-learn',
           'tqdm',
-          'torch',
+          'torch >= 1.6.0',
           'torchvision',
     ],
     extras_require={

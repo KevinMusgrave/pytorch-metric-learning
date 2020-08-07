@@ -1,4 +1,5 @@
-import unittest
+import unittest 
+from .. import TEST_DTYPES
 import torch
 from pytorch_metric_learning.reducers import MultipleReducers, AvgNonZeroReducer, DivisorReducer
 
@@ -11,7 +12,7 @@ class TestMultipleReducers(unittest.TestCase):
         reducer = MultipleReducers({"lossA": AvgNonZeroReducer(), "lossB": DivisorReducer()})
         batch_size = 100
         embedding_size = 64
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             embeddings = torch.randn(batch_size, embedding_size).type(dtype).to(self.device)
             labels = torch.randint(0,10,(batch_size,))
             pair_indices = (torch.randint(0,batch_size,(batch_size,)), torch.randint(0,batch_size,(batch_size,)))

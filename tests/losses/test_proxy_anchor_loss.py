@@ -51,7 +51,7 @@ class OriginalImplementationProxyAnchor(torch.nn.Module):
         pos_exp = torch.exp(-self.alpha * (cos - self.mrg))
         neg_exp = torch.exp(self.alpha * (cos + self.mrg))
 
-        with_pos_proxies = torch.nonzero(P_one_hot.sum(dim = 0) != 0).squeeze(dim = 1)   # The set of positive proxies of data in the batch
+        with_pos_proxies = torch.where(P_one_hot.sum(dim = 0) != 0)[0]   # The set of positive proxies of data in the batch
         num_valid_proxies = len(with_pos_proxies)   # The number of positive proxies
         
         P_sim_sum = torch.where(P_one_hot == 1, pos_exp, torch.zeros_like(pos_exp)).sum(dim=0) 
@@ -65,7 +65,8 @@ class OriginalImplementationProxyAnchor(torch.nn.Module):
 
 
 
-import unittest
+import unittest 
+from .. import TEST_DTYPES
 import torch
 from pytorch_metric_learning.losses import ProxyAnchorLoss
 from pytorch_metric_learning.utils import common_functions as c_f
@@ -79,7 +80,7 @@ class TestProxyAnchorLoss(unittest.TestCase):
         num_classes = 10
         embedding_size = 2
         margin = 0.5
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             alpha = 1 if dtype == torch.float16 else 32
             loss_func = ProxyAnchorLoss(num_classes, embedding_size, margin = margin, alpha = alpha).to(self.device)
             original_loss_func = OriginalImplementationProxyAnchor(num_classes, embedding_size, mrg = margin, alpha = alpha).to(self.device)

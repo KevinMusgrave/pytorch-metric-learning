@@ -1,6 +1,8 @@
-import unittest
+import unittest 
+from .. import TEST_DTYPES
 import torch
 from pytorch_metric_learning.losses import NPairsLoss
+from pytorch_metric_learning.regularizers import LpRegularizer
 from pytorch_metric_learning.utils import common_functions as c_f, loss_and_miner_utils as lmu
 
 class TestNPairsLoss(unittest.TestCase):
@@ -10,9 +12,9 @@ class TestNPairsLoss(unittest.TestCase):
 
     def test_npairs_loss(self):
         loss_funcA = NPairsLoss()
-        loss_funcB = NPairsLoss(l2_reg_weight=1)
+        loss_funcB = NPairsLoss(embedding_regularizer=LpRegularizer())
 
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             embedding_angles = list(range(0,180,20))[:7]
             embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=dtype).to(self.device) #2D embeddings
             labels = torch.LongTensor([0, 0, 1, 1, 1, 2, 3])
@@ -41,19 +43,20 @@ class TestNPairsLoss(unittest.TestCase):
 
 
     def test_with_no_valid_pairs(self):
-        loss_func = NPairsLoss()
-        embedding_angles = [0]
-        embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=torch.float) #2D embeddings
-        labels = torch.LongTensor([0])
-        loss = loss_func(embeddings, labels)
-        loss.backward()
-        self.assertEqual(loss, 0)
+        for dtype in TEST_DTYPES:
+            loss_func = NPairsLoss()
+            embedding_angles = [0]
+            embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=dtype).to(self.device) #2D embeddings
+            labels = torch.LongTensor([0])
+            loss = loss_func(embeddings, labels)
+            loss.backward()
+            self.assertEqual(loss, 0)
 
     def test_backward(self):
         loss_funcA = NPairsLoss()
-        loss_funcB = NPairsLoss(l2_reg_weight=1)
+        loss_funcB = NPairsLoss(embedding_regularizer=LpRegularizer())
 
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             for loss_func in [loss_funcA, loss_funcB]:
                 embedding_angles = list(range(0,180,20))[:7]
                 embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=dtype).to(self.device) #2D embeddings

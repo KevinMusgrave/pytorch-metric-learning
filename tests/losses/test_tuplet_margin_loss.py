@@ -1,4 +1,5 @@
-import unittest
+import unittest 
+from .. import TEST_DTYPES
 import torch
 import numpy as np
 from pytorch_metric_learning.losses import TupletMarginLoss
@@ -13,7 +14,7 @@ class TestTupletMarginLoss(unittest.TestCase):
         margin, scale = 5, 64
         loss_func = TupletMarginLoss(margin=margin, scale=scale)
 
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             embedding_angles = [0, 20, 40, 60, 80]
             embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=dtype).to(self.device) #2D embeddings
             labels = torch.LongTensor([0, 0, 1, 1, 2])
@@ -47,7 +48,7 @@ class TestTupletMarginLoss(unittest.TestCase):
 
     def test_with_no_valid_pairs(self):
         loss_func = TupletMarginLoss(0.1, 64)
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             embedding_angles = [0]
             embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=dtype).to(self.device) #2D embeddings
             labels = torch.LongTensor([0])

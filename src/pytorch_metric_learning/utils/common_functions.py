@@ -229,9 +229,9 @@ class LabelMapper:
 
 def add_to_recordable_attributes(input_obj, name=None, list_of_names=None, is_stat=False):
     if is_stat:
-        attr_name_list_name = "record_these_stats"
+        attr_name_list_name = "_record_these_stats"
     else:
-        attr_name_list_name = "record_these"
+        attr_name_list_name = "_record_these"
     if not hasattr(input_obj, attr_name_list_name):
         setattr(input_obj, attr_name_list_name, [])
     attr_name_list = getattr(input_obj, attr_name_list_name)
@@ -240,19 +240,19 @@ def add_to_recordable_attributes(input_obj, name=None, list_of_names=None, is_st
             attr_name_list.append(name)
         if not hasattr(input_obj, name):
             setattr(input_obj, name, 0)
-    if list_of_names is not None and isinstance(list_of_names, list):
+    if list_of_names is not None and is_list_or_tuple(list_of_names):
         for n in list_of_names:
-            add_to_recordable_attributes(input_obj, name=n)
+            add_to_recordable_attributes(input_obj, name=n, is_stat=is_stat)
 
 
 def reset_stats(input_obj):
-    for attr_list in ["record_these_stats"]:
+    for attr_list in ["_record_these_stats"]:
         for r in getattr(input_obj, attr_list, []):
             setattr(input_obj, r, 0)
 
 
 def list_of_recordable_attributes_list_names():
-    return ["record_these", "record_these_stats"]
+    return ["_record_these", "_record_these_stats"]
 
 
 def modelpath_creator(folder, basename, identifier, extension=".pth"):
@@ -348,6 +348,27 @@ def angle_to_coord(angle):
 def assert_embeddings_and_labels_are_same_size(embeddings, labels):
     assert embeddings.size(0) == labels.size(0), "Number of embeddings must equal number of labels"
 
+def assert_distance_type(obj, distance_type=None, **kwargs):
+    if distance_type is not None:
+        if is_list_or_tuple(distance_type):
+            distance_type_str = ", ".join(x.__name__ for x in distance_type)
+            distance_type_str = "one of "+distance_type_str
+        else:
+            distance_type_str = distance_type.__name__
+        obj_name = obj.__class__.__name__
+        assert isinstance(obj.distance, distance_type), "{} requires the distance metric to be {}".format(obj_name, distance_type_str)
+    for k,v in kwargs.items():
+        assert getattr(obj.distance, k) == v, "{} requires distance.{} to be {}".format(obj_name, k, v)
+
 
 def torch_arange_from_size(input, size_dim=0):
     return torch.arange(input.size(size_dim)).to(input.device)
+
+
+class TorchInitWrapper:
+    def __init__(self, init_func, **kwargs):
+        self.init_func = init_func
+        self.kwargs = kwargs
+    
+    def __call__(self, tensor):
+        self.init_func(tensor, **self.kwargs)

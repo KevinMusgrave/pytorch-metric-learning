@@ -1,4 +1,5 @@
-import unittest
+import unittest 
+from .. import TEST_DTYPES
 import torch
 from pytorch_metric_learning.losses import NormalizedSoftmaxLoss
 from pytorch_metric_learning.regularizers import RegularFaceRegularizer
@@ -14,12 +15,12 @@ class TestRegularFaceRegularizer(unittest.TestCase):
         num_classes = 10
         embedding_size = 512
         reg_weight = 0.1
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             loss_func = NormalizedSoftmaxLoss(temperature=temperature, 
                                                 num_classes=num_classes, 
                                                 embedding_size=embedding_size,
-                                                regularizer=RegularFaceRegularizer(),
-                                                reg_weight=reg_weight).to(self.device)
+                                                weight_regularizer=RegularFaceRegularizer(),
+                                                weight_reg_weight=reg_weight).to(self.device)
 
             embeddings = torch.nn.functional.normalize(torch.randn((180, embedding_size), requires_grad=True).type(dtype).to(self.device))
             labels = torch.randint(low=0, high=10, size=(180,)).to(self.device)

@@ -1,4 +1,5 @@
-import unittest
+import unittest 
+from .. import TEST_DTYPES
 import torch
 from pytorch_metric_learning.losses import LargeMarginSoftmaxLoss, SphereFaceLoss
 from pytorch_metric_learning.utils import common_functions as c_f
@@ -14,9 +15,9 @@ class TestLargeMarginSoftmaxLoss(unittest.TestCase):
     def test_large_margin_softmax_and_sphereface_loss(self):
         margin = 10
         scale = 2
-        for dtype in [torch.float16, torch.float32, torch.float64]:
-            loss_funcA = LargeMarginSoftmaxLoss(margin=margin, scale=scale, num_classes=10, embedding_size=2, normalize_embeddings=False)
-            loss_funcB = SphereFaceLoss(margin=margin, scale=scale, num_classes=10, embedding_size=2, normalize_embeddings=False)
+        for dtype in TEST_DTYPES:
+            loss_funcA = LargeMarginSoftmaxLoss(margin=margin, scale=scale, num_classes=10, embedding_size=2)
+            loss_funcB = SphereFaceLoss(margin=margin, scale=scale, num_classes=10, embedding_size=2)
 
             embedding_angles = torch.arange(0, 180)
             # multiply by 10 to make the embeddings unnormalized
@@ -30,7 +31,7 @@ class TestLargeMarginSoftmaxLoss(unittest.TestCase):
             weightsB = torch.nn.functional.normalize(loss_funcB.W, dim=0)
 
             product_of_magnitudesA = torch.norm(weightsA, p=2, dim=0).unsqueeze(0) * torch.norm(embeddings, p=2, dim=1).unsqueeze(1)
-            product_of_magnitudesB = torch.norm(embeddings, p=2, dim=1).unsqueeze(1)
+            product_of_magnitudesB = torch.norm(weightsB, p=2, dim=0).unsqueeze(0)* torch.norm(embeddings, p=2, dim=1).unsqueeze(1)
             cosinesA = torch.matmul(embeddings, weightsA) / (product_of_magnitudesA)
             cosinesB = torch.matmul(embeddings, weightsB) / (product_of_magnitudesB)
             coefficients = [scipy.special.binom(margin, 2*n) for n in range((margin // 2) + 1)]
@@ -72,9 +73,9 @@ class TestLargeMarginSoftmaxLoss(unittest.TestCase):
     def test_backward(self):
         margin = 10
         scale = 2
-        for dtype in [torch.float16, torch.float32, torch.float64]:
-            loss_funcA = LargeMarginSoftmaxLoss(margin=margin, scale=scale, num_classes=10, embedding_size=2, normalize_embeddings=False)
-            loss_funcB = SphereFaceLoss(margin=margin, scale=scale, num_classes=10, embedding_size=2, normalize_embeddings=False)
+        for dtype in TEST_DTYPES:
+            loss_funcA = LargeMarginSoftmaxLoss(margin=margin, scale=scale, num_classes=10, embedding_size=2)
+            loss_funcB = SphereFaceLoss(margin=margin, scale=scale, num_classes=10, embedding_size=2)
             for loss_func in [loss_funcA, loss_funcB]:
                 embedding_angles = torch.arange(0, 180)
                 # multiply by 10 to make the embeddings unnormalized

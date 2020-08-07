@@ -1,4 +1,5 @@
-import unittest
+import unittest 
+from .. import TEST_DTYPES
 import torch
 from pytorch_metric_learning.reducers import AvgNonZeroReducer
 
@@ -9,7 +10,7 @@ class TestAvgNonZeroReducer(unittest.TestCase):
 
     def test_avg_non_zero_reducer(self):
         reducer = AvgNonZeroReducer()
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             batch_size = 100
             embedding_size = 64
             embeddings = torch.randn(batch_size, embedding_size).type(dtype).to(self.device)

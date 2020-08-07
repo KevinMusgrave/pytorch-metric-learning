@@ -194,7 +194,8 @@ class OriginalImplementationFastAPLoss(torch.nn.Module):
 
 
 ### Testing this library's implementation ###
-import unittest
+import unittest 
+from .. import TEST_DTYPES
 import numpy as np
 from pytorch_metric_learning.losses import FastAPLoss
 from pytorch_metric_learning.utils import common_functions as c_f
@@ -209,7 +210,7 @@ class TestFastAPLoss(unittest.TestCase):
         loss_func = FastAPLoss(num_bins)
         original_loss_func = OriginalImplementationFastAPLoss(num_bins)
 
-        for dtype in [torch.float16, torch.float32, torch.float64]:
+        for dtype in TEST_DTYPES:
             embedding_angles = torch.arange(0, 180)
             embeddings = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles], requires_grad=True, dtype=dtype).to(self.device) #2D embeddings
             labels = torch.randint(low=0, high=10, size=(180,)).to(self.device)

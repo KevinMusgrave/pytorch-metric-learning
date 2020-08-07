@@ -1,9 +1,10 @@
 import torch
 from ..utils import common_functions as c_f, loss_and_miner_utils as lmu
+from ..utils.module_with_records import ModuleWithRecords
 
-class CrossBatchMemory(torch.nn.Module):
-    def __init__(self, loss, embedding_size, memory_size=1024, miner=None):
-        super().__init__()
+class CrossBatchMemory(ModuleWithRecords):
+    def __init__(self, loss, embedding_size, memory_size=1024, miner=None, **kwargs):
+        super().__init__(**kwargs)
         self.loss = loss
         self.miner = miner
         self.memory_size = memory_size
@@ -11,9 +12,11 @@ class CrossBatchMemory(torch.nn.Module):
         self.label_memory = torch.zeros(self.memory_size).long()
         self.has_been_filled = False
         self.queue_idx = 0
+        self.add_to_recordable_attributes(list_of_names=["embedding_size", "memory_size", "queue_idx"], is_stat=False)
 
     def forward(self, embeddings, labels, indices_tuple=None):
         assert embeddings.size(0) <= self.embedding_memory.size(0)
+        self.reset_stats()
         batch_size = embeddings.size(0)
         labels = labels.to(embeddings.device)
         self.embedding_memory = self.embedding_memory.to(embeddings.device).type(embeddings.dtype)

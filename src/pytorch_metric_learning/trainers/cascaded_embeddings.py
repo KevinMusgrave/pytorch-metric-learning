@@ -1,9 +1,5 @@
-#! /usr/bin/env python3
-
-
 from .base_trainer import BaseTrainer
 from .. import miners
-
 
 class CascadedEmbeddings(BaseTrainer):
     def __init__(self, embedding_sizes, *args, **kwargs):

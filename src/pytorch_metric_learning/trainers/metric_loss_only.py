@@ -1,8 +1,4 @@
-#! /usr/bin/env python3
-
-
 from .base_trainer import BaseTrainer
-
 
 class MetricLossOnly(BaseTrainer):
     def calculate_loss(self, curr_batch):

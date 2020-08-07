@@ -1,11 +1,19 @@
-#! /usr/bin/env python3
-
-from .. import miners
 import torch
+from ..miners import EmbeddingsAlreadyPackagedAsTriplets
+from ..distances import LpDistance
+from ..losses import TripletMarginLoss
 from ..utils import common_functions as c_f, loss_and_miner_utils as lmu
-
 from .train_with_classifier import TrainWithClassifier
 import copy
+
+class NegativeLpDistance(LpDistance):
+    def compute_mat(self, query_emb, ref_emb):
+        return super().compute_mat(query_emb, ref_emb) * -1
+
+    def pairwise_distance(self, query_emb, ref_emb):
+        return super().pairwise_distance(query_emb, ref_emb) * -1
+
+
 
 class DeepAdversarialMetricLearning(TrainWithClassifier):
     def __init__(
@@ -20,14 +28,13 @@ class DeepAdversarialMetricLearning(TrainWithClassifier):
         self.original_loss_weights = copy.deepcopy(self.loss_weights)
         self.metric_alone_epochs = metric_alone_epochs
         self.g_alone_epochs = g_alone_epochs
-        self.loss_funcs["g_adv_loss"].maybe_modify_loss = self.maybe_modify_loss
+        assert isinstance(self.loss_funcs["g_adv_loss"], TripletMarginLoss)
+        self.loss_funcs["g_adv_loss"].margin *= -1
+        self.loss_funcs["g_adv_loss"].distance = NegativeLpDistance()
         self.g_triplets_per_anchor = g_triplets_per_anchor
 
-    def maybe_modify_loss(self, x):
-        return x*-1
-
     def custom_setup(self):
-        synth_packaged_as_triplets = miners.EmbeddingsAlreadyPackagedAsTriplets(normalize_embeddings=False)
+        synth_packaged_as_triplets = EmbeddingsAlreadyPackagedAsTriplets()
         self.mining_funcs["synth_packaged_as_triplets"] = synth_packaged_as_triplets
         self.loss_names += ["g_hard_loss", "g_reg_loss"]
 
@@ -148,3 +155,4 @@ class DeepAdversarialMetricLearning(TrainWithClassifier):
 
     def verify_loss_funcs_keys(self):
         self._verify_dict_keys("loss_funcs", self.allowed_loss_funcs_keys(), True, important_keys=self.allowed_loss_funcs_keys(), essential_keys=["synth_loss", "g_adv_loss"])
+

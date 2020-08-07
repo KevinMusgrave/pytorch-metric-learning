@@ -1,7 +1,4 @@
-#! /usr/bin/env python3
-
 from .metric_loss_only import MetricLossOnly
-
 
 class TrainWithClassifier(MetricLossOnly):
     def calculate_loss(self, curr_batch):

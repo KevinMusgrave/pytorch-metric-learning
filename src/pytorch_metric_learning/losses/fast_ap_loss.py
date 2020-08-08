@@ -6,7 +6,7 @@ from ..distances import LpDistance
 class FastAPLoss(BaseMetricLossFunction):
     def __init__(self, num_bins=10, **kwargs):
         super().__init__(**kwargs)
-        c_f.assert_distance_type(self, LpDistance, p=2)
+        c_f.assert_distance_type(self, LpDistance, normalize_embeddings=True, p=2)
         self.num_bins = int(num_bins)
         self.num_edges = self.num_bins + 1
         self.add_to_recordable_attributes(list_of_names=["num_bins"], is_stat=False)

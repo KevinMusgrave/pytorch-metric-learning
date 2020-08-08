@@ -4,11 +4,6 @@ from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
 from ..distances import DotProductSimilarity
 
 class NPairsLoss(BaseMetricLossFunction):
-    """
-    Implementation of https://arxiv.org/abs/1708.01682
-    Args:
-        l2_reg_weight: The L2 regularizer weight (multiplier)
-    """
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.add_to_recordable_attributes(name="num_pairs", is_stat=True)

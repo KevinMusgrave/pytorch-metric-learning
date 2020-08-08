@@ -15,7 +15,7 @@ class LpDistance(BaseDistance):
             rows, cols = lmu.meshgrid_from_sizes(query_emb, ref_emb, dim=0)
             output = torch.zeros(rows.size(), dtype=dtype).to(device)
             rows, cols = rows.flatten(), cols.flatten()
-            distances = torch.nn.functional.pairwise_distance(query_emb[rows], ref_emb[cols], p=self.p)
+            distances = self.pairwise_distance(query_emb[rows], ref_emb[cols])
             output[rows, cols] = distances
             return output
         else:

@@ -559,7 +559,7 @@
                 
                 
                 <h1 id="distances">Distances<a class="headerlink" href="#distances" title="Permanent link">&para;</a></h1>
-<p>Distances are classes that when given a batch of embeddings, will return a matrix representing the pairwise distances/similarities between all the embeddings.</p>
+<p>Distance classes compute pairwise distances/similarities between input embeddings.</p>
 <p>Consider the TripletMarginLoss in its default form:</p>
 <div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning.losses</span> <span class="kn">import</span> <span class="n">TripletMarginLoss</span>
 <span class="n">loss_func</span> <span class="o">=</span> <span class="n">TripletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
@@ -567,8 +567,7 @@
 
 
 <p>This loss function attempts to minimize [d<sub>ap</sub> - d<sub>an</sub> + margin]<sub>+</sub>.</p>
-<p>In other words, it tries to make the anchor-positive distances (d<sub>ap</sub>) smaller than the anchor-negative distances (d<sub>an</sub>).</p>
-<p>Typically, d<sub>ap</sub> and d<sub>an</sub> represent Euclidean or L2 distances. But what if we want to use a squared L2 distance, or an unnormalized L1 distance, or completely different distance measure like signal-to-noise ratio? With the distances module, you can try out these ideas easily:</p>
+<p>Typically, d<sub>ap</sub> and d<sub>an</sub> represent Euclidean or L2 distances. But what if we want to use a squared L2 distance, or an unnormalized L1 distance, or a completely different distance measure like signal-to-noise ratio? With the distances module, you can try out these ideas easily:</p>
 <div class="codehilite"><pre><span></span><code><span class="c1">### TripletMarginLoss with squared L2 distance ###</span>
 <span class="kn">from</span> <span class="nn">pytorch_metric_learning.distances</span> <span class="kn">import</span> <span class="n">LpDistance</span>
 <span class="n">loss_func</span> <span class="o">=</span> <span class="n">TripletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="n">LpDistance</span><span class="p">(</span><span class="n">power</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>

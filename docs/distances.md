@@ -1,6 +1,6 @@
 # Distances
 
-Distances are classes that when given a batch of embeddings, will return a matrix representing the pairwise distances/similarities between all the embeddings.
+Distance classes compute pairwise distances/similarities between input embeddings.
 
 Consider the TripletMarginLoss in its default form:
 ```python
@@ -9,9 +9,7 @@ loss_func = TripletMarginLoss(margin=0.2)
 ```
 This loss function attempts to minimize [d<sub>ap</sub> - d<sub>an</sub> + margin]<sub>+</sub>.
 
-In other words, it tries to make the anchor-positive distances (d<sub>ap</sub>) smaller than the anchor-negative distances (d<sub>an</sub>).
-
-Typically, d<sub>ap</sub> and d<sub>an</sub> represent Euclidean or L2 distances. But what if we want to use a squared L2 distance, or an unnormalized L1 distance, or completely different distance measure like signal-to-noise ratio? With the distances module, you can try out these ideas easily:
+Typically, d<sub>ap</sub> and d<sub>an</sub> represent Euclidean or L2 distances. But what if we want to use a squared L2 distance, or an unnormalized L1 distance, or a completely different distance measure like signal-to-noise ratio? With the distances module, you can try out these ideas easily:
 ```python
 ### TripletMarginLoss with squared L2 distance ###
 from pytorch_metric_learning.distances import LpDistance

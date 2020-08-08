@@ -1,6 +1,7 @@
 site_name: PyTorch Metric Learning
 nav:
     - Home: index.md
+    - Distances: distances.md
     - Losses: losses.md
     - Miners: miners.md
     - Reducers: reducers.md
@@ -12,6 +13,7 @@ nav:
       - Accuracy Calculation: accuracy_calculation.md
       - Inference Models: inference_models.md
       - Logging Presets: logging_presets.md
+      - Common Functions: common_functions.md
     - How to extend this library:
       - Custom losses: extend/losses.md
 theme:

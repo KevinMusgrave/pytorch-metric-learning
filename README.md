@@ -10,8 +10,20 @@ PyTorch Metric Learning
      <img alt="PyPi stats" src="https://img.shields.io/pypi/dm/pytorch-metric-learning">
  </a>
  
+</p>
 
 </p>
+ <p align="center">
+<a href="https://anaconda.org/metric-learning/pytorch-metric-learning">
+     <img alt="Anaconda version" src="https://img.shields.io/conda/v/metric-learning/pytorch-metric-learning?color=bright-green">
+ </a>
+
+<a href="https://anaconda.org/metric-learning/pytorch-metric-learning">
+     <img alt="Anaconda downloads" src="https://img.shields.io/conda/dn/metric-learning/pytorch-metric-learning?color=bright-green">
+ </a>
+</p>
+
+
  <p align="center">
 <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/commits/master">
      <img alt="Commit activity" src="https://img.shields.io/github/commit-activity/m/KevinMusgrave/pytorch-metric-learning">
@@ -23,6 +35,12 @@ PyTorch Metric Learning
 </p>
 
 ## News
+
+**August 7**: MEGA UPDATE
+* New distances module makes loss functions even more modular.
+* Now compatible with half-precision
+* Unfortunately also comes with numerous **breaking changes**. See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.90) for details. 
+* Hopefully this is the last major structural change to the library.
 
 **July 25**: v0.9.89 comes with some bug fixes for CrossBatchMemory, AccuracyCalculator, BaseTester, and a new feature for InferenceModel. See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.89) for details
 

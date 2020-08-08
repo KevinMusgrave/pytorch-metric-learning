@@ -36,7 +36,7 @@ PyTorch Metric Learning
 
 ## News
 
-**August 7**: MEGA UPDATE
+**August 7**: v0.9.90 MEGA UPDATE
 * New distances module makes loss functions even more modular.
 * Now compatible with half-precision
 * Unfortunately also comes with numerous **breaking changes**. See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.90) for details. 

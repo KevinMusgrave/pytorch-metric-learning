@@ -198,6 +198,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../distances/" title="Distances" class="md-nav__link">
+      Distances
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
     <a href="../losses/" title="Losses" class="md-nav__link">
       Losses
     </a>
@@ -285,16 +297,16 @@
 
   <li class="md-nav__item md-nav__item--active md-nav__item--nested">
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-9" type="checkbox" id="nav-9" checked>
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-10" type="checkbox" id="nav-10" checked>
     
-    <label class="md-nav__link" for="nav-9">
+    <label class="md-nav__link" for="nav-10">
       Utils
       <span class="md-nav__icon md-icon">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"/></svg>
       </span>
     </label>
     <nav class="md-nav" aria-label="Utils" data-md-level="1">
-      <label class="md-nav__title" for="nav-9">
+      <label class="md-nav__title" for="nav-10">
         <span class="md-nav__icon md-icon">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
         </span>
@@ -395,6 +407,18 @@
   </li>
 
         
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../common_functions/" title="Common Functions" class="md-nav__link">
+      Common Functions
+    </a>
+  </li>
+
+        
       </ul>
     </nav>
   </li>
@@ -407,16 +431,16 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-10" type="checkbox" id="nav-10">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-11" type="checkbox" id="nav-11">
     
-    <label class="md-nav__link" for="nav-10">
+    <label class="md-nav__link" for="nav-11">
       How to extend this library
       <span class="md-nav__icon md-icon">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"/></svg>
       </span>
     </label>
     <nav class="md-nav" aria-label="How to extend this library" data-md-level="1">
-      <label class="md-nav__title" for="nav-10">
+      <label class="md-nav__title" for="nav-11">
         <span class="md-nav__icon md-icon">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
         </span>
@@ -525,26 +549,21 @@
 <ul>
 <li><strong>trunk</strong>: Your trained model for computing embeddings.</li>
 <li><strong>embedder</strong>: Optional. This is if your model is split into two components (trunk and embedder). If None, then the embedder will simply return the trunk's output.</li>
-<li><strong>match_finder</strong>: A <a href="./#matchfinder">MatchFinder</a> object. If <code>None</code>, it will be set to <code>MatchFinder(mode="sim", threshold=0.9)</code>.</li>
+<li><strong>match_finder</strong>: A <a href="./#matchfinder">MatchFinder</a> object. If <code>None</code>, it will be set to <code>MatchFinder(distance=CosineSimilarity(), threshold=0.9)</code>.</li>
 <li><strong>indexer</strong>: The object used for computing k-nearest-neighbors. If <code>None</code>, it will be set to <code>FaissIndexer()</code>.</li>
 <li><strong>normalize_embeddings</strong>: If True, embeddings will be normalized to have Euclidean norm of 1.</li>
 <li><strong>batch_size</strong>: The batch size used to compute embeddings, when training the indexer for k-nearest-neighbor retrieval.</li>
 </ul>
 <h2 id="matchfinder">MatchFinder<a class="headerlink" href="#matchfinder" title="Permanent link">&para;</a></h2>
 <div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils.inference</span> <span class="kn">import</span> <span class="n">MatchFinder</span>
-<span class="n">MatchFinder</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;dist&quot;</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="n">MatchFinder</span><span class="p">(</span><span class="n">distance</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
 
 
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>mode</strong>: One of:<ul>
-<li><code>dist</code>: Use the Euclidean distance between vectors</li>
-<li><code>squared_dist</code>: Use the squared Euclidean distance between vectors</li>
-<li><code>sim</code>: Use the dot product of vectors</li>
-</ul>
-</li>
-<li><strong>threshold</strong>: Optional. Pairs will be a match if they fall under this threshold for distance modes, or over this value for the similarity mode. If not provided, then a threshold must be provided during function calls.</li>
+<li><strong>distance</strong>: A <a href="../distances/">distance</a> object.</li>
+<li><strong>threshold</strong>: Optional. Pairs will be a match if they fall under this threshold for non-inverted distances, or over this value for inverted distances. If not provided, then a threshold must be provided during function calls.</li>
 </ul>
 <h2 id="faissindexer">FaissIndexer<a class="headerlink" href="#faissindexer" title="Permanent link">&para;</a></h2>
 <p>This will create a faiss index, specifically <code>IndexFlatL2</code>, which can be used for nearest neighbor retrieval.</p>

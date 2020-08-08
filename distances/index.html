@@ -15,7 +15,7 @@
     
     
       
-        <title>Logging Presets - PyTorch Metric Learning</title>
+        <title>Distances - PyTorch Metric Learning</title>
       
     
     
@@ -58,7 +58,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#logging-presets" class="md-skip">
+        <a href="#distances" class="md-skip">
           Skip to content
         </a>
       
@@ -86,7 +86,7 @@
           </span>
           <span class="md-header-nav__topic md-ellipsis">
             
-              Logging Presets
+              Distances
             
           </span>
         </div>
@@ -196,11 +196,81 @@
       
       
 
+  
 
-  <li class="md-nav__item">
-    <a href="../distances/" title="Distances" class="md-nav__link">
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+      
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Distances
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"/></svg>
+        </span>
+      </label>
+    
+    <a href="./" title="Distances" class="md-nav__link md-nav__link--active">
       Distances
     </a>
+    
+      
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#basedistance" class="md-nav__link">
+    BaseDistance
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cosinesimilarity" class="md-nav__link">
+    CosineSimilarity
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dotproductsimilarity" class="md-nav__link">
+    DotProductSimilarity
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lpdistance" class="md-nav__link">
+    LpDistance
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#snrdistance" class="md-nav__link">
+    SNRDistance
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+    
   </li>
 
     
@@ -292,12 +362,10 @@
       
       
 
-  
 
-
-  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+  <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-10" type="checkbox" id="nav-10" checked>
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-10" type="checkbox" id="nav-10">
     
     <label class="md-nav__link" for="nav-10">
       Utils
@@ -343,53 +411,11 @@
           
           
 
-  
 
-
-  <li class="md-nav__item md-nav__item--active">
-    
-    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-    
-      
-    
-    
-      <label class="md-nav__link md-nav__link--active" for="__toc">
-        Logging Presets
-        <span class="md-nav__icon md-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"/></svg>
-        </span>
-      </label>
-    
-    <a href="./" title="Logging Presets" class="md-nav__link md-nav__link--active">
+  <li class="md-nav__item">
+    <a href="../logging_presets/" title="Logging Presets" class="md-nav__link">
       Logging Presets
     </a>
-    
-      
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
-      </span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#hookcontainer" class="md-nav__link">
-    HookContainer
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-    
   </li>
 
         
@@ -478,8 +504,36 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#hookcontainer" class="md-nav__link">
-    HookContainer
+  <a href="#basedistance" class="md-nav__link">
+    BaseDistance
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cosinesimilarity" class="md-nav__link">
+    CosineSimilarity
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dotproductsimilarity" class="md-nav__link">
+    DotProductSimilarity
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lpdistance" class="md-nav__link">
+    LpDistance
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#snrdistance" class="md-nav__link">
+    SNRDistance
   </a>
   
 </li>
@@ -496,7 +550,7 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/edit/master/docs/logging_presets.md" title="Edit this page" class="md-content__button md-icon">
+                  <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/edit/master/docs/distances.md" title="Edit this page" class="md-content__button md-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
                   </a>
                 
@@ -504,96 +558,96 @@
                   
                 
                 
-                <h1 id="logging-presets">Logging Presets<a class="headerlink" href="#logging-presets" title="Permanent link">&para;</a></h1>
-<p>The <code>logging_presets</code> module contains ready-to-use hooks for logging data, validating and saving your models, and early stoppage during training. It requires the record-keeper and tensorboard packages, which can be installed with pip:</p>
-<p><code>pip install record-keeper tensorboard</code></p>
-<p>Here's how you can use it in conjunction with a trainer and tester:</p>
-<div class="codehilite"><pre><span></span><code><span class="kn">import</span> <span class="nn">pytorch_metric_learning.utils.logging_presets</span> <span class="k">as</span> <span class="nn">LP</span>
-<span class="n">log_folder</span><span class="p">,</span> <span class="n">tensorboard_folder</span> <span class="o">=</span> <span class="s2">&quot;example_logs&quot;</span><span class="p">,</span> <span class="s2">&quot;example_tensorboard&quot;</span>
-<span class="n">record_keeper</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">LP</span><span class="o">.</span><span class="n">get_record_keeper</span><span class="p">(</span><span class="n">log_folder</span><span class="p">,</span> <span class="n">tensorboard_folder</span><span class="p">)</span>
-<span class="n">hooks</span> <span class="o">=</span> <span class="n">LP</span><span class="o">.</span><span class="n">get_hook_container</span><span class="p">(</span><span class="n">record_keeper</span><span class="p">)</span>
-<span class="n">dataset_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;val&quot;</span><span class="p">:</span> <span class="n">val_dataset</span><span class="p">}</span>
-<span class="n">model_folder</span> <span class="o">=</span> <span class="s2">&quot;example_saved_models&quot;</span>
-
-<span class="c1"># Create the tester</span>
-<span class="n">tester</span> <span class="o">=</span> <span class="n">testers</span><span class="o">.</span><span class="n">GlobalEmbeddingSpaceTester</span><span class="p">(</span><span class="n">end_of_testing_hook</span><span class="o">=</span><span class="n">hooks</span><span class="o">.</span><span class="n">end_of_testing_hook</span><span class="p">)</span>
-<span class="n">end_of_epoch_hook</span> <span class="o">=</span> <span class="n">hooks</span><span class="o">.</span><span class="n">end_of_epoch_hook</span><span class="p">(</span><span class="n">tester</span><span class="p">,</span> <span class="n">dataset_dict</span><span class="p">,</span> <span class="n">model_folder</span><span class="p">)</span>
-<span class="n">trainer</span> <span class="o">=</span> <span class="n">trainers</span><span class="o">.</span><span class="n">MetricLossOnly</span><span class="p">(</span><span class="n">models</span><span class="p">,</span>
-                                <span class="n">optimizers</span><span class="p">,</span>
-                                <span class="n">batch_size</span><span class="p">,</span>
-                                <span class="n">loss_funcs</span><span class="p">,</span>
-                                <span class="n">mining_funcs</span><span class="p">,</span>
-                                <span class="n">train_dataset</span><span class="p">,</span>
-                                <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">,</span>
-                                <span class="n">end_of_iteration_hook</span><span class="o">=</span><span class="n">hooks</span><span class="o">.</span><span class="n">end_of_iteration_hook</span><span class="p">,</span>
-                                <span class="n">end_of_epoch_hook</span><span class="o">=</span><span class="n">end_of_epoch_hook</span><span class="p">)</span>
-
-<span class="n">trainer</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">num_epochs</span><span class="o">=</span><span class="n">num_epochs</span><span class="p">)</span>
+                <h1 id="distances">Distances<a class="headerlink" href="#distances" title="Permanent link">&para;</a></h1>
+<p>Distances are classes that when given a batch of embeddings, will return a matrix representing the pairwise distances/similarities between all the embeddings.</p>
+<p>Consider the TripletMarginLoss in its default form:</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning.losses</span> <span class="kn">import</span> <span class="n">TripletMarginLoss</span>
+<span class="n">loss_func</span> <span class="o">=</span> <span class="n">TripletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
 </code></pre></div>
 
 
-<p>With the provided hooks, data from both the training and validation stages will be saved in csv, sqlite, and tensorboard format, and models and optimizers will be saved in the specified model folder. See <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples">the example notebooks</a> for complete examples. Read the next section to learn more about the provided hooks.</p>
-<h3 id="hookcontainer">HookContainer<a class="headerlink" href="#hookcontainer" title="Permanent link">&para;</a></h3>
-<p>This class contains ready-to-use hooks to be used by trainers and testers.</p>
-<div class="codehilite"><pre><span></span><code><span class="kn">import</span> <span class="nn">pytorch_metric_learning.utils.logging_presets</span> <span class="k">as</span> <span class="nn">LP</span>
-<span class="n">LP</span><span class="o">.</span><span class="n">HookContainer</span><span class="p">(</span><span class="n">record_keeper</span><span class="p">,</span> 
-    <span class="n">record_group_name_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
-    <span class="n">primary_metric</span><span class="o">=</span><span class="s2">&quot;mean_average_precision_at_r&quot;</span><span class="p">,</span> 
-    <span class="n">validation_split_name</span><span class="o">=</span><span class="s2">&quot;val&quot;</span><span class="p">,</span>
-    <span class="n">save_custom_figures</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<p>This loss function attempts to minimize [d<sub>ap</sub> - d<sub>an</sub> + margin]<sub>+</sub>.</p>
+<p>In other words, it tries to make the anchor-positive distances (d<sub>ap</sub>) smaller than the anchor-negative distances (d<sub>an</sub>).</p>
+<p>Typically, d<sub>ap</sub> and d<sub>an</sub> represent Euclidean or L2 distances. But what if we want to use a squared L2 distance, or an unnormalized L1 distance, or completely different distance measure like signal-to-noise ratio? With the distances module, you can try out these ideas easily:</p>
+<div class="codehilite"><pre><span></span><code><span class="c1">### TripletMarginLoss with squared L2 distance ###</span>
+<span class="kn">from</span> <span class="nn">pytorch_metric_learning.distances</span> <span class="kn">import</span> <span class="n">LpDistance</span>
+<span class="n">loss_func</span> <span class="o">=</span> <span class="n">TripletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="n">LpDistance</span><span class="p">(</span><span class="n">power</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
+
+<span class="c1">### TripletMarginLoss with unnormalized L1 distance ###</span>
+<span class="n">loss_func</span> <span class="o">=</span> <span class="n">TripletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="n">LpDistance</span><span class="p">(</span><span class="n">normalize_embeddings</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+
+<span class="c1">### TripletMarginLoss with signal-to-noise ratio###</span>
+<span class="kn">from</span> <span class="nn">pytorch_metric_learning.distances</span> <span class="kn">import</span> <span class="n">SNRDistance</span>
+<span class="n">loss_func</span> <span class="o">=</span> <span class="n">TripletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="n">SNRDistance</span><span class="p">())</span>
+</code></pre></div>
+
+
+<p>You can also use similarity measures rather than distances, and the loss function will make the necessary adjustments:</p>
+<div class="codehilite"><pre><span></span><code><span class="c1">### TripletMarginLoss with cosine similarity##</span>
+<span class="kn">from</span> <span class="nn">pytorch_metric_learning.distances</span> <span class="kn">import</span> <span class="n">CosineSimilarity</span>
+<span class="n">loss_func</span> <span class="o">=</span> <span class="n">TripletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="n">CosineSimilarity</span><span class="p">())</span>
+</code></pre></div>
+
+
+<p>With a similarity measure, the TripletMarginLoss internally swaps the anchor-positive and anchor-negative terms: [s<sub>an</sub> - s<sub>ap</sub> + margin]<sub>+</sub>. In other words, it will try to make the anchor-negative similarities smaller than the anchor-positive similarities.</p>
+<p>All <strong>losses, miners, and regularizers</strong> accept a <code>distance</code> argument. So you can try out the <code>MultiSimilarityMiner</code> using <code>SNRDistance</code>, or the <code>NTXentLoss</code> using <code>LpDistance(p=1)</code> and so on. Note that some losses/miners/regularizers have restrictions on the type of distances they can accept. For example, some classification losses only allow <code>CosineSimilarity</code> or <code>DotProductSimilarity</code> as their distance measure between embeddings and weights. To view restrictions for specific loss functions, see the <a href="../losses/">losses page</a></p>
+<h2 id="basedistance">BaseDistance<a class="headerlink" href="#basedistance" title="Permanent link">&para;</a></h2>
+<p>All distances extend this class and therefore inherit its <code>__init__</code> parameters.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">distances</span><span class="o">.</span><span class="n">BaseDistance</span><span class="p">(</span><span class="n">collect_stats</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+                             <span class="n">normalize_embeddings</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
+                             <span class="n">p</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> 
+                             <span class="n">power</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
+                             <span class="n">is_inverted</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </code></pre></div>
 
 
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>record_keeper</strong>: A <code>record-keeper</code> object. Install: <code>pip install record-keeper tensorboard</code>.</li>
-<li><strong>record_group_name_prefix</strong>: A string which will be prepended to all record names and tensorboard tags.</li>
-<li><strong>primary_metric</strong>: A string that specifies the accuracy metric which will be used to determine the best checkpoint. Must be one of:<ul>
-<li>mean_average_precision_at_r</li>
-<li>r_precision</li>
-<li>precision_at_1</li>
-<li>NMI</li>
+<li><strong>collect_stats</strong>: If True, will collect various statistics that may be useful to analyze during experiments. If False, these computations will be skipped.</li>
+<li><strong>normalize_embeddings</strong>: If True, embeddings will be normalized to have an Lp norm of 1, before the distance/similarity matrix is computed.</li>
+<li><strong>p</strong>: The distance norm.</li>
+<li><strong>power</strong>: If not 1, each element of the distance/similarity matrix will be raised to this power.</li>
+<li><strong>is_inverted</strong>: Should be set by child classes. If True, then small values represent embeddings that are close together. If False, then large values represent embeddings that are similar to each other.</li>
 </ul>
-</li>
-<li><strong>validation_split_name</strong>: Optional. Default value is "val". The name of your validation set in <code>dataset_dict</code>.</li>
-<li><strong>save_custom_figures</strong>: Optional. If True, records that consist of a tensor at each iteration (rather than just a scalar), will be plotted on tensorboard.</li>
-</ul>
-<p><strong>Important functions</strong>:</p>
-<ul>
-<li><strong>end_of_iteration_hook</strong>: This function records data about models, optimizers, and loss and mining functions. You can pass this function directly into a trainer object.</li>
-<li><strong>end_of_epoch_hook</strong>: This function runs validation and saves models. This function returns the actual hook, i.e. you must pass in the following arguments to obtain the hook.<ul>
-<li><strong>tester</strong>: A <a href="../testers/">tester</a> object.</li>
-<li><strong>dataset_dict</strong>: A dictionary mapping from split names to PyTorch datasets. For example: <code>{"train": train_dataset, "val": val_dataset}</code></li>
-<li><strong>model_folder</strong>: A string which is the folder path where models, optimizers etc. will be saved. </li>
-<li><strong>test_interval</strong>: Optional. Default value is 1. Validation will be run every <code>test_interval</code> epochs.</li>
-<li><strong>patience</strong>: Optional. Default value is None. If not None, training will end early if <code>epoch - best_epoch &gt; patience</code>.</li>
-<li><strong>test_collate_fn</strong>: Optional. Default value is None. This is the collate function used by the dataloader during testing. </li>
-</ul>
-</li>
-<li><strong>end_of_testing_hook</strong>: This function records accuracy metrics. You can pass this function directly into a tester object.</li>
-</ul>
-<p><strong>Useful methods</strong>:</p>
-<p>Getting loss history:</p>
-<div class="codehilite"><pre><span></span><code><span class="c1"># Get a dictionary mapping from loss names to lists</span>
-<span class="n">loss_histories</span> <span class="o">=</span> <span class="n">hooks</span><span class="o">.</span><span class="n">get_loss_history</span><span class="p">()</span> 
+<p><strong>Required Implementations</strong>:</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># Must return a matrix where mat[j,k] represents </span>
+<span class="c1"># the distance/similarity between query_emb[j] and ref_emb[k]</span>
+<span class="k">def</span> <span class="nf">compute_mat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query_emb</span><span class="p">,</span> <span class="n">ref_emb</span><span class="p">):</span>
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
-<span class="c1"># You can also specify which loss histories you want</span>
-<span class="c1"># It will still return a dictionary. In this case, the dictionary will contain only &quot;total_loss&quot;</span>
-<span class="n">loss_histories</span> <span class="o">=</span> <span class="n">hooks</span><span class="o">.</span><span class="n">get_loss_history</span><span class="p">(</span><span class="n">loss_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;total_loss&quot;</span><span class="p">])</span>
+<span class="c1"># Must return a tensor where output[j] represents </span>
+<span class="c1"># the distance/similarity between query_emb[j] and ref_emb[j]</span>
+<span class="k">def</span> <span class="nf">pairwise_distance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query_emb</span><span class="p">,</span> <span class="n">ref_emb</span><span class="p">):</span>
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 </code></pre></div>
 
 
-<p>Getting accuracy history</p>
-<div class="codehilite"><pre><span></span><code><span class="c1"># The first argument is the tester object. The second is the split name.</span>
-<span class="c1"># Get a dictionary containing the keys &quot;epoch&quot; and the primary metric</span>
-<span class="c1"># The values are lists</span>
-<span class="n">acc_histories</span> <span class="o">=</span> <span class="n">hooks</span><span class="o">.</span><span class="n">get_accuracy_history</span><span class="p">(</span><span class="n">tester</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">)</span>
+<h2 id="cosinesimilarity">CosineSimilarity<a class="headerlink" href="#cosinesimilarity" title="Permanent link">&para;</a></h2>
+<div class="codehilite"><pre><span></span><code><span class="n">distances</span><span class="o">.</span><span class="n">CosineSimilarity</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div>
 
-<span class="c1"># Get all accuracy histories</span>
-<span class="n">acc_histories</span> <span class="o">=</span> <span class="n">hooks</span><span class="o">.</span><span class="n">get_accuracy_history</span><span class="p">(</span><span class="n">tester</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">,</span> <span class="n">return_all_metrics</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-<span class="c1"># Get a specific set of accuracy histories</span>
-<span class="n">acc_histories</span> <span class="o">=</span> <span class="n">hooks</span><span class="o">.</span><span class="n">get_accuracy_history</span><span class="p">(</span><span class="n">tester</span><span class="p">,</span> <span class="s2">&quot;val&quot;</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;AMI&quot;</span><span class="p">,</span> <span class="s2">&quot;NMI&quot;</span><span class="p">])</span>
+<p>The returned <code>mat[i,j]</code> is the cosine similarity between <code>query_emb[i]</code> and <code>ref_emb[j]</code>. This class is equivalent to <a href="./#dotproductsimilarity"><code>DotProductSimilarity(normalize_embeddings=True)</code></a>.</p>
+<h2 id="dotproductsimilarity">DotProductSimilarity<a class="headerlink" href="#dotproductsimilarity" title="Permanent link">&para;</a></h2>
+<div class="codehilite"><pre><span></span><code><span class="n">distances</span><span class="o">.</span><span class="n">DotProductSimilarity</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div>
+
+
+<p>The returned <code>mat[i,j]</code> is equal to <code>torch.sum(query_emb[i] * ref_emb[j])</code></p>
+<h2 id="lpdistance">LpDistance<a class="headerlink" href="#lpdistance" title="Permanent link">&para;</a></h2>
+<div class="codehilite"><pre><span></span><code><span class="n">distances</span><span class="o">.</span><span class="n">LpDistance</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div>
+
+
+<p>The returned <code>mat[i,j]</code> is the Lp distance between <code>query_emb[i]</code> and <code>ref_emb[j]</code>. With default parameters, this is the Euclidean distance.</p>
+<h2 id="snrdistance">SNRDistance<a class="headerlink" href="#snrdistance" title="Permanent link">&para;</a></h2>
+<p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Yuan_Signal-To-Noise_Ratio_A_Robust_Distance_Metric_for_Deep_Metric_Learning_CVPR_2019_paper.pdf" target="_blank">Signal-to-Noise Ratio: A Robust Distance Metric for Deep Metric Learning</a></p>
+<div class="codehilite"><pre><span></span><code><span class="n">distances</span><span class="o">.</span><span class="n">SNRDistance</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div>
+
+
+<p>The returned <code>mat[i,j]</code> is equal to:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">torch</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">query_emb</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">ref_emb</span><span class="p">[</span><span class="n">j</span><span class="p">])</span> <span class="o">/</span> <span class="n">torch</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">query_emb</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
 </code></pre></div>
                 
               
@@ -613,7 +667,7 @@
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
         
-          <a href="../inference_models/" title="Inference Models" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href=".." title="Home" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-footer-nav__button md-icon">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
             </div>
@@ -622,19 +676,19 @@
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                Inference Models
+                Home
               </div>
             </div>
           </a>
         
         
-          <a href="../common_functions/" title="Common Functions" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../losses/" title="Losses" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-footer-nav__title">
               <div class="md-ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                Common Functions
+                Losses
               </div>
             </div>
             <div class="md-footer-nav__button md-icon">

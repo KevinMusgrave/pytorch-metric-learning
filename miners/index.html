@@ -198,6 +198,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../distances/" title="Distances" class="md-nav__link">
+      Distances
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
     <a href="../losses/" title="Losses" class="md-nav__link">
       Losses
     </a>
@@ -402,16 +414,16 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-9" type="checkbox" id="nav-9">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-10" type="checkbox" id="nav-10">
     
-    <label class="md-nav__link" for="nav-9">
+    <label class="md-nav__link" for="nav-10">
       Utils
       <span class="md-nav__icon md-icon">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"/></svg>
       </span>
     </label>
     <nav class="md-nav" aria-label="Utils" data-md-level="1">
-      <label class="md-nav__title" for="nav-9">
+      <label class="md-nav__title" for="nav-10">
         <span class="md-nav__icon md-icon">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
         </span>
@@ -456,6 +468,18 @@
   </li>
 
         
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../common_functions/" title="Common Functions" class="md-nav__link">
+      Common Functions
+    </a>
+  </li>
+
+        
       </ul>
     </nav>
   </li>
@@ -468,16 +492,16 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-10" type="checkbox" id="nav-10">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-11" type="checkbox" id="nav-11">
     
-    <label class="md-nav__link" for="nav-10">
+    <label class="md-nav__link" for="nav-11">
       How to extend this library
       <span class="md-nav__icon md-icon">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"/></svg>
       </span>
     </label>
     <nav class="md-nav" aria-label="How to extend this library" data-md-level="1">
-      <label class="md-nav__title" for="nav-10">
+      <label class="md-nav__title" for="nav-11">
         <span class="md-nav__icon md-icon">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
         </span>
@@ -655,7 +679,7 @@
 
 
 <h2 id="angularminer">AngularMiner<a class="headerlink" href="#angularminer" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="n">miners</span><span class="o">.</span><span class="n">AngularMiner</span><span class="p">(</span><span class="n">angle</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="n">miners</span><span class="o">.</span><span class="n">AngularMiner</span><span class="p">(</span><span class="n">angle</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
@@ -663,15 +687,29 @@
 <ul>
 <li><strong>angle</strong>: The miner will return triplets that form an angle greater than this input angle. The angle is computed as defined in the <a href="https://arxiv.org/abs/1708.01682">angular loss paper</a></li>
 </ul>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li>
+<p><a href="../distances/#lpdistance"><code>LpDistance(p=2, power=1, normalize_embeddings=True)</code></a></p>
+<ul>
+<li>This is the only compatible distance.</li>
+</ul>
+</li>
+</ul>
 <h2 id="baseminer">BaseMiner<a class="headerlink" href="#baseminer" title="Permanent link">&para;</a></h2>
 <p>All miners extend this class and therefore inherit its <code>__init__</code> parameters.</p>
-<div class="codehilite"><pre><span></span><code><span class="n">miners</span><span class="o">.</span><span class="n">BaseMiner</span><span class="p">(</span><span class="n">normalize_embeddings</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="n">miners</span><span class="o">.</span><span class="n">BaseMiner</span><span class="p">(</span><span class="n">collect_stats</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
 
 
-<p><strong>Parameters</strong></p>
+<p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>normalize_embeddings</strong>: If True, embeddings will be normalized to have a Euclidean norm of 1 before any mining occurs.</li>
+<li><strong>collect_stats</strong>: If True, will collect various statistics that may be useful to analyze during experiments. If False, these computations will be skipped.</li>
+<li><strong>distance</strong>: A <a href="../distances/">distance</a> object. If None, then the default distance will be used.</li>
+</ul>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li><a href="../distances/#lpdistance"><code>LpDistance(normalize_embeddings=True, p=2, power=1)</code></a></li>
 </ul>
 <p><strong>Required Implementations</strong>:</p>
 <div class="codehilite"><pre><span></span><code><span class="c1"># Return indices of some form</span>
@@ -711,18 +749,18 @@
 </ul>
 <h2 id="batchhardminer">BatchHardMiner<a class="headerlink" href="#batchhardminer" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1703.07737.pdf">In Defense of the Triplet Loss for Person Re-Identification</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">miners</span><span class="o">.</span><span class="n">BatchHardMiner</span><span class="p">(</span><span class="n">use_similarity</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">squared_distances</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<p>For each element in the batch, this miner will find the hardest positive and hardest negative, and use those to form a single triplet. So for a batch size of N, this miner will output N triplets.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">miners</span><span class="o">.</span><span class="n">BatchHardMiner</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
-<p><strong>Parameters</strong></p>
+<p><strong>Default distance</strong>: </p>
 <ul>
-<li><strong>use_similarity</strong>: If True, will use dot product between vectors instead of euclidean distance.</li>
-<li><strong>squared_distances</strong>: If True, then the euclidean distance will be squared.</li>
+<li><a href="../distances/#lpdistance"><code>LpDistance(normalize_embeddings=True, p=2, power=1)</code></a></li>
 </ul>
 <h2 id="distanceweightedminer">DistanceWeightedMiner<a class="headerlink" href="#distanceweightedminer" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1706.07567.pdf">Sampling Matters in Deep Embedding Learning</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">miners</span><span class="o">.</span><span class="n">DistanceWeightedMiner</span><span class="p">(</span><span class="n">cutoff</span><span class="p">,</span> <span class="n">nonzero_loss_cutoff</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="n">miners</span><span class="o">.</span><span class="n">DistanceWeightedMiner</span><span class="p">(</span><span class="n">cutoff</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">nonzero_loss_cutoff</span><span class="o">=</span><span class="mf">1.4</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
@@ -731,23 +769,37 @@
 <li><strong>cutoff</strong>: Pairwise distances are clipped to this value if they fall below it.</li>
 <li><strong>nonzero_loss_cutoff</strong>: Pairs that have distance greater than this are discarded.</li>
 </ul>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li><a href="../distances/#lpdistance"><code>LpDistance(normalize_embeddings=True, p=2, power=1)</code></a><ul>
+<li>This is the only compatible distance.</li>
+</ul>
+</li>
+</ul>
 <h2 id="embeddingsalreadypackagedastriplets">EmbeddingsAlreadyPackagedAsTriplets<a class="headerlink" href="#embeddingsalreadypackagedastriplets" title="Permanent link">&para;</a></h2>
-<p>If your embeddings are already ordered sequentially as triplets, then use this miner to force your loss function to use the already-formed triplets.</p>
+<p>If your embeddings are already ordered sequentially as triplets, then use this miner to force your loss function to use the already-formed triplets. </p>
 <div class="codehilite"><pre><span></span><code><span class="n">miners</span><span class="o">.</span><span class="n">EmbeddingsAlreadyPackagedAsTriplets</span><span class="p">()</span>
+</code></pre></div>
+
+
+<p>For example, here's what a batch size of size 6 should look like:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">anchor1</span><span class="p">,</span> <span class="n">positive1</span><span class="p">,</span> <span class="n">negative1</span><span class="p">,</span> <span class="n">anchor2</span><span class="p">,</span> <span class="n">positive2</span><span class="p">,</span> <span class="n">negative2</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 </code></pre></div>
 
 
 <h2 id="hdcminer">HDCMiner<a class="headerlink" href="#hdcminer" title="Permanent link">&para;</a></h2>
 <p><a href="http://openaccess.thecvf.com/content_ICCV_2017/papers/Yuan_Hard-Aware_Deeply_Cascaded_ICCV_2017_paper.pdf">Hard-Aware Deeply Cascaded Embedding</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">miners</span><span class="o">.</span><span class="n">HDCMiner</span><span class="p">(</span><span class="n">filter_percentage</span><span class="p">,</span> <span class="n">use_similarity</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">squared_distances</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="n">miners</span><span class="o">.</span><span class="n">HDCMiner</span><span class="p">(</span><span class="n">filter_percentage</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>filter_percentage</strong>: The percentage of pairs that will be returned. For example, if filter_percentage is 0.25, then the hardest 25% of pairs will be returned. The pool of pairs is either externally or internally set. See the important methods below for details.</li>
-<li><strong>use_similarity</strong>: If True, will use dot product between vectors instead of euclidean distance.</li>
-<li><strong>squared_distances</strong>: If True, then the euclidean distance will be squared.</li>
+</ul>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li><a href="../distances/#lpdistance"><code>LpDistance(normalize_embeddings=True, p=2, power=1)</code></a></li>
 </ul>
 <p><strong>Important methods</strong>:</p>
 <div class="codehilite"><pre><span></span><code><span class="c1"># Pairs or triplets extracted from another miner, </span>
@@ -787,7 +839,7 @@
 </ul>
 <h2 id="multisimilarityminer">MultiSimilarityMiner<a class="headerlink" href="#multisimilarityminer" title="Permanent link">&para;</a></h2>
 <p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf">Multi-Similarity Loss with General Pair Weighting for Deep Metric Learning</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">miners</span><span class="o">.</span><span class="n">MultiSimilarityMiner</span><span class="p">(</span><span class="n">epsilon</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="n">miners</span><span class="o">.</span><span class="n">MultiSimilarityMiner</span><span class="p">(</span><span class="n">epsilon</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
@@ -799,9 +851,13 @@
 </ul>
 </li>
 </ul>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li><a href="../distances/#cosinesimilarity"><code>CosineSimilarity()</code></a></li>
+</ul>
 <h2 id="pairmarginminer">PairMarginMiner<a class="headerlink" href="#pairmarginminer" title="Permanent link">&para;</a></h2>
 <p>Returns positive and negative pairs that violate the specified margins.</p>
-<div class="codehilite"><pre><span></span><code><span class="n">miners</span><span class="o">.</span><span class="n">PairMarginMiner</span><span class="p">(</span><span class="n">pos_margin</span><span class="p">,</span> <span class="n">neg_margin</span><span class="p">,</span> <span class="n">use_similarity</span><span class="p">,</span> <span class="n">squared_distances</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="n">miners</span><span class="o">.</span><span class="n">PairMarginMiner</span><span class="p">(</span><span class="n">pos_margin</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">neg_margin</span><span class="o">=</span><span class="mf">0.8</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
@@ -809,12 +865,14 @@
 <ul>
 <li><strong>pos_margin</strong>: The distance (or similarity) over (under) which positive pairs will be chosen.</li>
 <li><strong>neg_margin</strong>: The distance (or similarity) under (over) which negative pairs will be chosen.  </li>
-<li><strong>use_similarity</strong>: If True, will use dot product between vectors instead of euclidean distance.</li>
-<li><strong>squared_distances</strong>: If True, then the euclidean distance will be squared.</li>
+</ul>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li><a href="../distances/#lpdistance"><code>LpDistance(normalize_embeddings=True, p=2, power=1)</code></a></li>
 </ul>
 <h2 id="tripletmarginminer">TripletMarginMiner<a class="headerlink" href="#tripletmarginminer" title="Permanent link">&para;</a></h2>
 <p>Returns hard, semihard, or all triplets.</p>
-<div class="codehilite"><pre><span></span><code><span class="n">miners</span><span class="o">.</span><span class="n">TripletMarginMiner</span><span class="p">(</span><span class="n">margin</span><span class="p">,</span> <span class="n">type_of_triplets</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="n">miners</span><span class="o">.</span><span class="n">TripletMarginMiner</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">type_of_triplets</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
@@ -828,6 +886,10 @@
 <li>"easy" means all triplets that do <strong>not</strong> violate the margin.</li>
 </ul>
 </li>
+</ul>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li><a href="../distances/#lpdistance"><code>LpDistance(normalize_embeddings=True, p=2, power=1)</code></a></li>
 </ul>
                 
               

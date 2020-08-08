@@ -196,6 +196,18 @@
       
       
 
+
+  <li class="md-nav__item">
+    <a href="../distances/" title="Distances" class="md-nav__link">
+      Distances
+    </a>
+  </li>
+
+    
+      
+      
+      
+
   
 
 
@@ -514,16 +526,16 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-9" type="checkbox" id="nav-9">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-10" type="checkbox" id="nav-10">
     
-    <label class="md-nav__link" for="nav-9">
+    <label class="md-nav__link" for="nav-10">
       Utils
       <span class="md-nav__icon md-icon">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"/></svg>
       </span>
     </label>
     <nav class="md-nav" aria-label="Utils" data-md-level="1">
-      <label class="md-nav__title" for="nav-9">
+      <label class="md-nav__title" for="nav-10">
         <span class="md-nav__icon md-icon">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
         </span>
@@ -568,6 +580,18 @@
   </li>
 
         
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../common_functions/" title="Common Functions" class="md-nav__link">
+      Common Functions
+    </a>
+  </li>
+
+        
       </ul>
     </nav>
   </li>
@@ -580,16 +604,16 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-10" type="checkbox" id="nav-10">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-11" type="checkbox" id="nav-11">
     
-    <label class="md-nav__link" for="nav-10">
+    <label class="md-nav__link" for="nav-11">
       How to extend this library
       <span class="md-nav__icon md-icon">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"/></svg>
       </span>
     </label>
     <nav class="md-nav" aria-label="How to extend this library" data-md-level="1">
-      <label class="md-nav__title" for="nav-10">
+      <label class="md-nav__title" for="nav-11">
         <span class="md-nav__icon md-icon">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
         </span>
@@ -883,7 +907,7 @@
 
 <h2 id="angularloss">AngularLoss<a class="headerlink" href="#angularloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1708.01682.pdf" target="_blank">Deep Metric Learning with Angular Loss</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">AngularLoss</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">AngularLoss</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
 </code></pre></div>
 
 
@@ -893,14 +917,26 @@
 <ul>
 <li><strong>alpha</strong>: The angle specified in degrees. The paper uses values between 36 and 55.</li>
 </ul>
-<p><strong>Default reducer</strong>: <a href="../reducers/#meanreducer">MeanReducer</a></p>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li>
+<p><a href="../distances/#lpdistance"><code>LpDistance(p=2, power=1, normalize_embeddings=True)</code></a></p>
+<ul>
+<li>This is the only compatible distance.</li>
+</ul>
+</li>
+</ul>
+<p><strong>Default reducer</strong>: </p>
+<ul>
+<li><a href="../reducers/#meanreducer">MeanReducer</a></li>
+</ul>
 <p><strong>Reducer input</strong>:</p>
 <ul>
 <li><strong>loss</strong>: The loss for every <code>a1</code>, where <code>(a1,p)</code> represents every positive pair in the batch. Reduction type is <code>"element"</code>.</li>
 </ul>
 <h2 id="arcfaceloss">ArcFaceLoss<a class="headerlink" href="#arcfaceloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1801.07698.pdf" target="_blank">ArcFace: Additive Angular Margin Loss for Deep Face Recognition</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">ArcFaceLoss</span><span class="p">(</span><span class="n">margin</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">ArcFaceLoss</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">margin</span><span class="o">=</span><span class="mf">28.6</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
@@ -915,7 +951,7 @@
 </ul>
 <p><strong>Other info</strong>: </p>
 <ul>
-<li>This also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts a <code>regularizer</code> and <code>reg_weight</code> as optional init arguments.</li>
+<li>This also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts <code>weight_regularizer</code>, <code>weight_reg_weight</code>, and <code>weight_init_func</code> as optional arguments.</li>
 <li>This loss <strong>requires an optimizer</strong>. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:</li>
 </ul>
 <div class="codehilite"><pre><span></span><code><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">ArcFaceLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span><span class="p">))</span>
@@ -925,24 +961,51 @@
 </code></pre></div>
 
 
-<p><strong>Default reducer</strong>: <a href="../reducers/#meanreducer">MeanReducer</a></p>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li><a href="../distances/#cosinesimilarity"><code>CosineSimilarity()</code></a><ul>
+<li>This is the only compatible distance.</li>
+</ul>
+</li>
+</ul>
+<p><strong>Default reducer</strong>: </p>
+<ul>
+<li><a href="../reducers/#meanreducer">MeanReducer</a></li>
+</ul>
 <p><strong>Reducer input</strong>:</p>
 <ul>
 <li><strong>loss</strong>: The loss per element in the batch. Reduction type is <code>"element"</code>.</li>
-<li><strong>reg_loss</strong>: The weight regularization loss, if any. Reduction type is <code>"already_reduced"</code>.</li>
 </ul>
 <h2 id="basemetriclossfunction">BaseMetricLossFunction<a class="headerlink" href="#basemetriclossfunction" title="Permanent link">&para;</a></h2>
 <p>All loss functions extend this class and therefore inherit its <code>__init__</code> parameters.</p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">BaseMetricLossFunction</span><span class="p">(</span><span class="n">normalize_embeddings</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">reducer</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">BaseMetricLossFunction</span><span class="p">(</span><span class="n">collect_stats</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> 
+                            <span class="n">reducer</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+                            <span class="n">distance</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+                            <span class="n">embedding_regularizer</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+                            <span class="n">embedding_reg_weight</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
 </code></pre></div>
 
 
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>normalize_embeddings</strong>: If True, embeddings will be normalized to have a Euclidean norm of 1 before the loss is computed.</li>
+<li><strong>collect_stats</strong>: If True, will collect various statistics that may be useful to analyze during experiments. If False, these computations will be skipped.</li>
 <li><strong>reducer</strong>: A <a href="../reducers/">reducer</a> object. If None, then the default reducer will be used.</li>
+<li><strong>distance</strong>: A <a href="../distances/">distance</a> object. If None, then the default distance will be used.</li>
+<li><strong>embedding_regularizer</strong>: A <a href="../regularizers/">regularizer</a> object that will be applied to embeddings. If None, then no embedding regularization will be used.</li>
+<li><strong>embedding_reg_weight</strong>: If an embedding regularizer is used, then its loss will be multiplied by this amount before being added to the total loss.</li>
 </ul>
-<p><strong>Default reducer</strong>: <a href="../reducers/#meanreducer">MeanReducer</a></p>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li><a href="../distances/#lpdistance"><code>LpDistance(normalize_embeddings=True, p=2, power=1)</code></a></li>
+</ul>
+<p><strong>Default reducer</strong>: </p>
+<ul>
+<li><a href="../reducers/#meanreducer">MeanReducer</a></li>
+</ul>
+<p><strong>Reducer input</strong>:</p>
+<ul>
+<li><strong>embedding_reg_loss</strong>: Only exists if an embedding regularizer is used. It contains the loss per element in the batch. Reduction type is <code>"already_reduced"</code>. </li>
+</ul>
 <p><strong>Required Implementations</strong>:</p>
 <div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">compute_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">indices_tuple</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="k">raise</span> <span class="ne">NotImplementedError</span>
@@ -970,17 +1033,25 @@
 <li><strong>m</strong>: The relaxation factor that controls the radius of the decision boundary. The paper uses 0.25 for face recognition, and 0.4 for fine-grained image retrieval (images of birds, cars, and online products).</li>
 <li><strong>gamma</strong>: The scale factor that determines the largest scale of each similarity score. The paper uses 256 for face recognition, and 80 for fine-grained image retrieval.</li>
 </ul>
-<p><strong>Default reducer</strong>: <a href="../reducers/#avgnonzeroreducer">AvgNonZeroReducer</a></p>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li>
+<p><a href="../distances/#cosinesimilarity"><code>CosineSimilarity()</code></a></p>
+<ul>
+<li>This is the only compatible distance.</li>
+</ul>
+</li>
+</ul>
+<p><strong>Default reducer</strong>: </p>
+<ul>
+<li><a href="../reducers/#avgnonzeroreducer">AvgNonZeroReducer</a></li>
+</ul>
 <p><strong>Reducer input</strong>:</p>
 <ul>
 <li><strong>loss</strong>: The loss per element in the batch. Reduction type is <code>"element"</code>.</li>
 </ul>
 <h2 id="contrastiveloss">ContrastiveLoss<a class="headerlink" href="#contrastiveloss" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">ContrastiveLoss</span><span class="p">(</span><span class="n">pos_margin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> 
-                    <span class="n">neg_margin</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
-                    <span class="n">use_similarity</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
-                    <span class="n">power</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                    <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">ContrastiveLoss</span><span class="p">(</span><span class="n">pos_margin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">neg_margin</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 </code></pre></div>
 
 
@@ -990,11 +1061,16 @@
 <ul>
 <li><strong>pos_margin</strong>: The distance (or similarity) over (under) which positive pairs will contribute to the loss.</li>
 <li><strong>neg_margin</strong>: The distance (or similarity) under (over) which negative pairs will contribute to the loss.  </li>
-<li><strong>use_similarity</strong>: If True, will use dot product between vectors instead of euclidean distance.</li>
-<li><strong>power</strong>: Each pair's loss will be raised to this power.</li>
 </ul>
-<p>Note that the default values for <code>pos_margin</code> and <code>neg_margin</code> are suitable if <code>use_similarity = False</code>. If you set <code>use_similarity = True</code>, then more appropriate values would be <code>pos_margin = 1</code> and <code>neg_margin = 0</code>.</p>
-<p><strong>Default reducer</strong>: <a href="../reducers/#avgnonzeroreducer">AvgNonZeroReducer</a></p>
+<p>Note that the default values for <code>pos_margin</code> and <code>neg_margin</code> are suitable if you are using a non-inverted distance measure, like <a href="../distances/#lpdistance">LpDistance</a>. If you use an inverted distance measure like <a href="../distances/#cosinesimilarity">CosineSimilarity</a>, then more appropriate values would be <code>pos_margin = 1</code> and <code>neg_margin = 0</code>.</p>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li><a href="../distances/#lpdistance"><code>LpDistance(normalize_embeddings=True, p=2, power=1)</code></a></li>
+</ul>
+<p><strong>Default reducer</strong>: </p>
+<ul>
+<li><a href="../reducers/#avgnonzeroreducer">AvgNonZeroReducer</a></li>
+</ul>
 <p><strong>Reducer input</strong>:</p>
 <ul>
 <li><strong>pos_loss</strong>: The loss per positive pair in the batch. Reduction type is <code>"pos_pair"</code>.</li>
@@ -1002,7 +1078,7 @@
 </ul>
 <h2 id="cosfaceloss">CosFaceLoss<a class="headerlink" href="#cosfaceloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1801.09414.pdf" target="_blank">CosFace: Large Margin Cosine Loss for Deep Face Recognition</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">CosFaceLoss</span><span class="p">(</span><span class="n">margin</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">CosFaceLoss</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">margin</span><span class="o">=</span><span class="mf">0.35</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
@@ -1017,7 +1093,7 @@
 </ul>
 <p><strong>Other info</strong>: </p>
 <ul>
-<li>This also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts a <code>regularizer</code> and <code>reg_weight</code> as optional init arguments.</li>
+<li>This also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts <code>weight_regularizer</code>, <code>weight_reg_weight</code>, and <code>weight_init_func</code> as optional arguments.</li>
 <li>This loss <strong>requires an optimizer</strong>. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:</li>
 </ul>
 <div class="codehilite"><pre><span></span><code><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">CosFaceLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span><span class="p">))</span>
@@ -1027,11 +1103,22 @@
 </code></pre></div>
 
 
-<p><strong>Default reducer</strong>: <a href="../reducers/#meanreducer">MeanReducer</a></p>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li>
+<p><a href="../distances/#cosinesimilarity"><code>CosineSimilarity()</code></a></p>
+<ul>
+<li>This is the only compatible distance.</li>
+</ul>
+</li>
+</ul>
+<p><strong>Default reducer</strong>: </p>
+<ul>
+<li><a href="../reducers/#meanreducer">MeanReducer</a></li>
+</ul>
 <p><strong>Reducer input</strong>:</p>
 <ul>
 <li><strong>loss</strong>: The loss per element in the batch. Reduction type is <code>"element"</code>.</li>
-<li><strong>reg_loss</strong>: The weight regularization loss, if any. Reduction type is <code>"already_reduced"</code>.</li>
 </ul>
 <h2 id="crossbatchmemory">CrossBatchMemory<a class="headerlink" href="#crossbatchmemory" title="Permanent link">&para;</a></h2>
 <p>This wraps a loss function, and implements <a href="https://arxiv.org/pdf/1912.06798.pdf" target="_blank">Cross-Batch Memory for Embedding Learning</a>. It stores embeddings from previous iterations in a queue, and uses them to form more pairs/triplets with the current iteration's embeddings.</p>
@@ -1048,7 +1135,7 @@
 </ul>
 <h2 id="fastaploss">FastAPLoss<a class="headerlink" href="#fastaploss" title="Permanent link">&para;</a></h2>
 <p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Cakir_Deep_Metric_Learning_to_Rank_CVPR_2019_paper.pdf" target="_blank">Deep Metric Learning to Rank</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">FastAPLoss</span><span class="p">(</span><span class="n">num_bins</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">FastAPLoss</span><span class="p">(</span><span class="n">num_bins</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
@@ -1056,21 +1143,29 @@
 <ul>
 <li><strong>num_bins</strong>: The number of soft histogram bins for calculating average precision. The paper suggests using 10.</li>
 </ul>
-<p><strong>Default reducer</strong>: <a href="../reducers/#meanreducer">MeanReducer</a></p>
+<p><strong>Default distance</strong>:</p>
+<ul>
+<li><a href="../distances/#lpdistance"><code>LpDistance(normalize_embeddings=True, p=2, power=2)</code></a><ul>
+<li>The only compatible distance is <code>LpDistance(normalize_embeddings=True, p=2)</code>. However, the <code>power</code> value can be changed.</li>
+</ul>
+</li>
+</ul>
+<p><strong>Default reducer</strong>: </p>
+<ul>
+<li><a href="../reducers/#meanreducer">MeanReducer</a></li>
+</ul>
 <p><strong>Reducer input</strong>:</p>
 <ul>
 <li><strong>loss</strong>: The loss per element that has at least 1 positive in the batch. Reduction type is <code>"element"</code>.</li>
 </ul>
 <h2 id="genericpairloss">GenericPairLoss<a class="headerlink" href="#genericpairloss" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">GenericPairLoss</span><span class="p">(</span><span class="n">use_similarity</span><span class="p">,</span> <span class="n">mat_based_loss</span><span class="p">,</span> <span class="n">squared_distances</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">GenericPairLoss</span><span class="p">(</span><span class="n">mat_based_loss</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>use_similarity</strong>: Set to True if the loss function uses pairwise similarity (dot product of each embedding pair). Otherwise, euclidean distance will be used.</li>
 <li><strong>mat_based_loss</strong>: See required implementations.</li>
-<li><strong>squared_distances</strong>: If True, then the euclidean distance will be squared.</li>
 </ul>
 <p><strong>Required Implementations</strong>:</p>
 <div class="codehilite"><pre><span></span><code><span class="c1"># If mat_based_loss is True, then this takes in mat, pos_mask, neg_mask</span>
@@ -1082,7 +1177,7 @@
 
 <h2 id="generalizedliftedstructureloss">GeneralizedLiftedStructureLoss<a class="headerlink" href="#generalizedliftedstructureloss" title="Permanent link">&para;</a></h2>
 <p>This was presented in <a href="https://arxiv.org/pdf/1703.07737.pdf" target="_blank">In Defense of the Triplet Loss for Person Re-Identification</a>. It is a modification of the original <a href="./#liftedstructureloss">LiftedStructureLoss</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">GeneralizedLiftedStructureLoss</span><span class="p">(</span><span class="n">neg_margin</span><span class="p">,</span> <span class="n">pos_margin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">GeneralizedLiftedStructureLoss</span><span class="p">(</span><span class="n">neg_margin</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">pos_margin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
@@ -1093,7 +1188,14 @@
 <li><strong>pos_margin</strong>: The margin in the expression <code>e^(D - margin)</code>. The paper uses <code>pos_margin = 0</code>, which is why this margin does not appear in the above equation.</li>
 <li><strong>neg_margin</strong>: This is <code>m</code> in the above equation. The paper used values between 0.1 and 1.</li>
 </ul>
-<p><strong>Default reducer</strong>: <a href="../reducers/#meanreducer">MeanReducer</a></p>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li><a href="../distances/#lpdistance"><code>LpDistance(normalize_embeddings=True, p=2, power=1)</code></a></li>
+</ul>
+<p><strong>Default reducer</strong>: </p>
+<ul>
+<li><a href="../reducers/#meanreducer">MeanReducer</a></li>
+</ul>
 <p><strong>Reducer input</strong>:</p>
 <ul>
 <li><strong>loss</strong>: The loss per element in the batch. Reduction type is <code>"element"</code>.</li>
@@ -1113,13 +1215,20 @@
 <li><strong>neg_eps</strong>: The epsilon in the L<sub>neg</sub> equation. The paper uses 0.01.</li>
 </ul>
 <p>You should probably use this in conjunction with another loss, as described in the paper. You can accomplish this by using <a href="./#multiplelosses">MultipleLosses</a>:</p>
-<div class="codehilite"><pre><span></span><code><span class="n">main_loss</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">TupletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="n">main_loss</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">TupletMarginLoss</span><span class="p">()</span>
 <span class="n">var_loss</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">IntraPairVarianceLoss</span><span class="p">()</span>
 <span class="n">complete_loss</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">MultipleLosses</span><span class="p">([</span><span class="n">main_loss</span><span class="p">,</span> <span class="n">var_loss</span><span class="p">],</span> <span class="n">weights</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">])</span>
 </code></pre></div>
 
 
-<p><strong>Default reducer</strong>: <a href="../reducers/#meanreducer">MeanReducer</a></p>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li><a href="../distances/#lpdistance"><code>LpDistance(normalize_embeddings=True, p=2, power=1)</code></a></li>
+</ul>
+<p><strong>Default reducer</strong>: </p>
+<ul>
+<li><a href="../reducers/#meanreducer">MeanReducer</a></li>
+</ul>
 <p><strong>Reducer input</strong>:</p>
 <ul>
 <li><strong>pos_loss</strong>: The loss per positive pair in the batch. Reduction type is <code>"pos_pair"</code>.</li>
@@ -1127,7 +1236,11 @@
 </ul>
 <h2 id="largemarginsoftmaxloss">LargeMarginSoftmaxLoss<a class="headerlink" href="#largemarginsoftmaxloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1612.02295.pdf" target="_blank">Large-Margin Softmax Loss for Convolutional Neural Networks</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">LargeMarginSoftmaxLoss</span><span class="p">(</span><span class="n">margin</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">normalize_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">LargeMarginSoftmaxLoss</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> 
+                            <span class="n">embedding_size</span><span class="p">,</span> 
+                            <span class="n">margin</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> 
+                            <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
+                            <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
@@ -1137,15 +1250,14 @@
 <p><img alt="large_margin_softmax_loss_equation2" src="../imgs/large_margin_softmax_loss_equation2.png" style="height:90px" /></p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>margin</strong>: An integer which dictates the size of the angular margin. This is <code>m</code> in the above equation. The paper finds <code>m=4</code> works best.</li>
 <li><strong>num_classes</strong>: The number of classes in your training dataset.</li>
 <li><strong>embedding_size</strong>: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set <code>embedding_size</code> to 512.</li>
+<li><strong>margin</strong>: An integer which dictates the size of the angular margin. This is <code>m</code> in the above equation. The paper finds <code>m=4</code> works best.</li>
 <li><strong>scale</strong>: The exponent multiplier in the loss's softmax expression. The paper uses <code>scale = 1</code>, which is why it does not appear in the above equation.</li>
-<li><strong>normalize_weights</strong>: If True, the learned weights will be normalized to have Euclidean norm of 1, before the loss is computed. Note that when this parameter is True, it becomes equivalent to <a href="./#spherefaceloss">SphereFaceLoss</a>.</li>
 </ul>
 <p><strong>Other info</strong>: </p>
 <ul>
-<li>This also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts a <code>regularizer</code> and <code>reg_weight</code> as optional init arguments.</li>
+<li>This also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts <code>weight_regularizer</code>, <code>weight_reg_weight</code>, and <code>weight_init_func</code> as optional arguments.</li>
 <li>This loss <strong>requires an optimizer</strong>. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:</li>
 </ul>
 <div class="codehilite"><pre><span></span><code><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">LargeMarginSoftmaxLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span><span class="p">))</span>
@@ -1155,15 +1267,26 @@
 </code></pre></div>
 
 
-<p><strong>Default reducer</strong>: <a href="../reducers/#meanreducer">MeanReducer</a></p>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li>
+<p><a href="../distances/#cosinesimilarity"><code>CosineSimilarity()</code></a></p>
+<ul>
+<li>This is the only compatible distance.</li>
+</ul>
+</li>
+</ul>
+<p><strong>Default reducer</strong>: </p>
+<ul>
+<li><a href="../reducers/#meanreducer">MeanReducer</a></li>
+</ul>
 <p><strong>Reducer input</strong>:</p>
 <ul>
 <li><strong>loss</strong>: The loss per element in the batch. Reduction type is <code>"element"</code>.</li>
-<li><strong>reg_loss</strong>: The weight regularization loss, if any. Reduction type is <code>"already_reduced"</code>.</li>
 </ul>
 <h2 id="liftedstructureloss">LiftedStructureLoss<a class="headerlink" href="#liftedstructureloss" title="Permanent link">&para;</a></h2>
 <p>The original lifted structure loss as presented in <a href="https://arxiv.org/pdf/1511.06452.pdf" target="_blank">Deep Metric Learning via Lifted Structured Feature Embedding</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">LiftedStructureLoss</span><span class="p">(</span><span class="n">neg_margin</span><span class="p">,</span> <span class="n">pos_margin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">LiftedStructureLoss</span><span class="p">(</span><span class="n">neg_margin</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">pos_margin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 </code></pre></div>
 
 
@@ -1174,14 +1297,27 @@
 <li><strong>pos_margin</strong>: The margin in the expression <code>D_(i,j) - margin</code>. The paper uses <code>pos_margin = 0</code>, which is why it does not appear in the above equation.</li>
 <li><strong>neg_margin</strong>: This is <code>alpha</code> in the above equation. The paper uses 1.</li>
 </ul>
-<p><strong>Default reducer</strong>: <a href="../reducers/#meanreducer">MeanReducer</a></p>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li><a href="../distances/#lpdistance"><code>LpDistance(normalize_embeddings=True, p=2, power=1)</code></a></li>
+</ul>
+<p><strong>Default reducer</strong>: </p>
+<ul>
+<li><a href="../reducers/#meanreducer">MeanReducer</a></li>
+</ul>
 <p><strong>Reducer input</strong>:</p>
 <ul>
 <li><strong>loss</strong>: The loss per positive pair in the batch. Reduction type is <code>"pos_pair"</code>.</li>
 </ul>
 <h2 id="marginloss">MarginLoss<a class="headerlink" href="#marginloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1706.07567.pdf" target="_blank">Sampling Matters in Deep Embedding Learning</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">MarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">triplets_per_anchor</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> <span class="n">learn_beta</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">num_classes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">MarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> 
+                <span class="n">nu</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> 
+                <span class="n">beta</span><span class="o">=</span><span class="mf">1.2</span><span class="p">,</span> 
+                <span class="n">triplets_per_anchor</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> 
+                <span class="n">learn_beta</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
+                <span class="n">num_classes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
@@ -1198,7 +1334,14 @@
 <li><strong>learn_beta</strong>: If True, beta will be a torch.nn.Parameter, which can be optimized using any PyTorch optimizer.</li>
 <li><strong>num_classes</strong>: If not None, then beta will be of size <code>num_classes</code>, so that a separate beta is used for each class during training.</li>
 </ul>
-<p><strong>Default reducer</strong>: <a href="../reducers/#divisorreducer">DivisorReducer</a></p>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li><a href="../distances/#lpdistance"><code>LpDistance(normalize_embeddings=True, p=2, power=1)</code></a></li>
+</ul>
+<p><strong>Default reducer</strong>: </p>
+<ul>
+<li><a href="../reducers/#divisorreducer">DivisorReducer</a></li>
+</ul>
 <p><strong>Reducer input</strong>:</p>
 <ul>
 <li><strong>margin_loss</strong>: The loss per triplet in the batch. Reduction type is <code>"triplet"</code>.</li>
@@ -1217,7 +1360,7 @@
 </ul>
 <h2 id="multisimilarityloss">MultiSimilarityLoss<a class="headerlink" href="#multisimilarityloss" title="Permanent link">&para;</a></h2>
 <p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf" target="_blank">Multi-Similarity Loss with General Pair Weighting for Deep Metric Learning</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">MultiSimilarityLoss</span><span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">MultiSimilarityLoss</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
@@ -1229,7 +1372,14 @@
 <li><strong>beta</strong>: The weight applied to negative pairs. The paper uses 50.</li>
 <li><strong>base</strong>: The offset applied to the exponent in the loss. This is lambda in the above equation. The paper uses 1. </li>
 </ul>
-<p><strong>Default reducer</strong>: <a href="../reducers/#meanreducer">MeanReducer</a></p>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li><a href="../distances/#cosinesimilarity"><code>CosineSimilarity()</code></a></li>
+</ul>
+<p><strong>Default reducer</strong>: </p>
+<ul>
+<li><a href="../reducers/#meanreducer">MeanReducer</a></li>
+</ul>
 <p><strong>Reducer input</strong>:</p>
 <ul>
 <li><strong>loss</strong>: The loss per element in the batch. Reduction type is <code>"element"</code>.</li>
@@ -1250,14 +1400,21 @@
 <ul>
 <li><strong>softmax_scale</strong>: The exponent multiplier in the loss's softmax expression. The paper uses <code>softmax_scale = 1</code>, which is why it does not appear in the above equations.</li>
 </ul>
-<p><strong>Default reducer</strong>: <a href="../reducers/#meanreducer">MeanReducer</a></p>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li><a href="../distances/#lpdistance"><code>LpDistance(normalize_embeddings=True, p=2, power=2)</code></a></li>
+</ul>
+<p><strong>Default reducer</strong>: </p>
+<ul>
+<li><a href="../reducers/#meanreducer">MeanReducer</a></li>
+</ul>
 <p><strong>Reducer input</strong>:</p>
 <ul>
 <li><strong>loss</strong>: The loss per element in the batch, that results in a non zero exponent in the cross entropy expression. Reduction type is <code>"element"</code>.</li>
 </ul>
 <h2 id="normalizedsoftmaxloss">NormalizedSoftmaxLoss<a class="headerlink" href="#normalizedsoftmaxloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1811.12649.pdf" target="_blank">Classification is a Strong Baseline for Deep Metric Learning</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">NormalizedSoftmaxLoss</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">NormalizedSoftmaxLoss</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
@@ -1265,13 +1422,13 @@
 <p><img alt="normalized_softmax_loss_equation" src="../imgs/normalized_softmax_loss_equation.png" style="height:80px" /></p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>temperature</strong>: This is sigma in the above equation. The paper uses 0.05.</li>
-<li><strong>embedding_size</strong>: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set <code>embedding_size</code> to 512.</li>
 <li><strong>num_classes</strong>: The number of classes in your training dataset.</li>
+<li><strong>embedding_size</strong>: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set <code>embedding_size</code> to 512.</li>
+<li><strong>temperature</strong>: This is sigma in the above equation. The paper uses 0.05.</li>
 </ul>
 <p><strong>Other info</strong></p>
 <ul>
-<li>This also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts a <code>regularizer</code> and <code>reg_weight</code> as optional init arguments.</li>
+<li>This also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts <code>weight_regularizer</code>, <code>weight_reg_weight</code>, and <code>weight_init_func</code> as optional arguments.</li>
 <li>This loss <strong>requires an optimizer</strong>. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:</li>
 </ul>
 <div class="codehilite"><pre><span></span><code><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">NormalizedSoftmaxLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span><span class="p">))</span>
@@ -1281,27 +1438,35 @@
 </code></pre></div>
 
 
-<p><strong>Default reducer</strong>: <a href="../reducers/#meanreducer">MeanReducer</a></p>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li><a href="../distances/#dotproductsimilarity"><code>DotProductSimilarity()</code></a></li>
+</ul>
+<p><strong>Default reducer</strong>: </p>
+<ul>
+<li><a href="../reducers/#meanreducer">MeanReducer</a></li>
+</ul>
 <p><strong>Reducer input</strong>:</p>
 <ul>
 <li><strong>loss</strong>: The loss per element in the batch. Reduction type is <code>"element"</code>.</li>
-<li><strong>reg_loss</strong>: The weight regularization loss, if any. Reduction type is <code>"already_reduced"</code>.</li>
 </ul>
 <h2 id="npairsloss">NPairsLoss<a class="headerlink" href="#npairsloss" title="Permanent link">&para;</a></h2>
 <p><a href="http://www.nec-labs.com/uploads/images/Department-Images/MediaAnalytics/papers/nips16_npairmetriclearning.pdf" target="_blank">Improved Deep Metric Learning with Multi-class N-pair Loss Objective</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">NPairsLoss</span><span class="p">(</span><span class="n">l2_reg_weight</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">NPairsLoss</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
-<p><strong>Parameters</strong>:</p>
+<p><strong>Default distance</strong>: </p>
 <ul>
-<li><strong>l2_reg_weight</strong>: The regularization weight for the L2 norm of the embeddings.</li>
+<li><a href="../distances/#dotproductsimilarity"><code>DotProductSimilarity()</code></a></li>
 </ul>
-<p><strong>Default reducer</strong>: <a href="../reducers/#meanreducer">MeanReducer</a></p>
+<p><strong>Default reducer</strong>: </p>
+<ul>
+<li><a href="../reducers/#meanreducer">MeanReducer</a></li>
+</ul>
 <p><strong>Reducer input</strong>:</p>
 <ul>
 <li><strong>loss</strong>: The loss per element in the batch. Reduction type is <code>"element"</code>.</li>
-<li><strong>l2_reg</strong>: The L2 regularization loss per element in the batch. This key exists only if <code>self.l2_reg_weight &gt; 0</code>. Reduction type is <code>"element"</code>.</li>
 </ul>
 <h2 id="ntxentloss">NTXentLoss<a class="headerlink" href="#ntxentloss" title="Permanent link">&para;</a></h2>
 <p>This is also known as InfoNCE, and is a generalization of the <a href="./#npairsloss">NPairsLoss</a>. It has been used in self-supervision papers such as: </p>
@@ -1310,7 +1475,7 @@
 <li><a href="https://arxiv.org/pdf/1911.05722.pdf" target="_blank">Momentum Contrast for Unsupervised Visual Representation Learning</a></li>
 <li><a href="https://arxiv.org/pdf/2002.05709.pdf" target="_blank">A Simple Framework for Contrastive Learning of Visual Representations</a></li>
 </ul>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">NTXentLoss</span><span class="p">(</span><span class="n">temperature</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">NTXentLoss</span><span class="p">(</span><span class="n">temperature</span><span class="o">=</span><span class="mf">0.07</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
@@ -1320,7 +1485,14 @@
 <ul>
 <li><strong>temperature</strong>: This is tau in the above equation. The MoCo paper uses 0.07, while SimCLR uses 0.5.</li>
 </ul>
-<p><strong>Default reducer</strong>: <a href="../reducers/#meanreducer">MeanReducer</a></p>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li><a href="../distances/#cosinesimilarity"><code>CosineSimilarity()</code></a></li>
+</ul>
+<p><strong>Default reducer</strong>: </p>
+<ul>
+<li><a href="../reducers/#meanreducer">MeanReducer</a></li>
+</ul>
 <p><strong>Reducer input</strong>:</p>
 <ul>
 <li><strong>loss</strong>: The loss per positive pair in the batch. Reduction type is <code>"pos_pair"</code>.</li>
@@ -1342,7 +1514,7 @@
 </ul>
 <p><strong>Other info</strong></p>
 <ul>
-<li>This also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts a <code>regularizer</code> and <code>reg_weight</code> as optional init arguments.</li>
+<li>This also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts <code>weight_regularizer</code>, <code>weight_reg_weight</code>, and <code>weight_init_func</code> as optional arguments.</li>
 <li>This loss <strong>requires an optimizer</strong>. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:</li>
 </ul>
 <div class="codehilite"><pre><span></span><code><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">ProxyAnchorLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span><span class="p">))</span>
@@ -1352,16 +1524,22 @@
 </code></pre></div>
 
 
-<p><strong>Default reducer</strong>: <a href="../reducers/#divisorreducer">DivisorReducer</a></p>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li><a href="../distances/#cosinesimilarity"><code>CosineSimilarity()</code></a></li>
+</ul>
+<p><strong>Default reducer</strong>: </p>
+<ul>
+<li><a href="../reducers/#divisorreducer">DivisorReducer</a></li>
+</ul>
 <p><strong>Reducer input</strong>:</p>
 <ul>
 <li><strong>pos_loss</strong>: The positive pair loss per proxy. Reduction type is <code>"element"</code>.</li>
 <li><strong>neg_loss</strong>: The negative pair loss per proxy. Reduction type is <code>"element"</code>.</li>
-<li><strong>reg_loss</strong>: The weight regularization loss, if any. Reduction type is <code>"already_reduced"</code>.</li>
 </ul>
 <h2 id="proxyncaloss">ProxyNCALoss<a class="headerlink" href="#proxyncaloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1703.07464.pdf" target="_blank">No Fuss Distance Metric Learning using Proxies</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">ProxyNCALoss</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">ProxyNCALoss</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">softmax_scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
@@ -1373,7 +1551,7 @@
 </ul>
 <p><strong>Other info</strong></p>
 <ul>
-<li>This also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts a <code>regularizer</code> and <code>reg_weight</code> as optional init arguments.</li>
+<li>This also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts <code>weight_regularizer</code>, <code>weight_reg_weight</code>, and <code>weight_init_func</code> as optional arguments.</li>
 <li>This loss <strong>requires an optimizer</strong>. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:</li>
 </ul>
 <div class="codehilite"><pre><span></span><code><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">ProxyNCALoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span><span class="p">))</span>
@@ -1383,18 +1561,21 @@
 </code></pre></div>
 
 
-<p><strong>Default reducer</strong>: <a href="../reducers/#meanreducer">MeanReducer</a></p>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li><a href="../distances/#lpdistance"><code>LpDistance(normalize_embeddings=True, p=2, power=2)</code></a></li>
+</ul>
+<p><strong>Default reducer</strong>:</p>
+<ul>
+<li><a href="../reducers/#meanreducer">MeanReducer</a></li>
+</ul>
 <p><strong>Reducer input</strong>:</p>
 <ul>
 <li><strong>loss</strong>: The loss per element in the batch, that results in a non zero exponent in the cross entropy expression. Reduction type is <code>"element"</code>.</li>
-<li><strong>reg_loss</strong>: The weight regularization loss, if any. Reduction type is <code>"already_reduced"</code>.</li>
 </ul>
 <h2 id="signaltonoiseratiocontrastiveloss">SignalToNoiseRatioContrastiveLoss<a class="headerlink" href="#signaltonoiseratiocontrastiveloss" title="Permanent link">&para;</a></h2>
 <p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Yuan_Signal-To-Noise_Ratio_A_Robust_Distance_Metric_for_Deep_Metric_Learning_CVPR_2019_paper.pdf" target="_blank">Signal-to-Noise Ratio: A Robust Distance Metric for Deep Metric Learning</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">SignalToNoiseRatioContrastiveLoss</span><span class="p">(</span><span class="n">pos_margin</span><span class="p">,</span> 
-                                        <span class="n">neg_margin</span><span class="p">,</span> 
-                                        <span class="n">regularizer_weight</span><span class="p">,</span> 
-                                        <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">SignalToNoiseRatioContrastiveLoss</span><span class="p">(</span><span class="n">pos_margin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">neg_margin</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 </code></pre></div>
 
 
@@ -1402,28 +1583,31 @@
 <ul>
 <li><strong>pos_margin</strong>: The noise-to-signal ratio over which positive pairs will contribute to the loss.</li>
 <li><strong>neg_margin</strong>: The noise-to-signal ratio under which negative pairs will contribute to the loss.</li>
-<li><strong>regularizer_weight</strong>: The regularizer encourages the embeddings to have zero-mean distributions. </li>
+</ul>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li><a href="../distances/#snrdistance"><code>SNRDistance()</code></a><ul>
+<li>This is the only compatible distance.</li>
+</ul>
+</li>
 </ul>
 <p><strong>Default reducer</strong>: </p>
 <ul>
-<li><a href="../reducers/#meanreducer">MeanReducer</a> for <code>reg_loss</code></li>
-<li><a href="../reducers/#avgnonzeroreducer">AvgNonZeroReducer</a> for <code>pos_loss</code> and <code>neg_loss</code></li>
+<li><a href="../reducers/#avgnonzeroreducer">AvgNonZeroReducer</a></li>
 </ul>
 <p><strong>Reducer input</strong>:</p>
 <ul>
 <li><strong>pos_loss</strong>: The loss per positive pair in the batch. Reduction type is <code>"pos_pair"</code>.</li>
 <li><strong>neg_loss</strong>: The loss per negative pair in the batch. Reduction type is <code>"neg_pair"</code>.</li>
-<li><strong>reg_loss</strong>: The regularization loss per element in the batch. Reduction type is <code>"element"</code>.</li>
 </ul>
 <h2 id="softtripleloss">SoftTripleLoss<a class="headerlink" href="#softtripleloss" title="Permanent link">&para;</a></h2>
 <p><a href="http://openaccess.thecvf.com/content_ICCV_2019/papers/Qian_SoftTriple_Loss_Deep_Metric_Learning_Without_Triplet_Sampling_ICCV_2019_paper.pdf" target="_blank">SoftTriple Loss: Deep Metric Learning Without Triplet Sampling</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">SoftTripleLoss</span><span class="p">(</span><span class="n">embedding_size</span><span class="p">,</span> 
-                    <span class="n">num_classes</span><span class="p">,</span> 
-                    <span class="n">centers_per_class</span><span class="p">,</span> 
+<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">SoftTripleLoss</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> 
+                    <span class="n">embedding_size</span><span class="p">,</span> 
+                    <span class="n">centers_per_class</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> 
                     <span class="n">la</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> 
                     <span class="n">gamma</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> 
-                    <span class="n">reg_weight</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> 
-                    <span class="n">margin</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> 
+                    <span class="n">margin</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
                     <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
@@ -1434,16 +1618,16 @@
 <p><img alt="soft_triple_loss_equation2" src="../imgs/soft_triple_loss_equation2.png" style="height:80px" /></p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>embedding_size</strong>: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set <code>embedding_size</code> to 512.</li>
 <li><strong>num_classes</strong>: The number of classes in your training dataset.</li>
+<li><strong>embedding_size</strong>: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set <code>embedding_size</code> to 512.</li>
 <li><strong>centers_per_class</strong>: The number of weight vectors per class. (The regular cross entropy loss has 1 center per class.) The paper uses 10.</li>
 <li><strong>la</strong>: This is lambda in the above equation.</li>
 <li><strong>gamma</strong>: This is gamma in the above equation. The paper uses 0.1.</li>
-<li><strong>reg_weight</strong>: The regularization weight which encourages class centers to be close to each other. The paper uses 0.2.</li>
 <li><strong>margin</strong>: The is delta in the above equations. The paper uses 0.01.</li>
 </ul>
 <p><strong>Other info</strong></p>
 <ul>
+<li>This also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts <code>weight_regularizer</code>, <code>weight_reg_weight</code>, and <code>weight_init_func</code> as optional arguments.</li>
 <li>This loss <strong>requires an optimizer</strong>. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:</li>
 </ul>
 <div class="codehilite"><pre><span></span><code><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">SoftTripleLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span><span class="p">))</span>
@@ -1453,15 +1637,28 @@
 </code></pre></div>
 
 
-<p><strong>Default reducer</strong>: <a href="../reducers/#meanreducer">MeanReducer</a></p>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li><a href="../distances/#cosinesimilarity"><code>CosineSimilarity()</code></a><ul>
+<li>The distance measure must be inverted. For example, <a href="../distances/#dotproductsimilarity"><code>DotProductSimilarity(normalize_embeddings=False)</code></a> is also compatible.</li>
+</ul>
+</li>
+</ul>
+<p><strong>Default reducer</strong>: </p>
+<ul>
+<li><a href="../reducers/#meanreducer">MeanReducer</a></li>
+</ul>
 <p><strong>Reducer input</strong>:</p>
 <ul>
 <li><strong>loss</strong>: The loss per element in the batch. Reduction type is <code>"element"</code>.</li>
-<li><strong>reg_loss</strong>: The weight regularization loss, if any. Reduction type is <code>"already_reduced"</code>.</li>
 </ul>
 <h2 id="spherefaceloss">SphereFaceLoss<a class="headerlink" href="#spherefaceloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1704.08063.pdf" target="_blank">SphereFace: Deep Hypersphere Embedding for Face Recognition</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">SphereFaceLoss</span><span class="p">(</span><span class="n">margin</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">SphereFaceLoss</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> 
+                    <span class="n">embedding_size</span><span class="p">,</span> 
+                    <span class="n">margin</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> 
+                    <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
+                    <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
@@ -1469,7 +1666,7 @@
 <p>See <a href="./#largemarginsoftmaxloss">LargeMarginSoftmaxLoss</a></p>
 <p><strong>Other info</strong></p>
 <ul>
-<li>This also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts a <code>regularizer</code> and <code>reg_weight</code> as optional init arguments.</li>
+<li>This also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts <code>weight_regularizer</code>, <code>weight_reg_weight</code>, and <code>weight_init_func</code> as optional arguments.</li>
 <li>This loss <strong>requires an optimizer</strong>. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:</li>
 </ul>
 <div class="codehilite"><pre><span></span><code><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">SphereFaceLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span><span class="p">))</span>
@@ -1479,19 +1676,28 @@
 </code></pre></div>
 
 
-<p><strong>Default reducer</strong>: <a href="../reducers/#meanreducer">MeanReducer</a></p>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li>
+<p><a href="../distances/#cosinesimilarity"><code>CosineSimilarity()</code></a></p>
+<ul>
+<li>This is the only compatible distance.</li>
+</ul>
+</li>
+</ul>
+<p><strong>Default reducer</strong>: </p>
+<ul>
+<li><a href="../reducers/#meanreducer">MeanReducer</a></li>
+</ul>
 <p><strong>Reducer input</strong>:</p>
 <ul>
 <li><strong>loss</strong>: The loss per element in the batch. Reduction type is <code>"element"</code>.</li>
-<li><strong>reg_loss</strong>: The weight regularization loss, if any. Reduction type is <code>"already_reduced"</code>.</li>
 </ul>
 <h2 id="tripletmarginloss">TripletMarginLoss<a class="headerlink" href="#tripletmarginloss" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">TripletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> 
-                        <span class="n">distance_norm</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> 
-                        <span class="n">power</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
-                        <span class="n">swap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
-                        <span class="n">smooth_loss</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
-                        <span class="n">triplets_per_anchor</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> 
+<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">TripletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+                        <span class="n">swap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="n">smooth_loss</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                        <span class="n">triplets_per_anchor</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span>
                         <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
@@ -1501,20 +1707,25 @@
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>margin</strong>: The desired difference between the anchor-positive distance and the anchor-negative distance. This is <code>m</code> in the above equation.</li>
-<li><strong>distance_norm</strong>: The norm used when calculating distance between embeddings</li>
-<li><strong>power</strong>: Each pair's loss will be raised to this power.</li>
 <li><strong>swap</strong>: Use the positive-negative distance instead of anchor-negative distance, if it violates the margin more.</li>
 <li><strong>smooth_loss</strong>: Use the log-exp version of the triplet loss</li>
 <li><strong>triplets_per_anchor</strong>: The number of triplets per element to sample within a batch. Can be an integer or the string "all". For example, if your batch size is 128, and triplets_per_anchor is 100, then 12800 triplets will be sampled. If triplets_per_anchor is "all", then all possible triplets in the batch will be used.</li>
 </ul>
-<p><strong>Default reducer</strong>: <a href="../reducers/#avgnonzeroreducer">AvgNonZeroReducer</a></p>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li><a href="../distances/#lpdistance"><code>LpDistance(normalize_embeddings=True, p=2, power=1)</code></a></li>
+</ul>
+<p><strong>Default reducer</strong>: </p>
+<ul>
+<li><a href="../reducers/#avgnonzeroreducer">AvgNonZeroReducer</a></li>
+</ul>
 <p><strong>Reducer input</strong>:</p>
 <ul>
 <li><strong>loss</strong>: The loss per triplet in the batch. Reduction type is <code>"triplet"</code>.</li>
 </ul>
 <h2 id="tupletmarginloss">TupletMarginLoss<a class="headerlink" href="#tupletmarginloss" title="Permanent link">&para;</a></h2>
 <p><a href="http://openaccess.thecvf.com/content_ICCV_2019/papers/Yu_Deep_Metric_Learning_With_Tuplet_Margin_Loss_ICCV_2019_paper.pdf" target="_blank">Deep Metric Learning with Tuplet Margin Loss</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">TupletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">TupletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mf">5.73</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
@@ -1526,27 +1737,40 @@
 <li><strong>scale</strong>: This is <code>s</code> in the above equation.</li>
 </ul>
 <p>The paper combines this loss with <a href="./#intrapairvarianceloss">IntraPairVarianceLoss</a>. You can accomplish this by using <a href="./#multiplelosses">MultipleLosses</a>:</p>
-<div class="codehilite"><pre><span></span><code><span class="n">main_loss</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">TupletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="n">main_loss</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">TupletMarginLoss</span><span class="p">()</span>
 <span class="n">var_loss</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">IntraPairVarianceLoss</span><span class="p">()</span>
 <span class="n">complete_loss</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">MultipleLosses</span><span class="p">([</span><span class="n">main_loss</span><span class="p">,</span> <span class="n">var_loss</span><span class="p">],</span> <span class="n">weights</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">])</span>
 </code></pre></div>
 
 
-<p><strong>Default reducer</strong>: <a href="../reducers/#meanreducer">MeanReducer</a></p>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li>
+<p><a href="../distances/#cosinesimilarity"><code>CosineSimilarity()</code></a></p>
+<ul>
+<li>This is the only compatible distance.</li>
+</ul>
+</li>
+</ul>
+<p><strong>Default reducer</strong>: </p>
+<ul>
+<li><a href="../reducers/#meanreducer">MeanReducer</a></li>
+</ul>
 <p><strong>Reducer input</strong>:</p>
 <ul>
 <li><strong>loss</strong>: The loss per positive pair in the batch. Reduction type is <code>"pos_pair"</code>.</li>
 </ul>
 <h2 id="weightregularizermixin">WeightRegularizerMixin<a class="headerlink" href="#weightregularizermixin" title="Permanent link">&para;</a></h2>
-<p>Losses can extend this class in addition to BaseMetricLossFunction. You should extend this class if your loss function can make use of a <a href="../regularizers/">weight regularizer</a>.</p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">WeightRegularizerMixin</span><span class="p">(</span><span class="n">regularizer</span><span class="p">,</span> <span class="n">reg_weight</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<p>Losses can extend this class in addition to BaseMetricLossFunction. You should extend this class if your loss function contains a learnable weight matrix.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">WeightRegularizerMixin</span><span class="p">(</span><span class="n">weight_init_func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight_regularizer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight_reg_weight</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>regularizer</strong>: The <a href="../regularizers/">regularizer</a> to apply to the loss's learned weights.</li>
-<li><strong>reg_weight</strong>: The amount the regularization loss will be multiplied by.</li>
+<li><strong>weight_init_func</strong>: An <a href="../common_functions/#torchinitwrapper">TorchInitWrapper</a> object, which will be used to initialize the weights of the loss function.</li>
+<li><strong>weight_regularizer</strong>: The <a href="../regularizers/">regularizer</a> to apply to the loss's learned weights.</li>
+<li><strong>weight_reg_weight</strong>: The amount the regularization loss will be multiplied by.</li>
 </ul>
 <p>Extended by:</p>
 <ul>
@@ -1556,6 +1780,7 @@
 <li><a href="./#normalizedsoftmaxloss">NormalizedSoftmaxLoss</a></li>
 <li><a href="./#proxyanchorloss">ProxyAnchorLoss</a></li>
 <li><a href="./#proxyncaloss">ProxyNCALoss</a></li>
+<li><a href="./#softtripleloss">SoftTripleLoss</a></li>
 <li><a href="./#spherefaceloss">SphereFaceLoss</a></li>
 </ul>
                 
@@ -1576,7 +1801,7 @@
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
         
-          <a href=".." title="Home" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../distances/" title="Distances" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-footer-nav__button md-icon">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
             </div>
@@ -1585,7 +1810,7 @@
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                Home
+                Distances
               </div>
             </div>
           </a>

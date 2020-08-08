@@ -198,6 +198,18 @@
 
 
   <li class="md-nav__item">
+    <a href="../distances/" title="Distances" class="md-nav__link">
+      Distances
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
     <a href="../losses/" title="Losses" class="md-nav__link">
       Losses
     </a>
@@ -269,8 +281,8 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#baseweightregularizer" class="md-nav__link">
-    BaseWeightRegularizer
+  <a href="#baseregularizer" class="md-nav__link">
+    BaseRegularizer
   </a>
   
 </li>
@@ -283,8 +295,29 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#lpregularizer" class="md-nav__link">
+    LpRegularizer
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#regularfaceregularizer" class="md-nav__link">
     RegularFaceRegularizer
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sparsecentersregularizer" class="md-nav__link">
+    SparseCentersRegularizer
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#zeromeanregularizer" class="md-nav__link">
+    ZeroMeanRegularizer
   </a>
   
 </li>
@@ -339,16 +372,16 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-9" type="checkbox" id="nav-9">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-10" type="checkbox" id="nav-10">
     
-    <label class="md-nav__link" for="nav-9">
+    <label class="md-nav__link" for="nav-10">
       Utils
       <span class="md-nav__icon md-icon">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"/></svg>
       </span>
     </label>
     <nav class="md-nav" aria-label="Utils" data-md-level="1">
-      <label class="md-nav__title" for="nav-9">
+      <label class="md-nav__title" for="nav-10">
         <span class="md-nav__icon md-icon">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
         </span>
@@ -393,6 +426,18 @@
   </li>
 
         
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../common_functions/" title="Common Functions" class="md-nav__link">
+      Common Functions
+    </a>
+  </li>
+
+        
       </ul>
     </nav>
   </li>
@@ -405,16 +450,16 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-10" type="checkbox" id="nav-10">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-11" type="checkbox" id="nav-11">
     
-    <label class="md-nav__link" for="nav-10">
+    <label class="md-nav__link" for="nav-11">
       How to extend this library
       <span class="md-nav__icon md-icon">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"/></svg>
       </span>
     </label>
     <nav class="md-nav" aria-label="How to extend this library" data-md-level="1">
-      <label class="md-nav__title" for="nav-10">
+      <label class="md-nav__title" for="nav-11">
         <span class="md-nav__icon md-icon">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
         </span>
@@ -466,8 +511,8 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#baseweightregularizer" class="md-nav__link">
-    BaseWeightRegularizer
+  <a href="#baseregularizer" class="md-nav__link">
+    BaseRegularizer
   </a>
   
 </li>
@@ -480,8 +525,29 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#lpregularizer" class="md-nav__link">
+    LpRegularizer
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#regularfaceregularizer" class="md-nav__link">
     RegularFaceRegularizer
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#sparsecentersregularizer" class="md-nav__link">
+    SparseCentersRegularizer
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#zeromeanregularizer" class="md-nav__link">
+    ZeroMeanRegularizer
   </a>
   
 </li>
@@ -507,41 +573,130 @@
                 
                 
                 <h1 id="regularizers">Regularizers<a class="headerlink" href="#regularizers" title="Permanent link">&para;</a></h1>
-<p>Regularizers are like helper-loss functions. They might not require any labels or embeddings as input, and might instead operate on weights that are learned by a network or loss function.</p>
-<p>Here is an example when used in conjunction with a compatible loss function:</p>
+<p>Regularizers are applied to weights and embeddings without the need for labels or tuples.</p>
+<p>Here is an example of a weight regularizer being passed to a loss function.</p>
 <div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">losses</span><span class="p">,</span> <span class="n">regularizers</span>
 <span class="n">R</span> <span class="o">=</span> <span class="n">regularizers</span><span class="o">.</span><span class="n">RegularFaceRegularizer</span><span class="p">()</span>
-<span class="n">loss</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">ArcFaceLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">num_classes</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">embedding_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">regularizer</span><span class="o">=</span><span class="n">R</span><span class="p">)</span>
+<span class="n">loss</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">ArcFaceLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">num_classes</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">embedding_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">weight_regularizer</span><span class="o">=</span><span class="n">R</span><span class="p">)</span>
 </code></pre></div>
 
 
-<h2 id="baseweightregularizer">BaseWeightRegularizer<a class="headerlink" href="#baseweightregularizer" title="Permanent link">&para;</a></h2>
-<p>Weight regularizers take in a 2-D tensor of weights of size (num_classes, embedding_size).</p>
-<div class="codehilite"><pre><span></span><code><span class="n">regularizers</span><span class="o">.</span><span class="n">BaseWeightRegularizer</span><span class="p">(</span><span class="n">normalize_weights</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">reducer</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<h2 id="baseregularizer">BaseRegularizer<a class="headerlink" href="#baseregularizer" title="Permanent link">&para;</a></h2>
+<div class="codehilite"><pre><span></span><code><span class="n">regularizers</span><span class="o">.</span><span class="n">BaseWeightRegularizer</span><span class="p">(</span><span class="n">collect_stats</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> 
+                                <span class="n">reducer</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
+                                <span class="n">distance</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+</code></pre></div>
+
+
+<p>An object that extends this class can be passed as the <code>embedding_regularizer</code> into any loss function. It can also be passed as the <code>weight_regularizer</code> into any class that extends <a href="../losses/#weightregularizermixin">WeightRegularizerMixin</a>.</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>collect_stats</strong>: If True, will collect various statistics that may be useful to analyze during experiments. If False, these computations will be skipped.</li>
+<li><strong>reducer</strong>: A <a href="../reducers/">reducer</a> object. If None, then the default reducer will be used.</li>
+<li><strong>distance</strong>: A <a href="../distances/">distance</a> object. If None, then the default distance will be used.</li>
+</ul>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li><a href="../distances/#lpdistance"><code>LpDistance(normalize_embeddings=True, p=2, power=1)</code></a></li>
+</ul>
+<p><strong>Default reducer</strong>: </p>
+<ul>
+<li><a href="../reducers/#meanreducer">MeanReducer</a></li>
+</ul>
+<h2 id="centerinvariantregularizer">CenterInvariantRegularizer<a class="headerlink" href="#centerinvariantregularizer" title="Permanent link">&para;</a></h2>
+<p><a href="http://www1.ece.neu.edu/~yuewu/files/2017/twu024.pdf" target="_blank">Deep Face Recognition with Center Invariant Loss</a></p>
+<p>This encourages unnormalized embeddings or weights to all have the same Lp norm.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">regularizers</span><span class="o">.</span><span class="n">CenterInvariantRegularizer</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div>
+
+
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li><a href="../distances/#lpdistance"><code>LpDistance(normalize_embeddings=False, p=2, power=1)</code></a><ul>
+<li>The distance must be <code>LpDistance(normalize_embeddings=False, power=1)</code>. However, <code>p</code> can be changed.</li>
+</ul>
+</li>
+</ul>
+<p><strong>Default reducer</strong>: </p>
+<ul>
+<li><a href="../reducers/#meanreducer">MeanReducer</a></li>
+</ul>
+<h2 id="lpregularizer">LpRegularizer<a class="headerlink" href="#lpregularizer" title="Permanent link">&para;</a></h2>
+<p>This encourages embeddings/weights to have a small Lp norm.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">regularizers</span><span class="o">.</span><span class="n">LpRegularizer</span><span class="p">(</span><span class="n">p</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
 <p><strong>Parameters</strong></p>
 <ul>
-<li><strong>normalize_weights</strong>: If True, weights will be normalized to have a Euclidean norm of 1 before any regularization occurs.</li>
-<li><strong>reducer</strong>: A <a href="../reducers/">reducer</a> object. If None, then the default reducer will be used.</li>
+<li><strong>p</strong>: The type of norm. For example, <code>p=1</code> is the Manhattan distance, and <code>p=2</code> is Euclidean distance.</li>
 </ul>
-<p>An object of this class can be passed as the <code>regularizer</code> argument into any class that extends <a href="../losses/#weightregularizermixin">WeightRegularizerMixin</a>.</p>
-<h2 id="centerinvariantregularizer">CenterInvariantRegularizer<a class="headerlink" href="#centerinvariantregularizer" title="Permanent link">&para;</a></h2>
-<p><a href="http://www1.ece.neu.edu/~yuewu/files/2017/twu024.pdf">Deep Face Recognition with Center Invariant Loss</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">regularizers</span><span class="o">.</span><span class="n">CenterInvariantRegularizer</span><span class="p">(</span><span class="n">normalize_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-</code></pre></div>
-
-
-<p>Extends <a href="./#baseweightregularizer">BaseWeightRegularizer</a>.
-<code>normalize_weights</code> must be False.</p>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li>This regularizer does not use a distance object, so setting this parameter will have no effect.</li>
+</ul>
+<p><strong>Default reducer</strong>: </p>
+<ul>
+<li><a href="../reducers/#meanreducer">MeanReducer</a></li>
+</ul>
 <h2 id="regularfaceregularizer">RegularFaceRegularizer<a class="headerlink" href="#regularfaceregularizer" title="Permanent link">&para;</a></h2>
-<p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Zhao_RegularFace_Deep_Face_Recognition_via_Exclusive_Regularization_CVPR_2019_paper.pdf">RegularFace: Deep Face Recognition via Exclusive Regularization</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">regularizers</span><span class="o">.</span><span class="n">RegularFaceRegularizer</span><span class="p">(</span><span class="n">normalize_weights</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Zhao_RegularFace_Deep_Face_Recognition_via_Exclusive_Regularization_CVPR_2019_paper.pdf" target="_blank">RegularFace: Deep Face Recognition via Exclusive Regularization</a></p>
+<p>This should be applied as a weight regularizer. It penalizes class vectors that are very close together.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">regularizers</span><span class="o">.</span><span class="n">RegularFaceRegularizer</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
 
-<p>Extends <a href="./#baseweightregularizer">BaseWeightRegularizer</a>.</p>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li><a href="../distances/#cosinesimilarity"><code>CosineSimilarity()</code></a><ul>
+<li>Only inverted distances are compatible. For example, <a href="../distances/#dotproductsimilarity"><code>DotProductSimilarity()</code></a> also works.</li>
+</ul>
+</li>
+</ul>
+<p><strong>Default reducer</strong>: </p>
+<ul>
+<li><a href="../reducers/#meanreducer">MeanReducer</a></li>
+</ul>
+<h2 id="sparsecentersregularizer">SparseCentersRegularizer<a class="headerlink" href="#sparsecentersregularizer" title="Permanent link">&para;</a></h2>
+<p><a href="http://openaccess.thecvf.com/content_ICCV_2019/papers/Qian_SoftTriple_Loss_Deep_Metric_Learning_Without_Triplet_Sampling_ICCV_2019_paper.pdf" target="_blank">SoftTriple Loss: Deep Metric Learning Without Triplet Sampling</a></p>
+<p>This should be applied as a weight regularizer. It encourages multiple class centers to "merge", i.e. group together.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">regularizers</span><span class="o">.</span><span class="n">SparseCentersRegularizer</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">centers_per_class</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div>
+
+
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>num_classes</strong>: The number of classes in your training dataset.</li>
+<li><strong>centers_per_class</strong>: The number of rows in the weight matrix that correspond to 1 class.</li>
+</ul>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li><a href="../distances/#cosinesimilarity"><code>CosineSimilarity()</code></a><ul>
+<li>This is the only compatible distance.</li>
+</ul>
+</li>
+</ul>
+<p><strong>Default reducer</strong>: </p>
+<ul>
+<li><a href="../reducers/#divisorreducer">DivisorReducer</a></li>
+</ul>
+<h2 id="zeromeanregularizer">ZeroMeanRegularizer<a class="headerlink" href="#zeromeanregularizer" title="Permanent link">&para;</a></h2>
+<p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Yuan_Signal-To-Noise_Ratio_A_Robust_Distance_Metric_for_Deep_Metric_Learning_CVPR_2019_paper.pdf" target="_blank">Signal-to-Noise Ratio: A Robust Distance Metric for Deep Metric Learning</a></p>
+<div class="codehilite"><pre><span></span><code><span class="n">regularizers</span><span class="o">.</span><span class="n">ZeroMeanRegularizer</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">centers_per_class</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div>
+
+
+<p><strong>Equation</strong></p>
+<p>In this equation, <code>N</code> is the batch size, <code>M</code> is the size of each embedding.</p>
+<p><img alt="zero_mean_regularizer_equation" src="../imgs/zero_mean_regularizer_equation.png" style="height:70px" /></p>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li>This regularizer does not use a distance object, so setting this parameter will have no effect.</li>
+</ul>
+<p><strong>Default reducer</strong>: </p>
+<ul>
+<li><a href="../reducers/#meanreducer">MeanReducer</a></li>
+</ul>
                 
               
               

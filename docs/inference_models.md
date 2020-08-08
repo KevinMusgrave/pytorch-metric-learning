@@ -16,7 +16,7 @@ InferenceModel(trunk,
 
 * **trunk**: Your trained model for computing embeddings.
 * **embedder**: Optional. This is if your model is split into two components (trunk and embedder). If None, then the embedder will simply return the trunk's output.
-* **match_finder**: A [MatchFinder](inference_models.md#matchfinder) object. If ```None```, it will be set to ```MatchFinder(mode="sim", threshold=0.9)```.
+* **match_finder**: A [MatchFinder](inference_models.md#matchfinder) object. If ```None```, it will be set to ```MatchFinder(distance=CosineSimilarity(), threshold=0.9)```.
 * **indexer**: The object used for computing k-nearest-neighbors. If ```None```, it will be set to ```FaissIndexer()```.
 * **normalize_embeddings**: If True, embeddings will be normalized to have Euclidean norm of 1.
 * **batch_size**: The batch size used to compute embeddings, when training the indexer for k-nearest-neighbor retrieval.
@@ -26,16 +26,13 @@ InferenceModel(trunk,
 ## MatchFinder
 ```python
 from pytorch_metric_learning.utils.inference import MatchFinder
-MatchFinder(mode="dist", threshold=None)
+MatchFinder(distance=None, threshold=None)
 ```
 
 **Parameters**:
 
-* **mode**: One of:
-	* ```dist```: Use the Euclidean distance between vectors
-	* ```squared_dist```: Use the squared Euclidean distance between vectors
-	* ```sim```: Use the dot product of vectors
-* **threshold**: Optional. Pairs will be a match if they fall under this threshold for distance modes, or over this value for the similarity mode. If not provided, then a threshold must be provided during function calls.
+* **distance**: A [distance](distances.md) object.
+* **threshold**: Optional. Pairs will be a match if they fall under this threshold for non-inverted distances, or over this value for inverted distances. If not provided, then a threshold must be provided during function calls.
 
 
 ## FaissIndexer

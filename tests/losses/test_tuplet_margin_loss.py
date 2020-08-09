@@ -55,3 +55,7 @@ class TestTupletMarginLoss(unittest.TestCase):
             loss = loss_func(embeddings, labels)
             loss.backward()
             self.assertEqual(loss, 0)
+
+
+if __name__ == "__main__":
+    unittest.main()

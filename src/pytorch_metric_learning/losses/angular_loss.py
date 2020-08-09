@@ -37,7 +37,7 @@ class AngularLoss(BaseMetricLossFunction):
             return [None]*4
         anchors = self.distance.normalize(embeddings[a1])
         positives = self.distance.normalize(embeddings[p])
-        keep_mask = (labels[a1].unsqueeze(1) != labels.unsqueeze(0)).type(embeddings.dtype)
+        keep_mask = (labels[a1].unsqueeze(1) != labels.unsqueeze(0))
         self.set_stats(anchors, positives, embeddings, keep_mask)
         return anchors, positives, keep_mask, a1
 
@@ -48,5 +48,5 @@ class AngularLoss(BaseMetricLossFunction):
                 ap_dist = self.distance.pairwise_distance(anchors, positives)
                 nc_dist = self.distance.get_norm(centers - embeddings.unsqueeze(1), dim=2).t()
                 angles = torch.atan(ap_dist.unsqueeze(1) / (2*nc_dist))
-                average_angle = torch.sum(angles*keep_mask) / torch.sum(keep_mask)
+                average_angle = torch.sum(angles[keep_mask]) / torch.sum(keep_mask)
                 self.average_angle = np.degrees(average_angle.item())

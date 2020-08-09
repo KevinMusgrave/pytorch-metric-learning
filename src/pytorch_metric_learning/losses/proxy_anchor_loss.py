@@ -26,10 +26,11 @@ class ProxyAnchorLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         dtype, device = embeddings.dtype, embeddings.device
         self.cast_types(dtype, device)
         miner_weights = lmu.convert_to_weights(indices_tuple, labels, dtype=dtype).unsqueeze(1)
+        miner_weights = miner_weights-1
 
         cos = self.distance(embeddings, self.proxies)
 
-        pos_mask = torch.nn.functional.one_hot(labels, self.num_classes).type(dtype)
+        pos_mask = torch.nn.functional.one_hot(labels, self.num_classes)
         neg_mask = 1 - pos_mask
 
         with_pos_proxies = torch.where(torch.sum(pos_mask, dim=0) != 0)[0]
@@ -37,8 +38,8 @@ class ProxyAnchorLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         pos_exp = self.distance.margin(cos, self.margin)
         neg_exp = self.distance.margin(-self.margin, cos)
 
-        pos_term = lmu.logsumexp(self.alpha * pos_exp, keep_mask=pos_mask*miner_weights, add_one=True, dim=0)
-        neg_term = lmu.logsumexp(self.alpha * neg_exp, keep_mask=neg_mask*miner_weights, add_one=True, dim=0)
+        pos_term = lmu.logsumexp((self.alpha * pos_exp) + miner_weights, keep_mask=pos_mask.bool(), add_one=True, dim=0)
+        neg_term = lmu.logsumexp((self.alpha * neg_exp) + miner_weights, keep_mask=neg_mask.bool(), add_one=True, dim=0)
 
         loss_indices = c_f.torch_arange_from_size(self.proxies)
 

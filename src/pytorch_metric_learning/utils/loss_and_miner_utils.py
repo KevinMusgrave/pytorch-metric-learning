@@ -3,20 +3,18 @@ import numpy as np
 import math
 from . import common_functions as c_f
 
-
+# input must be 2D
 def logsumexp(x, keep_mask=None, add_one=True, dim=1):
-    max_vals, _ = torch.max(x, dim=dim, keepdim=True)
-    inside_exp = x - max_vals
-    exp = torch.exp(inside_exp)
     if keep_mask is not None:
-        exp = exp*keep_mask
-    inside_log = torch.sum(exp, dim=dim, keepdim=True)
-    if add_one: 
-        inside_log = inside_log + torch.exp(-max_vals)
-    else:
-        # add one only if necessary
-        inside_log[inside_log==0] = torch.exp(-max_vals[inside_log==0])
-    return torch.log(inside_log) + max_vals
+        x = x.masked_fill(~keep_mask, c_f.neg_inf(x.dtype))
+    if add_one:
+        zeros = torch.zeros(x.size(dim-1), dtype=x.dtype, device=x.device).unsqueeze(dim)
+        x = torch.cat([x,zeros], dim=dim)
+    
+    output = torch.logsumexp(x, dim=dim, keepdim=True)
+    if keep_mask is not None:
+        output = output.masked_fill(~torch.any(keep_mask, dim=dim, keepdim=True), 0)
+    return output
 
 
 def meshgrid_from_sizes(x, y, dim=0):

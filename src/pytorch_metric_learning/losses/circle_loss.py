@@ -43,7 +43,10 @@ class CircleLoss(GenericPairLoss):
         new_mat[pos_mask_bool] = -self.gamma * torch.relu(self.op - anchor_positive.detach()) * (anchor_positive - self.delta_p)
         new_mat[neg_mask_bool] = self.gamma * torch.relu(anchor_negative.detach() - self.on) * (anchor_negative - self.delta_n)
 
-        losses = self.soft_plus(lmu.logsumexp(new_mat, keep_mask=pos_mask, add_one=False, dim=1) + lmu.logsumexp(new_mat, keep_mask=neg_mask, add_one=False, dim=1))
+        logsumexp_pos = lmu.logsumexp(new_mat, keep_mask=pos_mask_bool, add_one=False, dim=1)
+        logsumexp_neg = lmu.logsumexp(new_mat, keep_mask=neg_mask_bool, add_one=False, dim=1)
+
+        losses = self.soft_plus(logsumexp_pos + logsumexp_neg)
 
         zero_rows = torch.where((torch.sum(pos_mask, dim=1)==0) | (torch.sum(neg_mask, dim=1) == 0))[0]
         final_mask = torch.ones_like(losses)

@@ -96,3 +96,8 @@ class TestProxyAnchorLoss(unittest.TestCase):
             correct_loss = original_loss_func(embeddings, labels)
             rtol = 1e-2 if dtype == torch.float16 else 1e-5
             self.assertTrue(torch.isclose(loss, correct_loss, rtol=rtol))
+
+
+
+if __name__ == "__main__":
+    unittest.main()

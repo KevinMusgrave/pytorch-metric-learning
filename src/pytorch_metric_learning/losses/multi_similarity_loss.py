@@ -21,8 +21,8 @@ class MultiSimilarityLoss(GenericPairLoss):
     def _compute_loss(self, mat, pos_mask, neg_mask):
         pos_exp = self.distance.margin(mat, self.base)
         neg_exp = self.distance.margin(self.base, mat)
-        pos_loss = (1.0/self.alpha) * lmu.logsumexp(self.alpha * pos_exp, keep_mask=pos_mask, add_one=True)
-        neg_loss = (1.0/self.beta) * lmu.logsumexp(self.beta * neg_exp, keep_mask=neg_mask, add_one=True)
+        pos_loss = (1.0/self.alpha) * lmu.logsumexp(self.alpha * pos_exp, keep_mask=pos_mask.bool(), add_one=True)
+        neg_loss = (1.0/self.beta) * lmu.logsumexp(self.beta * neg_exp, keep_mask=neg_mask.bool(), add_one=True)
         return {"loss": {"losses": pos_loss + neg_loss, "indices": c_f.torch_arange_from_size(mat), "reduction_type": "element"}}
 
     def get_default_distance(self):

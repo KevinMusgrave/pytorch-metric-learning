@@ -18,7 +18,7 @@ class LiftedStructureLoss(GenericPairLoss):
             pos_pairs = pos_pairs.unsqueeze(1)
             n_per_p = ((a2.unsqueeze(0) == a1.unsqueeze(1)) | (a2.unsqueeze(0) == p.unsqueeze(1))).type(dtype)
             neg_pairs = neg_pairs*n_per_p
-            keep_mask = (~(n_per_p==0)).type(dtype)
+            keep_mask = (~(n_per_p==0))
 
             remaining_pos_margin = self.distance.margin(pos_pairs, self.pos_margin)
             remaining_neg_margin = self.distance.margin(self.neg_margin, neg_pairs)
@@ -46,6 +46,6 @@ class GeneralizedLiftedStructureLoss(GenericPairLoss):
         remaining_pos_margin = self.distance.margin(mat, self.pos_margin)
         remaining_neg_margin = self.distance.margin(self.neg_margin, mat)
 
-        pos_loss = lmu.logsumexp(remaining_pos_margin, keep_mask=pos_mask, add_one=False)
-        neg_loss = lmu.logsumexp(remaining_neg_margin, keep_mask=neg_mask, add_one=False)
+        pos_loss = lmu.logsumexp(remaining_pos_margin, keep_mask=pos_mask.bool(), add_one=False)
+        neg_loss = lmu.logsumexp(remaining_neg_margin, keep_mask=neg_mask.bool(), add_one=False)
         return {"loss": {"losses": torch.relu(pos_loss+neg_loss), "indices": c_f.torch_arange_from_size(mat), "reduction_type": "element"}}

@@ -86,6 +86,13 @@ class TestLossAndMinerUtils(unittest.TestCase):
             correct_weights = torch.tensor([0.25,0.25,0.25,0.25,1,0.5,0.5], dtype=dtype).to(self.device)
             self.assertTrue(torch.all(weights==correct_weights))
 
+        a = torch.LongTensor([]).to(self.device)
+        p = torch.LongTensor([]).to(self.device)
+        n = torch.LongTensor([]).to(self.device)
+        for dtype in TEST_DTYPES:
+            weights = lmu.convert_to_weights((a,p,n), labels=torch.arange(7).to(self.device), dtype=dtype)
+            correct_weights = torch.tensor([1,1,1,1,1,1,1], dtype=dtype).to(self.device)
+            self.assertTrue(torch.all(weights==correct_weights))
 
 if __name__ == "__main__":
     unittest.main()

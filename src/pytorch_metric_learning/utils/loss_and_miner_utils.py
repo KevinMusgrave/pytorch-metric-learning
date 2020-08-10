@@ -187,6 +187,8 @@ def convert_to_weights(indices_tuple, labels, dtype):
     weights = torch.zeros_like(labels).type(dtype)
     if indices_tuple is None:
         return weights + 1
+    if all(len(x) == 0 for x in indices_tuple):
+        return weights + 1 
     indices, counts = torch.unique(torch.cat(indices_tuple, dim=0), return_counts=True)
     counts = (counts.type(dtype) / torch.sum(counts))
     weights[indices] = counts / torch.max(counts)

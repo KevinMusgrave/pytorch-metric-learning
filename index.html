@@ -261,6 +261,47 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#how-loss-functions-work" class="md-nav__link">
+    How loss functions work
+  </a>
+  
+    <nav class="md-nav" aria-label="How loss functions work">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-losses-and-miners-in-your-training-loop" class="md-nav__link">
+    Using losses and miners in your training loop
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#customizing-loss-functions" class="md-nav__link">
+    Customizing loss functions
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-loss-functions-for-unsupervised-self-supervised-learning" class="md-nav__link">
+    Using loss functions for unsupervised / self-supervised learning
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#highlights-of-the-rest-of-the-library" class="md-nav__link">
+    Highlights of the rest of the library
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -550,6 +591,47 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#how-loss-functions-work" class="md-nav__link">
+    How loss functions work
+  </a>
+  
+    <nav class="md-nav" aria-label="How loss functions work">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-losses-and-miners-in-your-training-loop" class="md-nav__link">
+    Using losses and miners in your training loop
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#customizing-loss-functions" class="md-nav__link">
+    Customizing loss functions
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#using-loss-functions-for-unsupervised-self-supervised-learning" class="md-nav__link">
+    Using loss functions for unsupervised / self-supervised learning
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#highlights-of-the-rest-of-the-library" class="md-nav__link">
+    Highlights of the rest of the library
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -607,41 +689,37 @@
 
 <p><strong>To use the testing module, you'll need faiss, which can be installed via conda as well. See the <a href="https://github.com/facebookresearch/faiss/blob/master/INSTALL.md">installation instructions for faiss</a>.</strong></p>
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
-<p>Let’s try the vanilla <a href="losses/#tripletmarginloss">triplet margin loss</a>. In all examples, <em>embeddings</em> is assumed to be of size (N, embedding_size), and <em>labels</em> is of size (N).</p>
+<p>This library contains 9 modules, each of which can be used independently within your existing codebase, or combined together for a complete train/test workflow.</p>
+<p><img alt="high_level_module_overview" src="imgs/high_level_module_overview.png" /></p>
+<h2 id="how-loss-functions-work">How loss functions work<a class="headerlink" href="#how-loss-functions-work" title="Permanent link">&para;</a></h2>
+<h3 id="using-losses-and-miners-in-your-training-loop">Using losses and miners in your training loop<a class="headerlink" href="#using-losses-and-miners-in-your-training-loop" title="Permanent link">&para;</a></h3>
+<p>Let’s initialize a plain <a href="losses/#tripletmarginloss">TripletMarginLoss</a>:</p>
 <div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">losses</span>
-<span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">TripletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
-<span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span> <span class="c1"># in your training loop</span>
+<span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">TripletMarginLoss</span><span class="p">()</span>
 </code></pre></div>
 
 
-<p>Loss functions typically come with a variety of parameters. For example, with the TripletMarginLoss, you can control how many triplets per sample to use in each batch. You can also use all possible triplets within each batch:</p>
-<div class="codehilite"><pre><span></span><code><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">TripletMarginLoss</span><span class="p">(</span><span class="n">triplets_per_anchor</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">)</span>
+<p>To compute the loss in your training loop, pass in the embeddings computed by your model, and the corresponding labels. The embeddings should have size (N, embedding_size), and the labels should have size (N), where N is the batch size.</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># your training loop</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dataloader</span><span class="p">):</span>
+    <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+    <span class="n">embeddings</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+    <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+    <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
 </code></pre></div>
 
 
+<p>The TripletMarginLoss computes all possible triplets within the batch, based on the labels you pass into it. Anchor-positive pairs are formed by embeddings that share the same label, and anchor-negative pairs are formed by embeddings that have different labels. </p>
 <p>Sometimes it can help to add a mining function:</p>
 <div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">miners</span><span class="p">,</span> <span class="n">losses</span>
-<span class="n">miner</span> <span class="o">=</span> <span class="n">miners</span><span class="o">.</span><span class="n">MultiSimilarityMiner</span><span class="p">(</span><span class="n">epsilon</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
-<span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">TripletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
-<span class="n">hard_pairs</span> <span class="o">=</span> <span class="n">miner</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span> <span class="c1"># in your training loop</span>
-<span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">hard_pairs</span><span class="p">)</span>
-</code></pre></div>
+<span class="n">miner</span> <span class="o">=</span> <span class="n">miners</span><span class="o">.</span><span class="n">MultiSimilarityMiner</span><span class="p">()</span>
+<span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">TripletMarginLoss</span><span class="p">()</span>
 
-
-<p>In the above code, the miner finds positive and negative pairs that it thinks are particularly difficult. Note that even though the TripletMarginLoss operates on triplets, it’s still possible to pass in pairs. This is because the library automatically converts pairs to triplets and triplets to pairs, when necessary.</p>
-<p>Here's what the above examples look like in a typical training loop:</p>
-<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">miners</span><span class="p">,</span> <span class="n">losses</span>
-<span class="n">miner</span> <span class="o">=</span> <span class="n">miners</span><span class="o">.</span><span class="n">MultiSimilarityMiner</span><span class="p">(</span><span class="n">epsilon</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
-<span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">TripletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
-
-<span class="c1"># borrowed from https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html</span>
-<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">trainloader</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
-    <span class="n">inputs</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">data</span>
-    <span class="c1"># zero the parameter gradients</span>
+<span class="c1"># your training loop</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dataloader</span><span class="p">):</span>
     <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
-
-    <span class="c1"># forward + backward + optimize</span>
-    <span class="n">embeddings</span> <span class="o">=</span> <span class="n">net</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+    <span class="n">embeddings</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
     <span class="n">hard_pairs</span> <span class="o">=</span> <span class="n">miner</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
     <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">hard_pairs</span><span class="p">)</span>
     <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
@@ -649,9 +727,53 @@
 </code></pre></div>
 
 
-<p>For more complex approaches, like deep adversarial metric learning, use one of the <a href="trainers">trainers</a>.</p>
-<p>To check the accuracy of your model, use one of the <a href="testers">testers</a>. Which tester should you use? Almost definitely <a href="testers/#globalembeddingspacetester">GlobalEmbeddingSpaceTester</a>, because it does what most metric-learning papers do. </p>
-<p>Also check out the <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples">example Google Colab notebooks</a>.</p>
+<p>In the above code, the miner finds positive and negative pairs that it thinks are particularly difficult. Note that even though the TripletMarginLoss operates on triplets, it’s still possible to pass in pairs. This is because the library automatically converts pairs to triplets and triplets to pairs, when necessary.</p>
+<h3 id="customizing-loss-functions">Customizing loss functions<a class="headerlink" href="#customizing-loss-functions" title="Permanent link">&para;</a></h3>
+<p>Loss functions can be customized using <a href="distances/">distances</a>, <a href="reducers/">reducers</a>, and <a href="regularizers/">regularizers</a>.
+<img alt="high_level_loss_function_overview" src="imgs/high_level_loss_function_overview.png" /></p>
+<p>Here's an example of a customized TripletMarginLoss:</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning.distances</span> <span class="kn">import</span> <span class="n">CosineSimilarity</span>
+<span class="kn">from</span> <span class="nn">pytorch_metric_learning.reducers</span> <span class="kn">import</span> <span class="n">ThresholdReducer</span>
+<span class="kn">from</span> <span class="nn">pytorch_metric_learning.regularizers</span> <span class="kn">import</span> <span class="n">LpRegularizer</span>
+<span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">losses</span>
+<span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">TripletMarginLoss</span><span class="p">(</span><span class="n">distance</span> <span class="o">=</span> <span class="n">CosineSimilarity</span><span class="p">(),</span> 
+                                    <span class="n">reducer</span> <span class="o">=</span> <span class="n">ThresholdReducer</span><span class="p">(</span><span class="n">high</span><span class="o">=</span><span class="mf">0.3</span><span class="p">),</span> 
+                                    <span class="n">embedding_regularizer</span> <span class="o">=</span> <span class="n">LpRegularizer</span><span class="p">())</span>
+</code></pre></div>
+
+
+<p>This customized triplet loss has the following properties:</p>
+<ul>
+<li>The loss will be computed using cosine similarity instead of Euclidean distance.</li>
+<li>All triplet losses that are higher than 0.3 will be discarded.</li>
+<li>The embeddings will be L2 regularized.  </li>
+</ul>
+<h3 id="using-loss-functions-for-unsupervised-self-supervised-learning">Using loss functions for unsupervised / self-supervised learning<a class="headerlink" href="#using-loss-functions-for-unsupervised-self-supervised-learning" title="Permanent link">&para;</a></h3>
+<p>The TripletMarginLoss is an embedding-based or tuple-based loss. This means that internally, there is no real notion of "classes". Tuples (pairs or triplets) are formed at each iteration, based on the labels it receives. The labels don't have to represent classes. They simply need to indicate the positive and negative relationships between the embeddings. Thus, it is easy to use these loss functions for unsupervised or self-supervised learning. </p>
+<p>For example, the code below is a simplified version of the augmentation strategy commonly used in self-supervision. The dataset does not come with any labels. Instead, the labels are created in the training loop, solely to indicate which embeddings are positive pairs.</p>
+<div class="codehilite"><pre><span></span><code><span class="c1"># your training for-loop</span>
+<span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dataloader</span><span class="p">):</span>
+    <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+    <span class="n">embeddings</span> <span class="o">=</span> <span class="n">your_model</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">augmented</span> <span class="o">=</span> <span class="n">your_model</span><span class="p">(</span><span class="n">your_augmentation</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">embeddings</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+
+    <span class="n">embeddings</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">augmented</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">labels</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">labels</span><span class="p">,</span> <span class="n">labels</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+    <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+    <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+</code></pre></div>
+
+
+<h2 id="highlights-of-the-rest-of-the-library">Highlights of the rest of the library<a class="headerlink" href="#highlights-of-the-rest-of-the-library" title="Permanent link">&para;</a></h2>
+<ul>
+<li>For a convenient way to train your model, take a look at the <a href="trainers">trainers</a>.</li>
+<li>Want to test your model's accuracy on a dataset? Try the <a href="testers/">testers</a>.</li>
+<li>To compute the accuracy of an embedding space directly, use <a href="accuracy_calculation/">AccuracyCalculator</a>.</li>
+</ul>
+<p>If you're short of time, and want a complete train/test workflow, check out the <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples">example Google Colab notebooks</a>.</p>
                 
               
               

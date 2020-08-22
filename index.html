@@ -228,33 +228,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#installation" class="md-nav__link">
-    Installation
-  </a>
-  
-    <nav class="md-nav" aria-label="Installation">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#pip" class="md-nav__link">
-    Pip
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#conda" class="md-nav__link">
-    Conda
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#overview" class="md-nav__link">
     Overview
   </a>
@@ -299,6 +272,33 @@
   <a href="#highlights-of-the-rest-of-the-library" class="md-nav__link">
     Highlights of the rest of the library
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    Installation
+  </a>
+  
+    <nav class="md-nav" aria-label="Installation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pip" class="md-nav__link">
+    Pip
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#conda" class="md-nav__link">
+    Conda
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -558,33 +558,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#installation" class="md-nav__link">
-    Installation
-  </a>
-  
-    <nav class="md-nav" aria-label="Installation">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#pip" class="md-nav__link">
-    Pip
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#conda" class="md-nav__link">
-    Conda
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#overview" class="md-nav__link">
     Overview
   </a>
@@ -632,6 +605,33 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#installation" class="md-nav__link">
+    Installation
+  </a>
+  
+    <nav class="md-nav" aria-label="Installation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#pip" class="md-nav__link">
+    Pip
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#conda" class="md-nav__link">
+    Conda
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -655,39 +655,6 @@
                 <h1 id="pytorch-metric-learning">PyTorch Metric Learning<a class="headerlink" href="#pytorch-metric-learning" title="Permanent link">&para;</a></h1>
 <h2 id="google-colab-examples">Google Colab Examples<a class="headerlink" href="#google-colab-examples" title="Permanent link">&para;</a></h2>
 <p>See the <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/README.md">examples folder</a> for notebooks that show entire train/test workflows with logging and model saving.</p>
-<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
-<h3 id="pip">Pip<a class="headerlink" href="#pip" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="err">pip install pytorch-metric-learning</span>
-</code></pre></div>
-
-
-<p><strong>To get the latest dev version</strong>:</p>
-<div class="codehilite"><pre><span></span><code><span class="err">pip install pytorch-metric-learning --pre</span>
-</code></pre></div>
-
-
-<p><strong>To install on Windows</strong>:</p>
-<div class="codehilite"><pre><span></span><code><span class="err">pip install torch===1.4.0 torchvision===0.5.0 -f https://download.pytorch.org/whl/torch_stable.html</span>
-<span class="err">pip install pytorch-metric-learning</span>
-</code></pre></div>
-
-
-<p><strong>To install with evaluation and logging capabilities (This will install the unofficial pypi version of faiss-gpu)</strong>:</p>
-<div class="codehilite"><pre><span></span><code><span class="err">pip install pytorch-metric-learning[with-hooks]</span>
-</code></pre></div>
-
-
-<p><strong>To install with evaluation and logging capabilities (CPU) (This will install the unofficial pypi version of faiss-cpu)</strong>:</p>
-<div class="codehilite"><pre><span></span><code><span class="err">pip install pytorch-metric-learning[with-hooks-cpu]</span>
-</code></pre></div>
-
-
-<h3 id="conda">Conda<a class="headerlink" href="#conda" title="Permanent link">&para;</a></h3>
-<div class="codehilite"><pre><span></span><code><span class="err">conda install pytorch-metric-learning -c metric-learning -c pytorch</span>
-</code></pre></div>
-
-
-<p><strong>To use the testing module, you'll need faiss, which can be installed via conda as well. See the <a href="https://github.com/facebookresearch/faiss/blob/master/INSTALL.md">installation instructions for faiss</a>.</strong></p>
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
 <p>This library contains 9 modules, each of which can be used independently within your existing codebase, or combined together for a complete train/test workflow.</p>
 <p><img alt="high_level_module_overview" src="imgs/high_level_module_overview.png" /></p>
@@ -774,6 +741,39 @@
 <li>To compute the accuracy of an embedding space directly, use <a href="accuracy_calculation/">AccuracyCalculator</a>.</li>
 </ul>
 <p>If you're short of time, and want a complete train/test workflow, check out the <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples">example Google Colab notebooks</a>.</p>
+<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
+<h3 id="pip">Pip<a class="headerlink" href="#pip" title="Permanent link">&para;</a></h3>
+<div class="codehilite"><pre><span></span><code><span class="err">pip install pytorch-metric-learning</span>
+</code></pre></div>
+
+
+<p><strong>To get the latest dev version</strong>:</p>
+<div class="codehilite"><pre><span></span><code><span class="err">pip install pytorch-metric-learning --pre</span>
+</code></pre></div>
+
+
+<p><strong>To install on Windows</strong>:</p>
+<div class="codehilite"><pre><span></span><code><span class="err">pip install torch===1.4.0 torchvision===0.5.0 -f https://download.pytorch.org/whl/torch_stable.html</span>
+<span class="err">pip install pytorch-metric-learning</span>
+</code></pre></div>
+
+
+<p><strong>To install with evaluation and logging capabilities (This will install the unofficial pypi version of faiss-gpu)</strong>:</p>
+<div class="codehilite"><pre><span></span><code><span class="err">pip install pytorch-metric-learning[with-hooks]</span>
+</code></pre></div>
+
+
+<p><strong>To install with evaluation and logging capabilities (CPU) (This will install the unofficial pypi version of faiss-cpu)</strong>:</p>
+<div class="codehilite"><pre><span></span><code><span class="err">pip install pytorch-metric-learning[with-hooks-cpu]</span>
+</code></pre></div>
+
+
+<h3 id="conda">Conda<a class="headerlink" href="#conda" title="Permanent link">&para;</a></h3>
+<div class="codehilite"><pre><span></span><code><span class="err">conda install pytorch-metric-learning -c metric-learning -c pytorch</span>
+</code></pre></div>
+
+
+<p><strong>To use the testing module, you'll need faiss, which can be installed via conda as well. See the <a href="https://github.com/facebookresearch/faiss/blob/master/INSTALL.md">installation instructions for faiss</a>.</strong></p>
                 
               
               

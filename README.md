@@ -52,13 +52,6 @@ PyTorch Metric Learning
 ## Google Colab Examples
 See the [examples folder](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/README.md) for notebooks that show entire train/test workflows with logging and model saving.
 
-## Benefits of this library
-1. Ease of use
-   - Add metric learning to your application with just 2 lines of code in your training loop.  
-   - Mine pairs and triplets with a single function call. 
-2. Flexibility
-   - Mix and match losses, miners, and trainers in ways that other libraries don't allow.
-
 ## Installation
 ### Pip
 ```

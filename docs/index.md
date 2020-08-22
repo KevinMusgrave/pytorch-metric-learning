@@ -3,40 +3,6 @@
 ## Google Colab Examples
 See the [examples folder](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/README.md) for notebooks that show entire train/test workflows with logging and model saving.
 
-## Installation
-### Pip
-```
-pip install pytorch-metric-learning
-```
-
-**To get the latest dev version**:
-```
-pip install pytorch-metric-learning --pre
-```
-
-**To install on Windows**:
-```
-pip install torch===1.4.0 torchvision===0.5.0 -f https://download.pytorch.org/whl/torch_stable.html
-pip install pytorch-metric-learning
-```
-
-**To install with evaluation and logging capabilities (This will install the unofficial pypi version of faiss-gpu)**:
-```
-pip install pytorch-metric-learning[with-hooks]
-```
-
-**To install with evaluation and logging capabilities (CPU) (This will install the unofficial pypi version of faiss-cpu)**:
-```
-pip install pytorch-metric-learning[with-hooks-cpu]
-```
-
-### Conda
-```
-conda install pytorch-metric-learning -c metric-learning -c pytorch
-```
-
-**To use the testing module, you'll need faiss, which can be installed via conda as well. See the [installation instructions for faiss](https://github.com/facebookresearch/faiss/blob/master/INSTALL.md).**
-
 
 ## Overview
 This library contains 9 modules, each of which can be used independently within your existing codebase, or combined together for a complete train/test workflow.
@@ -135,3 +101,38 @@ for i, data in enumerate(dataloader):
 - To compute the accuracy of an embedding space directly, use [AccuracyCalculator](accuracy_calculation.md).
 
 If you're short of time, and want a complete train/test workflow, check out the [example Google Colab notebooks](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples).
+
+
+## Installation
+### Pip
+```
+pip install pytorch-metric-learning
+```
+
+**To get the latest dev version**:
+```
+pip install pytorch-metric-learning --pre
+```
+
+**To install on Windows**:
+```
+pip install torch===1.4.0 torchvision===0.5.0 -f https://download.pytorch.org/whl/torch_stable.html
+pip install pytorch-metric-learning
+```
+
+**To install with evaluation and logging capabilities (This will install the unofficial pypi version of faiss-gpu)**:
+```
+pip install pytorch-metric-learning[with-hooks]
+```
+
+**To install with evaluation and logging capabilities (CPU) (This will install the unofficial pypi version of faiss-cpu)**:
+```
+pip install pytorch-metric-learning[with-hooks-cpu]
+```
+
+### Conda
+```
+conda install pytorch-metric-learning -c metric-learning -c pytorch
+```
+
+**To use the testing module, you'll need faiss, which can be installed via conda as well. See the [installation instructions for faiss](https://github.com/facebookresearch/faiss/blob/master/INSTALL.md).**

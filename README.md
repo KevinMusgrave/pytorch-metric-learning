@@ -51,7 +51,7 @@ PyTorch Metric Learning
 - [**View the installation instructions here**](https://github.com/KevinMusgrave/pytorch-metric-learning#installation)
 
 ## Google Colab Examples
-See the [examples folder](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/README.md) for notebooks that show entire train/test workflows with logging and model saving.
+See the [examples folder](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/README.md) for notebooks you can download or run on Google Colab.
 
 
 ## Overview

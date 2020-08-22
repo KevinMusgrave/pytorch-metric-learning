@@ -1,8 +1,7 @@
 # PyTorch Metric Learning
 
 ## Google Colab Examples
-See the [examples folder](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/README.md) for notebooks that show entire train/test workflows with logging and model saving.
-
+See the [examples folder](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/README.md) for notebooks you can download or run on Google Colab.
 
 ## Overview
 This library contains 9 modules, each of which can be used independently within your existing codebase, or combined together for a complete train/test workflow.
@@ -100,7 +99,7 @@ for i, data in enumerate(dataloader):
 - Want to test your model's accuracy on a dataset? Try the [testers](testers/).
 - To compute the accuracy of an embedding space directly, use [AccuracyCalculator](accuracy_calculation.md).
 
-If you're short of time, and want a complete train/test workflow, check out the [example Google Colab notebooks](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples).
+If you're short of time and want a complete train/test workflow, check out the [example Google Colab notebooks](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples).
 
 
 ## Installation

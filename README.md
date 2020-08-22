@@ -143,7 +143,7 @@ Also check out the [example Google Colab notebooks](https://github.com/KevinMusg
 To learn more about all of the above, [see the documentation](https://kevinmusgrave.github.io/pytorch-metric-learning). 
 
 ## Library contents
-### [Losses](https://kevinmusgrave.github.io/pytorch-metric-learning/losses):
+### [Losses](https://kevinmusgrave.github.io/pytorch-metric-learning/losses)
 | Loss Name | Reference Papers |
 |---|---|
 | [**AngularLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#angularloss) | [Deep Metric Learning with Angular Loss](https://arxiv.org/pdf/1708.01682.pdf)
@@ -170,7 +170,7 @@ To learn more about all of the above, [see the documentation](https://kevinmusgr
 | [**TripletMarginLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#tripletmarginloss) | [Distance Metric Learning for Large Margin Nearest Neighbor Classification](https://papers.nips.cc/paper/2795-distance-metric-learning-for-large-margin-nearest-neighbor-classification.pdf)
 | [**TupletMarginLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#tupletmarginloss) | [Deep Metric Learning with Tuplet Margin Loss](http://openaccess.thecvf.com/content_ICCV_2019/papers/Yu_Deep_Metric_Learning_With_Tuplet_Margin_Loss_ICCV_2019_paper.pdf)
 
-### [Miners](https://kevinmusgrave.github.io/pytorch-metric-learning/miners):
+### [Miners](https://kevinmusgrave.github.io/pytorch-metric-learning/miners)
 | Loss Name | Reference Papers |
 |---|---|
 | [**AngularMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#angularminer) | 
@@ -183,13 +183,15 @@ To learn more about all of the above, [see the documentation](https://kevinmusgr
 | [**PairMarginMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#pairmarginminer) | 
 | [**TripletMarginMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#tripletmarginminer) | [FaceNet: A Unified Embedding for Face Recognition and Clustering](https://arxiv.org/pdf/1503.03832.pdf)
 
-### [Reducers](https://kevinmusgrave.github.io/pytorch-metric-learning/reducers):
-- [**AvgNonZeroReducer**](https://kevinmusgrave.github.io/pytorch-metric-learning/reducers/#avgnonzeroreducer)
-- [**ClassWeightedReducer**](https://kevinmusgrave.github.io/pytorch-metric-learning/reducers/#classweightedreducer)
-- [**DivisorReducer**](https://kevinmusgrave.github.io/pytorch-metric-learning/reducers/#divisorreducer)
-- [**DoNothingReducer**](https://kevinmusgrave.github.io/pytorch-metric-learning/reducers/#donothingreducer)
-- [**MeanReducer**](https://kevinmusgrave.github.io/pytorch-metric-learning/reducers/#meanreducer)
-- [**ThresholdReducer**](https://kevinmusgrave.github.io/pytorch-metric-learning/reducers/#thresholdreducer)
+### [Reducers](https://kevinmusgrave.github.io/pytorch-metric-learning/reducers)
+| Loss Name | Reference Papers |
+|---|---|
+| [**AvgNonZeroReducer**](https://kevinmusgrave.github.io/pytorch-metric-learning/reducers/#avgnonzeroreducer)
+| [**ClassWeightedReducer**](https://kevinmusgrave.github.io/pytorch-metric-learning/reducers/#classweightedreducer)
+| [**DivisorReducer**](https://kevinmusgrave.github.io/pytorch-metric-learning/reducers/#divisorreducer)
+| [**DoNothingReducer**](https://kevinmusgrave.github.io/pytorch-metric-learning/reducers/#donothingreducer)
+| [**MeanReducer**](https://kevinmusgrave.github.io/pytorch-metric-learning/reducers/#meanreducer)
+| [**ThresholdReducer**](https://kevinmusgrave.github.io/pytorch-metric-learning/reducers/#thresholdreducer)
 
 ### [Regularizers](https://kevinmusgrave.github.io/pytorch-metric-learning/regularizers):
 - [**CenterInvariantRegularizer**](https://kevinmusgrave.github.io/pytorch-metric-learning/regularizers/#centerinvariantregularizer) ([Deep Face Recognition with Center Invariant Loss](http://www1.ece.neu.edu/~yuewu/files/2017/twu024.pdf))

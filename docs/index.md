@@ -51,10 +51,11 @@ for i, (data, labels) in enumerate(dataloader):
 In the above code, the miner finds positive and negative pairs that it thinks are particularly difficult. Note that even though the TripletMarginLoss operates on triplets, it’s still possible to pass in pairs. This is because the library automatically converts pairs to triplets and triplets to pairs, when necessary.
 
 ### Customizing loss functions
-Loss functions can be customized using [distances](distances.md), [reducers](reducers.md), and [regularizers](regularizers.md).
+Loss functions can be customized using [distances](distances.md), [reducers](reducers.md), and [regularizers](regularizers.md). In the diagram below, a miner finds the indices of hard pairs within a batch. These are used to index into the distance matrix, computed by the distance object. For this diagram, the loss function is pair-based, so it computes a loss per pair. In addition, a regularizer has been supplied, so a regularization loss is computed for each embedding in the batch. The per-pair and per-element losses are passed to the reducer, which (in this diagram) only keeps losses with a high value. The averages are computed for the high-valued pair and element losses, and are then added together to obtain the final loss.
 ![high_level_loss_function_overview](imgs/high_level_loss_function_overview.png)
 
-Here's an example of a customized TripletMarginLoss:
+
+Now here's an example of a customized TripletMarginLoss:
 ```python
 from pytorch_metric_learning.distances import CosineSimilarity
 from pytorch_metric_learning.reducers import ThresholdReducer

@@ -52,6 +52,7 @@ In the above code, the miner finds positive and negative pairs that it thinks ar
 
 ### Customizing loss functions
 Loss functions can be customized using [distances](distances.md), [reducers](reducers.md), and [regularizers](regularizers.md). In the diagram below, a miner finds the indices of hard pairs within a batch. These are used to index into the distance matrix, computed by the distance object. For this diagram, the loss function is pair-based, so it computes a loss per pair. In addition, a regularizer has been supplied, so a regularization loss is computed for each embedding in the batch. The per-pair and per-element losses are passed to the reducer, which (in this diagram) only keeps losses with a high value. The averages are computed for the high-valued pair and element losses, and are then added together to obtain the final loss.
+
 ![high_level_loss_function_overview](imgs/high_level_loss_function_overview.png)
 
 

@@ -47,7 +47,8 @@ PyTorch Metric Learning
 **June 20**: v0.9.87 comes with some major changes that may cause your existing code to break. See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.87) for details.
 
 ## Documentation
-[**View the documentation here**](https://kevinmusgrave.github.io/pytorch-metric-learning/)
+- [**View the documentation here**](https://kevinmusgrave.github.io/pytorch-metric-learning/)
+- [**View the installation instructions here**](https://github.com/KevinMusgrave/pytorch-metric-learning#installation)
 
 ## Google Colab Examples
 See the [examples folder](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/README.md) for notebooks that show entire train/test workflows with logging and model saving.

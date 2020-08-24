@@ -374,12 +374,12 @@ This library contains code that has been adapted and modified from the following
 ## Citing this library
 If you'd like to cite pytorch-metric-learning in your paper, you can use this bibtex:
 ```latex
-@misc{Musgrave2019,
-  author = {Musgrave, Kevin and Lim, Ser-Nam and Belongie, Serge},
-  title = {PyTorch Metric Learning},
-  year = {2019},
-  publisher = {GitHub},
-  journal = {GitHub repository},
-  howpublished = {\url{https://github.com/KevinMusgrave/pytorch-metric-learning}},
+@misc{musgrave2020pytorch,
+    title={PyTorch Metric Learning},
+    author={Kevin Musgrave and Serge Belongie and Ser-Nam Lim},
+    year={2020},
+    eprint={2008.09164},
+    archivePrefix={arXiv},
+    primaryClass={cs.CV}
 }
 ```

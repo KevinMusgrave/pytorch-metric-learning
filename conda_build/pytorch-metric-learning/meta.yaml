@@ -1,5 +1,5 @@
 {% set name = "pytorch-metric-learning" %}
-{% set version = "0.9.90" %}
+{% set version = "0.9.91" %}
 
 package:
   name: "{{ name|lower }}"
@@ -7,7 +7,7 @@ package:
 
 source:
   url: "https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz"
-  sha256: 690764699f526a95638b33577f4edf48f13a9facd8399e260e90783c6c558783
+  sha256: e5c15ddbb40d783b129e5a38930f9c8dc14d72652ef78f303cd0acd9f86bacbc
 
 build:
   number: 0
@@ -34,8 +34,10 @@ requirements:
 test:
   imports:
     - pytorch_metric_learning
+    - pytorch_metric_learning.distances
     - pytorch_metric_learning.losses
     - pytorch_metric_learning.miners
+    - pytorch_metric_learning.reducers
     - pytorch_metric_learning.regularizers
     - pytorch_metric_learning.samplers
     - pytorch_metric_learning.testers

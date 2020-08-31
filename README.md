@@ -36,6 +36,8 @@ PyTorch Metric Learning
 
 ## News
 
+**August 31**: v0.9.91 has a couple of bug fixes. See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.91)
+
 **August 7**: v0.9.90 MEGA UPDATE
 * New distances module makes loss functions even more modular.
 * Now compatible with half-precision
@@ -43,8 +45,6 @@ PyTorch Metric Learning
 * Hopefully this is the last major structural change to the library.
 
 **July 25**: v0.9.89 comes with some bug fixes for CrossBatchMemory, AccuracyCalculator, BaseTester, and a new feature for InferenceModel. See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.89) for details
-
-**June 20**: v0.9.87 comes with some major changes that may cause your existing code to break. See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.87) for details.
 
 ## Documentation
 - [**View the documentation here**](https://kevinmusgrave.github.io/pytorch-metric-learning/)

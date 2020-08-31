@@ -6,14 +6,14 @@ The AccuracyCalculator class computes several accuracy metrics given a query and
 from pytorch_metric_learning.utils.accuracy_calculator import AccuracyCalculator
 AccuracyCalculator(include=(), exclude=(), avg_of_avgs=False, k=None)
 ```
-**Parameters**:
+### Parameters
 
 * **include**: Optional. A list or tuple of strings, which are the names of metrics you want to calculate. If left empty, all default metrics will be calculated.
 * **exclude**: Optional. A list or tuple of strings, which are the names of metrics you **do not** want to calculate.
 * **avg_of_avgs**: If True, the average accuracy per class is computed, and then the average of those averages is returned. This can be useful if your dataset has unbalanced classes. If False, the global average will be returned.
 * **k**: If set, this number of nearest neighbors will be retrieved for metrics that require k-nearest neighbors. If None, the value of k will be determined automatically.
 
-**Getting accuracy**:
+### Getting accuracy
 
 Call the ```get_accuracy``` method to obtain a dictionary of accuracies.
 ```python
@@ -42,7 +42,31 @@ def get_accuracy(self,
 * **include**: Optional. A list or tuple of strings, which are the names of metrics you want to calculate. If left empty, all metrics specified during initialization will be calculated.
 * **exclude**: Optional. A list or tuple of strings, which are the names of metrics you do not want to calculate.
 
-**Adding custom accuracy metrics**
+### Explanations of the default accuracy metrics
+
+- **AMI**: 
+
+     - [scikit-learn article](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.adjusted_mutual_info_score.html)
+     - [Wikipedia](https://en.wikipedia.org/wiki/Adjusted_mutual_information)
+
+- **NMI**:
+
+     - [scikit-learn article](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.normalized_mutual_info_score.html)
+     - [Slides from Northeastern University](https://course.ccs.neu.edu/cs6140sp15/7_locality_cluster/Assignment-6/NMI.pdf)
+
+- **mean_average_precision_at_r**:
+
+    - [See section 3.2 of A Metric Learning Reality Check](https://arxiv.org/pdf/2003.08505.pdf)
+
+- **precision_at_1**:
+
+    - Fancy way of saying "is the 1st nearest neighbor correct?"
+
+- **r_precision**:
+
+    - [See section 3.2 of A Metric Learning Reality Check](https://arxiv.org/pdf/2003.08505.pdf)
+
+### Adding custom accuracy metrics
 
 Let's say you want to use the existing metrics but also compute precision @ 2, and a fancy mutual info method. You can extend the existing class, and write methods that start with the keyword ```calculate_```
 

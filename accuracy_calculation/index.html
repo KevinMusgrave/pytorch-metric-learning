@@ -329,9 +329,63 @@
       
     
     
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Accuracy Calculation
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"/></svg>
+        </span>
+      </label>
+    
     <a href="./" title="Accuracy Calculation" class="md-nav__link md-nav__link--active">
       Accuracy Calculation
     </a>
+    
+      
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#parameters" class="md-nav__link">
+    Parameters
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-accuracy" class="md-nav__link">
+    Getting accuracy
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#explanations-of-the-default-accuracy-metrics" class="md-nav__link">
+    Explanations of the default accuracy metrics
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adding-custom-accuracy-metrics" class="md-nav__link">
+    Adding custom accuracy metrics
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
     
   </li>
 
@@ -436,6 +490,44 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#parameters" class="md-nav__link">
+    Parameters
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-accuracy" class="md-nav__link">
+    Getting accuracy
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#explanations-of-the-default-accuracy-metrics" class="md-nav__link">
+    Explanations of the default accuracy metrics
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#adding-custom-accuracy-metrics" class="md-nav__link">
+    Adding custom accuracy metrics
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -461,14 +553,14 @@
 </code></pre></div>
 
 
-<p><strong>Parameters</strong>:</p>
+<h3 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>include</strong>: Optional. A list or tuple of strings, which are the names of metrics you want to calculate. If left empty, all default metrics will be calculated.</li>
 <li><strong>exclude</strong>: Optional. A list or tuple of strings, which are the names of metrics you <strong>do not</strong> want to calculate.</li>
 <li><strong>avg_of_avgs</strong>: If True, the average accuracy per class is computed, and then the average of those averages is returned. This can be useful if your dataset has unbalanced classes. If False, the global average will be returned.</li>
 <li><strong>k</strong>: If set, this number of nearest neighbors will be retrieved for metrics that require k-nearest neighbors. If None, the value of k will be determined automatically.</li>
 </ul>
-<p><strong>Getting accuracy</strong>:</p>
+<h3 id="getting-accuracy">Getting accuracy<a class="headerlink" href="#getting-accuracy" title="Permanent link">&para;</a></h3>
 <p>Call the <code>get_accuracy</code> method to obtain a dictionary of accuracies.</p>
 <div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">get_accuracy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
     <span class="n">query</span><span class="p">,</span>      
@@ -498,7 +590,42 @@
 <li><strong>include</strong>: Optional. A list or tuple of strings, which are the names of metrics you want to calculate. If left empty, all metrics specified during initialization will be calculated.</li>
 <li><strong>exclude</strong>: Optional. A list or tuple of strings, which are the names of metrics you do not want to calculate.</li>
 </ul>
-<p><strong>Adding custom accuracy metrics</strong></p>
+<h3 id="explanations-of-the-default-accuracy-metrics">Explanations of the default accuracy metrics<a class="headerlink" href="#explanations-of-the-default-accuracy-metrics" title="Permanent link">&para;</a></h3>
+<ul>
+<li>
+<p><strong>AMI</strong>: </p>
+<ul>
+<li><a href="https://scikit-learn.org/stable/modules/generated/sklearn.metrics.adjusted_mutual_info_score.html">scikit-learn article</a></li>
+<li><a href="https://en.wikipedia.org/wiki/Adjusted_mutual_information">Wikipedia</a></li>
+</ul>
+</li>
+<li>
+<p><strong>NMI</strong>:</p>
+<ul>
+<li><a href="https://scikit-learn.org/stable/modules/generated/sklearn.metrics.normalized_mutual_info_score.html">scikit-learn article</a></li>
+<li><a href="https://course.ccs.neu.edu/cs6140sp15/7_locality_cluster/Assignment-6/NMI.pdf">Slides from Northeastern University</a></li>
+</ul>
+</li>
+<li>
+<p><strong>mean_average_precision_at_r</strong>:</p>
+<ul>
+<li><a href="https://arxiv.org/pdf/2003.08505.pdf">See section 3.2 of A Metric Learning Reality Check</a></li>
+</ul>
+</li>
+<li>
+<p><strong>precision_at_1</strong>:</p>
+<ul>
+<li>Fancy way of saying "is the 1st nearest neighbor correct?"</li>
+</ul>
+</li>
+<li>
+<p><strong>r_precision</strong>:</p>
+<ul>
+<li><a href="https://arxiv.org/pdf/2003.08505.pdf">See section 3.2 of A Metric Learning Reality Check</a></li>
+</ul>
+</li>
+</ul>
+<h3 id="adding-custom-accuracy-metrics">Adding custom accuracy metrics<a class="headerlink" href="#adding-custom-accuracy-metrics" title="Permanent link">&para;</a></h3>
 <p>Let's say you want to use the existing metrics but also compute precision @ 2, and a fancy mutual info method. You can extend the existing class, and write methods that start with the keyword <code>calculate_</code></p>
 <div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils</span> <span class="kn">import</span> <span class="n">accuracy_calculator</span>
 

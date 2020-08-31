@@ -557,6 +557,18 @@
 </code></pre></div>
 
 
+<p>You can perform custom actions by writing an end-of-testing hook (see the documentation for <a href="#basetester">BaseTester</a>), and you can access the test results directly via the <code>all_accuracies</code> attribute:</p>
+<div class="codehilite"><pre><span></span><code><span class="nb">print</span><span class="p">(</span><span class="n">tester</span><span class="o">.</span><span class="n">all_accuracies</span><span class="p">)</span>
+</code></pre></div>
+
+
+<p>This will print out a dictionary of accuracy metrics, per dataset split. You'll see something like this:</p>
+<div class="codehilite"><pre><span></span><code><span class="p">{</span><span class="s2">&quot;train&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;AMI_level0&quot;</span><span class="p">:</span> <span class="mf">0.53</span><span class="p">,</span> <span class="o">...</span><span class="p">},</span> <span class="s2">&quot;val&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;AMI_level0&quot;</span><span class="p">:</span> <span class="mf">0.44</span><span class="p">,</span> <span class="o">...</span><span class="p">}}</span>
+</code></pre></div>
+
+
+<p>Each of the accuracy metric names is appended with <code>level0</code>, which refers to the 0th label hierarchy level (see the documentation for <a href="#basetester">BaseTester</a>). This is only relevant if you're dealing with multi-label datasets. </p>
+<p>For an explanation of the default accuracy metrics, see the <a href="../accuracy_calculation/#explanations-of-the-default-accuracy-metrics">AccuracyCalculator documentation</a>.</p>
 <h2 id="basetester">BaseTester<a class="headerlink" href="#basetester" title="Permanent link">&para;</a></h2>
 <p>All trainers extend this class and therefore inherit its <code>__init__</code> arguments.</p>
 <div class="codehilite"><pre><span></span><code><span class="n">testers</span><span class="o">.</span><span class="n">BaseTester</span><span class="p">(</span><span class="n">reference_set</span><span class="o">=</span><span class="s2">&quot;compared_to_self&quot;</span><span class="p">,</span> 
@@ -595,7 +607,6 @@
 <li><strong>label_hierarchy_level</strong>: If each sample in your dataset has multiple labels, then this integer argument can be used to select which "level" to use. This assumes that your labels are "2-dimensional" with shape (num_samples, num_hierarchy_levels). Leave this at the default value, 0, if your data does not have multiple labels per sample.</li>
 <li><strong>end_of_testing_hook</strong>: This is an optional function that has one input argument (the tester object) and performs some action (e.g. logging data) at the end of testing.<ul>
 <li>You'll probably want to access the accuracy metrics, which are stored in <code>tester.all_accuracies</code>. This is a nested dictionary with the following format: <code>tester.all_accuracies[split_name][metric_name] = metric_value</code></li>
-<li>If you set <code>size_of_tsne</code> to be greater than 0, then the T-SNE embeddings will be stored in <code>tester.tsne_embeddings</code> which is a dictionary with the following format: <code>tester.tsne_embeddings[split_name]["tsne_level%d"] = (embeddings, labels)</code>. (Note that <code>"tsne_level%d"</code> refers to the label hierarchy level. If you use the default label hierarchy level, then the string will be <code>"tsne_level0"</code>.)</li>
 <li>If you want ready-to-use hooks, take a look at the <a href="../logging_presets/">logging_presets module</a>.</li>
 </ul>
 </li>
@@ -614,7 +625,7 @@
 </li>
 </ul>
 <h2 id="globalembeddingspacetester">GlobalEmbeddingSpaceTester<a class="headerlink" href="#globalembeddingspacetester" title="Permanent link">&para;</a></h2>
-<p>Computes nearest neighbors by looking at all points in the embedding space. This is probably the tester you are looking for. To see it in action, check one of the <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples">example notebooks</a></p>
+<p>Computes nearest neighbors by looking at all points in the embedding space (rather than a subset). This is probably the tester you are looking for. To see it in action, check one of the <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples">example notebooks</a></p>
 <div class="codehilite"><pre><span></span><code><span class="n">testers</span><span class="o">.</span><span class="n">GlobalEmbeddingSpaceTester</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 

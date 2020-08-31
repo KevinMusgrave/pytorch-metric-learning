@@ -169,7 +169,7 @@ pip install pytorch-metric-learning --pre
 
 **To install on Windows**:
 ```
-pip install torch===1.4.0 torchvision===0.5.0 -f https://download.pytorch.org/whl/torch_stable.html
+pip install torch===1.6.0 torchvision===0.7.0 -f https://download.pytorch.org/whl/torch_stable.html
 pip install pytorch-metric-learning
 ```
 
@@ -317,7 +317,12 @@ See [powerful-benchmarker](https://github.com/KevinMusgrave/powerful-benchmarker
 
 
 ## Development
-In order to run unit tests do:
+Unit tests can be run with the default ```unittest``` library:
+```bash
+python -m unittest discover
+```
+
+Or if you want to use ```pytest```:
 ```bash
 pip install -e .[dev]
 pytest tests

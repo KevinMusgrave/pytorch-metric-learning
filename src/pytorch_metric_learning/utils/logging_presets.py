@@ -15,12 +15,14 @@ class HookContainer:
     def __init__(self, record_keeper, 
                         record_group_name_prefix=None, 
                         primary_metric="mean_average_precision_at_r", 
-                        validation_split_name="val"):
+                        validation_split_name="val",
+                        save_models=True):
         self.record_keeper = record_keeper
         self.record_group_name_prefix = record_group_name_prefix
         self.saveable_trainer_objects = ["models", "optimizers", "lr_schedulers", "loss_funcs", "mining_funcs"]
         self.primary_metric = primary_metric
         self.validation_split_name = validation_split_name
+        self.do_save_models = save_models
 
     ############################################
     ############################################
@@ -83,10 +85,11 @@ class HookContainer:
 
 
     def save_models(self, trainer, model_folder, curr_suffix, prev_suffix=None):
-        for obj_dict in [getattr(trainer, x, {}) for x in self.saveable_trainer_objects]:
-            c_f.save_dict_of_models(obj_dict, curr_suffix, model_folder)
-            if prev_suffix is not None:
-                c_f.delete_dict_of_models(obj_dict, prev_suffix, model_folder) 
+        if self.do_save_models:
+            for obj_dict in [getattr(trainer, x, {}) for x in self.saveable_trainer_objects]:
+                c_f.save_dict_of_models(obj_dict, curr_suffix, model_folder)
+                if prev_suffix is not None:
+                    c_f.delete_dict_of_models(obj_dict, prev_suffix, model_folder) 
 
     def save_models_and_eval(self, trainer, dataset_dict, model_folder, test_interval, tester, collate_fn):
         epoch = trainer.epoch

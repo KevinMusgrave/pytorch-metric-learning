@@ -23,5 +23,5 @@ from .soft_triple_loss import SoftTripleLoss
 from .sphereface_loss import SphereFaceLoss
 from .triplet_margin_loss import TripletMarginLoss
 from .tuplet_margin_loss import TupletMarginLoss
-from .mixins import WeightRegularizerMixin
-from .mixins import EmbeddingRegularizerMixin
+from .mixins import WeightRegularizerMixin, EmbeddingRegularizerMixin
+from .distributed_loss_wrapper import DistributedLossWrapper

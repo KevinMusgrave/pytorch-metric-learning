@@ -180,6 +180,8 @@ def get_labels_to_indices(labels):
     Creates labels_to_indices, which is a dictionary mapping each label
     to a numpy array of indices that will be used to index into self.dataset
     """
+    if torch.is_tensor(labels):
+        labels = labels.cpu().numpy()
     labels_to_indices = collections.defaultdict(list)
     for i, label in enumerate(labels):
         labels_to_indices[label].append(i)
@@ -372,3 +374,27 @@ class TorchInitWrapper:
     
     def __call__(self, tensor):
         self.init_func(tensor, **self.kwargs)
+
+
+# modified from https://github.com/allenai/allennlp
+def is_distributed():
+    return torch.distributed.is_available() and torch.distributed.is_initialized()
+
+# modified from https://github.com/JohnGiorgi/DeCLUTR
+def all_gather_embeddings_labels(embeddings, labels):
+    # If we are not using distributed training, this is a no-op.
+    if not is_distributed():
+        return embeddings, labels
+    # Gather the encoded anchors and positives on all replicas
+    embeddings_list = [torch.ones_like(embeddings) for _ in range(torch.distributed.get_world_size())]
+    labels_list = [torch.ones_like(labels) for _ in range(torch.distributed.get_world_size())]
+    torch.distributed.all_gather(embeddings_list, embeddings.contiguous())
+    torch.distributed.all_gather(labels_list, labels.contiguous())
+    # The gathered copy of the current replicas positive pairs have no gradients, so we overwrite
+    # them with the positive pairs generated on this replica, which DO have gradients.
+    embeddings_list[torch.distributed.get_rank()] = embeddings
+    labels_list[torch.distributed.get_rank()] = labels
+    # Finally, we concatenate the positive pairs so they can be fed to the contrastive loss.
+    embeddings = torch.cat(embeddings_list)
+    labels = torch.cat(labels_list)
+    return embeddings, labels

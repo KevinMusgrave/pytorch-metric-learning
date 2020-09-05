@@ -19,6 +19,7 @@ class BaseReducer(ModuleWithRecords):
         return loss_info["losses"], loss_info["indices"], loss_info["reduction_type"]
 
     def reduce_the_loss(self, losses, loss_indices, reduction_type, embeddings, labels):
+        self.set_losses_size_stat(losses)
         if self.input_is_zero_loss(losses):
             return self.zero_loss(embeddings)
         self.assert_sizes(losses, loss_indices, reduction_type)
@@ -81,3 +82,11 @@ class BaseReducer(ModuleWithRecords):
         assert c_f.is_list_or_tuple(loss_indices)
         assert len(loss_indices) == 3
         assert all(len(x) == len(losses) for x in loss_indices)
+
+    def set_losses_size_stat(self, losses):
+        if self.collect_stats:
+            self.add_to_recordable_attributes(name="losses_size", is_stat=True)
+            if not torch.is_tensor(losses) or losses.ndim == 0:
+                self.losses_size = 1
+            else:
+                self.losses_size = len(losses)

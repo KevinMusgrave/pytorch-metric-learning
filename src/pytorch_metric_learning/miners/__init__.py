@@ -8,5 +8,5 @@ from .maximum_loss_miner import MaximumLossMiner
 from .multi_similarity_miner import MultiSimilarityMiner
 from .pair_margin_miner import PairMarginMiner
 from .triplet_margin_miner import TripletMarginMiner
-
+from .distributed_miner_wrapper import DistributedMinerWrapper
 

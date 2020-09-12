@@ -10,6 +10,7 @@ Click "Open in playground" on the Colab header to interact with the notebook.
 |Notebook|Description|Colab Link|
 |:---|:---:|:---|
 [MNIST using TripletMarginLoss](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/TripletMarginLossMNIST.ipynb) | Train with TripletMarginLoss, evaluate with AccuracyCalculator. |[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/TripletMarginLossMNIST.ipynb)
+[Multiprocessing with DistributedDataParallel](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/DistributedTripletMarginLossMNIST.ipynb) | An example using pytorch-metric-learnings.utils.distributed |[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/DistributedTripletMarginLossMNIST.ipynb)
 
 ## Training/testing workflows with logging and model saving
 

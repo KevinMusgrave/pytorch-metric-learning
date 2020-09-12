@@ -14,16 +14,16 @@ def all_gather(embeddings, labels):
         return embeddings, labels
     world_size = torch.distributed.get_world_size()
     rank = torch.distributed.get_rank()
-    # Gather the encoded anchors and positives on all replicas
+    # Gather the embeddings on all replicas
     embeddings_list = [torch.ones_like(embeddings) for _ in range(world_size)]
     labels_list = [torch.ones_like(labels) for _ in range(world_size)]
     torch.distributed.all_gather(embeddings_list, embeddings.contiguous())
     torch.distributed.all_gather(labels_list, labels.contiguous())
-    # The gathered copy of the current replicas positive pairs have no gradients, so we overwrite
-    # them with the positive pairs generated on this replica, which DO have gradients.
+    # The gathered copy of the current replicas embeddings have no gradients, so we overwrite
+    # them with the embeddings generated on this replica, which DO have gradients.
     embeddings_list[rank] = embeddings
     labels_list[rank] = labels
-    # Finally, we concatenate the positive pairs so they can be fed to the contrastive loss.
+    # Finally, we concatenate the embeddings
     embeddings = torch.cat(embeddings_list)
     labels = torch.cat(labels_list)
     return embeddings, labels

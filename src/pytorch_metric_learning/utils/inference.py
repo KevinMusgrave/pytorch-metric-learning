@@ -3,6 +3,7 @@ import numpy as np
 import torch
 import faiss
 from ..distances import CosineSimilarity
+import copy
 
 class MatchFinder:
     def __init__(self, distance, threshold=None):
@@ -115,3 +116,35 @@ class InferenceModel:
     def is_match(self, x, y, threshold=None):
         x, y = self.get_embeddings(x, y)
         return self.match_finder.is_match(x, y, threshold)
+
+
+
+class LogitGetter(torch.nn.Module):
+    possible_layer_names = ["fc", "proxies", "W"]
+
+    def __init__(self, classifier, layer_name=None, transpose=None, distance=None):
+        super().__init__()
+
+        ### set layer weights ###
+        if layer_name is not None:
+            self.weights = copy.deepcopy(getattr(classifier, layer_name))
+        else:
+            for x in self.possible_layer_names:
+                layer = getattr(classifier, x, None)
+                if layer is not None:
+                    self.weights = copy.deepcopy(layer)
+                    break
+        
+        ### set distance measure ###
+        self.distance = classifier.distance if distance is None else distance
+        self.transpose = transpose
+
+
+    def forward(self, embeddings):
+        w = self.weights
+        if self.transpose is True:
+            w = self.weights.t()
+        elif self.transpose is None:
+            if w.size(0) == embeddings.size(1):
+                w = self.weights.t()
+        return self.distance(embeddings, w)

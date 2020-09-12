@@ -207,9 +207,11 @@ class BaseTrainer:
         if self.data_and_label_getter is None:
             self.data_and_label_getter = c_f.return_input
 
+    def trainable_attributes(self):
+        return [self.models, self.loss_funcs]
+
     def set_to_train(self):
-        trainable = [self.models, self.loss_funcs]
-        for T in trainable:
+        for T in self.trainable_attributes():
             for k, v in T.items():
                 if k in self.freeze_these:
                     c_f.set_requires_grad(v, requires_grad=False)
@@ -219,8 +221,9 @@ class BaseTrainer:
         self.maybe_freeze_trunk_batchnorm()
 
     def set_to_eval(self):
-        for k, v in self.models.items():
-            v.eval()
+        for T in self.trainable_attributes():
+            for v in T.values():
+                v.eval()
 
     def initialize_loss_weights(self):
         if self.loss_weights is None:

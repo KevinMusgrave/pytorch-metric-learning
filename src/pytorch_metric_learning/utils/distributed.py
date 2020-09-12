@@ -1,12 +1,13 @@
 import torch
 from torch.nn.parallel import DistributedDataParallel as DDP
+from ..utils import common_functions as c_f
 
 # modified from https://github.com/allenai/allennlp
 def is_distributed():
     return torch.distributed.is_available() and torch.distributed.is_initialized()
 
 # modified from https://github.com/JohnGiorgi/DeCLUTR
-def all_gather_embeddings_labels(embeddings, labels):
+def all_gather(embeddings, labels):
     labels = labels.to(embeddings.device)
     # If we are not using distributed training, this is a no-op.
     if not is_distributed():
@@ -25,6 +26,22 @@ def all_gather_embeddings_labels(embeddings, labels):
     # Finally, we concatenate the positive pairs so they can be fed to the contrastive loss.
     embeddings = torch.cat(embeddings_list)
     labels = torch.cat(labels_list)
+    return embeddings, labels
+
+
+def all_gather_embeddings_labels(embeddings, labels):
+    if c_f.is_list_or_tuple(embeddings):
+        assert c_f.is_list_or_tuple(labels)
+        all_embeddings, all_labels = [], []
+        for i in range(len(embeddings)):
+            E, L = all_gather(embeddings[i], labels[i])
+            all_embeddings.append(E)
+            all_labels.append(L)
+        embeddings = torch.cat(all_embeddings, dim=0)
+        labels = torch.cat(all_labels, dim=0)
+    else:
+        embeddings, labels = all_gather(embeddings, labels)
+
     return embeddings, labels
 
 

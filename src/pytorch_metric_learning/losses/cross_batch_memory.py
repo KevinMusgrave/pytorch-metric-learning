@@ -14,14 +14,35 @@ class CrossBatchMemory(ModuleWithRecords):
         self.queue_idx = 0
         self.add_to_recordable_attributes(list_of_names=["embedding_size", "memory_size", "queue_idx"], is_stat=False)
 
-    def forward(self, embeddings, labels, indices_tuple=None):
-        assert embeddings.size(0) <= self.embedding_memory.size(0)
+
+    def forward(self, embeddings, labels, indices_tuple=None, enqueue_idx=None):
+        if enqueue_idx is not None:
+            assert len(enqueue_idx) <= len(self.embedding_memory)
+            assert len(enqueue_idx) < len(embeddings)
+        else:
+            assert len(embeddings) <= len(self.embedding_memory)
         self.reset_stats()
-        batch_size = embeddings.size(0)
-        labels = labels.to(embeddings.device)
-        self.embedding_memory = self.embedding_memory.to(embeddings.device).type(embeddings.dtype)
-        self.label_memory = self.label_memory.to(labels.device).type(labels.dtype)
-        self.add_to_memory(embeddings, labels, batch_size)
+        device = embeddings.device
+        labels = labels.to(device)
+        self.embedding_memory = self.embedding_memory.to(device).type(embeddings.dtype)
+        self.label_memory = self.label_memory.to(device).type(labels.dtype)
+
+        if enqueue_idx is not None:
+            mask = torch.zeros(len(embeddings)).bool().to(device)
+            mask[enqueue_idx] = True
+            emb_for_queue = embeddings[mask]
+            labels_for_queue = labels[mask]
+            embeddings = embeddings[~mask]
+            labels = labels[~mask]
+            do_remove_self_comparisons = False
+        else:
+            emb_for_queue = embeddings
+            labels_for_queue = labels
+            do_remove_self_comparisons = True
+
+        batch_size = len(embeddings)
+        queue_batch_size = len(emb_for_queue)
+        self.add_to_memory(emb_for_queue, labels_for_queue, queue_batch_size)
         
         if not self.has_been_filled:
             E_mem = self.embedding_memory[:self.queue_idx]
@@ -30,11 +51,12 @@ class CrossBatchMemory(ModuleWithRecords):
             E_mem = self.embedding_memory
             L_mem = self.label_memory
 
-        indices_tuple = self.create_indices_tuple(batch_size, embeddings, labels, E_mem, L_mem, indices_tuple)
+        indices_tuple = self.create_indices_tuple(batch_size, embeddings, labels, E_mem, L_mem, indices_tuple, do_remove_self_comparisons)
         combined_embeddings = torch.cat([embeddings, E_mem], dim=0)
         combined_labels = torch.cat([labels, L_mem], dim=0)
         loss = self.loss(combined_embeddings, combined_labels, indices_tuple)
         return loss
+
 
     def add_to_memory(self, embeddings, labels, batch_size):
         self.curr_batch_idx = (torch.arange(self.queue_idx, self.queue_idx + batch_size) % self.memory_size).to(labels.device)
@@ -45,13 +67,16 @@ class CrossBatchMemory(ModuleWithRecords):
         if (not self.has_been_filled) and (self.queue_idx <= prev_queue_idx):
             self.has_been_filled = True
 
-    def create_indices_tuple(self, batch_size, embeddings, labels, E_mem, L_mem, input_indices_tuple):
+
+    def create_indices_tuple(self, batch_size, embeddings, labels, E_mem, L_mem, input_indices_tuple, do_remove_self_comparisons):
         if self.miner:
         	indices_tuple = self.miner(embeddings, labels, E_mem, L_mem)
         else:
         	indices_tuple = lmu.get_all_pairs_indices(labels, L_mem)
 
-        indices_tuple = self.remove_self_comparisons(indices_tuple)
+        if do_remove_self_comparisons:
+            indices_tuple = self.remove_self_comparisons(indices_tuple)
+
         indices_tuple = c_f.shift_indices_tuple(indices_tuple, batch_size)
 
         if input_indices_tuple is not None:

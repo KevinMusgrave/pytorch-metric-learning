@@ -72,22 +72,41 @@ class TestCrossBatchMemory(unittest.TestCase):
     def test_sanity_check(self):
         # cross batch memory with batch_size == memory_size should be equivalent to just using the inner loss function
         for dtype in TEST_DTYPES:
-            for memory_size in range(20, 40, 5):
-                inner_loss = NTXentLoss(temperature=0.1)
-                inner_miner = TripletMarginMiner(margin=0.1)
-                loss = CrossBatchMemory(loss=inner_loss, embedding_size=self.embedding_size, memory_size=memory_size)
-                loss_with_miner = CrossBatchMemory(loss=inner_loss, embedding_size=self.embedding_size, memory_size=memory_size, miner=inner_miner)
-                for i in range(10):
-                    embeddings = torch.randn(memory_size, self.embedding_size).to(self.device).type(dtype)
-                    labels = torch.randint(0, 4, (memory_size,)).to(self.device)
-                    inner_loss_val = inner_loss(embeddings, labels)
-                    loss_val = loss(embeddings, labels)
-                    self.assertTrue(torch.isclose(inner_loss_val, loss_val))
+            for test_enqueue_idx in [False, True]:
+                for memory_size in range(20, 40, 5):
+                    inner_loss = NTXentLoss(temperature=0.1)
+                    inner_miner = TripletMarginMiner(margin=0.1)
+                    loss = CrossBatchMemory(loss=inner_loss, embedding_size=self.embedding_size, memory_size=memory_size)
+                    loss_with_miner = CrossBatchMemory(loss=inner_loss, embedding_size=self.embedding_size, memory_size=memory_size, miner=inner_miner)
+                    for i in range(10):
+                        if test_enqueue_idx:
+                            enqueue_idx = torch.arange(memory_size, memory_size*2)
+                            not_enqueue_idx = torch.arange(memory_size)
+                            batch_size = memory_size*2
+                        else:
+                            enqueue_idx = None
+                            batch_size = memory_size
+                        embeddings = torch.randn(batch_size, self.embedding_size).to(self.device).type(dtype)
+                        labels = torch.randint(0, 4, (batch_size,)).to(self.device)
 
-                    triplets = inner_miner(embeddings, labels)
-                    inner_loss_val = inner_loss(embeddings, labels, triplets)
-                    loss_val = loss_with_miner(embeddings, labels)
-                    self.assertTrue(torch.isclose(inner_loss_val, loss_val))
+                        if test_enqueue_idx:
+                            pairs = lmu.get_all_pairs_indices(labels[not_enqueue_idx], labels[enqueue_idx])
+                            pairs = c_f.shift_indices_tuple(pairs, memory_size)
+                            inner_loss_val = inner_loss(embeddings, labels, pairs)
+                        else:
+                            inner_loss_val = inner_loss(embeddings, labels)
+                        loss_val = loss(embeddings, labels, enqueue_idx=enqueue_idx)
+                        self.assertTrue(torch.isclose(inner_loss_val, loss_val))
+
+                        if test_enqueue_idx:
+                            triplets = inner_miner(embeddings[not_enqueue_idx], labels[not_enqueue_idx], embeddings[enqueue_idx], labels[enqueue_idx])
+                            triplets = c_f.shift_indices_tuple(triplets, memory_size)
+                            inner_loss_val = inner_loss(embeddings, labels, triplets)
+                        else:
+                            triplets = inner_miner(embeddings, labels)
+                            inner_loss_val = inner_loss(embeddings, labels, triplets)
+                        loss_val = loss_with_miner(embeddings, labels, enqueue_idx=enqueue_idx)
+                        self.assertTrue(torch.isclose(inner_loss_val, loss_val))
 
 
     def test_with_distance_weighted_miner(self):
@@ -158,29 +177,46 @@ class TestCrossBatchMemory(unittest.TestCase):
 
 
     def test_queue(self):
-        for dtype in TEST_DTYPES:
-            batch_size = 32
-            self.loss = CrossBatchMemory(loss=ContrastiveLoss(), embedding_size=self.embedding_size, memory_size=self.memory_size)
-            for i in range(30):
-                embeddings = torch.randn(batch_size, self.embedding_size).to(self.device).type(dtype)
-                labels = torch.arange(batch_size).to(self.device)
-                q = self.loss.queue_idx
-                self.assertTrue(q==(i*batch_size)%self.memory_size)
-                loss = self.loss(embeddings, labels)
+        for test_enqueue_idx in [False, True]:
+            for dtype in TEST_DTYPES:
+                batch_size = 32
+                enqueue_batch_size = 15
+                self.loss = CrossBatchMemory(loss=ContrastiveLoss(), embedding_size=self.embedding_size, memory_size=self.memory_size)
+                for i in range(30):
+                    embeddings = torch.randn(batch_size, self.embedding_size).to(self.device).type(dtype)
+                    labels = torch.arange(batch_size).to(self.device)
+                    q = self.loss.queue_idx
+                    B = enqueue_batch_size if test_enqueue_idx else batch_size
+                    if test_enqueue_idx:
+                        enqueue_idx = torch.arange(enqueue_batch_size)*2
+                    else:
+                        enqueue_idx = None
 
-                start_idx = q
-                if q+batch_size == self.memory_size:
-                    end_idx = self.memory_size
-                else:
-                    end_idx = (q+batch_size)%self.memory_size
-                if start_idx < end_idx:
-                    self.assertTrue(torch.equal(embeddings, self.loss.embedding_memory[start_idx:end_idx]))
-                    self.assertTrue(torch.equal(labels, self.loss.label_memory[start_idx:end_idx]))
-                else:
-                    correct_embeddings = torch.cat([self.loss.embedding_memory[start_idx:], self.loss.embedding_memory[:end_idx]], dim=0)
-                    correct_labels = torch.cat([self.loss.label_memory[start_idx:], self.loss.label_memory[:end_idx]], dim=0)
-                    self.assertTrue(torch.equal(embeddings, correct_embeddings))
-                    self.assertTrue(torch.equal(labels, correct_labels))
+                    self.assertTrue(q==(i*B)%self.memory_size)
+                    loss = self.loss(embeddings, labels, enqueue_idx=enqueue_idx)
+
+                    start_idx = q
+                    if q+B == self.memory_size:
+                        end_idx = self.memory_size
+                    else:
+                        end_idx = (q+B)%self.memory_size
+                    if start_idx < end_idx:
+                        if test_enqueue_idx:
+                            self.assertTrue(torch.equal(embeddings[enqueue_idx], self.loss.embedding_memory[start_idx:end_idx]))
+                            self.assertTrue(torch.equal(labels[enqueue_idx], self.loss.label_memory[start_idx:end_idx]))
+                        else:
+                            self.assertTrue(torch.equal(embeddings, self.loss.embedding_memory[start_idx:end_idx]))
+                            self.assertTrue(torch.equal(labels, self.loss.label_memory[start_idx:end_idx]))
+                    else:
+                        correct_embeddings = torch.cat([self.loss.embedding_memory[start_idx:], self.loss.embedding_memory[:end_idx]], dim=0)
+                        correct_labels = torch.cat([self.loss.label_memory[start_idx:], self.loss.label_memory[:end_idx]], dim=0)
+                        if test_enqueue_idx:
+                            self.assertTrue(torch.equal(embeddings[enqueue_idx], correct_embeddings))
+                            self.assertTrue(torch.equal(labels[enqueue_idx], correct_labels))
+                        else:
+                            self.assertTrue(torch.equal(embeddings, correct_embeddings))
+                            self.assertTrue(torch.equal(labels, correct_labels))
+
 
     def test_shift_indices_tuple(self):
         for dtype in TEST_DTYPES:
@@ -240,7 +276,7 @@ class TestCrossBatchMemory(unittest.TestCase):
                     a1ii, pii, a2ii, nii = lmu.convert_to_pairs(input_indices_tuple, labels)
                     indices_tuple = lmu.get_all_pairs_indices(labels, self.loss.label_memory)
                     a1i, pi, a2i, ni = self.loss.remove_self_comparisons(indices_tuple)
-                    a1, p, a2, n = self.loss.create_indices_tuple(batch_size, embeddings, labels, self.loss.embedding_memory, self.loss.label_memory, input_indices_tuple)
+                    a1, p, a2, n = self.loss.create_indices_tuple(batch_size, embeddings, labels, self.loss.embedding_memory, self.loss.label_memory, input_indices_tuple, True)
                     self.assertTrue(not torch.any((all_labels[a1]-all_labels[p]).bool()))
                     self.assertTrue(torch.all((all_labels[a2]-all_labels[n]).bool()))
                     self.assertTrue(len(a1) == len(a1i)+len(a1ii))
@@ -248,3 +284,6 @@ class TestCrossBatchMemory(unittest.TestCase):
                     self.assertTrue(len(a2) == len(a2i)+len(a2ii))
                     self.assertTrue(len(n) == len(ni)+len(nii))
 
+
+if __name__ == "__main__":
+    unittest.main()

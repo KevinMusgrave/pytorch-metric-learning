@@ -14,6 +14,7 @@ nav:
       - Inference Models: inference_models.md
       - Logging Presets: logging_presets.md
       - Common Functions: common_functions.md
+      - Distributed: distributed.md
     - How to extend this library:
       - Custom losses: extend/losses.md
 theme:

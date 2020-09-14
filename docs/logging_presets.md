@@ -38,7 +38,7 @@ LP.HookContainer(record_keeper,
 	record_group_name_prefix=None, 
 	primary_metric="mean_average_precision_at_r", 
 	validation_split_name="val",
-	save_custom_figures=False)
+	save_models=True)
 ```
 
 **Parameters**:
@@ -51,7 +51,7 @@ LP.HookContainer(record_keeper,
 	* precision_at_1
 	* NMI
 * **validation_split_name**: Optional. Default value is "val". The name of your validation set in ```dataset_dict```.
-* **save_custom_figures**: Optional. If True, records that consist of a tensor at each iteration (rather than just a scalar), will be plotted on tensorboard.
+* **save_models**: Optional. Models will be saved if this is ```True```.
 
 **Important functions**:
 

@@ -274,6 +274,14 @@ losses.CrossBatchMemory(loss, embedding_size, memory_size=1024, miner=None)
 * **memory_size**: The size of the memory queue.
 * **miner**: An optional [tuple miner](miners.md), which will be used to mine pairs/triplets from the memory queue.
 
+**Forward function**
+```python
+loss_fn(embeddings, labels, indices_tuple=None, enqueue_idx=None)
+```
+
+As shown above, CrossBatchMemory comes with a 4th argument in its ```forward``` function:
+
+* **enqueue_idx**: The indices of ```embeddings``` that will be added to the memory queue. In other words, only ```embeddings[enqueue_idx]``` will be added to memory. This enables CrossBatchMemory to be used in self-supervision frameworks like [MoCo](https://arxiv.org/pdf/1911.05722.pdf). Check out the [MoCo on CIFAR100](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples#simple-examples) notebook to see how this works.
 
 ## FastAPLoss
 [Deep Metric Learning to Rank](http://openaccess.thecvf.com/content_CVPR_2019/papers/Cakir_Deep_Metric_Learning_to_Rank_CVPR_2019_paper.pdf){target=_blank}

@@ -36,10 +36,9 @@ PyTorch Metric Learning
 
 ## News
 
-**September 14**: v0.9.92 comes with new features. The main highlights are:
+**September 14**: v0.9.92 comes with new features ([release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.92)). The main highlights are:
 * utils.distributed for multiprocessing.
 * Improvements to CrossBatchMemory which make it usable in MoCo-style self-supervised training. Check out the [MoCo on CIFAR10](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples#simple-examples) notebook to see how it works.
-* See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.92) for details.
 
 **August 31**: v0.9.91 has a couple of bug fixes. See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.91)
 

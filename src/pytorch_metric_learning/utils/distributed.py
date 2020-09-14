@@ -51,9 +51,9 @@ class DistributedLossWrapper(torch.nn.Module):
         has_parameters = len([p for p in loss.parameters()]) > 0
         self.loss = DDP(loss, **kwargs) if has_parameters else loss
 
-    def forward(self, embeddings, labels, indices_tuple=None):
+    def forward(self, embeddings, labels, *args, **kwargs):
         embeddings, labels = all_gather_embeddings_labels(embeddings, labels)
-        return self.loss(embeddings, labels, indices_tuple)
+        return self.loss(embeddings, labels, *args, **kwargs)
 
 
 

@@ -10,18 +10,18 @@
       
       
       
-      <link rel="shortcut icon" href="../../assets/images/favicon.png">
+      <link rel="shortcut icon" href="../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-5.5.0">
     
     
       
-        <title>Custom losses - PyTorch Metric Learning</title>
+        <title>Distributed - PyTorch Metric Learning</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.b5d04df8.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.b5d04df8.min.css">
       
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.9ab2c1f8.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.9ab2c1f8.min.css">
       
       
         
@@ -58,7 +58,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#how-to-write-custom-loss-functions" class="md-skip">
+        <a href="#distributed" class="md-skip">
           Skip to content
         </a>
       
@@ -69,7 +69,7 @@
     
       <header class="md-header" data-md-component="header">
   <nav class="md-header-nav md-grid" aria-label="Header">
-    <a href="../.." title="PyTorch Metric Learning" class="md-header-nav__button md-logo" aria-label="PyTorch Metric Learning">
+    <a href=".." title="PyTorch Metric Learning" class="md-header-nav__button md-logo" aria-label="PyTorch Metric Learning">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 003-3 3 3 0 00-3-3 3 3 0 00-3 3 3 3 0 003 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
@@ -86,7 +86,7 @@
           </span>
           <span class="md-header-nav__topic md-ellipsis">
             
-              Custom losses
+              Distributed
             
           </span>
         </div>
@@ -156,7 +156,7 @@
                   <div class="md-sidebar__inner">
                     <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="PyTorch Metric Learning" class="md-nav__button md-logo" aria-label="PyTorch Metric Learning">
+    <a href=".." title="PyTorch Metric Learning" class="md-nav__button md-logo" aria-label="PyTorch Metric Learning">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 003-3 3 3 0 00-3-3 3 3 0 00-3 3 3 3 0 003 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"/></svg>
@@ -186,7 +186,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../.." title="Home" class="md-nav__link">
+    <a href=".." title="Home" class="md-nav__link">
       Home
     </a>
   </li>
@@ -198,7 +198,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../distances/" title="Distances" class="md-nav__link">
+    <a href="../distances/" title="Distances" class="md-nav__link">
       Distances
     </a>
   </li>
@@ -210,7 +210,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../losses/" title="Losses" class="md-nav__link">
+    <a href="../losses/" title="Losses" class="md-nav__link">
       Losses
     </a>
   </li>
@@ -222,7 +222,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../miners/" title="Miners" class="md-nav__link">
+    <a href="../miners/" title="Miners" class="md-nav__link">
       Miners
     </a>
   </li>
@@ -234,7 +234,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../reducers/" title="Reducers" class="md-nav__link">
+    <a href="../reducers/" title="Reducers" class="md-nav__link">
       Reducers
     </a>
   </li>
@@ -246,7 +246,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../regularizers/" title="Regularizers" class="md-nav__link">
+    <a href="../regularizers/" title="Regularizers" class="md-nav__link">
       Regularizers
     </a>
   </li>
@@ -258,7 +258,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../samplers/" title="Samplers" class="md-nav__link">
+    <a href="../samplers/" title="Samplers" class="md-nav__link">
       Samplers
     </a>
   </li>
@@ -270,7 +270,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../trainers/" title="Trainers" class="md-nav__link">
+    <a href="../trainers/" title="Trainers" class="md-nav__link">
       Trainers
     </a>
   </li>
@@ -282,7 +282,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../testers/" title="Testers" class="md-nav__link">
+    <a href="../testers/" title="Testers" class="md-nav__link">
       Testers
     </a>
   </li>
@@ -292,10 +292,12 @@
       
       
 
+  
 
-  <li class="md-nav__item md-nav__item--nested">
+
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-10" type="checkbox" id="nav-10">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-10" type="checkbox" id="nav-10" checked>
     
     <label class="md-nav__link" for="nav-10">
       Utils
@@ -319,7 +321,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../accuracy_calculation/" title="Accuracy Calculation" class="md-nav__link">
+    <a href="../accuracy_calculation/" title="Accuracy Calculation" class="md-nav__link">
       Accuracy Calculation
     </a>
   </li>
@@ -331,7 +333,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../inference_models/" title="Inference Models" class="md-nav__link">
+    <a href="../inference_models/" title="Inference Models" class="md-nav__link">
       Inference Models
     </a>
   </li>
@@ -343,7 +345,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../logging_presets/" title="Logging Presets" class="md-nav__link">
+    <a href="../logging_presets/" title="Logging Presets" class="md-nav__link">
       Logging Presets
     </a>
   </li>
@@ -355,7 +357,7 @@
 
 
   <li class="md-nav__item">
-    <a href="../../common_functions/" title="Common Functions" class="md-nav__link">
+    <a href="../common_functions/" title="Common Functions" class="md-nav__link">
       Common Functions
     </a>
   </li>
@@ -365,11 +367,60 @@
           
           
 
+  
 
-  <li class="md-nav__item">
-    <a href="../../distributed/" title="Distributed" class="md-nav__link">
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+      
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Distributed
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"/></svg>
+        </span>
+      </label>
+    
+    <a href="./" title="Distributed" class="md-nav__link md-nav__link--active">
       Distributed
     </a>
+    
+      
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#distributedlosswrapper" class="md-nav__link">
+    DistributedLossWrapper
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#distributedminerwrapper" class="md-nav__link">
+    DistributedMinerWrapper
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+    
   </li>
 
         
@@ -382,12 +433,10 @@
       
       
 
-  
 
-
-  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+  <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-11" type="checkbox" id="nav-11" checked>
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-11" type="checkbox" id="nav-11">
     
     <label class="md-nav__link" for="nav-11">
       How to extend this library
@@ -409,53 +458,11 @@
           
           
 
-  
 
-
-  <li class="md-nav__item md-nav__item--active">
-    
-    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-    
-      
-    
-    
-      <label class="md-nav__link md-nav__link--active" for="__toc">
-        Custom losses
-        <span class="md-nav__icon md-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"/></svg>
-        </span>
-      </label>
-    
-    <a href="./" title="Custom losses" class="md-nav__link md-nav__link--active">
+  <li class="md-nav__item">
+    <a href="../extend/losses/" title="Custom losses" class="md-nav__link">
       Custom losses
     </a>
-    
-      
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
-      </span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#coming-soon" class="md-nav__link">
-    Coming soon!
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-    
   </li>
 
         
@@ -490,8 +497,15 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#coming-soon" class="md-nav__link">
-    Coming soon!
+  <a href="#distributedlosswrapper" class="md-nav__link">
+    DistributedLossWrapper
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#distributedminerwrapper" class="md-nav__link">
+    DistributedMinerWrapper
   </a>
   
 </li>
@@ -508,7 +522,7 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/edit/master/docs/extend/losses.md" title="Edit this page" class="md-content__button md-icon">
+                  <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/edit/master/docs/distributed.md" title="Edit this page" class="md-content__button md-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
                   </a>
                 
@@ -516,8 +530,55 @@
                   
                 
                 
-                <h1 id="how-to-write-custom-loss-functions">How to write custom loss functions<a class="headerlink" href="#how-to-write-custom-loss-functions" title="Permanent link">&para;</a></h1>
-<h2 id="coming-soon">Coming soon!<a class="headerlink" href="#coming-soon" title="Permanent link">&para;</a></h2>
+                <h1 id="distributed">Distributed<a class="headerlink" href="#distributed" title="Permanent link">&para;</a></h1>
+<p>Wrap a loss or miner with these when using PyTorch's <a href="https://pytorch.org/tutorials/intermediate/ddp_tutorial.html">DistributedDataParallel</a> (i.e. multiprocessing).</p>
+<h2 id="distributedlosswrapper">DistributedLossWrapper<a class="headerlink" href="#distributedlosswrapper" title="Permanent link">&para;</a></h2>
+<div class="codehilite"><pre><span></span><code><span class="n">utils</span><span class="o">.</span><span class="n">distributed</span><span class="o">.</span><span class="n">DistributedLossWrapper</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div>
+
+
+<p>The <code>**kwargs</code> allow you to pass in arguments which will be fed to <code>DistributedDataParallel</code>. This is used only if the loss function has trainable parameters (e.g. ArcFaceLoss).</p>
+<p>Example usage for a loss <strong>without</strong> parameters:</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">losses</span>
+<span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils</span> <span class="kn">import</span> <span class="n">distributed</span> <span class="k">as</span> <span class="n">pml_dist</span>
+
+<span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">ContrastiveLoss</span><span class="p">()</span>
+<span class="n">loss_func</span> <span class="o">=</span> <span class="n">pml_dist</span><span class="o">.</span><span class="n">DistributedLossWrapper</span><span class="p">(</span><span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">)</span>
+
+<span class="c1"># in each process during training</span>
+<span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+</code></pre></div>
+
+
+<p>Example usage for a loss <strong>with</strong> parameters:</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">losses</span>
+<span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils</span> <span class="kn">import</span> <span class="n">distributed</span> <span class="k">as</span> <span class="n">pml_dist</span>
+
+<span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">ArcFaceLoss</span><span class="p">(</span><span class="n">num_classes</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">embedding_size</span> <span class="o">=</span> <span class="mi">512</span><span class="p">)</span>
+
+<span class="c1"># Pass in the rank of the process</span>
+<span class="c1"># The loss function will be wrapped with DistributedDataParallel</span>
+<span class="c1"># And device_ids = [rank] will be passed into the init</span>
+<span class="n">loss_func</span> <span class="o">=</span> <span class="n">pml_dist</span><span class="o">.</span><span class="n">DistributedLossWrapper</span><span class="p">(</span><span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">,</span> <span class="n">device_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">rank</span><span class="p">])</span>
+
+<span class="c1"># in each process during training</span>
+<span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+</code></pre></div>
+
+
+<h2 id="distributedminerwrapper">DistributedMinerWrapper<a class="headerlink" href="#distributedminerwrapper" title="Permanent link">&para;</a></h2>
+<div class="codehilite"><pre><span></span><code><span class="n">utils</span><span class="o">.</span><span class="n">distributed</span><span class="o">.</span><span class="n">DistributedMinerWrapper</span><span class="p">(</span><span class="n">miner</span><span class="p">)</span>
+</code></pre></div>
+
+
+<p>Example usage:</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">miners</span>
+<span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils</span> <span class="kn">import</span> <span class="n">distributed</span> <span class="k">as</span> <span class="n">pml_dist</span>
+<span class="n">miner</span> <span class="o">=</span> <span class="n">pml_dist</span><span class="o">.</span><span class="n">DistributedMinerWrapper</span><span class="p">(</span><span class="n">miner</span> <span class="o">=</span> <span class="n">miners</span><span class="o">.</span><span class="n">MultiSimilarityMiner</span><span class="p">())</span>
+
+<span class="c1"># in each process</span>
+<span class="n">tuples</span> <span class="o">=</span> <span class="n">miner</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+</code></pre></div>
                 
               
               
@@ -536,7 +597,7 @@
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
         
-          <a href="../../distributed/" title="Distributed" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../common_functions/" title="Common Functions" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-footer-nav__button md-icon">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
             </div>
@@ -545,11 +606,25 @@
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                Distributed
+                Common Functions
               </div>
             </div>
           </a>
         
+        
+          <a href="../extend/losses/" title="Custom losses" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-footer-nav__title">
+              <div class="md-ellipsis">
+                <span class="md-footer-nav__direction">
+                  Next
+                </span>
+                Custom losses
+              </div>
+            </div>
+            <div class="md-footer-nav__button md-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+            </div>
+          </a>
         
       </nav>
     </div>
@@ -570,15 +645,15 @@
       
     </div>
     
-      <script src="../../assets/javascripts/vendor.92ffa368.min.js"></script>
-      <script src="../../assets/javascripts/bundle.5123e3d4.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
+      <script src="../assets/javascripts/vendor.92ffa368.min.js"></script>
+      <script src="../assets/javascripts/bundle.5123e3d4.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
       
       <script>
         app = initialize({
-          base: "../..",
+          base: "..",
           features: [],
           search: Object.assign({
-            worker: "../../assets/javascripts/worker/search.a68abb33.min.js"
+            worker: "../assets/javascripts/worker/search.a68abb33.min.js"
           }, typeof search !== "undefined" && search)
         })
       </script>

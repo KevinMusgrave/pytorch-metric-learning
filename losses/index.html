@@ -592,6 +592,18 @@
   </li>
 
         
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../distributed/" title="Distributed" class="md-nav__link">
+      Distributed
+    </a>
+  </li>
+
+        
       </ul>
     </nav>
   </li>
@@ -1132,6 +1144,15 @@
 <li><strong>embedding_size</strong>: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set <code>embedding_size</code> to 512.</li>
 <li><strong>memory_size</strong>: The size of the memory queue.</li>
 <li><strong>miner</strong>: An optional <a href="../miners/">tuple miner</a>, which will be used to mine pairs/triplets from the memory queue.</li>
+</ul>
+<p><strong>Forward function</strong></p>
+<div class="codehilite"><pre><span></span><code><span class="n">loss_fn</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">indices_tuple</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">enqueue_idx</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</code></pre></div>
+
+
+<p>As shown above, CrossBatchMemory comes with a 4th argument in its <code>forward</code> function:</p>
+<ul>
+<li><strong>enqueue_idx</strong>: The indices of <code>embeddings</code> that will be added to the memory queue. In other words, only <code>embeddings[enqueue_idx]</code> will be added to memory. This enables CrossBatchMemory to be used in self-supervision frameworks like <a href="https://arxiv.org/pdf/1911.05722.pdf">MoCo</a>. Check out the <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples#simple-examples">MoCo on CIFAR100</a> notebook to see how this works.</li>
 </ul>
 <h2 id="fastaploss">FastAPLoss<a class="headerlink" href="#fastaploss" title="Permanent link">&para;</a></h2>
 <p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Cakir_Deep_Metric_Learning_to_Rank_CVPR_2019_paper.pdf" target="_blank">Deep Metric Learning to Rank</a></p>

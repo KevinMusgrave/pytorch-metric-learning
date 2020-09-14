@@ -405,6 +405,18 @@
   </li>
 
         
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../distributed/" title="Distributed" class="md-nav__link">
+      Distributed
+    </a>
+  </li>
+
+        
       </ul>
     </nav>
   </li>
@@ -540,7 +552,7 @@
     <span class="n">record_group_name_prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
     <span class="n">primary_metric</span><span class="o">=</span><span class="s2">&quot;mean_average_precision_at_r&quot;</span><span class="p">,</span> 
     <span class="n">validation_split_name</span><span class="o">=</span><span class="s2">&quot;val&quot;</span><span class="p">,</span>
-    <span class="n">save_custom_figures</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">save_models</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </code></pre></div>
 
 
@@ -556,7 +568,7 @@
 </ul>
 </li>
 <li><strong>validation_split_name</strong>: Optional. Default value is "val". The name of your validation set in <code>dataset_dict</code>.</li>
-<li><strong>save_custom_figures</strong>: Optional. If True, records that consist of a tensor at each iteration (rather than just a scalar), will be plotted on tensorboard.</li>
+<li><strong>save_models</strong>: Optional. Models will be saved if this is <code>True</code>.</li>
 </ul>
 <p><strong>Important functions</strong>:</p>
 <ul>

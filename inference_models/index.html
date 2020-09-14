@@ -388,6 +388,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#logitgetter" class="md-nav__link">
+    LogitGetter
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -415,6 +422,18 @@
   <li class="md-nav__item">
     <a href="../common_functions/" title="Common Functions" class="md-nav__link">
       Common Functions
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../distributed/" title="Distributed" class="md-nav__link">
+      Distributed
     </a>
   </li>
 
@@ -512,6 +531,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#logitgetter" class="md-nav__link">
+    LogitGetter
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -569,6 +595,30 @@
 <p>This will create a faiss index, specifically <code>IndexFlatL2</code>, which can be used for nearest neighbor retrieval.</p>
 <div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils.inference</span> <span class="kn">import</span> <span class="n">FaissIndexer</span>
 <span class="n">FaissIndexer</span><span class="p">()</span>
+</code></pre></div>
+
+
+<h2 id="logitgetter">LogitGetter<a class="headerlink" href="#logitgetter" title="Permanent link">&para;</a></h2>
+<p>This class makes it easier to extract logits from classifier loss functions. Although "metric learning" usually means that you use embeddings during inference, there might be cases where you want to use the class logits instead of the embeddings.</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils.inference</span> <span class="kn">import</span> <span class="n">LogitGetter</span>
+<span class="n">LogitGetter</span><span class="p">(</span><span class="n">classifier</span><span class="p">,</span> <span class="n">layer_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">transpose</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</code></pre></div>
+
+
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>classifier</strong>: The classifier loss function that you want to extract logits from.</li>
+<li><strong>layer_name</strong>: Optional. The attribute name of the weight matrix inside the classifier. If not specified, each of the following will be tried: <code>["fc", "proxies", "W"]</code>.</li>
+<li><strong>transpose</strong>: Optional. Whether or not to transpose the weight matrix. If the weight matrix is of size <code>(embedding_size, num_classes)</code>, then it should be transposed. If not specified, then transposing will be done automatically during the <code>forward</code> call if necessary, based on the shapes of the input embeddings and the weight matrix. (Note that it is only guaranteed to make the correct transposing decision if <code>num_classes != embedding_size</code>.)</li>
+<li><strong>distance</strong>: Optional. A <a href="../distances/">distance</a> object which will compute the distance or similarity matrix, i.e. the logits. If not specified, then <code>classifier.distance</code> will be used.</li>
+</ul>
+<p>Example usage:</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning.losses</span> <span class="kn">import</span> <span class="n">ArcFaceLoss</span>
+<span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils.inference</span> <span class="kn">import</span> <span class="n">LogitGetter</span>
+
+<span class="n">loss_fn</span> <span class="o">=</span> <span class="n">ArcFaceLoss</span><span class="p">(</span><span class="n">num_classes</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">embedding_size</span> <span class="o">=</span> <span class="mi">512</span><span class="p">)</span>
+<span class="n">LG</span> <span class="o">=</span> <span class="n">LogitGetter</span><span class="p">(</span><span class="n">loss_fn</span><span class="p">)</span>
+<span class="n">logits</span> <span class="o">=</span> <span class="n">LG</span><span class="p">(</span><span class="n">embeddings</span><span class="p">)</span>
 </code></pre></div>
                 
               

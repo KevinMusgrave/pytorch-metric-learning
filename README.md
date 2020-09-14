@@ -36,6 +36,13 @@ PyTorch Metric Learning
 
 ## News
 
+**September 14**: v0.9.92 comes with new features. The main highlights are:
+* utils.distributed for multiprocessing.
+* Improvements to CrossBatchMemory which make it usable in MoCo-style self-supervised training.
+
+See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.92) for details.
+Also check out the [MoCo on CIFAR10](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples#simple-examples) notebook to see how to use CrossBatchMemory with MoCo.
+
 **August 31**: v0.9.91 has a couple of bug fixes. See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.91)
 
 **August 7**: v0.9.90 MEGA UPDATE
@@ -43,8 +50,6 @@ PyTorch Metric Learning
 * Now compatible with half-precision
 * Unfortunately also comes with numerous **breaking changes**. See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.90) for details. 
 * Hopefully this is the last major structural change to the library.
-
-**July 25**: v0.9.89 comes with some bug fixes for CrossBatchMemory, AccuracyCalculator, BaseTester, and a new feature for InferenceModel. See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.89) for details
 
 ## Documentation
 - [**View the documentation here**](https://kevinmusgrave.github.io/pytorch-metric-learning/)
@@ -143,6 +148,8 @@ for i, data in enumerate(dataloader):
 	loss.backward()
 	optimizer.step()
 ```
+
+If you're interested in [MoCo](https://arxiv.org/pdf/1911.05722.pdf)-style self-supervision, take a look at the [MoCo on CIFAR10](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples#simple-examples) notebook. It uses CrossBatchMemory to implement the momentum encoder queue, which means you can use any tuple loss, and any tuple miner to extract hard samples from the queue.
 
 
 ## Highlights of the rest of the library
@@ -264,6 +271,7 @@ conda install pytorch-metric-learning -c metric-learning -c pytorch
 | Name | Reference Papers |
 |---|---|
 | [**MPerClassSampler**](https://kevinmusgrave.github.io/pytorch-metric-learning/samplers/#mperclasssampler) |
+| [**TuplesToWeightsSampler**](https://kevinmusgrave.github.io/pytorch-metric-learning/samplers/#tuplestoweightssampler) |
 | [**FixedSetOfTriplets**](https://kevinmusgrave.github.io/pytorch-metric-learning/samplers/#fixedsetoftriplets) |
 
 ### [Trainers](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers)
@@ -290,6 +298,9 @@ conda install pytorch-metric-learning -c metric-learning -c pytorch
 | [**HookContainer**](https://kevinmusgrave.github.io/pytorch-metric-learning/logging_presets) | 
 | [**InferenceModel**](https://kevinmusgrave.github.io/pytorch-metric-learning/inference_models) |
 | [**TorchInitWrapper**](https://kevinmusgrave.github.io/pytorch-metric-learning/common_functions/#torchinitwrapper) |
+| [**DistributedLossWrapper**](https://kevinmusgrave.github.io/pytorch-metric-learning/distributed/#distributedlosswrapper) |
+| [**DistributedMinerWrapper**](https://kevinmusgrave.github.io/pytorch-metric-learning/distributed/#distributedminerwrapper) |
+| [**LogitGetter**](https://kevinmusgrave.github.io/pytorch-metric-learning/inference_models/#logitgetter) |
 
 ### Base Classes, Mixins, and Wrappers
 | Name | Reference Papers |
@@ -336,22 +347,22 @@ guide. Proceed to `pip install -e .[dev]` afterwards.
 ### Contributors
 Thanks to the contributors who made pull requests!
 
-#### Algorithm implementations
+#### Algorithm implementations + useful features
 - [AlenUbuntu](https://github.com/AlenUbuntu):
 	- [CircleLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#circleloss)
 - [marijnl](https://github.com/marijnl)
     - [TwoStreamMetricLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#twostreammetricloss)
     - [GlobalTwoStreamEmbeddingSpaceTester](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#globaltwostreamembeddingspacetester)
+- [btseytlin](https://github.com/btseytlin)
+    - ```get_nearest_neighbors``` in [InferenceModel](https://kevinmusgrave.github.io/pytorch-metric-learning/inference_models)
+- [JohnGiorgi](https://github.com/JohnGiorgi):
+	- ```all_gather``` in [utils.distributed](https://kevinmusgrave.github.io/pytorch-metric-learning/distributed)
 
 #### Example notebooks
 - [wconnell](https://github.com/wconnell)
 	- [Learning a scRNAseq Metric Embedding](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/scRNAseq_MetricEmbedding.ipynb)
 - [marijnl](https://github.com/marijnl)
     - [Example using trainers.TwoStreamMetricLoss](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/TwoStreamMetricLoss.ipynb)
-
-#### New features
-- [btseytlin](https://github.com/btseytlin)
-    - ```get_nearest_neighbors``` in [InferenceModel](https://kevinmusgrave.github.io/pytorch-metric-learning/inference_models)
 
 #### General improvements and bug fixes
 - [wconnell](https://github.com/wconnell)

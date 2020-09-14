@@ -38,10 +38,8 @@ PyTorch Metric Learning
 
 **September 14**: v0.9.92 comes with new features. The main highlights are:
 * utils.distributed for multiprocessing.
-* Improvements to CrossBatchMemory which make it usable in MoCo-style self-supervised training.
-
-See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.92) for details.
-Also check out the [MoCo on CIFAR10](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples#simple-examples) notebook to see how to use CrossBatchMemory with MoCo.
+* Improvements to CrossBatchMemory which make it usable in MoCo-style self-supervised training. Check out the [MoCo on CIFAR10](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples#simple-examples) notebook to see how it works.
+* See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.92) for details.
 
 **August 31**: v0.9.91 has a couple of bug fixes. See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.91)
 
@@ -348,14 +346,14 @@ guide. Proceed to `pip install -e .[dev]` afterwards.
 Thanks to the contributors who made pull requests!
 
 #### Algorithm implementations + useful features
-- [AlenUbuntu](https://github.com/AlenUbuntu):
+- [AlenUbuntu](https://github.com/AlenUbuntu)
 	- [CircleLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#circleloss)
 - [marijnl](https://github.com/marijnl)
     - [TwoStreamMetricLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#twostreammetricloss)
     - [GlobalTwoStreamEmbeddingSpaceTester](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#globaltwostreamembeddingspacetester)
 - [btseytlin](https://github.com/btseytlin)
     - ```get_nearest_neighbors``` in [InferenceModel](https://kevinmusgrave.github.io/pytorch-metric-learning/inference_models)
-- [JohnGiorgi](https://github.com/JohnGiorgi):
+- [JohnGiorgi](https://github.com/JohnGiorgi)
 	- ```all_gather``` in [utils.distributed](https://kevinmusgrave.github.io/pytorch-metric-learning/distributed)
 
 #### Example notebooks

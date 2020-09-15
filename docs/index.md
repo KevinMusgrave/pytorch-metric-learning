@@ -94,6 +94,8 @@ for i, data in enumerate(dataloader):
 	optimizer.step()
 ```
 
+If you're interested in [MoCo](https://arxiv.org/pdf/1911.05722.pdf)-style self-supervision, take a look at the [MoCo on CIFAR10](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples#simple-examples) notebook. It uses CrossBatchMemory to implement the momentum encoder queue, which means you can use any tuple loss, and any tuple miner to extract hard samples from the queue.
+
 
 ## Highlights of the rest of the library
 

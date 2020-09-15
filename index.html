@@ -746,6 +746,7 @@
 </code></pre></div>
 
 
+<p>If you're interested in <a href="https://arxiv.org/pdf/1911.05722.pdf">MoCo</a>-style self-supervision, take a look at the <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples#simple-examples">MoCo on CIFAR10</a> notebook. It uses CrossBatchMemory to implement the momentum encoder queue, which means you can use any tuple loss, and any tuple miner to extract hard samples from the queue.</p>
 <h2 id="highlights-of-the-rest-of-the-library">Highlights of the rest of the library<a class="headerlink" href="#highlights-of-the-rest-of-the-library" title="Permanent link">&para;</a></h2>
 <ul>
 <li>For a convenient way to train your model, take a look at the <a href="trainers">trainers</a>.</li>

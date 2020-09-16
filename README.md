@@ -56,7 +56,7 @@
 See the [examples folder](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/README.md) for notebooks you can download or run on Google Colab.
 
 
-## Overview
+## PyTorch Metric Learning Overview
 This library contains 9 modules, each of which can be used independently within your existing codebase, or combined together for a complete train/test workflow.
 
 ![high_level_module_overview](docs/imgs/high_level_module_overview.png)

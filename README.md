@@ -1,5 +1,5 @@
 <h1 align="center">
-PyTorch Metric Learning
+<img alt="Logo" src="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/docs/imgs/Logo.png">
 </h2>
 <p align="center">
  <a href="https://badge.fury.io/py/pytorch-metric-learning">

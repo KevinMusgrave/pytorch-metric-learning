@@ -94,5 +94,14 @@ class TestLossAndMinerUtils(unittest.TestCase):
             correct_weights = torch.tensor([1,1,1,1,1,1,1], dtype=dtype).to(self.device)
             self.assertTrue(torch.all(weights==correct_weights))
 
+    def test_get_random_triplet_indices(self):
+        torch.seed(1023)
+        labels = torch.randint(0, 100, (10000,))
+        a, p, n = lmu.get_random_triplet_indices(labels, t_per_anchor=1)
+        l_a, l_p, l_n = labels[a], labels[p], labels[n]
+        self.assertTrue(torch.all(a != p))
+        self.assertTrue(torch.all(l_a == l_p))
+        self.assertTrue(torch.all(l_p != l_n))
+
 if __name__ == "__main__":
     unittest.main()

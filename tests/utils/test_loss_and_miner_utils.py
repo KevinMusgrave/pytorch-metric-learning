@@ -95,6 +95,7 @@ class TestLossAndMinerUtils(unittest.TestCase):
             self.assertTrue(torch.all(weights==correct_weights))
 
     def test_get_random_triplet_indices(self):
+        # Test triplet validity.
         torch.seed(1023)
         labels = torch.randint(0, 100, (10000,))
         a, p, n = lmu.get_random_triplet_indices(labels, t_per_anchor=1)
@@ -102,6 +103,16 @@ class TestLossAndMinerUtils(unittest.TestCase):
         self.assertTrue(torch.all(a != p))
         self.assertTrue(torch.all(l_a == l_p))
         self.assertTrue(torch.all(l_p != l_n))
+
+        # Test one-hot weights.
+        labels = torch.randint(0, 10, (100,))
+        w = torch.zeros(len(labels))
+        for i, label in enumerate(labels):
+            w_ = w.clone()
+            w_[i] = 1.0
+            a, p, n, = get_random_triplet_indices(labels, t_per_anchor=1, weights=w_)
+            assert torch.all(n == i)
+
 
 if __name__ == "__main__":
     unittest.main()

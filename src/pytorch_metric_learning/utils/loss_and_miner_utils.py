@@ -96,9 +96,8 @@ def get_random_triplet_indices(labels, ref_labels=None, t_per_anchor=None, weigh
     unique_labels = torch.unique(labels)
     unique_labels_ = unique_labels.view(-1, 1)
     p_masks = labels == unique_labels_
-    n_masks = labels != unique_labels_
     l, ind = torch.nonzero(p_masks, as_tuple=True)
-    for label in unique_labels:
+    for i, label in enumerate(unique_labels):
         # Get indices of positive samples for this label.
         p_inds = ind[l == label]
         n_a = p_inds.shape[0]
@@ -114,19 +113,23 @@ def get_random_triplet_indices(labels, ref_labels=None, t_per_anchor=None, weigh
         a_ = torch.arange(n_a).view(-1, 1).repeat(1, k).view(n_a*k)
         p = p_inds_[a_, p_]
         a = p_inds[a_]
-        a_idx.append(a)
-        p_idx.append(p)
 
         # Get indices of negative samples for this label.
         n_inds = ind[l != label]
         if weights is not None:
-            w = weights[l != label]
+            w = weights[n_inds]
             # Sample the negative indices according to the weights.
-            n_ = torch.multinomial(w, n_a*k, replacement=True)
+            try:
+                n_ = torch.multinomial(w, n_a*k, replacement=True)
+            except RuntimeError as e:
+                logging.warning(e)
+                continue
         else:
             # Sample the negative indices uniformly.
             n_ = torch.randint(0, n_inds.shape[0], (n_a*k,))
         n = n_inds[n_]
+        a_idx.append(a)
+        p_idx.append(p)
         n_idx.append(n)
 
     a_idx = torch.LongTensor(torch.cat(a_idx)).to(labels_device)

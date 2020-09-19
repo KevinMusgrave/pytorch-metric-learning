@@ -2,6 +2,7 @@ import torch
 import numpy as np
 import math
 from . import common_functions as c_f
+import logging
 
 # input must be 2D
 def logsumexp(x, keep_mask=None, add_one=True, dim=1):
@@ -88,7 +89,8 @@ def get_all_triplets_indices(labels, ref_labels=None):
 
 # sample triplets, with a weighted distribution if weights is specified.
 def get_random_triplet_indices(labels, ref_labels=None, t_per_anchor=None, weights=None):
-    assert weights is None or not torch.any(torch.isnan(weights))
+    if weights is None and torch.any(torch.isnan(weights)):
+        logging.warning('Ignoring weights due to nan values!')
     a_idx, p_idx, n_idx = [], [], []
     labels_device = labels.device
     ref_labels = labels if ref_labels is None else ref_labels
@@ -117,13 +119,9 @@ def get_random_triplet_indices(labels, ref_labels=None, t_per_anchor=None, weigh
         # Get indices of negative samples for this label.
         n_inds = ind[l != label]
         if weights is not None:
-            w = weights[n_inds]
+            w = weights[:, n_inds][a]
             # Sample the negative indices according to the weights.
-            try:
-                n_ = torch.multinomial(w, n_a*k, replacement=True)
-            except RuntimeError as e:
-                logging.warning(e)
-                continue
+            n_ = torch.multinomial(w, k, replacement=True).flatten()
         else:
             # Sample the negative indices uniformly.
             n_ = torch.randint(0, n_inds.shape[0], (n_a*k,))

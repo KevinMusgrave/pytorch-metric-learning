@@ -101,7 +101,8 @@ def get_random_triplet_indices(labels, ref_labels=None, t_per_anchor=None, weigh
         n_inds = torch.where(ref_labels != label)[0]
         n_a = len(a_inds)
         n_p = len(p_inds)
-        if n_p < 2 or len(n_inds) < 1:
+        min_required_p = 2 if ref_labels is labels else 1
+        if (n_p < min_required_p) or (len(n_inds) < 1):
             continue
 
         k = n_p if t_per_anchor is None else t_per_anchor
@@ -139,6 +140,7 @@ def get_random_triplet_indices(labels, ref_labels=None, t_per_anchor=None, weigh
     else:
         empty = torch.LongTensor([]).to(labels_device)
         return empty.clone(), empty.clone(), empty.clone()
+
 
 
 def repeat_to_match_size(smaller_set, larger_size, smaller_size):

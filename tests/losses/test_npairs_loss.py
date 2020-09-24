@@ -3,10 +3,7 @@ from .. import TEST_DTYPES
 import torch
 from pytorch_metric_learning.losses import NPairsLoss
 from pytorch_metric_learning.regularizers import LpRegularizer
-from pytorch_metric_learning.utils import (
-    common_functions as c_f,
-    loss_and_miner_utils as lmu,
-)
+from pytorch_metric_learning.utils import common_functions as c_f
 
 
 class TestNPairsLoss(unittest.TestCase):

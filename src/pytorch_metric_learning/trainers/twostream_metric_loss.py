@@ -1,6 +1,5 @@
 from .base_trainer import BaseTrainer
 from ..utils import common_functions as c_f, loss_and_miner_utils as lmu
-import logging
 import torch
 
 

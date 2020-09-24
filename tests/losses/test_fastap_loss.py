@@ -6,7 +6,7 @@
 # so that we can make sure our implementation returns the same result.
 # It's copied under the MIT license.
 import torch
-from torch.autograd import Variable, Function
+from torch.autograd import Variable
 
 
 def softBinning(D, mid, Delta):
@@ -198,7 +198,6 @@ class OriginalImplementationFastAPLoss(torch.nn.Module):
 ### Testing this library's implementation ###
 import unittest
 from .. import TEST_DTYPES
-import numpy as np
 from pytorch_metric_learning.losses import FastAPLoss
 from pytorch_metric_learning.utils import common_functions as c_f
 

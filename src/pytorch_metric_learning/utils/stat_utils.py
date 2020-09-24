@@ -1,5 +1,3 @@
-#! /usr/bin/env python3
-import sys
 import logging
 
 try:
@@ -9,8 +7,6 @@ except ModuleNotFoundError:
         """The pytorch-metric-learning testing module requires faiss. You can install the GPU version with the command 'conda install faiss-gpu -c pytorch' 
                         or the CPU version with 'conda install faiss-cpu -c pytorch'. Learn more at https://github.com/facebookresearch/faiss/blob/master/INSTALL.md"""
     )
-import torch
-import numpy as np
 
 # modified from https://github.com/facebookresearch/deepcluster
 def get_knn(

@@ -1,10 +1,7 @@
-#! /usr/bin/env python3
-
 import torch
 from ..utils import common_functions as c_f, loss_tracker as l_t
 import tqdm
 import logging
-import numpy as np
 
 
 class BaseTrainer:

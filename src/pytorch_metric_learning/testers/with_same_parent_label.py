@@ -1,7 +1,5 @@
-#! /usr/bin/env python3
 from collections import defaultdict
 import numpy as np
-from ..utils import common_functions as c_f
 from .base_tester import BaseTester
 import logging
 

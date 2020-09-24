@@ -1,6 +1,5 @@
 from .nca_loss import NCALoss
 from .mixins import WeightRegularizerMixin
-from ..utils import loss_and_miner_utils as lmu
 import torch
 
 

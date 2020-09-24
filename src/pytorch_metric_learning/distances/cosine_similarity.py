@@ -1,5 +1,4 @@
 from .dot_product_similarity import DotProductSimilarity
-import torch
 
 
 class CosineSimilarity(DotProductSimilarity):

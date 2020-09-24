@@ -1,6 +1,3 @@
-#! /usr/bin/env python3
-from ..utils import common_functions as c_f
-
 from .base_tester import BaseTester
 
 

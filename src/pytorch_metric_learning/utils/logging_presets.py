@@ -2,7 +2,6 @@ import logging
 from . import common_functions as c_f
 import os
 import torch
-from collections import defaultdict
 import sqlite3
 
 # You can write your own hooks for logging.

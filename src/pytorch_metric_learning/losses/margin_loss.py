@@ -1,6 +1,6 @@
 from .base_metric_loss_function import BaseMetricLossFunction
 import torch
-from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
+from ..utils import loss_and_miner_utils as lmu
 from ..reducers import DivisorReducer
 
 

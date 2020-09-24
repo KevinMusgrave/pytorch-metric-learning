@@ -2,7 +2,6 @@ import torch
 import numpy as np
 import math
 from . import common_functions as c_f
-import logging
 
 # input must be 2D
 def logsumexp(x, keep_mask=None, add_one=True, dim=1):
@@ -87,53 +86,59 @@ def get_all_triplets_indices(labels, ref_labels=None):
     return torch.where(triplets)
 
 
-# sample triplets, with a weighted distribution if weights is specified.
 def get_random_triplet_indices(labels, ref_labels=None, t_per_anchor=None, weights=None):
-    if weights is None and torch.any(torch.isnan(weights)):
-        logging.warning('Ignoring weights due to nan values!')
     a_idx, p_idx, n_idx = [], [], []
     labels_device = labels.device
     ref_labels = labels if ref_labels is None else ref_labels
-    ref_labels_is_labels = ref_labels is labels
     unique_labels = torch.unique(labels)
-    unique_labels_ = unique_labels.view(-1, 1)
-    p_masks = labels == unique_labels_
-    l, ind = torch.nonzero(p_masks, as_tuple=True)
-    for i, label in enumerate(unique_labels):
+    for label in unique_labels:
         # Get indices of positive samples for this label.
-        p_inds = ind[l == label]
-        n_a = p_inds.shape[0]
-        if n_a < 2:
+        p_inds = torch.where(ref_labels == label)[0]
+        if ref_labels is labels:
+            a_inds = p_inds
+        else:
+            a_inds = torch.where(labels == label)[0]
+        n_inds = torch.where(ref_labels != label)[0]
+        n_a = len(a_inds)
+        n_p = len(p_inds)
+        if n_p < 2 or len(n_inds) < 1:
             continue
-        k = p_inds.shape[0] if t_per_anchor is None else t_per_anchor
-        p_inds_ = p_inds.expand((n_a, n_a))
+
+        k = n_p if t_per_anchor is None else t_per_anchor
+        num_triplets = n_a*k
+        p_inds_ = p_inds.expand((n_a, n_p))
         # Remove anchors from list of possible positive samples.
-        p_inds_ = p_inds_[~torch.eye(n_a).bool()].view((n_a, n_a-1))
+        if ref_labels is labels:
+            p_inds_ = p_inds_[~torch.eye(n_a).bool()].view((n_a, n_a-1))
         # Get indices of indices of k random positive samples for each anchor.
-        p_ = torch.randint(0, n_a-1, (n_a*k,))
+        p_ = torch.randint(0, p_inds_.shape[1], (num_triplets,))
         # Get indices of indices of corresponding anchors.
-        a_ = torch.arange(n_a).view(-1, 1).repeat(1, k).view(n_a*k)
+        a_ = torch.arange(n_a).view(-1, 1).repeat(1, k).view(num_triplets)
         p = p_inds_[a_, p_]
-        a = p_inds[a_]
+        a = a_inds[a_]
 
         # Get indices of negative samples for this label.
-        n_inds = ind[l != label]
         if weights is not None:
             w = weights[:, n_inds][a]
             # Sample the negative indices according to the weights.
             n_ = torch.multinomial(w, k, replacement=True).flatten()
         else:
             # Sample the negative indices uniformly.
-            n_ = torch.randint(0, n_inds.shape[0], (n_a*k,))
+            n_ = torch.randint(0, len(n_inds), (num_triplets,))
         n = n_inds[n_]
         a_idx.append(a)
         p_idx.append(p)
         n_idx.append(n)
 
-    a_idx = torch.LongTensor(torch.cat(a_idx)).to(labels_device)
-    p_idx = torch.LongTensor(torch.cat(p_idx)).to(labels_device)
-    n_idx = torch.LongTensor(torch.cat(n_idx)).to(labels_device)
-    return a_idx, p_idx, n_idx
+    if len(a_idx) > 0:
+        assert len(a_idx) == len(p_idx) == len(n_idx)
+        a_idx = torch.LongTensor(torch.cat(a_idx)).to(labels_device)
+        p_idx = torch.LongTensor(torch.cat(p_idx)).to(labels_device)
+        n_idx = torch.LongTensor(torch.cat(n_idx)).to(labels_device)
+        return a_idx, p_idx, n_idx
+    else:
+        empty = torch.LongTensor([]).to(labels_device)
+        return empty.clone(), empty.clone(), empty.clone()
 
 
 def repeat_to_match_size(smaller_set, larger_size, smaller_size):

@@ -2,6 +2,7 @@ from .base_regularizer import BaseRegularizer
 import torch
 from ..utils import common_functions as c_f
 
+
 class LpRegularizer(BaseRegularizer):
     def __init__(self, p=2, **kwargs):
         super().__init__(**kwargs)
@@ -10,4 +11,10 @@ class LpRegularizer(BaseRegularizer):
 
     def compute_loss(self, embeddings):
         reg = torch.norm(embeddings, p=self.p, dim=1)
-        return {"loss": {"losses": reg, "indices": c_f.torch_arange_from_size(embeddings), "reduction_type": "element"}}
+        return {
+            "loss": {
+                "losses": reg,
+                "indices": c_f.torch_arange_from_size(embeddings),
+                "reduction_type": "element",
+            }
+        }

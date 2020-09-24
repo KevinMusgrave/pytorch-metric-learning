@@ -1,4 +1,4 @@
-import unittest 
+import unittest
 from .. import TEST_DTYPES
 import torch
 import torchvision
@@ -8,7 +8,6 @@ from pytorch_metric_learning.utils import common_functions
 
 
 class TestInference(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -19,15 +18,19 @@ class TestInference(unittest.TestCase):
 
         cls.model = trunk
 
-        transform = transforms.Compose([transforms.Resize(64),
-                                        transforms.ToTensor(),
-                                        transforms.Normalize(
-                                            mean=[0.485, 0.456, 0.406],
-                                            std=[0.229, 0.224, 0.225])
-                                        ])
+        transform = transforms.Compose(
+            [
+                transforms.Resize(64),
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+                ),
+            ]
+        )
 
-        cls.dataset = datasets.FakeData(size=200, image_size=(3, 64, 64),
-                                    transform=transform)
+        cls.dataset = datasets.FakeData(
+            size=200, image_size=(3, 64, 64), transform=transform
+        )
 
     def test_untrained_indexer(self):
         inference_model = InferenceModel(trunk=self.model)
@@ -42,7 +45,9 @@ class TestInference(unittest.TestCase):
 
         self.assertTrue(inference_model.indexer.index.is_trained)
 
-        indices, distances = inference_model.get_nearest_neighbors([train_vectors[0]], k=10)
+        indices, distances = inference_model.get_nearest_neighbors(
+            [train_vectors[0]], k=10
+        )
         # The closest image is the query itself
         self.assertTrue(indices[0][0] == 0)
         self.assertTrue(len(indices) == 1)

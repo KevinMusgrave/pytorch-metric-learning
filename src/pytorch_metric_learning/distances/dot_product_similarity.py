@@ -1,6 +1,7 @@
 from .base_distance import BaseDistance
 import torch
 
+
 class DotProductSimilarity(BaseDistance):
     def __init__(self, **kwargs):
         super().__init__(is_inverted=True, **kwargs)
@@ -10,4 +11,4 @@ class DotProductSimilarity(BaseDistance):
         return torch.matmul(query_emb, ref_emb.t())
 
     def pairwise_distance(self, query_emb, ref_emb):
-        return torch.sum(query_emb*ref_emb, dim=1)
+        return torch.sum(query_emb * ref_emb, dim=1)

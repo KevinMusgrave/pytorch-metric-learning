@@ -2,6 +2,7 @@ from .base_distance import BaseDistance
 import torch
 from ..utils import loss_and_miner_utils as lmu
 
+
 class LpDistance(BaseDistance):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -11,7 +12,7 @@ class LpDistance(BaseDistance):
         dtype, device = query_emb.dtype, query_emb.device
         if ref_emb is None:
             ref_emb = query_emb
-        if dtype == torch.float16: # cdist doesn't work for float16
+        if dtype == torch.float16:  # cdist doesn't work for float16
             rows, cols = lmu.meshgrid_from_sizes(query_emb, ref_emb, dim=0)
             output = torch.zeros(rows.size(), dtype=dtype).to(device)
             rows, cols = rows.flatten(), cols.flatten()

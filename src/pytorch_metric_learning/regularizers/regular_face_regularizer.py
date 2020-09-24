@@ -20,8 +20,14 @@ class RegularFaceRegularizer(BaseRegularizer):
             mask = torch.zeros((num_classes, num_classes), dtype=dtype).to(device)
             row_nums = torch.arange(num_classes).long().to(device)
             mask[row_nums, indices] = 1
-        losses = torch.sum(cos*mask, dim=1)
-        return {"loss": {"losses": losses, "indices": c_f.torch_arange_from_size(weights), "reduction_type": "element"}}
+        losses = torch.sum(cos * mask, dim=1)
+        return {
+            "loss": {
+                "losses": losses,
+                "indices": c_f.torch_arange_from_size(weights),
+                "reduction_type": "element",
+            }
+        }
 
     def get_default_distance(self):
         return CosineSimilarity()

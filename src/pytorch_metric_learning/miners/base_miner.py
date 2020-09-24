@@ -2,6 +2,7 @@ import torch
 from ..utils import common_functions as c_f
 from ..utils.module_with_records_and_reducer import ModuleWithRecordsAndDistance
 
+
 class BaseMiner(ModuleWithRecordsAndDistance):
     def mine(self, embeddings, labels, ref_emb, ref_labels):
         raise NotImplementedError
@@ -21,7 +22,9 @@ class BaseMiner(ModuleWithRecordsAndDistance):
         with torch.no_grad():
             c_f.assert_embeddings_and_labels_are_same_size(embeddings, labels)
             labels = labels.to(embeddings.device)
-            ref_emb, ref_labels = self.set_ref_emb(embeddings, labels, ref_emb, ref_labels)
+            ref_emb, ref_labels = self.set_ref_emb(
+                embeddings, labels, ref_emb, ref_labels
+            )
             mining_output = self.mine(embeddings, labels, ref_emb, ref_labels)
         self.output_assertion(mining_output)
         return mining_output
@@ -38,7 +41,10 @@ class BaseMiner(ModuleWithRecordsAndDistance):
 class BaseTupleMiner(BaseMiner):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.add_to_recordable_attributes(list_of_names=["num_pos_pairs", "num_neg_pairs", "num_triplets"], is_stat=True)
+        self.add_to_recordable_attributes(
+            list_of_names=["num_pos_pairs", "num_neg_pairs", "num_triplets"],
+            is_stat=True,
+        )
 
     def output_assertion(self, output):
         """

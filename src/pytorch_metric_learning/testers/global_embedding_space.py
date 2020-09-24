@@ -5,9 +5,13 @@ from .base_tester import BaseTester
 
 
 class GlobalEmbeddingSpaceTester(BaseTester):
-
     def do_knn_and_accuracies(self, accuracies, embeddings_and_labels, split_name):
-        query_embeddings, query_labels, reference_embeddings, reference_labels = self.set_reference_and_query(embeddings_and_labels, split_name)
+        (
+            query_embeddings,
+            query_labels,
+            reference_embeddings,
+            reference_labels,
+        ) = self.set_reference_and_query(embeddings_and_labels, split_name)
         self.label_levels = self.label_levels_to_evaluate(query_labels)
 
         for L in self.label_levels:
@@ -25,4 +29,8 @@ class GlobalEmbeddingSpaceTester(BaseTester):
                 accuracies[keyname] = v
 
         if len(self.label_levels) > 1:
-            self.calculate_average_accuracies(accuracies, self.accuracy_calculator.get_curr_metrics(), self.label_levels)
+            self.calculate_average_accuracies(
+                accuracies,
+                self.accuracy_calculator.get_curr_metrics(),
+                self.label_levels,
+            )

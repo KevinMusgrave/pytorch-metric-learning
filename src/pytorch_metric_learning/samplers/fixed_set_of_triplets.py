@@ -3,6 +3,7 @@ from torch.utils.data.sampler import Sampler
 from ..utils import common_functions as c_f
 import numpy as np
 
+
 class FixedSetOfTriplets(Sampler):
     """
     Upon initialization, this will create num_triplets triplets based on
@@ -38,7 +39,9 @@ class FixedSetOfTriplets(Sampler):
         self.fixed_set_of_triplets = np.ones((self.num_triplets, 3), dtype=np.int) * -1
         label_list = list(self.labels_to_indices.keys())
         for i in range(self.num_triplets):
-            anchor_label, negative_label = c_f.NUMPY_RANDOM.choice(label_list, size=2, replace=False)
+            anchor_label, negative_label = c_f.NUMPY_RANDOM.choice(
+                label_list, size=2, replace=False
+            )
             anchor_list = self.labels_to_indices[anchor_label]
             negative_list = self.labels_to_indices[negative_label]
             anchor, positive = c_f.safe_random_choice(anchor_list, size=2)

@@ -14,6 +14,7 @@ class TripletMarginLoss(BaseMetricLossFunction):
               if it violates the margin more.
         smooth_loss: Use the log-exp version of the triplet loss
     """
+
     def __init__(
         self,
         margin=0.05,
@@ -28,9 +29,11 @@ class TripletMarginLoss(BaseMetricLossFunction):
         self.smooth_loss = smooth_loss
         self.triplets_per_anchor = triplets_per_anchor
         self.add_to_recordable_attributes(list_of_names=["margin"], is_stat=False)
-        
+
     def compute_loss(self, embeddings, labels, indices_tuple):
-        indices_tuple = lmu.convert_to_triplets(indices_tuple, labels, t_per_anchor=self.triplets_per_anchor)
+        indices_tuple = lmu.convert_to_triplets(
+            indices_tuple, labels, t_per_anchor=self.triplets_per_anchor
+        )
         anchor_idx, positive_idx, negative_idx = indices_tuple
         if len(anchor_idx) == 0:
             return self.zero_losses()
@@ -40,14 +43,20 @@ class TripletMarginLoss(BaseMetricLossFunction):
         if self.swap:
             pn_dists = mat[positive_idx, negative_idx]
             an_dists = self.distance.smallest_dist(an_dists, pn_dists)
-        
+
         current_margins = self.distance.margin(an_dists, ap_dists)
         if self.smooth_loss:
             loss = torch.log(1 + torch.exp(-current_margins))
         else:
             loss = torch.nn.functional.relu(-current_margins + self.margin)
 
-        return {"loss": {"losses": loss, "indices": indices_tuple, "reduction_type": "triplet"}}
+        return {
+            "loss": {
+                "losses": loss,
+                "indices": indices_tuple,
+                "reduction_type": "triplet",
+            }
+        }
 
     def get_default_reducer(self):
         return AvgNonZeroReducer()

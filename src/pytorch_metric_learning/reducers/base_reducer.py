@@ -11,7 +11,9 @@ class BaseReducer(ModuleWithRecords):
         loss_info = loss_dict[loss_name]
         self.add_to_recordable_attributes(name=loss_name, is_stat=True)
         losses, loss_indices, reduction_type = self.unpack_loss_info(loss_info)
-        loss_val = self.reduce_the_loss(losses, loss_indices, reduction_type, embeddings, labels)
+        loss_val = self.reduce_the_loss(
+            losses, loss_indices, reduction_type, embeddings, labels
+        )
         setattr(self, loss_name, loss_val.item())
         return loss_val
 
@@ -38,10 +40,10 @@ class BaseReducer(ModuleWithRecords):
 
     def neg_pair_reduction(self, losses, loss_indices, embeddings, labels):
         raise NotImplementedError
-    
+
     def triplet_reduction(self, losses, loss_indices, embeddings, labels):
         raise NotImplementedError
-        
+
     def get_reduction_func(self, reduction_type):
         return getattr(self, "{}_reduction".format(reduction_type))
 
@@ -49,13 +51,13 @@ class BaseReducer(ModuleWithRecords):
         getattr(self, "assert_sizes_{}".format(reduction_type))(losses, loss_indices)
 
     def zero_loss(self, embeddings):
-        return torch.sum(embeddings*0)
+        return torch.sum(embeddings * 0)
 
     def input_is_zero_loss(self, losses):
         if (not torch.is_tensor(losses)) and (losses == 0):
             return True
         return False
-    
+
     def assert_sizes_already_reduced(self, losses, loss_indices):
         pass
 
@@ -75,9 +77,9 @@ class BaseReducer(ModuleWithRecords):
         self.assert_sizes_pair(losses, loss_indices)
 
     def assert_sizes_neg_pair(self, losses, loss_indices):
-        self.assert_sizes_pair(losses, loss_indices)       
+        self.assert_sizes_pair(losses, loss_indices)
 
-    def assert_sizes_triplet(self, losses, loss_indices): 
+    def assert_sizes_triplet(self, losses, loss_indices):
         assert torch.is_tensor(losses)
         assert c_f.is_list_or_tuple(loss_indices)
         assert len(loss_indices) == 3

@@ -1,5 +1,5 @@
 import unittest
-from .. import TEST_DTYPES
+from .. import TEST_DTYPES, TEST_DEVICE
 import torch
 from pytorch_metric_learning.reducers import (
     MultipleReducers,
@@ -9,10 +9,6 @@ from pytorch_metric_learning.reducers import (
 
 
 class TestMultipleReducers(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.device = torch.device("cuda")
-
     def test_multiple_reducers(self):
         reducer = MultipleReducers(
             {"lossA": AvgNonZeroReducer(), "lossB": DivisorReducer()}
@@ -21,7 +17,7 @@ class TestMultipleReducers(unittest.TestCase):
         embedding_size = 64
         for dtype in TEST_DTYPES:
             embeddings = (
-                torch.randn(batch_size, embedding_size).type(dtype).to(self.device)
+                torch.randn(batch_size, embedding_size).type(dtype).to(TEST_DEVICE)
             )
             labels = torch.randint(0, 10, (batch_size,))
             pair_indices = (
@@ -31,8 +27,8 @@ class TestMultipleReducers(unittest.TestCase):
             triplet_indices = pair_indices + (
                 torch.randint(0, batch_size, (batch_size,)),
             )
-            lossesA = torch.randn(batch_size).type(dtype).to(self.device)
-            lossesB = torch.randn(batch_size).type(dtype).to(self.device)
+            lossesA = torch.randn(batch_size).type(dtype).to(TEST_DEVICE)
+            lossesB = torch.randn(batch_size).type(dtype).to(TEST_DEVICE)
 
             for indices, reduction_type in [
                 (torch.arange(batch_size), "element"),

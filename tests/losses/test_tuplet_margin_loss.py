@@ -1,5 +1,5 @@
 import unittest
-from .. import TEST_DTYPES
+from .. import TEST_DTYPES, TEST_DEVICE
 import torch
 import numpy as np
 from pytorch_metric_learning.losses import TupletMarginLoss
@@ -7,10 +7,6 @@ from pytorch_metric_learning.utils import common_functions as c_f
 
 
 class TestTupletMarginLoss(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.device = torch.device("cuda")
-
     def test_tuplet_margin_loss(self):
         margin, scale = 5, 64
         loss_func = TupletMarginLoss(margin=margin, scale=scale)
@@ -22,7 +18,7 @@ class TestTupletMarginLoss(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(
-                self.device
+                TEST_DEVICE
             )  # 2D embeddings
             labels = torch.LongTensor([0, 0, 1, 1, 2])
 
@@ -80,7 +76,7 @@ class TestTupletMarginLoss(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(
-                self.device
+                TEST_DEVICE
             )  # 2D embeddings
             labels = torch.LongTensor([0])
             loss = loss_func(embeddings, labels)

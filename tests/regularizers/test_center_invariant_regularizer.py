@@ -1,15 +1,11 @@
 import unittest
-from .. import TEST_DTYPES
+from .. import TEST_DTYPES, TEST_DEVICE
 import torch
 from pytorch_metric_learning.losses import NormalizedSoftmaxLoss
 from pytorch_metric_learning.regularizers import CenterInvariantRegularizer
 
 
 class TestCenterInvariantRegularizer(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.device = torch.device("cuda")
-
     def test_center_invariant_regularizer(self):
         temperature = 0.1
         num_classes = 10
@@ -22,14 +18,14 @@ class TestCenterInvariantRegularizer(unittest.TestCase):
                 embedding_size=embedding_size,
                 weight_regularizer=CenterInvariantRegularizer(),
                 weight_reg_weight=reg_weight,
-            ).to(self.device)
+            ).to(TEST_DEVICE)
 
             embeddings = torch.nn.functional.normalize(
                 torch.randn((180, embedding_size), requires_grad=True)
                 .type(dtype)
-                .to(self.device)
+                .to(TEST_DEVICE)
             )
-            labels = torch.randint(low=0, high=10, size=(180,)).to(self.device)
+            labels = torch.randint(low=0, high=10, size=(180,)).to(TEST_DEVICE)
 
             loss = loss_func(embeddings, labels)
             loss.backward()

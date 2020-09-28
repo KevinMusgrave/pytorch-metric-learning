@@ -1,14 +1,10 @@
 import unittest
-from .. import TEST_DTYPES
+from .. import TEST_DTYPES, TEST_DEVICE
 import torch
 from pytorch_metric_learning.reducers import ThresholdReducer
 
 
 class TestThresholdReducer(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.device = torch.device("cuda")
-
     def test_threshold_reducer(self):
         threshold = 0.5
         reducer = ThresholdReducer(threshold)
@@ -16,7 +12,7 @@ class TestThresholdReducer(unittest.TestCase):
         embedding_size = 64
         for dtype in TEST_DTYPES:
             embeddings = (
-                torch.randn(batch_size, embedding_size).type(dtype).to(self.device)
+                torch.randn(batch_size, embedding_size).type(dtype).to(TEST_DEVICE)
             )
             labels = torch.randint(0, 10, (batch_size,))
             pair_indices = (
@@ -26,8 +22,8 @@ class TestThresholdReducer(unittest.TestCase):
             triplet_indices = pair_indices + (
                 torch.randint(0, batch_size, (batch_size,)),
             )
-            losses = torch.randn(batch_size).type(dtype).to(self.device)
-            zero_losses = torch.zeros(batch_size).type(dtype).to(self.device)
+            losses = torch.randn(batch_size).type(dtype).to(TEST_DEVICE)
+            zero_losses = torch.zeros(batch_size).type(dtype).to(TEST_DEVICE)
 
             for indices, reduction_type in [
                 (torch.arange(batch_size), "element"),

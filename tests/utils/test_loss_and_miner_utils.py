@@ -1,14 +1,10 @@
 import unittest
-from .. import TEST_DTYPES
+from .. import TEST_DTYPES, TEST_DEVICE
 from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
 import torch
 
 
 class TestLossAndMinerUtils(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.device = torch.device("cuda")
-
     def test_logsumexp(self):
         for dtype in TEST_DTYPES:
             rtol = 1e-2 if dtype == torch.float16 else 1e-5
@@ -22,7 +18,7 @@ class TestLossAndMinerUtils(unittest.TestCase):
                 ],
                 dtype=dtype,
                 requires_grad=True,
-            ).to(self.device)
+            ).to(TEST_DEVICE)
             result = lmu.logsumexp(mat, keep_mask=None, add_one=False, dim=1)
             torch.mean(result).backward(retain_graph=True)
             correct_result = torch.logsumexp(mat, dim=1, keepdim=True)
@@ -35,7 +31,7 @@ class TestLossAndMinerUtils(unittest.TestCase):
                     [
                         mat,
                         torch.zeros(mat.size(0), dtype=dtype)
-                        .to(self.device)
+                        .to(TEST_DEVICE)
                         .unsqueeze(1),
                     ],
                     dim=1,
@@ -54,21 +50,21 @@ class TestLossAndMinerUtils(unittest.TestCase):
                     [0, 1, 1, 0, 0],
                 ],
                 dtype=torch.bool,
-            ).to(self.device)
+            ).to(TEST_DEVICE)
             result = lmu.logsumexp(mat, keep_mask=keep_mask, add_one=False, dim=1)
             torch.mean(result).backward()
 
-            row0_input = torch.tensor([-1, 0], dtype=dtype).to(self.device)
+            row0_input = torch.tensor([-1, 0], dtype=dtype).to(TEST_DEVICE)
             row1_input = torch.tensor([-300, -200, -100, -50, -20], dtype=dtype).to(
-                self.device
+                TEST_DEVICE
             )
-            row2_input = torch.tensor([-200, 0, 200], dtype=dtype).to(self.device)
-            row4_input = torch.tensor([0, 0], dtype=dtype).to(self.device)
+            row2_input = torch.tensor([-200, 0, 200], dtype=dtype).to(TEST_DEVICE)
+            row4_input = torch.tensor([0, 0], dtype=dtype).to(TEST_DEVICE)
 
             row0 = torch.logsumexp(row0_input, dim=0).unsqueeze(0)
             row1 = torch.logsumexp(row1_input, dim=0).unsqueeze(0)
             row2 = torch.logsumexp(row2_input, dim=0).unsqueeze(0)
-            row3 = torch.tensor([0.0], dtype=dtype).to(self.device)
+            row3 = torch.tensor([0.0], dtype=dtype).to(TEST_DEVICE)
             row4 = torch.logsumexp(row4_input, dim=0).unsqueeze(0)
             correct_result = torch.stack([row0, row1, row2, row3, row4], dim=0)
             self.assertTrue(torch.allclose(result, correct_result, rtol=rtol))
@@ -104,27 +100,27 @@ class TestLossAndMinerUtils(unittest.TestCase):
         )
 
     def test_convert_to_weights(self):
-        a = torch.LongTensor([0, 1, 2, 3]).to(self.device)
-        p = torch.LongTensor([4, 4, 4, 4]).to(self.device)
-        n = torch.LongTensor([5, 5, 6, 6]).to(self.device)
+        a = torch.LongTensor([0, 1, 2, 3]).to(TEST_DEVICE)
+        p = torch.LongTensor([4, 4, 4, 4]).to(TEST_DEVICE)
+        n = torch.LongTensor([5, 5, 6, 6]).to(TEST_DEVICE)
         for dtype in TEST_DTYPES:
             weights = lmu.convert_to_weights(
-                (a, p, n), labels=torch.arange(7).to(self.device), dtype=dtype
+                (a, p, n), labels=torch.arange(7).to(TEST_DEVICE), dtype=dtype
             )
             correct_weights = torch.tensor(
                 [0.25, 0.25, 0.25, 0.25, 1, 0.5, 0.5], dtype=dtype
-            ).to(self.device)
+            ).to(TEST_DEVICE)
             self.assertTrue(torch.all(weights == correct_weights))
 
-        a = torch.LongTensor([]).to(self.device)
-        p = torch.LongTensor([]).to(self.device)
-        n = torch.LongTensor([]).to(self.device)
+        a = torch.LongTensor([]).to(TEST_DEVICE)
+        p = torch.LongTensor([]).to(TEST_DEVICE)
+        n = torch.LongTensor([]).to(TEST_DEVICE)
         for dtype in TEST_DTYPES:
             weights = lmu.convert_to_weights(
-                (a, p, n), labels=torch.arange(7).to(self.device), dtype=dtype
+                (a, p, n), labels=torch.arange(7).to(TEST_DEVICE), dtype=dtype
             )
             correct_weights = torch.tensor([1, 1, 1, 1, 1, 1, 1], dtype=dtype).to(
-                self.device
+                TEST_DEVICE
             )
             self.assertTrue(torch.all(weights == correct_weights))
 

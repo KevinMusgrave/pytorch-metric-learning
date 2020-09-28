@@ -55,17 +55,13 @@ class OriginalImplementationSoftTriple(nn.Module):
 
 
 import unittest
-from .. import TEST_DTYPES
+from .. import TEST_DTYPES, TEST_DEVICE
 from pytorch_metric_learning.losses import SoftTripleLoss
 from pytorch_metric_learning.utils import common_functions as c_f
 from pytorch_metric_learning.regularizers import SparseCentersRegularizer
 
 
 class TestSoftTripleLoss(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.device = torch.device("cuda")
-
     def test_soft_triple_loss(self):
         embedding_size = 2
         num_classes = 11
@@ -91,7 +87,7 @@ class TestSoftTripleLoss(unittest.TestCase):
                     margin=margin,
                     weight_regularizer=weight_regularizer,
                     weight_reg_weight=reg_weight,
-                ).to(self.device)
+                ).to(TEST_DEVICE)
                 original_loss_func = OriginalImplementationSoftTriple(
                     la,
                     gamma,
@@ -100,7 +96,7 @@ class TestSoftTripleLoss(unittest.TestCase):
                     embedding_size,
                     num_classes,
                     centers_per_class,
-                ).to(self.device)
+                ).to(TEST_DEVICE)
 
                 original_loss_func.fc.data = original_loss_func.fc.data.type(dtype)
                 loss_func.fc = original_loss_func.fc
@@ -111,9 +107,9 @@ class TestSoftTripleLoss(unittest.TestCase):
                     requires_grad=True,
                     dtype=dtype,
                 ).to(
-                    self.device
+                    TEST_DEVICE
                 )  # 2D embeddings
-                labels = torch.randint(low=0, high=10, size=(180,)).to(self.device)
+                labels = torch.randint(low=0, high=10, size=(180,)).to(TEST_DEVICE)
 
                 loss = loss_func(embeddings, labels)
                 loss.backward()

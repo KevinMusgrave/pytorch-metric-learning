@@ -1,15 +1,11 @@
 import unittest
-from .. import TEST_DTYPES
+from .. import TEST_DTYPES, TEST_DEVICE
 import torch
 from pytorch_metric_learning.losses import NCALoss
 from pytorch_metric_learning.utils import common_functions as c_f
 
 
 class TestNCALoss(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.device = torch.device("cuda")
-
     def test_nca_loss(self):
         softmax_scale = 10
         loss_func = NCALoss(softmax_scale=softmax_scale)
@@ -21,7 +17,7 @@ class TestNCALoss(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(
-                self.device
+                TEST_DEVICE
             )  # 2D embeddings
             labels = torch.LongTensor([0, 0, 1, 1, 2])
 
@@ -75,7 +71,7 @@ class TestNCALoss(unittest.TestCase):
                     requires_grad=True,
                     dtype=dtype,
                 ).to(
-                    self.device
+                    TEST_DEVICE
                 )  # 2D embeddings
                 labels = torch.LongTensor(labels)
                 loss = loss_func(embeddings, labels)

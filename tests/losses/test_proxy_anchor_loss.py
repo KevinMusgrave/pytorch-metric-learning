@@ -71,17 +71,13 @@ class OriginalImplementationProxyAnchor(torch.nn.Module):
 
 
 import unittest
-from .. import TEST_DTYPES
+from .. import TEST_DTYPES, TEST_DEVICE
 import torch
 from pytorch_metric_learning.losses import ProxyAnchorLoss
 from pytorch_metric_learning.utils import common_functions as c_f
 
 
 class TestProxyAnchorLoss(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.device = torch.device("cuda")
-
     def test_proxyanchor_loss(self):
         num_classes = 10
         embedding_size = 2
@@ -90,10 +86,10 @@ class TestProxyAnchorLoss(unittest.TestCase):
             alpha = 1 if dtype == torch.float16 else 32
             loss_func = ProxyAnchorLoss(
                 num_classes, embedding_size, margin=margin, alpha=alpha
-            ).to(self.device)
+            ).to(TEST_DEVICE)
             original_loss_func = OriginalImplementationProxyAnchor(
                 num_classes, embedding_size, mrg=margin, alpha=alpha
-            ).to(self.device)
+            ).to(TEST_DEVICE)
             original_loss_func.proxies.data = original_loss_func.proxies.data.type(
                 dtype
             )
@@ -105,9 +101,9 @@ class TestProxyAnchorLoss(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(
-                self.device
+                TEST_DEVICE
             )  # 2D embeddings
-            labels = torch.randint(low=0, high=5, size=(180,)).to(self.device)
+            labels = torch.randint(low=0, high=5, size=(180,)).to(TEST_DEVICE)
 
             loss = loss_func(embeddings, labels)
             loss.backward()

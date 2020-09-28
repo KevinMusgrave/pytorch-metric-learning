@@ -1,5 +1,5 @@
 import unittest
-from .. import TEST_DTYPES
+from .. import TEST_DTYPES, TEST_DEVICE
 import torch
 from pytorch_metric_learning.losses import SignalToNoiseRatioContrastiveLoss
 from pytorch_metric_learning.utils import common_functions as c_f
@@ -7,10 +7,6 @@ from pytorch_metric_learning.regularizers import ZeroMeanRegularizer
 
 
 class TestSNRContrastiveLoss(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.device = torch.device("cuda")
-
     def test_snr_contrastive_loss(self):
         pos_margin, neg_margin, embedding_reg_weight = 0, 0.1, 0.1
         loss_func = SignalToNoiseRatioContrastiveLoss(
@@ -27,7 +23,7 @@ class TestSNRContrastiveLoss(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(
-                self.device
+                TEST_DEVICE
             )  # 2D embeddings
             labels = torch.LongTensor([0, 0, 1, 1, 2])
 
@@ -103,7 +99,7 @@ class TestSNRContrastiveLoss(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(
-                self.device
+                TEST_DEVICE
             )  # 2D embeddings
             labels = torch.LongTensor([0])
             reg_loss = (

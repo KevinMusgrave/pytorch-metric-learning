@@ -7,7 +7,7 @@ import torch.multiprocessing as mp
 from pytorch_metric_learning.utils import distributed, common_functions as c_f
 from pytorch_metric_learning import losses, miners
 from torch.nn.parallel import DistributedDataParallel as DDP
-from .. import TEST_DTYPES
+from .. import TEST_DTYPES, TEST_DEVICE
 
 # https://discuss.pytorch.org/t/check-if-models-have-same-weights/4351
 def parameters_are_equal(model1, model2):
@@ -148,7 +148,7 @@ def single_process_function(
 class TestDistributedLossWrapper(unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        self.device = torch.device("cuda")
+        TEST_DEVICE = torch.device("cuda")
 
     def create_loss(self, loss_class, is_tuple_loss, dtype):
         if is_tuple_loss:
@@ -174,13 +174,13 @@ class TestDistributedLossWrapper(unittest.TestCase):
                 model = ToyMpModel().type(dtype)
                 model.load_state_dict(original_model.state_dict())
 
-                original_model = original_model.to(self.device)
+                original_model = original_model.to(TEST_DEVICE)
                 original_loss_fn = self.create_loss(loss_class, is_tuple_loss, dtype)
                 loss_fn = self.create_loss(loss_class, is_tuple_loss, dtype)
                 if not is_tuple_loss:
                     loss_fn.load_state_dict(original_loss_fn.state_dict())
                     assert parameters_are_equal(original_loss_fn, loss_fn)
-                    original_loss_fn = original_loss_fn.to(self.device)
+                    original_loss_fn = original_loss_fn.to(TEST_DEVICE)
                     loss_optimizer = optim.SGD(original_loss_fn.parameters(), lr=lr)
                     loss_optimizer.zero_grad()
 
@@ -189,8 +189,8 @@ class TestDistributedLossWrapper(unittest.TestCase):
 
                 optimizer = optim.SGD(original_model.parameters(), lr=lr)
                 optimizer.zero_grad()
-                all_inputs = torch.cat(inputs, dim=0).to(self.device)
-                all_labels = torch.cat(labels, dim=0).to(self.device)
+                all_inputs = torch.cat(inputs, dim=0).to(TEST_DEVICE)
+                all_labels = torch.cat(labels, dim=0).to(TEST_DEVICE)
                 all_outputs = original_model(all_inputs)
                 if test_ref_emb:
                     ref_outputs = [
@@ -201,8 +201,8 @@ class TestDistributedLossWrapper(unittest.TestCase):
                         torch.randint(low=0, high=2, size=(batch_size,))
                         for _ in range(world_size)
                     ]
-                    all_ref_outputs = torch.cat(ref_outputs, dim=0).to(self.device)
-                    all_ref_labels = torch.cat(ref_labels, dim=0).to(self.device)
+                    all_ref_outputs = torch.cat(ref_outputs, dim=0).to(TEST_DEVICE)
+                    all_ref_labels = torch.cat(ref_labels, dim=0).to(TEST_DEVICE)
                     correct_indices_tuple = original_miner_fn(
                         all_outputs, all_labels, all_ref_outputs, all_ref_labels
                     )
@@ -210,10 +210,10 @@ class TestDistributedLossWrapper(unittest.TestCase):
                         correct_indices_tuple, len(all_outputs)
                     )
                     all_outputs = torch.cat([all_outputs, all_ref_outputs], dim=0).to(
-                        self.device
+                        TEST_DEVICE
                     )
                     all_labels = torch.cat([all_labels, all_ref_labels], dim=0).to(
-                        self.device
+                        TEST_DEVICE
                     )
                 else:
                     ref_outputs, ref_labels = None, None

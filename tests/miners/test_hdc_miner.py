@@ -1,5 +1,5 @@
 import unittest
-from .. import TEST_DTYPES
+from .. import TEST_DTYPES, TEST_DEVICE
 import torch
 from pytorch_metric_learning.miners import HDCMiner
 from pytorch_metric_learning.utils import common_functions as c_f
@@ -9,7 +9,6 @@ from pytorch_metric_learning.distances import LpDistance, CosineSimilarity
 class TestHDCMiner(unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        self.device = torch.device("cuda")
         self.dist_miner = HDCMiner(
             filter_percentage=0.3, distance=LpDistance(normalize_embeddings=False)
         )
@@ -25,17 +24,17 @@ class TestHDCMiner(unittest.TestCase):
         correct_a1 = torch.LongTensor([0, 5, 1, 5])
         correct_p = torch.LongTensor([5, 0, 5, 1])
         self.correct_pos_pairs = torch.stack([correct_a1, correct_p], dim=1).to(
-            self.device
+            TEST_DEVICE
         )
         correct_a2 = torch.LongTensor([1, 2, 4, 5, 0, 2])
         correct_n = torch.LongTensor([2, 1, 5, 4, 2, 0])
         self.correct_neg_pairs = torch.stack([correct_a2, correct_n], dim=1).to(
-            self.device
+            TEST_DEVICE
         )
 
     def test_dist_mining(self):
         for dtype in TEST_DTYPES:
-            embeddings = torch.arange(6).type(dtype).to(self.device).unsqueeze(1)
+            embeddings = torch.arange(6).type(dtype).to(TEST_DEVICE).unsqueeze(1)
             a1, p, a2, n = self.dist_miner(embeddings, self.labels)
             pos_pairs = torch.stack([a1, p], dim=1)
             neg_pairs = torch.stack([a2, n], dim=1)
@@ -46,7 +45,7 @@ class TestHDCMiner(unittest.TestCase):
             angles = [0, 20, 40, 60, 80, 100]
             embeddings = torch.tensor(
                 [c_f.angle_to_coord(a) for a in angles], dtype=dtype
-            ).to(self.device)
+            ).to(TEST_DEVICE)
             a1, p, a2, n = self.normalized_dist_miner(embeddings, self.labels)
             pos_pairs = torch.stack([a1, p], dim=1)
             neg_pairs = torch.stack([a2, n], dim=1)
@@ -57,7 +56,7 @@ class TestHDCMiner(unittest.TestCase):
             angles = [0, 20, 40, 60, 80, 100]
             embeddings = torch.tensor(
                 [c_f.angle_to_coord(a) for a in angles], dtype=dtype
-            ).to(self.device)
+            ).to(TEST_DEVICE)
             a1, p, a2, n = self.normalized_dist_miner_squared(embeddings, self.labels)
             pos_pairs = torch.stack([a1, p], dim=1)
             neg_pairs = torch.stack([a2, n], dim=1)
@@ -68,7 +67,7 @@ class TestHDCMiner(unittest.TestCase):
             angles = [0, 20, 40, 60, 80, 100]
             embeddings = torch.tensor(
                 [c_f.angle_to_coord(a) for a in angles], dtype=dtype
-            ).to(self.device)
+            ).to(TEST_DEVICE)
             a1, p, a2, n = self.sim_miner(embeddings, self.labels)
             pos_pairs = torch.stack([a1, p], dim=1)
             neg_pairs = torch.stack([a2, n], dim=1)
@@ -89,7 +88,7 @@ class TestHDCMiner(unittest.TestCase):
     def test_empty_output(self):
         for dtype in TEST_DTYPES:
             batch_size = 32
-            embeddings = torch.randn(batch_size, 64).type(dtype).to(self.device)
+            embeddings = torch.randn(batch_size, 64).type(dtype).to(TEST_DEVICE)
             labels = torch.arange(batch_size)
             for miner in [
                 self.dist_miner,

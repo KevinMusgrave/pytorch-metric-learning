@@ -1,15 +1,11 @@
 import unittest
-from .. import TEST_DTYPES
+from .. import TEST_DTYPES, TEST_DEVICE
 import torch
 from pytorch_metric_learning.losses import MarginLoss
 from pytorch_metric_learning.utils import common_functions as c_f
 
 
 class TestMarginLoss(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.device = torch.device("cuda")
-
     def test_margin_loss(self):
         for dtype in TEST_DTYPES:
             for learn_beta, num_classes in [
@@ -33,7 +29,7 @@ class TestMarginLoss(unittest.TestCase):
                     requires_grad=True,
                     dtype=dtype,
                 ).to(
-                    self.device
+                    TEST_DEVICE
                 )  # 2D embeddings
                 labels = torch.LongTensor([0, 0, 1, 1, 2])
 
@@ -101,7 +97,7 @@ class TestMarginLoss(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(
-                self.device
+                TEST_DEVICE
             )  # 2D embeddings
             labels = torch.LongTensor([0, 1, 2, 3, 4])
             loss = loss_func(embeddings, labels)

@@ -1,5 +1,5 @@
 import unittest
-from .. import TEST_DTYPES
+from .. import TEST_DTYPES, TEST_DEVICE
 import torch
 from pytorch_metric_learning.losses import (
     LiftedStructureLoss,
@@ -9,10 +9,6 @@ from pytorch_metric_learning.utils import common_functions as c_f
 
 
 class TestLiftedStructure(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.device = torch.device("cuda")
-
     def test_lifted_structure_loss(self):
         neg_margin = 0.5
         loss_func = LiftedStructureLoss(neg_margin=neg_margin)
@@ -24,7 +20,7 @@ class TestLiftedStructure(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(
-                self.device
+                TEST_DEVICE
             )  # 2D embeddings
             labels = torch.LongTensor([0, 0, 1, 1, 2])
 
@@ -87,7 +83,7 @@ class TestLiftedStructure(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(
-                self.device
+                TEST_DEVICE
             )  # 2D embeddings
             labels = torch.LongTensor([0])
             loss = loss_func(embeddings, labels)
@@ -98,7 +94,7 @@ class TestLiftedStructure(unittest.TestCase):
 class TestGeneralizedLiftedStructureLoss(unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        self.device = torch.device("cuda")
+        TEST_DEVICE = torch.device("cuda")
 
     def test_generalized_lifted_structure_loss(self):
         neg_margin = 0.5
@@ -111,7 +107,7 @@ class TestGeneralizedLiftedStructureLoss(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(
-                self.device
+                TEST_DEVICE
             )  # 2D embeddings
             labels = torch.LongTensor([0, 0, 1, 1, 2])
 
@@ -176,7 +172,7 @@ class TestGeneralizedLiftedStructureLoss(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(
-                self.device
+                TEST_DEVICE
             )  # 2D embeddings
             labels = torch.LongTensor([0])
             loss = loss_func(embeddings, labels)

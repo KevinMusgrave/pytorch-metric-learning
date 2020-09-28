@@ -1,5 +1,5 @@
 import unittest
-from .. import TEST_DTYPES
+from .. import TEST_DTYPES, TEST_DEVICE
 import torch
 from pytorch_metric_learning.miners import BatchHardMiner
 from pytorch_metric_learning.utils import common_functions as c_f
@@ -10,7 +10,6 @@ from pytorch_metric_learning.distances import CosineSimilarity, LpDistance
 class TestBatchHardMiner(unittest.TestCase):
     @classmethod
     def setUpClass(self):
-        self.device = torch.device("cuda")
         self.dist_miner = BatchHardMiner(
             distance=LpDistance(normalize_embeddings=False)
         )
@@ -22,16 +21,16 @@ class TestBatchHardMiner(unittest.TestCase):
         )
         self.sim_miner = BatchHardMiner(distance=CosineSimilarity())
         self.labels = torch.LongTensor([0, 0, 1, 1, 0, 2, 1, 1, 1])
-        self.correct_a = torch.LongTensor([0, 1, 2, 3, 4, 6, 7, 8]).to(self.device)
-        self.correct_p = torch.LongTensor([4, 4, 8, 8, 0, 2, 2, 2]).to(self.device)
+        self.correct_a = torch.LongTensor([0, 1, 2, 3, 4, 6, 7, 8]).to(TEST_DEVICE)
+        self.correct_p = torch.LongTensor([4, 4, 8, 8, 0, 2, 2, 2]).to(TEST_DEVICE)
         self.correct_n = [
-            torch.LongTensor([2, 2, 1, 4, 3, 5, 5, 5]).to(self.device),
-            torch.LongTensor([2, 2, 1, 4, 5, 5, 5, 5]).to(self.device),
+            torch.LongTensor([2, 2, 1, 4, 3, 5, 5, 5]).to(TEST_DEVICE),
+            torch.LongTensor([2, 2, 1, 4, 5, 5, 5, 5]).to(TEST_DEVICE),
         ]
 
     def test_dist_mining(self):
         for dtype in TEST_DTYPES:
-            embeddings = torch.arange(9).type(dtype).unsqueeze(1).to(self.device)
+            embeddings = torch.arange(9).type(dtype).unsqueeze(1).to(TEST_DEVICE)
             a, p, n = self.dist_miner(embeddings, self.labels)
             self.helper(a, p, n)
             self.assertTrue(self.dist_miner.hardest_pos_pair_dist == 6)
@@ -42,7 +41,7 @@ class TestBatchHardMiner(unittest.TestCase):
             angles = [0, 20, 40, 60, 80, 100, 120, 140, 160]
             embeddings = torch.tensor(
                 [c_f.angle_to_coord(a) for a in angles], dtype=dtype
-            ).to(self.device)
+            ).to(TEST_DEVICE)
             a, p, n = self.normalized_dist_miner(embeddings, self.labels)
             self.helper(a, p, n)
             correct_hardest_pos_pair_dist = torch.sqrt(
@@ -68,7 +67,7 @@ class TestBatchHardMiner(unittest.TestCase):
             angles = [0, 20, 40, 60, 80, 100, 120, 140, 160]
             embeddings = torch.tensor(
                 [c_f.angle_to_coord(a) for a in angles], dtype=dtype
-            ).to(self.device)
+            ).to(TEST_DEVICE)
             a, p, n = self.normalized_dist_miner_squared(embeddings, self.labels)
             self.helper(a, p, n)
             correct_hardest_pos_pair_dist = torch.sum(
@@ -94,7 +93,7 @@ class TestBatchHardMiner(unittest.TestCase):
             angles = [0, 20, 40, 60, 80, 100, 120, 140, 160]
             embeddings = torch.tensor(
                 [c_f.angle_to_coord(a) for a in angles], dtype=dtype
-            ).to(self.device)
+            ).to(TEST_DEVICE)
             a, p, n = self.sim_miner(embeddings, self.labels)
             self.helper(a, p, n)
             places = 2 if dtype == torch.float16 else 5
@@ -117,7 +116,7 @@ class TestBatchHardMiner(unittest.TestCase):
     def test_empty_output(self):
         batch_size = 32
         for dtype in TEST_DTYPES:
-            embeddings = torch.randn(batch_size, 64).type(dtype).to(self.device)
+            embeddings = torch.randn(batch_size, 64).type(dtype).to(TEST_DEVICE)
             labels = torch.arange(batch_size)
             for miner in [
                 self.dist_miner,

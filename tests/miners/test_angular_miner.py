@@ -1,5 +1,5 @@
 import unittest
-from .. import TEST_DTYPES
+from .. import TEST_DTYPES, TEST_DEVICE
 import torch
 import numpy as np
 from pytorch_metric_learning.miners import AngularMiner
@@ -7,10 +7,6 @@ from pytorch_metric_learning.utils import common_functions as c_f
 
 
 class TestAngularMiner(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.device = torch.device("cuda")
-
     def test_angular_miner(self):
         for dtype in TEST_DTYPES:
             embedding_angles = torch.arange(0, 16)
@@ -19,7 +15,7 @@ class TestAngularMiner(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(
-                self.device
+                TEST_DEVICE
             )  # 2D embeddings
             labels = torch.randint(low=0, high=2, size=(16,))
             triplets = []
@@ -63,7 +59,7 @@ class TestAngularMiner(unittest.TestCase):
         for dtype in TEST_DTYPES:
             miner = AngularMiner(35)
             batch_size = 32
-            embeddings = torch.randn(batch_size, 64).to(self.device).type(dtype)
+            embeddings = torch.randn(batch_size, 64).to(TEST_DEVICE).type(dtype)
             labels = torch.arange(batch_size)
             a, p, n = miner(embeddings, labels)
             self.assertTrue(len(a) == 0)

@@ -1,5 +1,5 @@
 import unittest
-from .. import TEST_DTYPES
+from .. import TEST_DTYPES, TEST_DEVICE
 import torch
 from pytorch_metric_learning.losses import TripletMarginLoss
 from pytorch_metric_learning.utils import common_functions as c_f
@@ -8,10 +8,6 @@ from pytorch_metric_learning.distances import CosineSimilarity
 
 
 class TestTripletMarginLoss(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.device = torch.device("cuda")
-
     def test_triplet_margin_loss(self):
         margin = 0.2
         loss_funcA = TripletMarginLoss(margin=margin)
@@ -27,7 +23,7 @@ class TestTripletMarginLoss(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(
-                self.device
+                TEST_DEVICE
             )  # 2D embeddings
             labels = torch.LongTensor([0, 0, 1, 1, 2])
 
@@ -97,7 +93,7 @@ class TestTripletMarginLoss(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(
-                self.device
+                TEST_DEVICE
             )  # 2D embeddings
             labels = torch.LongTensor([0, 1, 2, 3, 4])
             lossA = loss_funcA(embeddings, labels)
@@ -117,7 +113,7 @@ class TestTripletMarginLoss(unittest.TestCase):
                     requires_grad=True,
                     dtype=dtype,
                 ).to(
-                    self.device
+                    TEST_DEVICE
                 )  # 2D embeddings
                 labels = torch.LongTensor([0, 0, 1, 1, 2])
 

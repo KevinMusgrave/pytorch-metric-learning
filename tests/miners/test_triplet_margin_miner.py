@@ -1,5 +1,5 @@
 import unittest
-from .. import TEST_DTYPES
+from .. import TEST_DTYPES, TEST_DEVICE
 import torch
 from pytorch_metric_learning.miners import TripletMarginMiner
 from pytorch_metric_learning.utils import common_functions as c_f
@@ -7,10 +7,6 @@ from pytorch_metric_learning.distances import LpDistance, CosineSimilarity
 
 
 class TestTripletMarginMiner(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.device = torch.device("cuda")
-
     def test_triplet_margin_miner(self):
         for dtype in TEST_DTYPES:
             for distance in [LpDistance(), CosineSimilarity()]:
@@ -20,7 +16,7 @@ class TestTripletMarginMiner(unittest.TestCase):
                     requires_grad=True,
                     dtype=dtype,
                 ).to(
-                    self.device
+                    TEST_DEVICE
                 )  # 2D embeddings
                 labels = torch.randint(low=0, high=2, size=(16,))
                 mat = distance(embeddings)
@@ -90,7 +86,7 @@ class TestTripletMarginMiner(unittest.TestCase):
         miner = TripletMarginMiner(0.5, type_of_triplets="all")
         for dtype in TEST_DTYPES:
             batch_size = 32
-            embeddings = torch.randn(batch_size, 64).type(dtype).to(self.device)
+            embeddings = torch.randn(batch_size, 64).type(dtype).to(TEST_DEVICE)
             labels = torch.arange(batch_size)
             a, p, n = miner(embeddings, labels)
             self.assertTrue(len(a) == 0)

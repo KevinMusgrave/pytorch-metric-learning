@@ -1,15 +1,11 @@
 import unittest
-from .. import TEST_DTYPES
+from .. import TEST_DTYPES, TEST_DEVICE
 import torch
 from pytorch_metric_learning.losses import CircleLoss
 from pytorch_metric_learning.utils import common_functions as c_f
 
 
 class TestCircleLoss(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.device = torch.device("cuda")
-
     def test_circle_loss(self):
         margin, gamma = 0.25, 256
         Op, On = 1 + margin, -margin
@@ -23,7 +19,7 @@ class TestCircleLoss(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(
-                self.device
+                TEST_DEVICE
             )  # 2D embeddings
             labels = torch.LongTensor([0, 0, 1, 1, 2])
 
@@ -99,7 +95,7 @@ class TestCircleLoss(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(
-                self.device
+                TEST_DEVICE
             )  # 2D embeddings
             labels = torch.LongTensor([0])
             loss = loss_func(embeddings, labels)
@@ -116,7 +112,7 @@ class TestCircleLoss(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(
-                self.device
+                TEST_DEVICE
             )  # 2D embeddings
             labels = torch.randint(low=0, high=10, size=(180,))
             loss = loss_func(embeddings, labels)

@@ -5,6 +5,8 @@ from pytorch_metric_learning.utils import common_functions as c_f
 from pytorch_metric_learning.miners import MultiSimilarityMiner
 from torchvision import models, datasets, transforms
 import shutil
+from .. import TEST_DEVICE
+import os
 
 
 class TestTuplesToWeightsSampler(unittest.TestCase):
@@ -12,7 +14,7 @@ class TestTuplesToWeightsSampler(unittest.TestCase):
         model = models.resnet18(pretrained=True)
         model.fc = c_f.Identity()
         model = torch.nn.DataParallel(model)
-        model.to(torch.device("cuda"))
+        model.to(TEST_DEVICE)
 
         miner = MultiSimilarityMiner(epsilon=-0.2)
 
@@ -27,6 +29,8 @@ class TestTuplesToWeightsSampler(unittest.TestCase):
         )
 
         temporary_folder = "cifar100_temp_for_pytorch_metric_learning_test"
+
+        assert not os.path.isdir(temporary_folder)
 
         dataset = datasets.CIFAR100(
             temporary_folder, train=True, download=True, transform=eval_transform

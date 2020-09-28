@@ -1,15 +1,11 @@
 import unittest
-from .. import TEST_DTYPES
+from .. import TEST_DTYPES, TEST_DEVICE
 import torch
 from pytorch_metric_learning.losses import NormalizedSoftmaxLoss
 from pytorch_metric_learning.utils import common_functions as c_f
 
 
 class TestNormalizedSoftmaxLoss(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.device = torch.device("cuda")
-
     def test_normalized_softmax_loss(self):
         temperature = 0.1
         for dtype in TEST_DTYPES:
@@ -22,9 +18,9 @@ class TestNormalizedSoftmaxLoss(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(
-                self.device
+                TEST_DEVICE
             )  # 2D embeddings
-            labels = torch.randint(low=0, high=10, size=(180,)).to(self.device)
+            labels = torch.randint(low=0, high=10, size=(180,)).to(TEST_DEVICE)
 
             loss = loss_func(embeddings, labels)
             loss.backward()

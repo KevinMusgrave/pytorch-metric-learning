@@ -1,5 +1,5 @@
 import unittest
-from .. import TEST_DTYPES
+from .. import TEST_DTYPES, TEST_DEVICE
 import torch
 from pytorch_metric_learning.miners import DistanceWeightedMiner
 from pytorch_metric_learning.utils import (
@@ -9,10 +9,6 @@ from pytorch_metric_learning.utils import (
 
 
 class TestDistanceWeightedMiner(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.device = torch.device("cuda")
-
     def test_distance_weighted_miner(self, with_ref_labels=False):
         for dtype in TEST_DTYPES:
             embedding_angles = torch.arange(0, 256)
@@ -21,7 +17,7 @@ class TestDistanceWeightedMiner(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(
-                self.device
+                TEST_DEVICE
             )  # 2D embeddings
             ref_embeddings = embeddings.clone() if with_ref_labels else None
             labels = torch.randint(low=0, high=2, size=(256,))
@@ -76,7 +72,7 @@ class TestDistanceWeightedMiner(unittest.TestCase):
         miner = DistanceWeightedMiner(0.1, 0.5)
         batch_size = 32
         for dtype in TEST_DTYPES:
-            embeddings = torch.randn(batch_size, 64).type(dtype).to(self.device)
+            embeddings = torch.randn(batch_size, 64).type(dtype).to(TEST_DEVICE)
             labels = torch.arange(batch_size)
             a, p, n = miner(embeddings, labels)
             self.assertTrue(len(a) == 0)

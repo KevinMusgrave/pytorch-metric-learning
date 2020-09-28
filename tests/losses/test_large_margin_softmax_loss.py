@@ -1,5 +1,5 @@
 import unittest
-from .. import TEST_DTYPES
+from .. import TEST_DTYPES, TEST_DEVICE
 import torch
 from pytorch_metric_learning.losses import LargeMarginSoftmaxLoss, SphereFaceLoss
 from pytorch_metric_learning.utils import common_functions as c_f
@@ -9,10 +9,6 @@ import numpy as np
 
 
 class TestLargeMarginSoftmaxLoss(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.device = torch.device("cuda")
-
     def test_large_margin_softmax_and_sphereface_loss(self):
         margin = 10
         scale = 2
@@ -31,9 +27,9 @@ class TestLargeMarginSoftmaxLoss(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(
-                self.device
+                TEST_DEVICE
             )  # 2D embeddings
-            labels = torch.randint(low=0, high=10, size=(180,)).to(self.device)
+            labels = torch.randint(low=0, high=10, size=(180,)).to(TEST_DEVICE)
 
             lossA = loss_funcA(embeddings, labels)
             lossB = loss_funcB(embeddings, labels)
@@ -116,9 +112,9 @@ class TestLargeMarginSoftmaxLoss(unittest.TestCase):
                     requires_grad=True,
                     dtype=dtype,
                 ).to(
-                    self.device
+                    TEST_DEVICE
                 )  # 2D embeddings
-                labels = torch.randint(low=0, high=10, size=(180,)).to(self.device)
+                labels = torch.randint(low=0, high=10, size=(180,)).to(TEST_DEVICE)
 
                 loss = loss_func(embeddings, labels)
                 loss.backward()

@@ -1,5 +1,5 @@
 import unittest
-from .. import TEST_DTYPES
+from .. import TEST_DTYPES, TEST_DEVICE
 import torch
 from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
 from pytorch_metric_learning.utils import common_functions as c_f
@@ -17,7 +17,6 @@ class TestCrossBatchMemory(unittest.TestCase):
     def setUpClass(self):
         self.embedding_size = 128
         self.memory_size = 321
-        self.device = torch.device("cuda")
 
     def test_remove_self_comparisons(self):
         for dtype in TEST_DTYPES:
@@ -27,12 +26,12 @@ class TestCrossBatchMemory(unittest.TestCase):
                 embedding_size=self.embedding_size,
                 memory_size=self.memory_size,
             )
-            loss.embedding_memory = loss.embedding_memory.to(self.device).type(dtype)
-            loss.label_memory = loss.label_memory.to(self.device)
+            loss.embedding_memory = loss.embedding_memory.to(TEST_DEVICE).type(dtype)
+            loss.label_memory = loss.label_memory.to(TEST_DEVICE)
             embeddings = (
-                torch.randn(batch_size, self.embedding_size).to(self.device).type(dtype)
+                torch.randn(batch_size, self.embedding_size).to(TEST_DEVICE).type(dtype)
             )
-            labels = torch.randint(0, 10, (batch_size,)).to(self.device)
+            labels = torch.randint(0, 10, (batch_size,)).to(TEST_DEVICE)
             num_tuples = 1000
             num_non_identical = 147
 
@@ -40,21 +39,21 @@ class TestCrossBatchMemory(unittest.TestCase):
                 loss.add_to_memory(embeddings, labels, batch_size)
                 for identical in [True, False]:
                     # triplets
-                    a = torch.randint(0, batch_size, (num_tuples,)).to(self.device)
+                    a = torch.randint(0, batch_size, (num_tuples,)).to(TEST_DEVICE)
                     p = a + loss.curr_batch_idx[0]
                     if not identical:
                         rand_diff_idx = torch.randint(
                             0, num_tuples, (num_non_identical,)
-                        ).to(self.device)
+                        ).to(TEST_DEVICE)
                         offsets = torch.randint(
                             -self.memory_size + 1,
                             self.memory_size,
                             (num_non_identical,),
-                        ).to(self.device)
+                        ).to(TEST_DEVICE)
                         offsets[offsets == 0] = 1
                         p[rand_diff_idx] += offsets
                     p %= self.memory_size
-                    n = torch.randint(0, batch_size, (num_tuples,)).to(self.device)
+                    n = torch.randint(0, batch_size, (num_tuples,)).to(TEST_DEVICE)
                     a_new, p_new, n_new = loss.remove_self_comparisons((a, p, n))
                     if identical:
                         self.assertTrue(len(a_new) == len(p_new) == len(n_new) == 0)
@@ -76,23 +75,23 @@ class TestCrossBatchMemory(unittest.TestCase):
                         self.assertTrue(set(triplets) == set(triplets_new))
 
                     # pairs
-                    a1 = torch.randint(0, batch_size, (num_tuples,)).to(self.device)
+                    a1 = torch.randint(0, batch_size, (num_tuples,)).to(TEST_DEVICE)
                     p = a1 + loss.curr_batch_idx[0]
                     if not identical:
                         rand_diff_idx = torch.randint(
                             0, num_tuples, (num_non_identical,)
-                        ).to(self.device)
+                        ).to(TEST_DEVICE)
                         offsets = torch.randint(
                             -self.memory_size + 1,
                             self.memory_size,
                             (num_non_identical,),
-                        ).to(self.device)
+                        ).to(TEST_DEVICE)
                         offsets[offsets == 0] = 1
                         p[rand_diff_idx] += offsets
                     p %= self.memory_size
-                    a2 = torch.randint(0, batch_size, (num_tuples,)).to(self.device)
+                    a2 = torch.randint(0, batch_size, (num_tuples,)).to(TEST_DEVICE)
                     n = (
-                        torch.randint(0, batch_size, (num_tuples,)).to(self.device)
+                        torch.randint(0, batch_size, (num_tuples,)).to(TEST_DEVICE)
                         + loss.curr_batch_idx[0]
                     ) % self.memory_size
                     a1_new, p_new, a2_new, n_new = loss.remove_self_comparisons(
@@ -143,10 +142,10 @@ class TestCrossBatchMemory(unittest.TestCase):
                             batch_size = memory_size
                         embeddings = (
                             torch.randn(batch_size, self.embedding_size)
-                            .to(self.device)
+                            .to(TEST_DEVICE)
                             .type(dtype)
                         )
-                        labels = torch.randint(0, 4, (batch_size,)).to(self.device)
+                        labels = torch.randint(0, 4, (batch_size,)).to(TEST_DEVICE)
 
                         if test_enqueue_idx:
                             pairs = lmu.get_all_pairs_indices(
@@ -194,9 +193,9 @@ class TestCrossBatchMemory(unittest.TestCase):
                     requires_grad=True,
                     dtype=dtype,
                 ).to(
-                    self.device
+                    TEST_DEVICE
                 )  # 2D embeddings
-                labels = torch.randint(low=0, high=10, size=(32,)).to(self.device)
+                labels = torch.randint(low=0, high=10, size=(32,)).to(TEST_DEVICE)
                 loss_val = loss_with_miner(embeddings, labels)
                 loss_val.backward()
                 self.assertTrue(True)  # just check if we got here without an exception
@@ -226,15 +225,15 @@ class TestCrossBatchMemory(unittest.TestCase):
                 embedding_size=self.embedding_size,
                 memory_size=self.memory_size,
             )
-            all_embeddings = torch.tensor([], dtype=dtype).to(self.device)
-            all_labels = torch.LongTensor([]).to(self.device)
+            all_embeddings = torch.tensor([], dtype=dtype).to(TEST_DEVICE)
+            all_labels = torch.LongTensor([]).to(TEST_DEVICE)
             for i in range(num_iter):
                 embeddings = (
                     torch.randn(batch_size, self.embedding_size)
-                    .to(self.device)
+                    .to(TEST_DEVICE)
                     .type(dtype)
                 )
-                labels = torch.randint(0, num_labels, (batch_size,)).to(self.device)
+                labels = torch.randint(0, num_labels, (batch_size,)).to(TEST_DEVICE)
                 loss = self.loss(embeddings, labels)
                 loss_with_miner = self.loss_with_miner(embeddings, labels)
                 oa1, op, oa2, on = outer_miner(embeddings, labels)
@@ -310,10 +309,10 @@ class TestCrossBatchMemory(unittest.TestCase):
                 for i in range(30):
                     embeddings = (
                         torch.randn(batch_size, self.embedding_size)
-                        .to(self.device)
+                        .to(TEST_DEVICE)
                         .type(dtype)
                     )
-                    labels = torch.arange(batch_size).to(self.device)
+                    labels = torch.arange(batch_size).to(TEST_DEVICE)
                     q = self.loss.queue_idx
                     B = enqueue_batch_size if test_enqueue_idx else batch_size
                     if test_enqueue_idx:
@@ -394,10 +393,10 @@ class TestCrossBatchMemory(unittest.TestCase):
             for i in range(30):
                 embeddings = (
                     torch.randn(batch_size, self.embedding_size)
-                    .to(self.device)
+                    .to(TEST_DEVICE)
                     .type(dtype)
                 )
-                labels = torch.arange(batch_size).to(self.device)
+                labels = torch.arange(batch_size).to(TEST_DEVICE)
                 loss = self.loss(embeddings, labels)
                 all_labels = torch.cat([labels, self.loss.label_memory], dim=0)
 
@@ -455,10 +454,10 @@ class TestCrossBatchMemory(unittest.TestCase):
             for i in range(30):
                 embeddings = (
                     torch.randn(batch_size, self.embedding_size)
-                    .to(self.device)
+                    .to(TEST_DEVICE)
                     .type(dtype)
                 )
-                labels = torch.arange(batch_size).to(self.device)
+                labels = torch.arange(batch_size).to(TEST_DEVICE)
                 self.loss(embeddings, labels)
                 for curr_miner in [pair_miner, triplet_miner]:
                     input_indices_tuple = curr_miner(embeddings, labels)

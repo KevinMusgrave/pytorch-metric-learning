@@ -1,15 +1,11 @@
 import unittest
-from .. import TEST_DTYPES
+from .. import TEST_DTYPES, TEST_DEVICE
 import torch
 from pytorch_metric_learning.losses import IntraPairVarianceLoss
 from pytorch_metric_learning.utils import common_functions as c_f
 
 
 class TestIntraPairVarianceLoss(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.device = torch.device("cuda")
-
     def test_intra_pair_variance_loss(self):
         pos_eps, neg_eps = 0.01, 0.02
         loss_func = IntraPairVarianceLoss(pos_eps, neg_eps)
@@ -21,7 +17,7 @@ class TestIntraPairVarianceLoss(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(
-                self.device
+                TEST_DEVICE
             )  # 2D embeddings
             labels = torch.LongTensor([0, 0, 1, 1, 2])
 
@@ -94,7 +90,7 @@ class TestIntraPairVarianceLoss(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(
-                self.device
+                TEST_DEVICE
             )  # 2D embeddings
             labels = torch.LongTensor([0])
             loss = loss_func(embeddings, labels)

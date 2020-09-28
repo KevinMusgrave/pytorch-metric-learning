@@ -1,6 +1,6 @@
 import unittest
 import torch
-from .. import TEST_DTYPES
+from .. import TEST_DTYPES, TEST_DEVICE
 from pytorch_metric_learning.utils.inference import LogitGetter
 from pytorch_metric_learning.losses import (
     ArcFaceLoss,
@@ -11,10 +11,6 @@ from pytorch_metric_learning.distances import LpDistance
 
 
 class TestLogitGetter(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.device = torch.device("cuda")
-
     def helper_tester(self, loss_fn, embeddings, batch_size, num_classes, **kwargs):
         LG = LogitGetter(loss_fn, **kwargs)
         logits = LG(embeddings)
@@ -27,12 +23,12 @@ class TestLogitGetter(unittest.TestCase):
 
         for dtype in TEST_DTYPES:
             embeddings = (
-                torch.randn(batch_size, embedding_size).to(self.device).type(dtype)
+                torch.randn(batch_size, embedding_size).to(TEST_DEVICE).type(dtype)
             )
             kwargs = {"num_classes": num_classes, "embedding_size": embedding_size}
-            loss1 = ArcFaceLoss(**kwargs).to(self.device).type(dtype)
-            loss2 = NormalizedSoftmaxLoss(**kwargs).to(self.device).type(dtype)
-            loss3 = ProxyAnchorLoss(**kwargs).to(self.device).type(dtype)
+            loss1 = ArcFaceLoss(**kwargs).to(TEST_DEVICE).type(dtype)
+            loss2 = NormalizedSoftmaxLoss(**kwargs).to(TEST_DEVICE).type(dtype)
+            loss3 = ProxyAnchorLoss(**kwargs).to(TEST_DEVICE).type(dtype)
 
             # test the ability to infer shape
             for loss in [loss1, loss2, loss3]:

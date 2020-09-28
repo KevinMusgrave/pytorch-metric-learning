@@ -1,15 +1,11 @@
 import unittest
-from .. import TEST_DTYPES
+from .. import TEST_DTYPES, TEST_DEVICE
 import torch
 from pytorch_metric_learning.losses import CosFaceLoss
 from pytorch_metric_learning.utils import common_functions as c_f
 
 
 class TestCosFaceLoss(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        self.device = torch.device("cuda")
-
     def test_cosface_loss(self):
         margin = 0.5
         scale = 64
@@ -25,7 +21,7 @@ class TestCosFaceLoss(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(
-                self.device
+                TEST_DEVICE
             )  # 2D embeddings
             labels = torch.randint(low=0, high=10, size=(180,))
 
@@ -38,7 +34,7 @@ class TestCosFaceLoss(unittest.TestCase):
                 logits[i, c] -= margin
 
             correct_loss = torch.nn.functional.cross_entropy(
-                logits * scale, labels.to(self.device)
+                logits * scale, labels.to(TEST_DEVICE)
             )
             rtol = 1e-2 if dtype == torch.float16 else 1e-5
             self.assertTrue(torch.isclose(loss, correct_loss, rtol=rtol))

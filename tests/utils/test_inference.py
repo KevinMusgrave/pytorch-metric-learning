@@ -4,16 +4,16 @@ import torchvision
 from torchvision import datasets, transforms
 from pytorch_metric_learning.utils.inference import InferenceModel
 from pytorch_metric_learning.utils import common_functions
+from .. import TEST_DEVICE
 
 
 class TestInference(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         trunk = torchvision.models.resnet18(pretrained=True)
         cls.emb_dim = trunk.fc.in_features
         trunk.fc = common_functions.Identity()
-        trunk = torch.nn.DataParallel(trunk.to(device))
+        trunk = torch.nn.DataParallel(trunk.to(TEST_DEVICE))
 
         cls.model = trunk
 

@@ -10,19 +10,15 @@
      <img alt="PyPi stats" src="https://img.shields.io/pypi/dm/pytorch-metric-learning">
  </a>
  
-</p>
-
-</p>
- <p align="center">
-<a href="https://anaconda.org/metric-learning/pytorch-metric-learning">
+ <a href="https://anaconda.org/metric-learning/pytorch-metric-learning">
      <img alt="Anaconda version" src="https://img.shields.io/conda/v/metric-learning/pytorch-metric-learning?color=bright-green">
  </a>
 
 <a href="https://anaconda.org/metric-learning/pytorch-metric-learning">
      <img alt="Anaconda downloads" src="https://img.shields.io/conda/dn/metric-learning/pytorch-metric-learning?color=bright-green">
  </a>
+ 
 </p>
-
 
  <p align="center">
 <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/commits/master">
@@ -31,6 +27,12 @@
  
 <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/LICENSE">
      <img alt="License" src="https://img.shields.io/github/license/KevinMusgrave/pytorch-metric-learning?color=bright-green">
+ </a>
+</p>
+
+ <p align="center">
+<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/.github/workflows/unit_tests.yml">
+    <img alt="Unit Tests" src="https://github.com/KevinMusgrave/pytorch-metric-learning/workflows/Unit%20Tests/badge.svg">
  </a>
 </p>
 
@@ -330,7 +332,17 @@ Unit tests can be run with the default ```unittest``` library:
 python -m unittest discover
 ```
 
-Or if you want to use ```pytest```:
+You can specify the test datatypes and test device as environment variables. For example, to test using float32 and float64 on the CPU:
+```bash
+TEST_DTYPES=float32,float64 TEST_DEVICE=cpu python -m unittest discover
+```
+
+To run a single test file instead of the entire test suite, specify the file name:
+```bash
+python -m unittest tests/losses/test_angular_loss.py
+```
+
+If you want to use ```pytest```:
 ```bash
 pip install -e .[dev]
 pytest tests

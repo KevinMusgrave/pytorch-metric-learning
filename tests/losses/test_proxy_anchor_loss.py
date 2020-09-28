@@ -15,7 +15,7 @@ def binarize(T, nb_classes):
     import sklearn.preprocessing
 
     T = sklearn.preprocessing.label_binarize(T, classes=range(0, nb_classes))
-    T = torch.FloatTensor(T).cuda()
+    T = torch.FloatTensor(T)
     return T
 
 
@@ -33,7 +33,7 @@ class OriginalImplementationProxyAnchor(torch.nn.Module):
     def __init__(self, nb_classes, sz_embed, mrg=0.1, alpha=32):
         torch.nn.Module.__init__(self)
         # Proxy Anchor Initialization
-        self.proxies = torch.nn.Parameter(torch.randn(nb_classes, sz_embed).cuda())
+        self.proxies = torch.nn.Parameter(torch.randn(nb_classes, sz_embed))
         nn.init.kaiming_normal_(self.proxies, mode="fan_out")
 
         self.nb_classes = nb_classes
@@ -45,7 +45,7 @@ class OriginalImplementationProxyAnchor(torch.nn.Module):
         P = self.proxies
 
         cos = F.linear(l2_norm(X), l2_norm(P))  # Calcluate cosine similarity
-        P_one_hot = binarize(T=T, nb_classes=self.nb_classes)
+        P_one_hot = binarize(T=T, nb_classes=self.nb_classes).to(X.device)
         N_one_hot = 1 - P_one_hot
 
         pos_exp = torch.exp(-self.alpha * (cos - self.mrg))

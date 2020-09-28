@@ -4,6 +4,7 @@ import torch
 import torch.distributed as dist
 import torch.optim as optim
 import torch.multiprocessing as mp
+import logging
 from pytorch_metric_learning.utils import distributed, common_functions as c_f
 from pytorch_metric_learning import losses, miners
 from torch.nn.parallel import DistributedDataParallel as DDP
@@ -23,8 +24,9 @@ def setup(rank, world_size):
     os.environ["MASTER_ADDR"] = "localhost"
     os.environ["MASTER_PORT"] = "12355"
 
+    dist_type = "gloo" if TEST_DEVICE == torch.device("cpu") else "nccl"
     # initialize the process group
-    dist.init_process_group("nccl", rank=rank, world_size=world_size)
+    dist.init_process_group(dist_type, rank=rank, world_size=world_size)
 
 
 def cleanup():
@@ -63,15 +65,24 @@ def single_process_function(
     ref_labels,
 ):
     setup(rank, world_size)
-    device = torch.device("cuda:{}".format(rank))
+    if TEST_DEVICE == torch.device("cpu"):
+        device = TEST_DEVICE
+        device_ids = None
+        output_device = None
+    else:
+        device = torch.device("cuda:{}".format(rank))
+        device_ids = [rank]
+        output_device = rank
 
-    ddp_mp_model = DDP(model.to(device), device_ids=[rank], output_device=rank)
+    ddp_mp_model = DDP(
+        model.to(device), device_ids=device_ids, output_device=output_device
+    )
 
     if is_tuple_loss:
         loss_fn = distributed.DistributedLossWrapper(loss=loss_fn)
     else:
         loss_fn = distributed.DistributedLossWrapper(
-            loss=loss_fn.to(device), device_ids=[rank], output_device=rank
+            loss=loss_fn.to(device), device_ids=device_ids, output_device=output_device
         )
         loss_optimizer = optim.SGD(loss_fn.parameters(), lr=lr)
         loss_optimizer.zero_grad()
@@ -146,10 +157,6 @@ def single_process_function(
 
 
 class TestDistributedLossWrapper(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        TEST_DEVICE = torch.device("cuda")
-
     def create_loss(self, loss_class, is_tuple_loss, dtype):
         if is_tuple_loss:
             return loss_class()
@@ -159,8 +166,17 @@ class TestDistributedLossWrapper(unittest.TestCase):
     def loss_and_miner_tester(
         self, loss_class, miner_class, is_tuple_loss, test_ref_emb=False
     ):
+        if TEST_DEVICE != torch.device("cpu"):
+            max_world_size = min(4, torch.cuda.device_count())
+            if max_world_size < 1:
+                logging.warning(
+                    "In GPU mode but no GPUs available. Skipping distributed test"
+                )
+                return
+        else:
+            max_world_size = 2
         for dtype in TEST_DTYPES:
-            for world_size in range(1, 5):
+            for world_size in range(1, max_world_size + 1):
                 batch_size = 20
                 lr = 1
                 inputs = [
@@ -221,7 +237,11 @@ class TestDistributedLossWrapper(unittest.TestCase):
                 correct_loss = original_loss_fn(
                     all_outputs, all_labels, correct_indices_tuple
                 )
-                (correct_loss / world_size).backward(retain_graph=True)
+
+                if TEST_DEVICE == torch.device("cpu"):
+                    correct_loss.backward(retain_graph=True)
+                else:
+                    (correct_loss / world_size).backward(retain_graph=True)
                 optimizer.step()
                 if not is_tuple_loss:
                     for p in original_loss_fn.parameters():

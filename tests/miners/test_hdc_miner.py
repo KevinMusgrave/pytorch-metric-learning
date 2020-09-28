@@ -32,6 +32,10 @@ class TestHDCMiner(unittest.TestCase):
             TEST_DEVICE
         )
 
+    @classmethod
+    def tearDown(self):
+        torch.cuda.empty_cache()
+
     def test_dist_mining(self):
         for dtype in TEST_DTYPES:
             embeddings = torch.arange(6).type(dtype).to(TEST_DEVICE).unsqueeze(1)

@@ -28,6 +28,10 @@ class TestBatchHardMiner(unittest.TestCase):
             torch.LongTensor([2, 2, 1, 4, 5, 5, 5, 5]).to(TEST_DEVICE),
         ]
 
+    @classmethod
+    def tearDown(self):
+        torch.cuda.empty_cache()
+
     def test_dist_mining(self):
         for dtype in TEST_DTYPES:
             embeddings = torch.arange(9).type(dtype).unsqueeze(1).to(TEST_DEVICE)

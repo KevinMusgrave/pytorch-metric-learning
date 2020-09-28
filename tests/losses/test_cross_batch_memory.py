@@ -18,6 +18,10 @@ class TestCrossBatchMemory(unittest.TestCase):
         self.embedding_size = 128
         self.memory_size = 321
 
+    @classmethod
+    def tearDown(self):
+        torch.cuda.empty_cache()
+
     def test_remove_self_comparisons(self):
         for dtype in TEST_DTYPES:
             batch_size = 32

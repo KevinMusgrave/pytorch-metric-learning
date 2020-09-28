@@ -31,6 +31,10 @@ class TestInference(unittest.TestCase):
             size=200, image_size=(3, 64, 64), transform=transform
         )
 
+    @classmethod
+    def tearDown(self):
+        torch.cuda.empty_cache()
+
     def test_untrained_indexer(self):
         inference_model = InferenceModel(trunk=self.model)
         with self.assertRaises(RuntimeError):

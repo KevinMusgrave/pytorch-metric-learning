@@ -92,10 +92,6 @@ class TestLiftedStructure(unittest.TestCase):
 
 
 class TestGeneralizedLiftedStructureLoss(unittest.TestCase):
-    @classmethod
-    def setUpClass(self):
-        TEST_DEVICE = torch.device("cuda")
-
     def test_generalized_lifted_structure_loss(self):
         neg_margin = 0.5
         loss_func = GeneralizedLiftedStructureLoss(neg_margin=neg_margin)

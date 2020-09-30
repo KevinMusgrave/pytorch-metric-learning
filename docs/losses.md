@@ -29,7 +29,7 @@ loss = loss_func(embeddings, labels) # in your training for-loop
 ## AngularLoss 
 [Deep Metric Learning with Angular Loss](https://arxiv.org/pdf/1708.01682.pdf){target=_blank}
 ```python
-losses.AngularLoss(alpha=40, **kwargs
+losses.AngularLoss(alpha=40, **kwargs)
 ```
 **Equation**:
 

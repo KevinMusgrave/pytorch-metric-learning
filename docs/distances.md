@@ -51,7 +51,7 @@ distances.BaseDistance(collect_stats = True,
 * **normalize_embeddings**: If True, embeddings will be normalized to have an Lp norm of 1, before the distance/similarity matrix is computed.
 * **p**: The distance norm.
 * **power**: If not 1, each element of the distance/similarity matrix will be raised to this power.
-* **is_inverted**: Should be set by child classes. If True, then small values represent embeddings that are close together. If False, then large values represent embeddings that are similar to each other.
+* **is_inverted**: Should be set by child classes. If False, then small values represent embeddings that are close together. If True, then large values represent embeddings that are similar to each other.
 
 **Required Implementations**:
 ```python

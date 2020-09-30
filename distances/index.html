@@ -618,7 +618,7 @@
 <li><strong>normalize_embeddings</strong>: If True, embeddings will be normalized to have an Lp norm of 1, before the distance/similarity matrix is computed.</li>
 <li><strong>p</strong>: The distance norm.</li>
 <li><strong>power</strong>: If not 1, each element of the distance/similarity matrix will be raised to this power.</li>
-<li><strong>is_inverted</strong>: Should be set by child classes. If True, then small values represent embeddings that are close together. If False, then large values represent embeddings that are similar to each other.</li>
+<li><strong>is_inverted</strong>: Should be set by child classes. If False, then small values represent embeddings that are close together. If True, then large values represent embeddings that are similar to each other.</li>
 </ul>
 <p><strong>Required Implementations</strong>:</p>
 <div class="codehilite"><pre><span></span><code><span class="c1"># Must return a matrix where mat[j,k] represents </span>

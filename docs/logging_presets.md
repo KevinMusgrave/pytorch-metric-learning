@@ -1,5 +1,5 @@
-# Logging Presets
-The ```logging_presets``` module contains ready-to-use hooks for logging data, validating and saving your models, and early stoppage during training. It requires the record-keeper and tensorboard packages, which can be installed with pip:
+# Logging Preset's
+The ```logging_presets``` module contains ready-to-use hooks for logging data, validating and saving your models, and early stoppage during training. It requires the record-keeper and tensorboard package, which can be installed with pip:
 
 ```pip install record-keeper tensorboard```
 

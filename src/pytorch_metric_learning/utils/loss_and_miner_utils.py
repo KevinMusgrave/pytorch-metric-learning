@@ -96,35 +96,60 @@ def get_random_triplet_indices(
     a_idx, p_idx, n_idx = [], [], []
     labels_device = labels.device
     ref_labels = labels if ref_labels is None else ref_labels
-    ref_labels_is_labels = ref_labels is labels
-    labels = labels.cpu().numpy()
-    ref_labels = ref_labels.cpu().numpy()
-    batch_size = ref_labels.shape[0]
-    indices = np.arange(batch_size)
-    for i, label in enumerate(labels):
-        all_pos_pair_mask = ref_labels == label
-        if ref_labels_is_labels:
-            all_pos_pair_mask &= indices != i
-        all_pos_pair_idx = np.where(all_pos_pair_mask)[0]
-        curr_label_count = len(all_pos_pair_idx)
-        if curr_label_count == 0:
-            continue
-        k = curr_label_count if t_per_anchor is None else t_per_anchor
-
-        if weights is not None and not np.any(np.isnan(weights[i])):
-            n_idx += c_f.NUMPY_RANDOM.choice(batch_size, k, p=weights[i]).tolist()
+    unique_labels = torch.unique(labels)
+    for label in unique_labels:
+        # Get indices of positive samples for this label.
+        p_inds = torch.where(ref_labels == label)[0]
+        if ref_labels is labels:
+            a_inds = p_inds
         else:
-            possible_n_idx = list(np.where(ref_labels != label)[0])
-            n_idx += c_f.NUMPY_RANDOM.choice(possible_n_idx, k).tolist()
+            a_inds = torch.where(labels == label)[0]
+        n_inds = torch.where(ref_labels != label)[0]
+        n_a = len(a_inds)
+        n_p = len(p_inds)
+        min_required_p = 2 if ref_labels is labels else 1
+        if (n_p < min_required_p) or (len(n_inds) < 1):
+            continue
 
-        a_idx.extend([i] * k)
-        curr_p_idx = c_f.safe_random_choice(all_pos_pair_idx, k)
-        p_idx.extend(curr_p_idx.tolist())
+        k = n_p if t_per_anchor is None else t_per_anchor
+        num_triplets = n_a * k
+        p_inds_ = p_inds.expand((n_a, n_p))
+        # Remove anchors from list of possible positive samples.
+        if ref_labels is labels:
+            p_inds_ = p_inds_[~torch.eye(n_a).bool()].view((n_a, n_a - 1))
+        # Get indices of indices of k random positive samples for each anchor.
+        p_ = torch.randint(0, p_inds_.shape[1], (num_triplets,))
+        # Get indices of indices of corresponding anchors.
+        a_ = torch.arange(n_a).view(-1, 1).repeat(1, k).view(num_triplets)
+        p = p_inds_[a_, p_]
+        a = a_inds[a_]
 
-    a_idx = torch.LongTensor(a_idx).to(labels_device)
-    p_idx = torch.LongTensor(p_idx).to(labels_device)
-    n_idx = torch.LongTensor(n_idx).to(labels_device)
-    return a_idx, p_idx, n_idx
+        # Get indices of negative samples for this label.
+        if weights is not None:
+            w = weights[:, n_inds][a]
+            # Sample the negative indices according to the weights.
+            if w.dtype == torch.float16:
+                # special case needed due to pytorch cuda bug
+                # https://github.com/pytorch/pytorch/issues/19900
+                w = w.type(torch.float32)
+            n_ = torch.multinomial(w, 1, replacement=True).flatten()
+        else:
+            # Sample the negative indices uniformly.
+            n_ = torch.randint(0, len(n_inds), (num_triplets,))
+        n = n_inds[n_]
+        a_idx.append(a)
+        p_idx.append(p)
+        n_idx.append(n)
+
+    if len(a_idx) > 0:
+        a_idx = torch.cat(a_idx).to(labels_device).long()
+        p_idx = torch.cat(p_idx).to(labels_device).long()
+        n_idx = torch.cat(n_idx).to(labels_device).long()
+        assert len(a_idx) == len(p_idx) == len(n_idx)
+        return a_idx, p_idx, n_idx
+    else:
+        empty = torch.LongTensor([]).to(labels_device)
+        return empty.clone(), empty.clone(), empty.clone()
 
 
 def repeat_to_match_size(smaller_set, larger_size, smaller_size):

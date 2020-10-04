@@ -44,7 +44,6 @@ class DistanceWeightedMiner(BaseTupleMiner):
         weights[inf_or_nan] = 0
         weights = weights / torch.sum(weights, dim=1, keepdim=True)
 
-        np_weights = weights.cpu().numpy()
         return lmu.get_random_triplet_indices(
-            labels, ref_labels=ref_labels, weights=np_weights
+            labels, ref_labels=ref_labels, weights=weights
         )

@@ -112,11 +112,11 @@ def get_random_triplet_indices(
             continue
 
         k = n_p if t_per_anchor is None else t_per_anchor
-        num_triplets = n_a*k
+        num_triplets = n_a * k
         p_inds_ = p_inds.expand((n_a, n_p))
         # Remove anchors from list of possible positive samples.
         if ref_labels is labels:
-            p_inds_ = p_inds_[~torch.eye(n_a).bool()].view((n_a, n_a-1))
+            p_inds_ = p_inds_[~torch.eye(n_a).bool()].view((n_a, n_a - 1))
         # Get indices of indices of k random positive samples for each anchor.
         p_ = torch.randint(0, p_inds_.shape[1], (num_triplets,))
         # Get indices of indices of corresponding anchors.
@@ -150,7 +150,6 @@ def get_random_triplet_indices(
     else:
         empty = torch.LongTensor([]).to(labels_device)
         return empty.clone(), empty.clone(), empty.clone()
-
 
 
 def repeat_to_match_size(smaller_set, larger_size, smaller_size):

@@ -9,7 +9,9 @@ class ContrastiveLoss(GenericPairLoss):
         super().__init__(mat_based_loss=False, **kwargs)
         self.pos_margin = pos_margin
         self.neg_margin = neg_margin
-        self.add_to_recordable_attributes(list_of_names=["pos_margin", "neg_margin"], is_stat=False)
+        self.add_to_recordable_attributes(
+            list_of_names=["pos_margin", "neg_margin"], is_stat=False
+        )
 
     def _compute_loss(self, pos_pair_dist, neg_pair_dist, indices_tuple):
         pos_loss, neg_loss = 0, 0
@@ -19,8 +21,18 @@ class ContrastiveLoss(GenericPairLoss):
             neg_loss = self.get_per_pair_loss(neg_pair_dist, "neg")
         pos_pairs = lmu.pos_pairs_from_tuple(indices_tuple)
         neg_pairs = lmu.neg_pairs_from_tuple(indices_tuple)
-        return {"pos_loss": {"losses": pos_loss, "indices": pos_pairs, "reduction_type": "pos_pair"}, 
-                "neg_loss": {"losses": neg_loss, "indices": neg_pairs, "reduction_type": "neg_pair"}}
+        return {
+            "pos_loss": {
+                "losses": pos_loss,
+                "indices": pos_pairs,
+                "reduction_type": "pos_pair",
+            },
+            "neg_loss": {
+                "losses": neg_loss,
+                "indices": neg_pairs,
+                "reduction_type": "neg_pair",
+            },
+        }
 
     def get_per_pair_loss(self, pair_dists, pos_or_neg):
         loss_calc_func = self.pos_calc if pos_or_neg == "pos" else self.neg_calc

@@ -8,9 +8,11 @@ def logsumexp(x, keep_mask=None, add_one=True, dim=1):
     if keep_mask is not None:
         x = x.masked_fill(~keep_mask, c_f.neg_inf(x.dtype))
     if add_one:
-        zeros = torch.zeros(x.size(dim-1), dtype=x.dtype, device=x.device).unsqueeze(dim)
-        x = torch.cat([x,zeros], dim=dim)
-    
+        zeros = torch.zeros(x.size(dim - 1), dtype=x.dtype, device=x.device).unsqueeze(
+            dim
+        )
+        x = torch.cat([x, zeros], dim=dim)
+
     output = torch.logsumexp(x, dim=dim, keepdim=True)
     if keep_mask is not None:
         output = output.masked_fill(~torch.any(keep_mask, dim=dim, keepdim=True), 0)
@@ -20,7 +22,7 @@ def logsumexp(x, keep_mask=None, add_one=True, dim=1):
 def meshgrid_from_sizes(x, y, dim=0):
     a = torch.arange(x.size(dim)).to(x.device)
     b = torch.arange(y.size(dim)).to(y.device)
-    return torch.meshgrid(a,b)
+    return torch.meshgrid(a, b)
 
 
 def get_all_pairs_indices(labels, ref_labels=None):
@@ -62,12 +64,13 @@ def convert_to_pairs(indices_tuple, labels):
 
 def convert_to_pos_pairs_with_unique_labels(indices_tuple, labels):
     a, p, _, _ = convert_to_pairs(indices_tuple, labels)
-    _, unique_idx = np.unique(labels[a].cpu().numpy(), return_index=True) 
+    _, unique_idx = np.unique(labels[a].cpu().numpy(), return_index=True)
     return a[unique_idx], p[unique_idx]
 
 
 def pos_pairs_from_tuple(indices_tuple):
     return indices_tuple[:2]
+
 
 def neg_pairs_from_tuple(indices_tuple):
     return indices_tuple[2:]
@@ -82,11 +85,14 @@ def get_all_triplets_indices(labels, ref_labels=None):
     diffs = matches ^ 1
     if ref_labels is labels:
         matches.fill_diagonal_(0)
-    triplets = matches.unsqueeze(2)*diffs.unsqueeze(1)
+    triplets = matches.unsqueeze(2) * diffs.unsqueeze(1)
     return torch.where(triplets)
 
 
-def get_random_triplet_indices(labels, ref_labels=None, t_per_anchor=None, weights=None):
+# sample triplets, with a weighted distribution if weights is specified.
+def get_random_triplet_indices(
+    labels, ref_labels=None, t_per_anchor=None, weights=None
+):
     a_idx, p_idx, n_idx = [], [], []
     labels_device = labels.device
     ref_labels = labels if ref_labels is None else ref_labels
@@ -202,7 +208,6 @@ def convert_to_triplets(indices_tuple, labels, t_per_anchor=100):
             return empty_output
 
 
-
 def convert_to_weights(indices_tuple, labels, dtype):
     """
     Returns a weight for each batch element, based on
@@ -212,8 +217,8 @@ def convert_to_weights(indices_tuple, labels, dtype):
     if indices_tuple is None:
         return weights + 1
     if all(len(x) == 0 for x in indices_tuple):
-        return weights + 1 
+        return weights + 1
     indices, counts = torch.unique(torch.cat(indices_tuple, dim=0), return_counts=True)
-    counts = (counts.type(dtype) / torch.sum(counts))
+    counts = counts.type(dtype) / torch.sum(counts)
     weights[indices] = counts / torch.max(counts)
     return weights

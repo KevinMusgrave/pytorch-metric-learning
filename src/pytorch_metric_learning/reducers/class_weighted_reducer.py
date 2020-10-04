@@ -9,7 +9,7 @@ class ClassWeightedReducer(BaseReducer):
 
     def element_reduction(self, losses, loss_indices, embeddings, labels):
         return self.element_reduction_helper(losses, loss_indices, labels)
-    
+
     def pos_pair_reduction(self, losses, loss_indices, embeddings, labels):
         return self.element_reduction_helper(losses, loss_indices[0], labels)
 
@@ -23,4 +23,4 @@ class ClassWeightedReducer(BaseReducer):
 
     def element_reduction_helper(self, losses, indices, labels):
         self.weights = self.weights.type(losses.dtype).to(losses.device)
-        return torch.mean(losses*self.weights[labels[indices]])
+        return torch.mean(losses * self.weights[labels[indices]])

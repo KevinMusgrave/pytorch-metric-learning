@@ -5,7 +5,9 @@ import torch
 class ThresholdReducer(BaseReducer):
     def __init__(self, low=None, high=None, **kwargs):
         super().__init__(**kwargs)
-        assert (low is not None) or (high is not None), "At least one of low or high must be specified"
+        assert (low is not None) or (
+            high is not None
+        ), "At least one of low or high must be specified"
         self.low = low
         self.high = high
         if self.low is not None:
@@ -15,7 +17,7 @@ class ThresholdReducer(BaseReducer):
 
     def element_reduction(self, losses, *_):
         return self.element_reduction_helper(losses, "elements")
-    
+
     def pos_pair_reduction(self, losses, *args):
         return self.element_reduction_helper(losses, "pos_pairs")
 
@@ -26,14 +28,14 @@ class ThresholdReducer(BaseReducer):
         return self.element_reduction_helper(losses, "triplets")
 
     def element_reduction_helper(self, losses, attr_name):
-        low_condition = losses > self.low if self.low is not None else True 
-        high_condition = losses < self.high if self.high is not None else True 
+        low_condition = losses > self.low if self.low is not None else True
+        high_condition = losses < self.high if self.high is not None else True
         threshold_condition = low_condition & high_condition
         num_past_filter = torch.sum(threshold_condition)
         if num_past_filter >= 1:
             loss = torch.mean(losses[threshold_condition])
         else:
-            loss = torch.mean(losses)*0 # set loss to 0
+            loss = torch.mean(losses) * 0  # set loss to 0
         self.set_stats(low_condition, high_condition, num_past_filter, attr_name)
         return loss
 
@@ -51,5 +53,3 @@ class ThresholdReducer(BaseReducer):
                     curr_attr_name = "{}_below_high".format(attr_name)
                     self.add_to_recordable_attributes(name=curr_attr_name, is_stat=True)
                     setattr(self, curr_attr_name, torch.sum(high_condition).item())
-
-    

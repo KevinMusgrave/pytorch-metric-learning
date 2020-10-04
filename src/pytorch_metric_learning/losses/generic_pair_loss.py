@@ -2,11 +2,14 @@ import torch
 from ..utils import loss_and_miner_utils as lmu
 from .base_metric_loss_function import BaseMetricLossFunction
 
+
 class GenericPairLoss(BaseMetricLossFunction):
     def __init__(self, mat_based_loss, **kwargs):
         super().__init__(**kwargs)
-        self.loss_method = self.mat_based_loss if mat_based_loss else self.pair_based_loss
-        
+        self.loss_method = (
+            self.mat_based_loss if mat_based_loss else self.pair_based_loss
+        )
+
     def compute_loss(self, embeddings, labels, indices_tuple):
         indices_tuple = lmu.convert_to_pairs(indices_tuple, labels)
         if all(len(x) <= 1 for x in indices_tuple):

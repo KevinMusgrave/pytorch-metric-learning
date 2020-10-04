@@ -29,7 +29,7 @@ loss = loss_func(embeddings, labels) # in your training for-loop
 ## AngularLoss 
 [Deep Metric Learning with Angular Loss](https://arxiv.org/pdf/1708.01682.pdf){target=_blank}
 ```python
-losses.AngularLoss(alpha=40, **kwargs
+losses.AngularLoss(alpha=40, **kwargs)
 ```
 **Equation**:
 
@@ -635,6 +635,9 @@ loss_optimizer.step()
 
 ## NPairsLoss
 [Improved Deep Metric Learning with Multi-class N-pair Loss Objective](http://www.nec-labs.com/uploads/images/Department-Images/MediaAnalytics/papers/nips16_npairmetriclearning.pdf){target=_blank}
+
+If your batch has more than 2 samples per label, then you should use [NTXentLoss](#ntxentloss).
+
 ```python
 losses.NPairsLoss(**kwargs)
 ```

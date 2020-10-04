@@ -1,10 +1,12 @@
-import unittest 
+import unittest
 import torch
 from pytorch_metric_learning.samplers import TuplesToWeightsSampler
 from pytorch_metric_learning.utils import common_functions as c_f
 from pytorch_metric_learning.miners import MultiSimilarityMiner
 from torchvision import models, datasets, transforms
 import shutil
+from .. import TEST_DEVICE
+import os
 
 
 class TestTuplesToWeightsSampler(unittest.TestCase):
@@ -12,20 +14,27 @@ class TestTuplesToWeightsSampler(unittest.TestCase):
         model = models.resnet18(pretrained=True)
         model.fc = c_f.Identity()
         model = torch.nn.DataParallel(model)
-        model.to(torch.device("cuda"))
-        
+        model.to(TEST_DEVICE)
+
         miner = MultiSimilarityMiner(epsilon=-0.2)
 
-        eval_transform = transforms.Compose([
-            transforms.Resize(128),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                    std=[0.229, 0.224, 0.225])
-        ])
+        eval_transform = transforms.Compose(
+            [
+                transforms.Resize(128),
+                transforms.ToTensor(),
+                transforms.Normalize(
+                    mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+                ),
+            ]
+        )
 
         temporary_folder = "cifar100_temp_for_pytorch_metric_learning_test"
 
-        dataset = datasets.CIFAR100(temporary_folder, train=True, download=True, transform=eval_transform)
+        assert not os.path.isdir(temporary_folder)
+
+        dataset = datasets.CIFAR100(
+            temporary_folder, train=True, download=True, transform=eval_transform
+        )
         subset_size = 1000
         sampler = TuplesToWeightsSampler(model, miner, dataset, subset_size=subset_size)
         iterable_as_list = list(iter(sampler))

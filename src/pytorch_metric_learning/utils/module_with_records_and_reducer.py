@@ -2,6 +2,7 @@ from ..reducers import MeanReducer, MultipleReducers, DoNothingReducer
 from ..distances import LpDistance
 from .module_with_records import ModuleWithRecords
 
+
 class ModuleWithRecordsAndReducer(ModuleWithRecords):
     def __init__(self, reducer=None, **kwargs):
         super().__init__(**kwargs)
@@ -18,7 +19,9 @@ class ModuleWithRecordsAndReducer(ModuleWithRecords):
         else:
             reducer_dict = {}
             for k in self.sub_loss_names():
-                reducer_dict[k] = self.get_default_reducer() if reducer is None else reducer
+                reducer_dict[k] = (
+                    self.get_default_reducer() if reducer is None else reducer
+                )
             self.reducer = MultipleReducers(reducer_dict)
 
     def sub_loss_names(self):
@@ -37,6 +40,8 @@ class ModuleWithRecordsAndDistance(ModuleWithRecords):
         return self.get_default_distance()
 
 
-class ModuleWithRecordsReducerAndDistance(ModuleWithRecordsAndReducer, ModuleWithRecordsAndDistance):
+class ModuleWithRecordsReducerAndDistance(
+    ModuleWithRecordsAndReducer, ModuleWithRecordsAndDistance
+):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

@@ -6,7 +6,10 @@ from ..utils.module_with_records_and_reducer import ModuleWithRecordsReducerAndD
 from .mixins import EmbeddingRegularizerMixin
 import inspect
 
-class BaseMetricLossFunction(EmbeddingRegularizerMixin, ModuleWithRecordsReducerAndDistance):
+
+class BaseMetricLossFunction(
+    EmbeddingRegularizerMixin, ModuleWithRecordsReducerAndDistance
+):
     def compute_loss(self, embeddings, labels, indices_tuple=None):
         """
         This has to be implemented and is what actually computes the loss.
@@ -58,18 +61,29 @@ class MultipleLosses(torch.nn.Module):
     def __init__(self, losses, weights=None):
         super().__init__()
         self.is_dict = isinstance(losses, dict)
-        self.losses = torch.nn.ModuleDict(losses) if self.is_dict else torch.nn.ModuleList(losses)
+        self.losses = (
+            torch.nn.ModuleDict(losses) if self.is_dict else torch.nn.ModuleList(losses)
+        )
         if weights is not None:
-            assert isinstance(weights, dict) if self.is_dict else c_f.is_list_or_tuple(weights)
+            assert (
+                isinstance(weights, dict)
+                if self.is_dict
+                else c_f.is_list_or_tuple(weights)
+            )
             self.weights = weights
         else:
-            self.weights = {k:1 for k in self.losses.keys()} if self.is_dict else [1]*len(losses)
-
+            self.weights = (
+                {k: 1 for k in self.losses.keys()}
+                if self.is_dict
+                else [1] * len(losses)
+            )
 
     def forward(self, embeddings, labels, indices_tuple=None):
         total_loss = 0
         iterable = self.losses.items() if self.is_dict else enumerate(self.losses)
         if self.is_dict:
             for i, loss_func in iterable:
-                total_loss += loss_func(embeddings, labels, indices_tuple)*self.weights[i]
+                total_loss += (
+                    loss_func(embeddings, labels, indices_tuple) * self.weights[i]
+                )
         return total_loss

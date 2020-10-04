@@ -6,6 +6,7 @@ from ..utils import common_functions as c_f
 def is_distributed():
     return torch.distributed.is_available() and torch.distributed.is_initialized()
 
+
 # modified from https://github.com/JohnGiorgi/DeCLUTR
 def all_gather(embeddings, labels):
     labels = labels.to(embeddings.device)
@@ -54,7 +55,6 @@ class DistributedLossWrapper(torch.nn.Module):
     def forward(self, embeddings, labels, *args, **kwargs):
         embeddings, labels = all_gather_embeddings_labels(embeddings, labels)
         return self.loss(embeddings, labels, *args, **kwargs)
-
 
 
 class DistributedMinerWrapper(torch.nn.Module):

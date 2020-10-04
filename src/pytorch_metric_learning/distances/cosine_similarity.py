@@ -1,5 +1,5 @@
 from .dot_product_similarity import DotProductSimilarity
-import torch
+
 
 class CosineSimilarity(DotProductSimilarity):
     def __init__(self, **kwargs):

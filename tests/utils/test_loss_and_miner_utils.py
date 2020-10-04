@@ -126,7 +126,7 @@ class TestLossAndMinerUtils(unittest.TestCase):
 
     def test_get_random_triplet_indices(self):
         for dtype in TEST_DTYPES:
-            for i in range(10):
+            for _ in range(10):
                 labels = (
                     torch.randint(low=0, high=5, size=(100,))
                     .to(TEST_DEVICE)

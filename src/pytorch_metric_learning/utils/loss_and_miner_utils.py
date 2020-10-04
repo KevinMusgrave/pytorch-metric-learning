@@ -122,7 +122,11 @@ def get_random_triplet_indices(labels, ref_labels=None, t_per_anchor=None, weigh
         if weights is not None:
             w = weights[:, n_inds][a]
             # Sample the negative indices according to the weights.
-            n_ = torch.multinomial(w, k, replacement=True).flatten()
+            if w.dtype == torch.float16:
+                # special case needed due to pytorch cuda bug
+                # https://github.com/pytorch/pytorch/issues/19900
+                w = w.type(torch.float32)
+            n_ = torch.multinomial(w, 1, replacement=True).flatten()
         else:
             # Sample the negative indices uniformly.
             n_ = torch.randint(0, len(n_inds), (num_triplets,))
@@ -132,10 +136,10 @@ def get_random_triplet_indices(labels, ref_labels=None, t_per_anchor=None, weigh
         n_idx.append(n)
 
     if len(a_idx) > 0:
+        a_idx = torch.cat(a_idx).to(labels_device).long()
+        p_idx = torch.cat(p_idx).to(labels_device).long()
+        n_idx = torch.cat(n_idx).to(labels_device).long()
         assert len(a_idx) == len(p_idx) == len(n_idx)
-        a_idx = torch.LongTensor(torch.cat(a_idx)).to(labels_device)
-        p_idx = torch.LongTensor(torch.cat(p_idx)).to(labels_device)
-        n_idx = torch.LongTensor(torch.cat(n_idx)).to(labels_device)
         return a_idx, p_idx, n_idx
     else:
         empty = torch.LongTensor([]).to(labels_device)

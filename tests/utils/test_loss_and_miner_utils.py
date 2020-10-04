@@ -95,24 +95,75 @@ class TestLossAndMinerUtils(unittest.TestCase):
             self.assertTrue(torch.all(weights==correct_weights))
 
     def test_get_random_triplet_indices(self):
-        # Test triplet validity.
-        torch.manual_seed(1023)
-        labels = torch.randint(0, 100, (10000,))
-        a, p, n = lmu.get_random_triplet_indices(labels, t_per_anchor=1)
-        l_a, l_p, l_n = labels[a], labels[p], labels[n]
-        self.assertTrue(torch.all(a != p))
-        self.assertTrue(torch.all(l_a == l_p))
-        self.assertTrue(torch.all(l_p != l_n))
+        for dtype in TEST_DTYPES:
+            for i in range(10):
+                labels = torch.randint(low=0, high=5, size=(100,)).to(self.device).type(dtype)
+                a,p,n = lmu.get_random_triplet_indices(labels)
 
-        # Test one-hot weights.
-        labels = torch.randint(0, 3, (10,))
-        w = torch.zeros((len(labels), len(labels)))
-        for i, label in enumerate(labels):
-            ind = torch.nonzero(labels != label)
-            j = ind[torch.randint(0, len(ind), (1,))[0]]
-            w[i, j] = 1.0
-        a, p, n = lmu.get_random_triplet_indices(labels, t_per_anchor=1, weights=w)
-        self.assertTrue(torch.all(w[a, n] == 1.0))
+                l_a, l_p, l_n = labels[a], labels[p], labels[n]
+                self.assertTrue(torch.all(a != p))
+                self.assertTrue(torch.all(l_a == l_p))
+                self.assertTrue(torch.all(l_p != l_n))
+
+
+                labels = torch.randint(low=0, high=5, size=(100,)).to(self.device).type(dtype)
+                ref_labels = torch.randint(low=0, high=5, size=(50,)).to(self.device).type(dtype)
+                a,p,n = lmu.get_random_triplet_indices(labels, ref_labels=ref_labels)
+
+                l_a = labels[a]
+                l_p = ref_labels[p]
+                l_n = ref_labels[n]
+                self.assertTrue(torch.all(l_a == l_p))
+                self.assertTrue(torch.all(l_p != l_n))
+
+
+                # Test one-hot weights.
+                labels = torch.randint(0, 3, (10,)).to(self.device).type(dtype)
+                w = torch.zeros((len(labels), len(labels))).to(self.device).type(dtype)
+                for i, label in enumerate(labels):
+                    ind = torch.where(labels != label)[0]
+                    j = ind[torch.randint(0, len(ind), (1,))[0]]
+                    w[i, j] = 1.0
+                a, p, n = lmu.get_random_triplet_indices(labels, t_per_anchor=1, weights=w)
+                self.assertTrue(torch.all(w[a, n] == 1.0))
+
+                # Test one-hot weights.
+                labels = torch.randint(0, 3, (100,)).to(self.device).type(dtype)
+                ref_labels = torch.randint(0, 3, (50,)).to(self.device).type(dtype)
+                w = torch.zeros((len(labels), len(ref_labels))).to(self.device).type(dtype)
+                for i, label in enumerate(labels):
+                    ind = torch.where(ref_labels != label)[0]
+                    j = ind[torch.randint(0, len(ind), (1,))[0]]
+                    w[i, j] = 1.0
+                a, p, n = lmu.get_random_triplet_indices(labels, ref_labels=ref_labels, t_per_anchor=1, weights=w)
+                self.assertTrue(torch.all(w[a, n] == 1.0))
+
+
+                # test no possible triplets
+                labels = torch.arange(100).to(self.device).type(dtype)
+                a,p,n = lmu.get_random_triplet_indices(labels)
+                self.assertTrue(len(a) == len(p) == len(n) == 0)
+
+                labels = torch.zeros(100).to(self.device).type(dtype)
+                a,p,n = lmu.get_random_triplet_indices(labels)
+                self.assertTrue(len(a) == len(p) == len(n) == 0)
+
+
+                labels = torch.zeros(100).to(self.device).type(dtype)
+                ref_labels = torch.ones(100).to(self.device).type(dtype)
+                a,p,n = lmu.get_random_triplet_indices(labels, ref_labels=ref_labels)
+                self.assertTrue(len(a) == len(p) == len(n) == 0)
+
+                labels = torch.zeros(100).to(self.device).type(dtype)
+                ref_labels = torch.zeros(100).to(self.device).type(dtype)
+                a,p,n = lmu.get_random_triplet_indices(labels, ref_labels=ref_labels)
+                self.assertTrue(len(a) == len(p) == len(n) == 0)
+
+                labels = torch.zeros(100).to(self.device).type(dtype)
+                ref_labels = torch.ones(100).to(self.device).type(dtype)
+                ref_labels[0] = 0
+                a,p,n = lmu.get_random_triplet_indices(labels, ref_labels=ref_labels)
+                self.assertTrue(len(a) == len(p) == len(n) == 100)
 
 
 if __name__ == "__main__":

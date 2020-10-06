@@ -38,17 +38,14 @@
 
 ## News
 
+**October 6**: v0.9.93 is a small update: 
+ - ```get_random_triplet_indices``` has been optimized, so if you were using DistanceWeightedMiner, or if you ever set the ```triplets_per_anchor``` argument to something other than ```"all"``` anywhere in your code, it should run a lot faster now.
+
 **September 14**: v0.9.92 comes with new features ([release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.92)). The main highlights are:
 * utils.distributed for multiprocessing.
 * Improvements to CrossBatchMemory which make it usable in MoCo-style self-supervised training. Check out the [MoCo on CIFAR10](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples#simple-examples) notebook to see how it works.
 
 **August 31**: v0.9.91 has a couple of bug fixes. See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.91)
-
-**August 7**: v0.9.90 MEGA UPDATE
-* New distances module makes loss functions even more modular.
-* Now compatible with half-precision
-* Unfortunately also comes with numerous **breaking changes**. See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.90) for details. 
-* Hopefully this is the last major structural change to the library.
 
 ## Documentation
 - [**View the documentation here**](https://kevinmusgrave.github.io/pytorch-metric-learning/)
@@ -366,6 +363,8 @@ Thanks to the contributors who made pull requests!
     - ```get_nearest_neighbors``` in [InferenceModel](https://kevinmusgrave.github.io/pytorch-metric-learning/inference_models)
 - [JohnGiorgi](https://github.com/JohnGiorgi)
 	- ```all_gather``` in [utils.distributed](https://kevinmusgrave.github.io/pytorch-metric-learning/distributed)
+- [AlexSchuy](https://github.com/AlexSchuy)
+	- optimized ```utils.loss_and_miner_utils.get_random_triplet_indices```
 
 #### Example notebooks
 - [wconnell](https://github.com/wconnell)

@@ -48,7 +48,7 @@ class IntraPairVarianceLoss(GenericPairLoss):
             return (1 - eps) * mean_sim - pairs
         return pairs - (1 + eps) * mean_sim
 
-    def sub_loss_names(self):
+    def _sub_loss_names(self):
         return ["pos_loss", "neg_loss"]
 
     def get_default_distance(self):

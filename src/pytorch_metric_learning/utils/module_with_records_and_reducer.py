@@ -1,6 +1,7 @@
 from ..reducers import MeanReducer, MultipleReducers, DoNothingReducer
 from ..distances import LpDistance
 from .module_with_records import ModuleWithRecords
+import copy
 
 
 class ModuleWithRecordsAndReducer(ModuleWithRecords):
@@ -15,12 +16,18 @@ class ModuleWithRecordsAndReducer(ModuleWithRecords):
         if isinstance(reducer, (MultipleReducers, DoNothingReducer)):
             self.reducer = reducer
         elif len(self.sub_loss_names()) == 1:
-            self.reducer = self.get_default_reducer() if reducer is None else reducer
+            self.reducer = (
+                self.get_default_reducer()
+                if reducer is None
+                else copy.deepcopy(reducer)
+            )
         else:
             reducer_dict = {}
             for k in self.sub_loss_names():
                 reducer_dict[k] = (
-                    self.get_default_reducer() if reducer is None else reducer
+                    self.get_default_reducer()
+                    if reducer is None
+                    else copy.deepcopy(reducer)
                 )
             self.reducer = MultipleReducers(reducer_dict)
 

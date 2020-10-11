@@ -88,7 +88,7 @@ class MarginLoss(BaseMetricLossFunction):
                 }
         return self.zero_loss()
 
-    def sub_loss_names(self):
+    def _sub_loss_names(self):
         return ["margin_loss", "beta_reg_loss"]
 
     def get_default_reducer(self):

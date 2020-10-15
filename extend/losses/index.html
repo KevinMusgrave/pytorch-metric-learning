@@ -446,8 +446,43 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#coming-soon" class="md-nav__link">
-    Coming soon!
+  <a href="#the-simplest-possible-loss-function" class="md-nav__link">
+    The simplest possible loss function
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#compatability-with-distances-and-reducers" class="md-nav__link">
+    Compatability with distances and reducers
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#more-on-distances" class="md-nav__link">
+    More on distances
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-indices_tuple" class="md-nav__link">
+    Using indices_tuple
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reduction-type" class="md-nav__link">
+    Reduction type
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#some-useful-examples-to-look-at" class="md-nav__link">
+    Some useful examples to look at
   </a>
   
 </li>
@@ -490,8 +525,43 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#coming-soon" class="md-nav__link">
-    Coming soon!
+  <a href="#the-simplest-possible-loss-function" class="md-nav__link">
+    The simplest possible loss function
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#compatability-with-distances-and-reducers" class="md-nav__link">
+    Compatability with distances and reducers
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#more-on-distances" class="md-nav__link">
+    More on distances
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#using-indices_tuple" class="md-nav__link">
+    Using indices_tuple
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reduction-type" class="md-nav__link">
+    Reduction type
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#some-useful-examples-to-look-at" class="md-nav__link">
+    Some useful examples to look at
   </a>
   
 </li>
@@ -517,7 +587,161 @@
                 
                 
                 <h1 id="how-to-write-custom-loss-functions">How to write custom loss functions<a class="headerlink" href="#how-to-write-custom-loss-functions" title="Permanent link">&para;</a></h1>
-<h2 id="coming-soon">Coming soon!<a class="headerlink" href="#coming-soon" title="Permanent link">&para;</a></h2>
+<h2 id="the-simplest-possible-loss-function">The simplest possible loss function<a class="headerlink" href="#the-simplest-possible-loss-function" title="Permanent link">&para;</a></h2>
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning.losses</span> <span class="kn">import</span> <span class="n">BaseMetricLossFunction</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+
+<span class="k">class</span> <span class="nc">BarebonesLoss</span><span class="p">(</span><span class="n">BaseMetricLossFunction</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">compute_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">indices_tuple</span><span class="p">):</span>
+        <span class="c1"># perform some calculation #</span>
+        <span class="n">some_loss</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">embeddings</span><span class="p">)</span>
+
+        <span class="c1"># put into dictionary #</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;loss&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;losses&quot;</span><span class="p">:</span> <span class="n">some_loss</span><span class="p">,</span>
+                <span class="s2">&quot;indices&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="s2">&quot;reduction_type&quot;</span><span class="p">:</span> <span class="s2">&quot;already_reduced&quot;</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+</code></pre></div>
+
+
+<h2 id="compatability-with-distances-and-reducers">Compatability with distances and reducers<a class="headerlink" href="#compatability-with-distances-and-reducers" title="Permanent link">&para;</a></h2>
+<p>You can make your loss function a lot more powerful by adding support for distance metrics and reducers:</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning.losses</span> <span class="kn">import</span> <span class="n">BaseMetricLossFunction</span>
+<span class="kn">from</span> <span class="nn">pytorch_metric_learning.reducers</span> <span class="kn">import</span> <span class="n">AvgNonZeroReducer</span>
+<span class="kn">from</span> <span class="nn">pytorch_metric_learning.distances</span> <span class="kn">import</span> <span class="n">CosineSimilarity</span>
+<span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils</span> <span class="kn">import</span> <span class="n">loss_and_miner_utils</span> <span class="k">as</span> <span class="n">lmu</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+
+<span class="k">class</span> <span class="nc">FullFeaturedLoss</span><span class="p">(</span><span class="n">BaseMetricLossFunction</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">compute_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">indices_tuple</span><span class="p">):</span>
+        <span class="n">indices_tuple</span> <span class="o">=</span> <span class="n">lmu</span><span class="o">.</span><span class="n">convert_to_triplets</span><span class="p">(</span><span class="n">indices_tuple</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+        <span class="n">anchors</span><span class="p">,</span> <span class="n">positives</span><span class="p">,</span> <span class="n">negatives</span> <span class="o">=</span> <span class="n">indices_tuple</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">anchors</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero_losses</span><span class="p">()</span>
+
+        <span class="n">mat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">distance</span><span class="p">(</span><span class="n">embeddings</span><span class="p">)</span>
+        <span class="n">ap_dists</span> <span class="o">=</span> <span class="n">mat</span><span class="p">[</span><span class="n">anchors</span><span class="p">,</span> <span class="n">positives</span><span class="p">]</span>
+        <span class="n">an_dists</span> <span class="o">=</span> <span class="n">mat</span><span class="p">[</span><span class="n">anchors</span><span class="p">,</span> <span class="n">negatives</span><span class="p">]</span>
+
+        <span class="c1"># perform some calculations #</span>
+        <span class="n">losses1</span> <span class="o">=</span> <span class="n">ap_dists</span> <span class="o">-</span> <span class="n">an_dists</span>
+        <span class="n">losses2</span> <span class="o">=</span> <span class="n">ap_dists</span> <span class="o">*</span> <span class="mi">5</span>
+        <span class="n">losses3</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">embeddings</span><span class="p">)</span>
+
+        <span class="c1"># put into dictionary #</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s2">&quot;loss1&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;losses&quot;</span><span class="p">:</span> <span class="n">losses1</span><span class="p">,</span>
+                <span class="s2">&quot;indices&quot;</span><span class="p">:</span> <span class="n">indices_tuple</span><span class="p">,</span>
+                <span class="s2">&quot;reduction_type&quot;</span><span class="p">:</span> <span class="s2">&quot;triplet&quot;</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;loss2&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;losses&quot;</span><span class="p">:</span> <span class="n">losses2</span><span class="p">,</span>
+                <span class="s2">&quot;indices&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">anchors</span><span class="p">,</span> <span class="n">positives</span><span class="p">),</span>
+                <span class="s2">&quot;reduction_type&quot;</span><span class="p">:</span> <span class="s2">&quot;pos_pair&quot;</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="s2">&quot;loss3&quot;</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">&quot;losses&quot;</span><span class="p">:</span> <span class="n">losses3</span><span class="p">,</span>
+                <span class="s2">&quot;indices&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="s2">&quot;reduction_type&quot;</span><span class="p">:</span> <span class="s2">&quot;already_reduced&quot;</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">get_default_reducer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">AvgNonZeroReducer</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">get_default_distance</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">CosineSimilarity</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_sub_loss_names</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="s2">&quot;loss1&quot;</span><span class="p">,</span> <span class="s2">&quot;loss2&quot;</span><span class="p">,</span> <span class="s2">&quot;loss3&quot;</span><span class="p">]</span>
+</code></pre></div>
+
+
+<p>Here are a few details about this loss function:</p>
+<ul>
+<li>It operates on triplets, so <code>convert_to_triplets</code> is used to convert <code>indices_tuple</code> to triplet form.</li>
+<li><code>self.distance</code> returns a pairwise distance matrix</li>
+<li>The output of the loss function is a dictionary that contains multiple sub losses. This is why it overrides the <code>_sub_loss_names</code> function.</li>
+<li><code>get_default_reducer</code> is overriden to use <code>AvgNonZeroReducer</code> by default, rather than <code>MeanReducer</code>.</li>
+<li><code>get_default_distance</code> is overriden to use <code>CosineSimilarity</code> by default, rather than <code>LpDistances(p=2)</code>.</li>
+</ul>
+<h2 id="more-on-distances">More on distances<a class="headerlink" href="#more-on-distances" title="Permanent link">&para;</a></h2>
+<p>To make your loss compatible with inverted distances (like cosine similarity), you can check <code>self.distance.is_inverted</code>, and write whatever logic necessary to make your loss make sense in that context. </p>
+<p>There are also a few functions in <code>self.distance</code> that provide some of this logic, specifically <code>self.distance.smallest_dist</code>, <code>self.distance.largest_dist</code>, and <code>self.distance.margin</code>. The function definitions are pretty straightforward, and you can find them <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/src/pytorch_metric_learning/distances/base_distance.py#L39-L53">here</a>.</p>
+<h2 id="using-indices_tuple">Using <code>indices_tuple</code><a class="headerlink" href="#using-indices_tuple" title="Permanent link">&para;</a></h2>
+<p>This is an optional argument passed in from the outside. (See the <a href="../../#using-losses-and-miners-in-your-training-loop">overview</a> for an example.) It currently has 3 possible forms: </p>
+<ul>
+<li><code>None</code></li>
+<li>A tuple of size 4, representing the indices of mined pairs (anchors, positives, anchors, negatives)</li>
+<li>A tuple of size 3, representing the indices of mined triplets (anchors, positives, negatives)</li>
+</ul>
+<p>To use <code>indices_tuple</code>, use the appropriate conversion function. You don't need to know what type will be passed in, as the conversion function takes care of that:</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils</span> <span class="kn">import</span> <span class="n">loss_and_miner_utils</span> <span class="k">as</span> <span class="n">lmu</span>
+
+<span class="c1"># For a pair based loss</span>
+<span class="c1"># After conversion, indices_tuple will be a tuple of size 4</span>
+<span class="n">indices_tuple</span> <span class="o">=</span> <span class="n">lmu</span><span class="o">.</span><span class="n">convert_to_pairs</span><span class="p">(</span><span class="n">indices_tuple</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+
+<span class="c1"># For a triplet based loss</span>
+<span class="c1"># After conversion, indices_tuple will be a tuple of size 3</span>
+<span class="n">indices_tuple</span> <span class="o">=</span> <span class="n">lmu</span><span class="o">.</span><span class="n">convert_to_triplets</span><span class="p">(</span><span class="n">indices_tuple</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+
+<span class="c1"># For a classification based loss</span>
+<span class="c1"># miner_weights.shape == labels.shape</span>
+<span class="c1"># You can use these to weight your loss</span>
+<span class="n">miner_weights</span> <span class="o">=</span> <span class="n">lmu</span><span class="o">.</span><span class="n">convert_to_weights</span><span class="p">(</span><span class="n">indices_tuple</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+</code></pre></div>
+
+
+<h2 id="reduction-type">Reduction type<a class="headerlink" href="#reduction-type" title="Permanent link">&para;</a></h2>
+<p>The purpose of reduction types is to provide extra information to the reducer, if it needs it. For example, you could write a reducer that behaves differently depending on what kind of loss it receives. Here's a summary of each reduction type:</p>
+<table>
+<thead>
+<tr>
+<th>Reduction type</th>
+<th>Meaning</th>
+<th>Shape of "indices"</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>"triplet"</td>
+<td>Each entry in "losses" represents a triplet.</td>
+<td>A tuple of 3 tensors (anchors, positives, negatives), each of size (N,).</td>
+</tr>
+<tr>
+<td>"pos_pair"</td>
+<td>Each entry in "losses" represents a positive pair.</td>
+<td>A tuple of 2 tensors (anchors, positives), each of size (N,).</td>
+</tr>
+<tr>
+<td>"neg_pair"</td>
+<td>Each entry in "losses" represents a negative pair.</td>
+<td>A tuple of 2 tensors (anchors, negatives), each of size (N,).</td>
+</tr>
+<tr>
+<td>"element"</td>
+<td>Each entry in "losses" represents something other than a tuple, e.g. an element in a batch.</td>
+<td>A tensor of size (N,)</td>
+</tr>
+<tr>
+<td>"already_reduced"</td>
+<td>"losses" is a single number, i.e. the loss has already been reduced.</td>
+<td>Should be <code>None</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="some-useful-examples-to-look-at">Some useful examples to look at<a class="headerlink" href="#some-useful-examples-to-look-at" title="Permanent link">&para;</a></h2>
+<p>Here are some existing loss functions that might be useful for reference:</p>
+<ul>
+<li><a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/src/pytorch_metric_learning/losses/contrastive_loss.py">ContrastiveLoss</a></li>
+<li><a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/src/pytorch_metric_learning/losses/multi_similarity_loss.py">MultiSimilarityLoss</a></li>
+<li><a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/src/pytorch_metric_learning/losses/normalized_softmax_loss.py">NormalizedSoftmaxLoss</a></li>
+</ul>
                 
               
               

@@ -13,8 +13,8 @@ class RegularFaceRegularizer(BaseRegularizer):
         dtype, device = weights.dtype, weights.device
         num_classes = weights.size(0)
         cos = self.distance(weights)
-        cos1 = cos.clone()
         with torch.no_grad():
+            cos1 = cos.clone()
             cos1.fill_diagonal_(c_f.neg_inf(dtype))
             _, indices = self.distance.smallest_dist(cos1, dim=1)
             mask = torch.zeros((num_classes, num_classes), dtype=dtype).to(device)

@@ -107,6 +107,11 @@ If you're short of time and want a complete train/test workflow, check out the [
 
 
 ## Installation
+
+### Required PyTorch version
+ - ```pytorch-metric-learning >= v0.9.90``` requires ```torch >= 1.6```
+ - ```pytorch-metric-learning < v0.9.90``` doesn't have a version requirement, but was tested with ```torch >= 1.2```
+
 ### Pip
 ```
 pip install pytorch-metric-learning

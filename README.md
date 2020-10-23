@@ -160,6 +160,11 @@ To learn more about all of the above, [see the documentation](https://kevinmusgr
 
 
 ## Installation
+
+### Required PyTorch version
+ - ```pytorch-metric-learning >= v0.9.90``` requires ```torch >= 1.6```
+ - ```pytorch-metric-learning < v0.9.90``` doesn't have a version requirement, but was tested with ```torch >= 1.2```
+
 ### Pip
 ```
 pip install pytorch-metric-learning

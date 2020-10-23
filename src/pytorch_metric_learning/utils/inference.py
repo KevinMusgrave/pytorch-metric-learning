@@ -1,7 +1,6 @@
 from . import common_functions as c_f
 import numpy as np
 import torch
-import faiss
 from ..distances import CosineSimilarity
 import copy
 
@@ -49,12 +48,15 @@ class MatchFinder:
 
 class FaissIndexer:
     def __init__(self, index=None, emb_dim=None):
+        import faiss as faiss_module
+
+        self.faiss_module = faiss_module
         self.index = index
         self.emb_dim = emb_dim
 
     def train_index(self, vectors):
         self.emb_dim = len(vectors[0])
-        self.index = faiss.IndexFlatL2(self.emb_dim)
+        self.index = self.faiss_module.IndexFlatL2(self.emb_dim)
         self.index.add(vectors)
 
     def search_nn(self, query_batch, k):
@@ -134,17 +136,24 @@ class InferenceModel:
 class LogitGetter(torch.nn.Module):
     possible_layer_names = ["fc", "proxies", "W"]
 
-    def __init__(self, classifier, layer_name=None, transpose=None, distance=None):
+    def __init__(
+        self,
+        classifier,
+        layer_name=None,
+        transpose=None,
+        distance=None,
+        copy_weights=True,
+    ):
         super().__init__()
-
+        self.copy_weights = copy_weights
         ### set layer weights ###
         if layer_name is not None:
-            self.weights = copy.deepcopy(getattr(classifier, layer_name))
+            self.set_weights(getattr(classifier, layer_name))
         else:
             for x in self.possible_layer_names:
                 layer = getattr(classifier, x, None)
                 if layer is not None:
-                    self.weights = copy.deepcopy(layer)
+                    self.set_weights(layer)
                     break
 
         ### set distance measure ###
@@ -154,8 +163,11 @@ class LogitGetter(torch.nn.Module):
     def forward(self, embeddings):
         w = self.weights
         if self.transpose is True:
-            w = self.weights.t()
+            w = w.t()
         elif self.transpose is None:
             if w.size(0) == embeddings.size(1):
-                w = self.weights.t()
+                w = w.t()
         return self.distance(embeddings, w)
+
+    def set_weights(self, layer):
+        self.weights = copy.deepcopy(layer) if self.copy_weights else layer

@@ -56,6 +56,18 @@ class TestLogitGetter(unittest.TestCase):
                 loss1, embeddings, batch_size, num_classes, transpose=True
             )
 
+            # test copying weights
+            LG = LogitGetter(loss1)
+            self.assertTrue(torch.all(LG.weights == loss1.W))
+            loss1.W.data *= 0
+            self.assertTrue(not torch.all(LG.weights == loss1.W))
+
+            # test not copying weights
+            LG = LogitGetter(loss1, copy_weights=False)
+            self.assertTrue(torch.all(LG.weights == loss1.W))
+            loss1.W.data *= 0
+            self.assertTrue(torch.all(LG.weights == loss1.W))
+
 
 if __name__ == "__main__":
     unittest.main()

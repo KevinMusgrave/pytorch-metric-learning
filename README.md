@@ -398,7 +398,8 @@ This library contains code that has been adapted and modified from the following
 - https://github.com/tjddus9597/Proxy-Anchor-CVPR2020
 - http://kaizhao.net/regularface
 
-
+### Logo
+Thanks to [Jeff Musgrave](https://jeffmusgrave.com) for designing the logo.
 
 ## Citing this library
 If you'd like to cite pytorch-metric-learning in your paper, you can use this bibtex:

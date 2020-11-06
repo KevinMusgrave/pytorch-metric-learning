@@ -13,6 +13,9 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        pytorch-version: [1.6, 1.7]
 
     steps:
     - uses: actions/checkout@v2
@@ -25,6 +28,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install flake8
         pip install .[with-hooks-cpu]
+        pip install torch==${{ matrix.pytorch-version }}
     - name: Lint with flake8
       run: |
         # stop the build if there are Python syntax errors or undefined names

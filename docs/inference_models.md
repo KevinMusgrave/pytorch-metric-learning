@@ -47,7 +47,13 @@ FaissIndexer()
 This class makes it easier to extract logits from classifier loss functions. Although "metric learning" usually means that you use embeddings during inference, there might be cases where you want to use the class logits instead of the embeddings.
 ```python
 from pytorch_metric_learning.utils.inference import LogitGetter
-LogitGetter(classifier, layer_name=None, transpose=None, distance=None)
+LogitGetter(
+        classifier,
+        layer_name=None,
+        transpose=None,
+        distance=None,
+        copy_weights=True,
+    ):
 ```
 
 **Parameters**:
@@ -56,6 +62,7 @@ LogitGetter(classifier, layer_name=None, transpose=None, distance=None)
 * **layer_name**: Optional. The attribute name of the weight matrix inside the classifier. If not specified, each of the following will be tried: ```["fc", "proxies", "W"]```.
 * **transpose**: Optional. Whether or not to transpose the weight matrix. If the weight matrix is of size ```(embedding_size, num_classes)```, then it should be transposed. If not specified, then transposing will be done automatically during the ```forward``` call if necessary, based on the shapes of the input embeddings and the weight matrix. (Note that it is only guaranteed to make the correct transposing decision if ```num_classes != embedding_size```.)
 * **distance**: Optional. A [distance](distances.md) object which will compute the distance or similarity matrix, i.e. the logits. If not specified, then ```classifier.distance``` will be used.
+* **copy_weights**: If True, then LogitGetter will contain a copy of (instead of a reference to) the classifier weights, so that if you update the classifier weights, the LogitGetter remains unchanged.
 
 
 Example usage:

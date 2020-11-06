@@ -1370,13 +1370,14 @@
 </ul>
 <h2 id="multiplelosses">MultipleLosses<a class="headerlink" href="#multiplelosses" title="Permanent link">&para;</a></h2>
 <p>This is a simple wrapper for multiple losses. Pass in a list of already-initialized loss functions. Then, when you call forward on this object, it will return the sum of all wrapped losses.</p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">MultipleLosses</span><span class="p">(</span><span class="n">losses</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">MultipleLosses</span><span class="p">(</span><span class="n">losses</span><span class="p">,</span> <span class="n">miners</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
 
 
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>losses</strong>: A list or dictionary of initialized loss functions. On the forward call of MultipleLosses, each wrapped loss will be computed, and then the average will be returned.</li>
+<li><strong>miners</strong>: Optional. A list or dictionary of mining functions. This allows you to pair mining functions with loss functions. For example, if <code>losses = [loss_A, loss_B]</code>, and <code>miners = [None, miner_B]</code> then no mining will be done for <code>loss_A</code>, but the output of <code>miner_B</code> will be passed to <code>loss_B</code>. The same logic applies if <code>losses = {"loss_A": loss_A, "loss_B": loss_B}</code> and <code>miners = {"loss_B": miner_B}</code>.</li>
 <li><strong>weights</strong>: Optional. A list or dictionary of loss weights, which will be multiplied by the corresponding losses obtained by the loss functions. The default is to multiply each loss by 1. If <code>losses</code> is a list, then <code>weights</code> must be a list. If <code>losses</code> is a dictionary, <code>weights</code> must contain the same keys as <code>losses</code>. </li>
 </ul>
 <h2 id="multisimilarityloss">MultiSimilarityLoss<a class="headerlink" href="#multisimilarityloss" title="Permanent link">&para;</a></h2>

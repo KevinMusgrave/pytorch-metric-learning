@@ -36,10 +36,14 @@ class TestDistanceWeightedMiner(unittest.TestCase):
                 )
             min_an_dist = torch.min(all_an_dist)
 
-            for non_zero_cutoff_int in range(5, 15):
+            cutoffs = [0] + list(range(5, 15))
+            for non_zero_cutoff_int in cutoffs:
                 non_zero_cutoff = (float(non_zero_cutoff_int) / 10.0) - 0.01
                 miner = DistanceWeightedMiner(0, non_zero_cutoff)
                 a, p, n = miner(embeddings, labels, ref_embeddings, ref_labels)
+                if non_zero_cutoff_int == 0:
+                    self.assertTrue(len(a) == len(p) == len(n) == 0)
+                    continue
                 if with_ref_labels:
                     anchors, positives, negatives = (
                         embeddings[a],

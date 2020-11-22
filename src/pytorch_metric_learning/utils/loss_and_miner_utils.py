@@ -127,6 +127,12 @@ def get_random_triplet_indices(
         # Get indices of negative samples for this label.
         if weights is not None:
             w = weights[:, n_inds][a]
+            non_zero_rows = torch.where(torch.sum(w, dim=1) > 0)[0]
+            if len(non_zero_rows) == 0:
+                continue
+            w = w[non_zero_rows]
+            a = a[non_zero_rows]
+            p = p[non_zero_rows]
             # Sample the negative indices according to the weights.
             if w.dtype == torch.float16:
                 # special case needed due to pytorch cuda bug

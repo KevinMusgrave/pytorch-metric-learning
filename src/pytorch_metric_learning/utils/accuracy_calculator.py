@@ -42,11 +42,16 @@ def r_precision(
     return maybe_get_avg_of_avgs(accuracy_per_sample, gt_labels, avg_of_avgs)
 
 
-def mean_average_precision_at_r(
-    knn_labels, gt_labels, embeddings_come_from_same_source, label_counts, avg_of_avgs
+def mean_average_precision(
+    knn_labels,
+    gt_labels,
+    embeddings_come_from_same_source,
+    avg_of_avgs,
+    relevance_mask=None,
+    at_r=False,
 ):
-    relevance_mask = get_relevance_mask(
-        knn_labels.shape, gt_labels, embeddings_come_from_same_source, label_counts
+    relevance_mask = (
+        np.ones_like(knn_labels) if relevance_mask is None else relevance_mask
     )
     num_samples, num_k = knn_labels.shape
     equality = (knn_labels == gt_labels) * relevance_mask.astype(bool)
@@ -54,9 +59,29 @@ def mean_average_precision_at_r(
     k_idx = np.tile(np.arange(1, num_k + 1), (num_samples, 1))
     precision_at_ks = (cumulative_correct * equality) / k_idx
     summed_precision_per_row = np.sum(precision_at_ks * relevance_mask, axis=1)
-    max_possible_matches_per_row = np.sum(relevance_mask, axis=1)
+    if at_r:
+        max_possible_matches_per_row = np.sum(relevance_mask, axis=1)
+    else:
+        max_possible_matches_per_row = np.sum(equality, axis=1)
+        max_possible_matches_per_row[max_possible_matches_per_row == 0] = 1
     accuracy_per_sample = summed_precision_per_row / max_possible_matches_per_row
     return maybe_get_avg_of_avgs(accuracy_per_sample, gt_labels, avg_of_avgs)
+
+
+def mean_average_precision_at_r(
+    knn_labels, gt_labels, embeddings_come_from_same_source, label_counts, avg_of_avgs
+):
+    relevance_mask = get_relevance_mask(
+        knn_labels.shape, gt_labels, embeddings_come_from_same_source, label_counts
+    )
+    return mean_average_precision(
+        knn_labels,
+        gt_labels,
+        embeddings_come_from_same_source,
+        avg_of_avgs,
+        relevance_mask,
+        at_r=True,
+    )
 
 
 def precision_at_k(knn_labels, gt_labels, k, avg_of_avgs):
@@ -83,6 +108,15 @@ def get_lone_query_labels(
         return np.array([k for k, v in reference_label_counts.items() if v <= 1])
     else:
         return np.setdiff1d(query_labels, reference_labels)
+
+
+def try_getting_not_lone_labels(knn_labels, query_labels, not_lone_query_mask):
+    if not any(not_lone_query_mask):
+        return None, None
+    return (
+        knn_labels[not_lone_query_mask],
+        query_labels[not_lone_query_mask],
+    )
 
 
 class AccuracyCalculator:
@@ -116,7 +150,12 @@ class AccuracyCalculator:
         return ["NMI", "AMI"]
 
     def requires_knn(self):
-        return ["precision_at_1", "mean_average_precision_at_r", "r_precision"]
+        return [
+            "precision_at_1",
+            "mean_average_precision",
+            "mean_average_precision_at_r",
+            "r_precision",
+        ]
 
     def get_cluster_labels(self, query, query_labels, **kwargs):
         num_clusters = len(np.unique(query_labels.flatten()))
@@ -131,12 +170,11 @@ class AccuracyCalculator:
     def calculate_precision_at_1(
         self, knn_labels, query_labels, not_lone_query_mask, **kwargs
     ):
-        if not any(not_lone_query_mask):
-            return 0
-        knn_labels, query_labels = (
-            knn_labels[not_lone_query_mask],
-            query_labels[not_lone_query_mask],
+        knn_labels, query_labels = try_getting_not_lone_labels(
+            knn_labels, query_labels, not_lone_query_mask
         )
+        if knn_labels is None:
+            return 0
         return precision_at_k(knn_labels, query_labels[:, None], 1, self.avg_of_avgs)
 
     def calculate_mean_average_precision_at_r(
@@ -148,17 +186,36 @@ class AccuracyCalculator:
         label_counts,
         **kwargs
     ):
-        if not any(not_lone_query_mask):
-            return 0
-        knn_labels, query_labels = (
-            knn_labels[not_lone_query_mask],
-            query_labels[not_lone_query_mask],
+        knn_labels, query_labels = try_getting_not_lone_labels(
+            knn_labels, query_labels, not_lone_query_mask
         )
+        if knn_labels is None:
+            return 0
         return mean_average_precision_at_r(
             knn_labels,
             query_labels[:, None],
             embeddings_come_from_same_source,
             label_counts,
+            self.avg_of_avgs,
+        )
+
+    def calculate_mean_average_precision(
+        self,
+        knn_labels,
+        query_labels,
+        not_lone_query_mask,
+        embeddings_come_from_same_source,
+        **kwargs
+    ):
+        knn_labels, query_labels = try_getting_not_lone_labels(
+            knn_labels, query_labels, not_lone_query_mask
+        )
+        if knn_labels is None:
+            return 0
+        return mean_average_precision(
+            knn_labels,
+            query_labels[:, None],
+            embeddings_come_from_same_source,
             self.avg_of_avgs,
         )
 
@@ -171,12 +228,11 @@ class AccuracyCalculator:
         label_counts,
         **kwargs
     ):
-        if not any(not_lone_query_mask):
-            return 0
-        knn_labels, query_labels = (
-            knn_labels[not_lone_query_mask],
-            query_labels[not_lone_query_mask],
+        knn_labels, query_labels = try_getting_not_lone_labels(
+            knn_labels, query_labels, not_lone_query_mask
         )
+        if knn_labels is None:
+            return 0
         return r_precision(
             knn_labels,
             query_labels[:, None],

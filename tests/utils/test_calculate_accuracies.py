@@ -49,6 +49,7 @@ class TestCalculateAccuracies(unittest.TestCase):
                         self.assertTrue(acc["precision_at_1"] == 0)
                         self.assertTrue(acc["r_precision"] == 0)
                         self.assertTrue(acc["mean_average_precision_at_r"] == 0)
+                        self.assertTrue(acc["mean_average_precision"] == 0)
                     else:
                         self.assertTrue(
                             acc["precision_at_1"]
@@ -63,6 +64,10 @@ class TestCalculateAccuracies(unittest.TestCase):
                             == self.correct_mean_average_precision_at_r(
                                 ecfss, avg_of_avgs
                             )
+                        )
+                        self.assertTrue(
+                            acc["mean_average_precision"]
+                            == self.correct_mean_average_precision(ecfss, avg_of_avgs)
                         )
 
     def correct_precision_at_1(self, embeddings_come_from_same_source, avg_of_avgs):
@@ -99,7 +104,7 @@ class TestCalculateAccuracies(unittest.TestCase):
         self, embeddings_come_from_same_source, avg_of_avgs
     ):
         if not embeddings_come_from_same_source:
-            acc0 = (0 + 1.0 / 2 + 2.0 / 3) / 3
+            acc0 = (1.0 / 2 + 2.0 / 3) / 3
             acc1 = (1 + 2.0 / 3) / 3
             acc2 = (1.0 / 5) / 5
             acc3 = (1 + 2.0 / 3) / 4
@@ -110,6 +115,26 @@ class TestCalculateAccuracies(unittest.TestCase):
             acc2 = (1.0 / 4) / 4
             acc3 = (1.0 / 2) / 3
             acc4 = (1.0 / 2) / 4
+        if not avg_of_avgs:
+            return np.mean([acc0, acc1, acc2, acc3, acc4])
+        else:
+            return np.mean([(acc0 + acc1) / 2, acc2, acc3, acc4])
+
+    def correct_mean_average_precision(
+        self, embeddings_come_from_same_source, avg_of_avgs
+    ):
+        if not embeddings_come_from_same_source:
+            acc0 = (1.0 / 2 + 2.0 / 3) / 2
+            acc1 = (1 + 2.0 / 3 + 3.0 / 4) / 3
+            acc2 = (1.0 / 5) / 1
+            acc3 = (1 + 2.0 / 3 + 3.0 / 5) / 3
+            acc4 = (1.0 / 3) / 1
+        else:
+            acc0 = 1
+            acc1 = (1.0 / 2 + 2.0 / 3) / 2
+            acc2 = 1.0 / 4
+            acc3 = (1.0 / 2 + 2.0 / 4) / 2
+            acc4 = 1.0 / 2
         if not avg_of_avgs:
             return np.mean([acc0, acc1, acc2, acc3, acc4])
         else:

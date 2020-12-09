@@ -1,10 +1,8 @@
-#! /usr/bin/env python3
-
 import torch
 from ..utils import common_functions as c_f, loss_tracker as l_t
 import tqdm
 import logging
-import numpy as np
+
 
 class BaseTrainer:
     def __init__(
@@ -30,7 +28,7 @@ class BaseTrainer:
         dataset_labels=None,
         set_min_label_to_zero=False,
         end_of_iteration_hook=None,
-        end_of_epoch_hook=None
+        end_of_epoch_hook=None,
     ):
         self.models = models
         self.optimizers = optimizers
@@ -65,7 +63,7 @@ class BaseTrainer:
         self.initialize_data_and_label_getter()
         self.initialize_hooks()
         self.initialize_lr_schedulers()
-        
+
     def custom_setup(self):
         pass
 
@@ -77,7 +75,7 @@ class BaseTrainer:
 
     def train(self, start_epoch=1, num_epochs=1):
         self.initialize_dataloader()
-        for self.epoch in range(start_epoch, num_epochs+1):
+        for self.epoch in range(start_epoch, num_epochs + 1):
             self.set_to_train()
             logging.info("TRAINING EPOCH %d" % self.epoch)
             pbar = tqdm.tqdm(range(self.iterations_per_epoch))
@@ -87,6 +85,7 @@ class BaseTrainer:
                 pbar.set_description("total_loss=%.5f" % self.losses["total_loss"])
                 self.step_lr_schedulers(end_of_epoch=False)
             self.step_lr_schedulers(end_of_epoch=True)
+            self.zero_losses()
             if self.end_of_epoch_hook(self) is False:
                 break
 
@@ -126,9 +125,13 @@ class BaseTrainer:
             v.zero_grad()
 
     def get_batch(self):
-        self.dataloader_iter, curr_batch = c_f.try_next_on_generator(self.dataloader_iter, self.dataloader)
+        self.dataloader_iter, curr_batch = c_f.try_next_on_generator(
+            self.dataloader_iter, self.dataloader
+        )
         data, labels = self.data_and_label_getter(curr_batch)
-        labels = c_f.process_label(labels, self.label_hierarchy_level, self.label_mapper)
+        labels = c_f.process_label(
+            labels, self.label_hierarchy_level, self.label_mapper
+        )
         return self.maybe_do_batch_mining(data, labels)
 
     def compute_embeddings(self, data):
@@ -166,9 +169,13 @@ class BaseTrainer:
     def step_lr_schedulers(self, end_of_epoch=False):
         if self.lr_schedulers is not None:
             for k, v in self.lr_schedulers.items():
-                if end_of_epoch and k.endswith(self.allowed_lr_scheduler_key_suffixes["epoch"]):
+                if end_of_epoch and k.endswith(
+                    self.allowed_lr_scheduler_key_suffixes["epoch"]
+                ):
                     v.step()
-                elif not end_of_epoch and k.endswith(self.allowed_lr_scheduler_key_suffixes["iteration"]):
+                elif not end_of_epoch and k.endswith(
+                    self.allowed_lr_scheduler_key_suffixes["iteration"]
+                ):
                     v.step()
 
     def step_lr_plateau_schedulers(self, validation_info):
@@ -193,11 +200,15 @@ class BaseTrainer:
 
     def initialize_data_device(self):
         if self.data_device is None:
-            self.data_device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            self.data_device = torch.device(
+                "cuda" if torch.cuda.is_available() else "cpu"
+            )
 
     def initialize_label_mapper(self):
-        self.label_mapper = c_f.LabelMapper(self.set_min_label_to_zero, self.dataset_labels).map
-        
+        self.label_mapper = c_f.LabelMapper(
+            self.set_min_label_to_zero, self.dataset_labels
+        ).map
+
     def initialize_loss_tracker(self):
         self.loss_tracker = l_t.LossTracker(self.loss_names)
         self.losses = self.loss_tracker.losses
@@ -206,9 +217,11 @@ class BaseTrainer:
         if self.data_and_label_getter is None:
             self.data_and_label_getter = c_f.return_input
 
+    def trainable_attributes(self):
+        return [self.models, self.loss_funcs]
+
     def set_to_train(self):
-        trainable = [self.models, self.loss_funcs]
-        for T in trainable:
+        for T in self.trainable_attributes():
             for k, v in T.items():
                 if k in self.freeze_these:
                     c_f.set_requires_grad(v, requires_grad=False)
@@ -218,8 +231,9 @@ class BaseTrainer:
         self.maybe_freeze_trunk_batchnorm()
 
     def set_to_eval(self):
-        for k, v in self.models.items():
-            v.eval()
+        for T in self.trainable_attributes():
+            for v in T.values():
+                v.eval()
 
     def initialize_loss_weights(self):
         if self.loss_weights is None:
@@ -240,7 +254,11 @@ class BaseTrainer:
             self.models["embedder"] = c_f.Identity()
 
     def verify_dict_keys(self):
-        self.allowed_lr_scheduler_key_suffixes = {"iteration": "_scheduler_by_iteration", "epoch": "_scheduler_by_epoch", "plateau": "_scheduler_by_plateau"}
+        self.allowed_lr_scheduler_key_suffixes = {
+            "iteration": "_scheduler_by_iteration",
+            "epoch": "_scheduler_by_epoch",
+            "plateau": "_scheduler_by_plateau",
+        }
         self.verify_models_keys()
         self.verify_optimizers_keys()
         self.verify_loss_funcs_keys()
@@ -250,25 +268,39 @@ class BaseTrainer:
         self.verify_gradient_clippers_keys()
         self.verify_freeze_these_keys()
 
-    def _verify_dict_keys(self, obj_name, allowed_keys, warn_if_empty, important_keys=(), essential_keys=()):
+    def _verify_dict_keys(
+        self,
+        obj_name,
+        allowed_keys,
+        warn_if_empty,
+        important_keys=(),
+        essential_keys=(),
+    ):
         obj = getattr(self, obj_name, None)
         if obj in [None, {}]:
             if warn_if_empty:
-                logging.warn("%s is empty"%obj_name)
+                logging.warn("%s is empty" % obj_name)
         else:
             for k in obj.keys():
-                assert any(pattern.match(k) for pattern in c_f.regex_wrapper(allowed_keys)), "%s keys must be one of %s"%(obj_name, ", ".join(allowed_keys))
+                assert any(
+                    pattern.match(k) for pattern in c_f.regex_wrapper(allowed_keys)
+                ), "%s keys must be one of %s" % (obj_name, ", ".join(allowed_keys))
             for imp_key in important_keys:
                 if not any(c_f.regex_wrapper(imp_key).match(k) for k in obj):
-                    logging.warn("%s is missing \"%s\""%(obj_name, imp_key))
+                    logging.warn('%s is missing "%s"' % (obj_name, imp_key))
             for ess_key in essential_keys:
-                assert any(c_f.regex_wrapper(ess_key).match(k) for k in obj), "%s must contain \"%s\""%(obj_name, ess_key)
+                assert any(
+                    c_f.regex_wrapper(ess_key).match(k) for k in obj
+                ), '%s must contain "%s"' % (obj_name, ess_key)
 
     def allowed_model_keys(self):
         return ["trunk", "embedder"]
 
     def allowed_optimizer_keys(self):
-        return [x+"_optimizer" for x in self.allowed_model_keys() + self.allowed_loss_funcs_keys()]
+        return [
+            x + "_optimizer"
+            for x in self.allowed_model_keys() + self.allowed_loss_funcs_keys()
+        ]
 
     def allowed_loss_funcs_keys(self):
         return ["metric_loss"]
@@ -277,37 +309,81 @@ class BaseTrainer:
         return ["subset_batch_miner", "tuple_miner"]
 
     def allowed_lr_scheduers_keys(self):
-        return [x+y for y in self.allowed_lr_scheduler_key_suffixes.values()  for x in self.allowed_model_keys() + self.allowed_loss_funcs_keys()]
+        return [
+            x + y
+            for y in self.allowed_lr_scheduler_key_suffixes.values()
+            for x in self.allowed_model_keys() + self.allowed_loss_funcs_keys()
+        ]
 
     def allowed_gradient_clippers_keys(self):
-        return [x+"_grad_clipper" for x in self.allowed_model_keys() + self.allowed_loss_funcs_keys()]
+        return [
+            x + "_grad_clipper"
+            for x in self.allowed_model_keys() + self.allowed_loss_funcs_keys()
+        ]
 
     def allowed_freeze_these_keys(self):
         return self.allowed_model_keys() + self.allowed_loss_funcs_keys()
 
     def verify_models_keys(self):
-        self._verify_dict_keys("models", self.allowed_model_keys(), warn_if_empty=True, essential_keys=["trunk"], important_keys = [x for x in self.allowed_model_keys() if x != "trunk"])
+        self._verify_dict_keys(
+            "models",
+            self.allowed_model_keys(),
+            warn_if_empty=True,
+            essential_keys=["trunk"],
+            important_keys=[x for x in self.allowed_model_keys() if x != "trunk"],
+        )
 
     def verify_optimizers_keys(self):
-        self._verify_dict_keys("optimizers", self.allowed_optimizer_keys(), warn_if_empty=True, important_keys=[x+"_optimizer" for x in self.models.keys()])
+        self._verify_dict_keys(
+            "optimizers",
+            self.allowed_optimizer_keys(),
+            warn_if_empty=True,
+            important_keys=[x + "_optimizer" for x in self.models.keys()],
+        )
 
     def verify_loss_funcs_keys(self):
-        self._verify_dict_keys("loss_funcs", self.allowed_loss_funcs_keys(), warn_if_empty=True, important_keys=self.allowed_loss_funcs_keys())
+        self._verify_dict_keys(
+            "loss_funcs",
+            self.allowed_loss_funcs_keys(),
+            warn_if_empty=True,
+            important_keys=self.allowed_loss_funcs_keys(),
+        )
 
     def verify_mining_funcs_keys(self):
-        self._verify_dict_keys("mining_funcs", self.allowed_mining_funcs_keys(), warn_if_empty=False)
+        self._verify_dict_keys(
+            "mining_funcs", self.allowed_mining_funcs_keys(), warn_if_empty=False
+        )
 
     def verify_lr_schedulers_keys(self):
-        self._verify_dict_keys("lr_schedulers", self.allowed_lr_scheduers_keys(), warn_if_empty=False)
+        self._verify_dict_keys(
+            "lr_schedulers", self.allowed_lr_scheduers_keys(), warn_if_empty=False
+        )
 
     def verify_loss_weights_keys(self):
-        self._verify_dict_keys("loss_weights", self.loss_names, warn_if_empty=False, essential_keys=self.loss_names)
+        self._verify_dict_keys(
+            "loss_weights",
+            self.loss_names,
+            warn_if_empty=False,
+            essential_keys=self.loss_names,
+        )
 
     def verify_gradient_clippers_keys(self):
-        self._verify_dict_keys("gradient_clippers", self.allowed_gradient_clippers_keys(), warn_if_empty=False)
+        self._verify_dict_keys(
+            "gradient_clippers",
+            self.allowed_gradient_clippers_keys(),
+            warn_if_empty=False,
+        )
 
     def verify_freeze_these_keys(self):
         for k in self.freeze_these:
-            assert k in self.allowed_freeze_these_keys(), "freeze_these keys must be one of {}".format(", ".join(self.allowed_freeze_these_keys()))
-            if k+"_optimizer" in self.optimizers.keys():
-                logging.warn("You have passed in an optimizer for {}, but are freezing its parameters.".format(k))
+            assert (
+                k in self.allowed_freeze_these_keys()
+            ), "freeze_these keys must be one of {}".format(
+                ", ".join(self.allowed_freeze_these_keys())
+            )
+            if k + "_optimizer" in self.optimizers.keys():
+                logging.warn(
+                    "You have passed in an optimizer for {}, but are freezing its parameters.".format(
+                        k
+                    )
+                )

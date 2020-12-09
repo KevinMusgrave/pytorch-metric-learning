@@ -1,13 +1,26 @@
 # Examples on Google Colab
-The following notebooks are meant to show entire training/testing workflows. (If you want to use just a loss or miner in your own code, you can do that too.) They generally go through the following steps:
+
+Before running the notebooks, make sure that the runtime type is set to "GPU", by going to the Runtime menu, and clicking on "Change runtime type".
+
+Click "Open in playground" on the Colab header to interact with the notebook.
+
+
+## Simple examples
+
+|Notebook|Description|Colab Link|
+|:---|:---:|:---|
+[MNIST using TripletMarginLoss](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/TripletMarginLossMNIST.ipynb) | Train with TripletMarginLoss, evaluate with AccuracyCalculator. |[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/TripletMarginLossMNIST.ipynb)
+[MoCo on CIFAR10](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/MoCoCIFAR10.ipynb) | Self-supervision using MoCo with CrossBatchMemory |[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/MoCoCIFAR10.ipynb)
+[Multiprocessing with DistributedDataParallel](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/DistributedTripletMarginLossMNIST.ipynb) | An example using pytorch_metric_learning.utils.distributed |[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/DistributedTripletMarginLossMNIST.ipynb)
+
+## Training/testing workflows with logging and model saving
+
+The following notebooks are meant to show entire training/testing workflows. (If you want to use just a loss or miner in your own code, see the notebooks above.) They generally go through the following steps:
 - initialize models, optimizers, and transforms
 - creates train/validation splits
 - initialize a loss, miner, sampler, trainer, and tester
 - train the model, record accuracy, and plot the embedding space
 
-Before running the notebooks, make sure that the runtime type is set to "GPU", by going to the Runtime menu, and clicking on "Change runtime type".
-
-Click "Open in playground" on the Colab header to interact with the notebook.
 
 |Notebook|Description|Colab Link|
 |:---|:---:|:---|

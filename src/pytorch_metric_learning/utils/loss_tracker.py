@@ -8,12 +8,12 @@ class LossTracker:
         self.losses = {key: 0 for key in loss_names}
         self.loss_weights = {key: 1 for key in loss_names}
 
-    def weight_the_losses(self, exclude_loss=("total_loss")):
+    def weight_the_losses(self, exclude_loss=("total_loss",)):
         for k, _ in self.losses.items():
             if k not in exclude_loss:
                 self.losses[k] *= self.loss_weights[k]
 
-    def get_total_loss(self, exclude_loss=("total_loss")):
+    def get_total_loss(self, exclude_loss=("total_loss",)):
         self.losses["total_loss"] = 0
         for k, v in self.losses.items():
             if k not in exclude_loss:

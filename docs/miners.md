@@ -199,3 +199,22 @@ miners.TripletMarginMiner(margin, type_of_triplets="all", **kwargs)
 	* "all" means all triplets that violate the margin
 	* "hard" is a subset of "all", but the negative is closer to the anchor than the positive
 	* "semihard" is a subset of "all", but the negative is further from the anchor than the positive
+
+
+
+## BatchEasyHardMiner
+
+[Improved Embeddings with Easy Positive Triplet Mining](http://openaccess.thecvf.com/content_WACV_2020/papers/Xuan_Improved_Embeddings_with_Easy_Positive_Triplet_Mining_WACV_2020_paper.pdf)
+
+```python
+miners.BatchEasyHardMiner(positive_strategy=BatchEasyHardMiner.EASY,negative_strategy=BatchEasyHardMiner.HARD, allowed_positive_range=(0, Inf), allowed_negative_range=(0, Inf), use_similarity=False, squared_distances=False, **kwargs)
+```
+
+**Parameters**
+
+* **positive_strategy**: either BatchEasyHardMiner.EASY or BatchEasyHardMiner.HARD. During triplet creation it mines the easiest positive or hardest positive respectively. The easiest positive is defined as the positive closest to the anchor where distance/similarity does not violate `allowed_positive_range`.
+* **positive_strategy**: either BatchEasyHardMiner.EASY or BatchEasyHardMiner.HARD. During triplet creation it mines the easiest negative or hardest negative triplet respectively
+* **allowed_positive_range**: tuple containing the allowed range of anchor-positive distances/similarties
+* **allowed_negative_range**: tuple contains the allowed range of anchor-negative distances/similarties
+* **use_similarity**: If True, will use dot product between vectors instead of euclidean distance.
+* **squared_distances**: If True, then the euclidean distance will be squared.

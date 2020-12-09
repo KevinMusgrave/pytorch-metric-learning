@@ -1,13 +1,22 @@
 site_name: PyTorch Metric Learning
 nav:
     - Home: index.md
+    - Distances: distances.md
     - Losses: losses.md
     - Miners: miners.md
+    - Reducers: reducers.md
     - Regularizers: regularizers.md
     - Samplers: samplers.md
     - Trainers: trainers.md
     - Testers: testers.md
-    - Utils: utils.md
+    - Utils: 
+      - Accuracy Calculation: accuracy_calculation.md
+      - Inference Models: inference_models.md
+      - Logging Presets: logging_presets.md
+      - Common Functions: common_functions.md
+      - Distributed: distributed.md
+    - How to extend this library:
+      - Custom losses: extend/losses.md
 theme:
   name: 'material'
   palette:
@@ -17,5 +26,6 @@ markdown_extensions:
   - codehilite
   - toc:
       permalink: true
+  - attr_list
 repo_name: 'KevinMusgrave/pytorch-metric-learning'
 repo_url: 'https://github.com/KevinMusgrave/pytorch-metric-learning'

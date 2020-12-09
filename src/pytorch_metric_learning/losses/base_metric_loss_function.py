@@ -2,32 +2,14 @@
 
 import torch
 from ..utils import common_functions as c_f
+from ..utils.module_with_records_and_reducer import ModuleWithRecordsReducerAndDistance
+from .mixins import EmbeddingRegularizerMixin
+import inspect
 
-class BaseMetricLossFunction(torch.nn.Module):
-    """
-    All loss functions extend this class
-    Args:
-        normalize_embeddings: type boolean. If True then normalize embeddins
-                                to have norm = 1 before computing the loss
-        num_class_per_param: type int. The number of classes for each parameter.
-                            If your parameters don't have a separate value for each class,
-                            then leave this at None
-        learnable_param_names: type list of strings. Each element is the name of
-                            attributes that should be converted to nn.Parameter 
-    """
-    def __init__(
-        self,
-        normalize_embeddings=True,
-        num_class_per_param=None,
-        learnable_param_names=None,
-    ):
-        super().__init__()
-        self.normalize_embeddings = normalize_embeddings
-        self.num_class_per_param = num_class_per_param
-        self.learnable_param_names = learnable_param_names
-        self.initialize_learnable_parameters()
-        self.add_to_recordable_attributes(name="avg_embedding_norm")
 
+class BaseMetricLossFunction(
+    EmbeddingRegularizerMixin, ModuleWithRecordsReducerAndDistance
+):
     def compute_loss(self, embeddings, labels, indices_tuple=None):
         """
         This has to be implemented and is what actually computes the loss.
@@ -42,65 +24,97 @@ class BaseMetricLossFunction(torch.nn.Module):
             indices_tuple: tuple of size 3 for triplets (anchors, positives, negatives)
                             or size 4 for pairs (anchor1, postives, anchor2, negatives)
                             Can also be left as None
-        Returns: the loss (float)
+        Returns: the loss
         """
+        self.reset_stats()
         c_f.assert_embeddings_and_labels_are_same_size(embeddings, labels)
         labels = labels.to(embeddings.device)
-        if self.normalize_embeddings:
-            embeddings = torch.nn.functional.normalize(embeddings, p=2, dim=1)
-        self.embedding_norms = torch.norm(embeddings, p=2, dim=1)
-        self.avg_embedding_norm = torch.mean(self.embedding_norms)
+        loss_dict = self.compute_loss(embeddings, labels, indices_tuple)
+        self.add_embedding_regularization_to_loss_dict(loss_dict, embeddings)
+        return self.reducer(loss_dict, embeddings, labels)
 
-        loss = self.compute_loss(embeddings, labels, indices_tuple)
-        if loss == 0:
-            loss = torch.sum(embeddings*0)
-        return loss
+    def zero_loss(self):
+        return {"losses": 0, "indices": None, "reduction_type": "already_reduced"}
 
-    def initialize_learnable_parameters(self):
-        """
-        To learn hyperparams, create an attribute called learnable_param_names.
-        This should be a list of strings which are the names of the
-        hyperparameters to be learned
-        """
-        if self.learnable_param_names is not None:
-            for k in self.learnable_param_names:
-                v = getattr(self, k)
-                setattr(self, k, self.create_learnable_parameter(v))
+    def zero_losses(self):
+        return {loss_name: self.zero_loss() for loss_name in self.sub_loss_names()}
 
-    def create_learnable_parameter(self, init_value, unsqueeze=False):
-        """
-        Returns nn.Parameter with an initial value of init_value
-        and size of num_labels
-        """
-        vec_len = self.num_class_per_param if self.num_class_per_param else 1
-        if unsqueeze:
-            vec_len = (vec_len, 1)
-        p = torch.nn.Parameter(torch.ones(vec_len) * init_value)
-        return p
+    def _sub_loss_names(self):
+        return ["loss"]
 
-    def maybe_mask_param(self, param, labels):
-        """
-        This returns the hyperparameters corresponding to class labels (if applicable).
-        If there is a hyperparameter for each class, then when computing the loss,
-        the class hyperparameter has to be matched to the corresponding embedding.
-        """
-        if self.num_class_per_param:
-            return param[labels]
-        return param
+    def sub_loss_names(self):
+        return self._sub_loss_names() + self.all_regularization_loss_names()
 
-    def add_to_recordable_attributes(self, name=None, list_of_names=None):
-        c_f.add_to_recordable_attributes(self, name=name, list_of_names=list_of_names)
-
+    def all_regularization_loss_names(self):
+        reg_names = []
+        for base_class in inspect.getmro(self.__class__):
+            base_class_name = base_class.__name__
+            mixin_keyword = "RegularizerMixin"
+            if base_class_name.endswith(mixin_keyword):
+                descriptor = base_class_name.replace(mixin_keyword, "").lower()
+                if getattr(self, "{}_regularizer".format(descriptor)):
+                    reg_names.extend(base_class.regularization_loss_names(self))
+        return reg_names
 
 
 class MultipleLosses(torch.nn.Module):
-    def __init__(self, losses, weights=None):
+    def __init__(self, losses, miners=None, weights=None):
         super().__init__()
-        self.losses = torch.nn.ModuleList(losses)
-        self.weights = weights if weights is not None else [1]*len(self.losses)
+        self.is_dict = isinstance(losses, dict)
+        self.losses = (
+            torch.nn.ModuleDict(losses) if self.is_dict else torch.nn.ModuleList(losses)
+        )
+
+        if miners is not None:
+            self.assertions_if_not_none(miners, match_all_keys=False)
+            self.miners = (
+                torch.nn.ModuleDict(miners)
+                if self.is_dict
+                else torch.nn.ModuleList(miners)
+            )
+        else:
+            self.miners = None
+
+        if weights is not None:
+            self.assertions_if_not_none(weights, match_all_keys=True)
+            self.weights = weights
+        else:
+            self.weights = (
+                {k: 1 for k in self.losses.keys()}
+                if self.is_dict
+                else [1] * len(losses)
+            )
 
     def forward(self, embeddings, labels, indices_tuple=None):
+        if self.miners:
+            assert indices_tuple is None
         total_loss = 0
-        for i, loss in enumerate(self.losses):
-            total_loss += loss(embeddings, labels, indices_tuple)*self.weights[i]
+        iterable = self.losses.items() if self.is_dict else enumerate(self.losses)
+        for i, loss_func in iterable:
+            curr_indices_tuple = self.get_indices_tuple(
+                i, embeddings, labels, indices_tuple
+            )
+            total_loss += (
+                loss_func(embeddings, labels, curr_indices_tuple) * self.weights[i]
+            )
         return total_loss
+
+    def get_indices_tuple(self, i, embeddings, labels, indices_tuple):
+        if self.miners:
+            if (self.is_dict and i in self.miners) or (
+                not self.is_dict and self.miners[i] is not None
+            ):
+                indices_tuple = self.miners[i](embeddings, labels)
+        return indices_tuple
+
+    def assertions_if_not_none(self, x, match_all_keys):
+        if x is not None:
+            if self.is_dict:
+                assert isinstance(x, dict)
+                if match_all_keys:
+                    assert sorted(list(x.keys())) == sorted(list(self.losses.keys()))
+                else:
+                    assert all(k in self.losses.keys() for k in x.keys())
+            else:
+                assert c_f.is_list_or_tuple(x)
+                assert len(x) == len(self.losses)

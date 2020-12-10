@@ -33,7 +33,7 @@ class TestBatchEasyHardMiner(unittest.TestCase):
                             "pos_pair_dist" : 1,
                             "neg_pair_dist" : 1,
                             "expected" : {
-                                "correct_a" : torch.LongTensor([0, 1, 2, 3, 4, 6, 7, 8]).to(TEST_DEVICE),
+                                "correct_a" : torch.LongTensor(  [0, 1, 2, 3, 4, 6, 7, 8]).to(TEST_DEVICE),
                                 "correct_p" : [ torch.LongTensor([1, 0, 3, 2, 1, 7, 8, 7]).to(TEST_DEVICE),
                                                 torch.LongTensor([1, 0, 3, 2, 1, 7, 6, 7]).to(TEST_DEVICE)],
                                 "correct_n" : [ torch.LongTensor([2, 2, 1, 4, 3, 5, 5, 5]).to(TEST_DEVICE),
@@ -90,8 +90,6 @@ class TestBatchEasyHardMiner(unittest.TestCase):
                 cfg = self.gt[miner]
                 miner = cfg["miner"]
                 a, p, n = miner.mine(embeddings, self.labels, embeddings, self.labels)
-                print(miner.mine(embeddings, self.labels, embeddings, self.labels))
-                print(cfg["expected"])
                 self.helper(a, p, n, cfg["expected"])
                 self.assertTrue(miner.pos_pair_dist == cfg["pos_pair_dist"])
                 self.assertTrue(miner.neg_pair_dist == cfg["neg_pair_dist"])

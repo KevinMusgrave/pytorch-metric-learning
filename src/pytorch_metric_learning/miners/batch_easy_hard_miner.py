@@ -51,6 +51,8 @@ class BatchEasyHardMiner(BaseTupleMiner):
             mine_func = self.get_min_per_row if self.distance.is_inverted else self.get_max_per_row
         elif strategy == self.EASY:
             mine_func = self.get_max_per_row if self.distance.is_inverted else self.get_min_per_row
+        else:
+            raise NotImplementedError
         
         return mine_func
 

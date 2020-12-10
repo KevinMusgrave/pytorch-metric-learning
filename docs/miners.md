@@ -89,6 +89,32 @@ miners.BaseSubsetBatchMiner(output_batch_size, **kwargs)
 
 * **output_batch_size**: An integer that is the size of the subset that the miner will output.
 
+
+## BatchEasyHardMiner
+
+[Improved Embeddings with Easy Positive Triplet Mining](http://openaccess.thecvf.com/content_WACV_2020/papers/Xuan_Improved_Embeddings_with_Easy_Positive_Triplet_Mining_WACV_2020_paper.pdf)
+
+```python
+miners.BatchEasyHardMiner(
+        pos_strategy=BatchEasyHardMiner.EASY,
+        neg_strategy=BatchEasyHardMiner.HARD,
+        allowed_pos_range=None,
+        allowed_neg_range=None,
+        **kwargs
+    ):
+```
+
+**Parameters**
+
+* **pos_strategy**: either BatchEasyHardMiner.EASY or BatchEasyHardMiner.HARD. During triplet creation it mines the easiest positive or hardest positive respectively. The easiest positive is defined as the positive closest to the anchor where distance/similarity does not violate ```allowed_pos_range```.
+* **neg_strategy**: either BatchEasyHardMiner.EASY or BatchEasyHardMiner.HARD. During triplet creation it mines the easiest negative or hardest negative triplet respectively.
+* **allowed_pos_range**: Optional tuple containing the allowed range of anchor-positive distances/similarties. For example, ```allowed_pos_range = (0.2, 1)```. If ```None```, then a range is not applied.
+* **allowed_neg_range**: Optional tuple containing the allowed range of anchor-negative distances/similarties.
+
+**Default distance**: 
+
+ - [```LpDistance(normalize_embeddings=True, p=2, power=1)```](distances.md#lpdistance)
+
 ## BatchHardMiner
 
 [In Defense of the Triplet Loss for Person Re-Identification](https://arxiv.org/pdf/1703.07737.pdf)
@@ -232,25 +258,6 @@ miners.TripletMarginMiner(margin=0.2, type_of_triplets="all", **kwargs)
 	* "hard" is a subset of "all", but the negative is closer to the anchor than the positive
 	* "semihard" is a subset of "all", but the negative is further from the anchor than the positive
 	* "easy" means all triplets that do **not** violate the margin.
-
-**Default distance**: 
-
- - [```LpDistance(normalize_embeddings=True, p=2, power=1)```](distances.md#lpdistance)
-
- ## BatchEasyHardMiner
-
-[Improved Embeddings with Easy Positive Triplet Mining](http://openaccess.thecvf.com/content_WACV_2020/papers/Xuan_Improved_Embeddings_with_Easy_Positive_Triplet_Mining_WACV_2020_paper.pdf)
-
-```python
-miners.BatchEasyHardMiner(positive_strategy=BatchEasyHardMiner.EASY,negative_strategy=BatchEasyHardMiner.HARD, allowed_positive_range=(0, Inf), allowed_negative_range=(0, Inf), **kwargs)
-```
-
-**Parameters**
-
-* **positive_strategy**: either BatchEasyHardMiner.EASY or BatchEasyHardMiner.HARD. During triplet creation it mines the easiest positive or hardest positive respectively. The easiest positive is defined as the positive closest to the anchor where distance/similarity does not violate `allowed_positive_range`.
-* **positive_strategy**: either BatchEasyHardMiner.EASY or BatchEasyHardMiner.HARD. During triplet creation it mines the easiest negative or hardest negative triplet respectively
-* **allowed_positive_range**: tuple containing the allowed range of anchor-positive distances/similarties
-* **allowed_negative_range**: tuple contains the allowed range of anchor-negative distances/similarties
 
 **Default distance**: 
 

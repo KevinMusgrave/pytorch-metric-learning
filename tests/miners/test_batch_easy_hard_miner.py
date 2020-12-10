@@ -15,8 +15,8 @@ class TestBatchEasyHardMiner(unittest.TestCase):
         self.gt = {
             "batch_hard_hard" : {
                             "miner" : BatchEasyHardMiner(distance=self.distance,
-                                                         positive_strategy=BatchEasyHardMiner.HARD, 
-                                                         negative_strategy=BatchEasyHardMiner.HARD),
+                                                         pos_strategy=BatchEasyHardMiner.HARD, 
+                                                         neg_strategy=BatchEasyHardMiner.HARD),
                             "pos_pair_dist" : 6,
                             "neg_pair_dist" : 1,
                             "expected" : {
@@ -28,8 +28,8 @@ class TestBatchEasyHardMiner(unittest.TestCase):
                         },
             "batch_easy_hard" : {
                             "miner" : BatchEasyHardMiner(distance=self.distance,
-                                                         positive_strategy=BatchEasyHardMiner.EASY, 
-                                                         negative_strategy=BatchEasyHardMiner.HARD),
+                                                         pos_strategy=BatchEasyHardMiner.EASY, 
+                                                         neg_strategy=BatchEasyHardMiner.HARD),
                             "pos_pair_dist" : 1,
                             "neg_pair_dist" : 1,
                             "expected" : {
@@ -42,8 +42,8 @@ class TestBatchEasyHardMiner(unittest.TestCase):
                         },
             "batch_hard_easy" : {
                             "miner" : BatchEasyHardMiner(distance=self.distance,
-                                                         positive_strategy=BatchEasyHardMiner.HARD, 
-                                                         negative_strategy=BatchEasyHardMiner.EASY),
+                                                         pos_strategy=BatchEasyHardMiner.HARD, 
+                                                         neg_strategy=BatchEasyHardMiner.EASY),
                             "pos_pair_dist" : 6,
                             "neg_pair_dist" : 8,
                             "expected" : {   
@@ -54,8 +54,8 @@ class TestBatchEasyHardMiner(unittest.TestCase):
                         },
             "batch_easy_easy" : {
                             "miner" : BatchEasyHardMiner(distance=self.distance,
-                                                         positive_strategy=BatchEasyHardMiner.EASY, 
-                                                         negative_strategy=BatchEasyHardMiner.EASY),
+                                                         pos_strategy=BatchEasyHardMiner.EASY, 
+                                                         neg_strategy=BatchEasyHardMiner.EASY),
                             "pos_pair_dist" : 1,
                             "neg_pair_dist" : 8,
                             "expected" : {   
@@ -67,10 +67,10 @@ class TestBatchEasyHardMiner(unittest.TestCase):
                         },
             "batch_easy_easy_with_min_val" : {
                             "miner" : BatchEasyHardMiner(distance=self.distance,
-                                                         positive_strategy=BatchEasyHardMiner.EASY, 
-                                                         negative_strategy=BatchEasyHardMiner.EASY,
-                                                         allowed_negative_range=[1,7],
-                                                         allowed_positive_range=[1,7]
+                                                         pos_strategy=BatchEasyHardMiner.EASY, 
+                                                         neg_strategy=BatchEasyHardMiner.EASY,
+                                                         allowed_neg_range=[1,7],
+                                                         allowed_pos_range=[1,7]
                                                          ),
                             "pos_pair_dist" : 1,
                             "neg_pair_dist" : 7,
@@ -93,6 +93,10 @@ class TestBatchEasyHardMiner(unittest.TestCase):
                 self.helper(a, p, n, cfg["expected"])
                 self.assertTrue(miner.pos_pair_dist == cfg["pos_pair_dist"])
                 self.assertTrue(miner.neg_pair_dist == cfg["neg_pair_dist"])
+
+
+    # def test_strategy_assertion(self):
+    #     self.assertRaises(NotImplementedError, lambda: BatchEasyHardMiner(pos_strategy="blah"))
     
     def helper(self, a, p, n, gt):
         self.assertTrue(torch.equal(a, gt["correct_a"]))

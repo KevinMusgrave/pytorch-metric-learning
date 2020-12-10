@@ -13,24 +13,28 @@ class BatchEasyHardMiner(BaseTupleMiner):
 
     def __init__(
         self,
-        positive_strategy=EASY,
-        negative_strategy=HARD,
-        allowed_positive_range=None,
-        allowed_negative_range=None,
+        pos_strategy=EASY,
+        neg_strategy=HARD,
+        allowed_pos_range=None,
+        allowed_neg_range=None,
         **kwargs
     ):
         super().__init__(**kwargs)
 
         if not (
-            positive_strategy in self.all_batch_mining_strategies
-            and negative_strategy in self.all_batch_mining_strategies
+            pos_strategy in self.all_batch_mining_strategies
+            and neg_strategy in self.all_batch_mining_strategies
         ):
-            raise NotImplementedError
+            raise NotImplementedError(
+                "pos_strategy and neg_strategy must be in {}".format(
+                    self.all_batch_mining_strategies
+                )
+            )
 
-        self.positive_strategy = positive_strategy
-        self.negative_strategy = negative_strategy
-        self.allowed_positive_range = allowed_positive_range
-        self.allowed_negative_range = allowed_negative_range
+        self.pos_strategy = pos_strategy
+        self.neg_strategy = neg_strategy
+        self.allowed_pos_range = allowed_pos_range
+        self.allowed_neg_range = allowed_neg_range
 
         self.add_to_recordable_attributes(
             list_of_names=[
@@ -44,16 +48,16 @@ class BatchEasyHardMiner(BaseTupleMiner):
     def mine(self, embeddings, labels, ref_emb, ref_labels):
         mat = self.distance(embeddings, ref_emb)
         a1_idx, p_idx, a2_idx, n_idx = lmu.get_all_pairs_indices(labels, ref_labels)
-        pos_func = self.get_mine_function(self.positive_strategy)
+        pos_func = self.get_mine_function(self.pos_strategy)
         neg_func = self.get_mine_function(
-            self.EASY if self.negative_strategy == self.HARD else self.HARD
+            self.EASY if self.neg_strategy == self.HARD else self.HARD
         )
 
         (positive_dists, positive_indices), a1p_keep = pos_func(
-            mat, a1_idx, p_idx, self.allowed_positive_range
+            mat, a1_idx, p_idx, self.allowed_pos_range
         )
         (negative_dists, negative_indices), a2n_keep = neg_func(
-            mat, a2_idx, n_idx, self.allowed_negative_range
+            mat, a2_idx, n_idx, self.allowed_neg_range
         )
 
         a_keep_idx = torch.where(a1p_keep & a2n_keep)
@@ -96,8 +100,7 @@ class BatchEasyHardMiner(BaseTupleMiner):
         mask[anchor_idx, other_idx] = 1
 
         if val_range is not None:
-            condition = (mat > val_range[1]) | (mat < val_range[0])
-            mask[condition] = pos_inf
+            mask[(mat > val_range[1]) | (mat < val_range[0])] = pos_inf
 
         non_inf_rows = torch.any(mask != pos_inf, dim=1)
         mat = mat.clone()
@@ -108,18 +111,19 @@ class BatchEasyHardMiner(BaseTupleMiner):
         if self.collect_stats:
             with torch.no_grad():
                 triplet_func = self.get_func_for_stats(True)
-                pos_func = self.get_func_for_stats(self.positive_strategy == self.HARD)
-                neg_func = self.get_func_for_stats(self.negative_strategy == self.EASY)
+                pos_func = self.get_func_for_stats(self.pos_strategy == self.HARD)
+                neg_func = self.get_func_for_stats(self.neg_strategy == self.EASY)
 
                 len_pd = len(positive_dists)
                 len_pn = len(negative_dists)
                 if len_pd > 0 and len_pn > 0:
-                    self.triplet_dist = triplet_func(positive_dists - negative_dists).item()
+                    self.triplet_dist = triplet_func(
+                        positive_dists - negative_dists
+                    ).item()
                 if len_pd > 0:
                     self.pos_pair_dist = pos_func(positive_dists).item()
                 if len_pn > 0:
                     self.neg_pair_dist = neg_func(negative_dists).item()
-
 
     def get_func_for_stats(self, min_if_inverted):
         if min_if_inverted:

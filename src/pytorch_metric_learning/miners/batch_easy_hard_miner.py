@@ -26,8 +26,8 @@ class BatchEasyHardMiner(BaseTupleMiner):
             and neg_strategy in self.all_batch_mining_strategies
         ):
             raise NotImplementedError(
-                "pos_strategy and neg_strategy must be in {}".format(
-                    self.all_batch_mining_strategies
+                "\npos_strategy must be either \"{0}\"\nneg_strategy must be either \"{0}\"".format(
+                    "\" or \"".join(self.all_batch_mining_strategies)
                 )
             )
 

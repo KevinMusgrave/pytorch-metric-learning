@@ -95,8 +95,8 @@ class TestBatchEasyHardMiner(unittest.TestCase):
                 self.assertTrue(miner.neg_pair_dist == cfg["neg_pair_dist"])
 
 
-    # def test_strategy_assertion(self):
-    #     self.assertRaises(NotImplementedError, lambda: BatchEasyHardMiner(pos_strategy="blah"))
+    def test_strategy_assertion(self):
+        self.assertRaises(NotImplementedError, lambda: BatchEasyHardMiner(pos_strategy="blah"))
     
     def helper(self, a, p, n, gt):
         self.assertTrue(torch.equal(a, gt["correct_a"]))

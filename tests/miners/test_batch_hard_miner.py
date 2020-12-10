@@ -37,8 +37,8 @@ class TestBatchHardMiner(unittest.TestCase):
             embeddings = torch.arange(9).type(dtype).unsqueeze(1).to(TEST_DEVICE)
             a, p, n = self.dist_miner(embeddings, self.labels)
             self.helper(a, p, n)
-            self.assertTrue(self.dist_miner.hardest_pos_pair_dist == 6)
-            self.assertTrue(self.dist_miner.hardest_neg_pair_dist == 1)
+            self.assertTrue(self.dist_miner.pos_pair_dist == 6)
+            self.assertTrue(self.dist_miner.neg_pair_dist == 1)
 
     def test_normalized_dist_mining(self):
         for dtype in TEST_DTYPES:
@@ -48,21 +48,21 @@ class TestBatchHardMiner(unittest.TestCase):
             ).to(TEST_DEVICE)
             a, p, n = self.normalized_dist_miner(embeddings, self.labels)
             self.helper(a, p, n)
-            correct_hardest_pos_pair_dist = torch.sqrt(
+            correct_pos_pair_dist = torch.sqrt(
                 torch.sum((embeddings[2] - embeddings[8]) ** 2)
             ).item()
-            correct_hardest_neg_pair_dist = torch.sqrt(
+            correct_neg_pair_dist = torch.sqrt(
                 torch.sum((embeddings[1] - embeddings[2]) ** 2)
             ).item()
             places = 2 if dtype == torch.float16 else 5
             self.assertAlmostEqual(
-                self.normalized_dist_miner.hardest_pos_pair_dist,
-                correct_hardest_pos_pair_dist,
+                self.normalized_dist_miner.pos_pair_dist,
+                correct_pos_pair_dist,
                 places=places,
             )
             self.assertAlmostEqual(
-                self.normalized_dist_miner.hardest_neg_pair_dist,
-                correct_hardest_neg_pair_dist,
+                self.normalized_dist_miner.neg_pair_dist,
+                correct_neg_pair_dist,
                 places=places,
             )
 
@@ -74,21 +74,21 @@ class TestBatchHardMiner(unittest.TestCase):
             ).to(TEST_DEVICE)
             a, p, n = self.normalized_dist_miner_squared(embeddings, self.labels)
             self.helper(a, p, n)
-            correct_hardest_pos_pair_dist = torch.sum(
+            correct_pos_pair_dist = torch.sum(
                 (embeddings[2] - embeddings[8]) ** 2
             ).item()
-            correct_hardest_neg_pair_dist = torch.sum(
+            correct_neg_pair_dist = torch.sum(
                 (embeddings[1] - embeddings[2]) ** 2
             ).item()
             places = 2 if dtype == torch.float16 else 5
             self.assertAlmostEqual(
-                self.normalized_dist_miner_squared.hardest_pos_pair_dist,
-                correct_hardest_pos_pair_dist,
+                self.normalized_dist_miner_squared.pos_pair_dist,
+                correct_pos_pair_dist,
                 places=places,
             )
             self.assertAlmostEqual(
-                self.normalized_dist_miner_squared.hardest_neg_pair_dist,
-                correct_hardest_neg_pair_dist,
+                self.normalized_dist_miner_squared.neg_pair_dist,
+                correct_neg_pair_dist,
                 places=places,
             )
 
@@ -102,12 +102,12 @@ class TestBatchHardMiner(unittest.TestCase):
             self.helper(a, p, n)
             places = 2 if dtype == torch.float16 else 5
             self.assertAlmostEqual(
-                self.sim_miner.hardest_pos_pair_dist,
+                self.sim_miner.pos_pair_dist,
                 np.cos(np.radians(120)),
                 places=places,
             )
             self.assertAlmostEqual(
-                self.sim_miner.hardest_neg_pair_dist,
+                self.sim_miner.neg_pair_dist,
                 np.cos(np.radians(20)),
                 places=places,
             )
@@ -132,6 +132,6 @@ class TestBatchHardMiner(unittest.TestCase):
                 self.assertTrue(len(a) == 0)
                 self.assertTrue(len(p) == 0)
                 self.assertTrue(len(n) == 0)
-                self.assertTrue(miner.hardest_pos_pair_dist == 0)
-                self.assertTrue(miner.hardest_neg_pair_dist == 0)
-                self.assertTrue(miner.hardest_triplet_dist == 0)
+                self.assertTrue(miner.pos_pair_dist == 0)
+                self.assertTrue(miner.neg_pair_dist == 0)
+                self.assertTrue(miner.triplet_dist == 0)

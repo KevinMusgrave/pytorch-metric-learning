@@ -96,6 +96,8 @@ miners.BaseSubsetBatchMiner(output_batch_size, **kwargs)
 
 Returns positive and negative pairs according to the specified ```pos_strategy``` and ```neg_strategy```.
 
+To implement the loss function described in the paper, use this miner in combination with [```NTXentLoss(temperature=1)```](losses.md#ntxentloss).
+
 ```python
 miners.BatchEasyHardMiner(
         pos_strategy=BatchEasyHardMiner.EASY,

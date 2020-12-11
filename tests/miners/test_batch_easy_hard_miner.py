@@ -32,9 +32,7 @@ class TestBatchEasyHardMiner(unittest.TestCase):
                 "easiest_neg_pair": 3,
                 "hardest_neg_pair": 2,
                 "expected": {
-                    "correct_a": torch.LongTensor([0, 7, 8]).to(
-                        TEST_DEVICE
-                    ),
+                    "correct_a": torch.LongTensor([0, 7, 8]).to(TEST_DEVICE),
                     "correct_p": [
                         torch.LongTensor([1, 6, 6]).to(TEST_DEVICE),
                         torch.LongTensor([1, 8, 6]).to(TEST_DEVICE),
@@ -58,12 +56,8 @@ class TestBatchEasyHardMiner(unittest.TestCase):
                 "easiest_neg_pair": 7,
                 "hardest_neg_pair": 4,
                 "expected": {
-                    "correct_a": torch.LongTensor([0, 1, 6, 7, 8]).to(
-                        TEST_DEVICE
-                    ),
-                    "correct_p": [
-                        torch.LongTensor([4, 4, 2, 2, 2]).to(TEST_DEVICE)
-                    ],
+                    "correct_a": torch.LongTensor([0, 1, 6, 7, 8]).to(TEST_DEVICE),
+                    "correct_p": [torch.LongTensor([4, 4, 2, 2, 2]).to(TEST_DEVICE)],
                     "correct_n": [
                         torch.LongTensor([5, 5, 1, 1, 1]).to(TEST_DEVICE),
                     ],
@@ -319,15 +313,11 @@ class TestBatchEasyHardMiner(unittest.TestCase):
         )
         self.assertRaises(
             ValueError,
-            lambda: BatchEasyHardMiner(
-                pos_strategy="all", neg_strategy="semihard"
-            ),
+            lambda: BatchEasyHardMiner(pos_strategy="all", neg_strategy="semihard"),
         )
         self.assertRaises(
             ValueError,
-            lambda: BatchEasyHardMiner(
-                pos_strategy="semihard", neg_strategy="all"
-            ),
+            lambda: BatchEasyHardMiner(pos_strategy="semihard", neg_strategy="all"),
         )
 
     def helper(self, a1, p, a2, n, gt):

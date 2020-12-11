@@ -38,14 +38,12 @@
 
 ## News
 
+**December 10**: v0.9.95 includes a new tuple miner, [BatchEasyHardMiner](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#batcheasyhardminer). [Release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.95)
+
 **November 6**: v0.9.94 has minor bug fixes and improvements. [Release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.94)
 
 **October 6**: v0.9.93 is a small update: 
  - ```get_random_triplet_indices``` has been optimized, so if you were using DistanceWeightedMiner, or if you ever set the ```triplets_per_anchor``` argument to something other than ```"all"``` anywhere in your code, it should run a lot faster now.
-
-**September 14**: v0.9.92 comes with new features ([release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.92)). The main highlights are:
-* utils.distributed for multiprocessing.
-* Improvements to CrossBatchMemory which make it usable in MoCo-style self-supervised training. Check out the [MoCo on CIFAR10](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples#simple-examples) notebook to see how it works.
 
 ## Documentation
 - [**View the documentation here**](https://kevinmusgrave.github.io/pytorch-metric-learning/)
@@ -360,11 +358,12 @@ guide. Proceed to `pip install -e .[dev]` afterwards.
 Thanks to the contributors who made pull requests!
 
 #### Algorithm implementations + useful features
-- [AlenUbuntu](https://github.com/AlenUbuntu)
-	- [CircleLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#circleloss)
 - [marijnl](https://github.com/marijnl)
+	- [BatchEasyHardMiner](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#batcheasyhardminer)
     - [TwoStreamMetricLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#twostreammetricloss)
     - [GlobalTwoStreamEmbeddingSpaceTester](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#globaltwostreamembeddingspacetester)
+- [AlenUbuntu](https://github.com/AlenUbuntu)
+	- [CircleLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#circleloss)
 - [btseytlin](https://github.com/btseytlin)
     - ```get_nearest_neighbors``` in [InferenceModel](https://kevinmusgrave.github.io/pytorch-metric-learning/inference_models)
 - [JohnGiorgi](https://github.com/JohnGiorgi)
@@ -381,6 +380,8 @@ Thanks to the contributors who made pull requests!
 #### General improvements and bug fixes
 - [wconnell](https://github.com/wconnell)
 - [marijnl](https://github.com/marijnl)
+- [thinline72](https://github.com/thinline72)
+- [tpanum](https://github.com/tpanum)
 - [fralik](https://github.com/fralik)
 - [JoOkuma](https://github.com/JoOkuma)
 

@@ -38,7 +38,7 @@
 
 ## News
 
-**December 10**: v0.9.95 includes a new tuple miner, [BatchEasyHardMiner](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#batcheasyhardminer). [Release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.95)
+**December 10**: v0.9.95 includes a new tuple miner, [BatchEasyHardMiner](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#batcheasyhardminer). See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.95)
 
 **November 6**: v0.9.94 has minor bug fixes and improvements. [Release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.94)
 

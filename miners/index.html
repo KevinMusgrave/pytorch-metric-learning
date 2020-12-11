@@ -285,6 +285,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#batcheasyhardminer" class="md-nav__link">
+    BatchEasyHardMiner
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#batchhardminer" class="md-nav__link">
     BatchHardMiner
   </a>
@@ -593,6 +600,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#batcheasyhardminer" class="md-nav__link">
+    BatchEasyHardMiner
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#batchhardminer" class="md-nav__link">
     BatchHardMiner
   </a>
@@ -759,9 +773,51 @@
 <ul>
 <li><strong>output_batch_size</strong>: An integer that is the size of the subset that the miner will output.</li>
 </ul>
+<h2 id="batcheasyhardminer">BatchEasyHardMiner<a class="headerlink" href="#batcheasyhardminer" title="Permanent link">&para;</a></h2>
+<p><a href="http://openaccess.thecvf.com/content_WACV_2020/papers/Xuan_Improved_Embeddings_with_Easy_Positive_Triplet_Mining_WACV_2020_paper.pdf">Improved Embeddings with Easy Positive Triplet Mining</a></p>
+<p>Returns positive and negative pairs according to the specified <code>pos_strategy</code> and <code>neg_strategy</code>.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">miners</span><span class="o">.</span><span class="n">BatchEasyHardMiner</span><span class="p">(</span>
+        <span class="n">pos_strategy</span><span class="o">=</span><span class="n">BatchEasyHardMiner</span><span class="o">.</span><span class="n">EASY</span><span class="p">,</span>
+        <span class="n">neg_strategy</span><span class="o">=</span><span class="n">BatchEasyHardMiner</span><span class="o">.</span><span class="n">SEMIHARD</span><span class="p">,</span>
+        <span class="n">allowed_pos_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">allowed_neg_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+</code></pre></div>
+
+
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>pos_strategy</strong>: one of the following:<ul>
+<li><code>BatchEasyHardMiner.HARD</code> or <code>"hard"</code>: returns the hardest positive sample per anchor.</li>
+<li><code>BatchEasyHardMiner.SEMIHARD</code> or <code>"semihard"</code>: returns the hardest positive sample per anchor, such that it is closer than the selected negative.</li>
+<li><code>BatchEasyHardMiner.EASY</code> or <code>"easy"</code>: returns the easiest positive sample per anchor</li>
+<li><code>BatchEasyHardMiner.ALL</code> or <code>"all"</code>: returns all possible positive pairs</li>
+</ul>
+</li>
+<li><strong>neg_strategy</strong>: one of the following:<ul>
+<li><code>BatchEasyHardMiner.HARD</code> or <code>"hard"</code>: returns the hardest negative sample per anchor.</li>
+<li><code>BatchEasyHardMiner.SEMIHARD</code> or <code>"semihard"</code>: returns the hardest negative sample per anchor, such that it is further than the selected positive.</li>
+<li><code>BatchEasyHardMiner.EASY</code> or <code>"easy"</code>: returns the easiest negative sample per anchor</li>
+<li><code>BatchEasyHardMiner.ALL</code> or <code>"all"</code>: returns all possible negative pairs</li>
+</ul>
+</li>
+<li><strong>allowed_pos_range</strong>: Optional tuple containing the allowed range of anchor-positive distances/similarties. For example, <code>allowed_pos_range = (0.2, 1)</code>. If <code>None</code>, then a range is not applied.</li>
+<li><strong>allowed_neg_range</strong>: Optional tuple containing the allowed range of anchor-negative distances/similarties. For example, <code>allowed_neg_range = (0.2, 1)</code>. If <code>None</code>, then a range is not applied.</li>
+</ul>
+<p><strong>Restrictions</strong></p>
+<ul>
+<li><code>pos_strategy</code> and <code>neg_strategy</code> cannot both be set to <code>"semihard"</code></li>
+<li>If <code>pos_strategy</code> is set to <code>"semihard"</code>, then <code>neg_strategy</code> cannot be set to <code>"all"</code>, and vice versa.</li>
+</ul>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li><a href="../distances/#lpdistance"><code>LpDistance(normalize_embeddings=True, p=2, power=1)</code></a></li>
+</ul>
 <h2 id="batchhardminer">BatchHardMiner<a class="headerlink" href="#batchhardminer" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1703.07737.pdf">In Defense of the Triplet Loss for Person Re-Identification</a></p>
 <p>For each element in the batch, this miner will find the hardest positive and hardest negative, and use those to form a single triplet. So for a batch size of N, this miner will output N triplets.</p>
+<p>This miner is equivalent to using <code>miners.BatchEasyHardMiner(pos_strategy="hard", neg_strategy="hard")</code>, and converting the output pairs to triplets.</p>
 <div class="codehilite"><pre><span></span><code><span class="n">miners</span><span class="o">.</span><span class="n">BatchHardMiner</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 

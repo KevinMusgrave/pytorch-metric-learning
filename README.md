@@ -239,7 +239,8 @@ conda install pytorch-metric-learning -c metric-learning -c pytorch
 ### [Miners](https://kevinmusgrave.github.io/pytorch-metric-learning/miners)
 | Name | Reference Papers |
 |---|---|
-| [**AngularMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#angularminer) | 
+| [**AngularMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#angularminer) |
+| [**BatchEasyHardMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#batcheasyhardminer) | [Improved Embeddings with Easy Positive Triplet Mining](http://openaccess.thecvf.com/content_WACV_2020/papers/Xuan_Improved_Embeddings_with_Easy_Positive_Triplet_Mining_WACV_2020_paper.pdf) 
 | [**BatchHardMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#batchhardminer) | [In Defense of the Triplet Loss for Person Re-Identification](https://arxiv.org/pdf/1703.07737.pdf)
 | [**DistanceWeightedMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#distanceweightedminer) | [Sampling Matters in Deep Embedding Learning](https://arxiv.org/pdf/1706.07567.pdf)
 | [**EmbeddingsAlreadyPackagedAsTriplets**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#embeddingsalreadypackagedastriplets) | 

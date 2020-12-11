@@ -3,9 +3,6 @@ import torch
 from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
 
 
-# https://github.com/littleredxh/EasyPositiveHardNegative
-
-
 class BatchEasyHardMiner(BaseTupleMiner):
     HARD = "hard"
     SEMIHARD = "semihard"

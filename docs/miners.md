@@ -94,10 +94,12 @@ miners.BaseSubsetBatchMiner(output_batch_size, **kwargs)
 
 [Improved Embeddings with Easy Positive Triplet Mining](http://openaccess.thecvf.com/content_WACV_2020/papers/Xuan_Improved_Embeddings_with_Easy_Positive_Triplet_Mining_WACV_2020_paper.pdf)
 
+Returns positive and negative pairs according to the specified ```pos_strategy``` and ```neg_strategy```.
+
 ```python
 miners.BatchEasyHardMiner(
         pos_strategy=BatchEasyHardMiner.EASY,
-        neg_strategy=BatchEasyHardMiner.HARD,
+        neg_strategy=BatchEasyHardMiner.SEMIHARD,
         allowed_pos_range=None,
         allowed_neg_range=None,
         **kwargs
@@ -106,10 +108,23 @@ miners.BatchEasyHardMiner(
 
 **Parameters**
 
-* **pos_strategy**: either BatchEasyHardMiner.EASY or BatchEasyHardMiner.HARD. During triplet creation it mines the easiest positive or hardest positive respectively. The easiest positive is defined as the positive closest to the anchor where distance/similarity does not violate ```allowed_pos_range```.
-* **neg_strategy**: either BatchEasyHardMiner.EASY or BatchEasyHardMiner.HARD. During triplet creation it mines the easiest negative or hardest negative triplet respectively.
+* **pos_strategy**: one of the following:
+     * ```BatchEasyHardMiner.HARD``` or ```"hard"```: returns the hardest positive sample per anchor.
+     * ```BatchEasyHardMiner.SEMIHARD``` or ```"semihard"```: returns the hardest positive sample per anchor, such that it is closer than the selected negative.
+     * ```BatchEasyHardMiner.EASY``` or ```"easy"```: returns the easiest positive sample per anchor
+     * ```BatchEasyHardMiner.ALL``` or ```"all"```: returns all possible positive pairs
+* **neg_strategy**: one of the following:
+     * ```BatchEasyHardMiner.HARD``` or ```"hard"```: returns the hardest negative sample per anchor.
+     * ```BatchEasyHardMiner.SEMIHARD``` or ```"semihard"```: returns the hardest negative sample per anchor, such that it is further than the selected positive.
+     * ```BatchEasyHardMiner.EASY``` or ```"easy"```: returns the easiest negative sample per anchor
+     * ```BatchEasyHardMiner.ALL``` or ```"all"```: returns all possible negative pairs
 * **allowed_pos_range**: Optional tuple containing the allowed range of anchor-positive distances/similarties. For example, ```allowed_pos_range = (0.2, 1)```. If ```None```, then a range is not applied.
-* **allowed_neg_range**: Optional tuple containing the allowed range of anchor-negative distances/similarties.
+* **allowed_neg_range**: Optional tuple containing the allowed range of anchor-negative distances/similarties. For example, ```allowed_neg_range = (0.2, 1)```. If ```None```, then a range is not applied.
+
+**Restrictions**
+
+* ```pos_strategy``` and ```neg_strategy``` cannot both be set to ```"semihard"```
+* If ```pos_strategy``` is set to ```"semihard"```, then ```neg_strategy``` cannot be set to ```"all"```, and vice versa.
 
 **Default distance**: 
 
@@ -120,6 +135,8 @@ miners.BatchEasyHardMiner(
 [In Defense of the Triplet Loss for Person Re-Identification](https://arxiv.org/pdf/1703.07737.pdf)
 
 For each element in the batch, this miner will find the hardest positive and hardest negative, and use those to form a single triplet. So for a batch size of N, this miner will output N triplets.
+
+This miner is equivalent to using ```miners.BatchEasyHardMiner(pos_strategy="hard", neg_strategy="hard")```, and converting the output pairs to triplets.
 
 ```python
 miners.BatchHardMiner(**kwargs)

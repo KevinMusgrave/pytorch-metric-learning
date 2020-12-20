@@ -1068,7 +1068,10 @@
 
 
 <p><strong>Equation</strong>:</p>
-<p><img alt="contrastive_loss_equation" src="../imgs/contrastive_loss_equation.png" style="height:30px" /></p>
+<p>If using a distance metric like <a href="../distances/#lpdistance">LpDistance</a>, the loss is:</p>
+<p><img alt="contrastive_loss_equation" src="../imgs/contrastive_loss_equation.png" style="height:37px" /></p>
+<p>If using a similarity metric like <a href="../distances/#cosinesimilarity">CosineSimilarity</a>, the loss is:</p>
+<p><img alt="contrastive_loss_similarity_equation" src="../imgs/contrastive_loss_similarity_equation.png" style="height:35px" /></p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>pos_margin</strong>: The distance (or similarity) over (under) which positive pairs will contribute to the loss.</li>

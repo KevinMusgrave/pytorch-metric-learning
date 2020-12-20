@@ -193,7 +193,13 @@ losses.ContrastiveLoss(pos_margin=0, neg_margin=1, **kwargs):
 
 **Equation**:
 
-![contrastive_loss_equation](imgs/contrastive_loss_equation.png){: style="height:30px"}
+If using a distance metric like [LpDistance](distances.md#lpdistance), the loss is:
+
+![contrastive_loss_equation](imgs/contrastive_loss_equation.png){: style="height:37px"}
+
+If using a similarity metric like [CosineSimilarity](distances.md#cosinesimilarity), the loss is:
+
+![contrastive_loss_similarity_equation](imgs/contrastive_loss_similarity_equation.png){: style="height:35px"}
 
 **Parameters**:
 

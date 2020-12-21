@@ -19,21 +19,30 @@ This will print out a dictionary of accuracy metrics, per dataset split. You'll 
 ```python
 {"train": {"AMI_level0": 0.53, ...}, "val": {"AMI_level0": 0.44, ...}}
 ```
-Each of the accuracy metric names is appended with ```level0```, which refers to the 0th label hierarchy level (see the documentation for [BaseTester](#basetester)). This is only relevant if you're dealing with multi-label datasets. 
+Each of the accuracy metric names is appended with ```level0```, which refers to the 0th label hierarchy level (see the documentation for [BaseTester](#basetester)). This is only relevant if you're dealing with multi-label datasets.
 
 For an explanation of the default accuracy metrics, see the [AccuracyCalculator documentation](accuracy_calculation.md#explanations-of-the-default-accuracy-metrics).
+
+### Testing splits
+
+By default, every dataset in dataset_dict will be evaluated using itself as the query and reference (on which to find nearest neighbors) sets.
+More flexibility is allowed with the optional argument ```splits_to_eval``` taken by test().
+```splits_to_eval``` is a list of ```(query_split, [list_of_reference_splits])``` tuples. Some examples:
+
+- The default ```None``` resolves to: ```splits_to_eval = [('dataset_a', ['dataset_a']), ('dataset_b', ['dataset_b'])]```
+- A as the query, A + training set as the reference: ```splits_to_eval = [('dataset_a', ['dataset_a', 'train'])]```
+- If your test set is already split into reference and query sets: ```splits_to_eval = [('query_set', ['reference_set'])]```
 
 
 ## BaseTester
 All trainers extend this class and therefore inherit its ```__init__``` arguments.
 ```python
-testers.BaseTester(reference_set="compared_to_self", 
-					normalize_embeddings=True, 
-					use_trunk_output=False, 
-                    batch_size=32, 
-                    dataloader_num_workers=32, 
-                    pca=None, 
-                    data_device=None, 
+testers.BaseTester(normalize_embeddings=True,
+					use_trunk_output=False,
+                    batch_size=32,
+                    dataloader_num_workers=32,
+                    pca=None,
+                    data_device=None,
 					data_and_label_getter=None,
                     label_hierarchy_level=0,
                     end_of_testing_hook=None,
@@ -46,17 +55,13 @@ testers.BaseTester(reference_set="compared_to_self",
 
 **Parameters**:
 
-* **reference_set**: Must be one of the following:
-	* "compared_to_self": each dataset split will refer to itself to find nearest neighbors.
-	* "compared_to_sets_combined": each dataset split will refer to all provided splits to find nearest neighbors.
- 	* "compared_to_training_set": each dataset will refer to the training set to find nearest neighbors.
 * **normalize_embeddings**: If True, embeddings will be normalized to Euclidean norm of 1 before nearest neighbors are computed.
 * **use_trunk_output**: If True, the output of the trunk_model will be used to compute nearest neighbors, i.e. the output of the embedder model will be ignored.
 * **batch_size**: How many dataset samples to process at each iteration when computing embeddings.
 * **dataloader_num_workers**: How many processes the dataloader will use.
 * **pca**: The number of dimensions that your embeddings will be reduced to, using PCA. The default is None, meaning PCA will not be applied.
 * **data_device**: Which gpu to use for the loaded dataset samples. If None, then the gpu or cpu will be used (whichever is available).
-* **data_and_label_getter**: A function that takes the output of your dataset's ```__getitem__``` function, and returns a tuple of (data, labels). If None, then it is assumed that ```__getitem__``` returns (data, labels). 
+* **data_and_label_getter**: A function that takes the output of your dataset's ```__getitem__``` function, and returns a tuple of (data, labels). If None, then it is assumed that ```__getitem__``` returns (data, labels).
 * **label_hierarchy_level**: If each sample in your dataset has multiple labels, then this integer argument can be used to select which "level" to use. This assumes that your labels are "2-dimensional" with shape (num_samples, num_hierarchy_levels). Leave this at the default value, 0, if your data does not have multiple labels per sample.
 * **end_of_testing_hook**: This is an optional function that has one input argument (the tester object) and performs some action (e.g. logging data) at the end of testing.
 	* You'll probably want to access the accuracy metrics, which are stored in ```tester.all_accuracies```. This is a nested dictionary with the following format: ```tester.all_accuracies[split_name][metric_name] = metric_value```
@@ -84,13 +89,13 @@ testers.GlobalEmbeddingSpaceTester(*args, **kwargs)
 This assumes there is a label hierarchy. For each sample, the search space is narrowed by only looking at sibling samples, i.e. samples with the same parent label. For example, consider a dataset with 4 fine-grained classes {cat, dog, car, truck}, and 2 coarse-grained classes {animal, vehicle}. The nearest neighbor search for cats and dogs will consist of animals, and the nearest-neighbor search for cars and trucks will consist of vehicles.
 ```python
 testers.WithSameParentLabelTester(*args, **kwargs)
-``` 
+```
 
 ## GlobalTwoStreamEmbeddingSpaceTester
 This is the corresponding tester for [TwoStreamMetricLoss](trainers.md#twostreammetricloss). The supplied **dataset** must return ```(anchor, positive, label)```.
 ```python
 testers.GlobalTwoStreamEmbeddingSpaceTester(*args, **kwargs)
-``` 
+```
 **Requirements**:
 
-* **reference_set**: This must be left at the default value of ```"compared_to_self"```.
+This tester only supports the default value for ```splits_to_eval```: each split is used for both query and reference

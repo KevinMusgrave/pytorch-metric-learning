@@ -18,7 +18,7 @@ class DistanceWeightedMiner(BaseTupleMiner):
         )
 
     def mine(self, embeddings, labels, ref_emb, ref_labels):
-        dtype, device = embeddings.dtype, embeddings.device
+        dtype = embeddings.dtype
         d = float(embeddings.size(1))
         mat = self.distance(embeddings, ref_emb)
 

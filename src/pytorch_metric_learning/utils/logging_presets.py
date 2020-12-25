@@ -69,7 +69,7 @@ class HookContainer:
         patience=None,
         test_collate_fn=None,
     ):
-        if not self.primary_metric in tester.accuracy_calculator.get_curr_metrics():
+        if self.primary_metric not in tester.accuracy_calculator.get_curr_metrics():
             raise ValueError(
                 "HookContainer `primary_metric` must be one of: {}".format(
                     tester.accuracy_calculator.get_curr_metrics()

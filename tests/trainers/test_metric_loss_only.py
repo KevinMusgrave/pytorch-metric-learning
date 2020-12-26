@@ -79,130 +79,155 @@ class TestMetricLossOnly(unittest.TestCase):
         val_dataset = torch.utils.data.Subset(val_dataset, subset_idx)
 
         for dtype in TEST_DTYPES:
-            from temp_cifar_resnet_for_pytorch_metric_learning_test import resnet
+            for splits_to_eval in [
+                None,
+                [("train", ["train", "val"]), ("val", ["train", "val"])],
+            ]:
+                from temp_cifar_resnet_for_pytorch_metric_learning_test import resnet
 
-            model = torch.nn.DataParallel(resnet.resnet20())
-            checkpoint = torch.load(
-                "{}/pretrained_models/resnet20-12fca82f.th".format(cifar_resnet_folder),
-                map_location=TEST_DEVICE,
-            )
-            model.load_state_dict(checkpoint["state_dict"])
-            model.module.linear = c_f.Identity()
-            if TEST_DEVICE == torch.device("cpu"):
-                model = model.module
-            model = model.to(TEST_DEVICE).type(dtype)
+                model = torch.nn.DataParallel(resnet.resnet20())
+                checkpoint = torch.load(
+                    "{}/pretrained_models/resnet20-12fca82f.th".format(
+                        cifar_resnet_folder
+                    ),
+                    map_location=TEST_DEVICE,
+                )
+                model.load_state_dict(checkpoint["state_dict"])
+                model.module.linear = c_f.Identity()
+                if TEST_DEVICE == torch.device("cpu"):
+                    model = model.module
+                model = model.to(TEST_DEVICE).type(dtype)
 
-            optimizer = torch.optim.Adam(
-                model.parameters(),
-                lr=0.0002,
-                weight_decay=0.0001,
-                eps=1e-04,
-            )
+                optimizer = torch.optim.Adam(
+                    model.parameters(),
+                    lr=0.0002,
+                    weight_decay=0.0001,
+                    eps=1e-04,
+                )
 
-            batch_size = 32
-            model_dict = {"trunk": model}
-            optimizer_dict = {"trunk_optimizer": optimizer}
-            loss_fn_dict = {"metric_loss": loss_fn}
-            sampler = MPerClassSampler(
-                np.array(train_dataset.dataset.targets)[subset_idx],
-                m=4,
-                batch_size=32,
-                length_before_new_iter=len(train_dataset),
-            )
+                batch_size = 32
+                iterations_per_epoch = None if splits_to_eval is None else 1
+                model_dict = {"trunk": model}
+                optimizer_dict = {"trunk_optimizer": optimizer}
+                loss_fn_dict = {"metric_loss": loss_fn}
+                sampler = MPerClassSampler(
+                    np.array(train_dataset.dataset.targets)[subset_idx],
+                    m=4,
+                    batch_size=32,
+                    length_before_new_iter=len(train_dataset),
+                )
 
-            record_keeper, _, _ = logging_presets.get_record_keeper(
-                logs_folder, tensorboard_folder
-            )
-            hooks = logging_presets.get_hook_container(
-                record_keeper, primary_metric="precision_at_1"
-            )
-            dataset_dict = {"train": train_dataset_for_eval, "val": val_dataset}
+                record_keeper, _, _ = logging_presets.get_record_keeper(
+                    logs_folder, tensorboard_folder
+                )
+                hooks = logging_presets.get_hook_container(
+                    record_keeper, primary_metric="precision_at_1"
+                )
+                dataset_dict = {"train": train_dataset_for_eval, "val": val_dataset}
 
-            tester = GlobalEmbeddingSpaceTester(
-                end_of_testing_hook=hooks.end_of_testing_hook,
-                accuracy_calculator=accuracy_calculator.AccuracyCalculator(
-                    include=("precision_at_1", "AMI"), k=1
-                ),
-                data_device=TEST_DEVICE,
-                dtype=dtype,
-                dataloader_num_workers=32,
-            )
+                tester = GlobalEmbeddingSpaceTester(
+                    end_of_testing_hook=hooks.end_of_testing_hook,
+                    accuracy_calculator=accuracy_calculator.AccuracyCalculator(
+                        include=("precision_at_1", "AMI"), k=1
+                    ),
+                    data_device=TEST_DEVICE,
+                    dtype=dtype,
+                    dataloader_num_workers=32,
+                )
 
-            end_of_epoch_hook = hooks.end_of_epoch_hook(
-                tester, dataset_dict, model_folder, test_interval=1, patience=1
-            )
+                end_of_epoch_hook = hooks.end_of_epoch_hook(
+                    tester,
+                    dataset_dict,
+                    model_folder,
+                    test_interval=1,
+                    patience=1,
+                    splits_to_eval=splits_to_eval,
+                )
 
-            trainer = MetricLossOnly(
-                models=model_dict,
-                optimizers=optimizer_dict,
-                batch_size=batch_size,
-                loss_funcs=loss_fn_dict,
-                mining_funcs={},
-                dataset=train_dataset,
-                sampler=sampler,
-                data_device=TEST_DEVICE,
-                dtype=dtype,
-                dataloader_num_workers=32,
-                freeze_trunk_batchnorm=True,
-                end_of_iteration_hook=hooks.end_of_iteration_hook,
-                end_of_epoch_hook=end_of_epoch_hook,
-            )
+                trainer = MetricLossOnly(
+                    models=model_dict,
+                    optimizers=optimizer_dict,
+                    batch_size=batch_size,
+                    loss_funcs=loss_fn_dict,
+                    mining_funcs={},
+                    dataset=train_dataset,
+                    sampler=sampler,
+                    data_device=TEST_DEVICE,
+                    dtype=dtype,
+                    dataloader_num_workers=32,
+                    iterations_per_epoch=iterations_per_epoch,
+                    freeze_trunk_batchnorm=True,
+                    end_of_iteration_hook=hooks.end_of_iteration_hook,
+                    end_of_epoch_hook=end_of_epoch_hook,
+                )
 
-            num_epochs = 3
-            trainer.train(num_epochs=num_epochs)
-            best_epoch, best_accuracy = hooks.get_best_epoch_and_accuracy(tester, "val")
-            self.assertTrue(best_epoch == 3)
-            self.assertTrue(best_accuracy > 0.2)
+                num_epochs = 3
+                trainer.train(num_epochs=num_epochs)
+                best_epoch, best_accuracy = hooks.get_best_epoch_and_accuracy(
+                    tester, "val"
+                )
+                if splits_to_eval is None:
+                    self.assertTrue(best_epoch == 3)
+                    self.assertTrue(best_accuracy > 0.2)
 
-            accuracies, primary_metric_key = hooks.get_accuracies_of_best_epoch(
-                tester, "val"
-            )
-            accuracies = c_f.sqliteObjToDict(accuracies)
-            self.assertTrue(accuracies[primary_metric_key][0] == best_accuracy)
-            self.assertTrue(primary_metric_key == "precision_at_1_level0")
+                accuracies, primary_metric_key = hooks.get_accuracies_of_best_epoch(
+                    tester, "val"
+                )
+                accuracies = c_f.sqliteObjToDict(accuracies)
+                self.assertTrue(accuracies[primary_metric_key][0] == best_accuracy)
+                self.assertTrue(primary_metric_key == "precision_at_1_level0")
 
-            best_epoch_accuracies = hooks.get_accuracies_of_epoch(
-                tester, "val", best_epoch
-            )
-            best_epoch_accuracies = c_f.sqliteObjToDict(best_epoch_accuracies)
-            self.assertTrue(
-                best_epoch_accuracies[primary_metric_key][0] == best_accuracy
-            )
+                best_epoch_accuracies = hooks.get_accuracies_of_epoch(
+                    tester, "val", best_epoch
+                )
+                best_epoch_accuracies = c_f.sqliteObjToDict(best_epoch_accuracies)
+                self.assertTrue(
+                    best_epoch_accuracies[primary_metric_key][0] == best_accuracy
+                )
 
-            accuracy_history = hooks.get_accuracy_history(tester, "val")
-            self.assertTrue(
-                accuracy_history[primary_metric_key][
-                    accuracy_history["epoch"].index(best_epoch)
-                ]
-                == best_accuracy
-            )
+                accuracy_history = hooks.get_accuracy_history(tester, "val")
+                self.assertTrue(
+                    accuracy_history[primary_metric_key][
+                        accuracy_history["epoch"].index(best_epoch)
+                    ]
+                    == best_accuracy
+                )
 
-            loss_history = hooks.get_loss_history()
-            self.assertTrue(
-                len(loss_history["metric_loss"])
-                == (len(sampler) / batch_size) * num_epochs
-            )
+                loss_history = hooks.get_loss_history()
+                if splits_to_eval is None:
+                    self.assertTrue(
+                        len(loss_history["metric_loss"])
+                        == (len(sampler) / batch_size) * num_epochs
+                    )
 
-            curr_primary_metric = hooks.get_curr_primary_metric(tester, "val")
-            self.assertTrue(
-                curr_primary_metric == accuracy_history[primary_metric_key][-1]
-            )
+                curr_primary_metric = hooks.get_curr_primary_metric(tester, "val")
+                self.assertTrue(
+                    curr_primary_metric == accuracy_history[primary_metric_key][-1]
+                )
 
-            base_record_group_name = hooks.base_record_group_name(tester)
-            self.assertTrue(
-                base_record_group_name
-                == "accuracies_normalized_GlobalEmbeddingSpaceTester_level_0"
-            )
+                base_record_group_name = hooks.base_record_group_name(tester)
 
-            record_group_name = hooks.record_group_name(tester, "val")
-            self.assertTrue(
-                record_group_name
-                == "accuracies_normalized_GlobalEmbeddingSpaceTester_level_0_VAL_vs_self"
-            )
+                self.assertTrue(
+                    base_record_group_name
+                    == "accuracies_normalized_GlobalEmbeddingSpaceTester_level_0"
+                )
 
-            shutil.rmtree(model_folder)
-            shutil.rmtree(logs_folder)
-            shutil.rmtree(tensorboard_folder)
+                record_group_name = hooks.record_group_name(tester, "val")
+
+                if splits_to_eval is None:
+                    self.assertTrue(
+                        record_group_name
+                        == "accuracies_normalized_GlobalEmbeddingSpaceTester_level_0_VAL_vs_self"
+                    )
+                else:
+                    self.assertTrue(
+                        record_group_name
+                        == "accuracies_normalized_GlobalEmbeddingSpaceTester_level_0_VAL_vs_TRAIN_and_VAL"
+                    )
+
+                shutil.rmtree(model_folder)
+                shutil.rmtree(logs_folder)
+                shutil.rmtree(tensorboard_folder)
 
         shutil.rmtree(cifar_resnet_folder)
         shutil.rmtree(dataset_folder)

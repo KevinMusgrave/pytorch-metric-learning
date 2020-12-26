@@ -69,6 +69,7 @@ class HookContainer:
         model_folder,
         test_interval=1,
         patience=None,
+        splits_to_eval=None,
         test_collate_fn=None,
     ):
         if self.primary_metric not in tester.accuracy_calculator.get_curr_metrics():
@@ -89,6 +90,7 @@ class HookContainer:
                     model_folder,
                     test_interval,
                     tester,
+                    splits_to_eval,
                     test_collate_fn,
                 )
                 continue_training = self.patience_remaining(
@@ -162,8 +164,8 @@ class HookContainer:
         model_folder,
         test_interval,
         tester,
-        collate_fn,
         splits_to_eval=None,
+        collate_fn=None,
     ):
         epoch = trainer.epoch
         tester.test(
@@ -364,8 +366,8 @@ class HookContainer:
     def record_group_name(self, tester, split_name):
         base_record_group_name = self.base_record_group_name(tester)
         query_set_label = split_name.upper()
-        reference_sets_label = " & ".join(
-            [name.upper() for name in tester.reference_split_names[split_name]]
+        reference_sets_label = "_and_".join(
+            [name.upper() for name in sorted(tester.reference_split_names[split_name])]
         )
         if reference_sets_label == query_set_label:
             reference_sets_label = "self"

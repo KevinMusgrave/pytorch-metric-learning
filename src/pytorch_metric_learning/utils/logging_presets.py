@@ -365,10 +365,7 @@ class HookContainer:
         base_record_group_name = self.base_record_group_name(tester)
         query_set_label = split_name.upper()
         reference_sets_label = " & ".join(
-            [
-                name.upper()
-                for name in tester.reference_split_names[split_name]
-            ]
+            [name.upper() for name in tester.reference_split_names[split_name]]
         )
         if reference_sets_label == query_set_label:
             reference_sets_label = "self"

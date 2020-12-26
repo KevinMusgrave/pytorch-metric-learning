@@ -6,7 +6,6 @@ import numpy as np
 
 
 class GlobalTwoStreamEmbeddingSpaceTester(GlobalEmbeddingSpaceTester):
-
     def compute_all_embeddings(self, dataloader, trunk_model, embedder_model):
         s, e = 0, 0
         with torch.no_grad():
@@ -51,9 +50,12 @@ class GlobalTwoStreamEmbeddingSpaceTester(GlobalEmbeddingSpaceTester):
             np.concatenate([labels, labels], axis=0),
         )
 
-    def set_reference_and_query(self, embeddings_and_labels, query_split_name, reference_split_names):
+    def set_reference_and_query(
+        self, embeddings_and_labels, query_split_name, reference_split_names
+    ):
         assert (
-            query_split_name == reference_split_names[0] and len(reference_split_names) == 1
+            query_split_name == reference_split_names[0]
+            and len(reference_split_names) == 1
         ), "{} does not support different reference and query splits".format(
             self.__class__.__name__
         )

@@ -28,20 +28,24 @@ class TestWithSameParentLabelTester(unittest.TestCase):
         model = c_f.Identity()
         AC = accuracy_calculator.AccuracyCalculator(include=("precision_at_1",))
 
-        correct = {
-            "compared_to_self": {"train": 1, "val": (1 + 0.5) / 2},
-            "compared_to_sets_combined": {
-                "train": (0.75 + 0.5) / 2,
-                "val": (0.4 + 0.75) / 2,
-            },
-            "compared_to_training_set": {"train": 1, "val": (1 + 0.75) / 2},
-        }
+        correct = [
+            (None, {"train": 1, "val": (1 + 0.5) / 2}),
+            (
+                [("train", ["train", "val"]), ("val", ["train", "val"])],
+                {
+                    "train": (0.75 + 0.5) / 2,
+                    "val": (0.4 + 0.75) / 2,
+                },
+            ),
+            (
+                [("train", ["train"]), ("val", ["train"])],
+                {"train": 1, "val": (1 + 0.75) / 2},
+            ),
+        ]
 
-        for reference_set, correct_vals in correct.items():
-            tester = WithSameParentLabelTester(
-                reference_set=reference_set, accuracy_calculator=AC
-            )
-            tester.test(self.dataset_dict, 0, model)
+        for splits_to_eval, correct_vals in correct:
+            tester = WithSameParentLabelTester(accuracy_calculator=AC)
+            tester.test(self.dataset_dict, 0, model, splits_to_eval=splits_to_eval)
             self.assertTrue(
                 tester.all_accuracies["train"]["precision_at_1_level0"]
                 == correct_vals["train"]

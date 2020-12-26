@@ -27,21 +27,22 @@ For an explanation of the default accuracy metrics, see the [AccuracyCalculator 
 ## BaseTester
 All trainers extend this class and therefore inherit its ```__init__``` arguments.
 ```python
-testers.BaseTester(reference_set="compared_to_self", 
-					normalize_embeddings=True, 
-					use_trunk_output=False, 
-                    batch_size=32, 
-                    dataloader_num_workers=32, 
-                    pca=None, 
-                    data_device=None, 
+testers.BaseTester(reference_set="compared_to_self",
+					normalize_embeddings=True,
+					use_trunk_output=False,
+					batch_size=32,
+					dataloader_num_workers=32,
+					pca=None,
+					data_device=None,
+					dtype=None,
 					data_and_label_getter=None,
-                    label_hierarchy_level=0,
-                    end_of_testing_hook=None,
-			        dataset_labels=None,
-			        set_min_label_to_zero=False,
-			        accuracy_calculator=None,
-			        visualizer=None,
-        			visualizer_hook=None)
+					label_hierarchy_level=0,
+					end_of_testing_hook=None,
+					dataset_labels=None,
+					set_min_label_to_zero=False,
+					accuracy_calculator=None,
+					visualizer=None,
+					visualizer_hook=None,)
 ```
 
 **Parameters**:
@@ -56,6 +57,7 @@ testers.BaseTester(reference_set="compared_to_self",
 * **dataloader_num_workers**: How many processes the dataloader will use.
 * **pca**: The number of dimensions that your embeddings will be reduced to, using PCA. The default is None, meaning PCA will not be applied.
 * **data_device**: Which gpu to use for the loaded dataset samples. If None, then the gpu or cpu will be used (whichever is available).
+* **dtype**: The type that the dataset output will be converted to, e.g. ```torch.float16```. If set to ```None```, then no type casting will be done.
 * **data_and_label_getter**: A function that takes the output of your dataset's ```__getitem__``` function, and returns a tuple of (data, labels). If None, then it is assumed that ```__getitem__``` returns (data, labels). 
 * **label_hierarchy_level**: If each sample in your dataset has multiple labels, then this integer argument can be used to select which "level" to use. This assumes that your labels are "2-dimensional" with shape (num_samples, num_hierarchy_levels). Leave this at the default value, 0, if your data does not have multiple labels per sample.
 * **end_of_testing_hook**: This is an optional function that has one input argument (the tester object) and performs some action (e.g. logging data) at the end of testing.

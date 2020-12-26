@@ -21,6 +21,7 @@ class BaseTester:
         dataloader_num_workers=32,
         pca=None,
         data_device=None,
+        dtype=None,
         data_and_label_getter=None,
         label_hierarchy_level=0,
         end_of_testing_hook=None,
@@ -40,6 +41,7 @@ class BaseTester:
             if data_device is None
             else data_device
         )
+        self.dtype = dtype
         self.dataloader_num_workers = dataloader_num_workers
         self.data_and_label_getter = (
             c_f.return_input if data_and_label_getter is None else data_and_label_getter
@@ -114,7 +116,10 @@ class BaseTester:
         return embeddings, labels
 
     def get_embeddings_for_eval(self, trunk_model, embedder_model, input_imgs):
-        trunk_output = trunk_model(input_imgs.to(self.data_device))
+        input_imgs = input_imgs.to(self.data_device)
+        if self.dtype is not None:
+            input_imgs = input_imgs.type(self.dtype)
+        trunk_output = trunk_model(input_imgs)
         if self.use_trunk_output:
             return trunk_output
         return embedder_model(trunk_output)

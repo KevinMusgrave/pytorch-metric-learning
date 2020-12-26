@@ -402,9 +402,9 @@ def get_record_keeper(
         return record_keeper, record_writer, tensorboard_writer
 
     except ModuleNotFoundError as e:
-        logging.warn(e)
-        logging.warn("There won't be any logging or model saving.")
-        logging.warn("To fix this, pip install record-keeper tensorboard")
+        logging.warning(e)
+        logging.warning("There won't be any logging or model saving.")
+        logging.warning("To fix this, pip install record-keeper tensorboard")
         return None, None, None
 
 
@@ -412,5 +412,5 @@ def get_hook_container(record_keeper, **kwargs):
     if record_keeper:
         return HookContainer(record_keeper, **kwargs)
     else:
-        logging.warn("No record_keeper, so no preset hooks are being returned.")
+        logging.warning("No record_keeper, so no preset hooks are being returned.")
         return EmptyContainer()

@@ -13,27 +13,28 @@ t.train(num_epochs=10)
 All trainers extend this class and therefore inherit its ```__init__``` arguments.
 ```python
 trainers.BaseTrainer(models,
-			        optimizers,
-			        batch_size,
-			        loss_funcs,
-			        mining_funcs,
-			        dataset,
-		        	iterations_per_epoch=None,
-			        data_device=None,
-			        loss_weights=None,
-			        sampler=None,
-			        collate_fn=None,
-			        lr_schedulers=None,
-			        gradient_clippers=None,
-			        freeze_these=(),
-			        freeze_trunk_batchnorm=False,
-			        label_hierarchy_level=0,
-			        dataloader_num_workers=32,
-			        data_and_label_getter=None,
-			        dataset_labels=None,
-			        set_min_label_to_zero=False,
-			        end_of_iteration_hook=None,
-			        end_of_epoch_hook=None)
+					optimizers,
+					batch_size,
+					loss_funcs,
+					mining_funcs,
+					dataset,
+					iterations_per_epoch=None,
+					data_device=None,
+					dtype=None,
+					loss_weights=None,
+					sampler=None,
+					collate_fn=None,
+					lr_schedulers=None,
+					gradient_clippers=None,
+					freeze_these=(),
+					freeze_trunk_batchnorm=False,
+					label_hierarchy_level=0,
+					dataloader_num_workers=32,
+					data_and_label_getter=None,
+					dataset_labels=None,
+					set_min_label_to_zero=False,
+					end_of_iteration_hook=None,
+					end_of_epoch_hook=None)
 ```
 
 **Parameters**:
@@ -50,6 +51,7 @@ trainers.BaseTrainer(models,
 	* {"subset_batch_miner": mining_func1, "tuple_miner": mining_func2}
 * **dataset**: The dataset you want to train on. Note that training methods do not perform validation, so do not pass in your validation or test set.
 * **data_device**: The device that you want to put batches of data on. If not specified, the trainer will put the data on any available GPUs.
+* **dtype**: The type that the dataset output will be converted to, e.g. ```torch.float16```. If set to ```None```, then no type casting will be done.
 * **iterations_per_epoch**: Optional. 
 	* If you don't specify ```iterations_per_epoch```:
 		* 1 epoch = 1 pass through the dataloader iterator. If ```sampler=None```, then 1 pass through the iterator is 1 pass through the dataset. 
@@ -59,7 +61,7 @@ trainers.BaseTrainer(models,
 If not specified, then the original labels are used.
 * **sampler**: The sampler used by the dataloader. If not specified, then random sampling will be used.
 * **collate_fn**: The collate function used by the dataloader.
-* **lr_scheduers**: A dictionary of PyTorch learning rate schedulers. Your keys should be strings of the form ```<model>_<step_type>```, where ```<model>``` is a key that comes from either the ```models``` or ```loss_funcs``` dictionary, and ```<step_type>``` is one of the following:
+* **lr_schedulers**: A dictionary of PyTorch learning rate schedulers. Your keys should be strings of the form ```<model>_<step_type>```, where ```<model>``` is a key that comes from either the ```models``` or ```loss_funcs``` dictionary, and ```<step_type>``` is one of the following:
 	* "scheduler_by_iteration" (will be stepped at every iteration)
 	* "scheduler_by_epoch" (will be stepped at the end of each epoch)
 	* "scheduler_by_plateau" (will step if accuracy plateaus. This requires you to write your own end-of-epoch hook, compute validation accuracy, and call ```trainer.step_lr_plateau_schedulers(validation_accuracy)```. Or you can use [HookContainer](logging_presets.md).)

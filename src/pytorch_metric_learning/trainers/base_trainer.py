@@ -15,6 +15,7 @@ class BaseTrainer:
         dataset,
         iterations_per_epoch=None,
         data_device=None,
+        dtype=None,
         loss_weights=None,
         sampler=None,
         collate_fn=None,
@@ -38,6 +39,7 @@ class BaseTrainer:
         self.dataset = dataset
         self.iterations_per_epoch = iterations_per_epoch
         self.data_device = data_device
+        self.dtype = dtype
         self.sampler = sampler
         self.collate_fn = collate_fn
         self.lr_schedulers = lr_schedulers
@@ -143,7 +145,10 @@ class BaseTrainer:
         return self.models["embedder"](base_output)
 
     def get_trunk_output(self, data):
-        return self.models["trunk"](data.to(self.data_device))
+        data = data.to(self.data_device)
+        if self.dtype is not None:
+            data = data.type(self.dtype)
+        return self.models["trunk"](data)
 
     def maybe_mine_embeddings(self, embeddings, labels):
         if "tuple_miner" in self.mining_funcs:
@@ -279,7 +284,7 @@ class BaseTrainer:
         obj = getattr(self, obj_name, None)
         if obj in [None, {}]:
             if warn_if_empty:
-                logging.warn("%s is empty" % obj_name)
+                logging.warning("%s is empty" % obj_name)
         else:
             for k in obj.keys():
                 assert any(
@@ -287,7 +292,7 @@ class BaseTrainer:
                 ), "%s keys must be one of %s" % (obj_name, ", ".join(allowed_keys))
             for imp_key in important_keys:
                 if not any(c_f.regex_wrapper(imp_key).match(k) for k in obj):
-                    logging.warn('%s is missing "%s"' % (obj_name, imp_key))
+                    logging.warning('%s is missing "%s"' % (obj_name, imp_key))
             for ess_key in essential_keys:
                 assert any(
                     c_f.regex_wrapper(ess_key).match(k) for k in obj
@@ -382,7 +387,7 @@ class BaseTrainer:
                 ", ".join(self.allowed_freeze_these_keys())
             )
             if k + "_optimizer" in self.optimizers.keys():
-                logging.warn(
+                logging.warning(
                     "You have passed in an optimizer for {}, but are freezing its parameters.".format(
                         k
                     )

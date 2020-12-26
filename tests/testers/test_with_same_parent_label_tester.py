@@ -29,9 +29,12 @@ class TestWithSameParentLabelTester(unittest.TestCase):
         AC = accuracy_calculator.AccuracyCalculator(include=("precision_at_1",))
 
         correct = {
-            "compared_to_self": {"train": 1, "val": (1+0.5)/2},
-            "compared_to_sets_combined": {"train": (0.75+0.5)/2, "val": (0.4+0.75)/2},
-            "compared_to_training_set": {"train": 1, "val": (1+0.75)/2},
+            "compared_to_self": {"train": 1, "val": (1 + 0.5) / 2},
+            "compared_to_sets_combined": {
+                "train": (0.75 + 0.5) / 2,
+                "val": (0.4 + 0.75) / 2,
+            },
+            "compared_to_training_set": {"train": 1, "val": (1 + 0.75) / 2},
         }
 
         for reference_set, correct_vals in correct.items():

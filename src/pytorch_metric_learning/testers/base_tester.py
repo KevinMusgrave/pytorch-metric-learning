@@ -1,20 +1,21 @@
 #! /usr/bin/env python3
 
-import tqdm
-import torch
+import logging
+from collections import defaultdict
+
 import numpy as np
+import torch
+import tqdm
+from sklearn.preprocessing import normalize, StandardScaler
+
 from ..utils import stat_utils
 from ..utils import common_functions as c_f
 from ..utils.accuracy_calculator import AccuracyCalculator
-import logging
-from sklearn.preprocessing import normalize, StandardScaler
-from collections import defaultdict
 
 
 class BaseTester:
     def __init__(
         self,
-        reference_set="compared_to_self",
         normalize_embeddings=True,
         use_trunk_output=False,
         batch_size=32,
@@ -31,7 +32,6 @@ class BaseTester:
         visualizer=None,
         visualizer_hook=None,
     ):
-        self.reference_set = reference_set
         self.normalize_embeddings = normalize_embeddings
         self.pca = int(pca) if pca else None
         self.use_trunk_output = use_trunk_output
@@ -55,6 +55,7 @@ class BaseTester:
         self.original_visualizer_hook = visualizer_hook
         self.initialize_label_mapper()
         self.initialize_accuracy_calculator()
+        self.reference_split_names = {}
 
     def initialize_label_mapper(self):
         self.label_mapper = c_f.LabelMapper(
@@ -95,7 +96,6 @@ class BaseTester:
                 s = e
             labels = labels.cpu().numpy()
             all_q = all_q.cpu().numpy()
-
         return all_q, labels
 
     def get_all_embeddings(
@@ -159,7 +159,6 @@ class BaseTester:
             base_name += "_normalized"
         if self.use_trunk_output:
             base_name += "_trunk"
-        base_name += "_" + self.reference_set
         base_name += "_" + self.__class__.__name__
         base_name += "_level_" + self.label_hierarchy_level_to_str(
             self.label_hierarchy_level
@@ -188,28 +187,21 @@ class BaseTester:
             self.label_hierarchy_level_to_str(label_hierarchy_level),
         )
 
-    def all_splits_combined(self, embeddings_and_labels):
-        eee, lll = list(zip(*list(embeddings_and_labels.values())))
+    def maybe_combine_splits(self, embeddings_and_labels, splits):
+        to_combine = {split: embeddings_and_labels[split] for split in splits}
+        eee, lll = list(zip(*list(to_combine.values())))
         curr_embeddings = np.concatenate(eee, axis=0)
         curr_labels = np.concatenate(lll, axis=0)
         return curr_embeddings, curr_labels
 
-    def set_reference_and_query(self, embeddings_and_labels, curr_split):
-        query_embeddings, query_labels = embeddings_and_labels[curr_split]
-        if self.reference_set == "compared_to_self":
-            reference_embeddings, reference_labels = query_embeddings, query_labels
-        elif self.reference_set == "compared_to_sets_combined":
-            reference_embeddings, reference_labels = self.all_splits_combined(
-                embeddings_and_labels
-            )
-        elif self.reference_set == "compared_to_training_set":
-            reference_embeddings, reference_labels = embeddings_and_labels["train"]
-        else:
-            raise BaseException
+    def set_reference_and_query(
+        self, embeddings_and_labels, query_split_name, reference_split_names
+    ):
+        query_embeddings, query_labels = embeddings_and_labels[query_split_name]
+        reference_embeddings, reference_labels = self.maybe_combine_splits(
+            embeddings_and_labels, reference_split_names
+        )
         return query_embeddings, query_labels, reference_embeddings, reference_labels
-
-    def embeddings_come_from_same_source(self, embeddings_and_labels):
-        return self.reference_set in ["compared_to_self", "compared_to_sets_combined"]
 
     def label_levels_to_evaluate(self, query_labels):
         num_levels_available = query_labels.shape[1]
@@ -232,15 +224,16 @@ class BaseTester:
             accuracies[keyname] = summed_accuracy / len(label_levels)
 
     def get_splits_to_compute_embeddings(self, dataset_dict, splits_to_eval):
-        splits_to_eval = (
-            list(dataset_dict.keys()) if splits_to_eval is None else splits_to_eval
-        )
-        if self.reference_set in ["compared_to_self", "compared_to_sets_combined"]:
-            return splits_to_eval, splits_to_eval
-        if self.reference_set == "compared_to_training_set":
-            splits_to_compute_embeddings = set(splits_to_eval)
-            splits_to_compute_embeddings.add("train")
-            return splits_to_eval, list(splits_to_compute_embeddings)
+        if splits_to_eval is None:
+            splits_to_eval = [(k, [k]) for k in dataset_dict]
+        query_splits = [t[0] for t in splits_to_eval]
+        assert len(query_splits) == len(
+            set(query_splits)
+        ), "Unsupported: Evaluating a query split more than once"
+        splits_to_compute_embeddings = set()
+        for query_split, reference_splits in splits_to_eval:
+            splits_to_compute_embeddings.update(reference_splits + [query_split])
+        return splits_to_eval, list(splits_to_compute_embeddings)
 
     def get_all_embeddings_for_all_splits(
         self,
@@ -258,7 +251,9 @@ class BaseTester:
             )
         return embeddings_and_labels
 
-    def do_knn_and_accuracies(self, accuracies, embeddings_and_labels, split_name):
+    def do_knn_and_accuracies(
+        self, accuracies, embeddings_and_labels, query_split_name, reference_split_names
+    ):
         raise NotImplementedError
 
     def test(
@@ -269,7 +264,7 @@ class BaseTester:
         embedder_model=None,
         splits_to_eval=None,
         collate_fn=None,
-        **kwargs
+        **kwargs,
     ):
         logging.info("Evaluating epoch {}".format(epoch))
         if embedder_model is None:
@@ -289,11 +284,17 @@ class BaseTester:
         )
         self.maybe_visualize(self.embeddings_and_labels, epoch)
         self.all_accuracies = defaultdict(dict)
-        for split_name in splits_to_eval:
-            logging.info("Computing accuracy for the %s split" % split_name)
-            self.all_accuracies[split_name]["epoch"] = epoch
+        for query_split_name, reference_split_names in splits_to_eval:
+            logging.info(
+                f"Computing accuracy for the {query_split_name} split w.r.t {reference_split_names}"
+            )
+            self.all_accuracies[query_split_name]["epoch"] = epoch
+            self.reference_split_names[query_split_name] = reference_split_names
             self.do_knn_and_accuracies(
-                self.all_accuracies[split_name], self.embeddings_and_labels, split_name
+                self.all_accuracies[query_split_name],
+                self.embeddings_and_labels,
+                query_split_name,
+                reference_split_names,
             )
         self.end_of_testing_hook(self) if self.end_of_testing_hook else logging.info(
             self.all_accuracies

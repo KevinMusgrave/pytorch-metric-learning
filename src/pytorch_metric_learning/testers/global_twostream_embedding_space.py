@@ -6,14 +6,6 @@ import numpy as np
 
 
 class GlobalTwoStreamEmbeddingSpaceTester(GlobalEmbeddingSpaceTester):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        assert (
-            self.reference_set == "compared_to_self"
-        ), "compared_to_self is the only supported reference_set type for {}".format(
-            self.__class__.__name__
-        )
-
     def compute_all_embeddings(self, dataloader, trunk_model, embedder_model):
         s, e = 0, 0
         with torch.no_grad():
@@ -58,13 +50,18 @@ class GlobalTwoStreamEmbeddingSpaceTester(GlobalEmbeddingSpaceTester):
             np.concatenate([labels, labels], axis=0),
         )
 
-    def set_reference_and_query(self, embeddings_and_labels, curr_split):
-        embeddings, labels = embeddings_and_labels[curr_split]
+    def set_reference_and_query(
+        self, embeddings_and_labels, query_split_name, reference_split_names
+    ):
+        assert (
+            query_split_name == reference_split_names[0]
+            and len(reference_split_names) == 1
+        ), "{} does not support different reference and query splits".format(
+            self.__class__.__name__
+        )
+        embeddings, labels = embeddings_and_labels[query_split_name]
         half = int(embeddings.shape[0] / 2)
         anchors_embeddings = embeddings[:half]
         posneg_embeddings = embeddings[half:]
         query_labels = labels[:half]
         return anchors_embeddings, query_labels, posneg_embeddings, query_labels
-
-    def embeddings_come_from_same_source(self, embeddings_and_labels):
-        return False

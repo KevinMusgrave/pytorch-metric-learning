@@ -1,8 +1,10 @@
 import logging
-from . import common_functions as c_f
 import os
-import torch
 import sqlite3
+
+import torch
+
+from . import common_functions as c_f
 
 # You can write your own hooks for logging.
 # But if you'd like something that just works, then use this HookContainer.
@@ -67,6 +69,7 @@ class HookContainer:
         model_folder,
         test_interval=1,
         patience=None,
+        splits_to_eval=None,
         test_collate_fn=None,
     ):
         if self.primary_metric not in tester.accuracy_calculator.get_curr_metrics():
@@ -87,6 +90,7 @@ class HookContainer:
                     model_folder,
                     test_interval,
                     tester,
+                    splits_to_eval,
                     test_collate_fn,
                 )
                 continue_training = self.patience_remaining(
@@ -154,7 +158,14 @@ class HookContainer:
                     c_f.delete_dict_of_models(obj_dict, prev_suffix, model_folder)
 
     def save_models_and_eval(
-        self, trainer, dataset_dict, model_folder, test_interval, tester, collate_fn
+        self,
+        trainer,
+        dataset_dict,
+        model_folder,
+        test_interval,
+        tester,
+        splits_to_eval=None,
+        collate_fn=None,
     ):
         epoch = trainer.epoch
         tester.test(
@@ -162,7 +173,7 @@ class HookContainer:
             epoch,
             trainer.models["trunk"],
             trainer.models["embedder"],
-            list(dataset_dict.keys()),
+            splits_to_eval,
             collate_fn,
         )
         prev_best_epoch, _ = self.get_best_epoch_and_accuracy(
@@ -354,7 +365,13 @@ class HookContainer:
 
     def record_group_name(self, tester, split_name):
         base_record_group_name = self.base_record_group_name(tester)
-        return "%s_%s" % (base_record_group_name, split_name.upper())
+        query_set_label = split_name.upper()
+        reference_sets_label = "_and_".join(
+            [name.upper() for name in sorted(tester.reference_split_names[split_name])]
+        )
+        if reference_sets_label == query_set_label:
+            reference_sets_label = "self"
+        return f"{base_record_group_name}_{query_set_label}_vs_{reference_sets_label}"
 
     def optimizer_custom_attr_func(self, optimizer):
         return {"lr": optimizer.param_groups[0]["lr"]}
@@ -400,7 +417,6 @@ def get_record_keeper(
             save_figures=save_figures,
         )
         return record_keeper, record_writer, tensorboard_writer
-
     except ModuleNotFoundError as e:
         logging.warning(e)
         logging.warning("There won't be any logging or model saving.")

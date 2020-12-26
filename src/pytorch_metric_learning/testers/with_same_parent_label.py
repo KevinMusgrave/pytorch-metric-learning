@@ -1,19 +1,28 @@
-from collections import defaultdict
-import numpy as np
-from .base_tester import BaseTester
 import logging
+from collections import defaultdict
+
+import numpy as np
+
+from .base_tester import BaseTester
 
 
 class WithSameParentLabelTester(BaseTester):
     def do_knn_and_accuracies(
-        self, accuracies, embeddings_and_labels, split_name, tag_suffix=""
+        self,
+        accuracies,
+        embeddings_and_labels,
+        query_split_name,
+        reference_split_names,
+        tag_suffix="",
     ):
         (
             query_embeddings,
             query_labels,
             reference_embeddings,
             reference_labels,
-        ) = self.set_reference_and_query(embeddings_and_labels, split_name)
+        ) = self.set_reference_and_query(
+            embeddings_and_labels, query_split_name, reference_split_names
+        )
         self.label_levels = [
             L
             for L in self.label_levels_to_evaluate(query_labels)
@@ -21,7 +30,7 @@ class WithSameParentLabelTester(BaseTester):
         ]
         assert (
             len(self.label_levels) > 0
-        ), """There are no valid label levels to evaluate. Make sure you've set label_hierarchy_level correctly. 
+        ), """There are no valid label levels to evaluate. Make sure you've set label_hierarchy_level correctly.
             If it is an integer, it must be less than the number of hierarchy levels minus 1."""
 
         for L in self.label_levels:
@@ -43,7 +52,7 @@ class WithSameParentLabelTester(BaseTester):
                     curr_reference_embeddings,
                     curr_query_labels,
                     curr_reference_labels,
-                    self.embeddings_come_from_same_source(embeddings_and_labels),
+                    query_split_name in reference_split_names,
                 )
                 for metric, v in a.items():
                     average_accuracies[metric].append(v)

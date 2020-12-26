@@ -24,17 +24,18 @@ class TestGlobalEmbeddingSpaceTester(unittest.TestCase):
         model = c_f.Identity()
         AC = accuracy_calculator.AccuracyCalculator(include=("precision_at_1",))
 
-        correct = {
-            "compared_to_self": {"train": 1, "val": 6.0 / 8},
-            "compared_to_sets_combined": {"train": 1.0 / 8, "val": 1.0 / 8},
-            "compared_to_training_set": {"train": 1, "val": 1.0 / 8},
-        }
+        correct = [
+            (None, {"train": 1, "val": 6.0 / 8}),
+            (
+                [("train", ["train", "val"]), ("val", ["train", "val"])],
+                {"train": 1.0 / 8, "val": 1.0 / 8},
+            ),
+            ([("train", ["train"]), ("val", ["train"])], {"train": 1, "val": 1.0 / 8}),
+        ]
 
-        for reference_set, correct_vals in correct.items():
-            tester = GlobalEmbeddingSpaceTester(
-                reference_set=reference_set, accuracy_calculator=AC
-            )
-            tester.test(self.dataset_dict, 0, model)
+        for splits_to_eval, correct_vals in correct:
+            tester = GlobalEmbeddingSpaceTester(accuracy_calculator=AC)
+            tester.test(self.dataset_dict, 0, model, splits_to_eval=splits_to_eval)
             self.assertTrue(
                 tester.all_accuracies["train"]["precision_at_1_level0"]
                 == correct_vals["train"]

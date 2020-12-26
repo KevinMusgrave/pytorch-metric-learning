@@ -191,13 +191,13 @@ class TestMetricLossOnly(unittest.TestCase):
             base_record_group_name = hooks.base_record_group_name(tester)
             self.assertTrue(
                 base_record_group_name
-                == "accuracies_normalized_compared_to_self_GlobalEmbeddingSpaceTester_level_0"
+                == "accuracies_normalized_GlobalEmbeddingSpaceTester_level_0"
             )
 
             record_group_name = hooks.record_group_name(tester, "val")
             self.assertTrue(
                 record_group_name
-                == "accuracies_normalized_compared_to_self_GlobalEmbeddingSpaceTester_level_0_VAL"
+                == "accuracies_normalized_GlobalEmbeddingSpaceTester_level_0_VAL_vs_self"
             )
 
             shutil.rmtree(model_folder)

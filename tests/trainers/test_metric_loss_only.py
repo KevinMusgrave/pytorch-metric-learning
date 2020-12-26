@@ -83,10 +83,13 @@ class TestMetricLossOnly(unittest.TestCase):
 
             model = torch.nn.DataParallel(resnet.resnet20())
             checkpoint = torch.load(
-                "{}/pretrained_models/resnet20-12fca82f.th".format(cifar_resnet_folder)
+                "{}/pretrained_models/resnet20-12fca82f.th".format(cifar_resnet_folder),
+                map_location=TEST_DEVICE,
             )
             model.load_state_dict(checkpoint["state_dict"])
             model.module.linear = c_f.Identity()
+            if TEST_DEVICE == torch.device("cpu"):
+                model = model.module
             model = model.to(TEST_DEVICE).type(dtype)
 
             optimizer = torch.optim.Adam(
@@ -120,6 +123,7 @@ class TestMetricLossOnly(unittest.TestCase):
                 accuracy_calculator=accuracy_calculator.AccuracyCalculator(
                     include=("precision_at_1", "AMI"), k=1
                 ),
+                data_device=TEST_DEVICE,
                 dtype=dtype,
                 dataloader_num_workers=32,
             )
@@ -136,6 +140,7 @@ class TestMetricLossOnly(unittest.TestCase):
                 mining_funcs={},
                 dataset=train_dataset,
                 sampler=sampler,
+                data_device=TEST_DEVICE,
                 dtype=dtype,
                 dataloader_num_workers=32,
                 freeze_trunk_batchnorm=True,

@@ -57,7 +57,6 @@ class OriginalImplementationSoftTriple(nn.Module):
 import unittest
 from .. import TEST_DTYPES, TEST_DEVICE
 from pytorch_metric_learning.losses import SoftTripleLoss
-from pytorch_metric_learning.utils import common_functions as c_f
 from pytorch_metric_learning.regularizers import SparseCentersRegularizer
 
 

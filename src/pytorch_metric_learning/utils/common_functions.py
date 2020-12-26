@@ -330,7 +330,7 @@ def operate_on_dict_of_models(
             if log_if_successful:
                 logging.info("%s %s" % (logging_string, model_path))
         except IOError:
-            logging.warn("Could not %s %s" % (logging_string, model_path))
+            logging.warning("Could not %s %s" % (logging_string, model_path))
             if assert_success:
                 raise IOError
 
@@ -428,3 +428,19 @@ class TorchInitWrapper:
 
     def __call__(self, tensor):
         self.init_func(tensor, **self.kwargs)
+
+
+class EmbeddingDataset(torch.utils.data.Dataset):
+    def __init__(self, embeddings, labels):
+        self.embeddings = embeddings
+        self.labels = labels
+
+    def __len__(self):
+        return len(self.embeddings)
+
+    def __getitem__(self, idx):
+        return self.embeddings[idx], self.labels[idx]
+
+
+def sqliteObjToDict(sqliteObj):
+    return {k: [row[k] for row in sqliteObj] for k in sqliteObj[0].keys()}

@@ -28,7 +28,7 @@ jobs:
         pip install numpy
         pip install scikit-learn
         pip install tqdm
-        pip install torch==${{ matrix.pytorch-version }}
+        pip install torch==${{ matrix.pytorch-version }} --force-reinstall
         pip install flake8
         pip install .[with-hooks-cpu]
     - name: Lint with flake8

@@ -8,7 +8,6 @@ import numpy as np
 class GlobalTwoStreamEmbeddingSpaceTester(GlobalEmbeddingSpaceTester):
 
     def compute_all_embeddings(self, dataloader, trunk_model, embedder_model):
-        num_batches = len(dataloader)
         s, e = 0, 0
         with torch.no_grad():
             for i, data in enumerate(tqdm.tqdm(dataloader)):

@@ -4,10 +4,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 # Requirements for testing and development
-extras_require_dev = [
-    "pytest > 3.8",
-    "pytest-cov ~= 2.8",
-]
+extras_require_dev = ["black", "isort"]
 
 extras_require_with_hooks = ["record-keeper >= 0.9.29", "faiss-gpu >= 1.6.3", "tensorboard"]
 extras_require_with_hooks_cpu = ["record-keeper >= 0.9.29", "faiss-cpu >= 1.6.3", "tensorboard"]

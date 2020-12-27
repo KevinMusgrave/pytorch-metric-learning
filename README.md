@@ -1,5 +1,7 @@
 <h1 align="center">
+<a href="https://github.com/KevinMusgrave/pytorch-metric-learning">
 <img alt="Logo" src="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/docs/imgs/Logo.png">
+</a>
 </h2>
 <p align="center">
  <a href="https://badge.fury.io/py/pytorch-metric-learning">
@@ -343,13 +345,11 @@ To run a single test file instead of the entire test suite, specify the file nam
 python -m unittest tests/losses/test_angular_loss.py
 ```
 
-If you want to use ```pytest```:
+Code is formatted using ```black``` and ```isort```:
 ```bash
 pip install -e .[dev]
-pytest tests
+./format_code.sh
 ```
-The first command may fail initially on Windows. In such a case, install `torch` by following the official
-guide. Proceed to `pip install -e .[dev]` afterwards.
 
 
 ## Acknowledgements

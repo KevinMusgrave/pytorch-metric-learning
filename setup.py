@@ -3,9 +3,6 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-# Requirements for testing and development
-extras_require_dev = ["black", "isort"]
-
 extras_require_with_hooks = ["record-keeper >= 0.9.29", "faiss-gpu >= 1.6.3", "tensorboard"]
 extras_require_with_hooks_cpu = ["record-keeper >= 0.9.29", "faiss-cpu >= 1.6.3", "tensorboard"]
 
@@ -34,7 +31,6 @@ setuptools.setup(
           'torchvision',
     ],
     extras_require={
-        "dev": extras_require_dev,
         "with-hooks": extras_require_with_hooks,
         "with-hooks-cpu": extras_require_with_hooks_cpu
     },

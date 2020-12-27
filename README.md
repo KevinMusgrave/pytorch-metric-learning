@@ -347,7 +347,7 @@ python -m unittest tests/losses/test_angular_loss.py
 
 Code is formatted using ```black``` and ```isort```:
 ```bash
-pip install -e .[dev]
+pip install black isort
 ./format_code.sh
 ```
 

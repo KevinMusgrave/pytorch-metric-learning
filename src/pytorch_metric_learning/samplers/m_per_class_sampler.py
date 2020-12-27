@@ -1,6 +1,8 @@
 import torch
 from torch.utils.data.sampler import Sampler
+
 from ..utils import common_functions as c_f
+
 
 # modified from
 # https://raw.githubusercontent.com/bnulihaixia/Deep_metric/master/utils/sampler.py

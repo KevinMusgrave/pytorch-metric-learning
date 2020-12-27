@@ -1,10 +1,13 @@
 import unittest
-from .. import TEST_DTYPES, TEST_DEVICE
+
 import torch
-from pytorch_metric_learning.losses import TripletMarginLoss
-from pytorch_metric_learning.utils import common_functions as c_f
-from pytorch_metric_learning.reducers import MeanReducer
+
 from pytorch_metric_learning.distances import CosineSimilarity
+from pytorch_metric_learning.losses import TripletMarginLoss
+from pytorch_metric_learning.reducers import MeanReducer
+from pytorch_metric_learning.utils import common_functions as c_f
+
+from .. import TEST_DEVICE, TEST_DTYPES
 
 
 class TestTripletMarginLoss(unittest.TestCase):

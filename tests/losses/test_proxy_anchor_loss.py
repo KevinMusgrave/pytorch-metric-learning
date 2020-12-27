@@ -71,10 +71,13 @@ class OriginalImplementationProxyAnchor(torch.nn.Module):
 
 
 import unittest
-from .. import TEST_DTYPES, TEST_DEVICE
+
 import torch
+
 from pytorch_metric_learning.losses import ProxyAnchorLoss
 from pytorch_metric_learning.utils import common_functions as c_f
+
+from .. import TEST_DEVICE, TEST_DTYPES
 
 
 class TestProxyAnchorLoss(unittest.TestCase):

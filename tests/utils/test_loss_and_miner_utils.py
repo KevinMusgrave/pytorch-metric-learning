@@ -1,7 +1,10 @@
 import unittest
-from .. import TEST_DTYPES, TEST_DEVICE
-from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
+
 import torch
+
+from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
+
+from .. import TEST_DEVICE, TEST_DTYPES
 
 
 class TestLossAndMinerUtils(unittest.TestCase):

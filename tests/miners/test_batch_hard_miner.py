@@ -1,10 +1,13 @@
 import unittest
-from .. import TEST_DTYPES, TEST_DEVICE
+
+import numpy as np
 import torch
+
+from pytorch_metric_learning.distances import CosineSimilarity, LpDistance
 from pytorch_metric_learning.miners import BatchHardMiner
 from pytorch_metric_learning.utils import common_functions as c_f
-import numpy as np
-from pytorch_metric_learning.distances import CosineSimilarity, LpDistance
+
+from .. import TEST_DEVICE, TEST_DTYPES
 
 
 class TestBatchHardMiner(unittest.TestCase):

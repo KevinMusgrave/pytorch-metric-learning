@@ -1,5 +1,6 @@
-from .base_miner import BaseTupleMiner
 import torch
+
+from .base_miner import BaseTupleMiner
 
 
 class EmbeddingsAlreadyPackagedAsTriplets(BaseTupleMiner):

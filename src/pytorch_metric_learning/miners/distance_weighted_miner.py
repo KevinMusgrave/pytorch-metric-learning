@@ -1,7 +1,10 @@
-from .base_miner import BaseTupleMiner
 import torch
-from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
+
 from ..distances import LpDistance
+from ..utils import common_functions as c_f
+from ..utils import loss_and_miner_utils as lmu
+from .base_miner import BaseTupleMiner
+
 
 # adapted from
 # https://github.com/chaoyuaw/incubator-mxnet/blob/master/example/gluon/embedding_learning/model.py

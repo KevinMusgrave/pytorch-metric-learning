@@ -1,5 +1,7 @@
-from .base_distance import BaseDistance
 import torch
+
+from .base_distance import BaseDistance
+
 
 # Signal to Noise Ratio
 class SNRDistance(BaseDistance):

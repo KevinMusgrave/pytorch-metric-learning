@@ -1,7 +1,8 @@
-from ..reducers import MeanReducer, MultipleReducers, DoNothingReducer
-from ..distances import LpDistance
-from .module_with_records import ModuleWithRecords
 import copy
+
+from ..distances import LpDistance
+from ..reducers import DoNothingReducer, MeanReducer, MultipleReducers
+from .module_with_records import ModuleWithRecords
 
 
 class ModuleWithRecordsAndReducer(ModuleWithRecords):

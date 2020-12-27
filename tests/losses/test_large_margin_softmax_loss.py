@@ -1,11 +1,15 @@
-import unittest
-from .. import TEST_DTYPES, TEST_DEVICE
-import torch
-from pytorch_metric_learning.losses import LargeMarginSoftmaxLoss, SphereFaceLoss
-from pytorch_metric_learning.utils import common_functions as c_f
 import math
-import scipy
+import unittest
+
 import numpy as np
+import scipy
+import torch
+
+from pytorch_metric_learning.losses import (LargeMarginSoftmaxLoss,
+                                            SphereFaceLoss)
+from pytorch_metric_learning.utils import common_functions as c_f
+
+from .. import TEST_DEVICE, TEST_DTYPES
 
 
 class TestLargeMarginSoftmaxLoss(unittest.TestCase):

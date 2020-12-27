@@ -1,9 +1,12 @@
+import logging
+
+import numpy as np
 import torch
 from torch.utils.data.sampler import Sampler
-from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
+
 from ..testers import BaseTester
-import numpy as np
-import logging
+from ..utils import common_functions as c_f
+from ..utils import loss_and_miner_utils as lmu
 
 
 class TuplesToWeightsSampler(Sampler):

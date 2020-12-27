@@ -1,7 +1,10 @@
 import unittest
+
 import torch
+
 from pytorch_metric_learning.testers import WithSameParentLabelTester
-from pytorch_metric_learning.utils import common_functions as c_f, accuracy_calculator
+from pytorch_metric_learning.utils import accuracy_calculator
+from pytorch_metric_learning.utils import common_functions as c_f
 
 
 class TestWithSameParentLabelTester(unittest.TestCase):

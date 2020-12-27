@@ -1,7 +1,8 @@
+import numpy as np
 import torch
 from torch.utils.data.sampler import Sampler
+
 from ..utils import common_functions as c_f
-import numpy as np
 
 
 class FixedSetOfTriplets(Sampler):

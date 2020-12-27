@@ -1,7 +1,8 @@
 import torch
-from .generic_pair_loss import GenericPairLoss
-from ..utils import loss_and_miner_utils as lmu
+
 from ..reducers import AvgNonZeroReducer
+from ..utils import loss_and_miner_utils as lmu
+from .generic_pair_loss import GenericPairLoss
 
 
 class ContrastiveLoss(GenericPairLoss):

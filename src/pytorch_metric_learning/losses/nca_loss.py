@@ -1,7 +1,9 @@
-from .base_metric_loss_function import BaseMetricLossFunction
-from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
 import torch
+
 from ..distances import LpDistance
+from ..utils import common_functions as c_f
+from ..utils import loss_and_miner_utils as lmu
+from .base_metric_loss_function import BaseMetricLossFunction
 
 
 class NCALoss(BaseMetricLossFunction):

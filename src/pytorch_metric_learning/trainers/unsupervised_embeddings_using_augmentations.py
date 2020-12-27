@@ -1,7 +1,9 @@
-from .metric_loss_only import MetricLossOnly
 import logging
-from ..utils import common_functions as c_f
+
 import torch
+
+from ..utils import common_functions as c_f
+from .metric_loss_only import MetricLossOnly
 
 
 class UnsupervisedEmbeddingsUsingAugmentations(MetricLossOnly):

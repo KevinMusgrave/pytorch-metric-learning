@@ -1,5 +1,7 @@
 import torch
-from ..utils import common_functions as c_f, loss_and_miner_utils as lmu
+
+from ..utils import common_functions as c_f
+from ..utils import loss_and_miner_utils as lmu
 from ..utils.module_with_records import ModuleWithRecords
 
 

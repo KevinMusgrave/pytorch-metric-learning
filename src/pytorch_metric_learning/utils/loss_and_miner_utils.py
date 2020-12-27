@@ -1,7 +1,10 @@
-import torch
-import numpy as np
 import math
+
+import numpy as np
+import torch
+
 from . import common_functions as c_f
+
 
 # input must be 2D
 def logsumexp(x, keep_mask=None, add_one=True, dim=1):

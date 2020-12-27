@@ -1,8 +1,9 @@
-from ..utils import common_functions as c_f
-from .global_embedding_space import GlobalEmbeddingSpaceTester
+import numpy as np
 import torch
 import tqdm
-import numpy as np
+
+from ..utils import common_functions as c_f
+from .global_embedding_space import GlobalEmbeddingSpaceTester
 
 
 class GlobalTwoStreamEmbeddingSpaceTester(GlobalEmbeddingSpaceTester):

@@ -1,11 +1,12 @@
 import collections
-import torch
-import numpy as np
-import os
-import logging
 import glob
-import scipy.stats
+import logging
+import os
 import re
+
+import numpy as np
+import scipy.stats
+import torch
 
 NUMPY_RANDOM = np.random
 

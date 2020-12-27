@@ -1,6 +1,7 @@
-from .base_regularizer import BaseRegularizer
 import torch
+
 from ..utils import common_functions as c_f
+from .base_regularizer import BaseRegularizer
 
 
 class ZeroMeanRegularizer(BaseRegularizer):

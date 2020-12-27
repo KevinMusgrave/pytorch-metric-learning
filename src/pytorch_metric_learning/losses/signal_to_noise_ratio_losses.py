@@ -1,6 +1,6 @@
+from ..distances import SNRDistance
 from ..utils import common_functions as c_f
 from .contrastive_loss import ContrastiveLoss
-from ..distances import SNRDistance
 
 
 class SignalToNoiseRatioContrastiveLoss(ContrastiveLoss):

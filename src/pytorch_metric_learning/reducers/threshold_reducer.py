@@ -1,5 +1,6 @@
-from .base_reducer import BaseReducer
 import torch
+
+from .base_reducer import BaseReducer
 
 
 class ThresholdReducer(BaseReducer):

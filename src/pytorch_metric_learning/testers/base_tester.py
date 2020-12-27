@@ -6,10 +6,10 @@ from collections import defaultdict
 import numpy as np
 import torch
 import tqdm
-from sklearn.preprocessing import normalize, StandardScaler
+from sklearn.preprocessing import StandardScaler, normalize
 
-from ..utils import stat_utils
 from ..utils import common_functions as c_f
+from ..utils import stat_utils
 from ..utils.accuracy_calculator import AccuracyCalculator
 
 

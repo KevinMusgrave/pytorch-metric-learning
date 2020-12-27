@@ -1,9 +1,12 @@
 #! /usr/bin/env python3
 
-import numpy as np
-from sklearn.metrics import normalized_mutual_info_score, adjusted_mutual_info_score
-from . import stat_utils
 import logging
+
+import numpy as np
+from sklearn.metrics import (adjusted_mutual_info_score,
+                             normalized_mutual_info_score)
+
+from . import stat_utils
 
 
 def maybe_get_avg_of_avgs(accuracy_per_sample, sample_labels, avg_of_avgs):

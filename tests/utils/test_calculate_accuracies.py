@@ -1,6 +1,8 @@
 import unittest
-from pytorch_metric_learning.utils import accuracy_calculator
+
 import numpy as np
+
+from pytorch_metric_learning.utils import accuracy_calculator
 
 
 class TestCalculateAccuracies(unittest.TestCase):

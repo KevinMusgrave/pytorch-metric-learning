@@ -1,8 +1,11 @@
 import unittest
-from .. import TEST_DTYPES, TEST_DEVICE
+
 import torch
+
 from pytorch_metric_learning.losses import NormalizedSoftmaxLoss
 from pytorch_metric_learning.regularizers import CenterInvariantRegularizer
+
+from .. import TEST_DEVICE, TEST_DTYPES
 
 
 class TestCenterInvariantRegularizer(unittest.TestCase):

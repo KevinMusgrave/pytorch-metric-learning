@@ -1,6 +1,8 @@
-from .base_trainer import BaseTrainer
-from ..utils import common_functions as c_f, loss_and_miner_utils as lmu
 import torch
+
+from ..utils import common_functions as c_f
+from ..utils import loss_and_miner_utils as lmu
+from .base_trainer import BaseTrainer
 
 
 class TwoStreamMetricLoss(BaseTrainer):

@@ -1,6 +1,8 @@
 import torch
 from torch.nn.parallel import DistributedDataParallel as DDP
+
 from ..utils import common_functions as c_f
+
 
 # modified from https://github.com/allenai/allennlp
 def is_distributed():

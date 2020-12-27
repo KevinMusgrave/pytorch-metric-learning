@@ -1,7 +1,8 @@
-from .base_miner import BaseSubsetBatchMiner
-from ..utils import common_functions as c_f
 import numpy as np
 import torch
+
+from ..utils import common_functions as c_f
+from .base_miner import BaseSubsetBatchMiner
 
 
 class MaximumLossMiner(BaseSubsetBatchMiner):

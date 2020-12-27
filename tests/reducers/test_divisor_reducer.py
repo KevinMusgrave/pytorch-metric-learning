@@ -1,7 +1,10 @@
 import unittest
-from .. import TEST_DTYPES, TEST_DEVICE
+
 import torch
+
 from pytorch_metric_learning.reducers import DivisorReducer
+
+from .. import TEST_DEVICE, TEST_DTYPES
 
 
 class TestDivisorReducer(unittest.TestCase):

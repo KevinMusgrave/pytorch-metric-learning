@@ -1,9 +1,12 @@
 import unittest
+
 import torch
 import torchvision
 from torchvision import datasets, transforms
-from pytorch_metric_learning.utils.inference import InferenceModel
+
 from pytorch_metric_learning.utils import common_functions
+from pytorch_metric_learning.utils.inference import InferenceModel
+
 from .. import TEST_DEVICE
 
 

@@ -1,7 +1,10 @@
-import torch
-from ..utils import common_functions as c_f, loss_tracker as l_t
-import tqdm
 import logging
+
+import torch
+import tqdm
+
+from ..utils import common_functions as c_f
+from ..utils import loss_tracker as l_t
 
 
 class BaseTrainer:

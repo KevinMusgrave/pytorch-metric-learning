@@ -1,6 +1,7 @@
-from .base_distance import BaseDistance
 import torch
+
 from ..utils import loss_and_miner_utils as lmu
+from .base_distance import BaseDistance
 
 
 class LpDistance(BaseDistance):

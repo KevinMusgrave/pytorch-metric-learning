@@ -1,5 +1,7 @@
 import unittest
+
 import torch
+
 from pytorch_metric_learning.samplers import MPerClassSampler
 from pytorch_metric_learning.utils import common_functions as c_f
 

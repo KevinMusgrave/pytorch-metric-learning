@@ -1,12 +1,15 @@
+import os
+import shutil
 import unittest
+
 import torch
+from torchvision import datasets, models, transforms
+
+from pytorch_metric_learning.miners import MultiSimilarityMiner
 from pytorch_metric_learning.samplers import TuplesToWeightsSampler
 from pytorch_metric_learning.utils import common_functions as c_f
-from pytorch_metric_learning.miners import MultiSimilarityMiner
-from torchvision import models, datasets, transforms
-import shutil
+
 from .. import TEST_DEVICE
-import os
 
 
 class TestTuplesToWeightsSampler(unittest.TestCase):

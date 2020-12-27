@@ -1,5 +1,6 @@
-from ..utils import common_functions as c_f
 import torch
+
+from ..utils import common_functions as c_f
 
 
 class WeightMixin:

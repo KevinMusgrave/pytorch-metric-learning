@@ -1,6 +1,7 @@
-from .nca_loss import NCALoss
-from .mixins import WeightRegularizerMixin
 import torch
+
+from .mixins import WeightRegularizerMixin
+from .nca_loss import NCALoss
 
 
 class ProxyNCALoss(WeightRegularizerMixin, NCALoss):

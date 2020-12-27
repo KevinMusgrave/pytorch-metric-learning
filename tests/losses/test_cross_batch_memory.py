@@ -1,15 +1,17 @@
 import unittest
-from .. import TEST_DTYPES, TEST_DEVICE
+
 import torch
-from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
+
+from pytorch_metric_learning.losses import (ContrastiveLoss, CrossBatchMemory,
+                                            NTXentLoss)
+from pytorch_metric_learning.miners import (DistanceWeightedMiner,
+                                            MultiSimilarityMiner,
+                                            PairMarginMiner,
+                                            TripletMarginMiner)
 from pytorch_metric_learning.utils import common_functions as c_f
-from pytorch_metric_learning.losses import CrossBatchMemory, ContrastiveLoss, NTXentLoss
-from pytorch_metric_learning.miners import (
-    PairMarginMiner,
-    TripletMarginMiner,
-    MultiSimilarityMiner,
-    DistanceWeightedMiner,
-)
+from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
+
+from .. import TEST_DEVICE, TEST_DTYPES
 
 
 class TestCrossBatchMemory(unittest.TestCase):

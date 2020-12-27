@@ -8,11 +8,13 @@
 # No changes have been made, except removal of .cuda() calls
 # Implementation of SoftTriple Loss
 import math
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.nn.parameter import Parameter
 from torch.nn import init
+from torch.nn.parameter import Parameter
+
 from pytorch_metric_learning.utils import common_functions as c_f
 
 
@@ -55,9 +57,11 @@ class OriginalImplementationSoftTriple(nn.Module):
 
 
 import unittest
-from .. import TEST_DTYPES, TEST_DEVICE
+
 from pytorch_metric_learning.losses import SoftTripleLoss
 from pytorch_metric_learning.regularizers import SparseCentersRegularizer
+
+from .. import TEST_DEVICE, TEST_DTYPES
 
 
 class TestSoftTripleLoss(unittest.TestCase):

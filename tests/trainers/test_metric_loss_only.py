@@ -1,20 +1,21 @@
-import unittest
-import torch
-from pytorch_metric_learning.trainers import MetricLossOnly
-from pytorch_metric_learning.testers import GlobalEmbeddingSpaceTester
-from pytorch_metric_learning.samplers import MPerClassSampler
-from pytorch_metric_learning.utils import (
-    common_functions as c_f,
-    logging_presets,
-    accuracy_calculator,
-)
-from pytorch_metric_learning.losses import NTXentLoss
-from torchvision import models, datasets, transforms
-import shutil
-from .. import TEST_DEVICE, TEST_DTYPES
-import os
-import numpy as np
 import logging
+import os
+import shutil
+import unittest
+
+import numpy as np
+import torch
+from torchvision import datasets, models, transforms
+
+from pytorch_metric_learning.losses import NTXentLoss
+from pytorch_metric_learning.samplers import MPerClassSampler
+from pytorch_metric_learning.testers import GlobalEmbeddingSpaceTester
+from pytorch_metric_learning.trainers import MetricLossOnly
+from pytorch_metric_learning.utils import accuracy_calculator
+from pytorch_metric_learning.utils import common_functions as c_f
+from pytorch_metric_learning.utils import logging_presets
+
+from .. import TEST_DEVICE, TEST_DTYPES
 
 logging.getLogger().setLevel(logging.INFO)
 
@@ -83,7 +84,8 @@ class TestMetricLossOnly(unittest.TestCase):
                 None,
                 [("train", ["train", "val"]), ("val", ["train", "val"])],
             ]:
-                from temp_cifar_resnet_for_pytorch_metric_learning_test import resnet
+                from temp_cifar_resnet_for_pytorch_metric_learning_test import \
+                    resnet
 
                 model = torch.nn.DataParallel(resnet.resnet20())
                 checkpoint = torch.load(

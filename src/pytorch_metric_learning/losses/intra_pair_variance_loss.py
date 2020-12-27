@@ -1,7 +1,8 @@
-from ..losses import GenericPairLoss
 import torch
-from ..utils import loss_and_miner_utils as lmu
+
 from ..distances import CosineSimilarity
+from ..losses import GenericPairLoss
+from ..utils import loss_and_miner_utils as lmu
 
 
 class IntraPairVarianceLoss(GenericPairLoss):

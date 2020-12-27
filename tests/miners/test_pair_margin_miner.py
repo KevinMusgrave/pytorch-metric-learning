@@ -1,9 +1,12 @@
 import unittest
-from .. import TEST_DTYPES, TEST_DEVICE
+
 import torch
+
+from pytorch_metric_learning.distances import CosineSimilarity, LpDistance
 from pytorch_metric_learning.miners import PairMarginMiner
 from pytorch_metric_learning.utils import common_functions as c_f
-from pytorch_metric_learning.distances import LpDistance, CosineSimilarity
+
+from .. import TEST_DEVICE, TEST_DTYPES
 
 
 class TestPairMarginMiner(unittest.TestCase):

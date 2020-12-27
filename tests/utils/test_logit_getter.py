@@ -1,13 +1,13 @@
 import unittest
+
 import torch
-from .. import TEST_DTYPES, TEST_DEVICE
-from pytorch_metric_learning.utils.inference import LogitGetter
-from pytorch_metric_learning.losses import (
-    ArcFaceLoss,
-    NormalizedSoftmaxLoss,
-    ProxyAnchorLoss,
-)
+
 from pytorch_metric_learning.distances import LpDistance
+from pytorch_metric_learning.losses import (ArcFaceLoss, NormalizedSoftmaxLoss,
+                                            ProxyAnchorLoss)
+from pytorch_metric_learning.utils.inference import LogitGetter
+
+from .. import TEST_DEVICE, TEST_DTYPES
 
 
 class TestLogitGetter(unittest.TestCase):

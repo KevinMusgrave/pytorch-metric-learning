@@ -1,5 +1,5 @@
-from .base_trainer import BaseTrainer
 from .. import miners
+from .base_trainer import BaseTrainer
 
 
 class CascadedEmbeddings(BaseTrainer):

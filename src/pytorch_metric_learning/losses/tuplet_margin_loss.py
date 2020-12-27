@@ -1,8 +1,10 @@
-import torch
-from .generic_pair_loss import GenericPairLoss
 import numpy as np
-from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
+import torch
+
 from ..distances import CosineSimilarity
+from ..utils import common_functions as c_f
+from ..utils import loss_and_miner_utils as lmu
+from .generic_pair_loss import GenericPairLoss
 
 
 class TupletMarginLoss(GenericPairLoss):

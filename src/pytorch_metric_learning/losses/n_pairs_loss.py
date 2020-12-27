@@ -1,7 +1,8 @@
-from .base_metric_loss_function import BaseMetricLossFunction
 import torch
-from ..utils import loss_and_miner_utils as lmu
+
 from ..distances import DotProductSimilarity
+from ..utils import loss_and_miner_utils as lmu
+from .base_metric_loss_function import BaseMetricLossFunction
 
 
 class NPairsLoss(BaseMetricLossFunction):

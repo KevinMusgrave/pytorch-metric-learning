@@ -1,10 +1,13 @@
+import copy
+
 import torch
-from ..miners import EmbeddingsAlreadyPackagedAsTriplets
+
 from ..distances import LpDistance
 from ..losses import TripletMarginLoss
-from ..utils import common_functions as c_f, loss_and_miner_utils as lmu
+from ..miners import EmbeddingsAlreadyPackagedAsTriplets
+from ..utils import common_functions as c_f
+from ..utils import loss_and_miner_utils as lmu
 from .train_with_classifier import TrainWithClassifier
-import copy
 
 
 class NegativeLpDistance(LpDistance):

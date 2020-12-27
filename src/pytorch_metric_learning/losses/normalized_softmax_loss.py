@@ -1,8 +1,10 @@
-from .mixins import WeightRegularizerMixin
-from .base_metric_loss_function import BaseMetricLossFunction
 import torch
-from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
+
 from ..distances import DotProductSimilarity
+from ..utils import common_functions as c_f
+from ..utils import loss_and_miner_utils as lmu
+from .base_metric_loss_function import BaseMetricLossFunction
+from .mixins import WeightRegularizerMixin
 
 
 class NormalizedSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):

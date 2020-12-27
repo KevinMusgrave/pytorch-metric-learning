@@ -1,8 +1,10 @@
-from . import common_functions as c_f
+import copy
+
 import numpy as np
 import torch
+
 from ..distances import CosineSimilarity
-import copy
+from . import common_functions as c_f
 
 
 class MatchFinder:

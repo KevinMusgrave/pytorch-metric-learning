@@ -197,9 +197,11 @@ class OriginalImplementationFastAPLoss(torch.nn.Module):
 
 ### Testing this library's implementation ###
 import unittest
-from .. import TEST_DTYPES, TEST_DEVICE
+
 from pytorch_metric_learning.losses import FastAPLoss
 from pytorch_metric_learning.utils import common_functions as c_f
+
+from .. import TEST_DEVICE, TEST_DTYPES
 
 
 class TestFastAPLoss(unittest.TestCase):

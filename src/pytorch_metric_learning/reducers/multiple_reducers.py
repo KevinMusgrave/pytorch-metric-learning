@@ -1,6 +1,7 @@
+import torch
+
 from .base_reducer import BaseReducer
 from .mean_reducer import MeanReducer
-import torch
 
 
 class MultipleReducers(BaseReducer):

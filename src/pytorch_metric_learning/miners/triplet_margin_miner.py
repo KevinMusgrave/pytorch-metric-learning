@@ -1,6 +1,7 @@
-from .base_miner import BaseTupleMiner
-from ..utils import loss_and_miner_utils as lmu
 import torch
+
+from ..utils import loss_and_miner_utils as lmu
+from .base_miner import BaseTupleMiner
 
 
 class TripletMarginMiner(BaseTupleMiner):

@@ -1,9 +1,12 @@
-from .mixins import WeightRegularizerMixin
-from .base_metric_loss_function import BaseMetricLossFunction
 import torch
-from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
-from ..reducers import DivisorReducer
+
 from ..distances import CosineSimilarity
+from ..reducers import DivisorReducer
+from ..utils import common_functions as c_f
+from ..utils import loss_and_miner_utils as lmu
+from .base_metric_loss_function import BaseMetricLossFunction
+from .mixins import WeightRegularizerMixin
+
 
 # adapted from
 # https://github.com/tjddus9597/Proxy-Anchor-CVPR2020/blob/master/code/losses.py

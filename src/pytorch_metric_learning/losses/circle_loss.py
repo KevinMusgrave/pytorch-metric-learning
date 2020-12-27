@@ -1,8 +1,10 @@
-from .generic_pair_loss import GenericPairLoss
 import torch
-from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
-from ..reducers import AvgNonZeroReducer
+
 from ..distances import CosineSimilarity
+from ..reducers import AvgNonZeroReducer
+from ..utils import common_functions as c_f
+from ..utils import loss_and_miner_utils as lmu
+from .generic_pair_loss import GenericPairLoss
 
 
 class CircleLoss(GenericPairLoss):

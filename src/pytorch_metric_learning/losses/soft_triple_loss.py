@@ -1,10 +1,14 @@
-from .base_metric_loss_function import BaseMetricLossFunction
-from .mixins import WeightRegularizerMixin
-from ..utils import loss_and_miner_utils as lmu, common_functions as c_f
 import math
+
 import torch
 import torch.nn.functional as F
+
 from ..distances import CosineSimilarity
+from ..utils import common_functions as c_f
+from ..utils import loss_and_miner_utils as lmu
+from .base_metric_loss_function import BaseMetricLossFunction
+from .mixins import WeightRegularizerMixin
+
 
 ###### modified from https://github.com/idstcv/SoftTriple/blob/master/loss/SoftTriple.py ######
 ###### Original code is Copyright@Alibaba Group ######

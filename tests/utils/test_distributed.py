@@ -1,14 +1,19 @@
-import unittest
+import logging
 import os
+import unittest
+
 import torch
 import torch.distributed as dist
-import torch.optim as optim
 import torch.multiprocessing as mp
-import logging
-from pytorch_metric_learning.utils import distributed, common_functions as c_f
-from pytorch_metric_learning import losses, miners
+import torch.optim as optim
 from torch.nn.parallel import DistributedDataParallel as DDP
-from .. import TEST_DTYPES, TEST_DEVICE
+
+from pytorch_metric_learning import losses, miners
+from pytorch_metric_learning.utils import common_functions as c_f
+from pytorch_metric_learning.utils import distributed
+
+from .. import TEST_DEVICE, TEST_DTYPES
+
 
 # https://discuss.pytorch.org/t/check-if-models-have-same-weights/4351
 def parameters_are_equal(model1, model2):

@@ -1,7 +1,8 @@
 import torch
-from .generic_pair_loss import GenericPairLoss
-from ..utils import common_functions as c_f
+
 from ..distances import CosineSimilarity
+from ..utils import common_functions as c_f
+from .generic_pair_loss import GenericPairLoss
 
 
 class NTXentLoss(GenericPairLoss):

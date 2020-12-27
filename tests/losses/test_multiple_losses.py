@@ -1,13 +1,13 @@
 import unittest
-from .. import TEST_DTYPES, TEST_DEVICE
+
 import torch
-from pytorch_metric_learning.losses import (
-    MultipleLosses,
-    ContrastiveLoss,
-    TripletMarginLoss,
-)
+
+from pytorch_metric_learning.losses import (ContrastiveLoss, MultipleLosses,
+                                            TripletMarginLoss)
 from pytorch_metric_learning.miners import MultiSimilarityMiner
 from pytorch_metric_learning.utils import common_functions as c_f
+
+from .. import TEST_DEVICE, TEST_DTYPES
 
 
 class TestMultipleLosses(unittest.TestCase):

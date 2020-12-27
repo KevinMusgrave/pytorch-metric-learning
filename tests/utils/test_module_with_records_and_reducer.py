@@ -1,5 +1,7 @@
 import unittest
+
 import torch
+
 from pytorch_metric_learning.losses import ContrastiveLoss
 from pytorch_metric_learning.reducers import AvgNonZeroReducer
 

@@ -1,5 +1,6 @@
-from .base_distance import BaseDistance
 import torch
+
+from .base_distance import BaseDistance
 
 
 class DotProductSimilarity(BaseDistance):

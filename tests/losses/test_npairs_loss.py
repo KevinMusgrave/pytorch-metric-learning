@@ -1,9 +1,12 @@
 import unittest
-from .. import TEST_DTYPES, TEST_DEVICE
+
 import torch
+
 from pytorch_metric_learning.losses import NPairsLoss
 from pytorch_metric_learning.regularizers import LpRegularizer
 from pytorch_metric_learning.utils import common_functions as c_f
+
+from .. import TEST_DEVICE, TEST_DTYPES
 
 
 class TestNPairsLoss(unittest.TestCase):

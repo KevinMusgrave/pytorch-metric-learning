@@ -1,6 +1,7 @@
-import torch
-import sys
 import os
+import sys
+
+import torch
 
 sys.path.insert(0, "../pytorch-metric-learning/src")
 import pytorch_metric_learning

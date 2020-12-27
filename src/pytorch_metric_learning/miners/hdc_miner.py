@@ -1,7 +1,10 @@
-from .base_miner import BaseTupleMiner
-import torch
-from ..utils import loss_and_miner_utils as lmu
 import math
+
+import torch
+
+from ..utils import loss_and_miner_utils as lmu
+from .base_miner import BaseTupleMiner
+
 
 # mining method used in Hard Aware Deeply Cascaded Embeddings
 # https://arxiv.org/abs/1611.05720

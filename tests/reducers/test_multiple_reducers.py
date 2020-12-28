@@ -2,8 +2,11 @@ import unittest
 
 import torch
 
-from pytorch_metric_learning.reducers import (AvgNonZeroReducer,
-                                              DivisorReducer, MultipleReducers)
+from pytorch_metric_learning.reducers import (
+    AvgNonZeroReducer,
+    DivisorReducer,
+    MultipleReducers,
+)
 
 from .. import TEST_DEVICE, TEST_DTYPES
 

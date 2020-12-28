@@ -18,10 +18,10 @@ class TestCalculateAccuracies(unittest.TestCase):
                 [0, 0, 4, 2, 2],
             ]
         )
-        label_counts1 = {1: 3, 2: 5, 3: 4, 4: 5}
+        label_counts1 = ([1, 2, 3, 4], [3, 5, 4, 5])
 
         knn_labels2 = knn_labels1 + 5
-        label_counts2 = {k + 5: v for k, v in label_counts1.items()}
+        label_counts2 = ([6, 7, 8, 9], [3, 5, 4, 5])
 
         for avg_of_avgs in [False, True]:
             for i, (knn_labels, label_counts) in enumerate(
@@ -142,24 +142,28 @@ class TestCalculateAccuracies(unittest.TestCase):
         else:
             return np.mean([(acc0 + acc1) / 2, acc2, acc3, acc4])
 
-    def test_get_label_counts(self):
-        label_counts, num_k = accuracy_calculator.get_label_counts(
-            [0, 1, 3, 2, 3, 1, 3, 3, 4, 6, 5, 10, 4, 4, 4, 4, 6, 6, 5]
+    def test_get_label_match_counts(self):
+        (unique_labels, counts), num_k = accuracy_calculator.get_label_match_counts(
+            [0, 1, 3, 2, 3, 1, 3, 3, 4, 6, 5, 10, 4, 4, 4, 4, 6, 6, 5],
+            accuracy_calculator.EQUALITY,
         )
-        self.assertTrue(
-            label_counts == {0: 1, 1: 2, 2: 1, 3: 4, 4: 5, 5: 2, 6: 3, 10: 1}
-        )
+        self.assertTrue(sorted(unique_labels) == sorted([0, 1, 2, 3, 4, 5, 6, 10]))
+        self.assertTrue(sorted(counts) == sorted([1, 2, 1, 4, 5, 2, 3, 1]))
         self.assertTrue(num_k == 5)
 
     def test_get_lone_query_labels(self):
         query_labels = np.array([0, 1, 2, 3, 4, 5, 6])
         reference_labels = np.array([0, 0, 0, 1, 2, 2, 3, 4, 5, 6])
-        reference_label_counts, _ = accuracy_calculator.get_label_counts(
-            reference_labels
+        reference_label_counts, _ = accuracy_calculator.get_label_match_counts(
+            reference_labels,
+            accuracy_calculator.EQUALITY,
         )
 
-        lone_query_labels = accuracy_calculator.get_lone_query_labels(
-            query_labels, reference_labels, reference_label_counts, True
+        lone_query_labels, _ = accuracy_calculator.get_lone_query_labels(
+            query_labels,
+            reference_label_counts,
+            True,
+            accuracy_calculator.EQUALITY,
         )
         self.assertTrue(
             np.all(np.unique(lone_query_labels) == np.array([1, 3, 4, 5, 6]))
@@ -168,8 +172,11 @@ class TestCalculateAccuracies(unittest.TestCase):
         query_labels = np.array([0, 1, 2, 3, 4])
         reference_labels = np.array([0, 0, 0, 1, 2, 2, 4, 5, 6])
 
-        lone_query_labels = accuracy_calculator.get_lone_query_labels(
-            query_labels, reference_labels, reference_label_counts, False
+        lone_query_labels, _ = accuracy_calculator.get_lone_query_labels(
+            query_labels,
+            reference_label_counts,
+            False,
+            accuracy_calculator.EQUALITY,
         )
         self.assertTrue(np.all(np.unique(lone_query_labels) == np.array([3])))
 

@@ -2,8 +2,10 @@ import unittest
 
 import torch
 
-from pytorch_metric_learning.losses import (GeneralizedLiftedStructureLoss,
-                                            LiftedStructureLoss)
+from pytorch_metric_learning.losses import (
+    GeneralizedLiftedStructureLoss,
+    LiftedStructureLoss,
+)
 from pytorch_metric_learning.utils import common_functions as c_f
 
 from .. import TEST_DEVICE, TEST_DTYPES

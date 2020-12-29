@@ -143,7 +143,7 @@ def get_label_match_counts(reference_labels, label_comparison_fn):
             match_counts[ix_a] += 1
             for ix_b in range(ix_a + 1, len(reference_labels)):
                 label_b = reference_labels[ix_b]
-                if label_comparison_fn(label_a, label_b):
+                if label_comparison_fn(label_a[None, :], label_b[None, :]):
                     match_counts[ix_a] += 1
                     match_counts[ix_b] += 1
 
@@ -158,19 +158,20 @@ def get_lone_query_labels(
     embeddings_come_from_same_source,
     label_comparison_fn,
 ):
+    unique_labels, _ = label_counts
     if label_comparison_fn is EQUALITY:
         if embeddings_come_from_same_source:
             lone_query_labels = np.array([k for k, v in zip(*label_counts) if v <= 1])
         else:
-            lone_query_labels = np.setdiff1d(query_labels, label_counts[0])
+            lone_query_labels = np.setdiff1d(query_labels, unique_labels)
         not_lone_query_mask = ~np.isin(query_labels, lone_query_labels)
     else:
         not_lone_query_mask = []
         lone_query_labels = []
         for query_label in query_labels:
             lone = True
-            for reference_label in label_counts[0]:
-                if label_comparison_fn(query_label, reference_label):
+            for reference_label in unique_labels:
+                if label_comparison_fn(query_label[None, :], reference_label[None, :]):
                     lone = False
                     break
             not_lone_query_mask.append(not lone)

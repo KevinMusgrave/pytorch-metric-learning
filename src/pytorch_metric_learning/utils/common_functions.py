@@ -443,5 +443,9 @@ class EmbeddingDataset(torch.utils.data.Dataset):
         return self.embeddings[idx], self.labels[idx]
 
 
-def sqliteObjToDict(sqliteObj):
-    return {k: [row[k] for row in sqliteObj] for k in sqliteObj[0].keys()}
+def sqlite_obj_to_dict(sqlite_obj):
+    return {k: [row[k] for row in sqlite_obj] for k in sqlite_obj[0].keys()}
+
+
+def np_all_from_dim_to_end(x, dim):
+    return np.all(x, axis=tuple(np.arange(dim, x.ndim)))

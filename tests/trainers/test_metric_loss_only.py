@@ -84,8 +84,7 @@ class TestMetricLossOnly(unittest.TestCase):
                 None,
                 [("train", ["train", "val"]), ("val", ["train", "val"])],
             ]:
-                from temp_cifar_resnet_for_pytorch_metric_learning_test import \
-                    resnet
+                from temp_cifar_resnet_for_pytorch_metric_learning_test import resnet
 
                 model = torch.nn.DataParallel(resnet.resnet20())
                 checkpoint = torch.load(
@@ -175,14 +174,14 @@ class TestMetricLossOnly(unittest.TestCase):
                 accuracies, primary_metric_key = hooks.get_accuracies_of_best_epoch(
                     tester, "val"
                 )
-                accuracies = c_f.sqliteObjToDict(accuracies)
+                accuracies = c_f.sqlite_obj_to_dict(accuracies)
                 self.assertTrue(accuracies[primary_metric_key][0] == best_accuracy)
                 self.assertTrue(primary_metric_key == "precision_at_1_level0")
 
                 best_epoch_accuracies = hooks.get_accuracies_of_epoch(
                     tester, "val", best_epoch
                 )
-                best_epoch_accuracies = c_f.sqliteObjToDict(best_epoch_accuracies)
+                best_epoch_accuracies = c_f.sqlite_obj_to_dict(best_epoch_accuracies)
                 self.assertTrue(
                     best_epoch_accuracies[primary_metric_key][0] == best_accuracy
                 )

@@ -5,6 +5,7 @@ import logging
 import numpy as np
 from sklearn.metrics import adjusted_mutual_info_score, normalized_mutual_info_score
 
+from . import common_functions as c_f
 from . import stat_utils
 
 EQUALITY = np.equal
@@ -33,10 +34,12 @@ def get_relevance_mask(
     label_comparison_fn,
 ):
     relevance_mask = np.zeros(shape=shape, dtype=np.int)
+
     for label, count in zip(*label_counts):
-        same_label = label_comparison_fn(gt_labels, label)
-        matching_rows = np.where(same_label)[0]
-        max_column = count - 1 if embeddings_come_from_same_source else count
+        matching_rows = np.where(c_f.np_all_from_dim_to_end(gt_labels == label, 1))[0]
+        max_column = count
+        if label_comparison_fn is EQUALITY and embeddings_come_from_same_source:
+            max_column -= 1
         relevance_mask[matching_rows, :max_column] = 1
     return relevance_mask
 
@@ -130,26 +133,24 @@ def precision_at_k(knn_labels, gt_labels, k, avg_of_avgs, label_comparison_fn):
     )
 
 
-def get_label_match_counts(reference_labels, label_comparison_fn):
+def get_label_match_counts(query_labels, reference_labels, label_comparison_fn):
+    unique_query_labels = np.unique(query_labels, axis=0)
     if label_comparison_fn is EQUALITY:
-        # Categorical labels that can be compared with the equality operator
-        unique_labels, match_counts = np.unique(reference_labels, return_counts=True)
+        comparison = unique_query_labels[:, None] == reference_labels
+        match_counts = np.sum(c_f.np_all_from_dim_to_end(comparison, 2), axis=1)
     else:
         # Labels are compared with a custom function.
         # They might be non-categorical or multidimensional labels.
-        unique_labels = reference_labels
-        match_counts = [0 for _ in reference_labels]
-        for ix_a, label_a in enumerate(reference_labels):
-            match_counts[ix_a] += 1
-            for ix_b in range(ix_a + 1, len(reference_labels)):
-                label_b = reference_labels[ix_b]
+        match_counts = np.array([0 for _ in unique_query_labels])
+        for ix_a, label_a in enumerate(unique_query_labels):
+            for label_b in reference_labels:
                 if label_comparison_fn(label_a[None, :], label_b[None, :]):
                     match_counts[ix_a] += 1
-                    match_counts[ix_b] += 1
 
     # faiss can only do a max of k=1024, and we have to do k+1
     num_k = int(min(1023, np.max(match_counts)))
-    return (unique_labels, match_counts), num_k
+
+    return (unique_query_labels, match_counts), num_k
 
 
 def get_lone_query_labels(
@@ -158,27 +159,17 @@ def get_lone_query_labels(
     embeddings_come_from_same_source,
     label_comparison_fn,
 ):
-    unique_labels, _ = label_counts
-    if label_comparison_fn is EQUALITY:
-        if embeddings_come_from_same_source:
-            lone_query_labels = np.array([k for k, v in zip(*label_counts) if v <= 1])
-        else:
-            lone_query_labels = np.setdiff1d(query_labels, unique_labels)
-        not_lone_query_mask = ~np.isin(query_labels, lone_query_labels)
+    unique_labels, match_counts = label_counts
+    if label_comparison_fn is EQUALITY and embeddings_come_from_same_source:
+        lone_condition = match_counts <= 1
     else:
-        not_lone_query_mask = []
-        lone_query_labels = []
-        for query_label in query_labels:
-            lone = True
-            for reference_label in unique_labels:
-                if label_comparison_fn(query_label[None, :], reference_label[None, :]):
-                    lone = False
-                    break
-            not_lone_query_mask.append(not lone)
-            if lone:
-                lone_query_labels.append(query_label)
-        not_lone_query_mask = np.asarray(not_lone_query_mask)
-
+        lone_condition = match_counts == 0
+    lone_query_labels = unique_labels[lone_condition]
+    if len(lone_query_labels) > 0:
+        comparison = query_labels[:, None] == lone_query_labels
+        not_lone_query_mask = ~np.any(c_f.np_all_from_dim_to_end(comparison, 2), axis=1)
+    else:
+        not_lone_query_mask = np.ones(query_labels.shape[0], dtype=np.bool)
     return lone_query_labels, not_lone_query_mask
 
 
@@ -370,8 +361,15 @@ class AccuracyCalculator:
 
         if any(x in self.requires_knn() for x in self.get_curr_metrics()):
             label_counts, num_k = get_label_match_counts(
-                reference_labels, self.label_comparison_fn
+                query_labels, reference_labels, self.label_comparison_fn
             )
+            lone_query_labels, not_lone_query_mask = get_lone_query_labels(
+                query_labels,
+                label_counts,
+                embeddings_come_from_same_source,
+                self.label_comparison_fn,
+            )
+
             if self.k is not None:
                 num_k = self.k
             knn_indices, knn_distances = stat_utils.get_knn(
@@ -379,12 +377,6 @@ class AccuracyCalculator:
             )
 
             knn_labels = reference_labels[knn_indices]
-            lone_query_labels, not_lone_query_mask = get_lone_query_labels(
-                query_labels,
-                label_counts,
-                embeddings_come_from_same_source,
-                self.label_comparison_fn,
-            )
             if not any(not_lone_query_mask):
                 logging.warning("None of the query labels are in the reference set.")
             kwargs["label_counts"] = label_counts

@@ -5,8 +5,7 @@ import inspect
 import torch
 
 from ..utils import common_functions as c_f
-from ..utils.module_with_records_and_reducer import \
-    ModuleWithRecordsReducerAndDistance
+from ..utils.module_with_records_and_reducer import ModuleWithRecordsReducerAndDistance
 from .mixins import EmbeddingRegularizerMixin
 
 

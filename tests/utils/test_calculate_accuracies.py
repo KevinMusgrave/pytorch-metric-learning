@@ -1,6 +1,7 @@
 import unittest
 
 import numpy as np
+import torch
 
 from pytorch_metric_learning.utils import accuracy_calculator
 
@@ -69,7 +70,7 @@ class TestCalculateAccuracies(unittest.TestCase):
                         )
                         self.assertTrue(
                             acc["mean_average_precision"]
-                            == self.correct_mean_average_precision(ecfss, avg_of_avgs)
+                            == self.correct_mean_average_precision(ecfss, avg_of_avgs),
                         )
 
     def correct_precision_at_1(self, embeddings_come_from_same_source, avg_of_avgs):
@@ -98,9 +99,11 @@ class TestCalculateAccuracies(unittest.TestCase):
             acc3 = 1.0 / 3
             acc4 = 1.0 / 4
         if not avg_of_avgs:
-            return np.mean([acc0, acc1, acc2, acc3, acc4])
+            return torch.mean(torch.tensor([acc0, acc1, acc2, acc3, acc4])).item()
         else:
-            return np.mean([(acc0 + acc1) / 2, acc2, acc3, acc4])
+            return torch.mean(
+                torch.tensor([(acc0 + acc1) / 2, acc2, acc3, acc4])
+            ).item()
 
     def correct_mean_average_precision_at_r(
         self, embeddings_come_from_same_source, avg_of_avgs
@@ -118,9 +121,11 @@ class TestCalculateAccuracies(unittest.TestCase):
             acc3 = (1.0 / 2) / 3
             acc4 = (1.0 / 2) / 4
         if not avg_of_avgs:
-            return np.mean([acc0, acc1, acc2, acc3, acc4])
+            return torch.mean(torch.tensor([acc0, acc1, acc2, acc3, acc4])).item()
         else:
-            return np.mean([(acc0 + acc1) / 2, acc2, acc3, acc4])
+            return torch.mean(
+                torch.tensor([(acc0 + acc1) / 2, acc2, acc3, acc4])
+            ).item()
 
     def correct_mean_average_precision(
         self, embeddings_come_from_same_source, avg_of_avgs
@@ -138,9 +143,11 @@ class TestCalculateAccuracies(unittest.TestCase):
             acc3 = (1.0 / 2 + 2.0 / 4) / 2
             acc4 = 1.0 / 2
         if not avg_of_avgs:
-            return np.mean([acc0, acc1, acc2, acc3, acc4])
+            return torch.mean(torch.tensor([acc0, acc1, acc2, acc3, acc4])).item()
         else:
-            return np.mean([(acc0 + acc1) / 2, acc2, acc3, acc4])
+            return torch.mean(
+                torch.tensor([(acc0 + acc1) / 2, acc2, acc3, acc4])
+            ).item()
 
     def test_get_label_counts(self):
         label_counts, num_k = accuracy_calculator.get_label_counts(
@@ -215,7 +222,7 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
         acc = AC_global_average.get_accuracy(
             query, reference, query_labels, reference_labels, False
         )
-        self.assertTrue(acc["precision_at_1"] == 0.9)
+        self.assertTrue(np.isclose(acc["precision_at_1"], 0.9))
         self.assertTrue(acc["r_precision"] == 0.9)
         self.assertTrue(acc["mean_average_precision_at_r"] == 0.9)
 

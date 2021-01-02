@@ -7,25 +7,26 @@ from sklearn.metrics import (adjusted_mutual_info_score,
                              normalized_mutual_info_score)
 
 from . import stat_utils
+import torch
 
 
 def maybe_get_avg_of_avgs(accuracy_per_sample, sample_labels, avg_of_avgs):
     if avg_of_avgs:
-        unique_labels = np.unique(sample_labels)
-        mask = sample_labels == unique_labels[None, :]
-        acc_sum_per_class = np.sum(accuracy_per_sample[:, None] * mask, axis=0)
-        mask_sum_per_class = np.sum(mask, axis=0)
+        unique_labels = torch.unique(sample_labels)
+        mask = sample_labels == unique_labels.unsqueeze(0)
+        acc_sum_per_class = torch.sum(accuracy_per_sample.unsqueeze(1) * mask, dim=0)
+        mask_sum_per_class = torch.sum(mask, dim=0)
         average_per_class = acc_sum_per_class / mask_sum_per_class
-        return np.mean(average_per_class)
-    return np.mean(accuracy_per_sample)
+        return torch.mean(average_per_class).item()
+    return torch.mean(accuracy_per_sample).item()
 
 
 def get_relevance_mask(
     shape, gt_labels, embeddings_come_from_same_source, label_counts
 ):
-    relevance_mask = np.zeros(shape=shape, dtype=np.int)
+    relevance_mask = torch.zeros(size=shape, dtype=torch.bool)
     for k, v in label_counts.items():
-        matching_rows = np.where(gt_labels == k)[0]
+        matching_rows = torch.where(gt_labels == k)[0]
         max_column = v - 1 if embeddings_come_from_same_source else v
         relevance_mask[matching_rows, :max_column] = 1
     return relevance_mask
@@ -37,10 +38,10 @@ def r_precision(
     relevance_mask = get_relevance_mask(
         knn_labels.shape, gt_labels, embeddings_come_from_same_source, label_counts
     )
-    matches_per_row = np.sum(
-        (knn_labels == gt_labels) * relevance_mask.astype(bool), axis=1
-    )
-    max_possible_matches_per_row = np.sum(relevance_mask, axis=1)
+    matches_per_row = torch.sum(
+        (knn_labels == gt_labels) * relevance_mask, dim=1
+    ).float()
+    max_possible_matches_per_row = torch.sum(relevance_mask, dim=1)
     accuracy_per_sample = matches_per_row / max_possible_matches_per_row
     return maybe_get_avg_of_avgs(accuracy_per_sample, gt_labels, avg_of_avgs)
 
@@ -54,18 +55,18 @@ def mean_average_precision(
     at_r=False,
 ):
     relevance_mask = (
-        np.ones_like(knn_labels) if relevance_mask is None else relevance_mask
+        torch.ones_like(knn_labels).type(torch.bool) if relevance_mask is None else relevance_mask
     )
     num_samples, num_k = knn_labels.shape
-    equality = (knn_labels == gt_labels) * relevance_mask.astype(bool)
-    cumulative_correct = np.cumsum(equality, axis=1)
-    k_idx = np.tile(np.arange(1, num_k + 1), (num_samples, 1))
-    precision_at_ks = (cumulative_correct * equality) / k_idx
-    summed_precision_per_row = np.sum(precision_at_ks * relevance_mask, axis=1)
+    equality = (knn_labels == gt_labels) * relevance_mask
+    cumulative_correct = torch.cumsum(equality, dim=1)
+    k_idx = torch.arange(1, num_k + 1).repeat(num_samples, 1)
+    precision_at_ks = (cumulative_correct * equality).float() / k_idx
+    summed_precision_per_row = torch.sum(precision_at_ks * relevance_mask, dim=1)
     if at_r:
-        max_possible_matches_per_row = np.sum(relevance_mask, axis=1)
+        max_possible_matches_per_row = torch.sum(relevance_mask, dim=1)
     else:
-        max_possible_matches_per_row = np.sum(equality, axis=1)
+        max_possible_matches_per_row = torch.sum(equality, dim=1)
         max_possible_matches_per_row[max_possible_matches_per_row == 0] = 1
     accuracy_per_sample = summed_precision_per_row / max_possible_matches_per_row
     return maybe_get_avg_of_avgs(accuracy_per_sample, gt_labels, avg_of_avgs)
@@ -89,7 +90,7 @@ def mean_average_precision_at_r(
 
 def precision_at_k(knn_labels, gt_labels, k, avg_of_avgs):
     curr_knn_labels = knn_labels[:, :k]
-    accuracy_per_sample = np.sum(curr_knn_labels == gt_labels, axis=1) / k
+    accuracy_per_sample = torch.sum(curr_knn_labels == gt_labels, dim=1).float() / k
     return maybe_get_avg_of_avgs(accuracy_per_sample, gt_labels, avg_of_avgs)
 
 
@@ -178,7 +179,7 @@ class AccuracyCalculator:
         )
         if knn_labels is None:
             return 0
-        return precision_at_k(knn_labels, query_labels[:, None], 1, self.avg_of_avgs)
+        return precision_at_k(knn_labels, query_labels.unsqueeze(1), 1, self.avg_of_avgs)
 
     def calculate_mean_average_precision_at_r(
         self,
@@ -196,7 +197,7 @@ class AccuracyCalculator:
             return 0
         return mean_average_precision_at_r(
             knn_labels,
-            query_labels[:, None],
+            query_labels.unsqueeze(1),
             embeddings_come_from_same_source,
             label_counts,
             self.avg_of_avgs,
@@ -217,7 +218,7 @@ class AccuracyCalculator:
             return 0
         return mean_average_precision(
             knn_labels,
-            query_labels[:, None],
+            query_labels.unsqueeze(1),
             embeddings_come_from_same_source,
             self.avg_of_avgs,
         )
@@ -238,7 +239,7 @@ class AccuracyCalculator:
             return 0
         return r_precision(
             knn_labels,
-            query_labels[:, None],
+            query_labels.unsqueeze(1),
             embeddings_come_from_same_source,
             label_counts,
             self.avg_of_avgs,

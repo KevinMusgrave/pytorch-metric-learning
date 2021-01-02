@@ -278,11 +278,27 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
         def label_comparison_fn(x, y):
             return (x[..., 0] == y[..., 0]) & (x[..., 1] != y[..., 1])
 
-        AC = accuracy_calculator.AccuracyCalculator(
+        self.assertRaises(
+            NotImplementedError,
+            lambda: accuracy_calculator.AccuracyCalculator(
+                include=("NMI", "AMI"),
+                avg_of_avgs=False,
+                label_comparison_fn=label_comparison_fn,
+            ),
+        )
+
+        AC_global_average = accuracy_calculator.AccuracyCalculator(
             exclude=("NMI", "AMI"),
             avg_of_avgs=False,
             label_comparison_fn=label_comparison_fn,
         )
+
+        AC_per_class_average = accuracy_calculator.AccuracyCalculator(
+            exclude=("NMI", "AMI"),
+            avg_of_avgs=True,
+            label_comparison_fn=label_comparison_fn,
+        )
+
         query = np.arange(10)[:, None].astype(np.float32)
         reference = np.arange(10)[:, None].astype(np.float32)
         query[-1] = 100
@@ -315,10 +331,19 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
                 (0, 3),
             ]
         )
-        acc = AC.get_accuracy(query, reference, query_labels, reference_labels, False)
+        acc = AC_global_average.get_accuracy(
+            query, reference, query_labels, reference_labels, False
+        )
         self.assertTrue(acc["precision_at_1"] == 0.9)
         self.assertTrue(acc["r_precision"] == 0.9)
         self.assertTrue(acc["mean_average_precision_at_r"] == 0.9)
+
+        acc = AC_per_class_average.get_accuracy(
+            query, reference, query_labels, reference_labels, False
+        )
+        self.assertTrue(acc["precision_at_1"] == 0.5)
+        self.assertTrue(acc["r_precision"] == 0.5)
+        self.assertTrue(acc["mean_average_precision_at_r"] == 0.5)
 
         # SIMPLE CASE
         query = np.arange(2)[:, None].astype(np.float32)
@@ -338,7 +363,16 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
                 (1, 6),
             ]
         )
-        acc = AC.get_accuracy(query, reference, query_labels, reference_labels, False)
+        acc = AC_global_average.get_accuracy(
+            query, reference, query_labels, reference_labels, False
+        )
+        self.assertTrue(acc["precision_at_1"] == 0.5)
+        self.assertTrue(acc["r_precision"] == (1.0 / 3 + 1) / 2)
+        self.assertTrue(acc["mean_average_precision_at_r"] == ((1.0 / 3) / 3 + 1) / 2)
+
+        acc = AC_per_class_average.get_accuracy(
+            query, reference, query_labels, reference_labels, False
+        )
         self.assertTrue(acc["precision_at_1"] == 0.5)
         self.assertTrue(acc["r_precision"] == (1.0 / 3 + 1) / 2)
         self.assertTrue(acc["mean_average_precision_at_r"] == ((1.0 / 3) / 3 + 1) / 2)

@@ -11,14 +11,11 @@ from . import stat_utils
 EQUALITY = np.equal
 
 
-def maybe_get_avg_of_avgs(
-    accuracy_per_sample, sample_labels, avg_of_avgs, label_comparison_fn
-):
+def maybe_get_avg_of_avgs(accuracy_per_sample, sample_labels, avg_of_avgs):
     if avg_of_avgs:
-        if label_comparison_fn is not EQUALITY:
-            raise NotImplementedError
-        unique_labels = np.unique(sample_labels)
-        mask = sample_labels == unique_labels[None, :]
+        unique_labels = np.unique(sample_labels, axis=0)
+        mask = c_f.np_all_from_dim_to_end(sample_labels == unique_labels[:, None], 2)
+        mask = np.transpose(mask)
         acc_sum_per_class = np.sum(accuracy_per_sample[:, None] * mask, axis=0)
         mask_sum_per_class = np.sum(mask, axis=0)
         average_per_class = acc_sum_per_class / mask_sum_per_class
@@ -63,9 +60,7 @@ def r_precision(
     matches_per_row = np.sum(same_label * relevance_mask.astype(bool), axis=1)
     max_possible_matches_per_row = np.sum(relevance_mask, axis=1)
     accuracy_per_sample = matches_per_row / max_possible_matches_per_row
-    return maybe_get_avg_of_avgs(
-        accuracy_per_sample, gt_labels, avg_of_avgs, label_comparison_fn
-    )
+    return maybe_get_avg_of_avgs(accuracy_per_sample, gt_labels, avg_of_avgs)
 
 
 def mean_average_precision(
@@ -93,9 +88,7 @@ def mean_average_precision(
         max_possible_matches_per_row = np.sum(equality, axis=1)
         max_possible_matches_per_row[max_possible_matches_per_row == 0] = 1
     accuracy_per_sample = summed_precision_per_row / max_possible_matches_per_row
-    return maybe_get_avg_of_avgs(
-        accuracy_per_sample, gt_labels, avg_of_avgs, label_comparison_fn
-    )
+    return maybe_get_avg_of_avgs(accuracy_per_sample, gt_labels, avg_of_avgs)
 
 
 def mean_average_precision_at_r(
@@ -128,9 +121,7 @@ def precision_at_k(knn_labels, gt_labels, k, avg_of_avgs, label_comparison_fn):
     curr_knn_labels = knn_labels[:, :k]
     same_label = label_comparison_fn(gt_labels, curr_knn_labels)
     accuracy_per_sample = np.sum(same_label, axis=1) / k
-    return maybe_get_avg_of_avgs(
-        accuracy_per_sample, gt_labels, avg_of_avgs, label_comparison_fn
-    )
+    return maybe_get_avg_of_avgs(accuracy_per_sample, gt_labels, avg_of_avgs)
 
 
 def get_label_match_counts(query_labels, reference_labels, label_comparison_fn):
@@ -208,10 +199,6 @@ class AccuracyCalculator:
             if any(x in self.requires_clustering() for x in self.get_curr_metrics()):
                 raise NotImplementedError(
                     "Unsupported: clustering + custom label comparison"
-                )
-            if avg_of_avgs:
-                raise NotImplementedError(
-                    "Unsupported: avg_of_avgs + custom label comparison"
                 )
         else:
             self.label_comparison_fn = EQUALITY

@@ -363,16 +363,21 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
                 (1, 6),
             ]
         )
+
+        correct_precision_at_1 = 0.5
+        correct_r_precision = (1.0 / 3 + 1) / 2
+        correct_mapr = ((1.0 / 3) / 3 + 1) / 2
+
         acc = AC_global_average.get_accuracy(
             query, reference, query_labels, reference_labels, False
         )
-        self.assertTrue(acc["precision_at_1"] == 0.5)
-        self.assertTrue(acc["r_precision"] == (1.0 / 3 + 1) / 2)
-        self.assertTrue(acc["mean_average_precision_at_r"] == ((1.0 / 3) / 3 + 1) / 2)
+        self.assertTrue(acc["precision_at_1"] == correct_precision_at_1)
+        self.assertTrue(acc["r_precision"] == correct_r_precision)
+        self.assertTrue(acc["mean_average_precision_at_r"] == correct_mapr)
 
         acc = AC_per_class_average.get_accuracy(
             query, reference, query_labels, reference_labels, False
         )
-        self.assertTrue(acc["precision_at_1"] == 0.5)
-        self.assertTrue(acc["r_precision"] == (1.0 / 3 + 1) / 2)
-        self.assertTrue(acc["mean_average_precision_at_r"] == ((1.0 / 3) / 3 + 1) / 2)
+        self.assertTrue(acc["precision_at_1"] == correct_precision_at_1)
+        self.assertTrue(acc["r_precision"] == correct_r_precision)
+        self.assertTrue(acc["mean_average_precision_at_r"] == correct_mapr)

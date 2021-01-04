@@ -18,10 +18,10 @@ class TestCalculateAccuracies(unittest.TestCase):
                 [0, 0, 4, 2, 2],
             ]
         )
-        label_counts1 = {1: 3, 2: 5, 3: 4, 4: 5}
+        label_counts1 = ([1, 2, 3, 4], [3, 5, 4, 5])
 
         knn_labels2 = knn_labels1 + 5
-        label_counts2 = {k + 5: v for k, v in label_counts1.items()}
+        label_counts2 = ([6, 7, 8, 9], [3, 5, 4, 5])
 
         for avg_of_avgs in [False, True]:
             for i, (knn_labels, label_counts) in enumerate(
@@ -142,36 +142,84 @@ class TestCalculateAccuracies(unittest.TestCase):
         else:
             return np.mean([(acc0 + acc1) / 2, acc2, acc3, acc4])
 
-    def test_get_label_counts(self):
-        label_counts, num_k = accuracy_calculator.get_label_counts(
-            [0, 1, 3, 2, 3, 1, 3, 3, 4, 6, 5, 10, 4, 4, 4, 4, 6, 6, 5]
+    def test_get_lone_query_labels_multi_dim(self):
+        def custom_label_comparison_fn(x, y):
+            return (x[..., 0] == y[..., 0]) & (x[..., 1] != y[..., 1])
+
+        query_labels = np.array(
+            [
+                (1, 3),
+                (0, 3),
+                (0, 3),
+                (0, 3),
+                (0, 2),
+                (1, 2),
+                (4, 5),
+            ]
         )
-        self.assertTrue(
-            label_counts == {0: 1, 1: 2, 2: 1, 3: 4, 4: 5, 5: 2, 6: 3, 10: 1}
-        )
-        self.assertTrue(num_k == 5)
+
+        for comparison_fn in [accuracy_calculator.EQUALITY, custom_label_comparison_fn]:
+            label_counts, num_k = accuracy_calculator.get_label_match_counts(
+                query_labels,
+                query_labels,
+                comparison_fn,
+            )
+
+            if comparison_fn is accuracy_calculator.EQUALITY:
+                correct = [
+                    (
+                        True,
+                        np.array([[0, 2], [1, 2], [1, 3], [4, 5]]),
+                        np.array([False, True, True, True, False, False, False]),
+                    ),
+                    (
+                        False,
+                        np.array([[]]),
+                        np.array([True, True, True, True, True, True, True]),
+                    ),
+                ]
+            else:
+                correct_lone = np.array([[4, 5]])
+                correct_mask = np.array([True, True, True, True, True, True, False])
+                correct = [
+                    (True, correct_lone, correct_mask),
+                    (False, correct_lone, correct_mask),
+                ]
+
+            for same_source, correct_lone, correct_mask in correct:
+                (
+                    lone_query_labels,
+                    not_lone_query_mask,
+                ) = accuracy_calculator.get_lone_query_labels(
+                    query_labels, label_counts, same_source, comparison_fn
+                )
+                if correct_lone.size == 0:
+                    self.assertTrue(lone_query_labels.size == 0)
+                else:
+                    self.assertTrue(np.all(lone_query_labels == correct_lone))
+
+                self.assertTrue(np.all(not_lone_query_mask == correct_mask))
 
     def test_get_lone_query_labels(self):
         query_labels = np.array([0, 1, 2, 3, 4, 5, 6])
-        reference_labels = np.array([0, 0, 0, 1, 2, 2, 3, 4, 5, 6])
-        reference_label_counts, _ = accuracy_calculator.get_label_counts(
-            reference_labels
+        reference_labels = np.array([0, 0, 0, 1, 2, 2, 3, 4, 5])
+        label_counts, _ = accuracy_calculator.get_label_match_counts(
+            query_labels,
+            reference_labels,
+            accuracy_calculator.EQUALITY,
         )
 
-        lone_query_labels = accuracy_calculator.get_lone_query_labels(
-            query_labels, reference_labels, reference_label_counts, True
-        )
-        self.assertTrue(
-            np.all(np.unique(lone_query_labels) == np.array([1, 3, 4, 5, 6]))
-        )
-
-        query_labels = np.array([0, 1, 2, 3, 4])
-        reference_labels = np.array([0, 0, 0, 1, 2, 2, 4, 5, 6])
-
-        lone_query_labels = accuracy_calculator.get_lone_query_labels(
-            query_labels, reference_labels, reference_label_counts, False
-        )
-        self.assertTrue(np.all(np.unique(lone_query_labels) == np.array([3])))
+        for same_source, correct in [
+            (True, np.array([1, 3, 4, 5, 6])),
+            (False, np.array([6])),
+        ]:
+            lone_query_labels, _ = accuracy_calculator.get_lone_query_labels(
+                query_labels,
+                label_counts,
+                same_source,
+                accuracy_calculator.EQUALITY,
+            )
+            self.assertTrue(np.all(lone_query_labels == correct))
 
 
 class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
@@ -225,3 +273,111 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
         self.assertTrue(acc["precision_at_1"] == 0.5)
         self.assertTrue(acc["r_precision"] == 0.5)
         self.assertTrue(acc["mean_average_precision_at_r"] == 0.5)
+
+    def test_accuracy_calculator_custom_comparison_function(self):
+        def label_comparison_fn(x, y):
+            return (x[..., 0] == y[..., 0]) & (x[..., 1] != y[..., 1])
+
+        self.assertRaises(
+            NotImplementedError,
+            lambda: accuracy_calculator.AccuracyCalculator(
+                include=("NMI", "AMI"),
+                avg_of_avgs=False,
+                label_comparison_fn=label_comparison_fn,
+            ),
+        )
+
+        AC_global_average = accuracy_calculator.AccuracyCalculator(
+            exclude=("NMI", "AMI"),
+            avg_of_avgs=False,
+            label_comparison_fn=label_comparison_fn,
+        )
+
+        AC_per_class_average = accuracy_calculator.AccuracyCalculator(
+            exclude=("NMI", "AMI"),
+            avg_of_avgs=True,
+            label_comparison_fn=label_comparison_fn,
+        )
+
+        query = np.arange(10)[:, None].astype(np.float32)
+        reference = np.arange(10)[:, None].astype(np.float32)
+        query[-1] = 100
+        reference[0] = -100
+        query_labels = np.array(
+            [
+                (0, 2),
+                (0, 2),
+                (0, 2),
+                (0, 2),
+                (0, 2),
+                (0, 2),
+                (0, 2),
+                (0, 2),
+                (0, 2),
+                (1, 2),
+            ]
+        )
+        reference_labels = np.array(
+            [
+                (1, 3),
+                (0, 3),
+                (0, 3),
+                (0, 3),
+                (0, 3),
+                (0, 3),
+                (0, 3),
+                (0, 3),
+                (0, 3),
+                (0, 3),
+            ]
+        )
+        acc = AC_global_average.get_accuracy(
+            query, reference, query_labels, reference_labels, False
+        )
+        self.assertTrue(acc["precision_at_1"] == 0.9)
+        self.assertTrue(acc["r_precision"] == 0.9)
+        self.assertTrue(acc["mean_average_precision_at_r"] == 0.9)
+
+        acc = AC_per_class_average.get_accuracy(
+            query, reference, query_labels, reference_labels, False
+        )
+        self.assertTrue(acc["precision_at_1"] == 0.5)
+        self.assertTrue(acc["r_precision"] == 0.5)
+        self.assertTrue(acc["mean_average_precision_at_r"] == 0.5)
+
+        # SIMPLE CASE
+        query = np.arange(2)[:, None].astype(np.float32)
+        reference = np.arange(5)[:, None].astype(np.float32)
+        query_labels = np.array(
+            [
+                (1, 3),
+                (7, 3),
+            ]
+        )
+        reference_labels = np.array(
+            [
+                (1, 3),
+                (7, 4),
+                (1, 4),
+                (1, 5),
+                (1, 6),
+            ]
+        )
+
+        correct_precision_at_1 = 0.5
+        correct_r_precision = (1.0 / 3 + 1) / 2
+        correct_mapr = ((1.0 / 3) / 3 + 1) / 2
+
+        acc = AC_global_average.get_accuracy(
+            query, reference, query_labels, reference_labels, False
+        )
+        self.assertTrue(acc["precision_at_1"] == correct_precision_at_1)
+        self.assertTrue(acc["r_precision"] == correct_r_precision)
+        self.assertTrue(acc["mean_average_precision_at_r"] == correct_mapr)
+
+        acc = AC_per_class_average.get_accuracy(
+            query, reference, query_labels, reference_labels, False
+        )
+        self.assertTrue(acc["precision_at_1"] == correct_precision_at_1)
+        self.assertTrue(acc["r_precision"] == correct_r_precision)
+        self.assertTrue(acc["mean_average_precision_at_r"] == correct_mapr)

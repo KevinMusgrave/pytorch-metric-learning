@@ -142,6 +142,38 @@ class TestCalculateAccuracies(unittest.TestCase):
         else:
             return np.mean([(acc0 + acc1) / 2, acc2, acc3, acc4])
 
+    def test_get_lone_query_labels_custom(self):
+        def comparison_fn(x, y):
+            return abs(x - y) < 2
+
+        query_labels = np.array([0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 100])
+
+        label_counts, num_k = accuracy_calculator.get_label_match_counts(
+            query_labels,
+            query_labels,
+            comparison_fn,
+        )
+        unique_labels, counts = label_counts
+
+        correct_unique_labels = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 100])
+        correct_counts = np.array([3, 4, 3, 3, 3, 3, 3, 3, 3, 2, 1])
+        self.assertTrue(np.all(unique_labels == correct_unique_labels))
+        self.assertTrue(np.all(counts == correct_counts))
+
+        (
+            lone_query_labels,
+            not_lone_query_mask,
+        ) = accuracy_calculator.get_lone_query_labels(
+            query_labels, label_counts, True, comparison_fn
+        )
+
+        correct_lone_query_labels = np.array([100])
+        correct_not_lone_query_mask = np.array(
+            [True, True, True, True, True, True, True, True, True, True, True, False]
+        )
+        self.assertTrue(np.all(lone_query_labels == correct_lone_query_labels))
+        self.assertTrue(np.all(not_lone_query_mask == correct_not_lone_query_mask))
+
     def test_get_lone_query_labels_multi_dim(self):
         def custom_label_comparison_fn(x, y):
             return (x[..., 0] == y[..., 0]) & (x[..., 1] != y[..., 1])

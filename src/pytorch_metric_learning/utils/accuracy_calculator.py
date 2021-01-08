@@ -133,9 +133,11 @@ def get_label_match_counts(query_labels, reference_labels, label_comparison_fn):
         # Labels are compared with a custom function.
         # They might be non-categorical or multidimensional labels.
         match_counts = np.array([0 for _ in unique_query_labels])
-        for ix_a, label_a in enumerate(unique_query_labels):
-            for label_b in reference_labels:
-                if label_comparison_fn(label_a[None, :], label_b[None, :]):
+        for ix_a in range(len(unique_query_labels)):
+            label_a = unique_query_labels[ix_a : ix_a + 1]
+            for ix_b in range(len(reference_labels)):
+                label_b = reference_labels[ix_b : ix_b + 1]
+                if label_comparison_fn(label_a, label_b):
                     match_counts[ix_a] += 1
 
     # faiss can only do a max of k=1024, and we have to do k+1

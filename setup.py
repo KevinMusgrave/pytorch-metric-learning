@@ -3,12 +3,12 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-extras_require_with_hooks = ["record-keeper >= 0.9.29", "faiss-gpu >= 1.6.3", "tensorboard"]
-extras_require_with_hooks_cpu = ["record-keeper >= 0.9.29", "faiss-cpu >= 1.6.3", "tensorboard"]
+extras_require_with_hooks = ["record-keeper >= 0.9.30", "faiss-gpu >= 1.6.3", "tensorboard"]
+extras_require_with_hooks_cpu = ["record-keeper >= 0.9.30", "faiss-cpu >= 1.6.3", "tensorboard"]
 
 setuptools.setup(
     name="pytorch-metric-learning",
-    version="0.9.96.dev2",
+    version="0.9.96.dev3",
     author="Kevin Musgrave",
     author_email="tkm45@cornell.edu",
     description="The easiest way to use deep metric learning in your application. Modular, flexible, and extensible. Written in PyTorch.",

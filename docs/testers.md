@@ -88,7 +88,7 @@ testers.BaseTester(normalize_embeddings=True,
 	* embeddings: The dimensionality reduced embeddings.
 	* label: The corresponding labels for each embedding.
 	* split_name: The name of the split (train, val, etc.)
-	* keyname: The name of the dictionary key where the embeddings and labels are stored. (The dictionary is self.dim_reduced_embeddings[split_name][keyname].)
+	* keyname: The name of the dictionary key where the embeddings and labels are stored.
 	* epoch: The epoch for which the embeddings are being computed.
 
 

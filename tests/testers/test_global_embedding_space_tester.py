@@ -38,14 +38,15 @@ class TestGlobalEmbeddingSpaceTester(unittest.TestCase):
 
         for splits_to_eval, correct_vals in correct:
             tester = GlobalEmbeddingSpaceTester(accuracy_calculator=AC)
-            tester.test(self.dataset_dict, 0, model, splits_to_eval=splits_to_eval)
+            all_accuracies = tester.test(
+                self.dataset_dict, 0, model, splits_to_eval=splits_to_eval
+            )
             self.assertTrue(
-                tester.all_accuracies["train"]["precision_at_1_level0"]
+                all_accuracies["train"]["precision_at_1_level0"]
                 == correct_vals["train"]
             )
             self.assertTrue(
-                tester.all_accuracies["val"]["precision_at_1_level0"]
-                == correct_vals["val"]
+                all_accuracies["val"]["precision_at_1_level0"] == correct_vals["val"]
             )
 
     @classmethod

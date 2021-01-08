@@ -362,6 +362,9 @@ Thanks to the contributors who made pull requests!
 	- [BatchEasyHardMiner](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#batcheasyhardminer)
     - [TwoStreamMetricLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#twostreammetricloss)
     - [GlobalTwoStreamEmbeddingSpaceTester](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#globaltwostreamembeddingspacetester)
+- [mlopezantequera](https://github.com/mlopezantequera)
+	- Made the [testers](https://kevinmusgrave.github.io/pytorch-metric-learning/testers) work on any combination of query and reference sets
+	- Made [AccuracyCalculator](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/) work with arbitrary label comparisons
 - [AlenUbuntu](https://github.com/AlenUbuntu)
 	- [CircleLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#circleloss)
 - [btseytlin](https://github.com/btseytlin)
@@ -378,6 +381,7 @@ Thanks to the contributors who made pull requests!
     - [Example using trainers.TwoStreamMetricLoss](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/TwoStreamMetricLoss.ipynb)
 
 #### General improvements and bug fixes
+- [mlopezantequera](https://github.com/mlopezantequera)
 - [wconnell](https://github.com/wconnell)
 - [marijnl](https://github.com/marijnl)
 - [thinline72](https://github.com/thinline72)

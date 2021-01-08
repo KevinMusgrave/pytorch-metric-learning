@@ -175,6 +175,9 @@ class TestCalculateAccuracies(unittest.TestCase):
         self.assertTrue(np.all(not_lone_query_mask == correct_not_lone_query_mask))
 
     def test_get_lone_query_labels_multi_dim(self):
+        def equality2D(x, y):
+            return (x[..., 0] == y[..., 0]) & (x[..., 1] == y[..., 1])
+
         def custom_label_comparison_fn(x, y):
             return (x[..., 0] == y[..., 0]) & (x[..., 1] != y[..., 1])
 
@@ -184,20 +187,29 @@ class TestCalculateAccuracies(unittest.TestCase):
                 (0, 3),
                 (0, 3),
                 (0, 3),
-                (0, 2),
                 (1, 2),
                 (4, 5),
             ]
         )
 
-        for comparison_fn in [accuracy_calculator.EQUALITY, custom_label_comparison_fn]:
+        for comparison_fn in [custom_label_comparison_fn]:
             label_counts, num_k = accuracy_calculator.get_label_match_counts(
                 query_labels,
                 query_labels,
                 comparison_fn,
             )
 
-            if comparison_fn is accuracy_calculator.EQUALITY:
+            unique_labels, counts = label_counts
+            correct_unique_labels = np.array([[0, 3], [1, 2], [1, 3], [4, 5]])
+            if comparison_fn is equality2D:
+                correct_counts = np.array([3, 1, 1, 1])
+            else:
+                correct_counts = np.array([0, 1, 1, 0])
+
+            self.assertTrue(np.all(correct_counts == counts))
+            self.assertTrue(np.all(correct_unique_labels == unique_labels))
+
+            if comparison_fn is equality2D:
                 correct = [
                     (
                         True,
@@ -211,11 +223,17 @@ class TestCalculateAccuracies(unittest.TestCase):
                     ),
                 ]
             else:
-                correct_lone = np.array([[4, 5]])
-                correct_mask = np.array([True, True, True, True, True, True, False])
                 correct = [
-                    (True, correct_lone, correct_mask),
-                    (False, correct_lone, correct_mask),
+                    (
+                        True,
+                        np.array([[0, 3], [1, 2], [1, 3], [4, 5]]),
+                        np.array([False, False, False, False, False, False]),
+                    ),
+                    (
+                        False,
+                        np.array([[0, 3], [4, 5]]),
+                        np.array([True, False, False, False, True, False]),
+                    ),
                 ]
 
             for same_source, correct_lone, correct_mask in correct:

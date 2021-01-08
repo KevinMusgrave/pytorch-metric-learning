@@ -192,7 +192,7 @@ class TestCalculateAccuracies(unittest.TestCase):
             ]
         )
 
-        for comparison_fn in [custom_label_comparison_fn]:
+        for comparison_fn in [equality2D, custom_label_comparison_fn]:
             label_counts, num_k = accuracy_calculator.get_label_match_counts(
                 query_labels,
                 query_labels,
@@ -213,13 +213,13 @@ class TestCalculateAccuracies(unittest.TestCase):
                 correct = [
                     (
                         True,
-                        np.array([[0, 2], [1, 2], [1, 3], [4, 5]]),
-                        np.array([False, True, True, True, False, False, False]),
+                        np.array([[1, 2], [1, 3], [4, 5]]),
+                        np.array([False, True, True, True, False, False]),
                     ),
                     (
                         False,
                         np.array([[]]),
-                        np.array([True, True, True, True, True, True, True]),
+                        np.array([True, True, True, True, True, True]),
                     ),
                 ]
             else:

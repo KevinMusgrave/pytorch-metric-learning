@@ -6,14 +6,15 @@ In general, testers are used as follows:
 from pytorch_metric_learning import testers
 t = testers.SomeTestingFunction(*args, **kwargs)
 dataset_dict = {"train": train_dataset, "val": val_dataset}
-tester.test(dataset_dict, epoch, model)
+all_accuracies = tester.test(dataset_dict, epoch, model)
 
 # Or if your model is composed of a trunk + embedder
-tester.test(dataset_dict, epoch, trunk, embedder)
+all_accuracies = tester.test(dataset_dict, epoch, trunk, embedder)
 ```
 You can perform custom actions by writing an end-of-testing hook (see the documentation for [BaseTester](#basetester)), and you can access the test results directly via the ```all_accuracies``` attribute:
 ```python
-print(tester.all_accuracies)
+def end_of_testing_hook(tester):
+	print(tester.all_accuracies)
 ```
 This will print out a dictionary of accuracy metrics, per dataset split. You'll see something like this:
 ```python

@@ -125,7 +125,6 @@ class BaseTester:
         return embedder_model(trunk_output)
 
     def maybe_visualize(self, embeddings_and_labels, epoch):
-        self.dim_reduced_embeddings = defaultdict(dict)
         if self.visualizer:
             visualizer_name = self.visualizer.__class__.__name__
             for split_name, (embeddings, labels) in embeddings_and_labels.items():
@@ -138,10 +137,6 @@ class BaseTester:
                     label_scheme = labels[:, L]
                     keyname = self.accuracies_keyname(
                         visualizer_name, label_hierarchy_level=L
-                    )
-                    self.dim_reduced_embeddings[split_name][keyname] = (
-                        dim_reduced,
-                        label_scheme,
                     )
                     self.visualizer_hook(
                         self.visualizer,
@@ -299,3 +294,5 @@ class BaseTester:
         self.end_of_testing_hook(self) if self.end_of_testing_hook else logging.info(
             self.all_accuracies
         )
+        del self.embeddings_and_labels
+        return self.all_accuracies

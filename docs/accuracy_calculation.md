@@ -4,7 +4,11 @@ The AccuracyCalculator class computes several accuracy metrics given a query and
 
 ```python
 from pytorch_metric_learning.utils.accuracy_calculator import AccuracyCalculator
-AccuracyCalculator(include=(), exclude=(), avg_of_avgs=False, k=None)
+AccuracyCalculator(include=(),
+                    exclude=(),
+                    avg_of_avgs=False,
+                    k=None,
+                    label_comparison_fn=None)
 ```
 ### Parameters
 
@@ -12,6 +16,14 @@ AccuracyCalculator(include=(), exclude=(), avg_of_avgs=False, k=None)
 * **exclude**: Optional. A list or tuple of strings, which are the names of metrics you **do not** want to calculate.
 * **avg_of_avgs**: If True, the average accuracy per class is computed, and then the average of those averages is returned. This can be useful if your dataset has unbalanced classes. If False, the global average will be returned.
 * **k**: If set, this number of nearest neighbors will be retrieved for metrics that require k-nearest neighbors. If None, the value of k will be determined automatically.
+* **label_comparison_fn**: A function that compares two numpy arrays of labels and returns a boolean array. The default is ```numpy.equal```. If a custom function is used, then you must exclude clustering based metrics ("NMI" and "AMI"). The following is an example of a custom function for two-dimensional labels. It returns ```True``` if the 0th column matches, and the 1st column does **not** match:
+```python
+def example_label_comparison_fn(x, y):
+    return (x[:, 0] == y[:, 0]) & (x[:, 1] != y[:, 1])
+
+AccuracyCalculator(exclude=("NMI", "AMI"), 
+                    label_comparison_fn=example_label_comparison_fn)
+```
 
 ### Getting accuracy
 

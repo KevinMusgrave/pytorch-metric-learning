@@ -6,14 +6,15 @@ In general, testers are used as follows:
 from pytorch_metric_learning import testers
 t = testers.SomeTestingFunction(*args, **kwargs)
 dataset_dict = {"train": train_dataset, "val": val_dataset}
-tester.test(dataset_dict, epoch, model)
+all_accuracies = tester.test(dataset_dict, epoch, model)
 
 # Or if your model is composed of a trunk + embedder
-tester.test(dataset_dict, epoch, trunk, embedder)
+all_accuracies = tester.test(dataset_dict, epoch, trunk, embedder)
 ```
 You can perform custom actions by writing an end-of-testing hook (see the documentation for [BaseTester](#basetester)), and you can access the test results directly via the ```all_accuracies``` attribute:
 ```python
-print(tester.all_accuracies)
+def end_of_testing_hook(tester):
+	print(tester.all_accuracies)
 ```
 This will print out a dictionary of accuracy metrics, per dataset split. You'll see something like this:
 ```python
@@ -25,13 +26,24 @@ For an explanation of the default accuracy metrics, see the [AccuracyCalculator 
 
 ### Testing splits
 
-By default, every dataset in dataset_dict will be evaluated using itself as the query and reference (on which to find nearest neighbors) sets.
-More flexibility is allowed with the optional argument ```splits_to_eval``` taken by test().
-```splits_to_eval``` is a list of ```(query_split, [list_of_reference_splits])``` tuples. Some examples:
+By default, every dataset in ```dataset_dict``` will be evaluated using itself as the query and reference (on which to find nearest neighbors).
+More flexibility is allowed with the optional argument ```splits_to_eval``` taken by ```tester.test()```.
+```splits_to_eval``` is a list of ```(query_split, [list_of_reference_splits])``` tuples.
 
-- The default ```None``` resolves to: ```splits_to_eval = [('dataset_a', ['dataset_a']), ('dataset_b', ['dataset_b'])]```
-- A as the query, A + training set as the reference: ```splits_to_eval = [('dataset_a', ['dataset_a', 'train'])]```
-- If your test set is already split into reference and query sets: ```splits_to_eval = [('query_set', ['reference_set'])]```
+For example, let's say your ```dataset_dict``` has two keys: ```"dataset_a"``` and ```"train"```.
+
+- The default ```splits_to_eval = None``` is equivalent to: 
+```python
+splits_to_eval = [('dataset_a', ['dataset_a']), ('train', ['train'])]
+```
+- ```dataset_a``` as the query, and ```train``` as the reference: 
+```python
+splits_to_eval = [('dataset_a', ['train'])]
+```
+- ```dataset_a``` as the query, and ```dataset_a``` + ```train``` as the reference: 
+```python
+splits_to_eval = [('dataset_a', ['dataset_a', 'train'])]
+```
 
 
 ## BaseTester
@@ -77,7 +89,7 @@ testers.BaseTester(normalize_embeddings=True,
 	* embeddings: The dimensionality reduced embeddings.
 	* label: The corresponding labels for each embedding.
 	* split_name: The name of the split (train, val, etc.)
-	* keyname: The name of the dictionary key where the embeddings and labels are stored. (The dictionary is self.dim_reduced_embeddings[split_name][keyname].)
+	* keyname: The name of the dictionary key where the embeddings and labels are stored.
 	* epoch: The epoch for which the embeddings are being computed.
 
 

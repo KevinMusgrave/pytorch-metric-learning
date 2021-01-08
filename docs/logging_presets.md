@@ -62,6 +62,7 @@ LP.HookContainer(record_keeper,
 	* **model_folder**: A string which is the folder path where models, optimizers etc. will be saved. 
 	* **test_interval**: Optional. Default value is 1. Validation will be run every ```test_interval``` epochs.
 	* **patience**: Optional. Default value is None. If not None, training will end early if ```epoch - best_epoch > patience```.
+	* **splits_to_eval**: Optional. See [splits_to_eval](testers.md#testing-splits).
 	* **test_collate_fn**: Optional. Default value is None. This is the collate function used by the dataloader during testing. 
 * **end_of_testing_hook**: This function records accuracy metrics. You can pass this function directly into a tester object.
 

@@ -155,7 +155,7 @@ def get_lone_query_labels(
     unique_labels, match_counts = label_counts
     label_matches_itself = label_comparison_fn(unique_labels, unique_labels)
     if embeddings_come_from_same_source:
-        lone_condition = match_counts - ~label_matches_itself <= 1
+        lone_condition = match_counts - label_matches_itself <= 0
     else:
         lone_condition = match_counts == 0
     lone_query_labels = unique_labels[lone_condition]

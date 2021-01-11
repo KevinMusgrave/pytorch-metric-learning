@@ -67,12 +67,13 @@ class TestMPerClassSampler(unittest.TestCase):
                             sampler=sampler,
                             drop_last=False,
                         )
-                        for (_, curr_labels) in dataloader:
-                            unique_labels, counts = torch.unique(
-                                curr_labels, return_counts=True
-                            )
-                            self.assertTrue(len(unique_labels) == batch_size // m)
-                            self.assertTrue(torch.all(counts == m))
+                        for _ in range(2):
+                            for (_, curr_labels) in dataloader:
+                                unique_labels, counts = torch.unique(
+                                    curr_labels, return_counts=True
+                                )
+                                self.assertTrue(len(unique_labels) == batch_size // m)
+                                self.assertTrue(torch.all(counts == m))
 
 
 if __name__ == "__main__":

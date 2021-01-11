@@ -33,9 +33,10 @@ class TestFixedSetOfTriplet(unittest.TestCase):
                     dataloader = torch.utils.data.DataLoader(
                         dataset, batch_size=batch_size, sampler=sampler, drop_last=True
                     )
-                    for (embeddings, curr_labels) in dataloader:
-                        a, p, n = miner(batch_of_fake_embeddings, curr_labels)
-                        self.assertTrue(len(a) == batch_size // 3)
+                    for _ in range(2):
+                        for (embeddings, curr_labels) in dataloader:
+                            a, p, n = miner(batch_of_fake_embeddings, curr_labels)
+                            self.assertTrue(len(a) == batch_size // 3)
 
 
 if __name__ == "__main__":

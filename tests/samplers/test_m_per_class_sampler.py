@@ -33,7 +33,9 @@ class TestMPerClassSampler(unittest.TestCase):
             for m in [1, 5, 10, 17, 50]:
                 for num_labels in [2, 10, 55]:
                     for length_before_new_iter in [100, 999, 10000]:
+                        fake_embeddings = torch.randn(10000, 2)
                         labels = torch.randint(low=0, high=num_labels, size=(10000,))
+                        dataset = c_f.EmbeddingDataset(fake_embeddings, labels)
                         args = [labels, m, batch_size, length_before_new_iter]
                         if (
                             (length_before_new_iter < batch_size)
@@ -53,6 +55,19 @@ class TestMPerClassSampler(unittest.TestCase):
                                 )
                                 x.append(curr_batch)
                             curr_labels = labels[x]
+                            unique_labels, counts = torch.unique(
+                                curr_labels, return_counts=True
+                            )
+                            self.assertTrue(len(unique_labels) == batch_size // m)
+                            self.assertTrue(torch.all(counts == m))
+
+                        dataloader = torch.utils.data.DataLoader(
+                            dataset,
+                            batch_size=batch_size,
+                            sampler=sampler,
+                            drop_last=False,
+                        )
+                        for (_, curr_labels) in dataloader:
                             unique_labels, counts = torch.unique(
                                 curr_labels, return_counts=True
                             )

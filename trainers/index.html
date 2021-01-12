@@ -617,6 +617,7 @@
                     <span class="n">dataset</span><span class="p">,</span>
                     <span class="n">iterations_per_epoch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">data_device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">loss_weights</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">sampler</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">collate_fn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -656,6 +657,7 @@
 </li>
 <li><strong>dataset</strong>: The dataset you want to train on. Note that training methods do not perform validation, so do not pass in your validation or test set.</li>
 <li><strong>data_device</strong>: The device that you want to put batches of data on. If not specified, the trainer will put the data on any available GPUs.</li>
+<li><strong>dtype</strong>: The type that the dataset output will be converted to, e.g. <code>torch.float16</code>. If set to <code>None</code>, then no type casting will be done.</li>
 <li><strong>iterations_per_epoch</strong>: Optional. <ul>
 <li>If you don't specify <code>iterations_per_epoch</code>:<ul>
 <li>1 epoch = 1 pass through the dataloader iterator. If <code>sampler=None</code>, then 1 pass through the iterator is 1 pass through the dataset. </li>
@@ -669,7 +671,7 @@
 If not specified, then the original labels are used.</li>
 <li><strong>sampler</strong>: The sampler used by the dataloader. If not specified, then random sampling will be used.</li>
 <li><strong>collate_fn</strong>: The collate function used by the dataloader.</li>
-<li><strong>lr_scheduers</strong>: A dictionary of PyTorch learning rate schedulers. Your keys should be strings of the form <code>&lt;model&gt;_&lt;step_type&gt;</code>, where <code>&lt;model&gt;</code> is a key that comes from either the <code>models</code> or <code>loss_funcs</code> dictionary, and <code>&lt;step_type&gt;</code> is one of the following:<ul>
+<li><strong>lr_schedulers</strong>: A dictionary of PyTorch learning rate schedulers. Your keys should be strings of the form <code>&lt;model&gt;_&lt;step_type&gt;</code>, where <code>&lt;model&gt;</code> is a key that comes from either the <code>models</code> or <code>loss_funcs</code> dictionary, and <code>&lt;step_type&gt;</code> is one of the following:<ul>
 <li>"scheduler_by_iteration" (will be stepped at every iteration)</li>
 <li>"scheduler_by_epoch" (will be stepped at the end of each epoch)</li>
 <li>"scheduler_by_plateau" (will step if accuracy plateaus. This requires you to write your own end-of-epoch hook, compute validation accuracy, and call <code>trainer.step_lr_plateau_schedulers(validation_accuracy)</code>. Or you can use <a href="../logging_presets/">HookContainer</a>.)</li>

@@ -561,7 +561,11 @@
                 <h1 id="accuracy-calculation">Accuracy Calculation<a class="headerlink" href="#accuracy-calculation" title="Permanent link">&para;</a></h1>
 <p>The AccuracyCalculator class computes several accuracy metrics given a query and reference embeddings. It can be easily extended to create custom accuracy metrics.</p>
 <div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils.accuracy_calculator</span> <span class="kn">import</span> <span class="n">AccuracyCalculator</span>
-<span class="n">AccuracyCalculator</span><span class="p">(</span><span class="n">include</span><span class="o">=</span><span class="p">(),</span> <span class="n">exclude</span><span class="o">=</span><span class="p">(),</span> <span class="n">avg_of_avgs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="n">AccuracyCalculator</span><span class="p">(</span><span class="n">include</span><span class="o">=</span><span class="p">(),</span>
+                    <span class="n">exclude</span><span class="o">=</span><span class="p">(),</span>
+                    <span class="n">avg_of_avgs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">k</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">label_comparison_fn</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
 
 
@@ -571,7 +575,16 @@
 <li><strong>exclude</strong>: Optional. A list or tuple of strings, which are the names of metrics you <strong>do not</strong> want to calculate.</li>
 <li><strong>avg_of_avgs</strong>: If True, the average accuracy per class is computed, and then the average of those averages is returned. This can be useful if your dataset has unbalanced classes. If False, the global average will be returned.</li>
 <li><strong>k</strong>: If set, this number of nearest neighbors will be retrieved for metrics that require k-nearest neighbors. If None, the value of k will be determined automatically.</li>
+<li><strong>label_comparison_fn</strong>: A function that compares two numpy arrays of labels and returns a boolean array. The default is <code>numpy.equal</code>. If a custom function is used, then you must exclude clustering based metrics ("NMI" and "AMI"). The following is an example of a custom function for two-dimensional labels. It returns <code>True</code> if the 0th column matches, and the 1st column does <strong>not</strong> match:</li>
 </ul>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">example_label_comparison_fn</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">y</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">y</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
+
+<span class="n">AccuracyCalculator</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;NMI&quot;</span><span class="p">,</span> <span class="s2">&quot;AMI&quot;</span><span class="p">),</span> 
+                    <span class="n">label_comparison_fn</span><span class="o">=</span><span class="n">example_label_comparison_fn</span><span class="p">)</span>
+</code></pre></div>
+
+
 <h3 id="getting-accuracy">Getting accuracy<a class="headerlink" href="#getting-accuracy" title="Permanent link">&para;</a></h3>
 <p>Call the <code>get_accuracy</code> method to obtain a dictionary of accuracies.</p>
 <div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">get_accuracy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 

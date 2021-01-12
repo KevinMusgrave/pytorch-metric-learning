@@ -142,7 +142,81 @@ class TestCalculateAccuracies(unittest.TestCase):
         else:
             return np.mean([(acc0 + acc1) / 2, acc2, acc3, acc4])
 
+    def test_get_lone_query_labels_custom(self):
+        def fn1(x, y):
+            return abs(x - y) < 2
+
+        def fn2(x, y):
+            return abs(x - y) > 99
+
+        query_labels = np.array([0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 100])
+
+        for comparison_fn in [fn1, fn2]:
+            correct_unique_labels = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 100])
+
+            if comparison_fn is fn1:
+                correct_counts = np.array([3, 4, 3, 3, 3, 3, 3, 3, 3, 2, 1])
+                correct_lone_query_labels = np.array([100])
+                correct_not_lone_query_mask = np.array(
+                    [
+                        True,
+                        True,
+                        True,
+                        True,
+                        True,
+                        True,
+                        True,
+                        True,
+                        True,
+                        True,
+                        True,
+                        False,
+                    ]
+                )
+            elif comparison_fn is fn2:
+                correct_counts = np.array([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2])
+                correct_lone_query_labels = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9])
+                correct_not_lone_query_mask = np.array(
+                    [
+                        True,
+                        True,
+                        False,
+                        False,
+                        False,
+                        False,
+                        False,
+                        False,
+                        False,
+                        False,
+                        False,
+                        True,
+                    ]
+                )
+
+            label_counts, num_k = accuracy_calculator.get_label_match_counts(
+                query_labels,
+                query_labels,
+                comparison_fn,
+            )
+            unique_labels, counts = label_counts
+
+            self.assertTrue(np.all(unique_labels == correct_unique_labels))
+            self.assertTrue(np.all(counts == correct_counts))
+
+            (
+                lone_query_labels,
+                not_lone_query_mask,
+            ) = accuracy_calculator.get_lone_query_labels(
+                query_labels, label_counts, True, comparison_fn
+            )
+
+            self.assertTrue(np.all(lone_query_labels == correct_lone_query_labels))
+            self.assertTrue(np.all(not_lone_query_mask == correct_not_lone_query_mask))
+
     def test_get_lone_query_labels_multi_dim(self):
+        def equality2D(x, y):
+            return (x[..., 0] == y[..., 0]) & (x[..., 1] == y[..., 1])
+
         def custom_label_comparison_fn(x, y):
             return (x[..., 0] == y[..., 0]) & (x[..., 1] != y[..., 1])
 
@@ -152,38 +226,53 @@ class TestCalculateAccuracies(unittest.TestCase):
                 (0, 3),
                 (0, 3),
                 (0, 3),
-                (0, 2),
                 (1, 2),
                 (4, 5),
             ]
         )
 
-        for comparison_fn in [accuracy_calculator.EQUALITY, custom_label_comparison_fn]:
+        for comparison_fn in [equality2D, custom_label_comparison_fn]:
             label_counts, num_k = accuracy_calculator.get_label_match_counts(
                 query_labels,
                 query_labels,
                 comparison_fn,
             )
 
-            if comparison_fn is accuracy_calculator.EQUALITY:
+            unique_labels, counts = label_counts
+            correct_unique_labels = np.array([[0, 3], [1, 2], [1, 3], [4, 5]])
+            if comparison_fn is equality2D:
+                correct_counts = np.array([3, 1, 1, 1])
+            else:
+                correct_counts = np.array([0, 1, 1, 0])
+
+            self.assertTrue(np.all(correct_counts == counts))
+            self.assertTrue(np.all(correct_unique_labels == unique_labels))
+
+            if comparison_fn is equality2D:
                 correct = [
                     (
                         True,
-                        np.array([[0, 2], [1, 2], [1, 3], [4, 5]]),
-                        np.array([False, True, True, True, False, False, False]),
+                        np.array([[1, 2], [1, 3], [4, 5]]),
+                        np.array([False, True, True, True, False, False]),
                     ),
                     (
                         False,
                         np.array([[]]),
-                        np.array([True, True, True, True, True, True, True]),
+                        np.array([True, True, True, True, True, True]),
                     ),
                 ]
             else:
-                correct_lone = np.array([[4, 5]])
-                correct_mask = np.array([True, True, True, True, True, True, False])
                 correct = [
-                    (True, correct_lone, correct_mask),
-                    (False, correct_lone, correct_mask),
+                    (
+                        True,
+                        np.array([[0, 3], [4, 5]]),
+                        np.array([True, False, False, False, True, False]),
+                    ),
+                    (
+                        False,
+                        np.array([[0, 3], [4, 5]]),
+                        np.array([True, False, False, False, True, False]),
+                    ),
                 ]
 
             for same_source, correct_lone, correct_mask in correct:

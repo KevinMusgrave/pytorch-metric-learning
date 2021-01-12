@@ -40,12 +40,11 @@
 
 ## News
 
+**January 12**: v0.9.96 greatly increases the flexibility of the [testers](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/) and [AccuracyCalculator](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/). See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.96)
+
 **December 10**: v0.9.95 includes a new tuple miner, [BatchEasyHardMiner](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#batcheasyhardminer). See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.95)
 
 **November 6**: v0.9.94 has minor bug fixes and improvements. [Release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.94)
-
-**October 6**: v0.9.93 is a small update: 
- - ```get_random_triplet_indices``` has been optimized, so if you were using DistanceWeightedMiner, or if you ever set the ```triplets_per_anchor``` argument to something other than ```"all"``` anywhere in your code, it should run a lot faster now.
 
 ## Documentation
 - [**View the documentation here**](https://kevinmusgrave.github.io/pytorch-metric-learning/)

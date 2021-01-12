@@ -29,6 +29,8 @@ class TestFixedSetOfTriplet(unittest.TestCase):
                         curr_labels = labels[x]
                         a, p, n = miner(batch_of_fake_embeddings, curr_labels)
                         self.assertTrue(len(a) == batch_size // 3)
+                        self.assertTrue(torch.all(curr_labels[a] == curr_labels[p]))
+                        self.assertTrue(torch.all(curr_labels[a] != curr_labels[n]))
 
                     dataloader = torch.utils.data.DataLoader(
                         dataset, batch_size=batch_size, sampler=sampler, drop_last=True
@@ -37,6 +39,8 @@ class TestFixedSetOfTriplet(unittest.TestCase):
                         for (embeddings, curr_labels) in dataloader:
                             a, p, n = miner(batch_of_fake_embeddings, curr_labels)
                             self.assertTrue(len(a) == batch_size // 3)
+                            self.assertTrue(torch.all(curr_labels[a] == curr_labels[p]))
+                            self.assertTrue(torch.all(curr_labels[a] != curr_labels[n]))
 
 
 if __name__ == "__main__":

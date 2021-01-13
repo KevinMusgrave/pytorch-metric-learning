@@ -470,3 +470,61 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
         self.assertTrue(acc["precision_at_1"] == correct_precision_at_1)
         self.assertTrue(acc["r_precision"] == correct_r_precision)
         self.assertTrue(acc["mean_average_precision_at_r"] == correct_mapr)
+
+    def test_accuracy_calculator_float_custom_comparison_function(self):
+        def label_comparison_fn(x, y):
+            return np.abs(x - y) < 1
+
+        self.assertRaises(
+            NotImplementedError,
+            lambda: accuracy_calculator.AccuracyCalculator(
+                include=("NMI", "AMI"),
+                avg_of_avgs=False,
+                label_comparison_fn=label_comparison_fn,
+            ),
+        )
+
+        AC_global_average = accuracy_calculator.AccuracyCalculator(
+            exclude=("NMI", "AMI"),
+            avg_of_avgs=False,
+            label_comparison_fn=label_comparison_fn,
+        )
+
+        query = np.array([0, 3])[:, None].astype(np.float32)
+        reference = np.arange(4)[:, None].astype(np.float32)
+        query_labels = np.array(
+            [
+                0.01,
+                0.02,
+            ]
+        )
+        reference_labels = np.array(
+            [
+                10.0,
+                0.03,
+                0.04,
+                0.05,
+            ]
+        )
+
+        correct = {
+            "precision_at_1": (0 + 1) / 2,
+            "r_precision": (2 / 3 + 3 / 3) / 2,
+            "mean_average_precision_at_r": ((0 + 1 / 2 + 2 / 3) / 3 + 1) / 2,
+        }
+        acc = AC_global_average.get_accuracy(
+            query, reference, query_labels, reference_labels, False
+        )
+        for k in correct:
+            self.assertTrue(acc[k] == correct[k])
+
+        correct = {
+            "precision_at_1": (1 + 1) / 2,
+            "r_precision": (3 / 3 + 2 / 3) / 2,
+            "mean_average_precision_at_r": (1 + (1 / 1 + 2 / 2 + 0) / 3) / 2,
+        }
+        acc = AC_global_average.get_accuracy(
+            query, reference, query_labels, reference_labels, True
+        )
+        for k in correct:
+            self.assertTrue(acc[k] == correct[k])

@@ -132,13 +132,10 @@ def get_label_match_counts(query_labels, reference_labels, label_comparison_fn):
     else:
         # Labels are compared with a custom function.
         # They might be non-categorical or multidimensional labels.
-        match_counts = np.array([0 for _ in unique_query_labels])
+        match_counts = np.empty(shape=(len(unique_query_labels)), dtype=int)
         for ix_a in range(len(unique_query_labels)):
             label_a = unique_query_labels[ix_a : ix_a + 1]
-            for ix_b in range(len(reference_labels)):
-                label_b = reference_labels[ix_b : ix_b + 1]
-                if label_comparison_fn(label_a, label_b):
-                    match_counts[ix_a] += 1
+            match_counts[ix_a] = sum(label_comparison_fn(label_a, reference_labels))
 
     # faiss can only do a max of k=1024, and we have to do k+1
     num_k = int(min(1023, np.max(match_counts)))
@@ -153,8 +150,8 @@ def get_lone_query_labels(
     label_comparison_fn,
 ):
     unique_labels, match_counts = label_counts
-    label_matches_itself = label_comparison_fn(unique_labels, unique_labels)
     if embeddings_come_from_same_source:
+        label_matches_itself = label_comparison_fn(unique_labels, unique_labels)
         lone_condition = match_counts - label_matches_itself <= 0
     else:
         lone_condition = match_counts == 0

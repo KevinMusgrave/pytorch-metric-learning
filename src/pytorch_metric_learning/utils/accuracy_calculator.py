@@ -35,7 +35,7 @@ def get_relevance_mask(
     for label, count in zip(*label_counts):
         matching_rows = np.where(c_f.np_all_from_dim_to_end(gt_labels == label, 1))[0]
         max_column = count
-        if label_comparison_fn is EQUALITY and embeddings_come_from_same_source:
+        if embeddings_come_from_same_source:
             max_column -= 1
         relevance_mask[matching_rows, :max_column] = 1
     return relevance_mask

@@ -519,9 +519,9 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
             self.assertTrue(acc[k] == correct[k])
 
         correct = {
-            "precision_at_1": (1 + 1) / 2,
-            "r_precision": (3 / 3 + 2 / 3) / 2,
-            "mean_average_precision_at_r": (1 + (1 / 1 + 2 / 2 + 0) / 3) / 2,
+            "precision_at_1": 1.0,
+            "r_precision": 1.0,
+            "mean_average_precision_at_r": 1.0,
         }
         acc = AC_global_average.get_accuracy(
             query, reference, query_labels, reference_labels, True

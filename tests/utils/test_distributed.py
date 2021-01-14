@@ -16,10 +16,16 @@ from .. import TEST_DEVICE, TEST_DTYPES
 
 
 # https://discuss.pytorch.org/t/check-if-models-have-same-weights/4351
-def parameters_are_equal(model1, model2):
+def parameters_are_equal(model1, model2, should_be_equal=True, gradients=None):
     for p1, p2 in zip(model1.parameters(), model2.parameters()):
         num_elements = float(torch.numel(p2.data))
         if torch.sum(torch.isclose(p1.data, p2.data, rtol=1e-2)) < (num_elements * 0.8):
+            if should_be_equal:
+                print("p1.data", p1.data)
+                print("p2.data", p2.data)
+                if gradients is not None:
+                    print("gradients", gradients)
+                print("p2.grad", p2.grad)
             return False
     return True
 
@@ -30,6 +36,7 @@ def setup(rank, world_size):
     os.environ["MASTER_PORT"] = "12355"
 
     dist_type = "gloo" if TEST_DEVICE == torch.device("cpu") else "nccl"
+    print("dist_type", dist_type)
     # initialize the process group
     dist.init_process_group(dist_type, rank=rank, world_size=world_size)
 
@@ -61,6 +68,7 @@ def single_process_function(
     loss_fn,
     miner_fn,
     original_model,
+    gradients,
     original_loss_fn,
     original_miner_fn,
     correct_loss,
@@ -140,21 +148,25 @@ def single_process_function(
         )
 
     dist.barrier()
+    print("loss", loss.item())
+    print("correct_loss", correct_loss)
     loss.backward()
 
     original_model = original_model.to(device)
-    assert not parameters_are_equal(original_model, ddp_mp_model.module)
+    assert not parameters_are_equal(original_model, ddp_mp_model.module, should_be_equal=False)
     dist.barrier()
     optimizer.step()
     dist.barrier()
-    assert parameters_are_equal(original_model, ddp_mp_model.module)
+    print("testing model parameters")
+    assert parameters_are_equal(original_model, ddp_mp_model.module, gradients=gradients)
 
     if not is_tuple_loss:
         original_loss_fn = original_loss_fn.to(device)
-        assert not parameters_are_equal(original_loss_fn, loss_fn.loss.module)
+        assert not parameters_are_equal(original_loss_fn, loss_fn.loss.module, should_be_equal=False)
         dist.barrier()
         loss_optimizer.step()
         dist.barrier()
+        print("testing loss function parameters")
         assert parameters_are_equal(original_loss_fn, loss_fn.loss.module)
 
     dist.barrier()
@@ -243,6 +255,12 @@ class TestDistributedLossWrapper(unittest.TestCase):
                     all_outputs, all_labels, correct_indices_tuple
                 )
 
+                # for p in original_model.parameters():
+                #     p.retain_grad()
+                # if not is_tuple_loss:
+                #     for p in model.parameters():
+                #         p.retain_grad()
+
                 if TEST_DEVICE == torch.device("cpu"):
                     correct_loss.backward(retain_graph=True)
                 else:
@@ -253,6 +271,10 @@ class TestDistributedLossWrapper(unittest.TestCase):
                         # Each replica loss function sees gradients from the global batch
                         p.grad *= world_size
                     loss_optimizer.step()
+
+                model.share_memory()
+                if not is_tuple_loss:
+                    loss_fn.share_memory()
 
                 mp.spawn(
                     single_process_function,
@@ -265,6 +287,7 @@ class TestDistributedLossWrapper(unittest.TestCase):
                         loss_fn,
                         miner_fn,
                         original_model,
+                        [p.grad.cpu().numpy() for p in original_model.parameters()],
                         original_loss_fn,
                         original_miner_fn,
                         correct_loss.detach().cpu().numpy(),
@@ -278,16 +301,19 @@ class TestDistributedLossWrapper(unittest.TestCase):
                 )
 
     def test_distributed_tuple_loss_and_miner(self):
+        print("losses.ContrastiveLoss, miners.MultiSimilarityMiner")
         self.loss_and_miner_tester(
             losses.ContrastiveLoss, miners.MultiSimilarityMiner, True
         )
 
     def test_distributed_classifier_loss_and_miner(self):
+        print("losses.ArcFaceLoss, miners.MultiSimilarityMiner")
         self.loss_and_miner_tester(
             losses.ArcFaceLoss, miners.MultiSimilarityMiner, False
         )
 
     def test_distributed_tuple_miner_with_ref_emb(self):
+        print("losses.ContrastiveLoss, miners.MultiSimilarityMiner, True, test_ref_emb=True")
         self.loss_and_miner_tester(
             losses.ContrastiveLoss, miners.MultiSimilarityMiner, True, test_ref_emb=True
         )

@@ -32,7 +32,6 @@
  </a>
 </p>
 
-## Unit Tests Status
  <p align="center">
 <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/.github/workflows/test_losses.yml">
     <img alt="Losses unit tests" src="https://github.com/KevinMusgrave/pytorch-metric-learning/workflows/losses/badge.svg">

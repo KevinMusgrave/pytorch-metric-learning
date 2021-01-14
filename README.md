@@ -32,12 +32,6 @@
  </a>
 </p>
 
- <p align="center">
-<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/.github/workflows/unit_tests.yml">
-    <img alt="Unit Tests" src="https://github.com/KevinMusgrave/pytorch-metric-learning/workflows/Unit%20Tests/badge.svg">
- </a>
-</p>
-
 ## News
 
 **January 12**: v0.9.96 greatly increases the flexibility of the [testers](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/) and [AccuracyCalculator](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/). See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.96)

@@ -32,7 +32,7 @@ def get_relevance_mask(
     label_counts,
     label_comparison_fn,
 ):
-    relevance_mask = torch.zeros(size=shape, dtype=torch.bool)
+    relevance_mask = torch.zeros(size=shape, dtype=torch.bool, device=gt_labels.device)
 
     for label, count in zip(*label_counts):
         matching_rows = torch.where(
@@ -76,16 +76,17 @@ def mean_average_precision(
     relevance_mask=None,
     at_r=False,
 ):
+    device = gt_labels.device
     num_samples, num_k = knn_labels.shape[:2]
     relevance_mask = (
-        torch.ones((num_samples, num_k), dtype=torch.bool)
+        torch.ones((num_samples, num_k), dtype=torch.bool, device=device)
         if relevance_mask is None
         else relevance_mask
     )
     is_same_label = label_comparison_fn(gt_labels, knn_labels)
     equality = is_same_label * relevance_mask
     cumulative_correct = torch.cumsum(equality, dim=1)
-    k_idx = torch.arange(1, num_k + 1).repeat(num_samples, 1)
+    k_idx = torch.arange(1, num_k + 1, device=device).repeat(num_samples, 1)
     precision_at_ks = (cumulative_correct * equality).type(torch.float64) / k_idx
     summed_precision_per_row = torch.sum(precision_at_ks * relevance_mask, dim=1)
     if at_r:
@@ -138,7 +139,9 @@ def get_label_match_counts(query_labels, reference_labels, label_comparison_fn):
     else:
         # Labels are compared with a custom function.
         # They might be non-categorical or multidimensional labels.
-        match_counts = torch.empty(len(unique_query_labels), dtype=torch.int)
+        match_counts = torch.empty(
+            len(unique_query_labels), dtype=torch.int, device=query_labels.device
+        )
         for ix_a in range(len(unique_query_labels)):
             label_a = unique_query_labels[ix_a : ix_a + 1]
             match_counts[ix_a] = torch.sum(
@@ -170,7 +173,9 @@ def get_lone_query_labels(
             c_f.torch_all_from_dim_to_end(comparison, 2), dim=1
         )
     else:
-        not_lone_query_mask = torch.ones(query_labels.shape[0], dtype=torch.bool)
+        not_lone_query_mask = torch.ones(
+            query_labels.shape[0], dtype=torch.bool, device=query_labels.device
+        )
     return lone_query_labels, not_lone_query_mask
 
 

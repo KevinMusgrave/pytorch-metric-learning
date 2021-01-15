@@ -78,7 +78,7 @@ def mean_average_precision(
 ):
     num_samples, num_k = knn_labels.shape[:2]
     relevance_mask = (
-        torch.ones(num_samples, num_k) if relevance_mask is None else relevance_mask
+        torch.ones((num_samples, num_k), dtype=torch.bool) if relevance_mask is None else relevance_mask
     )
     is_same_label = label_comparison_fn(gt_labels, knn_labels)
     equality = is_same_label * relevance_mask

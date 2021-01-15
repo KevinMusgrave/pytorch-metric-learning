@@ -69,8 +69,12 @@ class TestCalculateAccuracies(unittest.TestCase):
                             )
                         )
                         self.assertTrue(
-                            acc["mean_average_precision"]
-                            == self.correct_mean_average_precision(ecfss, avg_of_avgs)
+                            np.isclose(
+                                acc["mean_average_precision"],
+                                self.correct_mean_average_precision(ecfss, avg_of_avgs),
+                                atol=1e-15,
+                                rtol=0,
+                            )
                         )
 
     def correct_precision_at_1(self, embeddings_come_from_same_source, avg_of_avgs):

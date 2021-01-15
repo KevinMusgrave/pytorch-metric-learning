@@ -122,11 +122,6 @@ class HookContainer:
                 ),
             )
 
-        for split_name, u in tester.dim_reduced_embeddings.items():
-            for k, (dim_reduced, labels) in u.items():
-                tag = "%s/%s" % (self.record_group_name(tester, split_name), k)
-                self.record_keeper.add_embedding_plot(dim_reduced, labels, tag, epoch)
-
     ############################################
     ############################################
     ######### MODEL LOADING AND SAVING #########

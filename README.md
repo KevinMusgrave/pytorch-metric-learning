@@ -33,19 +33,41 @@
 </p>
 
  <p align="center">
-<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/.github/workflows/unit_tests.yml">
-    <img alt="Unit Tests" src="https://github.com/KevinMusgrave/pytorch-metric-learning/workflows/Unit%20Tests/badge.svg">
+<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/.github/workflows/test_losses.yml">
+    <img alt="Losses unit tests" src="https://github.com/KevinMusgrave/pytorch-metric-learning/workflows/losses/badge.svg">
+ </a>
+<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/.github/workflows/test_miners.yml">
+    <img alt="Miners unit tests" src="https://github.com/KevinMusgrave/pytorch-metric-learning/workflows/miners/badge.svg">
+ </a>
+	<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/.github/workflows/test_reducers.yml">
+    <img alt="Reducers unit tests" src="https://github.com/KevinMusgrave/pytorch-metric-learning/workflows/reducers/badge.svg">
+ </a>
+	<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/.github/workflows/test_regularizers.yml">
+    <img alt="Regularizers unit tests" src="https://github.com/KevinMusgrave/pytorch-metric-learning/workflows/regularizers/badge.svg">
+ </a>
+</p>
+ <p align="center">
+	<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/.github/workflows/test_samplers.yml">
+    <img alt="Samplers unit tests" src="https://github.com/KevinMusgrave/pytorch-metric-learning/workflows/samplers/badge.svg">
+ </a>
+	<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/.github/workflows/test_testers.yml">
+    <img alt="Testers unit tests" src="https://github.com/KevinMusgrave/pytorch-metric-learning/workflows/testers/badge.svg">
+ </a>
+	<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/.github/workflows/test_trainers.yml">
+    <img alt="Trainers unit tests" src="https://github.com/KevinMusgrave/pytorch-metric-learning/workflows/trainers/badge.svg">
+ </a>
+	<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/.github/workflows/test_utils.yml">
+    <img alt="Utils unit tests" src="https://github.com/KevinMusgrave/pytorch-metric-learning/workflows/utils/badge.svg">
  </a>
 </p>
 
 ## News
 
+**January 12**: v0.9.96 greatly increases the flexibility of the [testers](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/) and [AccuracyCalculator](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/). See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.96)
+
 **December 10**: v0.9.95 includes a new tuple miner, [BatchEasyHardMiner](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#batcheasyhardminer). See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.95)
 
 **November 6**: v0.9.94 has minor bug fixes and improvements. [Release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.94)
-
-**October 6**: v0.9.93 is a small update: 
- - ```get_random_triplet_indices``` has been optimized, so if you were using DistanceWeightedMiner, or if you ever set the ```triplets_per_anchor``` argument to something other than ```"all"``` anywhere in your code, it should run a lot faster now.
 
 ## Documentation
 - [**View the documentation here**](https://kevinmusgrave.github.io/pytorch-metric-learning/)
@@ -362,6 +384,9 @@ Thanks to the contributors who made pull requests!
 	- [BatchEasyHardMiner](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#batcheasyhardminer)
     - [TwoStreamMetricLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#twostreammetricloss)
     - [GlobalTwoStreamEmbeddingSpaceTester](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#globaltwostreamembeddingspacetester)
+- [mlopezantequera](https://github.com/mlopezantequera)
+	- Made the [testers](https://kevinmusgrave.github.io/pytorch-metric-learning/testers) work on any combination of query and reference sets
+	- Made [AccuracyCalculator](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/) work with arbitrary label comparisons
 - [AlenUbuntu](https://github.com/AlenUbuntu)
 	- [CircleLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#circleloss)
 - [btseytlin](https://github.com/btseytlin)
@@ -378,6 +403,7 @@ Thanks to the contributors who made pull requests!
     - [Example using trainers.TwoStreamMetricLoss](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/TwoStreamMetricLoss.ipynb)
 
 #### General improvements and bug fixes
+- [mlopezantequera](https://github.com/mlopezantequera)
 - [wconnell](https://github.com/wconnell)
 - [marijnl](https://github.com/marijnl)
 - [thinline72](https://github.com/thinline72)

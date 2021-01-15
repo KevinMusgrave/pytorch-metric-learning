@@ -370,6 +370,7 @@ class AccuracyCalculator:
             knn_indices, knn_distances = stat_utils.get_knn(
                 reference, query, num_k, embeddings_come_from_same_source
             )
+
             knn_labels = reference_labels[knn_indices]
             if not any(not_lone_query_mask):
                 logging.warning("None of the query labels are in the reference set.")

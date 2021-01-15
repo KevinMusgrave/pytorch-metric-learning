@@ -445,3 +445,7 @@ class EmbeddingDataset(torch.utils.data.Dataset):
 
 def sqliteObjToDict(sqliteObj):
     return {k: [row[k] for row in sqliteObj] for k in sqliteObj[0].keys()}
+
+
+def torch_all_from_dim_to_end(x, dim):
+    return torch.all(x.view(*x.shape[:dim], -1), dim=-1)

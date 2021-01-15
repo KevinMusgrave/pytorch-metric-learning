@@ -8,6 +8,12 @@ except ModuleNotFoundError:
                         or the CPU version with 'conda install faiss-cpu -c pytorch'. Learn more at https://github.com/facebookresearch/faiss/blob/master/INSTALL.md"""
     )
 
+import numpy as np
+import torch
+
+from . import common_functions as c_f
+
+
 # modified from https://github.com/facebookresearch/deepcluster
 def get_knn(
     reference_embeddings, test_embeddings, k, embeddings_come_from_same_source=False
@@ -26,6 +32,9 @@ def get_knn(
         numpy array: indices of nearest k neighbors
         numpy array: corresponding distances
     """
+    reference_embeddings = c_f.to_numpy(reference_embeddings).astype(np.float32)
+    test_embeddings = c_f.to_numpy(test_embeddings).astype(np.float32)
+
     d = reference_embeddings.shape[1]
     logging.info("running k-nn with k=%d" % k)
     logging.info("embedding dimensionality is %d" % d)
@@ -34,6 +43,8 @@ def get_knn(
         index = faiss.index_cpu_to_all_gpus(index)
     index.add(reference_embeddings)
     distances, indices = index.search(test_embeddings, k + 1)
+    distances = torch.from_numpy(distances)
+    indices = torch.from_numpy(indices)
     if embeddings_come_from_same_source:
         return indices[:, 1:], distances[:, 1:]
     return indices[:, :k], distances[:, :k]
@@ -48,6 +59,7 @@ def run_kmeans(x, nmb_clusters):
     Returns:
         list: ids of data in each cluster
     """
+    x = c_f.to_numpy(x).astype(np.float32)
     n_data, d = x.shape
     logging.info("running k-means clustering with k=%d" % nmb_clusters)
     logging.info("embedding dimensionality is %d" % d)
@@ -68,6 +80,7 @@ def run_kmeans(x, nmb_clusters):
 
 # modified from https://github.com/facebookresearch/faiss/wiki/Faiss-building-blocks:-clustering,-PCA,-quantization
 def run_pca(x, output_dimensionality):
+    x = c_f.to_numpy(x).astype(np.float32)
     mat = faiss.PCAMatrix(x.shape[1], output_dimensionality)
     mat.train(x)
     assert mat.is_trained

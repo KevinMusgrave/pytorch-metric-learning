@@ -46,7 +46,7 @@ def try_next_on_generator(gen, iterable):
 def numpy_to_torch(v):
     try:
         return torch.from_numpy(v)
-    except AttributeError:
+    except TypeError:
         return v
 
 
@@ -447,5 +447,5 @@ def sqlite_obj_to_dict(sqlite_obj):
     return {k: [row[k] for row in sqlite_obj] for k in sqlite_obj[0].keys()}
 
 
-def np_all_from_dim_to_end(x, dim):
-    return np.all(x, axis=tuple(np.arange(dim, x.ndim)))
+def torch_all_from_dim_to_end(x, dim):
+    return torch.all(x.view(*x.shape[:dim], -1), dim=-1)

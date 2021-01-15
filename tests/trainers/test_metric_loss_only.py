@@ -5,7 +5,7 @@ import unittest
 
 import numpy as np
 import torch
-from torchvision import datasets, models, transforms
+from torchvision import datasets, transforms
 
 from pytorch_metric_learning.losses import NTXentLoss
 from pytorch_metric_learning.samplers import MPerClassSampler

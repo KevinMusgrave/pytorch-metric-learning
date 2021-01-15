@@ -1,11 +1,9 @@
 import unittest
 
-import numpy as np
 import torch
 
 from pytorch_metric_learning.distances import LpDistance
 from pytorch_metric_learning.miners import BatchEasyHardMiner
-from pytorch_metric_learning.utils import common_functions as c_f
 from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
 
 from .. import TEST_DEVICE, TEST_DTYPES

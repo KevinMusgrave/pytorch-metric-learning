@@ -2,25 +2,27 @@
 
 import logging
 
-import numpy as np
+import torch
 from sklearn.metrics import adjusted_mutual_info_score, normalized_mutual_info_score
 
 from . import common_functions as c_f
 from . import stat_utils
 
-EQUALITY = np.equal
+EQUALITY = torch.eq
 
 
 def maybe_get_avg_of_avgs(accuracy_per_sample, sample_labels, avg_of_avgs):
     if avg_of_avgs:
-        unique_labels = np.unique(sample_labels, axis=0)
-        mask = c_f.np_all_from_dim_to_end(sample_labels == unique_labels[:, None], 2)
-        mask = np.transpose(mask)
-        acc_sum_per_class = np.sum(accuracy_per_sample[:, None] * mask, axis=0)
-        mask_sum_per_class = np.sum(mask, axis=0)
+        unique_labels = torch.unique(sample_labels, dim=0)
+        mask = c_f.torch_all_from_dim_to_end(
+            sample_labels == unique_labels.unsqueeze(1), 2
+        )
+        mask = torch.t(mask)
+        acc_sum_per_class = torch.sum(accuracy_per_sample.unsqueeze(1) * mask, dim=0)
+        mask_sum_per_class = torch.sum(mask, dim=0)
         average_per_class = acc_sum_per_class / mask_sum_per_class
-        return np.mean(average_per_class)
-    return np.mean(accuracy_per_sample)
+        return torch.mean(average_per_class).item()
+    return torch.mean(accuracy_per_sample).item()
 
 
 def get_relevance_mask(
@@ -30,14 +32,14 @@ def get_relevance_mask(
     label_counts,
     label_comparison_fn,
 ):
-    relevance_mask = np.zeros(shape=shape, dtype=np.int)
+    relevance_mask = torch.zeros(size=shape, dtype=torch.bool, device=gt_labels.device)
 
     for label, count in zip(*label_counts):
-        matching_rows = np.where(c_f.np_all_from_dim_to_end(gt_labels == label, 1))[0]
-        max_column = count
-        if embeddings_come_from_same_source:
-            max_column -= 1
-        relevance_mask[matching_rows, :max_column] = 1
+        matching_rows = torch.where(
+            c_f.torch_all_from_dim_to_end(gt_labels == label, 1)
+        )[0]
+        max_column = count - 1 if embeddings_come_from_same_source else count
+        relevance_mask[matching_rows, :max_column] = True
     return relevance_mask
 
 
@@ -57,9 +59,11 @@ def r_precision(
         label_comparison_fn,
     )
     same_label = label_comparison_fn(gt_labels, knn_labels)
-    matches_per_row = np.sum(same_label * relevance_mask.astype(bool), axis=1)
-    max_possible_matches_per_row = np.sum(relevance_mask, axis=1)
-    accuracy_per_sample = matches_per_row / max_possible_matches_per_row
+    matches_per_row = torch.sum(same_label * relevance_mask, dim=1)
+    max_possible_matches_per_row = torch.sum(relevance_mask, dim=1)
+    accuracy_per_sample = (
+        matches_per_row.type(torch.float64) / max_possible_matches_per_row
+    )
     return maybe_get_avg_of_avgs(accuracy_per_sample, gt_labels, avg_of_avgs)
 
 
@@ -72,20 +76,23 @@ def mean_average_precision(
     relevance_mask=None,
     at_r=False,
 ):
+    device = gt_labels.device
     num_samples, num_k = knn_labels.shape[:2]
     relevance_mask = (
-        np.ones([num_samples, num_k]) if relevance_mask is None else relevance_mask
+        torch.ones((num_samples, num_k), dtype=torch.bool, device=device)
+        if relevance_mask is None
+        else relevance_mask
     )
     is_same_label = label_comparison_fn(gt_labels, knn_labels)
-    equality = is_same_label * relevance_mask.astype(bool)
-    cumulative_correct = np.cumsum(equality, axis=1)
-    k_idx = np.tile(np.arange(1, num_k + 1), (num_samples, 1))
-    precision_at_ks = (cumulative_correct * equality) / k_idx
-    summed_precision_per_row = np.sum(precision_at_ks * relevance_mask, axis=1)
+    equality = is_same_label * relevance_mask
+    cumulative_correct = torch.cumsum(equality, dim=1)
+    k_idx = torch.arange(1, num_k + 1, device=device).repeat(num_samples, 1)
+    precision_at_ks = (cumulative_correct * equality).type(torch.float64) / k_idx
+    summed_precision_per_row = torch.sum(precision_at_ks * relevance_mask, dim=1)
     if at_r:
-        max_possible_matches_per_row = np.sum(relevance_mask, axis=1)
+        max_possible_matches_per_row = torch.sum(relevance_mask, dim=1)
     else:
-        max_possible_matches_per_row = np.sum(equality, axis=1)
+        max_possible_matches_per_row = torch.sum(equality, dim=1)
         max_possible_matches_per_row[max_possible_matches_per_row == 0] = 1
     accuracy_per_sample = summed_precision_per_row / max_possible_matches_per_row
     return maybe_get_avg_of_avgs(accuracy_per_sample, gt_labels, avg_of_avgs)
@@ -120,25 +127,29 @@ def mean_average_precision_at_r(
 def precision_at_k(knn_labels, gt_labels, k, avg_of_avgs, label_comparison_fn):
     curr_knn_labels = knn_labels[:, :k]
     same_label = label_comparison_fn(gt_labels, curr_knn_labels)
-    accuracy_per_sample = np.sum(same_label, axis=1) / k
+    accuracy_per_sample = torch.sum(same_label, dim=1).type(torch.float64) / k
     return maybe_get_avg_of_avgs(accuracy_per_sample, gt_labels, avg_of_avgs)
 
 
 def get_label_match_counts(query_labels, reference_labels, label_comparison_fn):
-    unique_query_labels = np.unique(query_labels, axis=0)
+    unique_query_labels = torch.unique(query_labels, dim=0)
     if label_comparison_fn is EQUALITY:
         comparison = unique_query_labels[:, None] == reference_labels
-        match_counts = np.sum(c_f.np_all_from_dim_to_end(comparison, 2), axis=1)
+        match_counts = torch.sum(c_f.torch_all_from_dim_to_end(comparison, 2), dim=1)
     else:
         # Labels are compared with a custom function.
         # They might be non-categorical or multidimensional labels.
-        match_counts = np.empty(shape=(len(unique_query_labels)), dtype=int)
+        match_counts = torch.empty(
+            len(unique_query_labels), dtype=torch.int, device=query_labels.device
+        )
         for ix_a in range(len(unique_query_labels)):
             label_a = unique_query_labels[ix_a : ix_a + 1]
-            match_counts[ix_a] = sum(label_comparison_fn(label_a, reference_labels))
+            match_counts[ix_a] = torch.sum(
+                label_comparison_fn(label_a, reference_labels)
+            )
 
     # faiss can only do a max of k=1024, and we have to do k+1
-    num_k = int(min(1023, np.max(match_counts)))
+    num_k = int(min(1023, torch.max(match_counts)))
 
     return (unique_query_labels, match_counts), num_k
 
@@ -152,15 +163,19 @@ def get_lone_query_labels(
     unique_labels, match_counts = label_counts
     if embeddings_come_from_same_source:
         label_matches_itself = label_comparison_fn(unique_labels, unique_labels)
-        lone_condition = match_counts - label_matches_itself <= 0
+        lone_condition = match_counts - label_matches_itself.type(torch.int) <= 0
     else:
         lone_condition = match_counts == 0
     lone_query_labels = unique_labels[lone_condition]
     if len(lone_query_labels) > 0:
         comparison = query_labels[:, None] == lone_query_labels
-        not_lone_query_mask = ~np.any(c_f.np_all_from_dim_to_end(comparison, 2), axis=1)
+        not_lone_query_mask = ~torch.any(
+            c_f.torch_all_from_dim_to_end(comparison, 2), dim=1
+        )
     else:
-        not_lone_query_mask = np.ones(query_labels.shape[0], dtype=np.bool)
+        not_lone_query_mask = torch.ones(
+            query_labels.shape[0], dtype=torch.bool, device=query_labels.device
+        )
     return lone_query_labels, not_lone_query_mask
 
 
@@ -228,14 +243,14 @@ class AccuracyCalculator:
         ]
 
     def get_cluster_labels(self, query, query_labels, **kwargs):
-        num_clusters = len(np.unique(query_labels.flatten()))
+        num_clusters = len(torch.unique(query_labels.flatten()))
         return stat_utils.run_kmeans(query, num_clusters)
 
     def calculate_NMI(self, query_labels, cluster_labels, **kwargs):
-        return normalized_mutual_info_score(query_labels, cluster_labels)
+        return normalized_mutual_info_score(c_f.to_numpy(query_labels), cluster_labels)
 
     def calculate_AMI(self, query_labels, cluster_labels, **kwargs):
-        return adjusted_mutual_info_score(query_labels, cluster_labels)
+        return adjusted_mutual_info_score(c_f.to_numpy(query_labels), cluster_labels)
 
     def calculate_precision_at_1(
         self, knn_labels, query_labels, not_lone_query_mask, **kwargs
@@ -334,6 +349,11 @@ class AccuracyCalculator:
         embeddings_come_from_same_source = embeddings_come_from_same_source or (
             query is reference
         )
+
+        query = c_f.numpy_to_torch(query)
+        reference = c_f.numpy_to_torch(reference)
+        query_labels = c_f.numpy_to_torch(query_labels)
+        reference_labels = c_f.numpy_to_torch(reference_labels)
 
         self.curr_function_dict = self.get_function_dict(include, exclude)
 

@@ -1,8 +1,7 @@
 import torch
 
 from ..utils import common_functions as c_f
-from ..utils.module_with_records_and_reducer import \
-    ModuleWithRecordsAndDistance
+from ..utils.module_with_records_and_reducer import ModuleWithRecordsAndDistance
 
 
 class BaseMiner(ModuleWithRecordsAndDistance):

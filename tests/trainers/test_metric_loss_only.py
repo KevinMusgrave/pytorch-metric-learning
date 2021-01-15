@@ -84,8 +84,7 @@ class TestMetricLossOnly(unittest.TestCase):
                 None,
                 [("train", ["train", "val"]), ("val", ["train", "val"])],
             ]:
-                from temp_cifar_resnet_for_pytorch_metric_learning_test import \
-                    resnet
+                from temp_cifar_resnet_for_pytorch_metric_learning_test import resnet
 
                 model = torch.nn.DataParallel(resnet.resnet20())
                 checkpoint = torch.load(

@@ -1,8 +1,11 @@
 import unittest
 
 from pytorch_metric_learning.losses import ContrastiveLoss, TripletMarginLoss
-from pytorch_metric_learning.reducers import (AvgNonZeroReducer, MeanReducer,
-                                              ThresholdReducer)
+from pytorch_metric_learning.reducers import (
+    AvgNonZeroReducer,
+    MeanReducer,
+    ThresholdReducer,
+)
 
 
 class TestSettingReducers(unittest.TestCase):

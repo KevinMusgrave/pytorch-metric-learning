@@ -3,8 +3,7 @@
 import logging
 
 import torch
-from sklearn.metrics import (adjusted_mutual_info_score,
-                             normalized_mutual_info_score)
+from sklearn.metrics import adjusted_mutual_info_score, normalized_mutual_info_score
 
 from . import common_functions as c_f
 from . import stat_utils

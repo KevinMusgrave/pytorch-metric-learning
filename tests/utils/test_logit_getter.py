@@ -3,8 +3,11 @@ import unittest
 import torch
 
 from pytorch_metric_learning.distances import LpDistance
-from pytorch_metric_learning.losses import (ArcFaceLoss, NormalizedSoftmaxLoss,
-                                            ProxyAnchorLoss)
+from pytorch_metric_learning.losses import (
+    ArcFaceLoss,
+    NormalizedSoftmaxLoss,
+    ProxyAnchorLoss,
+)
 from pytorch_metric_learning.utils.inference import LogitGetter
 
 from .. import TEST_DEVICE, TEST_DTYPES

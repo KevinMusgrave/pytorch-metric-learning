@@ -343,6 +343,11 @@ class AccuracyCalculator:
             query is reference
         )
 
+        query = c_f.numpy_to_torch(query)
+        reference = c_f.numpy_to_torch(reference)
+        query_labels = c_f.numpy_to_torch(query_labels)
+        reference_labels = c_f.numpy_to_torch(reference_labels)
+
         self.curr_function_dict = self.get_function_dict(include, exclude)
 
         kwargs = {

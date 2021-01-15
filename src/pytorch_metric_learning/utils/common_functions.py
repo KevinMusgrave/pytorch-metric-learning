@@ -46,7 +46,7 @@ def try_next_on_generator(gen, iterable):
 def numpy_to_torch(v):
     try:
         return torch.from_numpy(v)
-    except AttributeError:
+    except TypeError:
         return v
 
 

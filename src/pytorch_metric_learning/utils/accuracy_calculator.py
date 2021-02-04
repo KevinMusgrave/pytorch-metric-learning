@@ -247,10 +247,16 @@ class AccuracyCalculator:
         return stat_utils.run_kmeans(query, num_clusters)
 
     def calculate_NMI(self, query_labels, cluster_labels, **kwargs):
-        return normalized_mutual_info_score(c_f.to_numpy(query_labels), cluster_labels)
+        [query_labels, cluster_labels] = [
+            c_f.to_numpy(x) for x in [query_labels, cluster_labels]
+        ]
+        return normalized_mutual_info_score(query_labels, cluster_labels)
 
     def calculate_AMI(self, query_labels, cluster_labels, **kwargs):
-        return adjusted_mutual_info_score(c_f.to_numpy(query_labels), cluster_labels)
+        [query_labels, cluster_labels] = [
+            c_f.to_numpy(x) for x in [query_labels, cluster_labels]
+        ]
+        return adjusted_mutual_info_score(query_labels, cluster_labels)
 
     def calculate_precision_at_1(
         self, knn_labels, query_labels, not_lone_query_mask, **kwargs
@@ -350,10 +356,10 @@ class AccuracyCalculator:
             query is reference
         )
 
-        query = c_f.numpy_to_torch(query)
-        reference = c_f.numpy_to_torch(reference)
-        query_labels = c_f.numpy_to_torch(query_labels)
-        reference_labels = c_f.numpy_to_torch(reference_labels)
+        [query, reference, query_labels, reference_labels] = [
+            c_f.numpy_to_torch(x)
+            for x in [query, reference, query_labels, reference_labels]
+        ]
 
         self.curr_function_dict = self.get_function_dict(include, exclude)
 

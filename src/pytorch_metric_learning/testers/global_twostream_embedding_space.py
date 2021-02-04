@@ -1,4 +1,3 @@
-import numpy as np
 import torch
 import tqdm
 
@@ -47,8 +46,8 @@ class GlobalTwoStreamEmbeddingSpaceTester(GlobalEmbeddingSpaceTester):
             self.maybe_normalize(posneg_embeddings),
         )
         return (
-            np.concatenate([anchor_embeddings, posneg_embeddings], axis=0),
-            np.concatenate([labels, labels], axis=0),
+            torch.cat([anchor_embeddings, posneg_embeddings], dim=0),
+            torch.cat([labels, labels], dim=0),
         )
 
     def set_reference_and_query(

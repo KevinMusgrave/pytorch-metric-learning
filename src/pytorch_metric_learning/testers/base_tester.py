@@ -3,10 +3,9 @@
 import logging
 from collections import defaultdict
 
-import numpy as np
 import torch
 import tqdm
-from sklearn.preprocessing import StandardScaler, normalize
+from sklearn.preprocessing import StandardScaler
 
 from ..utils import common_functions as c_f
 from ..utils import stat_utils
@@ -72,10 +71,10 @@ class BaseTester:
 
     def maybe_normalize(self, embeddings):
         if self.pca:
-            for_pca = StandardScaler().fit_transform(embeddings)
+            for_pca = StandardScaler().fit_transform(embeddings.cpu().numpy())
             embeddings = stat_utils.run_pca(for_pca, self.pca)
         if self.normalize_embeddings:
-            embeddings = normalize(embeddings)
+            embeddings = torch.nn.functional.normalize(embeddings)
         return embeddings
 
     def compute_all_embeddings(self, dataloader, trunk_model, embedder_model):
@@ -94,8 +93,6 @@ class BaseTester:
                 all_q[s:e] = q
                 labels[s:e] = label
                 s = e
-            labels = labels.cpu().numpy()
-            all_q = all_q.cpu().numpy()
         return all_q, labels
 
     def get_all_embeddings(
@@ -185,8 +182,8 @@ class BaseTester:
     def maybe_combine_splits(self, embeddings_and_labels, splits):
         to_combine = {split: embeddings_and_labels[split] for split in splits}
         eee, lll = list(zip(*list(to_combine.values())))
-        curr_embeddings = np.concatenate(eee, axis=0)
-        curr_labels = np.concatenate(lll, axis=0)
+        curr_embeddings = torch.cat(eee, dim=0)
+        curr_labels = torch.cat(lll, dim=0)
         return curr_embeddings, curr_labels
 
     def set_reference_and_query(

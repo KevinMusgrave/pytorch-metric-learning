@@ -49,6 +49,28 @@ class TestGlobalEmbeddingSpaceTester(unittest.TestCase):
                 all_accuracies["val"]["precision_at_1_level0"] == correct_vals["val"]
             )
 
+    def test_pca(self):
+        # just make sure pca runs without crashing
+        model = c_f.Identity()
+        AC = accuracy_calculator.AccuracyCalculator(include=("precision_at_1",))
+        embeddings = torch.randn(1024, 512)
+        labels = torch.randint(0, 10, size=(1024,))
+        dataset_dict = {"train": c_f.EmbeddingDataset(embeddings, labels)}
+        pca_size = 16
+
+        def end_of_testing_hook(tester):
+            self.assertTrue(
+                tester.embeddings_and_labels["train"][0].shape[1] == pca_size
+            )
+
+        tester = GlobalEmbeddingSpaceTester(
+            pca=pca_size,
+            accuracy_calculator=AC,
+            end_of_testing_hook=end_of_testing_hook,
+        )
+        all_accuracies = tester.test(dataset_dict, 0, model)
+        self.assertTrue(not hasattr(tester, "embeddings_and_labels"))
+
     @classmethod
     def tearDown(self):
         torch.cuda.empty_cache()

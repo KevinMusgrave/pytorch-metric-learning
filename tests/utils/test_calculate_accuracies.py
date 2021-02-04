@@ -359,7 +359,7 @@ class TestCalculateAccuracies(unittest.TestCase):
 
 class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
     def test_accuracy_calculator_and_faiss(self):
-        AC = accuracy_calculator.AccuracyCalculator(exclude=("NMI", "AMI"))
+        AC = accuracy_calculator.AccuracyCalculator()
 
         query = torch.arange(10, device=TEST_DEVICE).unsqueeze(1)
         reference = torch.arange(10, device=TEST_DEVICE).unsqueeze(1)
@@ -385,12 +385,8 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
         )
 
     def test_accuracy_calculator_and_faiss_avg_of_avgs(self):
-        AC_global_average = accuracy_calculator.AccuracyCalculator(
-            exclude=("NMI", "AMI"), avg_of_avgs=False
-        )
-        AC_per_class_average = accuracy_calculator.AccuracyCalculator(
-            exclude=("NMI", "AMI"), avg_of_avgs=True
-        )
+        AC_global_average = accuracy_calculator.AccuracyCalculator(avg_of_avgs=False)
+        AC_per_class_average = accuracy_calculator.AccuracyCalculator(avg_of_avgs=True)
         query = torch.arange(10, device=TEST_DEVICE).unsqueeze(1)
         reference = torch.arange(10, device=TEST_DEVICE).unsqueeze(1)
         query[-1] = 100

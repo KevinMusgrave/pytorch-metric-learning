@@ -18,20 +18,6 @@ from . import common_functions as c_f
 def get_knn(
     reference_embeddings, test_embeddings, k, embeddings_come_from_same_source=False
 ):
-    """
-    Finds the k elements in reference_embeddings that are closest to each
-    element of test_embeddings.
-    Args:
-        reference_embeddings: numpy array of size (num_samples, dimensionality).
-        test_embeddings: numpy array of size (num_samples2, dimensionality).
-        k: int, number of nearest neighbors to find
-        embeddings_come_from_same_source: if True, then the nearest neighbor of
-                                         each element (which is actually itself)
-                                         will be ignored.
-    Returns:
-        numpy array: indices of nearest k neighbors
-        numpy array: corresponding distances
-    """
     reference_embeddings = c_f.to_numpy(reference_embeddings).astype(np.float32)
     test_embeddings = c_f.to_numpy(test_embeddings).astype(np.float32)
 
@@ -52,13 +38,7 @@ def get_knn(
 
 # modified from https://raw.githubusercontent.com/facebookresearch/deepcluster/
 def run_kmeans(x, nmb_clusters):
-    """
-    Args:
-        x: data
-        nmb_clusters (int): number of clusters
-    Returns:
-        list: ids of data in each cluster
-    """
+    device = x.device
     x = c_f.to_numpy(x).astype(np.float32)
     n_data, d = x.shape
     logging.info("running k-means clustering with k=%d" % nmb_clusters)
@@ -75,7 +55,7 @@ def run_kmeans(x, nmb_clusters):
     clus.train(x, index)
     _, idxs = index.search(x, 1)
 
-    return [int(n[0]) for n in idxs]
+    return torch.tensor([int(n[0]) for n in idxs], dtype=int, device=device)
 
 
 # modified from https://github.com/facebookresearch/faiss/wiki/Faiss-building-blocks:-clustering,-PCA,-quantization
@@ -84,4 +64,4 @@ def run_pca(x, output_dimensionality):
     mat = faiss.PCAMatrix(x.shape[1], output_dimensionality)
     mat.train(x)
     assert mat.is_trained
-    return mat.apply_py(x)
+    return c_f.numpy_to_torch(mat.apply_py(x))

@@ -17,6 +17,7 @@ nav:
       - Distributed: distributed.md
     - How to extend this library:
       - Custom losses: extend/losses.md
+      - Custom miners: extend/miners.md
 theme:
   name: 'material'
   palette:

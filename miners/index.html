@@ -541,6 +541,18 @@
   </li>
 
         
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../extend/miners/" title="Custom miners" class="md-nav__link">
+      Custom miners
+    </a>
+  </li>
+
+        
       </ul>
     </nav>
   </li>
@@ -763,6 +775,7 @@
 
 
 <p>If you write your own miner, the <code>mine</code> function should work such that anchor indices correspond to <code>embeddings</code> and <code>labels</code>, and all other indices correspond to <code>ref_emb</code> and <code>ref_labels</code>. By default, <code>embeddings == ref_emb</code> and <code>labels == ref_labels</code>, but separating the anchor source from the positive/negative source allows for interesting use cases. For example, see <a href="../losses/#crossbatchmemory">CrossBatchMemory</a>.</p>
+<p>See <a href="../extend/miners/">custom miners</a> for details on how to write your own miner.</p>
 <h2 id="basesubsetbatchminer">BaseSubsetBatchMiner<a class="headerlink" href="#basesubsetbatchminer" title="Permanent link">&para;</a></h2>
 <p>This extends <a href="./#baseminer">BaseMiner</a>. It outputs indices corresponding to a subset of the input batch. The idea is to use these miners with torch.no_grad(), and with a large input batch size.</p>
 <div class="codehilite"><pre><span></span><code><span class="n">miners</span><span class="o">.</span><span class="n">BaseSubsetBatchMiner</span><span class="p">(</span><span class="n">output_batch_size</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>

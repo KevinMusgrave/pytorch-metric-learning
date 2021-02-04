@@ -1,4 +1,7 @@
 import setuptools
+import sys
+sys.path.insert(0, "src")
+import pytorch_metric_learning
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -8,7 +11,7 @@ extras_require_with_hooks_cpu = ["record-keeper >= 0.9.30", "faiss-cpu >= 1.6.3"
 
 setuptools.setup(
     name="pytorch-metric-learning",
-    version="0.9.97.dev0",
+    version=pytorch_metric_learning.__version__,
     author="Kevin Musgrave",
     description="The easiest way to use deep metric learning in your application. Modular, flexible, and extensible. Written in PyTorch.",
     long_description=long_description,

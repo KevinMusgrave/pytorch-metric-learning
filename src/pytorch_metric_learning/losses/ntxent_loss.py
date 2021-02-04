@@ -13,9 +13,9 @@ class NTXentLoss(GenericPairLoss):
 
     def _compute_loss(self, pos_pairs, neg_pairs, indices_tuple):
         a1, p, a2, _ = indices_tuple
-        dtype = neg_pairs.dtype
 
         if len(a1) > 0 and len(a2) > 0:
+            dtype = neg_pairs.dtype
             # if dealing with actual distances, use negative distances
             if not self.distance.is_inverted:
                 pos_pairs = -pos_pairs

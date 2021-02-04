@@ -5,7 +5,6 @@ from collections import defaultdict
 
 import torch
 import tqdm
-from sklearn.preprocessing import StandardScaler
 
 from ..utils import common_functions as c_f
 from ..utils import stat_utils
@@ -71,7 +70,7 @@ class BaseTester:
 
     def maybe_normalize(self, embeddings):
         if self.pca:
-            for_pca = StandardScaler().fit_transform(embeddings.cpu().numpy())
+            for_pca = c_f.torch_standard_scaler(embeddings)
             embeddings = stat_utils.run_pca(for_pca, self.pca)
         if self.normalize_embeddings:
             embeddings = torch.nn.functional.normalize(embeddings)
@@ -87,8 +86,18 @@ class BaseTester:
                 if label.dim() == 1:
                     label = label.unsqueeze(1)
                 if i == 0:
-                    labels = torch.zeros(len(dataloader.dataset), label.size(1))
-                    all_q = torch.zeros(len(dataloader.dataset), q.size(1))
+                    labels = torch.zeros(
+                        len(dataloader.dataset),
+                        label.size(1),
+                        device=self.data_device,
+                        dtype=label.dtype,
+                    )
+                    all_q = torch.zeros(
+                        len(dataloader.dataset),
+                        q.size(1),
+                        device=self.data_device,
+                        dtype=q.dtype,
+                    )
                 e = s + q.size(0)
                 all_q[s:e] = q
                 labels[s:e] = label

@@ -449,3 +449,9 @@ def sqlite_obj_to_dict(sqlite_obj):
 
 def torch_all_from_dim_to_end(x, dim):
     return torch.all(x.view(*x.shape[:dim], -1), dim=-1)
+
+
+def torch_standard_scaler(x):
+    mean = torch.mean(x, dim=0)
+    std = torch.std(x, dim=0)
+    return (x - mean) / std

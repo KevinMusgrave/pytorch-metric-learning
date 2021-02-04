@@ -358,6 +358,32 @@ class TestCalculateAccuracies(unittest.TestCase):
 
 
 class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
+    def test_accuracy_calculator_and_faiss_with_numpy_input(self):
+        AC = accuracy_calculator.AccuracyCalculator()
+
+        query = np.arange(10)[:, None]
+        reference = np.arange(10)[:, None]
+        query_labels = np.arange(10)
+        reference_labels = np.arange(10)
+        acc = AC.get_accuracy(query, reference, query_labels, reference_labels, False)
+        self.assertTrue(isclose(acc["precision_at_1"], 1))
+        self.assertTrue(isclose(acc["r_precision"], 1))
+        self.assertTrue(isclose(acc["mean_average_precision_at_r"], 1))
+
+        reference = (np.arange(20) / 2.0)[:, None]
+        reference_labels = np.zeros(20)
+        reference_labels[::2] = query_labels
+        reference_labels[1::2] = np.ones(10)
+        acc = AC.get_accuracy(query, reference, query_labels, reference_labels, True)
+        self.assertTrue(isclose(acc["precision_at_1"], 1))
+        self.assertTrue(isclose(acc["r_precision"], 0.5))
+        self.assertTrue(
+            isclose(
+                acc["mean_average_precision_at_r"],
+                (1 + 2.0 / 2 + 3.0 / 5 + 4.0 / 7 + 5.0 / 9) / 10,
+            )
+        )
+
     def test_accuracy_calculator_and_faiss(self):
         AC = accuracy_calculator.AccuracyCalculator()
 

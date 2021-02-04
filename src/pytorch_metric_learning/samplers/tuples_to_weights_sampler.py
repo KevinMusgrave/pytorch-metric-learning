@@ -37,8 +37,7 @@ class TuplesToWeightsSampler(Sampler):
             curr_dataset = self.dataset
 
         embeddings, labels = self.tester.get_all_embeddings(curr_dataset, self.model)
-        embeddings = torch.from_numpy(embeddings).to(self.device)
-        labels = torch.from_numpy(labels).to(self.device).squeeze(1)
+        labels = labels.squeeze(1)
         hard_tuples = self.miner(embeddings, labels)
 
         self.weights = torch.zeros(len(self.dataset)).to(self.device)

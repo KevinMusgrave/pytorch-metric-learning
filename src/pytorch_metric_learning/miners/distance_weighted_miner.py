@@ -34,14 +34,16 @@ class DistanceWeightedMiner(BaseTupleMiner):
         )
 
         inf_or_nan = torch.isinf(log_weights) | torch.isnan(log_weights)
-        # Subtract max(log(distance)) for stability.
-        weights = torch.exp(log_weights - torch.max(log_weights[~inf_or_nan]))
 
         # Sample only negative examples by setting weights of
         # the same-class examples to 0.
-        mask = torch.ones_like(weights)
+        mask = torch.ones_like(log_weights)
         same_class = labels.unsqueeze(1) == ref_labels.unsqueeze(0)
         mask[same_class] = 0
+        log_weights = log_weights * mask
+        # Subtract max(log(distance)) for stability.
+        weights = torch.exp(log_weights - torch.max(log_weights[~inf_or_nan]))
+ 
 
         weights = weights * mask * ((mat < self.nonzero_loss_cutoff).type(dtype))
         weights[inf_or_nan] = 0

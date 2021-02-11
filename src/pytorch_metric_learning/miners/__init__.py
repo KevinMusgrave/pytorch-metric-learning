@@ -9,3 +9,4 @@ from .maximum_loss_miner import MaximumLossMiner
 from .multi_similarity_miner import MultiSimilarityMiner
 from .pair_margin_miner import PairMarginMiner
 from .triplet_margin_miner import TripletMarginMiner
+from .uniform_histogram_miner import UniformHistogramMiner

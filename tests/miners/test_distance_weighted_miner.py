@@ -35,6 +35,7 @@ class TestDistanceWeightedMiner(unittest.TestCase):
                 all_an_dist = torch.nn.functional.pairwise_distance(
                     embeddings[a], embeddings[n], 2
                 )
+            max_an_dist = torch.max(all_an_dist)
             min_an_dist = torch.min(all_an_dist)
 
             cutoffs = [0] + list(range(5, 15))
@@ -61,10 +62,11 @@ class TestDistanceWeightedMiner(unittest.TestCase):
                 self.assertTrue(torch.max(an_dist) <= non_zero_cutoff)
                 an_dist_var = torch.var(an_dist)
                 an_dist_mean = torch.mean(an_dist)
+                upper_bound = min(max_an_dist, non_zero_cutoff)
                 target_var = (
-                    (non_zero_cutoff - min_an_dist) ** 2
+                    (upper_bound - min_an_dist) ** 2
                 ) / 12  # variance formula for uniform distribution
-                target_mean = (non_zero_cutoff - min_an_dist) / 2
+                target_mean = (upper_bound + min_an_dist) / 2
                 self.assertTrue(torch.abs(an_dist_var - target_var) / target_var < 0.1)
                 self.assertTrue(
                     torch.abs(an_dist_mean - target_mean) / target_mean < 0.1

@@ -130,7 +130,7 @@ class DeepAdversarialMetricLearning(TrainWithClassifier):
             [real_anchors, real_positives, real_negatives], dim=1
         )
         synthetic_negatives = self.models["generator"](
-            penultimate_embeddings_cat.to(self.data_device)
+            c_f.to_device(penultimate_embeddings_cat, device=self.data_device)
         )
         penultimate_embeddings_with_negative_synth = c_f.unslice_by_n(
             [real_anchors, real_positives, synthetic_negatives]

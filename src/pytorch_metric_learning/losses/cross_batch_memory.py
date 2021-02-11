@@ -28,12 +28,16 @@ class CrossBatchMemory(ModuleWithRecords):
             assert len(embeddings) <= len(self.embedding_memory)
         self.reset_stats()
         device = embeddings.device
-        labels = labels.to(device)
-        self.embedding_memory = self.embedding_memory.to(device).type(embeddings.dtype)
-        self.label_memory = self.label_memory.to(device).type(labels.dtype)
+        labels = c_f.to_device(labels, device=device)
+        self.embedding_memory = c_f.to_device(
+            self.embedding_memory, device=device, dtype=embeddings.dtype
+        )
+        self.label_memory = c_f.to_device(
+            self.label_memory, device=device, dtype=labels.dtype
+        )
 
         if enqueue_idx is not None:
-            mask = torch.zeros(len(embeddings)).bool().to(device)
+            mask = torch.zeros(len(embeddings), device=device, dtype=torch.bool)
             mask[enqueue_idx] = True
             emb_for_queue = embeddings[mask]
             labels_for_queue = labels[mask]
@@ -72,8 +76,11 @@ class CrossBatchMemory(ModuleWithRecords):
 
     def add_to_memory(self, embeddings, labels, batch_size):
         self.curr_batch_idx = (
-            torch.arange(self.queue_idx, self.queue_idx + batch_size) % self.memory_size
-        ).to(labels.device)
+            torch.arange(
+                self.queue_idx, self.queue_idx + batch_size, device=labels.device
+            )
+            % self.memory_size
+        )
         self.embedding_memory[self.curr_batch_idx] = embeddings.detach()
         self.label_memory[self.curr_batch_idx] = labels.detach()
         prev_queue_idx = self.queue_idx
@@ -110,7 +117,7 @@ class CrossBatchMemory(ModuleWithRecords):
                 )
             indices_tuple = tuple(
                 [
-                    torch.cat([x, y.to(x.device)], dim=0)
+                    torch.cat([x, c_f.to_device(y, x)], dim=0)
                     for x, y in zip(indices_tuple, input_indices_tuple)
                 ]
             )

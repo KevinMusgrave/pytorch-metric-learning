@@ -1,6 +1,7 @@
 import torch
 
 from ..reducers import DivisorReducer
+from ..utils import common_functions as c_f
 from ..utils import loss_and_miner_utils as lmu
 from .base_metric_loss_function import BaseMetricLossFunction
 
@@ -35,7 +36,7 @@ class MarginLoss(BaseMetricLossFunction):
             return self.zero_losses()
 
         beta = self.beta if len(self.beta) == 1 else self.beta[labels[anchor_idx]]
-        beta = beta.to(embeddings.device).type(embeddings.dtype)
+        beta = c_f.to_device(beta, device=embeddings.device, dtype=embeddings.dtype)
 
         mat = self.distance(embeddings)
 

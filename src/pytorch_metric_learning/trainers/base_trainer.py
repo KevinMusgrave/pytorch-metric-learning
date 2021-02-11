@@ -148,9 +148,7 @@ class BaseTrainer:
         return self.models["embedder"](base_output)
 
     def get_trunk_output(self, data):
-        data = data.to(self.data_device)
-        if self.dtype is not None:
-            data = data.type(self.dtype)
+        data = c_f.to_device(data, device=self.data_device, dtype=self.dtype)
         return self.models["trunk"](data)
 
     def maybe_mine_embeddings(self, embeddings, labels):

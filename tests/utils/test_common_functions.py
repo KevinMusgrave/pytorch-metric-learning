@@ -6,7 +6,7 @@ from sklearn.preprocessing import StandardScaler
 from pytorch_metric_learning.utils import common_functions as c_f
 
 
-class TestLogitGetter(unittest.TestCase):
+class TestCommonFunctions(unittest.TestCase):
     def test_torch_standard_scaler(self):
         embeddings = torch.randn(1024, 512)
         scaled = c_f.torch_standard_scaler(embeddings)

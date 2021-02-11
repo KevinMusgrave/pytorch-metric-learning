@@ -62,7 +62,8 @@ def r_precision(
     matches_per_row = torch.sum(same_label * relevance_mask, dim=1)
     max_possible_matches_per_row = torch.sum(relevance_mask, dim=1)
     accuracy_per_sample = (
-        matches_per_row.type(torch.float64) / max_possible_matches_per_row
+        c_f.to_dtype(matches_per_row, dtype=torch.float64)
+        / max_possible_matches_per_row
     )
     return maybe_get_avg_of_avgs(accuracy_per_sample, gt_labels, avg_of_avgs)
 
@@ -87,7 +88,9 @@ def mean_average_precision(
     equality = is_same_label * relevance_mask
     cumulative_correct = torch.cumsum(equality, dim=1)
     k_idx = torch.arange(1, num_k + 1, device=device).repeat(num_samples, 1)
-    precision_at_ks = (cumulative_correct * equality).type(torch.float64) / k_idx
+    precision_at_ks = (
+        c_f.to_dtype(cumulative_correct * equality, dtype=torch.float64) / k_idx
+    )
     summed_precision_per_row = torch.sum(precision_at_ks * relevance_mask, dim=1)
     if at_r:
         max_possible_matches_per_row = torch.sum(relevance_mask, dim=1)
@@ -127,7 +130,9 @@ def mean_average_precision_at_r(
 def precision_at_k(knn_labels, gt_labels, k, avg_of_avgs, label_comparison_fn):
     curr_knn_labels = knn_labels[:, :k]
     same_label = label_comparison_fn(gt_labels, curr_knn_labels)
-    accuracy_per_sample = torch.sum(same_label, dim=1).type(torch.float64) / k
+    accuracy_per_sample = (
+        c_f.to_dtype(torch.sum(same_label, dim=1), dtype=torch.float64) / k
+    )
     return maybe_get_avg_of_avgs(accuracy_per_sample, gt_labels, avg_of_avgs)
 
 
@@ -140,7 +145,7 @@ def get_label_match_counts(query_labels, reference_labels, label_comparison_fn):
         # Labels are compared with a custom function.
         # They might be non-categorical or multidimensional labels.
         match_counts = torch.empty(
-            len(unique_query_labels), dtype=torch.int, device=query_labels.device
+            len(unique_query_labels), dtype=torch.long, device=query_labels.device
         )
         for ix_a in range(len(unique_query_labels)):
             label_a = unique_query_labels[ix_a : ix_a + 1]
@@ -163,7 +168,9 @@ def get_lone_query_labels(
     unique_labels, match_counts = label_counts
     if embeddings_come_from_same_source:
         label_matches_itself = label_comparison_fn(unique_labels, unique_labels)
-        lone_condition = match_counts - label_matches_itself.type(torch.int) <= 0
+        lone_condition = (
+            match_counts - c_f.to_dtype(label_matches_itself, dtype=torch.long) <= 0
+        )
     else:
         lone_condition = match_counts == 0
     lone_query_labels = unique_labels[lone_condition]

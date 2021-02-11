@@ -23,8 +23,8 @@ def logsumexp(x, keep_mask=None, add_one=True, dim=1):
 
 
 def meshgrid_from_sizes(x, y, dim=0):
-    a = torch.arange(x.size(dim)).to(x.device)
-    b = torch.arange(y.size(dim)).to(y.device)
+    a = torch.arange(x.size(dim), device=x.device)
+    b = torch.arange(y.size(dim), device=y.device)
     return torch.meshgrid(a, b)
 
 
@@ -151,13 +151,13 @@ def get_random_triplet_indices(
         n_idx.append(n)
 
     if len(a_idx) > 0:
-        a_idx = torch.cat(a_idx).to(labels_device).long()
-        p_idx = torch.cat(p_idx).to(labels_device).long()
-        n_idx = torch.cat(n_idx).to(labels_device).long()
+        a_idx = c_f.to_device(torch.cat(a_idx), device=labels_device, dtype=torch.long)
+        p_idx = c_f.to_device(torch.cat(p_idx), device=labels_device, dtype=torch.long)
+        n_idx = c_f.to_device(torch.cat(n_idx), device=labels_device, dtype=torch.long)
         assert len(a_idx) == len(p_idx) == len(n_idx)
         return a_idx, p_idx, n_idx
     else:
-        empty = torch.LongTensor([]).to(labels_device)
+        empty = torch.tensor([], device=labels_device, dtype=torch.long)
         return empty.clone(), empty.clone(), empty.clone()
 
 
@@ -193,7 +193,7 @@ def convert_to_triplets(indices_tuple, labels, t_per_anchor=100):
     else:
         a_out, p_out, n_out = [], [], []
         a1, p, a2, n = indices_tuple
-        empty_output = [torch.tensor([]).to(labels.device)] * 3
+        empty_output = [torch.tensor([], device=labels.device)] * 3
         if len(a1) == 0 or len(a2) == 0:
             return empty_output
         for i in range(len(labels)):
@@ -221,12 +221,12 @@ def convert_to_weights(indices_tuple, labels, dtype):
     Returns a weight for each batch element, based on
     how many times they appear in indices_tuple.
     """
-    weights = torch.zeros_like(labels).type(dtype)
+    weights = torch.zeros_like(labels, dtype=dtype)
     if indices_tuple is None:
         return weights + 1
     if all(len(x) == 0 for x in indices_tuple):
         return weights + 1
     indices, counts = torch.unique(torch.cat(indices_tuple, dim=0), return_counts=True)
-    counts = counts.type(dtype) / torch.sum(counts)
+    counts = c_f.to_dtype(counts, dtype=dtype) / torch.sum(counts)
     weights[indices] = counts / torch.max(counts)
     return weights

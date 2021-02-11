@@ -59,7 +59,7 @@ class BatchEasyHardMiner(BaseTupleMiner):
     def mine(self, embeddings, labels, ref_emb, ref_labels):
         mat = self.distance(embeddings, ref_emb)
         a1_idx, p_idx, a2_idx, n_idx = lmu.get_all_pairs_indices(labels, ref_labels)
-        a = torch.arange(mat.size(0)).to(mat.device)
+        a = torch.arange(mat.size(0), device=mat.device)
 
         if self.pos_strategy == self.SEMIHARD and self.neg_strategy != self.ALL:
             (negative_dists, negative_indices), a2n_keep = self.get_negatives(

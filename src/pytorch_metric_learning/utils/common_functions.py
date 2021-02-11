@@ -150,7 +150,7 @@ def slice_by_n(input_array, n):
 def unslice_by_n(input_tensors):
     n = len(input_tensors)
     rows, cols = input_tensors[0].size()
-    output = torch.zeros((rows * n, cols)).to(input_tensors[0].device)
+    output = torch.zeros((rows * n, cols), device=input_tensors[0].device)
     for i in range(n):
         output[i::n] = input_tensors[i]
     return output
@@ -419,7 +419,7 @@ def assert_distance_type(obj, distance_type=None, **kwargs):
 
 
 def torch_arange_from_size(input, size_dim=0):
-    return torch.arange(input.size(size_dim)).to(input.device)
+    return torch.arange(input.size(size_dim), device=input.device)
 
 
 class TorchInitWrapper:
@@ -455,3 +455,19 @@ def torch_standard_scaler(x):
     mean = torch.mean(x, dim=0)
     std = torch.std(x, dim=0)
     return (x - mean) / std
+
+
+def to_dtype(x, tensor=None, dtype=None):
+    dt = dtype if dtype is not None else tensor.dtype
+    if x.dtype != dt:
+        x = x.type(dt)
+    return x
+
+
+def to_device(x, tensor=None, device=None, dtype=None):
+    dv = device if device is not None else tensor.device
+    if x.device != dv:
+        x = x.to(dv)
+    if dtype is not None:
+        x = to_dtype(x, dtype=dtype)
+    return x

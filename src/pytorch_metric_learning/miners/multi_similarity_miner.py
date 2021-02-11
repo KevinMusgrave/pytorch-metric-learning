@@ -17,7 +17,7 @@ class MultiSimilarityMiner(BaseTupleMiner):
         a1, p, a2, n = lmu.get_all_pairs_indices(labels, ref_labels)
 
         if len(a1) == 0 or len(a2) == 0:
-            empty = torch.LongTensor([]).to(labels.device)
+            empty = torch.tensor([], device=labels.device, dtype=torch.long)
             return empty.clone(), empty.clone(), empty.clone(), empty.clone()
 
         mat_neg_sorting = mat

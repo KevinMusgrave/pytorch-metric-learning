@@ -23,7 +23,7 @@ class NTXentLoss(GenericPairLoss):
 
             pos_pairs = pos_pairs.unsqueeze(1) / self.temperature
             neg_pairs = neg_pairs / self.temperature
-            n_per_p = (a2.unsqueeze(0) == a1.unsqueeze(1)).type(dtype)
+            n_per_p = c_f.to_dtype(a2.unsqueeze(0) == a1.unsqueeze(1), dtype=dtype)
             neg_pairs = neg_pairs * n_per_p
             neg_pairs[n_per_p == 0] = c_f.neg_inf(dtype)
 

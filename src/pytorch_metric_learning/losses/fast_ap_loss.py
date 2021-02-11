@@ -23,8 +23,8 @@ class FastAPLoss(BaseMetricLossFunction):
         miner_weights = lmu.convert_to_weights(indices_tuple, labels, dtype=dtype)
         N = labels.size(0)
         a1_idx, p_idx, a2_idx, n_idx = lmu.get_all_pairs_indices(labels)
-        I_pos = torch.zeros(N, N, dtype=dtype).to(device)
-        I_neg = torch.zeros(N, N, dtype=dtype).to(device)
+        I_pos = torch.zeros(N, N, dtype=dtype, device=device)
+        I_neg = torch.zeros(N, N, dtype=dtype, device=device)
         I_pos[a1_idx, p_idx] = 1
         I_neg[a2_idx, n_idx] = 1
         N_pos = torch.sum(I_pos, dim=1)
@@ -35,12 +35,9 @@ class FastAPLoss(BaseMetricLossFunction):
 
         histogram_max = 2 ** self.distance.power
         histogram_delta = histogram_max / self.num_bins
-        mid_points = (
-            torch.linspace(0.0, histogram_max, steps=self.num_edges)
-            .view(-1, 1, 1)
-            .to(device)
-            .type(dtype)
-        )
+        mid_points = torch.linspace(
+            0.0, histogram_max, steps=self.num_edges, device=device, dtype=dtype
+        ).view(-1, 1, 1)
         pulse = torch.nn.functional.relu(
             1 - torch.abs(dist_mat - mid_points) / histogram_delta
         )
@@ -53,7 +50,7 @@ class FastAPLoss(BaseMetricLossFunction):
         h_pos_product = pos_hist * total_pos_hist
         safe_H = (h_pos_product > 0) & (total_hist > 0)
         if torch.sum(safe_H) > 0:
-            FastAP = torch.zeros_like(pos_hist).to(device)
+            FastAP = torch.zeros_like(pos_hist, device=device)
             FastAP[safe_H] = h_pos_product[safe_H] / total_hist[safe_H]
             FastAP = torch.sum(FastAP, dim=1)
             FastAP = FastAP[safe_N] / N_pos[safe_N]

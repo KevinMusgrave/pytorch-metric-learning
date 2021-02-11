@@ -20,7 +20,7 @@ class NormalizedSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         )
 
     def cast_types(self, dtype, device):
-        self.W.data = self.W.data.to(device).type(dtype)
+        self.W.data = c_f.to_device(self.W.data, device=device, dtype=dtype)
 
     def compute_loss(self, embeddings, labels, indices_tuple):
         dtype, device = embeddings.dtype, embeddings.device

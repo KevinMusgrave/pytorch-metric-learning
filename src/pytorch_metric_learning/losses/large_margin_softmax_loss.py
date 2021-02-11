@@ -45,7 +45,7 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
     def get_cos_with_margin(self, cosine):
         cosine = cosine.unsqueeze(1)
         for attr in ["n_range", "margin_choose_n", "cos_powers", "alternating"]:
-            setattr(self, attr, getattr(self, attr).to(cosine.device))
+            setattr(self, attr, c_f.to_device(getattr(self, attr), cosine))
         cos_powered = cosine ** self.cos_powers
         sin_powered = (1 - cosine ** 2) ** self.n_range
         terms = (
@@ -65,8 +65,11 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
 
     def get_target_mask(self, embeddings, labels):
         batch_size = labels.size(0)
-        mask = torch.zeros(batch_size, self.num_classes, dtype=embeddings.dtype).to(
-            embeddings.device
+        mask = torch.zeros(
+            batch_size,
+            self.num_classes,
+            dtype=embeddings.dtype,
+            device=embeddings.device,
         )
         mask[torch.arange(batch_size), labels] = 1
         return mask
@@ -88,11 +91,13 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         return logits * product_of_magnitudes * self.scale
 
     def cast_types(self, dtype, device):
-        self.W.data = self.W.data.to(device).type(dtype)
-        self.n_range = self.n_range.to(device).type(dtype)
-        self.margin_choose_n = self.margin_choose_n.to(device).type(dtype)
-        self.cos_powers = self.cos_powers.to(device).type(dtype)
-        self.alternating = self.alternating.to(device).type(dtype)
+        self.W.data = c_f.to_device(self.W.data, device=device, dtype=dtype)
+        self.n_range = c_f.to_device(self.n_range, device=device, dtype=dtype)
+        self.margin_choose_n = c_f.to_device(
+            self.margin_choose_n, device=device, dtype=dtype
+        )
+        self.cos_powers = c_f.to_device(self.cos_powers, device=device, dtype=dtype)
+        self.alternating = c_f.to_device(self.alternating, device=device, dtype=dtype)
 
     def compute_loss(self, embeddings, labels, indices_tuple):
         dtype, device = embeddings.dtype, embeddings.device

@@ -1,5 +1,6 @@
 import unittest
 
+import numpy as np
 import torch
 
 from pytorch_metric_learning.testers import WithSameParentLabelTester
@@ -27,7 +28,7 @@ class TestWithSameParentLabelTester(unittest.TestCase):
             "val": c_f.EmbeddingDataset(embeddings2, labels2),
         }
 
-    def test_global_embedding_space_tester(self):
+    def test_with_same_parent_label_tester(self):
         model = c_f.Identity()
         AC = accuracy_calculator.AccuracyCalculator(include=("precision_at_1",))
 
@@ -52,11 +53,15 @@ class TestWithSameParentLabelTester(unittest.TestCase):
                 self.dataset_dict, 0, model, splits_to_eval=splits_to_eval
             )
             self.assertTrue(
-                all_accuracies["train"]["precision_at_1_level0"]
-                == correct_vals["train"]
+                np.isclose(
+                    all_accuracies["train"]["precision_at_1_level0"],
+                    correct_vals["train"],
+                )
             )
             self.assertTrue(
-                all_accuracies["val"]["precision_at_1_level0"] == correct_vals["val"]
+                np.isclose(
+                    all_accuracies["val"]["precision_at_1_level0"], correct_vals["val"]
+                )
             )
 
     @classmethod

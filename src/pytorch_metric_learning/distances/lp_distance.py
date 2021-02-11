@@ -15,7 +15,7 @@ class LpDistance(BaseDistance):
             ref_emb = query_emb
         if dtype == torch.float16:  # cdist doesn't work for float16
             rows, cols = lmu.meshgrid_from_sizes(query_emb, ref_emb, dim=0)
-            output = torch.zeros(rows.size(), dtype=dtype).to(device)
+            output = torch.zeros(rows.size(), dtype=dtype, device=device)
             rows, cols = rows.flatten(), cols.flatten()
             distances = self.pairwise_distance(query_emb[rows], ref_emb[cols])
             output[rows, cols] = distances

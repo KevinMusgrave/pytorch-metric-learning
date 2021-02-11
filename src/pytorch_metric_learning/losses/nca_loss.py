@@ -32,8 +32,8 @@ class NCALoss(BaseMetricLossFunction):
             mat = -mat
         if query is reference:
             mat.fill_diagonal_(c_f.neg_inf(dtype))
-        same_labels = (query_labels.unsqueeze(1) == reference_labels.unsqueeze(0)).type(
-            dtype
+        same_labels = c_f.to_dtype(
+            query_labels.unsqueeze(1) == reference_labels.unsqueeze(0), dtype=dtype
         )
         exp = torch.nn.functional.softmax(self.softmax_scale * mat, dim=1)
         exp = torch.sum(exp * same_labels, dim=1)

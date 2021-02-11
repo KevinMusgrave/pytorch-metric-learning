@@ -30,7 +30,7 @@ class BaseMetricLossFunction(
         """
         self.reset_stats()
         c_f.assert_embeddings_and_labels_are_same_size(embeddings, labels)
-        labels = labels.to(embeddings.device)
+        labels = c_f.to_device(labels, embeddings)
         loss_dict = self.compute_loss(embeddings, labels, indices_tuple)
         self.add_embedding_regularization_to_loss_dict(loss_dict, embeddings)
         return self.reducer(loss_dict, embeddings, labels)

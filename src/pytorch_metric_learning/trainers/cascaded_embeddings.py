@@ -1,4 +1,5 @@
 from .. import miners
+from ..utils import common_functions as c_f
 from .base_trainer import BaseTrainer
 
 
@@ -62,7 +63,9 @@ class CascadedEmbeddings(BaseTrainer):
 
     def maybe_get_classifier_loss(self, logits, labels, curr_loss_name):
         if self.loss_weights.get(curr_loss_name, 0) > 0:
-            return self.loss_funcs[curr_loss_name](logits, labels.to(logits.device))
+            return self.loss_funcs[curr_loss_name](
+                logits, c_f.to_device(labels, logits)
+            )
         return 0
 
     def allowed_model_keys(self):

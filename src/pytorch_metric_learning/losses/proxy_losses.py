@@ -1,5 +1,6 @@
 import torch
 
+from ..utils import common_functions as c_f
 from .mixins import WeightRegularizerMixin
 from .nca_loss import NCALoss
 
@@ -13,7 +14,7 @@ class ProxyNCALoss(WeightRegularizerMixin, NCALoss):
         self.add_to_recordable_attributes(list_of_names=["num_classes"], is_stat=False)
 
     def cast_types(self, dtype, device):
-        self.proxies.data = self.proxies.data.to(device).type(dtype)
+        self.proxies.data = c_f.to_device(self.proxies.data, device=device, dtype=dtype)
 
     def compute_loss(self, embeddings, labels, indices_tuple):
         dtype, device = embeddings.dtype, embeddings.device
@@ -22,7 +23,7 @@ class ProxyNCALoss(WeightRegularizerMixin, NCALoss):
             embeddings,
             self.proxies,
             labels,
-            self.proxy_labels.to(labels.device),
+            c_f.to_device(self.proxy_labels, labels),
             indices_tuple,
         )
         self.add_weight_regularization_to_loss_dict(loss_dict, self.proxies)

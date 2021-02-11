@@ -19,8 +19,8 @@ class RegularFaceRegularizer(BaseRegularizer):
             cos1 = cos.clone()
             cos1.fill_diagonal_(c_f.neg_inf(dtype))
             _, indices = self.distance.smallest_dist(cos1, dim=1)
-            mask = torch.zeros((num_classes, num_classes), dtype=dtype).to(device)
-            row_nums = torch.arange(num_classes).long().to(device)
+            mask = torch.zeros((num_classes, num_classes), dtype=dtype, device=device)
+            row_nums = torch.arange(num_classes, device=device, dtype=torch.long)
             mask[row_nums, indices] = 1
         losses = torch.sum(cos * mask, dim=1)
         return {

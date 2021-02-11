@@ -25,7 +25,7 @@ class ProxyAnchorLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         )
 
     def cast_types(self, dtype, device):
-        self.proxies.data = self.proxies.data.to(device).type(dtype)
+        self.proxies.data = c_f.to_device(self.proxies.data, device=device, dtype=dtype)
 
     def compute_loss(self, embeddings, labels, indices_tuple):
         dtype, device = embeddings.dtype, embeddings.device

@@ -1,3 +1,4 @@
+from ..utils import common_functions as c_f
 from .metric_loss_only import MetricLossOnly
 
 
@@ -14,7 +15,9 @@ class TrainWithClassifier(MetricLossOnly):
 
     def maybe_get_classifier_loss(self, logits, labels):
         if logits is not None:
-            return self.loss_funcs["classifier_loss"](logits, labels.to(logits.device))
+            return self.loss_funcs["classifier_loss"](
+                logits, c_f.to_device(labels, logits)
+            )
         return 0
 
     def maybe_get_logits(self, embeddings):

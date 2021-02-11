@@ -48,7 +48,7 @@ class SoftTripleLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         )
 
     def cast_types(self, dtype, device):
-        self.fc.data = self.fc.data.to(device).type(dtype)
+        self.fc.data = c_f.to_device(self.fc.data, device=device, dtype=dtype)
 
     def compute_loss(self, embeddings, labels, indices_tuple):
         dtype, device = embeddings.dtype, embeddings.device
@@ -60,7 +60,9 @@ class SoftTripleLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         )
         prob = F.softmax(sim_to_centers * self.gamma, dim=2)
         sim_to_classes = torch.sum(prob * sim_to_centers, dim=2)
-        margin = torch.zeros(sim_to_classes.shape, dtype=dtype).to(embeddings.device)
+        margin = torch.zeros(
+            sim_to_classes.shape, dtype=dtype, device=embeddings.device
+        )
         margin[torch.arange(0, margin.shape[0]), labels] = self.margin
         loss = F.cross_entropy(
             self.la * (sim_to_classes - margin), labels, reduction="none"

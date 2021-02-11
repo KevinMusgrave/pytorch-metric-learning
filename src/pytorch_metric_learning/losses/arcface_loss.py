@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 
+from ..utils import common_functions as c_f
 from .large_margin_softmax_loss import LargeMarginSoftmaxLoss
 
 
@@ -16,7 +17,7 @@ class ArcFaceLoss(LargeMarginSoftmaxLoss):
         self.margin = np.radians(self.margin)
 
     def cast_types(self, dtype, device):
-        self.W.data = self.W.data.to(device).type(dtype)
+        self.W.data = c_f.to_device(self.W.data, device=device, dtype=dtype)
 
     def modify_cosine_of_target_classes(self, cosine_of_target_classes, *args):
         angles = self.get_angles(cosine_of_target_classes)

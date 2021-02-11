@@ -30,8 +30,8 @@ def get_knn(
         index = faiss.index_cpu_to_all_gpus(index)
     index.add(reference_embeddings)
     distances, indices = index.search(test_embeddings, k + 1)
-    distances = torch.from_numpy(distances).to(device)
-    indices = torch.from_numpy(indices).to(device)
+    distances = c_f.to_device(torch.from_numpy(distances), device=device)
+    indices = c_f.to_device(torch.from_numpy(indices), device=device)
     if embeddings_come_from_same_source:
         return indices[:, 1:], distances[:, 1:]
     return indices[:, :k], distances[:, :k]
@@ -66,4 +66,4 @@ def run_pca(x, output_dimensionality):
     mat = faiss.PCAMatrix(x.shape[1], output_dimensionality)
     mat.train(x)
     assert mat.is_trained
-    return c_f.numpy_to_torch(mat.apply_py(x)).to(device)
+    return c_f.to_device(torch.from_numpy(mat.apply_py(x)), device=device)

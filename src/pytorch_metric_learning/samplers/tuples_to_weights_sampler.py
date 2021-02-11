@@ -33,14 +33,14 @@ class TuplesToWeightsSampler(Sampler):
             )
             curr_dataset = torch.utils.data.Subset(self.dataset, indices)
         else:
-            indices = torch.arange(len(self.dataset)).to(self.device)
+            indices = torch.arange(len(self.dataset), device=self.device)
             curr_dataset = self.dataset
 
         embeddings, labels = self.tester.get_all_embeddings(curr_dataset, self.model)
         labels = labels.squeeze(1)
         hard_tuples = self.miner(embeddings, labels)
 
-        self.weights = torch.zeros(len(self.dataset)).to(self.device)
+        self.weights = torch.zeros(len(self.dataset), device=self.device)
         self.weights[indices] = lmu.convert_to_weights(
             hard_tuples, labels, dtype=torch.float32
         )

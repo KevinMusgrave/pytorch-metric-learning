@@ -1,5 +1,6 @@
 import torch
 
+from ..utils import common_functions as c_f
 from .large_margin_softmax_loss import LargeMarginSoftmaxLoss
 
 
@@ -15,7 +16,7 @@ class CosFaceLoss(LargeMarginSoftmaxLoss):
         pass
 
     def cast_types(self, dtype, device):
-        self.W.data = self.W.data.to(device).type(dtype)
+        self.W.data = c_f.to_device(self.W.data, device=device, dtype=dtype)
 
     def modify_cosine_of_target_classes(self, cosine_of_target_classes, *args):
         if self.collect_stats:

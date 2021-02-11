@@ -3,7 +3,7 @@ import sys
 
 import torch
 
-sys.path.insert(0, "../pytorch-metric-learning/src")
+sys.path.insert(0, "src")
 import pytorch_metric_learning
 
 print(

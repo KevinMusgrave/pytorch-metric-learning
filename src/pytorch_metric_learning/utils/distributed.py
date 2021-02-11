@@ -11,7 +11,7 @@ def is_distributed():
 
 # modified from https://github.com/JohnGiorgi/DeCLUTR
 def all_gather(embeddings, labels):
-    labels = labels.to(embeddings.device)
+    labels = c_f.to_device(labels, embeddings)
     # If we are not using distributed training, this is a no-op.
     if not is_distributed():
         return embeddings, labels

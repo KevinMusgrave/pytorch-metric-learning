@@ -65,7 +65,8 @@ class DistributedMinerWrapper(torch.nn.Module):
         self.miner = miner
 
     def forward(self, embeddings, labels, ref_emb=None, ref_labels=None):
-        embeddings, labels = all_gather_embeddings_labels(embeddings, labels)
         if ref_emb is not None:
             ref_emb, ref_labels = all_gather_embeddings_labels(ref_emb, ref_labels)
+        else:
+            ref_emb, ref_labels = all_gather_embeddings_labels(embeddings, labels)
         return self.miner(embeddings, labels, ref_emb, ref_labels)

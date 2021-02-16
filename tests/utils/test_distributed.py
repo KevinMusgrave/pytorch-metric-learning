@@ -11,6 +11,7 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 from pytorch_metric_learning import losses, miners
 from pytorch_metric_learning.utils import common_functions as c_f
 from pytorch_metric_learning.utils import distributed
+from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
 
 from .. import TEST_DEVICE, TEST_DTYPES
 
@@ -75,32 +76,35 @@ def single_process_function(
             loss=loss_fn.to(device), device_ids=device_ids, output_device=output_device
         )
 
-    miner_fn = distributed.DistributedMinerWrapper(miner=miner_fn)
-
     outputs = ddp_mp_model(inputs[rank].to(device))
-    indices_tuple = miner_fn(outputs, labels[rank])
-    loss = loss_fn(outputs, labels[rank], indices_tuple)
+
+    if miner_fn is not None:
+        miner_fn = distributed.DistributedMinerWrapper(miner=miner_fn)
+        indices_tuple = miner_fn(outputs, labels[rank])
+        loss = loss_fn(outputs, labels[rank], indices_tuple)
+        for i in range(len(correct_indices_tuple[rank])):
+            assert torch.all(
+                indices_tuple[i]
+                == (torch.from_numpy(correct_indices_tuple[rank][i]).to(device))
+            )
+    else:
+        loss = loss_fn(outputs, labels[rank])
 
     assert torch.isclose(loss, torch.from_numpy(correct_losses[rank]).to(device))
-    for i in range(len(correct_indices_tuple[rank])):
-        assert torch.all(
-            indices_tuple[i] == (torch.from_numpy(correct_indices_tuple[rank][i]).to(device))
-        )
 
     dist.barrier()
     cleanup()
 
 
 class TestDistributedLossWrapper(unittest.TestCase):
-    def create_loss(self, loss_class, is_tuple_loss, dtype):
+    def create_loss(self, loss_class, is_tuple_loss, dtype, num_classes):
         if is_tuple_loss:
             return loss_class()
         else:
-            return loss_class(num_classes=2, embedding_size=5).type(dtype)
+            return loss_class(num_classes=num_classes, embedding_size=5).type(dtype)
 
-    def loss_and_miner_tester(
-        self, loss_class, miner_class, is_tuple_loss
-    ):
+    def loss_and_miner_tester(self, loss_class, miner_class, is_tuple_loss):
+        num_classes = 3
         if TEST_DEVICE != torch.device("cpu"):
             max_world_size = min(4, torch.cuda.device_count())
             if max_world_size < 1:
@@ -112,13 +116,16 @@ class TestDistributedLossWrapper(unittest.TestCase):
             max_world_size = 2
         for dtype in TEST_DTYPES:
             for world_size in range(1, max_world_size + 1):
-                batch_size = 20
+                batch_size = 32
                 lr = 1
                 inputs = [
-                    torch.randn(batch_size, 10).type(dtype).to(TEST_DEVICE) for _ in range(world_size)
+                    torch.randn(batch_size, 10).type(dtype).to(TEST_DEVICE)
+                    for _ in range(world_size)
                 ]
                 labels = [
-                    torch.randint(low=0, high=2, size=(batch_size,)).to(TEST_DEVICE)
+                    torch.randint(low=0, high=num_classes, size=(batch_size,)).to(
+                        TEST_DEVICE
+                    )
                     for _ in range(world_size)
                 ]
                 original_model = ToyMpModel().type(dtype)
@@ -126,8 +133,12 @@ class TestDistributedLossWrapper(unittest.TestCase):
                 model.load_state_dict(original_model.state_dict())
 
                 original_model = original_model.to(TEST_DEVICE)
-                original_loss_fn = self.create_loss(loss_class, is_tuple_loss, dtype)
-                loss_fn = self.create_loss(loss_class, is_tuple_loss, dtype)
+                original_loss_fn = self.create_loss(
+                    loss_class, is_tuple_loss, dtype, num_classes
+                )
+                loss_fn = self.create_loss(
+                    loss_class, is_tuple_loss, dtype, num_classes
+                )
                 if not is_tuple_loss:
                     loss_fn.load_state_dict(original_loss_fn.state_dict())
                     assert parameters_are_equal(original_loss_fn, loss_fn)
@@ -135,17 +146,30 @@ class TestDistributedLossWrapper(unittest.TestCase):
                     loss_optimizer = optim.SGD(original_loss_fn.parameters(), lr=lr)
                     loss_optimizer.zero_grad()
 
-                original_miner_fn = miner_class()
-                miner_fn = miner_class()
-
                 all_labels = torch.cat(labels, dim=0).to(TEST_DEVICE)
                 outputs = [original_model(x).to(TEST_DEVICE) for x in inputs]
                 all_outputs = torch.cat(outputs, dim=0)
-                correct_indices_tuple = [original_miner_fn(x, y, all_outputs, all_labels) for (x,y) in zip(outputs, labels)]
+                if miner_class is not None:
+                    original_miner_fn = miner_class()
+                    miner_fn = miner_class()
+                    correct_indices_tuple = [
+                        original_miner_fn(x, y, all_outputs, all_labels)
+                        for (x, y) in zip(outputs, labels)
+                    ]
+                else:
+                    miner_fn = None
+                    correct_indices_tuple = [
+                        lmu.get_all_pairs_indices(y, all_labels) for y in labels
+                    ]
+
                 correct_losses = []
-                
+
                 for i in range(len(outputs)):
-                    correct_losses.append(original_loss_fn(all_outputs, all_labels, correct_indices_tuple[i]))
+                    correct_losses.append(
+                        original_loss_fn(
+                            all_outputs, all_labels, correct_indices_tuple[i]
+                        )
+                    )
 
                 correct_losses = [x.detach().cpu().numpy() for x in correct_losses]
 
@@ -159,7 +183,10 @@ class TestDistributedLossWrapper(unittest.TestCase):
                         loss_fn,
                         miner_fn,
                         correct_losses,
-                        [tuple([x.cpu().numpy() for x in y]) for y in correct_indices_tuple],
+                        [
+                            tuple([x.cpu().numpy() for x in y])
+                            for y in correct_indices_tuple
+                        ],
                         is_tuple_loss,
                     ),
                     nprocs=world_size,
@@ -168,17 +195,18 @@ class TestDistributedLossWrapper(unittest.TestCase):
 
     def test_distributed_tuple_loss_and_miner(self):
         self.loss_and_miner_tester(
-            losses.ContrastiveLoss, miners.MultiSimilarityMiner, True
+            losses.ContrastiveLoss, miner_class=None, is_tuple_loss=True
+        )
+
+        self.loss_and_miner_tester(
+            losses.ContrastiveLoss,
+            miner_class=miners.MultiSimilarityMiner,
+            is_tuple_loss=True,
         )
 
     # def test_distributed_classifier_loss_and_miner(self):
     #     self.loss_and_miner_tester(
     #         losses.ArcFaceLoss, miners.MultiSimilarityMiner, False
-    #     )
-
-    # def test_distributed_tuple_miner_with_ref_emb(self):
-    #     self.loss_and_miner_tester(
-    #         losses.ContrastiveLoss, miners.MultiSimilarityMiner, True,
     #     )
 
 

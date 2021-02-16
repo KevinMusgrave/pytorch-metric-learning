@@ -2,6 +2,7 @@ import torch
 from torch.nn.parallel import DistributedDataParallel as DDP
 
 from ..utils import common_functions as c_f
+from ..utils import loss_and_miner_utils as lmu
 
 
 # modified from https://github.com/allenai/allennlp
@@ -10,7 +11,7 @@ def is_distributed():
 
 
 # modified from https://github.com/JohnGiorgi/DeCLUTR
-def all_gather(embeddings, labels):
+def all_gather(embeddings, labels, indices_tuple=None, get_indices_tuple=True):
     labels = c_f.to_device(labels, embeddings)
     # If we are not using distributed training, this is a no-op.
     if not is_distributed():
@@ -27,12 +28,17 @@ def all_gather(embeddings, labels):
     embeddings_list[rank] = embeddings
     labels_list[rank] = labels
     # Finally, we concatenate the embeddings
-    embeddings = torch.cat(embeddings_list)
-    labels = torch.cat(labels_list)
-    return embeddings, labels
+    all_embeddings = torch.cat(embeddings_list)
+    all_labels = torch.cat(labels_list)
+
+    if get_indices_tuple and indices_tuple is None:
+        indices_tuple = lmu.get_all_pairs_indices(labels, all_labels)
+    return all_embeddings, all_labels, indices_tuple
 
 
-def all_gather_embeddings_labels(embeddings, labels):
+def all_gather_embeddings_labels(
+    embeddings, labels, indices_tuple=None, get_indices_tuple=True
+):
     if c_f.is_list_or_tuple(embeddings):
         assert c_f.is_list_or_tuple(labels)
         all_embeddings, all_labels = [], []
@@ -43,9 +49,11 @@ def all_gather_embeddings_labels(embeddings, labels):
         embeddings = torch.cat(all_embeddings, dim=0)
         labels = torch.cat(all_labels, dim=0)
     else:
-        embeddings, labels = all_gather(embeddings, labels)
+        embeddings, labels, indices_tuple = all_gather(
+            embeddings, labels, indices_tuple, get_indices_tuple
+        )
 
-    return embeddings, labels
+    return embeddings, labels, indices_tuple
 
 
 class DistributedLossWrapper(torch.nn.Module):
@@ -54,9 +62,11 @@ class DistributedLossWrapper(torch.nn.Module):
         has_parameters = len([p for p in loss.parameters()]) > 0
         self.loss = DDP(loss, **kwargs) if has_parameters else loss
 
-    def forward(self, embeddings, labels, *args, **kwargs):
-        embeddings, labels = all_gather_embeddings_labels(embeddings, labels)
-        return self.loss(embeddings, labels, *args, **kwargs)
+    def forward(self, embeddings, labels, indices_tuple=None, *args, **kwargs):
+        embeddings, labels, indices_tuple = all_gather_embeddings_labels(
+            embeddings, labels, indices_tuple
+        )
+        return self.loss(embeddings, labels, indices_tuple, **kwargs)
 
 
 class DistributedMinerWrapper(torch.nn.Module):
@@ -66,7 +76,11 @@ class DistributedMinerWrapper(torch.nn.Module):
 
     def forward(self, embeddings, labels, ref_emb=None, ref_labels=None):
         if ref_emb is not None:
-            ref_emb, ref_labels = all_gather_embeddings_labels(ref_emb, ref_labels)
+            ref_emb, ref_labels, _ = all_gather_embeddings_labels(
+                ref_emb, ref_labels, get_indices_tuple=False
+            )
         else:
-            ref_emb, ref_labels = all_gather_embeddings_labels(embeddings, labels)
+            ref_emb, ref_labels, _ = all_gather_embeddings_labels(
+                embeddings, labels, get_indices_tuple=False
+            )
         return self.miner(embeddings, labels, ref_emb, ref_labels)

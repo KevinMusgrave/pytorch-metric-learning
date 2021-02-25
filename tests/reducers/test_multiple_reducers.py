@@ -49,7 +49,7 @@ class TestMultipleReducers(unittest.TestCase):
                         "losses": lossesB,
                         "indices": indices,
                         "reduction_type": reduction_type,
-                        "divisor_summands": {"partA": 32, "partB": 15},
+                        "divisor": 32 + 15,
                     },
                 }
                 output = reducer(loss_dict, embeddings, labels)

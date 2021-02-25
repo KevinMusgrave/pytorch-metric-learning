@@ -43,11 +43,13 @@ class TestDivisorReducer(unittest.TestCase):
                             "losses": L,
                             "indices": indices,
                             "reduction_type": reduction_type,
-                            "divisor_summands": {"partA": partA, "partB": partB},
+                            "divisor": partA + partB,
                         }
                     }
                     output = reducer(loss_dict, embeddings, labels)
-                    if partA + partB == 0:
+                    if reduction_type == "already_reduced":
+                        correct_output = L
+                    elif partA + partB == 0:
                         correct_output = torch.sum(L) * 0
                     else:
                         correct_output = torch.sum(L) / (32 + 15)

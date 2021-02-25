@@ -11,23 +11,30 @@ class BaseReducer(ModuleWithRecords):
         loss_name = list(loss_dict.keys())[0]
         loss_info = loss_dict[loss_name]
         self.add_to_recordable_attributes(name=loss_name, is_stat=True)
-        losses, loss_indices, reduction_type = self.unpack_loss_info(loss_info)
+        losses, loss_indices, reduction_type, kwargs = self.unpack_loss_info(loss_info)
         loss_val = self.reduce_the_loss(
-            losses, loss_indices, reduction_type, embeddings, labels
+            losses, loss_indices, reduction_type, kwargs, embeddings, labels
         )
         setattr(self, loss_name, loss_val.item())
         return loss_val
 
     def unpack_loss_info(self, loss_info):
-        return loss_info["losses"], loss_info["indices"], loss_info["reduction_type"]
+        return (
+            loss_info["losses"],
+            loss_info["indices"],
+            loss_info["reduction_type"],
+            {},
+        )
 
-    def reduce_the_loss(self, losses, loss_indices, reduction_type, embeddings, labels):
+    def reduce_the_loss(
+        self, losses, loss_indices, reduction_type, kwargs, embeddings, labels
+    ):
         self.set_losses_size_stat(losses)
         if self.input_is_zero_loss(losses):
             return self.zero_loss(embeddings)
         self.assert_sizes(losses, loss_indices, reduction_type)
         reduction_func = self.get_reduction_func(reduction_type)
-        return reduction_func(losses, loss_indices, embeddings, labels)
+        return reduction_func(losses, loss_indices, embeddings, labels, **kwargs)
 
     def already_reduced_reduction(self, losses, loss_indices, embeddings, labels):
         assert losses.ndim == 0 or len(losses) == 1

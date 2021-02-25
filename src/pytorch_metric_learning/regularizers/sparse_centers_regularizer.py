@@ -34,7 +34,7 @@ class SparseCentersRegularizer(BaseRegularizer):
                 "losses": reg,
                 "indices": c_f.torch_arange_from_size(reg),
                 "reduction_type": "element",
-                "divisor_summands": {"two_times_num_comparisons": divisor},
+                "divisor": divisor,
             }
         }
 

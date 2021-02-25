@@ -53,10 +53,7 @@ class MarginLoss(BaseMetricLossFunction):
         num_pos_pairs = torch.sum(pos_loss > 0.0)
         num_neg_pairs = torch.sum(neg_loss > 0.0)
 
-        divisor_summands = {
-            "num_pos_pairs": num_pos_pairs,
-            "num_neg_pairs": num_neg_pairs,
-        }
+        divisor = num_pos_pairs + num_neg_pairs
 
         margin_loss = pos_loss + neg_loss
 
@@ -65,14 +62,14 @@ class MarginLoss(BaseMetricLossFunction):
                 "losses": margin_loss,
                 "indices": indices_tuple,
                 "reduction_type": "triplet",
-                "divisor_summands": divisor_summands,
+                "divisor": divisor,
             },
-            "beta_reg_loss": self.compute_reg_loss(beta, anchor_idx, divisor_summands),
+            "beta_reg_loss": self.compute_reg_loss(beta, anchor_idx, divisor),
         }
 
         return loss_dict
 
-    def compute_reg_loss(self, beta, anchor_idx, divisor_summands):
+    def compute_reg_loss(self, beta, anchor_idx, divisor):
         if self.learn_beta:
             loss = beta * self.nu
             if len(self.beta) == 1:
@@ -86,7 +83,7 @@ class MarginLoss(BaseMetricLossFunction):
                     "losses": loss,
                     "indices": anchor_idx,
                     "reduction_type": "element",
-                    "divisor_summands": divisor_summands,
+                    "divisor": divisor,
                 }
         return self.zero_loss()
 

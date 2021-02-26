@@ -14,13 +14,13 @@ class DivisorReducer(BaseReducer):
             self.add_to_recordable_attributes(name="divisor", is_stat=True)
         return losses, loss_indices, reduction_type, kwargs
 
-    def sum_and_divide(self, losses, divisor):
+    def sum_and_divide(self, losses, embeddings, divisor):
         if divisor != 0:
             return torch.sum(losses) / divisor
-        return torch.sum(losses * 0)
+        return self.zero_loss(embeddings)
 
     def element_reduction(self, losses, loss_indices, embeddings, labels, divisor=1):
-        return self.sum_and_divide(losses, divisor)
+        return self.sum_and_divide(losses, embeddings, divisor)
 
     def pos_pair_reduction(self, *args, **kwargs):
         return self.element_reduction(*args, **kwargs)

@@ -16,19 +16,19 @@ class ThresholdReducer(BaseReducer):
         if self.high is not None:
             self.add_to_recordable_attributes(list_of_names=["high"], is_stat=False)
 
-    def element_reduction(self, losses, *_):
-        return self.element_reduction_helper(losses, "elements")
+    def element_reduction(self, losses, loss_indices, embeddings, labels):
+        return self.element_reduction_helper(losses, embeddings, "elements")
 
-    def pos_pair_reduction(self, losses, *args):
-        return self.element_reduction_helper(losses, "pos_pairs")
+    def pos_pair_reduction(self, losses, loss_indices, embeddings, labels):
+        return self.element_reduction_helper(losses, embeddings, "pos_pairs")
 
-    def neg_pair_reduction(self, losses, *args):
-        return self.element_reduction_helper(losses, "neg_pairs")
+    def neg_pair_reduction(self, losses, loss_indices, embeddings, labels):
+        return self.element_reduction_helper(losses, embeddings, "neg_pairs")
 
-    def triplet_reduction(self, losses, *args):
-        return self.element_reduction_helper(losses, "triplets")
+    def triplet_reduction(self, losses, loss_indices, embeddings, labels):
+        return self.element_reduction_helper(losses, embeddings, "triplets")
 
-    def element_reduction_helper(self, losses, attr_name):
+    def element_reduction_helper(self, losses, embeddings, attr_name):
         low_condition = losses > self.low if self.low is not None else True
         high_condition = losses < self.high if self.high is not None else True
         threshold_condition = low_condition & high_condition
@@ -36,7 +36,7 @@ class ThresholdReducer(BaseReducer):
         if num_past_filter >= 1:
             loss = torch.mean(losses[threshold_condition])
         else:
-            loss = torch.mean(losses) * 0  # set loss to 0
+            loss = self.zero_loss(embeddings)
         self.set_stats(low_condition, high_condition, num_past_filter, attr_name)
         return loss
 

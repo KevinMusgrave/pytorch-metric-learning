@@ -27,7 +27,9 @@ class NTXentLoss(GenericPairLoss):
             neg_pairs = neg_pairs * n_per_p
             neg_pairs[n_per_p == 0] = c_f.neg_inf(dtype)
 
-            max_val = torch.max(pos_pairs, torch.max(neg_pairs, dim=1, keepdim=True)[0])
+            max_val = torch.max(
+                pos_pairs, torch.max(neg_pairs, dim=1, keepdim=True)[0]
+            ).detach()
             numerator = torch.exp(pos_pairs - max_val).squeeze(1)
             denominator = torch.sum(torch.exp(neg_pairs - max_val), dim=1) + numerator
             log_exp = torch.log((numerator / denominator) + c_f.small_val(dtype))

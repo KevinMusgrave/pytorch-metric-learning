@@ -15,7 +15,6 @@ class UniformHistogramMiner(BaseTupleMiner):
         )
 
     def mine(self, embeddings, labels, ref_emb, ref_labels):
-        dtype = embeddings.dtype
         mat = self.distance(embeddings, ref_emb)
         a1, p, a2, n = lmu.get_all_pairs_indices(labels, ref_labels)
         pos_pairs = mat[a1, p]

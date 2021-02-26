@@ -17,7 +17,7 @@ class TestPerAnchorReducer(unittest.TestCase):
     def test_per_anchor_reducer(self):
         for inner_reducer in [MeanReducer(), AvgNonZeroReducer()]:
             reducer = PerAnchorReducer(inner_reducer)
-            batch_size = 10
+            batch_size = 100
             embedding_size = 64
             for dtype in TEST_DTYPES:
                 embeddings = (
@@ -82,4 +82,4 @@ class TestPerAnchorReducer(unittest.TestCase):
                             }
                         }
                     correct_output = inner_reducer(loss_dict, embeddings, labels)
-                    self.assertTrue(torch.isclose(output, correct_output, rtol=1e-5))
+                    self.assertTrue(torch.isclose(output, correct_output))

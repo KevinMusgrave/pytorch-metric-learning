@@ -5,8 +5,15 @@ from .base_reducer import BaseReducer
 from .mean_reducer import MeanReducer
 
 
+def aggregation_func(x, num_per_row):
+    zero_denom = num_per_row == 0
+    x = torch.sum(x, dim=1) / num_per_row
+    x[zero_denom] = 0
+    return x
+
+
 class PerAnchorReducer(BaseReducer):
-    def __init__(self, reducer=None, aggregation_func=torch.sum, **kwargs):
+    def __init__(self, reducer=None, aggregation_func=aggregation_func, **kwargs):
         super().__init__(**kwargs)
         self.reducer = reducer if reducer is not None else MeanReducer()
         self.aggregation_func = aggregation_func
@@ -34,10 +41,8 @@ class PerAnchorReducer(BaseReducer):
         num_inf = torch.sum(pos_inf_mask, dim=1)
 
         new_array[pos_inf_mask] = 0
-        denom = batch_size - num_inf
-        zero_denom = denom == 0
-        output = self.aggregation_func(new_array, dim=1) / denom
-        output[zero_denom] = 0
+        num_per_row = batch_size - num_inf
+        output = self.aggregation_func(new_array, num_per_row)
 
         loss_dict = {
             "loss": {

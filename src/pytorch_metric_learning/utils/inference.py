@@ -22,7 +22,7 @@ class MatchFinder:
         self, query_emb, ref_emb=None, threshold=None, return_tuples=False
     ):
         with torch.no_grad():
-            threshold = threshold if self.threshold is None else self.threshold
+            threshold = threshold if threshold is not None else self.threshold
             return self.operate_on_emb(
                 self._get_matching_pairs, query_emb, ref_emb, threshold, return_tuples
             )
@@ -37,7 +37,7 @@ class MatchFinder:
 
     # where x and y are already matched pairs
     def is_match(self, x, y, threshold=None):
-        threshold = threshold if self.threshold is None else self.threshold
+        threshold = threshold if threshold is not None else self.threshold
         with torch.no_grad():
             dist = self.distance.pairwise_distance(x, y)
             output = (

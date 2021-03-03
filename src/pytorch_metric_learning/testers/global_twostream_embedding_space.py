@@ -28,10 +28,6 @@ class GlobalTwoStreamEmbeddingSpaceTester(GlobalEmbeddingSpaceTester):
                 all_posnegs[s:e] = pns
                 labels[s:e] = label
                 s = e
-            labels = labels.cpu().numpy()
-            all_posnegs = all_posnegs.cpu().numpy()
-            all_anchors = all_anchors.cpu().numpy()
-
         return all_anchors, all_posnegs, labels
 
     def get_all_embeddings(self, dataset, trunk_model, embedder_model, collate_fn):

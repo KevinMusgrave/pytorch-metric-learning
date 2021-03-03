@@ -137,10 +137,10 @@ class BaseTester:
                 logging.info(
                     "Running {} on the {} set".format(visualizer_name, split_name)
                 )
-                dim_reduced = self.visualizer.fit_transform(embeddings)
+                dim_reduced = self.visualizer.fit_transform(embeddings.cpu().numpy())
                 logging.info("Finished {}".format(visualizer_name))
                 for L in self.label_levels_to_evaluate(labels):
-                    label_scheme = labels[:, L]
+                    label_scheme = labels[:, L].cpu().numpy()
                     keyname = self.accuracies_keyname(
                         visualizer_name, label_hierarchy_level=L
                     )

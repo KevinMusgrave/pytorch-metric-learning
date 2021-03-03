@@ -152,7 +152,7 @@ miners.BatchHardMiner(**kwargs)
 
 
 ## DistanceWeightedMiner
-[Sampling Matters in Deep Embedding Learning](https://arxiv.org/pdf/1706.07567.pdf)
+Implementation of the miner from [Sampling Matters in Deep Embedding Learning](https://arxiv.org/pdf/1706.07567.pdf). 
 ```python
 miners.DistanceWeightedMiner(cutoff=0.5, nonzero_loss_cutoff=1.4, **kwargs)
 ```
@@ -166,6 +166,10 @@ miners.DistanceWeightedMiner(cutoff=0.5, nonzero_loss_cutoff=1.4, **kwargs)
 
  - [```LpDistance(normalize_embeddings=True, p=2, power=1)```](distances.md#lpdistance)
      - This is the only compatible distance.
+
+**Important note**:
+
+This miner works well only with low dimensionality embeddings (e.g 64-dim) and L2-normalized distances. Check out [UniformHistogramMiner](#uniformhistogramminer) for a miner that is roughly equivalent, but works with embeddings of any dimensionality and any distance metric.
 
 ## EmbeddingsAlreadyPackagedAsTriplets
 If your embeddings are already ordered sequentially as triplets, then use this miner to force your loss function to use the already-formed triplets. 
@@ -283,3 +287,42 @@ miners.TripletMarginMiner(margin=0.2, type_of_triplets="all", **kwargs)
 **Default distance**: 
 
  - [```LpDistance(normalize_embeddings=True, p=2, power=1)```](distances.md#lpdistance)
+
+
+## UniformHistogramMiner
+Returns pairs that have uniformly distributed distances. This is like [DistanceWeightedMiner](#distanceweightedminer), except that it works well with high dimension embeddings, and works with any distance metric (not just L2 normalized distance).
+```python
+miners.UniformHistogramMiner(num_bins=100, 
+                            pos_per_bin=10, 
+                            neg_per_bin=10, 
+                            **kwargs):
+```
+
+**Parameters**
+
+* **num_bins**: The number of bins to divide the distances into. For example, if the distances for the current batch range from 0 to 2, and num_bins = 100, then each bin will have a width of 0.02.
+* **pos_per_bin**: The number of positive pairs to mine for each bin.
+* **neg_per_bin**: The number of negative pairs to mine for each bin.
+
+**Default distance**: 
+
+ - [```LpDistance(normalize_embeddings=True, p=2, power=1)```](distances.md#lpdistance)
+
+
+**Example**:
+```python
+from pytorch_metric_learning.miners import UniformHistogramMiner
+from pytorch_metric_learning.distances import SNRDistance
+
+miner = UniformHistogramMiner(
+    num_bins=100,
+    pos_per_bin=25,
+    neg_per_bin=33,
+    distance=SNRDistance(),
+)
+```
+
+In a given batch, this will:
+
+- Divide up the positive distances into 100 bins, and return 25 positive pairs per bin, or 0 if no pairs exist in that bin
+- Divide up the negative distances into 100 bins, and return 33 negative pairs per bin, or 0 if no pairs exist in that bin

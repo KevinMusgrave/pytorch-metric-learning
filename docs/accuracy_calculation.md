@@ -16,7 +16,7 @@ AccuracyCalculator(include=(),
 * **exclude**: Optional. A list or tuple of strings, which are the names of metrics you **do not** want to calculate.
 * **avg_of_avgs**: If True, the average accuracy per class is computed, and then the average of those averages is returned. This can be useful if your dataset has unbalanced classes. If False, the global average will be returned.
 * **k**: If set, this number of nearest neighbors will be retrieved for metrics that require k-nearest neighbors. If None, the value of k will be determined automatically.
-* **label_comparison_fn**: A function that compares two numpy arrays of labels and returns a boolean array. The default is ```numpy.equal```. If a custom function is used, then you must exclude clustering based metrics ("NMI" and "AMI"). The following is an example of a custom function for two-dimensional labels. It returns ```True``` if the 0th column matches, and the 1st column does **not** match:
+* **label_comparison_fn**: A function that compares two torch arrays of labels and returns a boolean array. The default is ```torch.eq```. If a custom function is used, then you must exclude clustering based metrics ("NMI" and "AMI"). The following is an example of a custom function for two-dimensional labels. It returns ```True``` if the 0th column matches, and the 1st column does **not** match:
 ```python
 def example_label_comparison_fn(x, y):
     return (x[:, 0] == y[:, 0]) & (x[:, 1] != y[:, 1])
@@ -46,10 +46,10 @@ def get_accuracy(self,
 # "r_precision"
 # "mean_average_precision_at_r"
 ```
-* **query**: A 2D numpy array of size ```(Nq, D)```, where Nq is the number of query samples. For each query sample, nearest neighbors are retrieved and accuracy is computed.
-* **reference**: A 2D numpy array of size ```(Nr, D)```, where Nr is the number of reference samples. This is where nearest neighbors are retrieved from.
-* **query_labels**: A 1D numpy array of size ```(Nq)```. Each element should be an integer representing the sample's label.
-* **reference_labels**: A 1D numpy array of size ```(Nr)```. Each element should be an integer representing the sample's label. 
+* **query**: A 2D torch or numpy array of size ```(Nq, D)```, where Nq is the number of query samples. For each query sample, nearest neighbors are retrieved and accuracy is computed.
+* **reference**: A 2D torch or numpy array of size ```(Nr, D)```, where Nr is the number of reference samples. This is where nearest neighbors are retrieved from.
+* **query_labels**: A 1D torch or numpy array of size ```(Nq)```. Each element should be an integer representing the sample's label.
+* **reference_labels**: A 1D torch or numpy array of size ```(Nr)```. Each element should be an integer representing the sample's label. 
 * **embeddings_come_from_same_source**: Set to True if ```query``` is a subset of ```reference``` or if ```query is reference```. Set to False otherwise.
 * **include**: Optional. A list or tuple of strings, which are the names of metrics you want to calculate. If left empty, all metrics specified during initialization will be calculated.
 * **exclude**: Optional. A list or tuple of strings, which are the names of metrics you do not want to calculate.
@@ -118,7 +118,7 @@ If your method requires a k-nearest neighbors search, then append your method's 
 	{"label_counts": label_counts,           # A dictionary mapping from reference labels to the number of times they occur
     "knn_labels": knn_labels,                # A 2d array where each row is the labels of the nearest neighbors of each query. The neighbors are retrieved from the reference set
     "knn_distances": knn_distances           # The euclidean distance corresponding to each k-nearest neighbor in knn_labels
-    "lone_query_labels": lone_query_labels   # The set of labels (in the form of a numpy array) that have only 1 occurrence in reference_labels
+    "lone_query_labels": lone_query_labels   # The set of labels (in the form of a torch array) that have only 1 occurrence in reference_labels
     "not_lone_query_mask": not_lone_query_mask} # A boolean mask, where True means that a query element has at least 1 possible neighbor in reference.           
 ```
 

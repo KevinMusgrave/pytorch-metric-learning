@@ -406,9 +406,11 @@ Thanks to the contributors who made pull requests!
 - [mlopezantequera](https://github.com/mlopezantequera)
 - [wconnell](https://github.com/wconnell)
 - [marijnl](https://github.com/marijnl)
+- [z1w](https://github.com/z1w)
 - [thinline72](https://github.com/thinline72)
 - [tpanum](https://github.com/tpanum)
 - [fralik](https://github.com/fralik)
+- [joaqo](https://github.com/joaqo)
 - [JoOkuma](https://github.com/JoOkuma)
 
 ### Facebook AI

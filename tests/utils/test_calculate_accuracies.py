@@ -358,22 +358,40 @@ class TestCalculateAccuracies(unittest.TestCase):
 
 
 class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
-    def test_accuracy_calculator_and_faiss_with_numpy_input(self):
-        AC = accuracy_calculator.AccuracyCalculator()
+    def test_accuracy_calculator_and_faiss_with_torch_and_numpy(self):
+        for use_numpy in [True, False]:
+            self._test_accuracy_calculator_and_faiss(use_numpy)
+            self._test_accuracy_calculator_and_faiss_avg_of_avgs(use_numpy)
+            self._test_accuracy_calculator_custom_comparison_function(use_numpy)
+            self._test_accuracy_calculator_float_custom_comparison_function(use_numpy)
 
-        query = np.arange(10)[:, None]
-        reference = np.arange(10)[:, None]
-        query_labels = np.arange(10)
-        reference_labels = np.arange(10)
+    def _test_accuracy_calculator_and_faiss(self, use_numpy):
+        AC = accuracy_calculator.AccuracyCalculator()
+        if use_numpy:
+            query = np.arange(10)[:, None]
+            reference = np.arange(10)[:, None]
+            query_labels = np.arange(10)
+            reference_labels = np.arange(10)
+        else:
+            query = torch.arange(10, device=TEST_DEVICE).unsqueeze(1)
+            reference = torch.arange(10, device=TEST_DEVICE).unsqueeze(1)
+            query_labels = torch.arange(10, device=TEST_DEVICE)
+            reference_labels = torch.arange(10, device=TEST_DEVICE)
         acc = AC.get_accuracy(query, reference, query_labels, reference_labels, False)
         self.assertTrue(isclose(acc["precision_at_1"], 1))
         self.assertTrue(isclose(acc["r_precision"], 1))
         self.assertTrue(isclose(acc["mean_average_precision_at_r"], 1))
 
-        reference = (np.arange(20) / 2.0)[:, None]
-        reference_labels = np.zeros(20)
-        reference_labels[::2] = query_labels
-        reference_labels[1::2] = np.ones(10)
+        if use_numpy:
+            reference = (np.arange(20) / 2.0)[:, None]
+            reference_labels = np.zeros(20)
+            reference_labels[::2] = query_labels
+            reference_labels[1::2] = np.ones(10)
+        else:
+            reference = (torch.arange(20, device=TEST_DEVICE) / 2.0).unsqueeze(1)
+            reference_labels = torch.zeros(20, device=TEST_DEVICE)
+            reference_labels[::2] = query_labels
+            reference_labels[1::2] = torch.ones(10)
         acc = AC.get_accuracy(query, reference, query_labels, reference_labels, True)
         self.assertTrue(isclose(acc["precision_at_1"], 1))
         self.assertTrue(isclose(acc["r_precision"], 0.5))
@@ -384,43 +402,27 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
             )
         )
 
-    def test_accuracy_calculator_and_faiss(self):
-        AC = accuracy_calculator.AccuracyCalculator()
-
-        query = torch.arange(10, device=TEST_DEVICE).unsqueeze(1)
-        reference = torch.arange(10, device=TEST_DEVICE).unsqueeze(1)
-        query_labels = torch.arange(10, device=TEST_DEVICE)
-        reference_labels = torch.arange(10, device=TEST_DEVICE)
-        acc = AC.get_accuracy(query, reference, query_labels, reference_labels, False)
-        self.assertTrue(isclose(acc["precision_at_1"], 1))
-        self.assertTrue(isclose(acc["r_precision"], 1))
-        self.assertTrue(isclose(acc["mean_average_precision_at_r"], 1))
-
-        reference = (torch.arange(20, device=TEST_DEVICE) / 2.0).unsqueeze(1)
-        reference_labels = torch.zeros(20, device=TEST_DEVICE)
-        reference_labels[::2] = query_labels
-        reference_labels[1::2] = torch.ones(10)
-        acc = AC.get_accuracy(query, reference, query_labels, reference_labels, True)
-        self.assertTrue(isclose(acc["precision_at_1"], 1))
-        self.assertTrue(isclose(acc["r_precision"], 0.5))
-        self.assertTrue(
-            isclose(
-                acc["mean_average_precision_at_r"],
-                (1 + 2.0 / 2 + 3.0 / 5 + 4.0 / 7 + 5.0 / 9) / 10,
-            )
-        )
-
-    def test_accuracy_calculator_and_faiss_avg_of_avgs(self):
+    def _test_accuracy_calculator_and_faiss_avg_of_avgs(self, use_numpy):
         AC_global_average = accuracy_calculator.AccuracyCalculator(avg_of_avgs=False)
         AC_per_class_average = accuracy_calculator.AccuracyCalculator(avg_of_avgs=True)
-        query = torch.arange(10, device=TEST_DEVICE).unsqueeze(1)
-        reference = torch.arange(10, device=TEST_DEVICE).unsqueeze(1)
+
+        query_labels = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
+        reference_labels = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+        if use_numpy:
+            query = np.arange(10)[:, None]
+            reference = np.arange(10)[:, None]
+            query_labels = np.array(query_labels)
+            reference_labels = np.array(reference_labels)
+        else:
+            query = torch.arange(10, device=TEST_DEVICE).unsqueeze(1)
+            reference = torch.arange(10, device=TEST_DEVICE).unsqueeze(1)
+            query_labels = torch.tensor(query_labels, device=TEST_DEVICE)
+            reference_labels = torch.tensor(reference_labels, device=TEST_DEVICE)
+
         query[-1] = 100
         reference[0] = -100
-        query_labels = torch.tensor([0, 0, 0, 0, 0, 0, 0, 0, 0, 1], device=TEST_DEVICE)
-        reference_labels = torch.tensor(
-            [1, 0, 0, 0, 0, 0, 0, 0, 0, 0], device=TEST_DEVICE
-        )
+
         acc = AC_global_average.get_accuracy(
             query, reference, query_labels, reference_labels, False
         )
@@ -435,7 +437,7 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
         self.assertTrue(isclose(acc["r_precision"], 0.5))
         self.assertTrue(isclose(acc["mean_average_precision_at_r"], 0.5))
 
-    def test_accuracy_calculator_custom_comparison_function(self):
+    def _test_accuracy_calculator_custom_comparison_function(self, use_numpy):
         def label_comparison_fn(x, y):
             return (x[..., 0] == y[..., 0]) & (x[..., 1] != y[..., 1])
 
@@ -460,40 +462,46 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
             label_comparison_fn=label_comparison_fn,
         )
 
-        query = torch.arange(10, device=TEST_DEVICE).unsqueeze(1)
-        reference = torch.arange(10, device=TEST_DEVICE).unsqueeze(1)
+        query_labels = [
+            (0, 2),
+            (0, 2),
+            (0, 2),
+            (0, 2),
+            (0, 2),
+            (0, 2),
+            (0, 2),
+            (0, 2),
+            (0, 2),
+            (1, 2),
+        ]
+
+        reference_labels = [
+            (1, 3),
+            (0, 3),
+            (0, 3),
+            (0, 3),
+            (0, 3),
+            (0, 3),
+            (0, 3),
+            (0, 3),
+            (0, 3),
+            (0, 3),
+        ]
+
+        if use_numpy:
+            query = np.arange(10)[:, None]
+            reference = np.arange(10)[:, None]
+            query_labels = np.array(query_labels)
+            reference_labels = np.array(reference_labels)
+        else:
+            query = torch.arange(10, device=TEST_DEVICE).unsqueeze(1)
+            reference = torch.arange(10, device=TEST_DEVICE).unsqueeze(1)
+            query_labels = torch.tensor(query_labels, device=TEST_DEVICE)
+            reference_labels = torch.tensor(reference_labels, device=TEST_DEVICE)
+
         query[-1] = 100
         reference[0] = -100
-        query_labels = torch.tensor(
-            [
-                (0, 2),
-                (0, 2),
-                (0, 2),
-                (0, 2),
-                (0, 2),
-                (0, 2),
-                (0, 2),
-                (0, 2),
-                (0, 2),
-                (1, 2),
-            ],
-            device=TEST_DEVICE,
-        )
-        reference_labels = torch.tensor(
-            [
-                (1, 3),
-                (0, 3),
-                (0, 3),
-                (0, 3),
-                (0, 3),
-                (0, 3),
-                (0, 3),
-                (0, 3),
-                (0, 3),
-                (0, 3),
-            ],
-            device=TEST_DEVICE,
-        )
+
         acc = AC_global_average.get_accuracy(
             query, reference, query_labels, reference_labels, False
         )
@@ -508,26 +516,30 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
         self.assertTrue(isclose(acc["r_precision"], 0.5))
         self.assertTrue(isclose(acc["mean_average_precision_at_r"], 0.5))
 
+        query_labels = [
+            (1, 3),
+            (7, 3),
+        ]
+
+        reference_labels = [
+            (1, 3),
+            (7, 4),
+            (1, 4),
+            (1, 5),
+            (1, 6),
+        ]
+
         # SIMPLE CASE
-        query = torch.arange(2, device=TEST_DEVICE).unsqueeze(1)
-        reference = torch.arange(5, device=TEST_DEVICE).unsqueeze(1)
-        query_labels = torch.tensor(
-            [
-                (1, 3),
-                (7, 3),
-            ],
-            device=TEST_DEVICE,
-        )
-        reference_labels = torch.tensor(
-            [
-                (1, 3),
-                (7, 4),
-                (1, 4),
-                (1, 5),
-                (1, 6),
-            ],
-            device=TEST_DEVICE,
-        )
+        if use_numpy:
+            query = np.arange(2)[:, None]
+            reference = np.arange(5)[:, None]
+            query_labels = np.array(query_labels)
+            reference_labels = np.array(reference_labels)
+        else:
+            query = torch.arange(2, device=TEST_DEVICE).unsqueeze(1)
+            reference = torch.arange(5, device=TEST_DEVICE).unsqueeze(1)
+            query_labels = torch.tensor(query_labels, device=TEST_DEVICE)
+            reference_labels = torch.tensor(reference_labels, device=TEST_DEVICE)
 
         correct = {
             "precision_at_1": 0.5,
@@ -549,7 +561,7 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
         for k in correct:
             self.assertTrue(isclose(acc[k], correct[k]))
 
-    def test_accuracy_calculator_float_custom_comparison_function(self):
+    def _test_accuracy_calculator_float_custom_comparison_function(self, use_numpy):
         def label_comparison_fn(x, y):
             return torch.abs(x - y) < 1
 
@@ -568,24 +580,34 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
             label_comparison_fn=label_comparison_fn,
         )
 
-        query = torch.tensor([0, 3], device=TEST_DEVICE).unsqueeze(1)
-        reference = torch.arange(4, device=TEST_DEVICE).unsqueeze(1)
-        query_labels = torch.tensor(
-            [
-                0.01,
-                0.02,
-            ],
-            device=TEST_DEVICE,
-        )
-        reference_labels = torch.tensor(
-            [
-                10.0,
-                0.03,
-                0.04,
-                0.05,
-            ],
-            device=TEST_DEVICE,
-        )
+        query_labels = [
+            0.01,
+            0.02,
+        ]
+
+        reference_labels = [
+            10.0,
+            0.03,
+            0.04,
+            0.05,
+        ]
+
+        if use_numpy:
+            query = np.array([0, 3])[:, None]
+            reference = np.arange(4)[:, None]
+            query_labels = np.array(query_labels)
+            reference_labels = np.array(reference_labels)
+        else:
+            query = torch.tensor([0, 3], device=TEST_DEVICE).unsqueeze(1)
+            reference = torch.arange(4, device=TEST_DEVICE).unsqueeze(1)
+            query_labels = torch.tensor(
+                query_labels,
+                device=TEST_DEVICE,
+            )
+            reference_labels = torch.tensor(
+                reference_labels,
+                device=TEST_DEVICE,
+            )
 
         correct = {
             "precision_at_1": (0 + 1) / 2,

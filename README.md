@@ -271,6 +271,7 @@ conda install pytorch-metric-learning -c metric-learning -c pytorch
 | [**MultiSimilarityMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#multisimilarityminer) | [Multi-Similarity Loss with General Pair Weighting for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf)
 | [**PairMarginMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#pairmarginminer) | 
 | [**TripletMarginMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#tripletmarginminer) | [FaceNet: A Unified Embedding for Face Recognition and Clustering](https://arxiv.org/pdf/1503.03832.pdf)
+| [**UniformHistogramMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#uniformhistogramminer) |
 
 ### [Reducers](https://kevinmusgrave.github.io/pytorch-metric-learning/reducers)
 | Name | Reference Papers |
@@ -280,6 +281,7 @@ conda install pytorch-metric-learning -c metric-learning -c pytorch
 | [**DivisorReducer**](https://kevinmusgrave.github.io/pytorch-metric-learning/reducers/#divisorreducer)
 | [**DoNothingReducer**](https://kevinmusgrave.github.io/pytorch-metric-learning/reducers/#donothingreducer)
 | [**MeanReducer**](https://kevinmusgrave.github.io/pytorch-metric-learning/reducers/#meanreducer)
+| [**PerAnchorReducer**](https://kevinmusgrave.github.io/pytorch-metric-learning/reducers/#peranchorreducer)
 | [**ThresholdReducer**](https://kevinmusgrave.github.io/pytorch-metric-learning/reducers/#thresholdreducer)
 
 ### [Regularizers](https://kevinmusgrave.github.io/pytorch-metric-learning/regularizers)
@@ -406,9 +408,11 @@ Thanks to the contributors who made pull requests!
 - [mlopezantequera](https://github.com/mlopezantequera)
 - [wconnell](https://github.com/wconnell)
 - [marijnl](https://github.com/marijnl)
+- [z1w](https://github.com/z1w)
 - [thinline72](https://github.com/thinline72)
 - [tpanum](https://github.com/tpanum)
 - [fralik](https://github.com/fralik)
+- [joaqo](https://github.com/joaqo)
 - [JoOkuma](https://github.com/JoOkuma)
 
 ### Facebook AI

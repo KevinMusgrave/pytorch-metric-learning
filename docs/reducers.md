@@ -47,18 +47,22 @@ This divides each loss by a custom value specified inside the loss function. Thi
 ```python
 reducers.DivisorReducer(**kwargs)
 ```
-To use this reducer, the loss function must include ```divisor_summands``` in its loss dictionary. For example, the [ProxyAnchorLoss](losses.md#proxyanchorloss) uses ```DivisorReducer``` by default, and returns the following dictionary:
+To use this reducer, the loss function must include ```divisor``` in its loss dictionary. For example, the [ProxyAnchorLoss](losses.md#proxyanchorloss) uses ```DivisorReducer``` by default, and returns the following dictionary:
 
 ```python
-{"pos_loss": {"losses": pos_term.squeeze(0), 
-			"indices": loss_indices, 
-			"reduction_type": "element", 
-			"divisor_summands": {"num_pos_proxies": len(with_pos_proxies)}},
-"neg_loss": {"losses": neg_term.squeeze(0), 
-			"indices": loss_indices, 
-			"reduction_type": "element", 
-			"divisor_summands": {"num_classes": self.num_classes}},
-"reg_loss": self.regularization_loss(self.proxies)
+loss_dict = {
+    "pos_loss": {
+        "losses": pos_term.squeeze(0),
+        "indices": loss_indices,
+        "reduction_type": "element",
+        "divisor": len(with_pos_proxies),
+    },
+    "neg_loss": {
+        "losses": neg_term.squeeze(0),
+        "indices": loss_indices,
+        "reduction_type": "element",
+        "divisor": self.num_classes,
+    },
 }
 ```
 
@@ -95,6 +99,28 @@ reducer_dict = {"pos_loss": ThresholdReducer(0.1), "neg_loss": MeanReducer()}
 reducer = MultipleReducers(reducer_dict)
 loss_func = ContrastiveLoss(reducer=reducer)
 ```
+
+## PerAnchorReducer
+This converts unreduced pairs to unreduced elements. For example, [ContrastiveLoss](losses.md#contrastiveloss) returns losses per pair. If you used PerAnchorReducer with ContrastiveLoss, then the losses per pair would first be converted to losses per batch element, before being passed to the inner reducer. Note that this reducer currently only works with pair based losses.
+```python
+def aggregation_func(x, num_per_row):
+    zero_denom = num_per_row == 0
+    x = torch.sum(x, dim=1) / num_per_row
+    x[zero_denom] = 0
+    return x
+
+reducers.PerAnchorReducer(reducer=None, 
+							aggregation_func=aggregation_func, 
+							**kwargs):
+```
+
+**Parameters**:
+
+* **reducer**: The reducer that will be fed per-element losses. The default is [MeanReducer](#meanreducer)
+* **aggregation_func**: A function that takes in ```(x, num_per_row)``` and returns a loss per row of ```x```. The default is the ```aggregation_func``` defined in the code snippet above. It returns the mean per row.
+   	* ```x``` is an NxN array of pairwise losses, where N is the batch size.
+   	* ```num_per_row``` is a size N array which indicates how many non-zero losses there are per-row of ```x```.
+
 
 ## ThresholdReducer
 This computes the average loss, using only the losses that fall within a specified range.

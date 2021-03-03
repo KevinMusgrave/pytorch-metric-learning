@@ -8,6 +8,7 @@ from pytorch_metric_learning.utils import common_functions as c_f
 
 class TestCommonFunctions(unittest.TestCase):
     def test_torch_standard_scaler(self):
+        torch.manual_seed(56987)
         embeddings = torch.randn(1024, 512)
         scaled = c_f.torch_standard_scaler(embeddings)
         true_scaled = StandardScaler().fit_transform(embeddings.cpu().numpy())

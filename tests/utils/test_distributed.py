@@ -171,6 +171,7 @@ class TestDistributedLossWrapper(unittest.TestCase):
     def loss_and_miner_tester(
         self, loss_class, miner_class, is_tuple_loss, test_ref_emb=False
     ):
+        torch.manual_seed(75210)
         if TEST_DEVICE != torch.device("cpu"):
             max_world_size = min(4, torch.cuda.device_count())
             if max_world_size < 1:

@@ -11,6 +11,7 @@ from .. import TEST_DEVICE, TEST_DTYPES
 
 class TestUniformHistogramMiner(unittest.TestCase):
     def test_uniform_histogram_miner(self):
+        torch.manual_seed(93612)
         batch_size = 128
         embedding_size = 32
         num_bins, pos_per_bin, neg_per_bin = 100, 25, 123

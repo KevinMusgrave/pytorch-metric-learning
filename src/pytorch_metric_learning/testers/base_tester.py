@@ -105,7 +105,13 @@ class BaseTester:
         return all_q, labels
 
     def get_all_embeddings(
-        self, dataset, trunk_model, embedder_model=None, collate_fn=None, eval=True
+        self,
+        dataset,
+        trunk_model,
+        embedder_model=None,
+        collate_fn=None,
+        eval=True,
+        return_as_numpy=False,
     ):
         if embedder_model is None:
             embedder_model = c_f.Identity()
@@ -119,6 +125,8 @@ class BaseTester:
             dataloader, trunk_model, embedder_model
         )
         embeddings = self.maybe_normalize(embeddings)
+        if return_as_numpy:
+            return embeddings.cpu().numpy(), labels.cpu().numpy()
         return embeddings, labels
 
     def get_embeddings_for_eval(self, trunk_model, embedder_model, input_imgs):

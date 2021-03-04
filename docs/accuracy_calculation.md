@@ -54,6 +54,9 @@ def get_accuracy(self,
 * **include**: Optional. A list or tuple of strings, which are the names of metrics you want to calculate. If left empty, all metrics specified during initialization will be calculated.
 * **exclude**: Optional. A list or tuple of strings, which are the names of metrics you do not want to calculate.
 
+Note that labels can be 2D if a [custom label comparison function](#using-a-custom-label-comparison-function) is used.
+
+
 ### Explanations of the default accuracy metrics
 
 - **AMI**: 
@@ -81,6 +84,8 @@ def get_accuracy(self,
 - **r_precision**:
 
     - [See section 3.2 of A Metric Learning Reality Check](https://arxiv.org/pdf/2003.08505.pdf)
+
+
 
 ### Adding custom accuracy metrics
 
@@ -145,4 +150,37 @@ You can use your custom calculator with the [tester](testers.md) classes as well
 ```python
 from pytorch_metric_learning import testers
 t = testers.GlobalEmbeddingSpaceTester(..., accuracy_calculator=YourCalculator())
+```
+
+
+### Using a custom label comparison function
+If you define your own ```label_comparison_fn```, then ```query_labels``` and ```reference_labels``` can be 1D or 2D, and consist of integers or floating point numbers, as long as your ```label_comparison_fn``` can process them.
+
+Example of 2D labels:
+```python
+def label_comparison_fn(x, y):
+    return (x[..., 0] == y[..., 0]) & (x[..., 1] != y[..., 1])
+
+# these are valid labels
+labels = [
+    (1, 3),
+    (7, 4),
+    (1, 4),
+    (1, 5),
+    (1, 6),
+]
+```
+
+Example of floating point labels:
+```python
+def label_comparison_fn(x, y):
+    return torch.abs(x - y) < 1
+
+# these are valid labels
+labels = [
+    10.0,
+    0.03,
+    0.04,
+    0.05,
+]
 ```

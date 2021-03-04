@@ -318,6 +318,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#peranchorreducer" class="md-nav__link">
+    PerAnchorReducer
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#thresholdreducer" class="md-nav__link">
     ThresholdReducer
   </a>
@@ -598,6 +605,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#peranchorreducer" class="md-nav__link">
+    PerAnchorReducer
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#thresholdreducer" class="md-nav__link">
     ThresholdReducer
   </a>
@@ -669,16 +683,20 @@
 </code></pre></div>
 
 
-<p>To use this reducer, the loss function must include <code>divisor_summands</code> in its loss dictionary. For example, the <a href="../losses/#proxyanchorloss">ProxyAnchorLoss</a> uses <code>DivisorReducer</code> by default, and returns the following dictionary:</p>
-<div class="codehilite"><pre><span></span><code><span class="p">{</span><span class="s2">&quot;pos_loss&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;losses&quot;</span><span class="p">:</span> <span class="n">pos_term</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> 
-            <span class="s2">&quot;indices&quot;</span><span class="p">:</span> <span class="n">loss_indices</span><span class="p">,</span> 
-            <span class="s2">&quot;reduction_type&quot;</span><span class="p">:</span> <span class="s2">&quot;element&quot;</span><span class="p">,</span> 
-            <span class="s2">&quot;divisor_summands&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;num_pos_proxies&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">with_pos_proxies</span><span class="p">)}},</span>
-<span class="s2">&quot;neg_loss&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;losses&quot;</span><span class="p">:</span> <span class="n">neg_term</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> 
-            <span class="s2">&quot;indices&quot;</span><span class="p">:</span> <span class="n">loss_indices</span><span class="p">,</span> 
-            <span class="s2">&quot;reduction_type&quot;</span><span class="p">:</span> <span class="s2">&quot;element&quot;</span><span class="p">,</span> 
-            <span class="s2">&quot;divisor_summands&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;num_classes&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span><span class="p">}},</span>
-<span class="s2">&quot;reg_loss&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">regularization_loss</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proxies</span><span class="p">)</span>
+<p>To use this reducer, the loss function must include <code>divisor</code> in its loss dictionary. For example, the <a href="../losses/#proxyanchorloss">ProxyAnchorLoss</a> uses <code>DivisorReducer</code> by default, and returns the following dictionary:</p>
+<div class="codehilite"><pre><span></span><code><span class="n">loss_dict</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;pos_loss&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;losses&quot;</span><span class="p">:</span> <span class="n">pos_term</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+        <span class="s2">&quot;indices&quot;</span><span class="p">:</span> <span class="n">loss_indices</span><span class="p">,</span>
+        <span class="s2">&quot;reduction_type&quot;</span><span class="p">:</span> <span class="s2">&quot;element&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;divisor&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">with_pos_proxies</span><span class="p">),</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;neg_loss&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;losses&quot;</span><span class="p">:</span> <span class="n">neg_term</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+        <span class="s2">&quot;indices&quot;</span><span class="p">:</span> <span class="n">loss_indices</span><span class="p">,</span>
+        <span class="s2">&quot;reduction_type&quot;</span><span class="p">:</span> <span class="s2">&quot;element&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;divisor&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span><span class="p">,</span>
+    <span class="p">},</span>
 <span class="p">}</span>
 </code></pre></div>
 
@@ -716,6 +734,29 @@
 </code></pre></div>
 
 
+<h2 id="peranchorreducer">PerAnchorReducer<a class="headerlink" href="#peranchorreducer" title="Permanent link">&para;</a></h2>
+<p>This converts unreduced pairs to unreduced elements. For example, <a href="../losses/#ntxentloss">NTXentLoss</a> returns losses per positive pair. If you used PerAnchorReducer with NTXentLoss, then the losses per pair would first be converted to losses per batch element, before being passed to the inner reducer. This makes NTXentLoss equivalent to the SupConLoss described in <a href="https://arxiv.org/abs/2004.11362">Supervised Contrastive Learning</a>. Note that this reducer currently only works with pair based losses.</p>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">aggregation_func</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">num_per_row</span><span class="p">):</span>
+    <span class="n">zero_denom</span> <span class="o">=</span> <span class="n">num_per_row</span> <span class="o">==</span> <span class="mi">0</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">num_per_row</span>
+    <span class="n">x</span><span class="p">[</span><span class="n">zero_denom</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">return</span> <span class="n">x</span>
+
+<span class="n">reducers</span><span class="o">.</span><span class="n">PerAnchorReducer</span><span class="p">(</span><span class="n">reducer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                            <span class="n">aggregation_func</span><span class="o">=</span><span class="n">aggregation_func</span><span class="p">,</span> 
+                            <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</code></pre></div>
+
+
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>reducer</strong>: The reducer that will be fed per-element losses. The default is <a href="#meanreducer">MeanReducer</a></li>
+<li><strong>aggregation_func</strong>: A function that takes in <code>(x, num_per_row)</code> and returns a loss per row of <code>x</code>. The default is the <code>aggregation_func</code> defined in the code snippet above. It returns the mean per row.<ul>
+<li><code>x</code> is an NxN array of pairwise losses, where N is the batch size.</li>
+<li><code>num_per_row</code> is a size N array which indicates how many non-zero losses there are per-row of <code>x</code>.</li>
+</ul>
+</li>
+</ul>
 <h2 id="thresholdreducer">ThresholdReducer<a class="headerlink" href="#thresholdreducer" title="Permanent link">&para;</a></h2>
 <p>This computes the average loss, using only the losses that fall within a specified range.</p>
 <div class="codehilite"><pre><span></span><code><span class="n">reducers</span><span class="o">.</span><span class="n">ThresholdReducer</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="kc">None</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>

@@ -587,7 +587,7 @@
 <li><strong>exclude</strong>: Optional. A list or tuple of strings, which are the names of metrics you <strong>do not</strong> want to calculate.</li>
 <li><strong>avg_of_avgs</strong>: If True, the average accuracy per class is computed, and then the average of those averages is returned. This can be useful if your dataset has unbalanced classes. If False, the global average will be returned.</li>
 <li><strong>k</strong>: If set, this number of nearest neighbors will be retrieved for metrics that require k-nearest neighbors. If None, the value of k will be determined automatically.</li>
-<li><strong>label_comparison_fn</strong>: A function that compares two numpy arrays of labels and returns a boolean array. The default is <code>numpy.equal</code>. If a custom function is used, then you must exclude clustering based metrics ("NMI" and "AMI"). The following is an example of a custom function for two-dimensional labels. It returns <code>True</code> if the 0th column matches, and the 1st column does <strong>not</strong> match:</li>
+<li><strong>label_comparison_fn</strong>: A function that compares two torch arrays of labels and returns a boolean array. The default is <code>torch.eq</code>. If a custom function is used, then you must exclude clustering based metrics ("NMI" and "AMI"). The following is an example of a custom function for two-dimensional labels. It returns <code>True</code> if the 0th column matches, and the 1st column does <strong>not</strong> match:</li>
 </ul>
 <div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">example_label_comparison_fn</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
     <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">y</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">y</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
@@ -619,10 +619,10 @@
 
 
 <ul>
-<li><strong>query</strong>: A 2D numpy array of size <code>(Nq, D)</code>, where Nq is the number of query samples. For each query sample, nearest neighbors are retrieved and accuracy is computed.</li>
-<li><strong>reference</strong>: A 2D numpy array of size <code>(Nr, D)</code>, where Nr is the number of reference samples. This is where nearest neighbors are retrieved from.</li>
-<li><strong>query_labels</strong>: A 1D numpy array of size <code>(Nq)</code>. Each element should be an integer representing the sample's label.</li>
-<li><strong>reference_labels</strong>: A 1D numpy array of size <code>(Nr)</code>. Each element should be an integer representing the sample's label. </li>
+<li><strong>query</strong>: A 2D torch or numpy array of size <code>(Nq, D)</code>, where Nq is the number of query samples. For each query sample, nearest neighbors are retrieved and accuracy is computed.</li>
+<li><strong>reference</strong>: A 2D torch or numpy array of size <code>(Nr, D)</code>, where Nr is the number of reference samples. This is where nearest neighbors are retrieved from.</li>
+<li><strong>query_labels</strong>: A 1D torch or numpy array of size <code>(Nq)</code>. Each element should be an integer representing the sample's label.</li>
+<li><strong>reference_labels</strong>: A 1D torch or numpy array of size <code>(Nr)</code>. Each element should be an integer representing the sample's label. </li>
 <li><strong>embeddings_come_from_same_source</strong>: Set to True if <code>query</code> is a subset of <code>reference</code> or if <code>query is reference</code>. Set to False otherwise.</li>
 <li><strong>include</strong>: Optional. A list or tuple of strings, which are the names of metrics you want to calculate. If left empty, all metrics specified during initialization will be calculated.</li>
 <li><strong>exclude</strong>: Optional. A list or tuple of strings, which are the names of metrics you do not want to calculate.</li>
@@ -700,7 +700,7 @@
 <div class="codehilite"><pre><span></span><code>    <span class="p">{</span><span class="s2">&quot;label_counts&quot;</span><span class="p">:</span> <span class="n">label_counts</span><span class="p">,</span>           <span class="c1"># A dictionary mapping from reference labels to the number of times they occur</span>
     <span class="s2">&quot;knn_labels&quot;</span><span class="p">:</span> <span class="n">knn_labels</span><span class="p">,</span>                <span class="c1"># A 2d array where each row is the labels of the nearest neighbors of each query. The neighbors are retrieved from the reference set</span>
     <span class="s2">&quot;knn_distances&quot;</span><span class="p">:</span> <span class="n">knn_distances</span>           <span class="c1"># The euclidean distance corresponding to each k-nearest neighbor in knn_labels</span>
-    <span class="s2">&quot;lone_query_labels&quot;</span><span class="p">:</span> <span class="n">lone_query_labels</span>   <span class="c1"># The set of labels (in the form of a numpy array) that have only 1 occurrence in reference_labels</span>
+    <span class="s2">&quot;lone_query_labels&quot;</span><span class="p">:</span> <span class="n">lone_query_labels</span>   <span class="c1"># The set of labels (in the form of a torch array) that have only 1 occurrence in reference_labels</span>
     <span class="s2">&quot;not_lone_query_mask&quot;</span><span class="p">:</span> <span class="n">not_lone_query_mask</span><span class="p">}</span> <span class="c1"># A boolean mask, where True means that a query element has at least 1 possible neighbor in reference.           </span>
 </code></pre></div>
 

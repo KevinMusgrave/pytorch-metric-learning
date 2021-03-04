@@ -347,6 +347,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#uniformhistogramminer" class="md-nav__link">
+    UniformHistogramMiner
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -674,6 +681,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#uniformhistogramminer" class="md-nav__link">
+    UniformHistogramMiner
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -841,7 +855,7 @@
 <li><a href="../distances/#lpdistance"><code>LpDistance(normalize_embeddings=True, p=2, power=1)</code></a></li>
 </ul>
 <h2 id="distanceweightedminer">DistanceWeightedMiner<a class="headerlink" href="#distanceweightedminer" title="Permanent link">&para;</a></h2>
-<p><a href="https://arxiv.org/pdf/1706.07567.pdf">Sampling Matters in Deep Embedding Learning</a></p>
+<p>Implementation of the miner from <a href="https://arxiv.org/pdf/1706.07567.pdf">Sampling Matters in Deep Embedding Learning</a>. </p>
 <div class="codehilite"><pre><span></span><code><span class="n">miners</span><span class="o">.</span><span class="n">DistanceWeightedMiner</span><span class="p">(</span><span class="n">cutoff</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">nonzero_loss_cutoff</span><span class="o">=</span><span class="mf">1.4</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
 
@@ -858,6 +872,8 @@
 </ul>
 </li>
 </ul>
+<p><strong>Important note</strong>:</p>
+<p>This miner works well only with low dimensionality embeddings (e.g 64-dim) and L2-normalized distances. Check out <a href="#uniformhistogramminer">UniformHistogramMiner</a> for a miner that is roughly equivalent, but works with embeddings of any dimensionality and any distance metric.</p>
 <h2 id="embeddingsalreadypackagedastriplets">EmbeddingsAlreadyPackagedAsTriplets<a class="headerlink" href="#embeddingsalreadypackagedastriplets" title="Permanent link">&para;</a></h2>
 <p>If your embeddings are already ordered sequentially as triplets, then use this miner to force your loss function to use the already-formed triplets. </p>
 <div class="codehilite"><pre><span></span><code><span class="n">miners</span><span class="o">.</span><span class="n">EmbeddingsAlreadyPackagedAsTriplets</span><span class="p">()</span>
@@ -972,6 +988,43 @@
 <p><strong>Default distance</strong>: </p>
 <ul>
 <li><a href="../distances/#lpdistance"><code>LpDistance(normalize_embeddings=True, p=2, power=1)</code></a></li>
+</ul>
+<h2 id="uniformhistogramminer">UniformHistogramMiner<a class="headerlink" href="#uniformhistogramminer" title="Permanent link">&para;</a></h2>
+<p>Returns pairs that have uniformly distributed distances. This is like <a href="#distanceweightedminer">DistanceWeightedMiner</a>, except that it works well with high dimension embeddings, and works with any distance metric (not just L2 normalized distance).</p>
+<div class="codehilite"><pre><span></span><code><span class="n">miners</span><span class="o">.</span><span class="n">UniformHistogramMiner</span><span class="p">(</span><span class="n">num_bins</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> 
+                            <span class="n">pos_per_bin</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> 
+                            <span class="n">neg_per_bin</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> 
+                            <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</code></pre></div>
+
+
+<p><strong>Parameters</strong></p>
+<ul>
+<li><strong>num_bins</strong>: The number of bins to divide the distances into. For example, if the distances for the current batch range from 0 to 2, and num_bins = 100, then each bin will have a width of 0.02.</li>
+<li><strong>pos_per_bin</strong>: The number of positive pairs to mine for each bin.</li>
+<li><strong>neg_per_bin</strong>: The number of negative pairs to mine for each bin.</li>
+</ul>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li><a href="../distances/#lpdistance"><code>LpDistance(normalize_embeddings=True, p=2, power=1)</code></a></li>
+</ul>
+<p><strong>Example</strong>:</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning.miners</span> <span class="kn">import</span> <span class="n">UniformHistogramMiner</span>
+<span class="kn">from</span> <span class="nn">pytorch_metric_learning.distances</span> <span class="kn">import</span> <span class="n">SNRDistance</span>
+
+<span class="n">miner</span> <span class="o">=</span> <span class="n">UniformHistogramMiner</span><span class="p">(</span>
+    <span class="n">num_bins</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+    <span class="n">pos_per_bin</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span>
+    <span class="n">neg_per_bin</span><span class="o">=</span><span class="mi">33</span><span class="p">,</span>
+    <span class="n">distance</span><span class="o">=</span><span class="n">SNRDistance</span><span class="p">(),</span>
+<span class="p">)</span>
+</code></pre></div>
+
+
+<p>In a given batch, this will:</p>
+<ul>
+<li>Divide up the positive distances into 100 bins, and return 25 positive pairs per bin, or 0 if no pairs exist in that bin</li>
+<li>Divide up the negative distances into 100 bins, and return 33 negative pairs per bin, or 0 if no pairs exist in that bin</li>
 </ul>
                 
               

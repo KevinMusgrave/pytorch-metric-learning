@@ -9,6 +9,7 @@ from .. import TEST_DEVICE, TEST_DTYPES
 
 class TestClassWeightedReducer(unittest.TestCase):
     def test_class_weighted_reducer(self):
+        torch.manual_seed(99114)
         class_weights = torch.tensor([1, 0.9, 1, 0.1, 0, 0, 0, 0, 0, 0])
         for dtype in TEST_DTYPES:
             reducer = ClassWeightedReducer(class_weights)

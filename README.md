@@ -402,6 +402,8 @@ Thanks to the contributors who made pull requests!
 	- ```all_gather``` in [utils.distributed](https://kevinmusgrave.github.io/pytorch-metric-learning/distributed)
 - [AlexSchuy](https://github.com/AlexSchuy)
 	- optimized ```utils.loss_and_miner_utils.get_random_triplet_indices```
+- [fjsj](https://github.com/fjsj)
+	- [SupConLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#supconloss)
 
 #### Example notebooks
 - [wconnell](https://github.com/wconnell)

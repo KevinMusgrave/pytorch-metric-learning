@@ -383,6 +383,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#using-a-custom-label-comparison-function" class="md-nav__link">
+    Using a custom label comparison function
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -550,6 +557,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#using-a-custom-label-comparison-function" class="md-nav__link">
+    Using a custom label comparison function
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -627,6 +641,7 @@
 <li><strong>include</strong>: Optional. A list or tuple of strings, which are the names of metrics you want to calculate. If left empty, all metrics specified during initialization will be calculated.</li>
 <li><strong>exclude</strong>: Optional. A list or tuple of strings, which are the names of metrics you do not want to calculate.</li>
 </ul>
+<p>Note that labels can be 2D if a <a href="#using-a-custom-label-comparison-function">custom label comparison function</a> is used.</p>
 <h3 id="explanations-of-the-default-accuracy-metrics">Explanations of the default accuracy metrics<a class="headerlink" href="#explanations-of-the-default-accuracy-metrics" title="Permanent link">&para;</a></h3>
 <ul>
 <li>
@@ -726,6 +741,37 @@
 <p>You can use your custom calculator with the <a href="../testers/">tester</a> classes as well, by passing it in as an init argument. (By default, the testers use AccuracyCalculator.)</p>
 <div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">testers</span>
 <span class="n">t</span> <span class="o">=</span> <span class="n">testers</span><span class="o">.</span><span class="n">GlobalEmbeddingSpaceTester</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">accuracy_calculator</span><span class="o">=</span><span class="n">YourCalculator</span><span class="p">())</span>
+</code></pre></div>
+
+
+<h3 id="using-a-custom-label-comparison-function">Using a custom label comparison function<a class="headerlink" href="#using-a-custom-label-comparison-function" title="Permanent link">&para;</a></h3>
+<p>If you define your own <code>label_comparison_fn</code>, then <code>query_labels</code> and <code>reference_labels</code> can be 1D or 2D, and consist of integers or floating point numbers, as long as your <code>label_comparison_fn</code> can process them.</p>
+<p>Example of 2D labels:</p>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">label_comparison_fn</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">y</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">y</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+
+<span class="c1"># these are valid labels</span>
+<span class="n">labels</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+    <span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>
+    <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>
+    <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
+    <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span>
+<span class="p">]</span>
+</code></pre></div>
+
+
+<p>Example of floating point labels:</p>
+<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">label_comparison_fn</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span>
+
+<span class="c1"># these are valid labels</span>
+<span class="n">labels</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="mf">10.0</span><span class="p">,</span>
+    <span class="mf">0.03</span><span class="p">,</span>
+    <span class="mf">0.04</span><span class="p">,</span>
+    <span class="mf">0.05</span><span class="p">,</span>
+<span class="p">]</span>
 </code></pre></div>
                 
               

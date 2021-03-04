@@ -162,13 +162,13 @@ def label_comparison_fn(x, y):
     return (x[..., 0] == y[..., 0]) & (x[..., 1] != y[..., 1])
 
 # these are valid labels
-labels = [
+labels = torch.tensor([
     (1, 3),
     (7, 4),
     (1, 4),
     (1, 5),
     (1, 6),
-]
+])
 ```
 
 Example of floating point labels:
@@ -177,10 +177,10 @@ def label_comparison_fn(x, y):
     return torch.abs(x - y) < 1
 
 # these are valid labels
-labels = [
+labels = torch.tensor([
     10.0,
     0.03,
     0.04,
     0.05,
-]
+])
 ```

@@ -89,6 +89,14 @@ Note that labels can be 2D if a [custom label comparison function](#using-a-cust
     - [See section 3.2 of A Metric Learning Reality Check](https://arxiv.org/pdf/2003.08505.pdf)
 
 
+**Important note**
+
+AccuracyCalculator's ```mean_average_precision_at_r``` and ```r_precision``` are correct only if the following are true:
+
+* every query class has less than 1024 samples in the reference set
+* ```k = None```, **or** if you set ```k```, it must be ```>=``` the value that is automatically calculated (see the [parameters](#parameters) section)
+
+
 
 ### Adding custom accuracy metrics
 

@@ -684,6 +684,37 @@ More flexibility is allowed with the optional argument <code>splits_to_eval</cod
 </ul>
 </li>
 </ul>
+<p><strong>Functions</strong>:</p>
+<ul>
+<li><code>tester.test</code></li>
+</ul>
+<p>Call this to test your model on a dataset dict. It returns a dictionary of accuracies.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">all_accuracies</span> <span class="o">=</span> <span class="n">tester</span><span class="o">.</span><span class="n">test</span><span class="p">(</span>
+    <span class="n">dataset_dict</span><span class="p">,</span> <span class="c1"># dictionary mapping strings to datasets</span>
+    <span class="n">epoch</span><span class="p">,</span> <span class="c1"># used for logging</span>
+    <span class="n">trunk_model</span><span class="p">,</span> <span class="c1"># your model</span>
+    <span class="n">embedder_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="c1"># by default this will be a no-op</span>
+    <span class="n">splits_to_eval</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">collate_fn</span><span class="o">=</span><span class="kc">None</span> <span class="c1"># custom collate_fn for the dataloader</span>
+<span class="p">)</span>
+</code></pre></div>
+
+
+<ul>
+<li><code>tester.get_all_embeddings</code></li>
+</ul>
+<p>Returns all the embeddings and labels for the input dataset and model.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">tester</span><span class="o">.</span><span class="n">get_all_embeddings</span><span class="p">(</span>
+    <span class="n">dataset</span><span class="p">,</span> <span class="c1"># Any pytorch dataset</span>
+    <span class="n">trunk_model</span><span class="p">,</span> <span class="c1"># your model</span>
+    <span class="n">embedder_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="c1"># by default this will be a no-op</span>
+    <span class="n">collate_fn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="c1"># custom collate_fn for the dataloader</span>
+    <span class="nb">eval</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="c1"># set models to eval mode</span>
+    <span class="n">return_as_numpy</span><span class="o">=</span><span class="kc">False</span>
+ <span class="p">)</span>
+</code></pre></div>
+
+
 <h2 id="globalembeddingspacetester">GlobalEmbeddingSpaceTester<a class="headerlink" href="#globalembeddingspacetester" title="Permanent link">&para;</a></h2>
 <p>Computes nearest neighbors by looking at all points in the embedding space (rather than a subset). This is probably the tester you are looking for. To see it in action, check one of the <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples">example notebooks</a></p>
 <div class="codehilite"><pre><span></span><code><span class="n">testers</span><span class="o">.</span><span class="n">GlobalEmbeddingSpaceTester</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>

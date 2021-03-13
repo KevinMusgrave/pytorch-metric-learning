@@ -602,7 +602,6 @@
 <li><strong>avg_of_avgs</strong>: If True, the average accuracy per class is computed, and then the average of those averages is returned. This can be useful if your dataset has unbalanced classes. If False, the global average will be returned.</li>
 <li><strong>k</strong>: If set, this number of nearest neighbors will be retrieved for metrics that require k-nearest neighbors. If None, the value of k will be determined as follows:<ul>
 <li>First, count the number of occurrences of each label in <code>reference_labels</code>, and set k to the maximum value. For example, if <code>reference_labels</code> is <code>[0, 0, 1, 1, 1, 1, 2]</code>, then <code>k = 4</code>.</li>
-<li>If <code>reference_labels == query_labels</code> or <code>embeddings_come_from_same_source == True</code>, set <code>k = k - 1</code>. </li>
 <li>Then set <code>k = min(1023, k)</code>. This is done because faiss (the library that computes k-nn) has a limit on the value of k.</li>
 <li>After k is set, the <code>k+1</code> nearest neighbors are found for every query sample. When the query and reference come from the same source, the 1st nearest neighbor is discarded since that "neighbor" is actually the query sample. When the query and reference come from different sources, the <code>k+1</code> neighbor is discarded.</li>
 </ul>

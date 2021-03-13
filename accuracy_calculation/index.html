@@ -688,6 +688,12 @@
 </ul>
 </li>
 </ul>
+<p><strong>Important note</strong></p>
+<p>AccuracyCalculator's <code>mean_average_precision_at_r</code> and <code>r_precision</code> are correct only if the following are true:</p>
+<ul>
+<li>every query class has less than 1024 samples in the reference set</li>
+<li><code>k = None</code>, <strong>or</strong> if you set <code>k</code>, it must be <code>&gt;=</code> the value that is automatically calculated (see the <a href="#parameters">parameters</a> section)</li>
+</ul>
 <h3 id="adding-custom-accuracy-metrics">Adding custom accuracy metrics<a class="headerlink" href="#adding-custom-accuracy-metrics" title="Permanent link">&para;</a></h3>
 <p>Let's say you want to use the existing metrics but also compute precision @ 2, and a fancy mutual info method. You can extend the existing class, and write methods that start with the keyword <code>calculate_</code></p>
 <div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils</span> <span class="kn">import</span> <span class="n">accuracy_calculator</span>

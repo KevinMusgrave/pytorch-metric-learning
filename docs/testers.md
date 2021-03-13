@@ -92,6 +92,39 @@ testers.BaseTester(normalize_embeddings=True,
 	* keyname: The name of the dictionary key where the embeddings and labels are stored.
 	* epoch: The epoch for which the embeddings are being computed.
 
+**Functions**:
+
+* ```tester.test```
+
+Call this to test your model on a dataset dict. It returns a dictionary of accuracies.
+
+```python
+all_accuracies = tester.test(
+	dataset_dict, # dictionary mapping strings to datasets
+	epoch, # used for logging
+	trunk_model, # your model
+	embedder_model=None, # by default this will be a no-op
+	splits_to_eval=None,
+	collate_fn=None # custom collate_fn for the dataloader
+)
+```
+
+
+* ```tester.get_all_embeddings```
+
+Returns all the embeddings and labels for the input dataset and model.
+
+```python
+embeddings, labels = tester.get_all_embeddings(
+	dataset, # Any pytorch dataset
+	trunk_model, # your model
+	embedder_model=None, # by default this will be a no-op
+	collate_fn=None, # custom collate_fn for the dataloader
+	eval=True, # set models to eval mode
+	return_as_numpy=False
+ )
+```
+
 
 ## GlobalEmbeddingSpaceTester
 Computes nearest neighbors by looking at all points in the embedding space (rather than a subset). This is probably the tester you are looking for. To see it in action, check one of the [example notebooks](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples)

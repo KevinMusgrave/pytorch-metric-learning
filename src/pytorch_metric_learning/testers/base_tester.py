@@ -273,7 +273,6 @@ class BaseTester:
         embedder_model=None,
         splits_to_eval=None,
         collate_fn=None,
-        **kwargs,
     ):
         logging.info("Evaluating epoch {}".format(epoch))
         if embedder_model is None:

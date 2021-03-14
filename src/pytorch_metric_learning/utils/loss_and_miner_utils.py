@@ -191,29 +191,9 @@ def convert_to_triplets(indices_tuple, labels, t_per_anchor=100):
     elif len(indices_tuple) == 3:
         return indices_tuple
     else:
-        a_out, p_out, n_out = [], [], []
         a1, p, a2, n = indices_tuple
-        empty_output = [torch.tensor([], device=labels.device)] * 3
-        if len(a1) == 0 or len(a2) == 0:
-            return empty_output
-        for i in range(len(labels)):
-            pos_idx = torch.where(a1 == i)[0]
-            neg_idx = torch.where(a2 == i)[0]
-            if len(pos_idx) > 0 and len(neg_idx) > 0:
-                p_idx = p[pos_idx]
-                n_idx = n[neg_idx]
-                p_idx, n_idx = matched_size_indices(p_idx, n_idx)
-                a_idx = torch.ones_like(c_f.longest_list([p_idx, n_idx])) * i
-                a_out.append(a_idx)
-                p_out.append(p_idx)
-                n_out.append(n_idx)
-        try:
-            return [torch.cat(x, dim=0) for x in [a_out, p_out, n_out]]
-        except RuntimeError:
-            # assert that the exception was caused by disjoint a1 and a2
-            # otherwise something has gone wrong
-            assert len(np.intersect1d(a1, a2)) == 0
-            return empty_output
+        p_idx, n_idx = torch.where(a1.unsqueeze(1) == a2)
+        return a1[p_idx], p[p_idx], n[n_idx]
 
 
 def convert_to_weights(indices_tuple, labels, dtype):

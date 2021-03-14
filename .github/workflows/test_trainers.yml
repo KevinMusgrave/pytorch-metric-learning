@@ -5,12 +5,12 @@ name: trainers
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, dev ]
     paths:
       - 'src/**'
       - 'tests/**'
   pull_request:
-    branches: [ master ]
+    branches: [ master, dev ]
     paths:
       - 'src/**'
       - 'tests/**'

@@ -894,7 +894,7 @@ loss_optimizer.step()
 
 
 ## SupConLoss
-An alternative to [NTXentLoss](#ntxentloss) where the losses per pair are reduced per anchor. Described in [Supervised Contrastive Learning](https://arxiv.org/abs/2004.11362){target=_blank}.
+Described in [Supervised Contrastive Learning](https://arxiv.org/abs/2004.11362){target=_blank}.
 ```python
 losses.SupConLoss(temperature=0.1, **kwargs)
 ```

@@ -5,6 +5,7 @@ from ..utils import loss_and_miner_utils as lmu
 from .generic_pair_loss import GenericPairLoss
 
 
+# adapted from https://github.com/HobbitLong/SupContrast
 class SupConLoss(GenericPairLoss):
     def __init__(self, temperature=0.1, **kwargs):
         super().__init__(mat_based_loss=True, **kwargs)

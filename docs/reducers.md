@@ -101,7 +101,7 @@ loss_func = ContrastiveLoss(reducer=reducer)
 ```
 
 ## PerAnchorReducer
-This converts unreduced pairs to unreduced elements. For example, [NTXentLoss](losses.md#ntxentloss) returns losses per positive pair. If you used PerAnchorReducer with NTXentLoss, then the losses per pair would first be converted to losses per batch element, before being passed to the inner reducer. This makes NTXentLoss equivalent to the [SupConLoss](losses.md#supconloss) described in [Supervised Contrastive Learning](https://arxiv.org/abs/2004.11362). Note that this reducer currently only works with pair based losses.
+This converts unreduced pairs to unreduced elements. For example, [NTXentLoss](losses.md#ntxentloss) returns losses per positive pair. If you used PerAnchorReducer with NTXentLoss, then the losses per pair would first be converted to losses per batch element, before being passed to the inner reducer.
 ```python
 def aggregation_func(x, num_per_row):
     zero_denom = num_per_row == 0

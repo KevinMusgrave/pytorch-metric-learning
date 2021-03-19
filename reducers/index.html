@@ -735,7 +735,7 @@
 
 
 <h2 id="peranchorreducer">PerAnchorReducer<a class="headerlink" href="#peranchorreducer" title="Permanent link">&para;</a></h2>
-<p>This converts unreduced pairs to unreduced elements. For example, <a href="../losses/#ntxentloss">NTXentLoss</a> returns losses per positive pair. If you used PerAnchorReducer with NTXentLoss, then the losses per pair would first be converted to losses per batch element, before being passed to the inner reducer. This makes NTXentLoss equivalent to the SupConLoss described in <a href="https://arxiv.org/abs/2004.11362">Supervised Contrastive Learning</a>. Note that this reducer currently only works with pair based losses.</p>
+<p>This converts unreduced pairs to unreduced elements. For example, <a href="../losses/#ntxentloss">NTXentLoss</a> returns losses per positive pair. If you used PerAnchorReducer with NTXentLoss, then the losses per pair would first be converted to losses per batch element, before being passed to the inner reducer.</p>
 <div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">aggregation_func</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">num_per_row</span><span class="p">):</span>
     <span class="n">zero_denom</span> <span class="o">=</span> <span class="n">num_per_row</span> <span class="o">==</span> <span class="mi">0</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">num_per_row</span>

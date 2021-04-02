@@ -901,7 +901,7 @@ losses.SupConLoss(temperature=0.1, **kwargs)
 
 **Equation**:
 
-![supcon_loss_equation](imgs/supcon_loss_equation.png){: style="height:123px"}
+![supcon_loss_equation](imgs/supcon_loss_equation.png){: style="height:90px"}
 
 **Parameters**:
 

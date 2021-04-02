@@ -14,10 +14,39 @@ import torch
 from . import common_functions as c_f
 
 
+def add_to_index_and_search(index, reference_embeddings, test_embeddings, k):
+    index.add(reference_embeddings)
+    return index.search(test_embeddings, k)
+
+
+def try_gpu(cpu_index, reference_embeddings, test_embeddings, k):
+    # https://github.com/facebookresearch/faiss/blob/master/faiss/gpu/utils/DeviceDefs.cuh
+    gpu_index = None
+    gpus_are_available = faiss.get_num_gpus() > 0
+    if gpus_are_available:
+        max_k_for_gpu = 1024 if float(torch.version.cuda) < 9.5 else 2048
+        if k <= max_k_for_gpu:
+            gpu_index = faiss.index_cpu_to_all_gpus(cpu_index)
+    try:
+        return add_to_index_and_search(
+            gpu_index, reference_embeddings, test_embeddings, k
+        )
+    except (AttributeError, RuntimeError) as e:
+        if gpus_are_available:
+            logging.warning(
+                f"Using CPU for k-nn search because k = {k} > {max_k_for_gpu}, which is the maximum allowable on GPU."
+            )
+        return add_to_index_and_search(
+            cpu_index, reference_embeddings, test_embeddings, k
+        )
+
+
 # modified from https://github.com/facebookresearch/deepcluster
 def get_knn(
     reference_embeddings, test_embeddings, k, embeddings_come_from_same_source=False
 ):
+    if embeddings_come_from_same_source:
+        k = k + 1
     device = reference_embeddings.device
     reference_embeddings = c_f.to_numpy(reference_embeddings).astype(np.float32)
     test_embeddings = c_f.to_numpy(test_embeddings).astype(np.float32)
@@ -25,16 +54,13 @@ def get_knn(
     d = reference_embeddings.shape[1]
     logging.info("running k-nn with k=%d" % k)
     logging.info("embedding dimensionality is %d" % d)
-    index = faiss.IndexFlatL2(d)
-    if faiss.get_num_gpus() > 0:
-        index = faiss.index_cpu_to_all_gpus(index)
-    index.add(reference_embeddings)
-    distances, indices = index.search(test_embeddings, k + 1)
+    cpu_index = faiss.IndexFlatL2(d)
+    distances, indices = try_gpu(cpu_index, reference_embeddings, test_embeddings, k)
     distances = c_f.to_device(torch.from_numpy(distances), device=device)
     indices = c_f.to_device(torch.from_numpy(indices), device=device)
     if embeddings_come_from_same_source:
         return indices[:, 1:], distances[:, 1:]
-    return indices[:, :k], distances[:, :k]
+    return indices, distances
 
 
 # modified from https://raw.githubusercontent.com/facebookresearch/deepcluster/

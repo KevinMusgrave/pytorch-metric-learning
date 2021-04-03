@@ -420,6 +420,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#supconloss" class="md-nav__link">
+    SupConLoss
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#tripletmarginloss" class="md-nav__link">
     TripletMarginLoss
   </a>
@@ -859,6 +866,13 @@
         <li class="md-nav__item">
   <a href="#spherefaceloss" class="md-nav__link">
     SphereFaceLoss
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#supconloss" class="md-nav__link">
+    SupConLoss
   </a>
   
 </li>
@@ -1730,6 +1744,30 @@
 <p><strong>Reducer input</strong>:</p>
 <ul>
 <li><strong>loss</strong>: The loss per element in the batch. Reduction type is <code>"element"</code>.</li>
+</ul>
+<h2 id="supconloss">SupConLoss<a class="headerlink" href="#supconloss" title="Permanent link">&para;</a></h2>
+<p>Described in <a href="https://arxiv.org/abs/2004.11362" target="_blank">Supervised Contrastive Learning</a>.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">SupConLoss</span><span class="p">(</span><span class="n">temperature</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div>
+
+
+<p><strong>Equation</strong>:</p>
+<p><img alt="supcon_loss_equation" src="../imgs/supcon_loss_equation.png" style="height:90px" /></p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>temperature</strong>: This is tau in the above equation. The paper uses 0.1.</li>
+</ul>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li><a href="../distances/#cosinesimilarity"><code>CosineSimilarity()</code></a></li>
+</ul>
+<p><strong>Default reducer</strong>: </p>
+<ul>
+<li><a href="../reducers/#avgnonzeroreducer">AvgNonZeroReducer</a></li>
+</ul>
+<p><strong>Reducer input</strong>:</p>
+<ul>
+<li><strong>loss</strong>: The loss per element in the batch. If an element has only negative pairs or no pairs, it's ignored thanks to <code>AvgNonZeroReducer</code>. Reduction type is <code>"element"</code>.</li>
 </ul>
 <h2 id="tripletmarginloss">TripletMarginLoss<a class="headerlink" href="#tripletmarginloss" title="Permanent link">&para;</a></h2>
 <div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">TripletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>

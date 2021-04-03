@@ -370,6 +370,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#cpugpu-usage" class="md-nav__link">
+    CPU/GPU usage
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#explanations-of-the-default-accuracy-metrics" class="md-nav__link">
     Explanations of the default accuracy metrics
   </a>
@@ -386,6 +393,13 @@
         <li class="md-nav__item">
   <a href="#using-a-custom-label-comparison-function" class="md-nav__link">
     Using a custom label comparison function
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#warning-for-versions-0997" class="md-nav__link">
+    Warning for versions &lt;= 0.9.97
   </a>
   
 </li>
@@ -544,6 +558,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#cpugpu-usage" class="md-nav__link">
+    CPU/GPU usage
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#explanations-of-the-default-accuracy-metrics" class="md-nav__link">
     Explanations of the default accuracy metrics
   </a>
@@ -560,6 +581,13 @@
         <li class="md-nav__item">
   <a href="#using-a-custom-label-comparison-function" class="md-nav__link">
     Using a custom label comparison function
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#warning-for-versions-0997" class="md-nav__link">
+    Warning for versions &lt;= 0.9.97
   </a>
   
 </li>
@@ -600,10 +628,10 @@
 <li><strong>include</strong>: Optional. A list or tuple of strings, which are the names of metrics you want to calculate. If left empty, all default metrics will be calculated.</li>
 <li><strong>exclude</strong>: Optional. A list or tuple of strings, which are the names of metrics you <strong>do not</strong> want to calculate.</li>
 <li><strong>avg_of_avgs</strong>: If True, the average accuracy per class is computed, and then the average of those averages is returned. This can be useful if your dataset has unbalanced classes. If False, the global average will be returned.</li>
-<li><strong>k</strong>: If set, this number of nearest neighbors will be retrieved for metrics that require k-nearest neighbors. If None, the value of k will be determined as follows:<ul>
-<li>First, count the number of occurrences of each label in <code>reference_labels</code>, and set k to the maximum value. For example, if <code>reference_labels</code> is <code>[0, 0, 1, 1, 1, 1, 2]</code>, then <code>k = 4</code>.</li>
-<li>Then set <code>k = min(1023, k)</code>. This is done because faiss (the library that computes k-nn) has a limit on the value of k.</li>
-<li>After k is set, the <code>k+1</code> nearest neighbors are found for every query sample. When the query and reference come from the same source, the 1st nearest neighbor is discarded since that "neighbor" is actually the query sample. When the query and reference come from different sources, the <code>k+1</code> neighbor is discarded.</li>
+<li><strong>k</strong>: The number of nearest neighbors that will be retrieved for metrics that require k-nearest neighbors. The allowed values are:<ul>
+<li><code>None</code>. This means k will be set to the total number of reference embeddings.</li>
+<li><code>x</code>, where <code>x &gt; 0</code>. This means k will be set to x.</li>
+<li><code>"max_bin_count"</code>. This means k will be set to <code>max(bincount(reference_labels)) - self_count</code> where <code>self_count == 1</code> if the query and reference embeddings come from the same source.</li>
 </ul>
 </li>
 <li><strong>label_comparison_fn</strong>: A function that compares two torch arrays of labels and returns a boolean array. The default is <code>torch.eq</code>. If a custom function is used, then you must exclude clustering based metrics ("NMI" and "AMI"). The following is an example of a custom function for two-dimensional labels. It returns <code>True</code> if the 0th column matches, and the 1st column does <strong>not</strong> match:</li>
@@ -647,6 +675,12 @@
 <li><strong>exclude</strong>: Optional. A list or tuple of strings, which are the names of metrics you do not want to calculate.</li>
 </ul>
 <p>Note that labels can be 2D if a <a href="#using-a-custom-label-comparison-function">custom label comparison function</a> is used.</p>
+<h3 id="cpugpu-usage">CPU/GPU usage<a class="headerlink" href="#cpugpu-usage" title="Permanent link">&para;</a></h3>
+<ul>
+<li>If you installed <code>faiss-cpu</code> then the CPU will always be used.</li>
+<li>If you installed <code>faiss-gpu</code>, then the GPU will be used if <code>k &lt;= 1024</code> for CUDA &lt; 9.5, and <code>k &lt;= 2048</code> for CUDA &gt;= 9.5. If this condition is not met, then the CPU will be used. </li>
+</ul>
+<p>If your dataset is large, you might find the k-nn search is very slow. This is because the default behavior (<code>k = None</code>) is to search the entire dataset. To avoid this, you can set k to a number, like <code>k = 1000</code>, or try <code>k = "max_bin_count"</code>.</p>
 <h3 id="explanations-of-the-default-accuracy-metrics">Explanations of the default accuracy metrics<a class="headerlink" href="#explanations-of-the-default-accuracy-metrics" title="Permanent link">&para;</a></h3>
 <ul>
 <li>
@@ -689,11 +723,7 @@
 </li>
 </ul>
 <p><strong>Important note</strong></p>
-<p>AccuracyCalculator's <code>mean_average_precision_at_r</code> and <code>r_precision</code> are correct only if the following are true:</p>
-<ul>
-<li>every query class has less than 1024 samples in the reference set</li>
-<li><code>k = None</code>, <strong>or</strong> if you set <code>k</code>, it must be <code>&gt;=</code> the value that is automatically calculated (see the <a href="#parameters">parameters</a> section)</li>
-</ul>
+<p>AccuracyCalculator's <code>mean_average_precision_at_r</code> and <code>r_precision</code> are correct only if <code>k = None</code>, <strong>or</strong> <code>k = "max_bin_count"</code>, <strong>or</strong> <code>k &gt;= max(bincount(reference_labels))</code></p>
 <h3 id="adding-custom-accuracy-metrics">Adding custom accuracy metrics<a class="headerlink" href="#adding-custom-accuracy-metrics" title="Permanent link">&para;</a></h3>
 <p>Let's say you want to use the existing metrics but also compute precision @ 2, and a fancy mutual info method. You can extend the existing class, and write methods that start with the keyword <code>calculate_</code></p>
 <div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils</span> <span class="kn">import</span> <span class="n">accuracy_calculator</span>
@@ -784,6 +814,15 @@
     <span class="mf">0.05</span><span class="p">,</span>
 <span class="p">])</span>
 </code></pre></div>
+
+
+<h3 id="warning-for-versions-0997">Warning for versions &lt;= 0.9.97<a class="headerlink" href="#warning-for-versions-0997" title="Permanent link">&para;</a></h3>
+<p>The behavior of the <code>k</code> parameter described in the <a href="#parameters">Parameters</a> section is for versions &gt;= 0.9.98.</p>
+<p>For versions &lt;= 0.9.97, the behavior was:</p>
+<ul>
+<li>If <code>k = None</code>, then <code>k = min(1023, max(bincount(reference_labels)))</code></li>
+<li>Otherwise <code>k = k</code></li>
+</ul>
                 
               
               

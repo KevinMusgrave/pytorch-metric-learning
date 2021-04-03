@@ -630,7 +630,7 @@
 <li><strong>avg_of_avgs</strong>: If True, the average accuracy per class is computed, and then the average of those averages is returned. This can be useful if your dataset has unbalanced classes. If False, the global average will be returned.</li>
 <li><strong>k</strong>: The number of nearest neighbors that will be retrieved for metrics that require k-nearest neighbors. The allowed values are:<ul>
 <li><code>None</code>. This means k will be set to the total number of reference embeddings.</li>
-<li><code>x</code>, where <code>x &gt; 0</code>. This means k will be set to x.</li>
+<li>An integer greater than 0. This means k will be set to the input integer.</li>
 <li><code>"max_bin_count"</code>. This means k will be set to <code>max(bincount(reference_labels)) - self_count</code> where <code>self_count == 1</code> if the query and reference embeddings come from the same source.</li>
 </ul>
 </li>

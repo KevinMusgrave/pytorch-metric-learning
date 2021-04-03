@@ -65,7 +65,7 @@ Note that labels can be 2D if a [custom label comparison function](#using-a-cust
 * If you installed ```faiss-cpu``` then the CPU will always be used.
 * If you installed ```faiss-gpu```, then the GPU will be used if ```k <= 1024``` for CUDA < 9.5, and ```k <= 2048``` for CUDA >= 9.5. If this condition is not met, then the CPU will be used. 
 
-If your dataset is large, you might find the k-nn search is very slow. This is because the default behavior (```k = None```) is to search the entire dataset. To avoid this, you can set k to a number, like ```k = 1000```, or try ```k = "max_bin_count"```.
+If your dataset is large, you might find the k-nn search is very slow. This is because the default behavior is to set k to ```len(reference_embeddings)```. To avoid this, you can set k to a number, like ```k = 1000```, or try ```k = "max_bin_count"```.
 
 
 ### Explanations of the default accuracy metrics

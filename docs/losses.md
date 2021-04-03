@@ -893,6 +893,33 @@ loss_optimizer.step()
 * **loss**: The loss per element in the batch. Reduction type is ```"element"```.
 
 
+## SupConLoss
+Described in [Supervised Contrastive Learning](https://arxiv.org/abs/2004.11362){target=_blank}.
+```python
+losses.SupConLoss(temperature=0.1, **kwargs)
+```
+
+**Equation**:
+
+![supcon_loss_equation](imgs/supcon_loss_equation.png){: style="height:90px"}
+
+**Parameters**:
+
+* **temperature**: This is tau in the above equation. The paper uses 0.1.
+
+**Default distance**: 
+
+ - [```CosineSimilarity()```](distances.md#cosinesimilarity)
+
+**Default reducer**: 
+
+- [AvgNonZeroReducer](reducers.md#avgnonzeroreducer)
+
+**Reducer input**:
+
+* **loss**: The loss per element in the batch. If an element has only negative pairs or no pairs, it's ignored thanks to `AvgNonZeroReducer`. Reduction type is ```"element"```.
+
+
 ## TripletMarginLoss
 
 ```python

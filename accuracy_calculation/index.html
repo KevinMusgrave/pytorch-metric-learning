@@ -680,7 +680,7 @@
 <li>If you installed <code>faiss-cpu</code> then the CPU will always be used.</li>
 <li>If you installed <code>faiss-gpu</code>, then the GPU will be used if <code>k &lt;= 1024</code> for CUDA &lt; 9.5, and <code>k &lt;= 2048</code> for CUDA &gt;= 9.5. If this condition is not met, then the CPU will be used. </li>
 </ul>
-<p>If your dataset is large, you might find the k-nn search is very slow. This is because the default behavior (<code>k = None</code>) is to search the entire dataset. To avoid this, you can set k to a number, like <code>k = 1000</code>, or try <code>k = "max_bin_count"</code>.</p>
+<p>If your dataset is large, you might find the k-nn search is very slow. This is because the default behavior is to set k to <code>len(reference_embeddings)</code>. To avoid this, you can set k to a number, like <code>k = 1000</code>, or try <code>k = "max_bin_count"</code>.</p>
 <h3 id="explanations-of-the-default-accuracy-metrics">Explanations of the default accuracy metrics<a class="headerlink" href="#explanations-of-the-default-accuracy-metrics" title="Permanent link">&para;</a></h3>
 <ul>
 <li>

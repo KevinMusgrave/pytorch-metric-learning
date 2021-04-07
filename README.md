@@ -63,6 +63,12 @@
 
 ## News
 
+**April 2**: v0.9.98 includes:
+- [SupConLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#supconloss)
+- A bug fix for compatibility with autocast
+- New behavior for the ```k``` parameter of AccuracyCalculator. (Apologies for the breaking change. I'm hoping to have things stable and following semantic versioning when v1.0 arrives.)
+- See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.98)
+
 **March 3**: v0.9.97 has various bug fixes and improvements: 
 - Bug fixes for [NTXentLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#ntxentloss)
 - Efficiency improvement for [AccuracyCalculator](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/), by using torch instead of numpy
@@ -70,8 +76,6 @@
 - See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.97) for details.
 
 **January 12**: v0.9.96 greatly increases the flexibility of the [testers](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/) and [AccuracyCalculator](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/). See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.96)
-
-**December 10**: v0.9.95 includes a new tuple miner, [BatchEasyHardMiner](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#batcheasyhardminer). See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.95)
 
 ## Documentation
 - [**View the documentation here**](https://kevinmusgrave.github.io/pytorch-metric-learning/)

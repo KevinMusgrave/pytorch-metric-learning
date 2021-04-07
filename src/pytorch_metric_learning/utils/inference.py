@@ -2,6 +2,7 @@ import copy
 
 import numpy as np
 import torch
+from torch.utils import data
 
 from ..distances import CosineSimilarity
 from . import common_functions as c_f
@@ -74,7 +75,6 @@ class InferenceModel:
         match_finder=None,
         normalize_embeddings=True,
         indexer=None,
-        batch_size=64,
     ):
         self.trunk = trunk
         self.embedder = c_f.Identity() if embedder is None else embedder
@@ -85,23 +85,34 @@ class InferenceModel:
         )
         self.indexer = FaissIndexer() if indexer is None else indexer
         self.normalize_embeddings = normalize_embeddings
-        self.batch_size = batch_size
 
-    def train_indexer(self, tensors, emb_dim):
-        if isinstance(tensors, list):
-            tensors = torch.stack(tensors)
+    def train_indexer(self, inputs, batch_size=64):
+        if isinstance(inputs, list):
+            inputs = torch.stack(inputs)
 
-        embeddings = torch.Tensor(len(tensors), emb_dim)
-        for i in range(0, len(tensors), self.batch_size):
-            embeddings[i : i + self.batch_size] = self.get_embeddings(
-                tensors[i : i + self.batch_size], None
-            )[0]
-
+        embeddings = []
+        if torch.is_tensor(inputs):
+            for i in range(0, len(inputs), batch_size):
+                embeddings.append(
+                    self.get_embeddings(
+                        inputs[i: i + batch_size], None
+                    )[0]
+                )
+        elif isinstance(inputs, data.Dataset):
+            dataloader = data.DataLoader(inputs, batch_size=batch_size)
+            for inp in dataloader:
+                embeddings.append(self.get_embeddings(inp, None)[0])
+        else:
+            raise TypeError(
+                'Indexing {} is not supported.'.format(type(inputs))
+            )
+        embeddings = torch.cat(embeddings)
         self.indexer.train_index(embeddings.cpu().numpy())
 
     def get_nearest_neighbors(self, query, k):
         if not self.indexer.index or not self.indexer.index.is_trained:
-            raise RuntimeError("Index must be trained by running `train_indexer`")
+            raise RuntimeError(
+                "Index must be trained by running `train_indexer`")
 
         query_emb, _ = self.get_embeddings(query, None)
 
@@ -116,7 +127,8 @@ class InferenceModel:
         self.embedder.eval()
         with torch.no_grad():
             query_emb = self.embedder(self.trunk(query))
-            ref_emb = query_emb if ref is None else self.embedder(self.trunk(ref))
+            ref_emb = query_emb if ref is None else self.embedder(
+                self.trunk(ref))
         if self.normalize_embeddings:
             query_emb = torch.nn.functional.normalize(query_emb, p=2, dim=1)
             ref_emb = torch.nn.functional.normalize(ref_emb, p=2, dim=1)

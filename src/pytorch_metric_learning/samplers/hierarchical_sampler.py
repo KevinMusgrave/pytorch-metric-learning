@@ -37,7 +37,7 @@ class HierarchicalSampler(BatchSampler):
         if self.samples_per_class > 0:
             assert self.sub_batch_len % self.samples_per_class == 0, "batch_size not a multiple of samples_per_class"
         else:
-            self.samples_per_class = len(labels)
+            self.samples_per_class = None
 
         all_super_labels = set(labels[:, outer_label])
         self.super_image_lists = {slb: {} for slb in all_super_labels}
@@ -73,12 +73,10 @@ class HierarchicalSampler(BatchSampler):
                     c_f.NUMPY_RANDOM.shuffle(all_classes)
                     for cl in all_classes:
                         instances = self.super_image_lists[slb][cl]
-                        if len(sub_batch) + min(len(instances), self.samples_per_class) > self.sub_batch_len:
+                        samples_per_class = self.samples_per_class if self.samples_per_class else len(instances)
+                        if len(sub_batch) + samples_per_class > self.sub_batch_len:
                             continue
-
-                        sub_batch.extend(
-                            c_f.NUMPY_RANDOM.choice(instances, size=min(len(instances), self.samples_per_class), replace=False)
-                        )
+                        sub_batch.extend(c_f.safe_random_choice(instances, size=samples_per_class))
 
                     batch.extend(sub_batch)
 

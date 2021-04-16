@@ -398,16 +398,17 @@ Thanks to the contributors who made pull requests!
 - [mlopezantequera](https://github.com/mlopezantequera)
 	- Made the [testers](https://kevinmusgrave.github.io/pytorch-metric-learning/testers) work on any combination of query and reference sets
 	- Made [AccuracyCalculator](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/) work with arbitrary label comparisons
-- [AlenUbuntu](https://github.com/AlenUbuntu)
-	- [CircleLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#circleloss)
-- [btseytlin](https://github.com/btseytlin)
-    - ```get_nearest_neighbors``` in [InferenceModel](https://kevinmusgrave.github.io/pytorch-metric-learning/inference_models)
-- [JohnGiorgi](https://github.com/JohnGiorgi)
-	- ```all_gather``` in [utils.distributed](https://kevinmusgrave.github.io/pytorch-metric-learning/distributed)
-- [AlexSchuy](https://github.com/AlexSchuy)
-	- optimized ```utils.loss_and_miner_utils.get_random_triplet_indices```
 - [fjsj](https://github.com/fjsj)
 	- [SupConLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#supconloss)
+- [AlenUbuntu](https://github.com/AlenUbuntu)
+	- [CircleLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#circleloss)
+- [AlexSchuy](https://github.com/AlexSchuy)
+	- optimized ```utils.loss_and_miner_utils.get_random_triplet_indices```
+- [JohnGiorgi](https://github.com/JohnGiorgi)
+	- ```all_gather``` in [utils.distributed](https://kevinmusgrave.github.io/pytorch-metric-learning/distributed)
+- [btseytlin](https://github.com/btseytlin)
+    - ```get_nearest_neighbors``` in [InferenceModel](https://kevinmusgrave.github.io/pytorch-metric-learning/inference_models)
+
 
 #### Example notebooks
 - [wconnell](https://github.com/wconnell)

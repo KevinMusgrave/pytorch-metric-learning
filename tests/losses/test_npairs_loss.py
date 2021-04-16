@@ -12,7 +12,8 @@ from .. import TEST_DEVICE, TEST_DTYPES
 class TestNPairsLoss(unittest.TestCase):
     def test_npairs_loss(self):
         loss_funcA = NPairsLoss()
-        loss_funcB = NPairsLoss(embedding_regularizer=LpRegularizer())
+        loss_funcB = NPairsLoss(embedding_regularizer=LpRegularizer(power=2))
+        embedding_norm = 2.3
 
         for dtype in TEST_DTYPES:
             embedding_angles = list(range(0, 180, 20))[:7]
@@ -23,10 +24,13 @@ class TestNPairsLoss(unittest.TestCase):
             ).to(
                 TEST_DEVICE
             )  # 2D embeddings
+            embeddings_for_loss_fn = (
+                embeddings * embedding_norm
+            )  # scale by random amount to test l2 regularizer
             labels = torch.LongTensor([0, 0, 1, 1, 1, 2, 3])
 
-            lossA = loss_funcA(embeddings, labels)
-            lossB = loss_funcB(embeddings, labels)
+            lossA = loss_funcA(embeddings_for_loss_fn, labels)
+            lossB = loss_funcB(embeddings_for_loss_fn, labels)
 
             pos_pairs = [(0, 1), (2, 3)]
             neg_pairs = [(0, 3), (2, 1)]
@@ -46,8 +50,8 @@ class TestNPairsLoss(unittest.TestCase):
             total_loss /= len(pos_pairs[0])
             self.assertTrue(torch.isclose(lossA, total_loss))
             self.assertTrue(
-                torch.isclose(lossB, total_loss + 1)
-            )  # l2_reg is going to be 1 since the embeddings are normalized
+                torch.isclose(lossB, total_loss + (embedding_norm) ** 2)
+            )  # l2_reg is going to be embedding_norm ** self.power
 
     def test_with_no_valid_pairs(self):
         for dtype in TEST_DTYPES:

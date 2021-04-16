@@ -202,9 +202,10 @@ def convert_to_weights(indices_tuple, labels, dtype):
     how many times they appear in indices_tuple.
     """
     weights = torch.zeros(labels.shape[0], device=labels.device)
+    weights = c_f.to_dtype(weights, dtype=dtype)
     if (indices_tuple is None) or (all(len(x) == 0 for x in indices_tuple)):
-        return c_f.to_dtype(weights + 1, dtype=dtype)
+        return weights + 1
     indices, counts = torch.unique(torch.cat(indices_tuple, dim=0), return_counts=True)
-    counts = counts / torch.sum(counts)
+    counts = c_f.to_dtype(counts, dtype=dtype) / torch.sum(counts)
     weights[indices] = counts / torch.max(counts)
-    return c_f.to_dtype(weights, dtype=dtype)
+    return weights

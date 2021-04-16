@@ -306,6 +306,7 @@ conda install pytorch-metric-learning -c metric-learning -c pytorch
 | Name | Reference Papers |
 |---|---|
 | [**MPerClassSampler**](https://kevinmusgrave.github.io/pytorch-metric-learning/samplers/#mperclasssampler) |
+| [**HierarchicalSampler**](https://kevinmusgrave.github.io/pytorch-metric-learning/samplers/#hierarchicalsampler) | [Deep Metric Learning to Rank](http://openaccess.thecvf.com/content_CVPR_2019/papers/Cakir_Deep_Metric_Learning_to_Rank_CVPR_2019_paper.pdf)
 | [**TuplesToWeightsSampler**](https://kevinmusgrave.github.io/pytorch-metric-learning/samplers/#tuplestoweightssampler) |
 | [**FixedSetOfTriplets**](https://kevinmusgrave.github.io/pytorch-metric-learning/samplers/#fixedsetoftriplets) |
 
@@ -398,6 +399,8 @@ Thanks to the contributors who made pull requests!
 - [mlopezantequera](https://github.com/mlopezantequera)
 	- Made the [testers](https://kevinmusgrave.github.io/pytorch-metric-learning/testers) work on any combination of query and reference sets
 	- Made [AccuracyCalculator](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/) work with arbitrary label comparisons
+- [elias-ramzi](https://github.com/elias-ramzi)
+	- [HierarchicalSampler](https://kevinmusgrave.github.io/pytorch-metric-learning/samplers/#hierarchicalsampler)
 - [fjsj](https://github.com/fjsj)
 	- [SupConLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#supconloss)
 - [AlenUbuntu](https://github.com/AlenUbuntu)

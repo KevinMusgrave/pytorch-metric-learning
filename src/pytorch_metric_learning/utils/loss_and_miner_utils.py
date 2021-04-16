@@ -201,12 +201,10 @@ def convert_to_weights(indices_tuple, labels, dtype):
     Returns a weight for each batch element, based on
     how many times they appear in indices_tuple.
     """
-    weights = torch.zeros_like(labels, dtype=dtype)
-    if indices_tuple is None:
-        return weights + 1
-    if all(len(x) == 0 for x in indices_tuple):
-        return weights + 1
+    weights = torch.zeros(labels.shape[0], device=labels.device)
+    if (indices_tuple is None) or (all(len(x) == 0 for x in indices_tuple)):
+        return c_f.to_dtype(weights + 1, dtype=dtype)
     indices, counts = torch.unique(torch.cat(indices_tuple, dim=0), return_counts=True)
-    counts = c_f.to_dtype(counts, dtype=dtype) / torch.sum(counts)
+    counts = counts / torch.sum(counts)
     weights[indices] = counts / torch.max(counts)
-    return weights
+    return c_f.to_dtype(weights, dtype=dtype)

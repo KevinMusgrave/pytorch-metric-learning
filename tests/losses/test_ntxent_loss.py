@@ -3,8 +3,8 @@ import unittest
 import torch
 
 from pytorch_metric_learning.distances import LpDistance
-from pytorch_metric_learning.losses import NTXentLoss
-from pytorch_metric_learning.reducers import PerAnchorReducer
+from pytorch_metric_learning.losses import NTXentLoss, SupConLoss
+from pytorch_metric_learning.reducers import AvgNonZeroReducer, PerAnchorReducer
 from pytorch_metric_learning.utils import common_functions as c_f
 
 from .. import TEST_DEVICE, TEST_DTYPES
@@ -15,10 +15,14 @@ class TestNTXentLoss(unittest.TestCase):
         temperature = 0.1
         loss_funcA = NTXentLoss(temperature=temperature)
         loss_funcB = NTXentLoss(temperature=temperature, distance=LpDistance())
-        loss_funcC = NTXentLoss(temperature=temperature, reducer=PerAnchorReducer())
+        loss_funcC = NTXentLoss(
+            temperature=temperature, reducer=PerAnchorReducer(AvgNonZeroReducer())
+        )
+        loss_funcD = SupConLoss(temperature=temperature)
+        loss_funcE = SupConLoss(temperature=temperature, distance=LpDistance())
 
         for dtype in TEST_DTYPES:
-            embedding_angles = [0, 20, 40, 60, 80, 100]
+            embedding_angles = [0, 10, 20, 50, 60, 80]
             embeddings = torch.tensor(
                 [c_f.angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
@@ -29,9 +33,10 @@ class TestNTXentLoss(unittest.TestCase):
 
             labels = torch.LongTensor([0, 0, 0, 1, 1, 2])
 
-            lossA = loss_funcA(embeddings, labels)
-            lossB = loss_funcB(embeddings, labels)
-            lossC = loss_funcC(embeddings, labels)
+            obtained_losses = [
+                x(embeddings, labels)
+                for x in [loss_funcA, loss_funcB, loss_funcC, loss_funcD, loss_funcE]
+            ]
 
             pos_pairs = [(0, 1), (0, 2), (1, 0), (1, 2), (2, 0), (2, 1), (3, 4), (4, 3)]
             neg_pairs = [
@@ -59,10 +64,12 @@ class TestNTXentLoss(unittest.TestCase):
                 (5, 4),
             ]
 
-            total_lossA, total_lossB, total_lossC = (
+            total_lossA, total_lossB, total_lossC, total_lossD, total_lossE = (
                 0,
                 0,
-                torch.zeros(6, device=TEST_DEVICE, dtype=dtype),
+                torch.zeros(5, device=TEST_DEVICE, dtype=dtype),
+                torch.zeros(5, device=TEST_DEVICE, dtype=dtype),
+                torch.zeros(5, device=TEST_DEVICE, dtype=dtype),
             )
             for a1, p in pos_pairs:
                 anchor, positive = embeddings[a1], embeddings[p]
@@ -72,69 +79,95 @@ class TestNTXentLoss(unittest.TestCase):
                 )
                 denominatorA = numeratorA.clone()
                 denominatorB = numeratorB.clone()
-                for a2, n in neg_pairs:
+                denominatorD = 0
+                denominatorE = 0
+                for a2, n in pos_pairs + neg_pairs:
                     if a2 == a1:
                         negative = embeddings[n]
+                        curr_denomD = torch.exp(
+                            torch.matmul(anchor, negative) / temperature
+                        )
+                        curr_denomE = torch.exp(
+                            -torch.sqrt(torch.sum((anchor - negative) ** 2))
+                            / temperature
+                        )
+                        denominatorD += curr_denomD
+                        denominatorE += curr_denomE
+                        if (a2, n) not in pos_pairs:
+                            denominatorA += curr_denomD
+                            denominatorB += curr_denomE
                     else:
                         continue
-                    denominatorA += torch.exp(
-                        torch.matmul(anchor, negative) / temperature
-                    )
-                    denominatorB += torch.exp(
-                        -torch.sqrt(torch.sum((anchor - negative) ** 2)) / temperature
-                    )
+
                 curr_lossA = -torch.log(numeratorA / denominatorA)
                 curr_lossB = -torch.log(numeratorB / denominatorB)
+                curr_lossD = -torch.log(numeratorA / denominatorD)
+                curr_lossE = -torch.log(numeratorB / denominatorE)
                 total_lossA += curr_lossA
                 total_lossB += curr_lossB
                 total_lossC[a1] += curr_lossA
+                total_lossD[a1] += curr_lossD
+                total_lossE[a1] += curr_lossE
 
             total_lossA /= len(pos_pairs)
             total_lossB /= len(pos_pairs)
             pos_pair_per_anchor = torch.tensor(
-                [2, 2, 2, 1, 1, 0], device=TEST_DEVICE, dtype=dtype
+                [2, 2, 2, 1, 1], device=TEST_DEVICE, dtype=dtype
             )
-            total_lossC = total_lossC / pos_pair_per_anchor
-            total_lossC[pos_pair_per_anchor == 0] = 0
-
-            total_lossC = torch.mean(total_lossC)
+            total_lossC, total_lossD, total_lossE = [
+                torch.mean(x / pos_pair_per_anchor)
+                for x in [total_lossC, total_lossD, total_lossE]
+            ]
 
             rtol = 1e-2 if dtype == torch.float16 else 1e-5
-            self.assertTrue(torch.isclose(lossA, total_lossA, rtol=rtol))
-            self.assertTrue(torch.isclose(lossB, total_lossB, rtol=rtol))
-            self.assertTrue(torch.isclose(lossC, total_lossC, rtol=rtol))
+            self.assertTrue(torch.isclose(obtained_losses[0], total_lossA, rtol=rtol))
+            self.assertTrue(torch.isclose(obtained_losses[1], total_lossB, rtol=rtol))
+            self.assertTrue(torch.isclose(obtained_losses[2], total_lossC, rtol=rtol))
+            self.assertTrue(torch.isclose(obtained_losses[3], total_lossD, rtol=rtol))
+            self.assertTrue(torch.isclose(obtained_losses[4], total_lossE, rtol=rtol))
 
     def test_with_no_valid_pairs(self):
-        loss_func = NTXentLoss(temperature=0.1)
-        all_embedding_angles = [[0], [0, 10, 20]]
-        all_labels = [torch.LongTensor([0]), torch.LongTensor([0, 0, 0])]
-        for dtype in TEST_DTYPES:
-            for embedding_angles, labels in zip(all_embedding_angles, all_labels):
-                embeddings = torch.tensor(
-                    [c_f.angle_to_coord(a) for a in embedding_angles],
-                    requires_grad=True,
-                    dtype=dtype,
-                ).to(
-                    TEST_DEVICE
-                )  # 2D embeddings
-                loss = loss_func(embeddings, labels)
-                loss.backward()
-                self.assertEqual(loss, 0)
+        all_embedding_angles = [[0], [0, 10, 20], [0, 40, 60]]
+        all_labels = [
+            torch.LongTensor([0]),
+            torch.LongTensor([0, 0, 0]),
+            torch.LongTensor([1, 2, 3]),
+        ]
+        temperature = 0.1
+        for loss_class in [NTXentLoss, SupConLoss]:
+            loss_funcA = loss_class(temperature)
+            loss_funcB = loss_class(temperature, distance=LpDistance())
+            for loss_func in [loss_funcA, loss_funcB]:
+                for dtype in TEST_DTYPES:
+                    for embedding_angles, labels in zip(
+                        all_embedding_angles, all_labels
+                    ):
+                        embeddings = torch.tensor(
+                            [c_f.angle_to_coord(a) for a in embedding_angles],
+                            requires_grad=True,
+                            dtype=dtype,
+                        ).to(
+                            TEST_DEVICE
+                        )  # 2D embeddings
+                        loss = loss_func(embeddings, labels)
+                        loss.backward()
+                        self.assertEqual(loss, 0)
 
     def test_backward(self):
         temperature = 0.1
-        loss_funcA = NTXentLoss(temperature=temperature)
-        loss_funcB = NTXentLoss(temperature=temperature, distance=LpDistance())
-        for dtype in TEST_DTYPES:
-            for loss_func in [loss_funcA, loss_funcB]:
-                embedding_angles = [0, 20, 40, 60, 80]
-                embeddings = torch.tensor(
-                    [c_f.angle_to_coord(a) for a in embedding_angles],
-                    requires_grad=True,
-                    dtype=dtype,
-                ).to(
-                    TEST_DEVICE
-                )  # 2D embeddings
-                labels = torch.LongTensor([0, 0, 1, 1, 2])
-                loss = loss_func(embeddings, labels)
-                loss.backward()
+        for loss_class in [NTXentLoss, SupConLoss]:
+            loss_funcA = loss_class(temperature)
+            loss_funcB = loss_class(temperature, distance=LpDistance())
+            for dtype in TEST_DTYPES:
+                for loss_func in [loss_funcA, loss_funcB]:
+                    embedding_angles = [0, 20, 40, 60, 80]
+                    embeddings = torch.tensor(
+                        [c_f.angle_to_coord(a) for a in embedding_angles],
+                        requires_grad=True,
+                        dtype=dtype,
+                    ).to(
+                        TEST_DEVICE
+                    )  # 2D embeddings
+                    labels = torch.LongTensor([0, 0, 1, 1, 2])
+                    loss = loss_func(embeddings, labels)
+                    loss.backward()

@@ -466,9 +466,10 @@ def torch_standard_scaler(x):
 
 
 def to_dtype(x, tensor=None, dtype=None):
-    dt = dtype if dtype is not None else tensor.dtype
-    if x.dtype != dt:
-        x = x.type(dt)
+    if not torch.is_autocast_enabled():
+        dt = dtype if dtype is not None else tensor.dtype
+        if x.dtype != dt:
+            x = x.type(dt)
     return x
 
 

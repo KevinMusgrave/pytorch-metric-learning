@@ -63,6 +63,12 @@
 
 ## News
 
+**April 2**: v0.9.98 includes:
+- [SupConLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#supconloss)
+- A bug fix for compatibility with autocast
+- New behavior for the ```k``` parameter of AccuracyCalculator. (Apologies for the breaking change. I'm hoping to have things stable and following semantic versioning when v1.0 arrives.)
+- See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.98)
+
 **March 3**: v0.9.97 has various bug fixes and improvements: 
 - Bug fixes for [NTXentLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#ntxentloss)
 - Efficiency improvement for [AccuracyCalculator](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/), by using torch instead of numpy
@@ -70,8 +76,6 @@
 - See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.97) for details.
 
 **January 12**: v0.9.96 greatly increases the flexibility of the [testers](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/) and [AccuracyCalculator](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/). See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.96)
-
-**December 10**: v0.9.95 includes a new tuple miner, [BatchEasyHardMiner](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#batcheasyhardminer). See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.95)
 
 ## Documentation
 - [**View the documentation here**](https://kevinmusgrave.github.io/pytorch-metric-learning/)
@@ -259,6 +263,7 @@ conda install pytorch-metric-learning -c metric-learning -c pytorch
 | [**SignalToNoiseRatioContrastiveLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#signaltonoiseratiocontrastiveloss) | [Signal-to-Noise Ratio: A Robust Distance Metric for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Yuan_Signal-To-Noise_Ratio_A_Robust_Distance_Metric_for_Deep_Metric_Learning_CVPR_2019_paper.pdf)
 | [**SoftTripleLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#softtripleloss) | [SoftTriple Loss: Deep Metric Learning Without Triplet Sampling](http://openaccess.thecvf.com/content_ICCV_2019/papers/Qian_SoftTriple_Loss_Deep_Metric_Learning_Without_Triplet_Sampling_ICCV_2019_paper.pdf)
 | [**SphereFaceLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#spherefaceloss) | [SphereFace: Deep Hypersphere Embedding for Face Recognition](https://arxiv.org/pdf/1704.08063.pdf)
+| [**SupConLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#supconloss) | [Supervised Contrastive Learning](https://arxiv.org/abs/2004.11362)
 | [**TripletMarginLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#tripletmarginloss) | [Distance Metric Learning for Large Margin Nearest Neighbor Classification](https://papers.nips.cc/paper/2795-distance-metric-learning-for-large-margin-nearest-neighbor-classification.pdf)
 | [**TupletMarginLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#tupletmarginloss) | [Deep Metric Learning with Tuplet Margin Loss](http://openaccess.thecvf.com/content_ICCV_2019/papers/Yu_Deep_Metric_Learning_With_Tuplet_Margin_Loss_ICCV_2019_paper.pdf)
 
@@ -396,6 +401,8 @@ Thanks to the contributors who made pull requests!
 	- Made [AccuracyCalculator](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/) work with arbitrary label comparisons
 - [elias-ramzi](https://github.com/elias-ramzi)
 	- [HierarchicalSampler](https://kevinmusgrave.github.io/pytorch-metric-learning/samplers/#hierarchicalsampler)
+- [fjsj](https://github.com/fjsj)
+	- [SupConLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#supconloss)
 - [AlenUbuntu](https://github.com/AlenUbuntu)
 	- [CircleLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#circleloss)
 - [AlexSchuy](https://github.com/AlexSchuy)
@@ -404,6 +411,7 @@ Thanks to the contributors who made pull requests!
 	- ```all_gather``` in [utils.distributed](https://kevinmusgrave.github.io/pytorch-metric-learning/distributed)
 - [btseytlin](https://github.com/btseytlin)
     - ```get_nearest_neighbors``` in [InferenceModel](https://kevinmusgrave.github.io/pytorch-metric-learning/inference_models)
+
 
 #### Example notebooks
 - [wconnell](https://github.com/wconnell)

@@ -61,3 +61,6 @@ class GlobalTwoStreamEmbeddingSpaceTester(GlobalEmbeddingSpaceTester):
         posneg_embeddings = embeddings[half:]
         query_labels = labels[:half]
         return anchors_embeddings, query_labels, posneg_embeddings, query_labels
+
+    def embeddings_come_from_same_source(self, query_split_name, reference_split_names):
+        return False

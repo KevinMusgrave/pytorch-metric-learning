@@ -5,6 +5,8 @@
 # This code is copied directly from the official implementation
 # so that we can make sure our implementation returns the same result.
 # It's copied under the MIT license.
+from contextlib import nullcontext
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -85,34 +87,50 @@ class TestProxyAnchorLoss(unittest.TestCase):
         num_classes = 10
         embedding_size = 2
         margin = 0.5
-        for dtype in TEST_DTYPES:
-            alpha = 1 if dtype == torch.float16 else 32
-            loss_func = ProxyAnchorLoss(
-                num_classes, embedding_size, margin=margin, alpha=alpha
-            ).to(TEST_DEVICE)
-            original_loss_func = OriginalImplementationProxyAnchor(
-                num_classes, embedding_size, mrg=margin, alpha=alpha
-            ).to(TEST_DEVICE)
-            original_loss_func.proxies.data = original_loss_func.proxies.data.type(
-                dtype
-            )
-            loss_func.proxies = original_loss_func.proxies
 
-            embedding_angles = list(range(0, 180))
-            embeddings = torch.tensor(
-                [c_f.angle_to_coord(a) for a in embedding_angles],
-                requires_grad=True,
-                dtype=dtype,
-            ).to(
-                TEST_DEVICE
-            )  # 2D embeddings
-            labels = torch.randint(low=0, high=5, size=(180,)).to(TEST_DEVICE)
+        for use_autocast in [True, False]:
 
-            loss = loss_func(embeddings, labels)
-            loss.backward()
-            correct_loss = original_loss_func(embeddings, labels)
-            rtol = 1e-2 if dtype == torch.float16 else 1e-5
-            self.assertTrue(torch.isclose(loss, correct_loss, rtol=rtol))
+            if use_autocast:
+                cm = torch.cuda.amp.autocast()
+            else:
+                cm = nullcontext()
+
+            for dtype in TEST_DTYPES:
+                alpha = 1 if dtype == torch.float16 else 32
+                loss_func = ProxyAnchorLoss(
+                    num_classes, embedding_size, margin=margin, alpha=alpha
+                ).to(TEST_DEVICE)
+                original_loss_func = OriginalImplementationProxyAnchor(
+                    num_classes, embedding_size, mrg=margin, alpha=alpha
+                ).to(TEST_DEVICE)
+
+                if not use_autocast:
+                    original_loss_func.proxies.data = (
+                        original_loss_func.proxies.data.type(dtype)
+                    )
+                loss_func.proxies = original_loss_func.proxies
+
+                embedding_angles = list(range(0, 180))
+                embeddings = torch.tensor(
+                    [c_f.angle_to_coord(a) for a in embedding_angles],
+                    requires_grad=True,
+                    dtype=torch.float32,
+                ).to(
+                    TEST_DEVICE
+                )  # 2D embeddings
+
+                if not use_autocast:
+                    embeddings = embeddings.type(dtype)
+                labels = torch.randint(low=0, high=5, size=(180,)).to(TEST_DEVICE)
+
+                with cm:
+                    loss = loss_func(embeddings, labels)
+
+                loss.backward()
+                correct_loss = original_loss_func(embeddings, labels)
+                rtol = 1e-2 if dtype == torch.float16 or use_autocast else 1e-5
+
+                self.assertTrue(torch.isclose(loss, correct_loss, rtol=rtol))
 
 
 if __name__ == "__main__":

@@ -226,7 +226,7 @@ class TestCalculateAccuracies(unittest.TestCase):
                     device=TEST_DEVICE,
                 )
 
-            label_counts, num_k = accuracy_calculator.get_label_match_counts(
+            label_counts = accuracy_calculator.get_label_match_counts(
                 query_labels,
                 query_labels,
                 comparison_fn,
@@ -268,7 +268,7 @@ class TestCalculateAccuracies(unittest.TestCase):
         )
 
         for comparison_fn in [equality2D, custom_label_comparison_fn]:
-            label_counts, num_k = accuracy_calculator.get_label_match_counts(
+            label_counts = accuracy_calculator.get_label_match_counts(
                 query_labels,
                 query_labels,
                 comparison_fn,
@@ -338,7 +338,7 @@ class TestCalculateAccuracies(unittest.TestCase):
     def test_get_lone_query_labels(self):
         query_labels = torch.tensor([0, 1, 2, 3, 4, 5, 6], device=TEST_DEVICE)
         reference_labels = torch.tensor([0, 0, 0, 1, 2, 2, 3, 4, 5], device=TEST_DEVICE)
-        label_counts, _ = accuracy_calculator.get_label_match_counts(
+        label_counts = accuracy_calculator.get_label_match_counts(
             query_labels,
             reference_labels,
             accuracy_calculator.EQUALITY,
@@ -630,3 +630,11 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
         )
         for k in correct:
             self.assertTrue(isclose(acc[k], correct[k]))
+
+
+class TestCalculateAccuraciesValidK(unittest.TestCase):
+    def test_valid_k(self):
+        for k in [-1, 0, 1.5, "max"]:
+            self.assertRaises(
+                ValueError, lambda: accuracy_calculator.AccuracyCalculator(k=k)
+            )

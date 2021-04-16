@@ -265,6 +265,9 @@ class BaseTester:
     ):
         raise NotImplementedError
 
+    def embeddings_come_from_same_source(self, query_split_name, reference_split_names):
+        return query_split_name in reference_split_names
+
     def test(
         self,
         dataset_dict,
@@ -273,7 +276,6 @@ class BaseTester:
         embedder_model=None,
         splits_to_eval=None,
         collate_fn=None,
-        **kwargs,
     ):
         logging.info("Evaluating epoch {}".format(epoch))
         if embedder_model is None:

@@ -153,10 +153,7 @@ def get_label_match_counts(query_labels, reference_labels, label_comparison_fn):
                 label_comparison_fn(label_a, reference_labels)
             )
 
-    # faiss can only do a max of k=1024, and we have to do k+1
-    num_k = int(min(1023, torch.max(match_counts)))
-
-    return (unique_query_labels, match_counts), num_k
+    return (unique_query_labels, match_counts)
 
 
 def get_lone_query_labels(
@@ -214,6 +211,11 @@ class AccuracyCalculator:
         self.original_function_dict = self.get_function_dict(include, exclude)
         self.curr_function_dict = self.get_function_dict()
         self.avg_of_avgs = avg_of_avgs
+
+        if (not (isinstance(k, int) and k > 0)) and (k not in [None, "max_bin_count"]):
+            raise ValueError(
+                "k must be an integer greater than 0, or None, or 'max_bin_count'"
+            )
         self.k = k
 
         if label_comparison_fn:
@@ -359,10 +361,6 @@ class AccuracyCalculator:
         include=(),
         exclude=(),
     ):
-        embeddings_come_from_same_source = embeddings_come_from_same_source or (
-            query is reference
-        )
-
         [query, reference, query_labels, reference_labels] = [
             c_f.numpy_to_torch(x)
             for x in [query, reference, query_labels, reference_labels]
@@ -380,7 +378,7 @@ class AccuracyCalculator:
         }
 
         if any(x in self.requires_knn() for x in self.get_curr_metrics()):
-            label_counts, num_k = get_label_match_counts(
+            label_counts = get_label_match_counts(
                 query_labels, reference_labels, self.label_comparison_fn
             )
             lone_query_labels, not_lone_query_mask = get_lone_query_labels(
@@ -390,8 +388,10 @@ class AccuracyCalculator:
                 self.label_comparison_fn,
             )
 
-            if self.k is not None:
-                num_k = self.k
+            num_k = self.determine_k(
+                label_counts[1], len(reference), embeddings_come_from_same_source
+            )
+
             knn_indices, knn_distances = stat_utils.get_knn(
                 reference, query, num_k, embeddings_come_from_same_source
             )
@@ -426,6 +426,16 @@ class AccuracyCalculator:
                         primary_metrics
                     )
                 )
+
+    def determine_k(
+        self, bin_counts, num_reference_embeddings, embeddings_come_from_same_source
+    ):
+        self_count = int(embeddings_come_from_same_source)
+        if self.k == "max_bin_count":
+            return torch.max(bin_counts).item() - self_count
+        if self.k is None:
+            return num_reference_embeddings - self_count
+        return self.k
 
     def description(self):
         return "avg_of_avgs" if self.avg_of_avgs else ""

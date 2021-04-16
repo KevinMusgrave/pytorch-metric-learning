@@ -15,10 +15,10 @@ AccuracyCalculator(include=(),
 * **include**: Optional. A list or tuple of strings, which are the names of metrics you want to calculate. If left empty, all default metrics will be calculated.
 * **exclude**: Optional. A list or tuple of strings, which are the names of metrics you **do not** want to calculate.
 * **avg_of_avgs**: If True, the average accuracy per class is computed, and then the average of those averages is returned. This can be useful if your dataset has unbalanced classes. If False, the global average will be returned.
-* **k**: If set, this number of nearest neighbors will be retrieved for metrics that require k-nearest neighbors. If None, the value of k will be determined as follows:
-    * First, count the number of occurrences of each label in ```reference_labels```, and set k to the maximum value. For example, if ```reference_labels``` is ```[0, 0, 1, 1, 1, 1, 2]```, then ```k = 4```.
-    * Then set ```k = min(1023, k)```. This is done because faiss (the library that computes k-nn) has a limit on the value of k.
-    * After k is set, the ```k+1``` nearest neighbors are found for every query sample. When the query and reference come from the same source, the 1st nearest neighbor is discarded since that "neighbor" is actually the query sample. When the query and reference come from different sources, the ```k+1``` neighbor is discarded.
+* **k**: The number of nearest neighbors that will be retrieved for metrics that require k-nearest neighbors. The allowed values are:
+    * ```None```. This means k will be set to the total number of reference embeddings.
+    * An integer greater than 0. This means k will be set to the input integer.
+    * ```"max_bin_count"```. This means k will be set to ```max(bincount(reference_labels)) - self_count``` where ```self_count == 1``` if the query and reference embeddings come from the same source.
 * **label_comparison_fn**: A function that compares two torch arrays of labels and returns a boolean array. The default is ```torch.eq```. If a custom function is used, then you must exclude clustering based metrics ("NMI" and "AMI"). The following is an example of a custom function for two-dimensional labels. It returns ```True``` if the 0th column matches, and the 1st column does **not** match:
 ```python
 def example_label_comparison_fn(x, y):
@@ -60,6 +60,14 @@ def get_accuracy(self,
 Note that labels can be 2D if a [custom label comparison function](#using-a-custom-label-comparison-function) is used.
 
 
+### CPU/GPU usage
+
+* If you installed ```faiss-cpu``` then the CPU will always be used.
+* If you installed ```faiss-gpu```, then the GPU will be used if ```k <= 1024``` for CUDA < 9.5, and ```k <= 2048``` for CUDA >= 9.5. If this condition is not met, then the CPU will be used. 
+
+If your dataset is large, you might find the k-nn search is very slow. This is because the default behavior is to set k to ```len(reference_embeddings)```. To avoid this, you can set k to a number, like ```k = 1000```, or try ```k = "max_bin_count"```.
+
+
 ### Explanations of the default accuracy metrics
 
 - **AMI**: 
@@ -91,11 +99,7 @@ Note that labels can be 2D if a [custom label comparison function](#using-a-cust
 
 **Important note**
 
-AccuracyCalculator's ```mean_average_precision_at_r``` and ```r_precision``` are correct only if the following are true:
-
-* every query class has less than 1024 samples in the reference set
-* ```k = None```, **or** if you set ```k```, it must be ```>=``` the value that is automatically calculated (see the [parameters](#parameters) section)
-
+AccuracyCalculator's ```mean_average_precision_at_r``` and ```r_precision``` are correct only if ```k = None```, **or** ```k = "max_bin_count"```, **or** ```k >= max(bincount(reference_labels))```
 
 
 ### Adding custom accuracy metrics
@@ -195,3 +199,13 @@ labels = torch.tensor([
     0.05,
 ])
 ```
+
+
+### Warning for versions <= 0.9.97
+
+The behavior of the ```k``` parameter described in the [Parameters](#parameters) section is for versions >= 0.9.98.
+
+For versions <= 0.9.97, the behavior was:
+
+* If ```k = None```, then ```k = min(1023, max(bincount(reference_labels)))```
+* Otherwise ```k = k```

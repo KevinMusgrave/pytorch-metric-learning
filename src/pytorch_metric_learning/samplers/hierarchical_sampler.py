@@ -15,8 +15,8 @@ class HierarchicalSampler(BatchSampler):
         labels,
         batch_size,
         samples_per_class,
-        batches_per_super_pair=4,
-        nb_categories=2,
+        batches_per_super_tuple=4,
+        super_classes_per_batch=2,
         inner_label=0,
         outer_label=1,
     ):
@@ -24,7 +24,7 @@ class HierarchicalSampler(BatchSampler):
         labels: 2D array, where rows correspond to elements, and columns correspond to the hierarchical labels
         batch_size: because this is a BatchSampler the batch size must be specified
         samples_per_class: number of instances to sample for a specific class. set to "all" if all element in a class
-        batches_per_super_pairs: number of batches to create for a pair of categories (or super labels)
+        batches_per_super_tuples: number of batches to create for a pair of categories (or super labels)
         inner_label: columns index corresponding to classes
         outer_label: columns index corresponding to the level of hierarchy for the pairs
         """
@@ -32,15 +32,15 @@ class HierarchicalSampler(BatchSampler):
             labels = labels.cpu().numpy()
 
         self.batch_size = batch_size
-        self.batches_per_super_pair = batches_per_super_pair
+        self.batches_per_super_tuple = batches_per_super_tuple
         self.samples_per_class = samples_per_class
-        self.nb_categories = nb_categories
+        self.super_classes_per_batch = super_classes_per_batch
 
         # checks
         assert (
-            self.batch_size % nb_categories == 0
-        ), f"batch_size should be a multiple of {nb_categories}"
-        self.sub_batch_len = self.batch_size // nb_categories
+            self.batch_size % super_classes_per_batch == 0
+        ), f"batch_size should be a multiple of {super_classes_per_batch}"
+        self.sub_batch_len = self.batch_size // super_classes_per_batch
 
         if self.samples_per_class != "all":
             assert self.samples_per_class > 0
@@ -54,7 +54,9 @@ class HierarchicalSampler(BatchSampler):
             slb, lb = instance[outer_label], instance[inner_label]
             self.super_image_lists[slb][lb].append(idx)
 
-        self.super_pairs = list(itertools.combinations(all_super_labels, nb_categories))
+        self.super_pairs = list(
+            itertools.combinations(all_super_labels, super_classes_per_batch)
+        )
         self.reshuffle()
 
     def __iter__(
@@ -73,7 +75,7 @@ class HierarchicalSampler(BatchSampler):
         batches = []
         for combinations in self.super_pairs:
 
-            for b in range(self.batches_per_super_pair):
+            for b in range(self.batches_per_super_tuple):
 
                 batch = []
                 for slb in combinations:

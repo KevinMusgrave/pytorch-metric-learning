@@ -10,11 +10,11 @@ from pytorch_metric_learning.samplers import HierarchicalSampler
 class TestHierarchicalSampler(unittest.TestCase):
     def test_hierarchical_sampler(self):
         dataset_size = 15023
-        batches_per_super_pair = 9
+        batches_per_super_tuple = 9
         num_superlabels = 12
 
-        for nb_categories in range(1, 4):
-            batch_size = 50 * nb_categories
+        for super_classes_per_batch in range(1, 4):
+            batch_size = 50 * super_classes_per_batch
             for samples_per_class, num_labels_per_super_labels in [
                 (5, 17),
                 ("all", 93),
@@ -32,13 +32,13 @@ class TestHierarchicalSampler(unittest.TestCase):
                     labels=labels,
                     batch_size=batch_size,
                     samples_per_class=samples_per_class,
-                    batches_per_super_pair=batches_per_super_pair,
-                    nb_categories=nb_categories,
+                    batches_per_super_tuple=batches_per_super_tuple,
+                    super_classes_per_batch=super_classes_per_batch,
                 )
                 self.assertTrue(
                     len(sampler)
-                    == batches_per_super_pair
-                    * math.comb(num_superlabels, nb_categories)
+                    == batches_per_super_tuple
+                    * math.comb(num_superlabels, super_classes_per_batch)
                 )
                 all_batch_super_labels = []
                 for j, batch in enumerate(sampler):
@@ -54,16 +54,16 @@ class TestHierarchicalSampler(unittest.TestCase):
                         )  # Each labels has the samples_per_class number of instances
                         self.assertTrue(
                             all(
-                                v == batch_size // nb_categories
+                                v == batch_size // super_classes_per_batch
                                 for v in batch_super_labels.values()
                             )
                         )  # Each super labels has the same number of instances
 
-                    self.assertTrue(len(batch_super_labels) == nb_categories)
+                    self.assertTrue(len(batch_super_labels) == super_classes_per_batch)
 
                 self.assertTrue(
                     all(
-                        v == batches_per_super_pair
+                        v == batches_per_super_tuple
                         for v in Counter(all_batch_super_labels).values()
                     )
                 )

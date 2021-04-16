@@ -53,7 +53,9 @@ class WithSameParentLabelTester(BaseTester):
                     curr_reference_embeddings,
                     curr_query_labels,
                     curr_reference_labels,
-                    query_split_name in reference_split_names,
+                    self.embeddings_come_from_same_source(
+                        query_split_name, reference_split_names
+                    ),
                 )
                 for metric, v in a.items():
                     average_accuracies[metric].append(v)

@@ -18,7 +18,7 @@ class CosFaceLoss(LargeMarginSoftmaxLoss):
     def cast_types(self, dtype, device):
         self.W.data = c_f.to_device(self.W.data, device=device, dtype=dtype)
 
-    def modify_cosine_of_target_classes(self, cosine_of_target_classes, *args):
+    def modify_cosine_of_target_classes(self, cosine_of_target_classes):
         if self.collect_stats:
             with torch.no_grad():
                 self.get_angles(

@@ -9,6 +9,7 @@ import scipy.stats
 import torch
 
 NUMPY_RANDOM = np.random
+COLLECT_STATS = True
 
 
 class Identity(torch.nn.Module):

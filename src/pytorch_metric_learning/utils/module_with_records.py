@@ -4,7 +4,7 @@ from . import common_functions as c_f
 
 
 class ModuleWithRecords(torch.nn.Module):
-    def __init__(self, collect_stats=True):
+    def __init__(self, collect_stats=c_f.COLLECT_STATS):
         super().__init__()
         self.collect_stats = collect_stats
 

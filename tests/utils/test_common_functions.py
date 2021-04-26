@@ -25,6 +25,27 @@ class TestCommonFunctions(unittest.TestCase):
         self.assertTrue(loss_fn.distance.collect_stats == WITH_COLLECT_STATS)
         self.assertTrue(loss_fn.reducer.collect_stats == WITH_COLLECT_STATS)
 
+    def test_check_shapes(self):
+        embeddings = torch.randn(32, 512, 3)
+        labels = torch.randn(32)
+        loss_fn = TripletMarginLoss()
+
+        # embeddings is 3-dimensional
+        self.assertRaises(ValueError, lambda: loss_fn(embeddings, labels))
+
+        # embeddings does not match labels
+        embeddings = torch.randn(33, 512)
+        self.assertRaises(ValueError, lambda: loss_fn(embeddings, labels))
+
+        # labels is 2D
+        embeddings = torch.randn(32, 512)
+        labels = labels.unsqueeze(1)
+        self.assertRaises(ValueError, lambda: loss_fn(embeddings, labels))
+
+        # correct shapes
+        labels = labels.squeeze(1)
+        self.assertTrue(torch.is_tensor(loss_fn(embeddings, labels)))
+
 
 if __name__ == "__main__":
     unittest.main()

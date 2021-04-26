@@ -402,10 +402,15 @@ def angle_to_coord(angle):
     return x, y
 
 
-def assert_embeddings_and_labels_are_same_size(embeddings, labels):
-    assert embeddings.size(0) == labels.size(
-        0
-    ), "Number of embeddings must equal number of labels"
+def check_shapes(embeddings, labels):
+    if embeddings.size(0) != labels.size(0):
+        raise ValueError("Number of embeddings must equal number of labels")
+    if embeddings.ndim != 2:
+        raise ValueError(
+            "embeddings must be a 2D tensor of shape (batch_size, embedding_size)"
+        )
+    if labels.ndim != 1:
+        raise ValueError("labels must be a 1D tensor of shape (batch_size,)")
 
 
 def assert_distance_type(obj, distance_type=None, **kwargs):

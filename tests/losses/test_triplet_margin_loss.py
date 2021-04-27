@@ -116,7 +116,7 @@ class TestTripletMarginLoss(unittest.TestCase):
         loss_funcB = TripletMarginLoss(margin=margin, reducer=MeanReducer())
         loss_funcC = TripletMarginLoss(smooth_loss=True)
         for dtype in TEST_DTYPES:
-            for loss_func in [loss_funcA, loss_funcB]:
+            for loss_func in [loss_funcA, loss_funcB, loss_funcC]:
                 embedding_angles = [0, 20, 40, 60, 80]
                 embeddings = torch.tensor(
                     [c_f.angle_to_coord(a) for a in embedding_angles],

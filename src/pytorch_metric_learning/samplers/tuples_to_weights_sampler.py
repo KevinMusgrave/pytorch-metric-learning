@@ -1,5 +1,3 @@
-import logging
-
 import numpy as np
 import torch
 from torch.utils.data.sampler import Sampler
@@ -25,7 +23,7 @@ class TuplesToWeightsSampler(Sampler):
         return len(self.dataset)
 
     def __iter__(self):
-        logging.info("Computing embeddings in {}".format(self.__class__.__name__))
+        c_f.LOGGER.info("Computing embeddings in {}".format(self.__class__.__name__))
 
         if self.subset_size:
             indices = c_f.safe_random_choice(

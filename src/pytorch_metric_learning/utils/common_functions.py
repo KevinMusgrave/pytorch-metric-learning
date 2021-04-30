@@ -8,8 +8,17 @@ import numpy as np
 import scipy.stats
 import torch
 
+LOGGER_NAME = "PML"
+LOGGER = logging.getLogger(LOGGER_NAME)
 NUMPY_RANDOM = np.random
 COLLECT_STATS = True
+
+
+def set_logger_name(name):
+    global LOGGER_NAME
+    global LOGGER
+    LOGGER_NAME = name
+    LOGGER = logging.getLogger(LOGGER_NAME)
 
 
 class Identity(torch.nn.Module):
@@ -338,9 +347,9 @@ def operate_on_dict_of_models(
         try:
             operation(k, v, model_path)
             if log_if_successful:
-                logging.info("%s %s" % (logging_string, model_path))
+                LOGGER.info("%s %s" % (logging_string, model_path))
         except IOError:
-            logging.warning("Could not %s %s" % (logging_string, model_path))
+            LOGGER.warning("Could not %s %s" % (logging_string, model_path))
             if assert_success:
                 raise IOError
 

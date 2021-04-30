@@ -1,6 +1,5 @@
 #! /usr/bin/env python3
 
-import logging
 
 import torch
 from sklearn.metrics import adjusted_mutual_info_score, normalized_mutual_info_score
@@ -398,7 +397,7 @@ class AccuracyCalculator:
 
             knn_labels = reference_labels[knn_indices]
             if not any(not_lone_query_mask):
-                logging.warning("None of the query labels are in the reference set.")
+                c_f.LOGGER.warning("None of the query labels are in the reference set.")
             kwargs["label_counts"] = label_counts
             kwargs["knn_labels"] = knn_labels
             kwargs["knn_distances"] = knn_distances

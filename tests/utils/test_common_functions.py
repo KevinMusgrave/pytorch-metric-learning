@@ -1,3 +1,4 @@
+import logging
 import unittest
 
 import torch
@@ -45,6 +46,17 @@ class TestCommonFunctions(unittest.TestCase):
         # correct shapes
         labels = labels.squeeze(1)
         self.assertTrue(torch.is_tensor(loss_fn(embeddings, labels)))
+
+    def test_logger(self):
+        logging.basicConfig()
+        for name in [None, "some_random_name"]:
+            if name is not None:
+                c_f.set_logger_name(name)
+                self.assertTrue(c_f.LOGGER_NAME == name)
+            for level in range(0, 60, 10):
+                logging.getLogger(c_f.LOGGER_NAME).setLevel(level)
+                self.assertTrue(c_f.LOGGER.level == level)
+                self.assertTrue(logging.getLogger().level == logging.WARNING)
 
 
 if __name__ == "__main__":

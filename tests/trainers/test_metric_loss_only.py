@@ -17,7 +17,8 @@ from pytorch_metric_learning.utils import logging_presets
 
 from .. import TEST_DEVICE, TEST_DTYPES
 
-logging.getLogger().setLevel(logging.INFO)
+logging.basicConfig()
+logging.getLogger(c_f.LOGGER_NAME).setLevel(logging.INFO)
 
 
 class TestMetricLossOnly(unittest.TestCase):

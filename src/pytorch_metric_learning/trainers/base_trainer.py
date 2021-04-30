@@ -1,5 +1,3 @@
-import logging
-
 import torch
 import tqdm
 
@@ -82,7 +80,7 @@ class BaseTrainer:
         self.initialize_dataloader()
         for self.epoch in range(start_epoch, num_epochs + 1):
             self.set_to_train()
-            logging.info("TRAINING EPOCH %d" % self.epoch)
+            c_f.LOGGER.info("TRAINING EPOCH %d" % self.epoch)
             pbar = tqdm.tqdm(range(self.iterations_per_epoch))
             for self.iteration in pbar:
                 self.forward_and_backward()
@@ -95,7 +93,7 @@ class BaseTrainer:
                 break
 
     def initialize_dataloader(self):
-        logging.info("Initializing dataloader")
+        c_f.LOGGER.info("Initializing dataloader")
         self.dataloader = c_f.get_train_dataloader(
             self.dataset,
             self.batch_size,
@@ -105,9 +103,9 @@ class BaseTrainer:
         )
         if not self.iterations_per_epoch:
             self.iterations_per_epoch = len(self.dataloader)
-        logging.info("Initializing dataloader iterator")
+        c_f.LOGGER.info("Initializing dataloader iterator")
         self.dataloader_iter = iter(self.dataloader)
-        logging.info("Done creating dataloader iterator")
+        c_f.LOGGER.info("Done creating dataloader iterator")
 
     def forward_and_backward(self):
         self.zero_losses()
@@ -285,7 +283,7 @@ class BaseTrainer:
         obj = getattr(self, obj_name, None)
         if obj in [None, {}]:
             if warn_if_empty:
-                logging.warning("%s is empty" % obj_name)
+                c_f.LOGGER.warning("%s is empty" % obj_name)
         else:
             for k in obj.keys():
                 assert any(
@@ -293,7 +291,7 @@ class BaseTrainer:
                 ), "%s keys must be one of %s" % (obj_name, ", ".join(allowed_keys))
             for imp_key in important_keys:
                 if not any(c_f.regex_wrapper(imp_key).match(k) for k in obj):
-                    logging.warning('%s is missing "%s"' % (obj_name, imp_key))
+                    c_f.LOGGER.warning('%s is missing "%s"' % (obj_name, imp_key))
             for ess_key in essential_keys:
                 assert any(
                     c_f.regex_wrapper(ess_key).match(k) for k in obj
@@ -388,7 +386,7 @@ class BaseTrainer:
                 ", ".join(self.allowed_freeze_these_keys())
             )
             if k + "_optimizer" in self.optimizers.keys():
-                logging.warning(
+                c_f.LOGGER.warning(
                     "You have passed in an optimizer for {}, but are freezing its parameters.".format(
                         k
                     )

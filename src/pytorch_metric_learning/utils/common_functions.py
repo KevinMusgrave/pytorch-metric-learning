@@ -306,7 +306,7 @@ def modelpath_creator(folder, basename, identifier, extension=".pth"):
         return os.path.join(folder, "%s_%s%s" % (basename, str(identifier), extension))
 
 
-def save_model(model, model_name, filepath):
+def save_model(model, filepath):
     if any(
         isinstance(model, x)
         for x in [torch.nn.DataParallel, torch.nn.parallel.DistributedDataParallel]
@@ -345,7 +345,7 @@ def operate_on_dict_of_models(
     for k, v in input_dict.items():
         model_path = modelpath_creator(folder, k, suffix)
         try:
-            operation(k, v, model_path)
+            operation(v, model_path)
             if log_if_successful:
                 LOGGER.info("%s %s" % (logging_string, model_path))
         except IOError:
@@ -355,21 +355,21 @@ def operate_on_dict_of_models(
 
 
 def save_dict_of_models(input_dict, suffix, folder, **kwargs):
-    def operation(k, v, model_path):
-        save_model(v, k, model_path)
+    def operation(v, model_path):
+        save_model(v, model_path)
 
     operate_on_dict_of_models(input_dict, suffix, folder, operation, "SAVE", **kwargs)
 
 
 def load_dict_of_models(input_dict, suffix, folder, device, **kwargs):
-    def operation(k, v, model_path):
+    def operation(v, model_path):
         load_model(v, model_path, device)
 
     operate_on_dict_of_models(input_dict, suffix, folder, operation, "LOAD", **kwargs)
 
 
 def delete_dict_of_models(input_dict, suffix, folder, **kwargs):
-    def operation(k, v, model_path):
+    def operation(v, model_path):
         if os.path.exists(model_path):
             os.remove(model_path)
 

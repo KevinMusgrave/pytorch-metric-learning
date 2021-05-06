@@ -312,7 +312,7 @@ class BaseTrainer:
     def allowed_mining_funcs_keys(self):
         return ["subset_batch_miner", "tuple_miner"]
 
-    def allowed_lr_scheduers_keys(self):
+    def allowed_lr_schedulers_keys(self):
         return [
             x + y
             for y in self.allowed_lr_scheduler_key_suffixes.values()
@@ -360,7 +360,7 @@ class BaseTrainer:
 
     def verify_lr_schedulers_keys(self):
         self._verify_dict_keys(
-            "lr_schedulers", self.allowed_lr_scheduers_keys(), warn_if_empty=False
+            "lr_schedulers", self.allowed_lr_schedulers_keys(), warn_if_empty=False
         )
 
     def verify_loss_weights_keys(self):

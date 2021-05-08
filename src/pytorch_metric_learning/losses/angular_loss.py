@@ -23,9 +23,9 @@ class AngularLoss(BaseMetricLossFunction):
         self.add_to_recordable_attributes(list_of_names=["alpha"], is_stat=False)
         self.add_to_recordable_attributes(list_of_names=["average_angle"], is_stat=True)
 
-    def compute_loss(self, embeddings, labels, indices_tuple):
+    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
         anchors, positives, keep_mask, anchor_idx = self.get_pairs(
-            embeddings, labels, indices_tuple
+            embeddings, labels, indices_tuple, ref_emb, ref_labels
         )
         if anchors is None:
             return self.zero_losses()
@@ -33,7 +33,7 @@ class AngularLoss(BaseMetricLossFunction):
         sq_tan_alpha = torch.tan(self.alpha) ** 2
         ap_dot = torch.sum(anchors * positives, dim=1, keepdim=True)
         ap_matmul_embeddings = torch.matmul(
-            (anchors + positives), (embeddings.unsqueeze(2))
+            (anchors + positives), (ref_emb.unsqueeze(2))
         )
         ap_matmul_embeddings = ap_matmul_embeddings.squeeze(2).t()
 
@@ -49,23 +49,23 @@ class AngularLoss(BaseMetricLossFunction):
             }
         }
 
-    def get_pairs(self, embeddings, labels, indices_tuple):
-        a1, p, a2, _ = lmu.convert_to_pairs(indices_tuple, labels)
+    def get_pairs(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+        a1, p, a2, _ = lmu.convert_to_pairs(indices_tuple, labels, ref_labels)
         if len(a1) == 0 or len(a2) == 0:
             return [None] * 4
         anchors = self.distance.normalize(embeddings[a1])
-        positives = self.distance.normalize(embeddings[p])
-        keep_mask = labels[a1].unsqueeze(1) != labels.unsqueeze(0)
-        self.set_stats(anchors, positives, embeddings, keep_mask)
+        positives = self.distance.normalize(ref_emb[p])
+        keep_mask = labels[a1].unsqueeze(1) != ref_labels.unsqueeze(0)
+        self.set_stats(anchors, positives, embeddings, ref_emb, keep_mask)
         return anchors, positives, keep_mask, a1
 
-    def set_stats(self, anchors, positives, embeddings, keep_mask):
+    def set_stats(self, anchors, positives, embeddings, ref_emb, keep_mask):
         if self.collect_stats:
             with torch.no_grad():
                 centers = (anchors + positives) / 2
                 ap_dist = self.distance.pairwise_distance(anchors, positives)
                 nc_dist = self.distance.get_norm(
-                    centers - embeddings.unsqueeze(1), dim=2
+                    centers - ref_emb.unsqueeze(1), dim=2
                 ).t()
                 angles = torch.atan(ap_dist.unsqueeze(1) / (2 * nc_dist))
                 average_angle = torch.sum(angles[keep_mask]) / torch.sum(keep_mask)

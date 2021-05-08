@@ -69,9 +69,7 @@ class CrossBatchMemory(ModuleWithRecords):
             indices_tuple,
             do_remove_self_comparisons,
         )
-        combined_embeddings = torch.cat([embeddings, E_mem], dim=0)
-        combined_labels = torch.cat([labels, L_mem], dim=0)
-        loss = self.loss(combined_embeddings, combined_labels, indices_tuple)
+        loss = self.loss(embeddings, labels, indices_tuple, E_mem, L_mem)
         return loss
 
     def add_to_memory(self, embeddings, labels, batch_size):

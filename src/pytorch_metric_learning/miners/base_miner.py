@@ -23,20 +23,12 @@ class BaseMiner(ModuleWithRecordsAndDistance):
         with torch.no_grad():
             c_f.check_shapes(embeddings, labels)
             labels = c_f.to_device(labels, embeddings)
-            ref_emb, ref_labels = self.set_ref_emb(
+            ref_emb, ref_labels = c_f.set_ref_emb(
                 embeddings, labels, ref_emb, ref_labels
             )
             mining_output = self.mine(embeddings, labels, ref_emb, ref_labels)
         self.output_assertion(mining_output)
         return mining_output
-
-    def set_ref_emb(self, embeddings, labels, ref_emb, ref_labels):
-        if ref_emb is not None:
-            ref_labels = c_f.to_device(ref_labels, ref_emb)
-        else:
-            ref_emb, ref_labels = embeddings, labels
-        c_f.check_shapes(ref_emb, ref_labels)
-        return ref_emb, ref_labels
 
 
 class BaseTupleMiner(BaseMiner):

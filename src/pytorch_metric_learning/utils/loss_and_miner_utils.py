@@ -47,7 +47,7 @@ def get_all_pairs_indices(labels, ref_labels=None):
     return a1_idx, p_idx, a2_idx, n_idx
 
 
-def convert_to_pairs(indices_tuple, labels):
+def convert_to_pairs(indices_tuple, labels, ref_labels=None):
     """
     This returns anchor-positive and anchor-negative indices,
     regardless of what the input indices_tuple is
@@ -57,7 +57,7 @@ def convert_to_pairs(indices_tuple, labels):
         labels: a tensor which has the label for each element in a batch
     """
     if indices_tuple is None:
-        return get_all_pairs_indices(labels)
+        return get_all_pairs_indices(labels, ref_labels)
     elif len(indices_tuple) == 4:
         return indices_tuple
     else:

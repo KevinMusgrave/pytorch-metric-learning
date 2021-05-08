@@ -495,3 +495,12 @@ def to_device(x, tensor=None, device=None, dtype=None):
     if dtype is not None:
         x = to_dtype(x, dtype=dtype)
     return x
+
+
+def set_ref_emb(embeddings, labels, ref_emb, ref_labels):
+    if ref_emb is not None:
+        ref_labels = to_device(ref_labels, ref_emb)
+    else:
+        ref_emb, ref_labels = embeddings, labels
+    check_shapes(ref_emb, ref_labels)
+    return ref_emb, ref_labels

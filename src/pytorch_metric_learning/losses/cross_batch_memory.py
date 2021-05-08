@@ -104,8 +104,6 @@ class CrossBatchMemory(ModuleWithRecords):
         if do_remove_self_comparisons:
             indices_tuple = self.remove_self_comparisons(indices_tuple)
 
-        indices_tuple = c_f.shift_indices_tuple(indices_tuple, batch_size)
-
         if input_indices_tuple is not None:
             if len(input_indices_tuple) == 3 and len(indices_tuple) == 4:
                 input_indices_tuple = lmu.convert_to_pairs(input_indices_tuple, labels)

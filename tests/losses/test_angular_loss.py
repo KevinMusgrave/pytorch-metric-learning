@@ -7,6 +7,7 @@ from pytorch_metric_learning.losses import AngularLoss
 from pytorch_metric_learning.utils import common_functions as c_f
 
 from .. import TEST_DEVICE, TEST_DTYPES
+from .utils import get_triplet_embeddings_with_ref
 
 
 class TestAngularLoss(unittest.TestCase):
@@ -37,28 +38,13 @@ class TestAngularLoss(unittest.TestCase):
 
     def test_angular_loss_with_ref(self):
         for dtype in TEST_DTYPES:
-            embeddings = torch.randn(
-                4, 32, requires_grad=True, device=TEST_DEVICE, dtype=dtype
-            )
-            embeddings = torch.nn.functional.normalize(embeddings)
-            labels = torch.LongTensor([0, 0, 1, 1])
-
-            ref_emb = torch.randn(
-                3, 32, requires_grad=True, device=TEST_DEVICE, dtype=dtype
-            )
-            ref_emb = torch.nn.functional.normalize(ref_emb)
-            ref_labels = torch.LongTensor([0, 1, 2])
-
-            triplets = [
-                (0, 0, 1),
-                (0, 0, 2),
-                (1, 0, 1),
-                (1, 0, 2),
-                (2, 1, 0),
-                (2, 1, 2),
-                (3, 1, 0),
-                (3, 1, 2),
-            ]
+            (
+                embeddings,
+                labels,
+                ref_emb,
+                ref_labels,
+                triplets,
+            ) = get_triplet_embeddings_with_ref(dtype, TEST_DEVICE)
 
             self.helper(embeddings, labels, triplets, dtype, ref_emb, ref_labels)
 

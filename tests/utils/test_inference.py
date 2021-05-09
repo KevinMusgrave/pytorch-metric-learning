@@ -1,5 +1,7 @@
+import os
 import unittest
 
+import faiss
 import torch
 import torchvision
 from torchvision import datasets, transforms
@@ -14,7 +16,6 @@ class TestInference(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         trunk = torchvision.models.resnet18(pretrained=True)
-        cls.emb_dim = trunk.fc.in_features
         trunk.fc = common_functions.Identity()
         trunk = torch.nn.DataParallel(trunk.to(TEST_DEVICE))
 
@@ -34,6 +35,8 @@ class TestInference(unittest.TestCase):
             size=200, image_size=(3, 64, 64), transform=transform
         )
 
+        cls.train_vectors = [cls.dataset[i][0] for i in range(len(cls.dataset))]
+
     @classmethod
     def tearDown(self):
         torch.cuda.empty_cache()
@@ -44,21 +47,34 @@ class TestInference(unittest.TestCase):
             inference_model.get_nearest_neighbors(self.dataset[0][0], k=10)
 
     def test_get_nearest_neighbors(self):
+        test_filename = "test_inference.index"
+        for indexer_input in [self.train_vectors, self.dataset]:
+            for load_from_file in [False, True]:
+                inference_model = InferenceModel(trunk=self.model)
+                if load_from_file:
+                    inference_model.load_index(test_filename)
+                else:
+                    inference_model.train_indexer(indexer_input)
+                    inference_model.save_index(test_filename)
+
+                self.helper_assertions(inference_model)
+
+        os.remove(test_filename)
+
+    def test_add_to_indexer(self):
         inference_model = InferenceModel(trunk=self.model)
-        train_vectors = [self.dataset[i][0] for i in range(len(self.dataset))]
-        for indexer_input in [train_vectors, self.dataset]:
-            inference_model.train_indexer(indexer_input, self.emb_dim)
+        inference_model.indexer.index = faiss.IndexFlatL2(512)
+        inference_model.add_to_indexer(self.dataset)
+        self.helper_assertions(inference_model)
 
-            self.assertTrue(inference_model.indexer.index.is_trained)
-
-            indices, distances = inference_model.get_nearest_neighbors(
-                [train_vectors[0]], k=10
-            )
-            # The closest image is the query itself
-            self.assertTrue(indices[0][0] == 0)
-            self.assertTrue(len(indices) == 1)
-            self.assertTrue(len(distances) == 1)
-            self.assertTrue(len(indices[0]) == 10)
-            self.assertTrue(len(distances[0]) == 10)
-
-            self.assertTrue((indices != -1).any())
+    def helper_assertions(self, inference_model):
+        self.assertTrue(inference_model.indexer.index.is_trained)
+        indices, distances = inference_model.get_nearest_neighbors(
+            [self.train_vectors[0]], k=10
+        )
+        # The closest image is the query itself
+        self.assertTrue(indices[0][0] == 0)
+        self.assertTrue(len(indices) == 1)
+        self.assertTrue(len(distances) == 1)
+        self.assertTrue(len(indices[0]) == 10)
+        self.assertTrue(len(distances[0]) == 10)

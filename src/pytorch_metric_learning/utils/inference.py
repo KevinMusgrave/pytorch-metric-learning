@@ -49,21 +49,28 @@ class MatchFinder:
 
 
 class FaissIndexer:
-    def __init__(self, index=None, emb_dim=None):
+    def __init__(self, index=None):
         import faiss as faiss_module
 
         self.faiss_module = faiss_module
         self.index = index
-        self.emb_dim = emb_dim
 
-    def train_index(self, vectors):
-        self.emb_dim = len(vectors[0])
-        self.index = self.faiss_module.IndexFlatL2(self.emb_dim)
-        self.index.add(vectors)
+    def train_index(self, embeddings):
+        self.index = self.faiss_module.IndexFlatL2(embeddings.shape[1])
+        self.add_to_index(embeddings)
+
+    def add_to_index(self, embeddings):
+        self.index.add(embeddings)
 
     def search_nn(self, query_batch, k):
         D, I = self.index.search(query_batch, k)
         return I, D
+
+    def save(self, filename):
+        self.faiss_module.write_index(self.index, filename)
+
+    def load(self, filename):
+        self.index = self.faiss_module.read_index(filename)
 
 
 class InferenceModel:
@@ -85,7 +92,7 @@ class InferenceModel:
         self.indexer = FaissIndexer() if indexer is None else indexer
         self.normalize_embeddings = normalize_embeddings
 
-    def train_indexer(self, inputs, batch_size=64):
+    def get_embeddings_from_tensor_or_dataset(self, inputs, batch_size):
         if isinstance(inputs, list):
             inputs = torch.stack(inputs)
 
@@ -98,9 +105,16 @@ class InferenceModel:
             for inp, _ in dataloader:
                 embeddings.append(self.get_embeddings(inp))
         else:
-            raise TypeError("Indexing {} is not supported.".format(type(inputs)))
-        embeddings = torch.cat(embeddings)
+            raise TypeError(f"Indexing {type(inputs)} is not supported.")
+        return torch.cat(embeddings)
+
+    def train_indexer(self, inputs, batch_size=64):
+        embeddings = self.get_embeddings_from_tensor_or_dataset(inputs, batch_size)
         self.indexer.train_index(embeddings.cpu().numpy())
+
+    def add_to_indexer(self, inputs, batch_size=64):
+        embeddings = self.get_embeddings_from_tensor_or_dataset(inputs, batch_size)
+        self.indexer.add_to_index(embeddings.cpu().numpy())
 
     def get_nearest_neighbors(self, query, k):
         if not self.indexer.index or not self.indexer.index.is_trained:
@@ -138,6 +152,12 @@ class InferenceModel:
         x = self.get_embeddings(x)
         y = self.get_embeddings(y)
         return self.match_finder.is_match(x, y, threshold)
+
+    def save_index(self, filename):
+        self.indexer.save(filename)
+
+    def load_index(self, filename):
+        self.indexer.load(filename)
 
 
 class LogitGetter(torch.nn.Module):

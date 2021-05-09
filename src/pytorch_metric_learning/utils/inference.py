@@ -74,7 +74,6 @@ class InferenceModel:
         match_finder=None,
         normalize_embeddings=True,
         indexer=None,
-        batch_size=64,
     ):
         self.trunk = trunk
         self.embedder = c_f.Identity() if embedder is None else embedder
@@ -85,18 +84,24 @@ class InferenceModel:
         )
         self.indexer = FaissIndexer() if indexer is None else indexer
         self.normalize_embeddings = normalize_embeddings
-        self.batch_size = batch_size
 
-    def train_indexer(self, tensors, emb_dim):
-        if isinstance(tensors, list):
-            tensors = torch.stack(tensors)
+    def train_indexer(self, inputs, batch_size=64):
+        if isinstance(inputs, list):
+            inputs = torch.stack(inputs)
 
-        embeddings = torch.Tensor(len(tensors), emb_dim)
-        for i in range(0, len(tensors), self.batch_size):
-            embeddings[i : i + self.batch_size] = self.get_embeddings(
-                tensors[i : i + self.batch_size], None
-            )[0]
-
+        embeddings = []
+        if torch.is_tensor(inputs):
+            for i in range(0, len(inputs), batch_size):
+                embeddings.append(
+                    self.get_embeddings(inputs[i : i + batch_size], None)[0]
+                )
+        elif isinstance(inputs, torch.utils.data.Dataset):
+            dataloader = torch.utils.data.DataLoader(inputs, batch_size=batch_size)
+            for inp, _ in dataloader:
+                embeddings.append(self.get_embeddings(inp, None)[0])
+        else:
+            raise TypeError("Indexing {} is not supported.".format(type(inputs)))
+        embeddings = torch.cat(embeddings)
         self.indexer.train_index(embeddings.cpu().numpy())
 
     def get_nearest_neighbors(self, query, k):

@@ -45,20 +45,20 @@ class TestInference(unittest.TestCase):
 
     def test_get_nearest_neighbors(self):
         inference_model = InferenceModel(trunk=self.model)
-
         train_vectors = [self.dataset[i][0] for i in range(len(self.dataset))]
-        inference_model.train_indexer(train_vectors, self.emb_dim)
+        for indexer_input in [train_vectors, self.dataset]:
+            inference_model.train_indexer(indexer_input, self.emb_dim)
 
-        self.assertTrue(inference_model.indexer.index.is_trained)
+            self.assertTrue(inference_model.indexer.index.is_trained)
 
-        indices, distances = inference_model.get_nearest_neighbors(
-            [train_vectors[0]], k=10
-        )
-        # The closest image is the query itself
-        self.assertTrue(indices[0][0] == 0)
-        self.assertTrue(len(indices) == 1)
-        self.assertTrue(len(distances) == 1)
-        self.assertTrue(len(indices[0]) == 10)
-        self.assertTrue(len(distances[0]) == 10)
+            indices, distances = inference_model.get_nearest_neighbors(
+                [train_vectors[0]], k=10
+            )
+            # The closest image is the query itself
+            self.assertTrue(indices[0][0] == 0)
+            self.assertTrue(len(indices) == 1)
+            self.assertTrue(len(distances) == 1)
+            self.assertTrue(len(indices[0]) == 10)
+            self.assertTrue(len(distances[0]) == 10)
 
-        self.assertTrue((indices != -1).any())
+            self.assertTrue((indices != -1).any())

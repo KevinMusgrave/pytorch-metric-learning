@@ -412,7 +412,7 @@ def angle_to_coord(angle):
 
 
 def check_shapes(embeddings, labels):
-    if embeddings.size(0) != labels.size(0):
+    if embeddings.shape[0] != labels.shape[0]:
         raise ValueError("Number of embeddings must equal number of labels")
     if embeddings.ndim != 2:
         raise ValueError(
@@ -511,3 +511,18 @@ def set_ref_emb(embeddings, labels, ref_emb, ref_labels):
 def ref_not_supported(embeddings, labels, ref_emb, ref_labels):
     if ref_emb is not embeddings or ref_labels is not labels:
         raise ValueError("ref_emb is not supported for this loss function")
+
+
+def concatenate_indices_tuples(it1, it2):
+    return tuple([torch.cat([x, to_device(y, x)], dim=0) for x, y in zip(it1, it2)])
+
+
+def merge_loss_dicts(x, y):
+    if x.keys() != y.keys():
+        raise KeyError("Input loss dicts must have the same keys")
+    for k, v in x.items():
+        curr_y = y[k]
+        v["losses"] = torch.cat([v["losses"], curr_y["losses"]], dim=0)
+        v["indices"] = concatenate_indices_tuples(v["indices"], curr_y["indices"])
+        if curr_y["reduction_type"] != "already_reduced":
+            v["reduction_type"] = curr_y["reduction_type"]

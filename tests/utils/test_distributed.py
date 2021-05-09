@@ -14,8 +14,6 @@ from pytorch_metric_learning.utils import distributed
 
 from .. import TEST_DEVICE, TEST_DTYPES, WITH_COLLECT_STATS
 
-TEST_DEVICE = torch.device("cpu")
-TEST_DTYPES = [torch.float32]
 
 # https://discuss.pytorch.org/t/check-if-models-have-same-weights/4351
 def parameters_are_equal(model1, model2):
@@ -89,13 +87,18 @@ def single_process_function(
         loss_optimizer = optim.SGD(loss_fn.parameters(), lr=lr)
         loss_optimizer.zero_grad()
 
-    miner_fn = distributed.DistributedMinerWrapper(miner=miner_fn)
+    if miner_fn:
+        miner_fn = distributed.DistributedMinerWrapper(miner=miner_fn)
 
     optimizer = optim.SGD(ddp_mp_model.parameters(), lr=lr)
     optimizer.zero_grad()
     outputs = ddp_mp_model(inputs[rank].to(device))
-    indices_tuple = miner_fn(outputs, labels[rank])
+    indices_tuple = None
+    if miner_fn:
+        indices_tuple = miner_fn(outputs, labels[rank])
     loss = loss_fn(outputs, labels[rank], indices_tuple)
+
+    print(f"rank {rank} loss {loss}")
 
     dist.barrier()
     loss.backward()
@@ -138,7 +141,7 @@ class TestDistributedLossWrapper(unittest.TestCase):
         else:
             max_world_size = 2
         for dtype in TEST_DTYPES:
-            for world_size in range(1, max_world_size + 1):
+            for world_size in range(2, max_world_size + 1):
                 batch_size = 20
                 lr = 1
                 inputs = [
@@ -163,7 +166,7 @@ class TestDistributedLossWrapper(unittest.TestCase):
                     loss_optimizer = optim.SGD(original_loss_fn.parameters(), lr=lr)
                     loss_optimizer.zero_grad()
 
-                if miner_class is not None:
+                if miner_class:
                     original_miner_fn = miner_class()
                     miner_fn = miner_class()
                 else:
@@ -176,10 +179,10 @@ class TestDistributedLossWrapper(unittest.TestCase):
                 all_labels = torch.cat(labels, dim=0).to(TEST_DEVICE)
                 all_outputs = original_model(all_inputs)
                 indices_tuple = None
-                if original_miner_fn is not None:
+                if original_miner_fn:
                     indices_tuple = original_miner_fn(all_ouputs, all_labels)
                 loss = original_loss_fn(all_outputs, all_labels, indices_tuple)
-                loss.backward(retain_graph=True)
+                loss.backward()
                 optimizer.step()
                 if not is_tuple_loss:
                     loss_optimizer.step()

@@ -111,11 +111,8 @@ class CrossBatchMemory(ModuleWithRecords):
                 input_indices_tuple = lmu.convert_to_triplets(
                     input_indices_tuple, labels
                 )
-            indices_tuple = tuple(
-                [
-                    torch.cat([x, c_f.to_device(y, x)], dim=0)
-                    for x, y in zip(indices_tuple, input_indices_tuple)
-                ]
+            indices_tuple = c_f.concatenate_indices_tuples(
+                indices_tuple, input_indices_tuple
             )
 
         return indices_tuple

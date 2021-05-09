@@ -10,53 +10,48 @@ def is_distributed():
 
 
 # modified from https://github.com/JohnGiorgi/DeCLUTR
-def all_gather(embeddings, labels):
+def all_gather(x):
+    world_size = torch.distributed.get_world_size()
+    rank = torch.distributed.get_rank()
+    x_list = [torch.ones_like(x) for _ in range(world_size)]
+    torch.distributed.all_gather(x_list, x.contiguous())
+    del x_list[rank]
+    return torch.cat(x_list, dim=0)
+
+
+# modified from https://github.com/JohnGiorgi/DeCLUTR
+def all_gather_embeddings_and_labels(embeddings, labels):
     labels = c_f.to_device(labels, embeddings)
     # If we are not using distributed training, this is a no-op.
     if not is_distributed():
-        return embeddings, labels
-    world_size = torch.distributed.get_world_size()
-    rank = torch.distributed.get_rank()
-    # Gather the embeddings on all replicas
-    embeddings_list = [torch.ones_like(embeddings) for _ in range(world_size)]
-    labels_list = [torch.ones_like(labels) for _ in range(world_size)]
-    torch.distributed.all_gather(embeddings_list, embeddings.contiguous())
-    torch.distributed.all_gather(labels_list, labels.contiguous())
-    # The gathered copy of the current replicas embeddings have no gradients, so we overwrite
-    # them with the embeddings generated on this replica, which DO have gradients.
-    embeddings_list[rank] = embeddings
-    labels_list[rank] = labels
-    # Finally, we concatenate the embeddings
-    embeddings = torch.cat(embeddings_list)
-    labels = torch.cat(labels_list)
-    return embeddings, labels
+        return None, None
+    ref_emb = all_gather(embeddings)
+    ref_labels = all_gather(labels)
+    return ref_emb, ref_labels
 
 
-def all_gather_embeddings_labels(embeddings, labels):
-    if c_f.is_list_or_tuple(embeddings):
-        assert c_f.is_list_or_tuple(labels)
-        all_embeddings, all_labels = [], []
-        for i in range(len(embeddings)):
-            E, L = all_gather(embeddings[i], labels[i])
-            all_embeddings.append(E)
-            all_labels.append(L)
-        embeddings = torch.cat(all_embeddings, dim=0)
-        labels = torch.cat(all_labels, dim=0)
-    else:
-        embeddings, labels = all_gather(embeddings, labels)
-
-    return embeddings, labels
+def gather_and_concat(embeddings, labels, ref_emb, ref_labels):
+    dist_ref_emb, dist_ref_labels = all_gather_embeddings_and_labels(embeddings, labels)
+    if None not in [dist_ref_emb, ref_emb]:
+        dist_ref_emb = torch.cat([dist_ref_emb, ref_emb], dim=0)
+        dist_ref_labels = torch.cat([dist_ref_labels, ref_labels], dim=0)
+    return dist_ref_emb, dist_ref_labels
 
 
 class DistributedLossWrapper(torch.nn.Module):
-    def __init__(self, loss, **kwargs):
+    def __init__(self, loss):
         super().__init__()
-        has_parameters = len([p for p in loss.parameters()]) > 0
-        self.loss = DDP(loss, **kwargs) if has_parameters else loss
+        self.loss = loss
 
-    def forward(self, embeddings, labels, *args, **kwargs):
-        embeddings, labels = all_gather_embeddings_labels(embeddings, labels)
-        return self.loss(embeddings, labels, *args, **kwargs)
+    def forward(
+        self, embeddings, labels, indices_tuple=None, ref_emb=None, ref_labels=None
+    ):
+        dist_ref_emb, dist_ref_labels = gather_and_concat(
+            embeddings, labels, ref_emb, ref_labels
+        )
+        return self.loss(
+            embeddings, labels, indices_tuple, dist_ref_emb, dist_ref_labels
+        )
 
 
 class DistributedMinerWrapper(torch.nn.Module):
@@ -65,7 +60,7 @@ class DistributedMinerWrapper(torch.nn.Module):
         self.miner = miner
 
     def forward(self, embeddings, labels, ref_emb=None, ref_labels=None):
-        embeddings, labels = all_gather_embeddings_labels(embeddings, labels)
-        if ref_emb is not None:
-            ref_emb, ref_labels = all_gather_embeddings_labels(ref_emb, ref_labels)
-        return self.miner(embeddings, labels, ref_emb, ref_labels)
+        dist_ref_emb, dist_ref_labels = gather_and_concat(
+            embeddings, labels, ref_emb, ref_labels
+        )
+        return self.miner(embeddings, labels, dist_ref_emb, dist_ref_labels)

@@ -141,7 +141,7 @@ class InferenceModel:
     def get_matches(self, query, ref=None, threshold=None, return_tuples=False):
         query_emb = self.get_embeddings(query)
         ref_emb = query_emb
-        if ref is None:
+        if ref is not None:
             ref_emb = self.get_embeddings(ref)
         return self.match_finder.get_matching_pairs(
             query_emb, ref_emb, threshold, return_tuples

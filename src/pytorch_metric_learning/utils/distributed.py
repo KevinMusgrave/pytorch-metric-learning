@@ -49,9 +49,10 @@ class DistributedLossWrapper(torch.nn.Module):
         dist_ref_emb, dist_ref_labels = gather_and_concat(
             embeddings, labels, ref_emb, ref_labels
         )
-        return self.loss(
+        loss = self.loss(
             embeddings, labels, indices_tuple, dist_ref_emb, dist_ref_labels
         )
+        return loss * torch.distributed.get_world_size()
 
 
 class DistributedMinerWrapper(torch.nn.Module):

@@ -178,16 +178,18 @@ def matched_size_indices(curr_p_idx, curr_n_idx):
     return p_idx, n_idx
 
 
-def convert_to_triplets(indices_tuple, labels, t_per_anchor=100):
+def convert_to_triplets(indices_tuple, labels, ref_labels=None, t_per_anchor=100):
     """
     This returns anchor-positive-negative triplets
     regardless of what the input indices_tuple is
     """
     if indices_tuple is None:
         if t_per_anchor == "all":
-            return get_all_triplets_indices(labels)
+            return get_all_triplets_indices(labels, ref_labels)
         else:
-            return get_random_triplet_indices(labels, t_per_anchor=t_per_anchor)
+            return get_random_triplet_indices(
+                labels, ref_labels, t_per_anchor=t_per_anchor
+            )
     elif len(indices_tuple) == 3:
         return indices_tuple
     else:

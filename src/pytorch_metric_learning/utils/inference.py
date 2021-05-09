@@ -2,7 +2,6 @@ import copy
 
 import numpy as np
 import torch
-from torch.utils import data
 
 from ..distances import CosineSimilarity
 from . import common_functions as c_f
@@ -94,25 +93,20 @@ class InferenceModel:
         if torch.is_tensor(inputs):
             for i in range(0, len(inputs), batch_size):
                 embeddings.append(
-                    self.get_embeddings(
-                        inputs[i: i + batch_size], None
-                    )[0]
+                    self.get_embeddings(inputs[i : i + batch_size], None)[0]
                 )
-        elif isinstance(inputs, data.Dataset):
-            dataloader = data.DataLoader(inputs, batch_size=batch_size)
-            for inp in dataloader:
+        elif isinstance(inputs, torch.utils.data.Dataset):
+            dataloader = torch.utils.data.DataLoader(inputs, batch_size=batch_size)
+            for inp, _ in dataloader:
                 embeddings.append(self.get_embeddings(inp, None)[0])
         else:
-            raise TypeError(
-                'Indexing {} is not supported.'.format(type(inputs))
-            )
+            raise TypeError("Indexing {} is not supported.".format(type(inputs)))
         embeddings = torch.cat(embeddings)
         self.indexer.train_index(embeddings.cpu().numpy())
 
     def get_nearest_neighbors(self, query, k):
         if not self.indexer.index or not self.indexer.index.is_trained:
-            raise RuntimeError(
-                "Index must be trained by running `train_indexer`")
+            raise RuntimeError("Index must be trained by running `train_indexer`")
 
         query_emb, _ = self.get_embeddings(query, None)
 
@@ -127,8 +121,7 @@ class InferenceModel:
         self.embedder.eval()
         with torch.no_grad():
             query_emb = self.embedder(self.trunk(query))
-            ref_emb = query_emb if ref is None else self.embedder(
-                self.trunk(ref))
+            ref_emb = query_emb if ref is None else self.embedder(self.trunk(ref))
         if self.normalize_embeddings:
             query_emb = torch.nn.functional.normalize(query_emb, p=2, dim=1)
             ref_emb = torch.nn.functional.normalize(ref_emb, p=2, dim=1)

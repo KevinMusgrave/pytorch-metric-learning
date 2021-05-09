@@ -92,13 +92,11 @@ class InferenceModel:
         embeddings = []
         if torch.is_tensor(inputs):
             for i in range(0, len(inputs), batch_size):
-                embeddings.append(
-                    self.get_embeddings(inputs[i : i + batch_size], None)[0]
-                )
+                embeddings.append(self.get_embeddings(inputs[i : i + batch_size]))
         elif isinstance(inputs, torch.utils.data.Dataset):
             dataloader = torch.utils.data.DataLoader(inputs, batch_size=batch_size)
             for inp, _ in dataloader:
-                embeddings.append(self.get_embeddings(inp, None)[0])
+                embeddings.append(self.get_embeddings(inp))
         else:
             raise TypeError("Indexing {} is not supported.".format(type(inputs)))
         embeddings = torch.cat(embeddings)
@@ -108,35 +106,37 @@ class InferenceModel:
         if not self.indexer.index or not self.indexer.index.is_trained:
             raise RuntimeError("Index must be trained by running `train_indexer`")
 
-        query_emb, _ = self.get_embeddings(query, None)
+        query_emb = self.get_embeddings(query)
 
         indices, distances = self.indexer.search_nn(query_emb.cpu().numpy(), k)
         return indices, distances
 
-    def get_embeddings(self, query, ref):
-        if isinstance(query, list):
-            query = torch.stack(query)
+    def get_embeddings(self, x):
+        if isinstance(x, list):
+            x = torch.stack(x)
 
         self.trunk.eval()
         self.embedder.eval()
         with torch.no_grad():
-            query_emb = self.embedder(self.trunk(query))
-            ref_emb = query_emb if ref is None else self.embedder(self.trunk(ref))
+            x_emb = self.embedder(self.trunk(x))
         if self.normalize_embeddings:
-            query_emb = torch.nn.functional.normalize(query_emb, p=2, dim=1)
-            ref_emb = torch.nn.functional.normalize(ref_emb, p=2, dim=1)
-        return query_emb, ref_emb
+            x_emb = torch.nn.functional.normalize(x_emb, p=2, dim=1)
+        return x_emb
 
     # for a batch of queries
     def get_matches(self, query, ref=None, threshold=None, return_tuples=False):
-        query_emb, ref_emb = self.get_embeddings(query, ref)
+        query_emb = self.get_embeddings(query)
+        ref_emb = query_emb
+        if ref is None:
+            ref_emb = self.get_embeddings(ref)
         return self.match_finder.get_matching_pairs(
             query_emb, ref_emb, threshold, return_tuples
         )
 
     # where x and y are already matched pairs
     def is_match(self, x, y, threshold=None):
-        x, y = self.get_embeddings(x, y)
+        x = self.get_embeddings(x)
+        y = self.get_embeddings(y)
         return self.match_finder.is_match(x, y, threshold)
 
 

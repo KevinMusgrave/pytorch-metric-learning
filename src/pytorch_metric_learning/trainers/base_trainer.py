@@ -1,9 +1,9 @@
 import torch
-from ..utils.schema import Schema, SchemaDict
 import tqdm
 
 from ..utils import common_functions as c_f
 from ..utils import loss_tracker as l_t
+from ..utils.key_checker import KeyChecker, KeyCheckerDict
 
 
 class BaseTrainer:
@@ -259,7 +259,11 @@ class BaseTrainer:
             self.models["embedder"] = c_f.Identity()
 
     def verify_dict_keys(self):
-        self.allowed_lr_scheduler_key_suffixes = {"iteration": "_scheduler_by_iteration", "epoch": "_scheduler_by_epoch", "plateau": "_scheduler_by_plateau"}
+        self.allowed_lr_scheduler_key_suffixes = {
+            "iteration": "_scheduler_by_iteration",
+            "epoch": "_scheduler_by_epoch",
+            "plateau": "_scheduler_by_plateau",
+        }
         self.set_schema()
         self.schema.verify(self)
         self.verify_freeze_these_keys()
@@ -268,31 +272,46 @@ class BaseTrainer:
         pass
 
     def set_schema(self):
-        self.schema = SchemaDict({
-            'models': Schema(['trunk', 'embedder'], essential=['trunk']),
-            'loss_funcs': Schema(['metric_loss']),
-            'mining_funcs': Schema(['subset_batch_miner', 'tuple_miner'],
-                warn_empty=False, important=[]),
-            'loss_weights': Schema(self.loss_names, warn_empty=False,
-                essential=self.loss_names),
-            'optimizers': Schema(
-                lambda s, d: c_f.append_map(
-                    d['models'].keys + d['loss_funcs'].keys, "_optimizer"),
-                important=c_f.append_map(self.models.keys(), "_optimizer")),
-            'lr_schedulers': Schema(
-                lambda s, d: [x + y
-                    for y in self.allowed_lr_scheduler_key_suffixes.values()
-                    for x in d['models'].keys + d['loss_funcs'].keys],
-                warn_empty=False, important=[]),
-            'gradient_clippers': Schema(
-                lambda s, d: c_f.append_map(
-                    d['models'].keys + d['loss_funcs'].keys, "_grad_clipper"),
-                warn_empty=False, important=[]),
-        })
+        self.schema = KeyCheckerDict(
+            {
+                "models": KeyChecker(["trunk", "embedder"], essential=["trunk"]),
+                "loss_funcs": KeyChecker(["metric_loss"]),
+                "mining_funcs": KeyChecker(
+                    ["subset_batch_miner", "tuple_miner"],
+                    warn_empty=False,
+                    important=[],
+                ),
+                "loss_weights": KeyChecker(
+                    self.loss_names, warn_empty=False, essential=self.loss_names
+                ),
+                "optimizers": KeyChecker(
+                    lambda s, d: c_f.append_map(
+                        d["models"].keys + d["loss_funcs"].keys, "_optimizer"
+                    ),
+                    important=c_f.append_map(self.models.keys(), "_optimizer"),
+                ),
+                "lr_schedulers": KeyChecker(
+                    lambda s, d: [
+                        x + y
+                        for y in self.allowed_lr_scheduler_key_suffixes.values()
+                        for x in d["models"].keys + d["loss_funcs"].keys
+                    ],
+                    warn_empty=False,
+                    important=[],
+                ),
+                "gradient_clippers": KeyChecker(
+                    lambda s, d: c_f.append_map(
+                        d["models"].keys + d["loss_funcs"].keys, "_grad_clipper"
+                    ),
+                    warn_empty=False,
+                    important=[],
+                ),
+            }
+        )
         self.modify_schema()
 
     def verify_freeze_these_keys(self):
-        allowed_keys = self.schema['models'].keys + self.schema['loss_funcs'].keys
+        allowed_keys = self.schema["models"].keys + self.schema["loss_funcs"].keys
         for k in self.freeze_these:
             assert (
                 k in self.allowed_freeze_these_keys()

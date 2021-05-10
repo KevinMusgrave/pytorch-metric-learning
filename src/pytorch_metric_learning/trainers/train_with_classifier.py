@@ -29,5 +29,5 @@ class TrainWithClassifier(MetricLossOnly):
         return None
 
     def modify_schema(self):
-        self.schema['models'].keys += ['classifier']
-        self.schema['loss_funcs'].keys += ['classifier_loss']
+        self.schema["models"].keys += ["classifier"]
+        self.schema["loss_funcs"].keys += ["classifier_loss"]

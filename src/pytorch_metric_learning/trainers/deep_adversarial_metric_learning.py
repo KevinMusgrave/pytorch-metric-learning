@@ -172,8 +172,8 @@ class DeepAdversarialMetricLearning(TrainWithClassifier):
 
     def modify_schema(self):
         super().modify_schema()
-        self.schema['models'].keys += ['generator']
-        self.schema['models'].essential += ['generator']
-        self.schema['loss_funcs'].keys += ['synth_loss', 'g_adv_loss']
-        self.schema['loss_funcs'].essential += ['synth_loss', 'g_adv_loss']
-        self.schema['mining_funcs'].keys += ['synth_packaged_as_triplets']
+        self.schema["models"].keys += ["generator"]
+        self.schema["models"].essential += ["generator"]
+        self.schema["loss_funcs"].keys += ["synth_loss", "g_adv_loss"]
+        self.schema["loss_funcs"].essential += ["synth_loss", "g_adv_loss"]
+        self.schema["mining_funcs"].keys += ["synth_packaged_as_triplets"]

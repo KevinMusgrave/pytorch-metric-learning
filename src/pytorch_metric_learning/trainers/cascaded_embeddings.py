@@ -69,6 +69,9 @@ class CascadedEmbeddings(BaseTrainer):
         return 0
 
     def modify_schema(self):
-        self.schema['models'].keys += ['classifier_[0-9]+']
-        self.schema['loss_funcs'].keys = ['metric_loss_[0-9]+', 'classifier_loss_[0-9]+']
-        self.schema['mining_funcs'].keys = ["tuple_miner_[0-9]+"]
+        self.schema["models"].keys += ["classifier_[0-9]+"]
+        self.schema["loss_funcs"].keys = [
+            "metric_loss_[0-9]+",
+            "classifier_loss_[0-9]+",
+        ]
+        self.schema["mining_funcs"].keys = ["tuple_miner_[0-9]+"]

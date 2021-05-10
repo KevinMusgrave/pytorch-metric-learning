@@ -63,6 +63,11 @@
 
 ## News
 
+**May 9**: v0.9.99 includes:
+- [HierarchicalSampler](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#hierarchicalsampler)
+- Improvements to logging, trainer key-verification, and InferenceModel
+- See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.99)
+
 **April 2**: v0.9.98 includes:
 - [SupConLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#supconloss)
 - A bug fix for compatibility with autocast
@@ -74,8 +79,6 @@
 - Efficiency improvement for [AccuracyCalculator](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/), by using torch instead of numpy
 - [UniformHistogramMiner](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#uniformhistogramminer), which is like DistanceWeightedMiner except that it works well with high dimensional embeddings, and with any distance metric.
 - See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.97) for details.
-
-**January 12**: v0.9.96 greatly increases the flexibility of the [testers](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/) and [AccuracyCalculator](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/). See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.96)
 
 ## Documentation
 - [**View the documentation here**](https://kevinmusgrave.github.io/pytorch-metric-learning/)

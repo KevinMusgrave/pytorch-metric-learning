@@ -575,31 +575,15 @@
                 <h1 id="distributed">Distributed<a class="headerlink" href="#distributed" title="Permanent link">&para;</a></h1>
 <p>Wrap a loss or miner with these when using PyTorch's <a href="https://pytorch.org/tutorials/intermediate/ddp_tutorial.html">DistributedDataParallel</a> (i.e. multiprocessing).</p>
 <h2 id="distributedlosswrapper">DistributedLossWrapper<a class="headerlink" href="#distributedlosswrapper" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="n">utils</span><span class="o">.</span><span class="n">distributed</span><span class="o">.</span><span class="n">DistributedLossWrapper</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="codehilite"><pre><span></span><code><span class="n">utils</span><span class="o">.</span><span class="n">distributed</span><span class="o">.</span><span class="n">DistributedLossWrapper</span><span class="p">(</span><span class="n">loss</span><span class="p">)</span>
 </code></pre></div>
 
-<p>The <code>**kwargs</code> allow you to pass in arguments which will be fed to <code>DistributedDataParallel</code>. This is used only if the loss function has trainable parameters (e.g. ArcFaceLoss).</p>
-<p>Example usage for a loss <strong>without</strong> parameters:</p>
+<p>Example usage:</p>
 <div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">losses</span>
 <span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils</span> <span class="kn">import</span> <span class="n">distributed</span> <span class="k">as</span> <span class="n">pml_dist</span>
 
 <span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">ContrastiveLoss</span><span class="p">()</span>
-<span class="n">loss_func</span> <span class="o">=</span> <span class="n">pml_dist</span><span class="o">.</span><span class="n">DistributedLossWrapper</span><span class="p">(</span><span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">)</span>
-
-<span class="c1"># in each process during training</span>
-<span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
-</code></pre></div>
-
-<p>Example usage for a loss <strong>with</strong> parameters:</p>
-<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">losses</span>
-<span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils</span> <span class="kn">import</span> <span class="n">distributed</span> <span class="k">as</span> <span class="n">pml_dist</span>
-
-<span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">ArcFaceLoss</span><span class="p">(</span><span class="n">num_classes</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span> <span class="n">embedding_size</span> <span class="o">=</span> <span class="mi">512</span><span class="p">)</span>
-
-<span class="c1"># Pass in the rank of the process</span>
-<span class="c1"># The loss function will be wrapped with DistributedDataParallel</span>
-<span class="c1"># And device_ids = [rank] will be passed into the init</span>
-<span class="n">loss_func</span> <span class="o">=</span> <span class="n">pml_dist</span><span class="o">.</span><span class="n">DistributedLossWrapper</span><span class="p">(</span><span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">,</span> <span class="n">device_ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">rank</span><span class="p">])</span>
+<span class="n">loss_func</span> <span class="o">=</span> <span class="n">pml_dist</span><span class="o">.</span><span class="n">DistributedLossWrapper</span><span class="p">(</span><span class="n">loss_func</span><span class="p">)</span>
 
 <span class="c1"># in each process during training</span>
 <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>

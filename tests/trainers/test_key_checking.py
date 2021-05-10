@@ -36,6 +36,7 @@ class TestMetricLossOnly(unittest.TestCase):
             model_dict = {"trunk": model}
             optimizer_dict = {"trunk_optimizer": None}
             loss_fn_dict = {"metric_loss": loss_fn}
+            lr_scheduler_dict = {"trunk_scheduler_by_iteration": None}
 
             if trainer_class is DeepAdversarialMetricLearning:
                 model_dict["generator"] = model
@@ -50,11 +51,18 @@ class TestMetricLossOnly(unittest.TestCase):
                 "mining_funcs": {},
                 "dataset": dataset,
                 "freeze_these": ["trunk"],
+                "lr_schedulers": lr_scheduler_dict,
             }
 
             trainer = trainer_class(**kwargs)
 
-            for k in ["models", "mining_funcs", "loss_funcs", "freeze_these"]:
+            for k in [
+                "models",
+                "mining_funcs",
+                "loss_funcs",
+                "freeze_these",
+                "lr_schedulers",
+            ]:
                 new_kwargs = copy.deepcopy(kwargs)
                 if k == "models":
                     new_kwargs[k] = {}
@@ -67,6 +75,8 @@ class TestMetricLossOnly(unittest.TestCase):
                         continue
                 if k == "freeze_these":
                     new_kwargs[k] = ["frog"]
+                if k == "lr_schedulers":
+                    new_kwargs[k] = {"trunk_scheduler": None}
                 with self.assertRaises(AssertionError):
                     trainer = trainer_class(**new_kwargs)
 

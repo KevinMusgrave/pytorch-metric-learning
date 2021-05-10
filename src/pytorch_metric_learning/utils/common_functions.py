@@ -495,3 +495,11 @@ def to_device(x, tensor=None, device=None, dtype=None):
     if dtype is not None:
         x = to_dtype(x, dtype=dtype)
     return x
+
+
+def exclude(it, targets):
+    return [x for x in it if x not in targets]
+
+
+def append_map(it, suf):
+    return [x + suf for x in it]

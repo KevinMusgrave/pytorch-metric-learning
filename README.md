@@ -83,6 +83,8 @@
 ## Documentation
 - [**View the documentation here**](https://kevinmusgrave.github.io/pytorch-metric-learning/)
 - [**View the installation instructions here**](https://github.com/KevinMusgrave/pytorch-metric-learning#installation)
+- [**View the available losses, miners etc. here**](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/CONTENTS.md) 
+
 
 ## Google Colab Examples
 See the [examples folder](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/README.md) for notebooks you can download or run on Google Colab.
@@ -231,8 +233,6 @@ conda install pytorch-metric-learning -c metric-learning -c pytorch
 
 **To use the testing module, you'll need faiss, which can be installed via conda as well. See the [installation instructions for faiss](https://github.com/facebookresearch/faiss/blob/master/INSTALL.md).**
 
-## Library contents
-See the [contents page](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/CONTENTS.md)
 
 ## Benchmark results
 See [powerful-benchmarker](https://github.com/KevinMusgrave/powerful-benchmarker/) to view benchmark results and to use the benchmarking tool.

@@ -281,10 +281,9 @@ class BaseTrainer:
         essential_keys=(),
     ):
         obj = getattr(self, obj_name, None)
-        if obj in [None, {}]:
-            if warn_if_empty:
-                c_f.LOGGER.warning("%s is empty" % obj_name)
-        else:
+        if warn_if_empty and obj in [None, {}]:
+            c_f.LOGGER.warning("%s is empty" % obj_name)
+        if obj is not None:
             for k in obj.keys():
                 assert any(
                     pattern.match(k) for pattern in c_f.regex_wrapper(allowed_keys)
@@ -332,7 +331,7 @@ class BaseTrainer:
         self._verify_dict_keys(
             "models",
             self.allowed_model_keys(),
-            warn_if_empty=True,
+            warn_if_empty=False,
             essential_keys=["trunk"],
             important_keys=[x for x in self.allowed_model_keys() if x != "trunk"],
         )

@@ -313,10 +313,8 @@ class BaseTrainer:
     def verify_freeze_these_keys(self):
         allowed_keys = self.schema["models"].keys + self.schema["loss_funcs"].keys
         for k in self.freeze_these:
-            assert (
-                k in self.allowed_freeze_these_keys()
-            ), "freeze_these keys must be one of {}".format(
-                ", ".join(self.allowed_freeze_these_keys())
+            assert k in allowed_keys, "freeze_these keys must be one of {}".format(
+                ", ".join(allowed_keys)
             )
             if k + "_optimizer" in self.optimizers.keys():
                 c_f.LOGGER.warning(

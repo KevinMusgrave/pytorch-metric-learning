@@ -49,11 +49,12 @@ class TestMetricLossOnly(unittest.TestCase):
                 "loss_funcs": loss_fn_dict,
                 "mining_funcs": {},
                 "dataset": dataset,
+                "freeze_these": ["trunk"],
             }
 
             trainer = trainer_class(**kwargs)
 
-            for k in ["models", "mining_funcs", "loss_funcs"]:
+            for k in ["models", "mining_funcs", "loss_funcs", "freeze_these"]:
                 new_kwargs = copy.deepcopy(kwargs)
                 if k == "models":
                     new_kwargs[k] = {}
@@ -64,6 +65,8 @@ class TestMetricLossOnly(unittest.TestCase):
                         new_kwargs[k] = {}
                     else:
                         continue
+                if k == "freeze_these":
+                    new_kwargs[k] = ["frog"]
                 with self.assertRaises(AssertionError):
                     trainer = trainer_class(**new_kwargs)
 

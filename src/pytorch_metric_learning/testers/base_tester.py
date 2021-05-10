@@ -1,42 +1,49 @@
 #! /usr/bin/env python3
 
-import tqdm
-import torch
-import numpy as np
-from ..utils import stat_utils
-from ..utils import common_functions as c_f
-from ..utils import AccuracyCalculator
-import logging
-from sklearn.preprocessing import normalize, StandardScaler
+
 from collections import defaultdict
+
+import torch
+import tqdm
+
+from ..utils import common_functions as c_f
+from ..utils import stat_utils
+from ..utils.accuracy_calculator import AccuracyCalculator
+
 
 class BaseTester:
     def __init__(
-        self, 
-        reference_set="compared_to_self", 
-        normalize_embeddings=True, 
-        use_trunk_output=False, 
-        batch_size=32, 
-        dataloader_num_workers=32, 
-        pca=None, 
-        data_device=None,  
-        data_and_label_getter=None, 
-        label_hierarchy_level=0, 
+        self,
+        normalize_embeddings=True,
+        use_trunk_output=False,
+        batch_size=32,
+        dataloader_num_workers=32,
+        pca=None,
+        data_device=None,
+        dtype=None,
+        data_and_label_getter=None,
+        label_hierarchy_level=0,
         end_of_testing_hook=None,
         dataset_labels=None,
         set_min_label_to_zero=False,
         accuracy_calculator=None,
         visualizer=None,
-        visualizer_hook=None
+        visualizer_hook=None,
     ):
-        self.reference_set = reference_set
         self.normalize_embeddings = normalize_embeddings
         self.pca = int(pca) if pca else None
         self.use_trunk_output = use_trunk_output
         self.batch_size = int(batch_size)
-        self.data_device = torch.device("cuda" if torch.cuda.is_available() else "cpu") if data_device is None else data_device
+        self.data_device = (
+            torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            if data_device is None
+            else data_device
+        )
+        self.dtype = dtype
         self.dataloader_num_workers = dataloader_num_workers
-        self.data_and_label_getter = c_f.return_input if data_and_label_getter is None else data_and_label_getter
+        self.data_and_label_getter = (
+            c_f.return_input if data_and_label_getter is None else data_and_label_getter
+        )
         self.label_hierarchy_level = label_hierarchy_level
         self.end_of_testing_hook = end_of_testing_hook
         self.dataset_labels = dataset_labels
@@ -45,10 +52,13 @@ class BaseTester:
         self.visualizer = visualizer
         self.original_visualizer_hook = visualizer_hook
         self.initialize_label_mapper()
-        self.initialize_accuracy_calculator()         
+        self.initialize_accuracy_calculator()
+        self.reference_split_names = {}
 
     def initialize_label_mapper(self):
-        self.label_mapper = c_f.LabelMapper(self.set_min_label_to_zero, self.dataset_labels).map
+        self.label_mapper = c_f.LabelMapper(
+            self.set_min_label_to_zero, self.dataset_labels
+        ).map
 
     def initialize_accuracy_calculator(self):
         if self.accuracy_calculator is None:
@@ -60,14 +70,13 @@ class BaseTester:
 
     def maybe_normalize(self, embeddings):
         if self.pca:
-            for_pca = StandardScaler().fit_transform(embeddings)
+            for_pca = c_f.torch_standard_scaler(embeddings)
             embeddings = stat_utils.run_pca(for_pca, self.pca)
         if self.normalize_embeddings:
-            embeddings = normalize(embeddings)
+            embeddings = torch.nn.functional.normalize(embeddings)
         return embeddings
 
     def compute_all_embeddings(self, dataloader, trunk_model, embedder_model):
-        num_batches = len(dataloader)
         s, e = 0, 0
         with torch.no_grad():
             for i, data in enumerate(tqdm.tqdm(dataloader)):
@@ -77,60 +86,95 @@ class BaseTester:
                 if label.dim() == 1:
                     label = label.unsqueeze(1)
                 if i == 0:
-                    labels = torch.zeros(len(dataloader.dataset), label.size(1))
-                    all_q = torch.zeros(len(dataloader.dataset), q.size(1))
+                    labels = torch.zeros(
+                        len(dataloader.dataset),
+                        label.size(1),
+                        device=self.data_device,
+                        dtype=label.dtype,
+                    )
+                    all_q = torch.zeros(
+                        len(dataloader.dataset),
+                        q.size(1),
+                        device=self.data_device,
+                        dtype=q.dtype,
+                    )
                 e = s + q.size(0)
                 all_q[s:e] = q
                 labels[s:e] = label
                 s = e
-            labels = labels.cpu().numpy()
-            all_q = all_q.cpu().numpy()
-
         return all_q, labels
 
-    def get_all_embeddings(self, dataset, trunk_model, embedder_model=None, collate_fn=None, eval=True):
-        if embedder_model is None: embedder_model = c_f.Identity()
+    def get_all_embeddings(
+        self,
+        dataset,
+        trunk_model,
+        embedder_model=None,
+        collate_fn=None,
+        eval=True,
+        return_as_numpy=False,
+    ):
+        if embedder_model is None:
+            embedder_model = c_f.Identity()
         if eval:
             trunk_model.eval()
             embedder_model.eval()
-        dataloader = c_f.get_eval_dataloader(dataset, self.batch_size, self.dataloader_num_workers, collate_fn)
-        embeddings, labels = self.compute_all_embeddings(dataloader, trunk_model, embedder_model)
+        dataloader = c_f.get_eval_dataloader(
+            dataset, self.batch_size, self.dataloader_num_workers, collate_fn
+        )
+        embeddings, labels = self.compute_all_embeddings(
+            dataloader, trunk_model, embedder_model
+        )
         embeddings = self.maybe_normalize(embeddings)
+        if return_as_numpy:
+            return embeddings.cpu().numpy(), labels.cpu().numpy()
         return embeddings, labels
 
     def get_embeddings_for_eval(self, trunk_model, embedder_model, input_imgs):
-        trunk_output = trunk_model(input_imgs.to(self.data_device))
+        input_imgs = c_f.to_device(
+            input_imgs, device=self.data_device, dtype=self.dtype
+        )
+        trunk_output = trunk_model(input_imgs)
         if self.use_trunk_output:
             return trunk_output
         return embedder_model(trunk_output)
 
     def maybe_visualize(self, embeddings_and_labels, epoch):
-        self.dim_reduced_embeddings = defaultdict(dict)
         if self.visualizer:
             visualizer_name = self.visualizer.__class__.__name__
             for split_name, (embeddings, labels) in embeddings_and_labels.items():
-                logging.info("Running {} on the {} set".format(visualizer_name, split_name))
-                dim_reduced = self.visualizer.fit_transform(embeddings)
-                logging.info("Finished {}".format(visualizer_name))
+                c_f.LOGGER.info(
+                    "Running {} on the {} set".format(visualizer_name, split_name)
+                )
+                dim_reduced = self.visualizer.fit_transform(embeddings.cpu().numpy())
+                c_f.LOGGER.info("Finished {}".format(visualizer_name))
                 for L in self.label_levels_to_evaluate(labels):
-                    label_scheme = labels[:, L]
-                    keyname = self.accuracies_keyname(visualizer_name, label_hierarchy_level=L)
-                    self.dim_reduced_embeddings[split_name][keyname] = (dim_reduced, label_scheme)
-                    self.visualizer_hook(self.visualizer, dim_reduced, label_scheme, split_name, keyname, epoch)
+                    label_scheme = labels[:, L].cpu().numpy()
+                    keyname = self.accuracies_keyname(
+                        visualizer_name, label_hierarchy_level=L
+                    )
+                    self.visualizer_hook(
+                        self.visualizer,
+                        dim_reduced,
+                        label_scheme,
+                        split_name,
+                        keyname,
+                        epoch,
+                    )
 
     def description_suffixes(self, base_name):
         if self.pca:
-            base_name += "_pca%d"%self.pca
+            base_name += "_pca%d" % self.pca
         if self.normalize_embeddings:
             base_name += "_normalized"
         if self.use_trunk_output:
             base_name += "_trunk"
-        base_name += "_"+self.reference_set
-        base_name += "_"+self.__class__.__name__
-        base_name += "_level_"+self.label_hierarchy_level_to_str(self.label_hierarchy_level)
+        base_name += "_" + self.__class__.__name__
+        base_name += "_level_" + self.label_hierarchy_level_to_str(
+            self.label_hierarchy_level
+        )
         accuracy_calculator_descriptor = self.accuracy_calculator.description()
         if accuracy_calculator_descriptor != "":
-            base_name += "_"+accuracy_calculator_descriptor
+            base_name += "_" + accuracy_calculator_descriptor
         return base_name
 
     def label_hierarchy_level_to_str(self, label_hierarchy_level):
@@ -141,31 +185,32 @@ class BaseTester:
 
     def accuracies_keyname(self, metric, label_hierarchy_level=0, average=False):
         if average:
-            return "AVERAGE_%s"%metric
-        if (label_hierarchy_level=="all" or c_f.is_list_or_tuple(label_hierarchy_level)) and len(self.label_levels) == 1:
+            return "AVERAGE_%s" % metric
+        if (
+            label_hierarchy_level == "all"
+            or c_f.is_list_or_tuple(label_hierarchy_level)
+        ) and len(self.label_levels) == 1:
             label_hierarchy_level = self.label_levels[0]
-        return "%s_level%s"%(metric, self.label_hierarchy_level_to_str(label_hierarchy_level))
+        return "%s_level%s" % (
+            metric,
+            self.label_hierarchy_level_to_str(label_hierarchy_level),
+        )
 
-    def all_splits_combined(self, embeddings_and_labels):
-        eee, lll = list(zip(*list(embeddings_and_labels.values())))
-        curr_embeddings = np.concatenate(eee, axis=0)
-        curr_labels = np.concatenate(lll, axis=0)
+    def maybe_combine_splits(self, embeddings_and_labels, splits):
+        to_combine = {split: embeddings_and_labels[split] for split in splits}
+        eee, lll = list(zip(*list(to_combine.values())))
+        curr_embeddings = torch.cat(eee, dim=0)
+        curr_labels = torch.cat(lll, dim=0)
         return curr_embeddings, curr_labels
 
-    def set_reference_and_query(self, embeddings_and_labels, curr_split):
-        query_embeddings, query_labels = embeddings_and_labels[curr_split]
-        if self.reference_set == "compared_to_self":
-            reference_embeddings, reference_labels = query_embeddings, query_labels
-        elif self.reference_set == "compared_to_sets_combined":
-            reference_embeddings, reference_labels = self.all_splits_combined(embeddings_and_labels)
-        elif self.reference_set == "compared_to_training_set":
-            reference_embeddings, reference_labels = embeddings_and_labels["train"]
-        else:
-            raise BaseException 
+    def set_reference_and_query(
+        self, embeddings_and_labels, query_split_name, reference_split_names
+    ):
+        query_embeddings, query_labels = embeddings_and_labels[query_split_name]
+        reference_embeddings, reference_labels = self.maybe_combine_splits(
+            embeddings_and_labels, reference_split_names
+        )
         return query_embeddings, query_labels, reference_embeddings, reference_labels
-
-    def embeddings_come_from_same_source(self, embeddings_and_labels):
-        return self.reference_set in ["compared_to_self", "compared_to_sets_combined"]
 
     def label_levels_to_evaluate(self, query_labels):
         num_levels_available = query_labels.shape[1]
@@ -188,33 +233,82 @@ class BaseTester:
             accuracies[keyname] = summed_accuracy / len(label_levels)
 
     def get_splits_to_compute_embeddings(self, dataset_dict, splits_to_eval):
-        splits_to_eval = list(dataset_dict.keys()) if splits_to_eval is None else splits_to_eval
-        if self.reference_set in ["compared_to_self", "compared_to_sets_combined"]:
-            return splits_to_eval, splits_to_eval
-        if self.reference_set == "compared_to_training_set":
-            return splits_to_eval, list(set(splits_to_eval).add("train"))
+        if splits_to_eval is None:
+            splits_to_eval = [(k, [k]) for k in dataset_dict]
+        query_splits = [t[0] for t in splits_to_eval]
+        assert len(query_splits) == len(
+            set(query_splits)
+        ), "Unsupported: Evaluating a query split more than once"
+        splits_to_compute_embeddings = set()
+        for query_split, reference_splits in splits_to_eval:
+            splits_to_compute_embeddings.update(reference_splits + [query_split])
+        return splits_to_eval, list(splits_to_compute_embeddings)
 
-    def get_all_embeddings_for_all_splits(self, dataset_dict, trunk_model, embedder_model, splits_to_compute_embeddings, collate_fn):
+    def get_all_embeddings_for_all_splits(
+        self,
+        dataset_dict,
+        trunk_model,
+        embedder_model,
+        splits_to_compute_embeddings,
+        collate_fn,
+    ):
         embeddings_and_labels = {}
         for split_name in splits_to_compute_embeddings:
-            logging.info('Getting embeddings for the %s split'%split_name)
-            embeddings_and_labels[split_name] = self.get_all_embeddings(dataset_dict[split_name], trunk_model, embedder_model, collate_fn)
+            c_f.LOGGER.info("Getting embeddings for the %s split" % split_name)
+            embeddings_and_labels[split_name] = self.get_all_embeddings(
+                dataset_dict[split_name], trunk_model, embedder_model, collate_fn
+            )
         return embeddings_and_labels
 
-    def do_knn_and_accuracies(self, accuracies, embeddings_and_labels, split_name):
+    def do_knn_and_accuracies(
+        self, accuracies, embeddings_and_labels, query_split_name, reference_split_names
+    ):
         raise NotImplementedError
 
-    def test(self, dataset_dict, epoch, trunk_model, embedder_model=None, splits_to_eval=None, collate_fn=None, **kwargs):
-        logging.info("Evaluating epoch %d" % epoch)
-        if embedder_model is None: embedder_model = c_f.Identity()
+    def embeddings_come_from_same_source(self, query_split_name, reference_split_names):
+        return query_split_name in reference_split_names
+
+    def test(
+        self,
+        dataset_dict,
+        epoch,
+        trunk_model,
+        embedder_model=None,
+        splits_to_eval=None,
+        collate_fn=None,
+    ):
+        c_f.LOGGER.info("Evaluating epoch {}".format(epoch))
+        if embedder_model is None:
+            embedder_model = c_f.Identity()
         trunk_model.eval()
         embedder_model.eval()
-        splits_to_eval, splits_to_compute_embeddings = self.get_splits_to_compute_embeddings(dataset_dict, splits_to_eval)
-        self.embeddings_and_labels = self.get_all_embeddings_for_all_splits(dataset_dict, trunk_model, embedder_model, splits_to_compute_embeddings, collate_fn)
+        (
+            splits_to_eval,
+            splits_to_compute_embeddings,
+        ) = self.get_splits_to_compute_embeddings(dataset_dict, splits_to_eval)
+        self.embeddings_and_labels = self.get_all_embeddings_for_all_splits(
+            dataset_dict,
+            trunk_model,
+            embedder_model,
+            splits_to_compute_embeddings,
+            collate_fn,
+        )
         self.maybe_visualize(self.embeddings_and_labels, epoch)
         self.all_accuracies = defaultdict(dict)
-        for split_name in splits_to_eval:
-            logging.info('Computing accuracy for the %s split'%split_name)
-            self.all_accuracies[split_name]["epoch"] = epoch 
-            self.do_knn_and_accuracies(self.all_accuracies[split_name], self.embeddings_and_labels, split_name)
-        self.end_of_testing_hook(self) if self.end_of_testing_hook else logging.info(self.all_accuracies)
+        for query_split_name, reference_split_names in splits_to_eval:
+            c_f.LOGGER.info(
+                f"Computing accuracy for the {query_split_name} split w.r.t {reference_split_names}"
+            )
+            self.all_accuracies[query_split_name]["epoch"] = epoch
+            self.reference_split_names[query_split_name] = reference_split_names
+            self.do_knn_and_accuracies(
+                self.all_accuracies[query_split_name],
+                self.embeddings_and_labels,
+                query_split_name,
+                reference_split_names,
+            )
+        self.end_of_testing_hook(self) if self.end_of_testing_hook else c_f.LOGGER.info(
+            self.all_accuracies
+        )
+        del self.embeddings_and_labels
+        return self.all_accuracies

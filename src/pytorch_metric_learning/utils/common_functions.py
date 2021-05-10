@@ -1,13 +1,25 @@
 import collections
-import torch
-import numpy as np
-import os
-import logging
 import glob
-import scipy.stats
+import logging
+import os
 import re
 
+import numpy as np
+import scipy.stats
+import torch
+
+LOGGER_NAME = "PML"
+LOGGER = logging.getLogger(LOGGER_NAME)
 NUMPY_RANDOM = np.random
+COLLECT_STATS = True
+
+
+def set_logger_name(name):
+    global LOGGER_NAME
+    global LOGGER
+    LOGGER_NAME = name
+    LOGGER = logging.getLogger(LOGGER_NAME)
+
 
 class Identity(torch.nn.Module):
     def __init__(self):
@@ -15,6 +27,18 @@ class Identity(torch.nn.Module):
 
     def forward(self, x):
         return x
+
+
+def pos_inf(dtype):
+    return torch.finfo(dtype).max
+
+
+def neg_inf(dtype):
+    return torch.finfo(dtype).min
+
+
+def small_val(dtype):
+    return torch.finfo(dtype).tiny
 
 
 def is_list_or_tuple(x):
@@ -32,8 +56,9 @@ def try_next_on_generator(gen, iterable):
 def numpy_to_torch(v):
     try:
         return torch.from_numpy(v)
-    except AttributeError:
+    except TypeError:
         return v
+
 
 def to_numpy(v):
     if is_list_or_tuple(v):
@@ -67,33 +92,44 @@ def map_labels(label_map, labels):
         labels = label_map(labels, 0)
     return labels
 
+
 def process_label(labels, hierarchy_level, label_map):
     labels = map_labels(label_map, labels)
     labels = get_hierarchy_label(labels, hierarchy_level)
     labels = numpy_to_torch(labels)
     return labels
 
+
 def set_requires_grad(model, requires_grad):
     for param in model.parameters():
         param.requires_grad = requires_grad
 
+
 def shift_indices_tuple(indices_tuple, batch_size):
     """
     Shifts indices of positives and negatives of pairs or triplets by batch_size
-    
+
     if len(indices_tuple) != 3 or len(indices_tuple) != 4, it will return indices_tuple
     Args:
         indices_tuple is a tuple with torch.Tensor
-        batch_size is an int 
+        batch_size is an int
     Returns:
         A tuple with shifted indices
     """
 
     if len(indices_tuple) == 3:
-        indices_tuple = (indices_tuple[0],) + tuple([x+batch_size if len(x) > 0 else x for x in indices_tuple[1:]])
+        indices_tuple = (indices_tuple[0],) + tuple(
+            [x + batch_size if len(x) > 0 else x for x in indices_tuple[1:]]
+        )
     elif len(indices_tuple) == 4:
-        indices_tuple = tuple([x+batch_size if len(x) > 0 and i%2==1 else x for i,x in enumerate(indices_tuple)])
+        indices_tuple = tuple(
+            [
+                x + batch_size if len(x) > 0 and i % 2 == 1 else x
+                for i, x in enumerate(indices_tuple)
+            ]
+        )
     return indices_tuple
+
 
 def safe_random_choice(input_data, size):
     """
@@ -124,7 +160,7 @@ def slice_by_n(input_array, n):
 def unslice_by_n(input_tensors):
     n = len(input_tensors)
     rows, cols = input_tensors[0].size()
-    output = torch.zeros((rows * n, cols)).to(input_tensors[0].device)
+    output = torch.zeros((rows * n, cols), device=input_tensors[0].device)
     for i in range(n):
         output[i::n] = input_tensors[i]
     return output
@@ -135,10 +171,19 @@ def set_layers_to_eval(layer_name):
         classname = m.__class__.__name__
         if classname.find(layer_name) != -1:
             m.eval()
+
     return set_to_eval
 
 
 def get_train_dataloader(dataset, batch_size, sampler, num_workers, collate_fn):
+    if isinstance(sampler, torch.utils.data.BatchSampler):
+        return torch.utils.data.DataLoader(
+            dataset,
+            batch_sampler=sampler,
+            num_workers=num_workers,
+            collate_fn=collate_fn,
+            pin_memory=False,
+        )
     return torch.utils.data.DataLoader(
         dataset,
         batch_size=int(batch_size),
@@ -147,8 +192,9 @@ def get_train_dataloader(dataset, batch_size, sampler, num_workers, collate_fn):
         num_workers=num_workers,
         collate_fn=collate_fn,
         shuffle=sampler is None,
-        pin_memory=False
+        pin_memory=False,
     )
+
 
 def get_eval_dataloader(dataset, batch_size, num_workers, collate_fn):
     return torch.utils.data.DataLoader(
@@ -158,12 +204,12 @@ def get_eval_dataloader(dataset, batch_size, num_workers, collate_fn):
         num_workers=num_workers,
         collate_fn=collate_fn,
         shuffle=False,
-        pin_memory=False
+        pin_memory=False,
     )
 
 
 def try_torch_operation(torch_op, input_val):
-    return torch_op(input_val) if torch.is_tensor(input_val) else input_val 
+    return torch_op(input_val) if torch.is_tensor(input_val) else input_val
 
 
 def get_labels_to_indices(labels):
@@ -171,6 +217,8 @@ def get_labels_to_indices(labels):
     Creates labels_to_indices, which is a dictionary mapping each label
     to a numpy array of indices that will be used to index into self.dataset
     """
+    if torch.is_tensor(labels):
+        labels = labels.cpu().numpy()
     labels_to_indices = collections.defaultdict(list)
     for i, label in enumerate(labels):
         labels_to_indices[label].append(i)
@@ -187,21 +235,23 @@ def make_label_to_rank_dict(label_set):
     Returns:
         A dictionary mapping each label to its numeric rank in the original set
     """
-    ranked = scipy.stats.rankdata(label_set)-1
+    ranked = scipy.stats.rankdata(label_set) - 1
     return {k: v for k, v in zip(label_set, ranked)}
 
 
 def get_label_map(labels):
-    # Returns a nested dictionary. 
+    # Returns a nested dictionary.
     # First level of dictionary represents label hierarchy level.
     # Second level is the label map for that hierarchy level
     labels = np.array(labels)
     if labels.ndim == 2:
         label_map = {}
         for hierarchy_level in range(labels.shape[1]):
-            label_map[hierarchy_level] = make_label_to_rank_dict(list(set(labels[:, hierarchy_level])))
+            label_map[hierarchy_level] = make_label_to_rank_dict(
+                list(set(labels[:, hierarchy_level]))
+            )
         return label_map
-    return {0: make_label_to_rank_dict(list(set(labels)))} 
+    return {0: make_label_to_rank_dict(list(set(labels)))}
 
 
 class LabelMapper:
@@ -214,32 +264,53 @@ class LabelMapper:
         if not self.set_min_label_to_zero:
             return labels
         else:
-            return np.array([self.label_map[hierarchy_level][x] for x in labels], dtype=np.int)
-        
+            return np.array(
+                [self.label_map[hierarchy_level][x] for x in labels], dtype=np.int
+            )
 
 
-def add_to_recordable_attributes(input_obj, name=None, list_of_names=None):
-    if not hasattr(input_obj, "record_these"):
-        input_obj.record_these = []
+def add_to_recordable_attributes(
+    input_obj, name=None, list_of_names=None, is_stat=False
+):
+    if is_stat:
+        attr_name_list_name = "_record_these_stats"
+    else:
+        attr_name_list_name = "_record_these"
+    if not hasattr(input_obj, attr_name_list_name):
+        setattr(input_obj, attr_name_list_name, [])
+    attr_name_list = getattr(input_obj, attr_name_list_name)
     if name is not None:
-        if name not in input_obj.record_these:
-            input_obj.record_these.append(name)
+        if name not in attr_name_list:
+            attr_name_list.append(name)
         if not hasattr(input_obj, name):
             setattr(input_obj, name, 0)
-    if list_of_names is not None and isinstance(list_of_names, list):
+    if list_of_names is not None and is_list_or_tuple(list_of_names):
         for n in list_of_names:
-            add_to_recordable_attributes(input_obj, name=n)
+            add_to_recordable_attributes(input_obj, name=n, is_stat=is_stat)
+
+
+def reset_stats(input_obj):
+    for attr_list in ["_record_these_stats"]:
+        for r in getattr(input_obj, attr_list, []):
+            setattr(input_obj, r, 0)
+
+
+def list_of_recordable_attributes_list_names():
+    return ["_record_these", "_record_these_stats"]
 
 
 def modelpath_creator(folder, basename, identifier, extension=".pth"):
     if identifier is None:
-        return os.path.join(folder, basename+extension)
+        return os.path.join(folder, basename + extension)
     else:
         return os.path.join(folder, "%s_%s%s" % (basename, str(identifier), extension))
 
 
-def save_model(model, model_name, filepath):
-    if any(isinstance(model, x) for x in [torch.nn.DataParallel, torch.nn.parallel.DistributedDataParallel]):
+def save_model(model, filepath):
+    if any(
+        isinstance(model, x)
+        for x in [torch.nn.DataParallel, torch.nn.parallel.DistributedDataParallel]
+    ):
         torch.save(model.module.state_dict(), filepath)
     else:
         torch.save(model.state_dict(), filepath)
@@ -262,33 +333,46 @@ def load_model(model_def, model_filename, device):
         model_def.load_state_dict(new_state_dict)
 
 
-def operate_on_dict_of_models(input_dict, suffix, folder, operation, logging_string='', log_if_successful=False, assert_success=False):
+def operate_on_dict_of_models(
+    input_dict,
+    suffix,
+    folder,
+    operation,
+    logging_string="",
+    log_if_successful=False,
+    assert_success=False,
+):
     for k, v in input_dict.items():
         model_path = modelpath_creator(folder, k, suffix)
         try:
-            operation(k, v, model_path)
+            operation(v, model_path)
             if log_if_successful:
-                logging.info("%s %s"%(logging_string, model_path))
+                LOGGER.info("%s %s" % (logging_string, model_path))
         except IOError:
-            logging.warn("Could not %s %s"%(logging_string, model_path))
+            LOGGER.warning("Could not %s %s" % (logging_string, model_path))
             if assert_success:
                 raise IOError
 
+
 def save_dict_of_models(input_dict, suffix, folder, **kwargs):
-    def operation(k, v, model_path):
-        save_model(v, k, model_path)
+    def operation(v, model_path):
+        save_model(v, model_path)
+
     operate_on_dict_of_models(input_dict, suffix, folder, operation, "SAVE", **kwargs)
 
 
 def load_dict_of_models(input_dict, suffix, folder, device, **kwargs):
-    def operation(k, v, model_path):
+    def operation(v, model_path):
         load_model(v, model_path, device)
+
     operate_on_dict_of_models(input_dict, suffix, folder, operation, "LOAD", **kwargs)
 
 
 def delete_dict_of_models(input_dict, suffix, folder, **kwargs):
-    def operation(k, v, model_path):
-        if os.path.exists(model_path): os.remove(model_path)
+    def operation(v, model_path):
+        if os.path.exists(model_path):
+            os.remove(model_path)
+
     operate_on_dict_of_models(input_dict, suffix, folder, operation, "DELETE", **kwargs)
 
 
@@ -296,6 +380,7 @@ def regex_wrapper(x):
     if isinstance(x, list):
         return [re.compile(z) for z in x]
     return re.compile(x)
+
 
 def regex_replace(search, replace, contents):
     return re.sub(search, replace, contents)
@@ -305,27 +390,108 @@ def latest_version(folder, string_to_glob="trunk_*.pth", best=False):
     items = glob.glob(os.path.join(folder, string_to_glob))
     if items == []:
         return (0, None)
-    model_regex = regex_wrapper("best[0-9]+\.pth$") if best else regex_wrapper("[0-9]+\.pth$")
+    model_regex = (
+        regex_wrapper("best[0-9]+\.pth$") if best else regex_wrapper("[0-9]+\.pth$")
+    )
     epoch_regex = regex_wrapper("[0-9]+\.pth$")
     items = [x for x in items if model_regex.search(x)]
     version = [int(epoch_regex.findall(x)[-1].split(".")[0]) for x in items]
     resume_epoch = max(version)
-    suffix = "best%d"%resume_epoch if best else resume_epoch
+    suffix = "best%d" % resume_epoch if best else resume_epoch
     return resume_epoch, suffix
+
 
 def return_input(x):
     return x
+
 
 def angle_to_coord(angle):
     x = np.cos(np.radians(angle))
     y = np.sin(np.radians(angle))
     return x, y
 
-def assert_embeddings_and_labels_are_same_size(embeddings, labels):
-    assert embeddings.size(0) == labels.size(0), "Number of embeddings must equal number of labels"
 
-def exclude(it, targets):
-    return [x for x in it if x not in targets]
+def check_shapes(embeddings, labels):
+    if embeddings.size(0) != labels.size(0):
+        raise ValueError("Number of embeddings must equal number of labels")
+    if embeddings.ndim != 2:
+        raise ValueError(
+            "embeddings must be a 2D tensor of shape (batch_size, embedding_size)"
+        )
+    if labels.ndim != 1:
+        raise ValueError("labels must be a 1D tensor of shape (batch_size,)")
 
-def append_map(it, suf):
-    return [x + suf for x in it]
+
+def assert_distance_type(obj, distance_type=None, **kwargs):
+    if distance_type is not None:
+        if is_list_or_tuple(distance_type):
+            distance_type_str = ", ".join(x.__name__ for x in distance_type)
+            distance_type_str = "one of " + distance_type_str
+        else:
+            distance_type_str = distance_type.__name__
+        obj_name = obj.__class__.__name__
+        assert isinstance(
+            obj.distance, distance_type
+        ), "{} requires the distance metric to be {}".format(
+            obj_name, distance_type_str
+        )
+    for k, v in kwargs.items():
+        assert getattr(obj.distance, k) == v, "{} requires distance.{} to be {}".format(
+            obj_name, k, v
+        )
+
+
+def torch_arange_from_size(input, size_dim=0):
+    return torch.arange(input.size(size_dim), device=input.device)
+
+
+class TorchInitWrapper:
+    def __init__(self, init_func, **kwargs):
+        self.init_func = init_func
+        self.kwargs = kwargs
+
+    def __call__(self, tensor):
+        self.init_func(tensor, **self.kwargs)
+
+
+class EmbeddingDataset(torch.utils.data.Dataset):
+    def __init__(self, embeddings, labels):
+        self.embeddings = embeddings
+        self.labels = labels
+
+    def __len__(self):
+        return len(self.embeddings)
+
+    def __getitem__(self, idx):
+        return self.embeddings[idx], self.labels[idx]
+
+
+def sqlite_obj_to_dict(sqlite_obj):
+    return {k: [row[k] for row in sqlite_obj] for k in sqlite_obj[0].keys()}
+
+
+def torch_all_from_dim_to_end(x, dim):
+    return torch.all(x.view(*x.shape[:dim], -1), dim=-1)
+
+
+def torch_standard_scaler(x):
+    mean = torch.mean(x, dim=0)
+    std = torch.std(x, dim=0)
+    return (x - mean) / std
+
+
+def to_dtype(x, tensor=None, dtype=None):
+    if not torch.is_autocast_enabled():
+        dt = dtype if dtype is not None else tensor.dtype
+        if x.dtype != dt:
+            x = x.type(dt)
+    return x
+
+
+def to_device(x, tensor=None, device=None, dtype=None):
+    dv = device if device is not None else tensor.device
+    if x.device != dv:
+        x = x.to(dv)
+    if dtype is not None:
+        x = to_dtype(x, dtype=dtype)
+    return x

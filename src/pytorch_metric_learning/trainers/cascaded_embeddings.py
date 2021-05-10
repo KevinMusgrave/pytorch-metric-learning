@@ -1,8 +1,6 @@
-#! /usr/bin/env python3
-
-
-from .base_trainer import BaseTrainer
 from .. import miners
+from ..utils import common_functions as c_f
+from .base_trainer import BaseTrainer
 
 
 class CascadedEmbeddings(BaseTrainer):
@@ -17,28 +15,36 @@ class CascadedEmbeddings(BaseTrainer):
         logits = []
         indices_tuple = None
         for i, curr_size in enumerate(self.embedding_sizes):
-            curr_loss_name = "metric_loss_%d"%i 
-            curr_miner_name = "tuple_miner_%d"%i
-            curr_classifier_name = "classifier_%d"%i
+            curr_loss_name = "metric_loss_%d" % i
+            curr_miner_name = "tuple_miner_%d" % i
+            curr_classifier_name = "classifier_%d" % i
 
             e = embeddings[:, s : s + curr_size]
-            indices_tuple = self.maybe_mine_embeddings(e, labels, indices_tuple, curr_miner_name)
-            self.losses[curr_loss_name] += self.maybe_get_metric_loss(e, labels, indices_tuple, curr_loss_name)
+            indices_tuple = self.maybe_mine_embeddings(
+                e, labels, indices_tuple, curr_miner_name
+            )
+            self.losses[curr_loss_name] += self.maybe_get_metric_loss(
+                e, labels, indices_tuple, curr_loss_name
+            )
             logits.append(self.maybe_get_logits(e, curr_classifier_name))
             s += curr_size
 
         for i, L in enumerate(logits):
             if L is None:
                 continue
-            curr_loss_name = "classifier_loss_%d"%i
-            self.losses[curr_loss_name] += self.maybe_get_classifier_loss(L, labels, curr_loss_name)
+            curr_loss_name = "classifier_loss_%d" % i
+            self.losses[curr_loss_name] += self.maybe_get_classifier_loss(
+                L, labels, curr_loss_name
+            )
 
     def maybe_get_metric_loss(self, embeddings, labels, indices_tuple, curr_loss_name):
         if self.loss_weights.get(curr_loss_name, 0) > 0:
             return self.loss_funcs[curr_loss_name](embeddings, labels, indices_tuple)
         return 0
 
-    def maybe_mine_embeddings(self, embeddings, labels, prev_indices_tuple, curr_miner_name):
+    def maybe_mine_embeddings(
+        self, embeddings, labels, prev_indices_tuple, curr_miner_name
+    ):
         if curr_miner_name in self.mining_funcs:
             curr_miner = self.mining_funcs[curr_miner_name]
             if isinstance(curr_miner, miners.HDCMiner):
@@ -46,7 +52,7 @@ class CascadedEmbeddings(BaseTrainer):
                 curr_indices_tuple = curr_miner(embeddings, labels)
                 curr_miner.reset_idx()
             else:
-                curr_indices_tuple = curr_miner(embeddings, labels) 
+                curr_indices_tuple = curr_miner(embeddings, labels)
             return curr_indices_tuple
         return None
 
@@ -57,7 +63,9 @@ class CascadedEmbeddings(BaseTrainer):
 
     def maybe_get_classifier_loss(self, logits, labels, curr_loss_name):
         if self.loss_weights.get(curr_loss_name, 0) > 0:
-            return self.loss_funcs[curr_loss_name](logits, labels.to(logits.device))
+            return self.loss_funcs[curr_loss_name](
+                logits, c_f.to_device(labels, logits)
+            )
         return 0
 
     def modify_schema(self):

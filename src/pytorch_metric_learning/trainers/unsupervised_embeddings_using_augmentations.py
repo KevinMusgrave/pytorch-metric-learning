@@ -1,7 +1,8 @@
-from .metric_loss_only import MetricLossOnly
-import logging
-from ..utils import common_functions as c_f
 import torch
+
+from ..utils import common_functions as c_f
+from .metric_loss_only import MetricLossOnly
+
 
 class UnsupervisedEmbeddingsUsingAugmentations(MetricLossOnly):
     def __init__(self, transforms, data_and_label_setter=None, *args, **kwargs):
@@ -11,7 +12,7 @@ class UnsupervisedEmbeddingsUsingAugmentations(MetricLossOnly):
         self.transforms = transforms
         self.collate_fn = self.custom_collate_fn
         self.initialize_dataloader()
-        logging.info("Transforms: %s"%transforms)
+        c_f.LOGGER.info("Transforms: %s" % transforms)
 
     def initialize_data_and_label_setter(self):
         if self.data_and_label_setter is None:
@@ -24,4 +25,6 @@ class UnsupervisedEmbeddingsUsingAugmentations(MetricLossOnly):
             for t in self.transforms:
                 transformed_data.append(t(img))
                 labels.append(i)
-        return self.data_and_label_setter((torch.stack(transformed_data, dim=0), torch.LongTensor(labels)))
+        return self.data_and_label_setter(
+            (torch.stack(transformed_data, dim=0), torch.LongTensor(labels))
+        )

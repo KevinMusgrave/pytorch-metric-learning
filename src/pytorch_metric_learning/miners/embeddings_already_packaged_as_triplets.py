@@ -1,13 +1,9 @@
-#! /usr/bin/env python3
+import torch
 
 from .base_miner import BaseTupleMiner
-import torch
 
 
 class EmbeddingsAlreadyPackagedAsTriplets(BaseTupleMiner):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
     # If the embeddings are grouped by triplet,
     # then use this miner to force the loss function to use the already-formed triplets
     def mine(self, embeddings, labels, ref_emb, ref_labels):
@@ -15,4 +11,4 @@ class EmbeddingsAlreadyPackagedAsTriplets(BaseTupleMiner):
         a = torch.arange(0, batch_size, 3)
         p = torch.arange(1, batch_size, 3)
         n = torch.arange(2, batch_size, 3)
-        return a, p, n        
+        return a, p, n

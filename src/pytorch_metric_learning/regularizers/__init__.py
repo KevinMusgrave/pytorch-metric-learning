@@ -1,3 +1,6 @@
-from .base_weight_regularizer import BaseWeightRegularizer
+from .base_regularizer import BaseRegularizer
 from .center_invariant_regularizer import CenterInvariantRegularizer
+from .lp_regularizer import LpRegularizer
 from .regular_face_regularizer import RegularFaceRegularizer
+from .sparse_centers_regularizer import SparseCentersRegularizer
+from .zero_mean_regularizer import ZeroMeanRegularizer

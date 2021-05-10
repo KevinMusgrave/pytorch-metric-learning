@@ -64,7 +64,7 @@
 ## News
 
 **May 9**: v0.9.99 includes:
-- [HierarchicalSampler](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#hierarchicalsampler)
+- [HierarchicalSampler](https://kevinmusgrave.github.io/pytorch-metric-learning/samplers/#hierarchicalsampler)
 - Improvements to logging, trainer key-verification, and InferenceModel
 - See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.99)
 

@@ -1,4 +1,3 @@
-import logging
 import os
 import sqlite3
 
@@ -186,7 +185,7 @@ class HookContainer:
             trainer, model_folder, epoch, epoch - test_interval
         )  # save latest model
         if is_new_best:
-            logging.info("New best accuracy! {}".format(curr_accuracy))
+            c_f.LOGGER.info("New best accuracy! {}".format(curr_accuracy))
             curr_suffix = "best%d" % best_epoch
             prev_suffix = (
                 "best%d" % prev_best_epoch if prev_best_epoch is not None else None
@@ -312,7 +311,7 @@ class HookContainer:
     def patience_remaining(self, epoch, best_epoch, patience):
         if patience is not None and best_epoch is not None:
             if epoch - best_epoch > patience:
-                logging.info("Validation accuracy has plateaued. Exiting.")
+                c_f.LOGGER.info("Validation accuracy has plateaued. Exiting.")
                 return False
         return True
 
@@ -332,7 +331,7 @@ class HookContainer:
                 tester, dataset_dict, epoch, splits_to_eval
             )
             if len(splits_to_eval) == 0:
-                logging.info("Already evaluated")
+                c_f.LOGGER.info("Already evaluated")
                 return False
         tester.test(dataset_dict, epoch, trunk, embedder, splits_to_eval, collate_fn)
         return True
@@ -413,9 +412,9 @@ def get_record_keeper(
         )
         return record_keeper, record_writer, tensorboard_writer
     except ModuleNotFoundError as e:
-        logging.warning(e)
-        logging.warning("There won't be any logging or model saving.")
-        logging.warning("To fix this, pip install record-keeper tensorboard")
+        c_f.LOGGER.warning(e)
+        c_f.LOGGER.warning("There won't be any logging or model saving.")
+        c_f.LOGGER.warning("To fix this, pip install record-keeper tensorboard")
         return None, None, None
 
 
@@ -423,5 +422,5 @@ def get_hook_container(record_keeper, **kwargs):
     if record_keeper:
         return HookContainer(record_keeper, **kwargs)
     else:
-        logging.warning("No record_keeper, so no preset hooks are being returned.")
+        c_f.LOGGER.warning("No record_keeper, so no preset hooks are being returned.")
         return EmptyContainer()

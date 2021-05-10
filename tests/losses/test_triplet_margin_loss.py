@@ -19,6 +19,7 @@ class TestTripletMarginLoss(unittest.TestCase):
         loss_funcD = TripletMarginLoss(
             margin=margin, reducer=MeanReducer(), distance=CosineSimilarity()
         )
+        loss_funcE = TripletMarginLoss(margin=margin, smooth_loss=True)
         for dtype in TEST_DTYPES:
             embedding_angles = [0, 20, 40, 60, 80]
             embeddings = torch.tensor(
@@ -30,10 +31,10 @@ class TestTripletMarginLoss(unittest.TestCase):
             )  # 2D embeddings
             labels = torch.LongTensor([0, 0, 1, 1, 2])
 
-            lossA = loss_funcA(embeddings, labels)
-            lossB = loss_funcB(embeddings, labels)
-            lossC = loss_funcC(embeddings, labels)
-            lossD = loss_funcD(embeddings, labels)
+            [lossA, lossB, lossC, lossD, lossE] = [
+                x(embeddings, labels)
+                for x in [loss_funcA, loss_funcB, loss_funcC, loss_funcD, loss_funcE]
+            ]
 
             triplets = [
                 (0, 1, 2),
@@ -52,17 +53,19 @@ class TestTripletMarginLoss(unittest.TestCase):
 
             correct_loss = 0
             correct_loss_cosine = 0
+            correct_smooth_loss = 0
             num_non_zero_triplets = 0
             num_non_zero_triplets_cosine = 0
             for a, p, n in triplets:
                 anchor, positive, negative = embeddings[a], embeddings[p], embeddings[n]
-                curr_loss = torch.relu(
-                    torch.sqrt(torch.sum((anchor - positive) ** 2))
-                    - torch.sqrt(torch.sum((anchor - negative) ** 2))
-                    + margin
-                )
+                ap_dist = torch.sqrt(torch.sum((anchor - positive) ** 2))
+                an_dist = torch.sqrt(torch.sum((anchor - negative) ** 2))
+                curr_loss = torch.relu(ap_dist - an_dist + margin)
                 curr_loss_cosine = torch.relu(
                     torch.sum(anchor * negative) - torch.sum(anchor * positive) + margin
+                )
+                correct_smooth_loss += torch.nn.functional.softplus(
+                    ap_dist - an_dist + margin
                 )
                 if curr_loss > 0:
                     num_non_zero_triplets += 1
@@ -84,6 +87,9 @@ class TestTripletMarginLoss(unittest.TestCase):
             )
             self.assertTrue(
                 torch.isclose(lossD, correct_loss_cosine / len(triplets), rtol=rtol)
+            )
+            self.assertTrue(
+                torch.isclose(lossE, correct_smooth_loss / len(triplets), rtol=rtol)
             )
 
     def test_with_no_valid_triplets(self):
@@ -108,8 +114,9 @@ class TestTripletMarginLoss(unittest.TestCase):
         margin = 0.2
         loss_funcA = TripletMarginLoss(margin=margin)
         loss_funcB = TripletMarginLoss(margin=margin, reducer=MeanReducer())
+        loss_funcC = TripletMarginLoss(smooth_loss=True)
         for dtype in TEST_DTYPES:
-            for loss_func in [loss_funcA, loss_funcB]:
+            for loss_func in [loss_funcA, loss_funcB, loss_funcC]:
                 embedding_angles = [0, 20, 40, 60, 80]
                 embeddings = torch.tensor(
                     [c_f.angle_to_coord(a) for a in embedding_angles],

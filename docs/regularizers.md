@@ -20,7 +20,7 @@ An object that extends this class can be passed as the ```embedding_regularizer`
 
 **Parameters**
 
-* **collect_stats**: If True, will collect various statistics that may be useful to analyze during experiments. If False, these computations will be skipped.
+* **collect_stats**: If True, will collect various statistics that may be useful to analyze during experiments. If False, these computations will be skipped. Want to make ```False``` the default? Set the global [COLLECT_STATS](common_functions.md#collect_stats) flag.
 * **reducer**: A [reducer](reducers.md) object. If None, then the default reducer will be used.
 * **distance**: A [distance](distances.md) object. If None, then the default distance will be used.
 
@@ -56,7 +56,7 @@ regularizers.CenterInvariantRegularizer(**kwargs)
 ## LpRegularizer
 This encourages embeddings/weights to have a small Lp norm.
 ```python
-regularizers.LpRegularizer(p=2, **kwargs)
+regularizers.LpRegularizer(p=2, power=1, **kwargs)
 ```
 
 **Parameters**

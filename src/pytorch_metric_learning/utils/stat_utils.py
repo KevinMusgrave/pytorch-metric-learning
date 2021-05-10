@@ -1,17 +1,15 @@
-import logging
+from . import common_functions as c_f
 
 try:
     import faiss
 except ModuleNotFoundError:
-    logging.warning(
+    c_f.LOGGER.warning(
         """The pytorch-metric-learning testing module requires faiss. You can install the GPU version with the command 'conda install faiss-gpu -c pytorch'
                         or the CPU version with 'conda install faiss-cpu -c pytorch'. Learn more at https://github.com/facebookresearch/faiss/blob/master/INSTALL.md"""
     )
 
 import numpy as np
 import torch
-
-from . import common_functions as c_f
 
 
 def add_to_index_and_search(index, reference_embeddings, test_embeddings, k):
@@ -33,7 +31,7 @@ def try_gpu(cpu_index, reference_embeddings, test_embeddings, k):
         )
     except (AttributeError, RuntimeError) as e:
         if gpus_are_available:
-            logging.warning(
+            c_f.LOGGER.warning(
                 f"Using CPU for k-nn search because k = {k} > {max_k_for_gpu}, which is the maximum allowable on GPU."
             )
         return add_to_index_and_search(
@@ -52,8 +50,8 @@ def get_knn(
     test_embeddings = c_f.to_numpy(test_embeddings).astype(np.float32)
 
     d = reference_embeddings.shape[1]
-    logging.info("running k-nn with k=%d" % k)
-    logging.info("embedding dimensionality is %d" % d)
+    c_f.LOGGER.info("running k-nn with k=%d" % k)
+    c_f.LOGGER.info("embedding dimensionality is %d" % d)
     cpu_index = faiss.IndexFlatL2(d)
     distances, indices = try_gpu(cpu_index, reference_embeddings, test_embeddings, k)
     distances = c_f.to_device(torch.from_numpy(distances), device=device)
@@ -68,8 +66,8 @@ def run_kmeans(x, nmb_clusters):
     device = x.device
     x = c_f.to_numpy(x).astype(np.float32)
     n_data, d = x.shape
-    logging.info("running k-means clustering with k=%d" % nmb_clusters)
-    logging.info("embedding dimensionality is %d" % d)
+    c_f.LOGGER.info("running k-means clustering with k=%d" % nmb_clusters)
+    c_f.LOGGER.info("embedding dimensionality is %d" % d)
 
     # faiss implementation of k-means
     clus = faiss.Clustering(d, nmb_clusters)

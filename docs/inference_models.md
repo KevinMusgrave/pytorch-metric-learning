@@ -9,8 +9,7 @@ InferenceModel(trunk,
 				embedder=None, 
 				match_finder=None, 
 				indexer=None,
-				normalize_embeddings=True,
-				batch_size=64)
+				normalize_embeddings=True)
 ```
 **Parameters**:
 
@@ -19,8 +18,31 @@ InferenceModel(trunk,
 * **match_finder**: A [MatchFinder](inference_models.md#matchfinder) object. If ```None```, it will be set to ```MatchFinder(distance=CosineSimilarity(), threshold=0.9)```.
 * **indexer**: The object used for computing k-nearest-neighbors. If ```None```, it will be set to ```FaissIndexer()```.
 * **normalize_embeddings**: If True, embeddings will be normalized to have Euclidean norm of 1.
-* **batch_size**: The batch size used to compute embeddings, when training the indexer for k-nearest-neighbor retrieval.
 
+**Methods**:
+```python
+# initialize with a model
+im = InferenceModel(model)
+
+# pass in a dataset to serve as the search space for k-nn
+im.train_indexer(dataset)
+
+# add another dataset to the index
+im.add_to_indexer(dataset2)
+
+# get the 10 nearest neighbors of a query
+indices, distances = im.get_nearest_neighbors(query, k=10)
+
+# determine if inputs are close to each other
+is_match = im.is_match(x, y)
+
+# determine "is_match" pairwise for all elements in a batch
+match_matrix = im.get_matches(x)
+
+# save and load faiss index
+im.save_index("filename.index")
+im.load_index("filename.index")
+```
 
 
 ## MatchFinder

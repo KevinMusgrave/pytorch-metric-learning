@@ -7,7 +7,7 @@ from pytorch_metric_learning.distances import CosineSimilarity, LpDistance
 from pytorch_metric_learning.miners import BatchHardMiner
 from pytorch_metric_learning.utils import common_functions as c_f
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, WITH_COLLECT_STATS
 
 
 class TestBatchHardMiner(unittest.TestCase):
@@ -40,8 +40,9 @@ class TestBatchHardMiner(unittest.TestCase):
             embeddings = torch.arange(9).type(dtype).unsqueeze(1).to(TEST_DEVICE)
             a, p, n = self.dist_miner(embeddings, self.labels)
             self.helper(a, p, n)
-            self.assertTrue(self.dist_miner.hardest_pos_pair == 6)
-            self.assertTrue(self.dist_miner.hardest_neg_pair == 1)
+            if WITH_COLLECT_STATS:
+                self.assertTrue(self.dist_miner.hardest_pos_pair == 6)
+                self.assertTrue(self.dist_miner.hardest_neg_pair == 1)
 
     def test_normalized_dist_mining(self):
         for dtype in TEST_DTYPES:
@@ -58,16 +59,18 @@ class TestBatchHardMiner(unittest.TestCase):
                 torch.sum((embeddings[1] - embeddings[2]) ** 2)
             ).item()
             places = 2 if dtype == torch.float16 else 5
-            self.assertAlmostEqual(
-                self.normalized_dist_miner.hardest_pos_pair,
-                correct_hardest_pos_pair,
-                places=places,
-            )
-            self.assertAlmostEqual(
-                self.normalized_dist_miner.hardest_neg_pair,
-                correct_hardest_neg_pair,
-                places=places,
-            )
+
+            if WITH_COLLECT_STATS:
+                self.assertAlmostEqual(
+                    self.normalized_dist_miner.hardest_pos_pair,
+                    correct_hardest_pos_pair,
+                    places=places,
+                )
+                self.assertAlmostEqual(
+                    self.normalized_dist_miner.hardest_neg_pair,
+                    correct_hardest_neg_pair,
+                    places=places,
+                )
 
     def test_normalized_dist_squared_mining(self):
         for dtype in TEST_DTYPES:
@@ -84,16 +87,18 @@ class TestBatchHardMiner(unittest.TestCase):
                 (embeddings[1] - embeddings[2]) ** 2
             ).item()
             places = 2 if dtype == torch.float16 else 5
-            self.assertAlmostEqual(
-                self.normalized_dist_miner_squared.hardest_pos_pair,
-                correct_hardest_pos_pair,
-                places=places,
-            )
-            self.assertAlmostEqual(
-                self.normalized_dist_miner_squared.hardest_neg_pair,
-                correct_hardest_neg_pair,
-                places=places,
-            )
+
+            if WITH_COLLECT_STATS:
+                self.assertAlmostEqual(
+                    self.normalized_dist_miner_squared.hardest_pos_pair,
+                    correct_hardest_pos_pair,
+                    places=places,
+                )
+                self.assertAlmostEqual(
+                    self.normalized_dist_miner_squared.hardest_neg_pair,
+                    correct_hardest_neg_pair,
+                    places=places,
+                )
 
     def test_sim_mining(self):
         for dtype in TEST_DTYPES:
@@ -104,16 +109,18 @@ class TestBatchHardMiner(unittest.TestCase):
             a, p, n = self.sim_miner(embeddings, self.labels)
             self.helper(a, p, n)
             places = 2 if dtype == torch.float16 else 5
-            self.assertAlmostEqual(
-                self.sim_miner.hardest_pos_pair,
-                np.cos(np.radians(120)),
-                places=places,
-            )
-            self.assertAlmostEqual(
-                self.sim_miner.hardest_neg_pair,
-                np.cos(np.radians(20)),
-                places=places,
-            )
+
+            if WITH_COLLECT_STATS:
+                self.assertAlmostEqual(
+                    self.sim_miner.hardest_pos_pair,
+                    np.cos(np.radians(120)),
+                    places=places,
+                )
+                self.assertAlmostEqual(
+                    self.sim_miner.hardest_neg_pair,
+                    np.cos(np.radians(20)),
+                    places=places,
+                )
 
     def helper(self, a, p, n):
         self.assertTrue(torch.equal(a, self.correct_a))
@@ -135,6 +142,8 @@ class TestBatchHardMiner(unittest.TestCase):
                 self.assertTrue(len(a) == 0)
                 self.assertTrue(len(p) == 0)
                 self.assertTrue(len(n) == 0)
-                self.assertTrue(miner.hardest_pos_pair == 0)
-                self.assertTrue(miner.hardest_neg_pair == 0)
-                self.assertTrue(miner.hardest_triplet == 0)
+
+                if WITH_COLLECT_STATS:
+                    self.assertTrue(miner.hardest_pos_pair == 0)
+                    self.assertTrue(miner.hardest_neg_pair == 0)
+                    self.assertTrue(miner.hardest_triplet == 0)

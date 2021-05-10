@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 
-import logging
+
 from collections import defaultdict
 
 import torch
@@ -142,11 +142,11 @@ class BaseTester:
         if self.visualizer:
             visualizer_name = self.visualizer.__class__.__name__
             for split_name, (embeddings, labels) in embeddings_and_labels.items():
-                logging.info(
+                c_f.LOGGER.info(
                     "Running {} on the {} set".format(visualizer_name, split_name)
                 )
                 dim_reduced = self.visualizer.fit_transform(embeddings.cpu().numpy())
-                logging.info("Finished {}".format(visualizer_name))
+                c_f.LOGGER.info("Finished {}".format(visualizer_name))
                 for L in self.label_levels_to_evaluate(labels):
                     label_scheme = labels[:, L].cpu().numpy()
                     keyname = self.accuracies_keyname(
@@ -254,7 +254,7 @@ class BaseTester:
     ):
         embeddings_and_labels = {}
         for split_name in splits_to_compute_embeddings:
-            logging.info("Getting embeddings for the %s split" % split_name)
+            c_f.LOGGER.info("Getting embeddings for the %s split" % split_name)
             embeddings_and_labels[split_name] = self.get_all_embeddings(
                 dataset_dict[split_name], trunk_model, embedder_model, collate_fn
             )
@@ -265,6 +265,9 @@ class BaseTester:
     ):
         raise NotImplementedError
 
+    def embeddings_come_from_same_source(self, query_split_name, reference_split_names):
+        return query_split_name in reference_split_names
+
     def test(
         self,
         dataset_dict,
@@ -274,7 +277,7 @@ class BaseTester:
         splits_to_eval=None,
         collate_fn=None,
     ):
-        logging.info("Evaluating epoch {}".format(epoch))
+        c_f.LOGGER.info("Evaluating epoch {}".format(epoch))
         if embedder_model is None:
             embedder_model = c_f.Identity()
         trunk_model.eval()
@@ -293,7 +296,7 @@ class BaseTester:
         self.maybe_visualize(self.embeddings_and_labels, epoch)
         self.all_accuracies = defaultdict(dict)
         for query_split_name, reference_split_names in splits_to_eval:
-            logging.info(
+            c_f.LOGGER.info(
                 f"Computing accuracy for the {query_split_name} split w.r.t {reference_split_names}"
             )
             self.all_accuracies[query_split_name]["epoch"] = epoch
@@ -304,7 +307,7 @@ class BaseTester:
                 query_split_name,
                 reference_split_names,
             )
-        self.end_of_testing_hook(self) if self.end_of_testing_hook else logging.info(
+        self.end_of_testing_hook(self) if self.end_of_testing_hook else c_f.LOGGER.info(
             self.all_accuracies
         )
         del self.embeddings_and_labels

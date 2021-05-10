@@ -8,7 +8,17 @@ import numpy as np
 import scipy.stats
 import torch
 
+LOGGER_NAME = "PML"
+LOGGER = logging.getLogger(LOGGER_NAME)
 NUMPY_RANDOM = np.random
+COLLECT_STATS = True
+
+
+def set_logger_name(name):
+    global LOGGER_NAME
+    global LOGGER
+    LOGGER_NAME = name
+    LOGGER = logging.getLogger(LOGGER_NAME)
 
 
 class Identity(torch.nn.Module):
@@ -166,6 +176,14 @@ def set_layers_to_eval(layer_name):
 
 
 def get_train_dataloader(dataset, batch_size, sampler, num_workers, collate_fn):
+    if isinstance(sampler, torch.utils.data.BatchSampler):
+        return torch.utils.data.DataLoader(
+            dataset,
+            batch_sampler=sampler,
+            num_workers=num_workers,
+            collate_fn=collate_fn,
+            pin_memory=False,
+        )
     return torch.utils.data.DataLoader(
         dataset,
         batch_size=int(batch_size),
@@ -288,7 +306,7 @@ def modelpath_creator(folder, basename, identifier, extension=".pth"):
         return os.path.join(folder, "%s_%s%s" % (basename, str(identifier), extension))
 
 
-def save_model(model, model_name, filepath):
+def save_model(model, filepath):
     if any(
         isinstance(model, x)
         for x in [torch.nn.DataParallel, torch.nn.parallel.DistributedDataParallel]
@@ -327,31 +345,31 @@ def operate_on_dict_of_models(
     for k, v in input_dict.items():
         model_path = modelpath_creator(folder, k, suffix)
         try:
-            operation(k, v, model_path)
+            operation(v, model_path)
             if log_if_successful:
-                logging.info("%s %s" % (logging_string, model_path))
+                LOGGER.info("%s %s" % (logging_string, model_path))
         except IOError:
-            logging.warning("Could not %s %s" % (logging_string, model_path))
+            LOGGER.warning("Could not %s %s" % (logging_string, model_path))
             if assert_success:
                 raise IOError
 
 
 def save_dict_of_models(input_dict, suffix, folder, **kwargs):
-    def operation(k, v, model_path):
-        save_model(v, k, model_path)
+    def operation(v, model_path):
+        save_model(v, model_path)
 
     operate_on_dict_of_models(input_dict, suffix, folder, operation, "SAVE", **kwargs)
 
 
 def load_dict_of_models(input_dict, suffix, folder, device, **kwargs):
-    def operation(k, v, model_path):
+    def operation(v, model_path):
         load_model(v, model_path, device)
 
     operate_on_dict_of_models(input_dict, suffix, folder, operation, "LOAD", **kwargs)
 
 
 def delete_dict_of_models(input_dict, suffix, folder, **kwargs):
-    def operation(k, v, model_path):
+    def operation(v, model_path):
         if os.path.exists(model_path):
             os.remove(model_path)
 
@@ -393,10 +411,15 @@ def angle_to_coord(angle):
     return x, y
 
 
-def assert_embeddings_and_labels_are_same_size(embeddings, labels):
-    assert embeddings.size(0) == labels.size(
-        0
-    ), "Number of embeddings must equal number of labels"
+def check_shapes(embeddings, labels):
+    if embeddings.size(0) != labels.size(0):
+        raise ValueError("Number of embeddings must equal number of labels")
+    if embeddings.ndim != 2:
+        raise ValueError(
+            "embeddings must be a 2D tensor of shape (batch_size, embedding_size)"
+        )
+    if labels.ndim != 1:
+        raise ValueError("labels must be a 1D tensor of shape (batch_size,)")
 
 
 def assert_distance_type(obj, distance_type=None, **kwargs):
@@ -472,3 +495,11 @@ def to_device(x, tensor=None, device=None, dtype=None):
     if dtype is not None:
         x = to_dtype(x, dtype=dtype)
     return x
+
+
+def exclude(it, targets):
+    return [x for x in it if x not in targets]
+
+
+def append_map(it, suf):
+    return [x + suf for x in it]

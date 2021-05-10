@@ -63,6 +63,11 @@
 
 ## News
 
+**May 9**: v0.9.99 includes:
+- [HierarchicalSampler](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#hierarchicalsampler)
+- Improvements to logging, trainer key-verification, and InferenceModel
+- See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.99)
+
 **April 2**: v0.9.98 includes:
 - [SupConLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#supconloss)
 - A bug fix for compatibility with autocast
@@ -74,8 +79,6 @@
 - Efficiency improvement for [AccuracyCalculator](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/), by using torch instead of numpy
 - [UniformHistogramMiner](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#uniformhistogramminer), which is like DistanceWeightedMiner except that it works well with high dimensional embeddings, and with any distance metric.
 - See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.97) for details.
-
-**January 12**: v0.9.96 greatly increases the flexibility of the [testers](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/) and [AccuracyCalculator](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/). See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.96)
 
 ## Documentation
 - [**View the documentation here**](https://kevinmusgrave.github.io/pytorch-metric-learning/)
@@ -306,6 +309,7 @@ conda install pytorch-metric-learning -c metric-learning -c pytorch
 | Name | Reference Papers |
 |---|---|
 | [**MPerClassSampler**](https://kevinmusgrave.github.io/pytorch-metric-learning/samplers/#mperclasssampler) |
+| [**HierarchicalSampler**](https://kevinmusgrave.github.io/pytorch-metric-learning/samplers/#hierarchicalsampler) | [Deep Metric Learning to Rank](http://openaccess.thecvf.com/content_CVPR_2019/papers/Cakir_Deep_Metric_Learning_to_Rank_CVPR_2019_paper.pdf)
 | [**TuplesToWeightsSampler**](https://kevinmusgrave.github.io/pytorch-metric-learning/samplers/#tuplestoweightssampler) |
 | [**FixedSetOfTriplets**](https://kevinmusgrave.github.io/pytorch-metric-learning/samplers/#fixedsetoftriplets) |
 
@@ -398,16 +402,23 @@ Thanks to the contributors who made pull requests!
 - [mlopezantequera](https://github.com/mlopezantequera)
 	- Made the [testers](https://kevinmusgrave.github.io/pytorch-metric-learning/testers) work on any combination of query and reference sets
 	- Made [AccuracyCalculator](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/) work with arbitrary label comparisons
-- [AlenUbuntu](https://github.com/AlenUbuntu)
-	- [CircleLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#circleloss)
-- [btseytlin](https://github.com/btseytlin)
-    - ```get_nearest_neighbors``` in [InferenceModel](https://kevinmusgrave.github.io/pytorch-metric-learning/inference_models)
-- [JohnGiorgi](https://github.com/JohnGiorgi)
-	- ```all_gather``` in [utils.distributed](https://kevinmusgrave.github.io/pytorch-metric-learning/distributed)
-- [AlexSchuy](https://github.com/AlexSchuy)
-	- optimized ```utils.loss_and_miner_utils.get_random_triplet_indices```
+- [elias-ramzi](https://github.com/elias-ramzi)
+	- [HierarchicalSampler](https://kevinmusgrave.github.io/pytorch-metric-learning/samplers/#hierarchicalsampler)
 - [fjsj](https://github.com/fjsj)
 	- [SupConLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#supconloss)
+- [AlenUbuntu](https://github.com/AlenUbuntu)
+	- [CircleLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#circleloss)
+- [AlexSchuy](https://github.com/AlexSchuy)
+	- optimized ```utils.loss_and_miner_utils.get_random_triplet_indices```
+- [JohnGiorgi](https://github.com/JohnGiorgi)
+	- ```all_gather``` in [utils.distributed](https://kevinmusgrave.github.io/pytorch-metric-learning/distributed)
+- [Hummer12007](https://github.com/Hummer12007)
+	- ```utils.key_checker```
+- [vltanh](https://github.com/vltanh)
+	- Made ```InferenceModel.train_indexer``` accept datasets
+- [btseytlin](https://github.com/btseytlin)
+    - ```get_nearest_neighbors``` in [InferenceModel](https://kevinmusgrave.github.io/pytorch-metric-learning/inference_models)
+
 
 #### Example notebooks
 - [wconnell](https://github.com/wconnell)
@@ -425,6 +436,7 @@ Thanks to the contributors who made pull requests!
 - [fralik](https://github.com/fralik)
 - [joaqo](https://github.com/joaqo)
 - [JoOkuma](https://github.com/JoOkuma)
+- [gkouros](https://github.com/gkouros)
 
 ### Facebook AI
 Thank you to [Ser-Nam Lim](https://research.fb.com/people/lim-ser-nam/) at [Facebook AI](https://ai.facebook.com/), and my research advisor, [Professor Serge Belongie](https://vision.cornell.edu/se3/people/serge-belongie/). This project began during my internship at Facebook AI where I received valuable feedback from Ser-Nam, and his team of computer vision and machine learning engineers and research scientists. In particular, thanks to [Ashish Shah](https://www.linkedin.com/in/ashish217/) and [Austin Reiter](https://www.linkedin.com/in/austin-reiter-3962aa7/) for reviewing my code during its early stages of development.

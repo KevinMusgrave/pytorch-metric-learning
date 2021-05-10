@@ -1,9 +1,9 @@
-import logging
 from collections import defaultdict
 
 import numpy as np
 import torch
 
+from ..utils import common_functions as c_f
 from .base_tester import BaseTester
 
 
@@ -39,7 +39,7 @@ class WithSameParentLabelTester(BaseTester):
             curr_reference_parent_labels = reference_labels[:, L + 1]
             average_accuracies = defaultdict(list)
             for parent_label in torch.unique(curr_query_parent_labels):
-                logging.info(
+                c_f.LOGGER.info(
                     "Label level {} and parent label {}".format(L, parent_label)
                 )
                 query_match = curr_query_parent_labels == parent_label
@@ -53,7 +53,9 @@ class WithSameParentLabelTester(BaseTester):
                     curr_reference_embeddings,
                     curr_query_labels,
                     curr_reference_labels,
-                    query_split_name in reference_split_names,
+                    self.embeddings_come_from_same_source(
+                        query_split_name, reference_split_names
+                    ),
                 )
                 for metric, v in a.items():
                     average_accuracies[metric].append(v)

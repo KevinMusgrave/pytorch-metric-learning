@@ -1,10 +1,9 @@
-import logging
-
 import torch
 import tqdm
 
 from ..utils import common_functions as c_f
 from ..utils import loss_tracker as l_t
+from ..utils.key_checker import KeyChecker, KeyCheckerDict
 
 
 class BaseTrainer:
@@ -82,7 +81,7 @@ class BaseTrainer:
         self.initialize_dataloader()
         for self.epoch in range(start_epoch, num_epochs + 1):
             self.set_to_train()
-            logging.info("TRAINING EPOCH %d" % self.epoch)
+            c_f.LOGGER.info("TRAINING EPOCH %d" % self.epoch)
             pbar = tqdm.tqdm(range(self.iterations_per_epoch))
             for self.iteration in pbar:
                 self.forward_and_backward()
@@ -95,7 +94,7 @@ class BaseTrainer:
                 break
 
     def initialize_dataloader(self):
-        logging.info("Initializing dataloader")
+        c_f.LOGGER.info("Initializing dataloader")
         self.dataloader = c_f.get_train_dataloader(
             self.dataset,
             self.batch_size,
@@ -105,9 +104,9 @@ class BaseTrainer:
         )
         if not self.iterations_per_epoch:
             self.iterations_per_epoch = len(self.dataloader)
-        logging.info("Initializing dataloader iterator")
+        c_f.LOGGER.info("Initializing dataloader iterator")
         self.dataloader_iter = iter(self.dataloader)
-        logging.info("Done creating dataloader iterator")
+        c_f.LOGGER.info("Done creating dataloader iterator")
 
     def forward_and_backward(self):
         self.zero_losses()
@@ -265,130 +264,60 @@ class BaseTrainer:
             "epoch": "_scheduler_by_epoch",
             "plateau": "_scheduler_by_plateau",
         }
-        self.verify_models_keys()
-        self.verify_optimizers_keys()
-        self.verify_loss_funcs_keys()
-        self.verify_mining_funcs_keys()
-        self.verify_lr_schedulers_keys()
-        self.verify_loss_weights_keys()
-        self.verify_gradient_clippers_keys()
+        self.set_schema()
+        self.schema.verify(self)
         self.verify_freeze_these_keys()
 
-    def _verify_dict_keys(
-        self,
-        obj_name,
-        allowed_keys,
-        warn_if_empty,
-        important_keys=(),
-        essential_keys=(),
-    ):
-        obj = getattr(self, obj_name, None)
-        if obj in [None, {}]:
-            if warn_if_empty:
-                logging.warning("%s is empty" % obj_name)
-        else:
-            for k in obj.keys():
-                assert any(
-                    pattern.match(k) for pattern in c_f.regex_wrapper(allowed_keys)
-                ), "%s keys must be one of %s" % (obj_name, ", ".join(allowed_keys))
-            for imp_key in important_keys:
-                if not any(c_f.regex_wrapper(imp_key).match(k) for k in obj):
-                    logging.warning('%s is missing "%s"' % (obj_name, imp_key))
-            for ess_key in essential_keys:
-                assert any(
-                    c_f.regex_wrapper(ess_key).match(k) for k in obj
-                ), '%s must contain "%s"' % (obj_name, ess_key)
+    def modify_schema(self):
+        pass
 
-    def allowed_model_keys(self):
-        return ["trunk", "embedder"]
-
-    def allowed_optimizer_keys(self):
-        return [
-            x + "_optimizer"
-            for x in self.allowed_model_keys() + self.allowed_loss_funcs_keys()
-        ]
-
-    def allowed_loss_funcs_keys(self):
-        return ["metric_loss"]
-
-    def allowed_mining_funcs_keys(self):
-        return ["subset_batch_miner", "tuple_miner"]
-
-    def allowed_lr_scheduers_keys(self):
-        return [
-            x + y
-            for y in self.allowed_lr_scheduler_key_suffixes.values()
-            for x in self.allowed_model_keys() + self.allowed_loss_funcs_keys()
-        ]
-
-    def allowed_gradient_clippers_keys(self):
-        return [
-            x + "_grad_clipper"
-            for x in self.allowed_model_keys() + self.allowed_loss_funcs_keys()
-        ]
-
-    def allowed_freeze_these_keys(self):
-        return self.allowed_model_keys() + self.allowed_loss_funcs_keys()
-
-    def verify_models_keys(self):
-        self._verify_dict_keys(
-            "models",
-            self.allowed_model_keys(),
-            warn_if_empty=True,
-            essential_keys=["trunk"],
-            important_keys=[x for x in self.allowed_model_keys() if x != "trunk"],
+    def set_schema(self):
+        self.schema = KeyCheckerDict(
+            {
+                "models": KeyChecker(["trunk", "embedder"], essential=["trunk"]),
+                "loss_funcs": KeyChecker(["metric_loss"]),
+                "mining_funcs": KeyChecker(
+                    ["subset_batch_miner", "tuple_miner"],
+                    warn_empty=False,
+                    important=[],
+                ),
+                "loss_weights": KeyChecker(
+                    self.loss_names, warn_empty=False, essential=self.loss_names
+                ),
+                "optimizers": KeyChecker(
+                    lambda s, d: c_f.append_map(
+                        d["models"].keys + d["loss_funcs"].keys, "_optimizer"
+                    ),
+                    important=c_f.append_map(self.models.keys(), "_optimizer"),
+                ),
+                "lr_schedulers": KeyChecker(
+                    lambda s, d: [
+                        x + y
+                        for y in self.allowed_lr_scheduler_key_suffixes.values()
+                        for x in d["models"].keys + d["loss_funcs"].keys
+                    ],
+                    warn_empty=False,
+                    important=[],
+                ),
+                "gradient_clippers": KeyChecker(
+                    lambda s, d: c_f.append_map(
+                        d["models"].keys + d["loss_funcs"].keys, "_grad_clipper"
+                    ),
+                    warn_empty=False,
+                    important=[],
+                ),
+            }
         )
-
-    def verify_optimizers_keys(self):
-        self._verify_dict_keys(
-            "optimizers",
-            self.allowed_optimizer_keys(),
-            warn_if_empty=True,
-            important_keys=[x + "_optimizer" for x in self.models.keys()],
-        )
-
-    def verify_loss_funcs_keys(self):
-        self._verify_dict_keys(
-            "loss_funcs",
-            self.allowed_loss_funcs_keys(),
-            warn_if_empty=True,
-            important_keys=self.allowed_loss_funcs_keys(),
-        )
-
-    def verify_mining_funcs_keys(self):
-        self._verify_dict_keys(
-            "mining_funcs", self.allowed_mining_funcs_keys(), warn_if_empty=False
-        )
-
-    def verify_lr_schedulers_keys(self):
-        self._verify_dict_keys(
-            "lr_schedulers", self.allowed_lr_scheduers_keys(), warn_if_empty=False
-        )
-
-    def verify_loss_weights_keys(self):
-        self._verify_dict_keys(
-            "loss_weights",
-            self.loss_names,
-            warn_if_empty=False,
-            essential_keys=self.loss_names,
-        )
-
-    def verify_gradient_clippers_keys(self):
-        self._verify_dict_keys(
-            "gradient_clippers",
-            self.allowed_gradient_clippers_keys(),
-            warn_if_empty=False,
-        )
+        self.modify_schema()
 
     def verify_freeze_these_keys(self):
+        allowed_keys = self.schema["models"].keys + self.schema["loss_funcs"].keys
         for k in self.freeze_these:
-            assert (
-                k in self.allowed_freeze_these_keys()
-            ), "freeze_these keys must be one of {}".format(
-                ", ".join(self.allowed_freeze_these_keys())
+            assert k in allowed_keys, "freeze_these keys must be one of {}".format(
+                ", ".join(allowed_keys)
             )
             if k + "_optimizer" in self.optimizers.keys():
-                logging.warning(
+                c_f.LOGGER.warning(
                     "You have passed in an optimizer for {}, but are freezing its parameters.".format(
                         k
                     )

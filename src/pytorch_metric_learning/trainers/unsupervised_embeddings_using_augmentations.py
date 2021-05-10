@@ -1,5 +1,3 @@
-import logging
-
 import torch
 
 from ..utils import common_functions as c_f
@@ -14,7 +12,7 @@ class UnsupervisedEmbeddingsUsingAugmentations(MetricLossOnly):
         self.transforms = transforms
         self.collate_fn = self.custom_collate_fn
         self.initialize_dataloader()
-        logging.info("Transforms: %s" % transforms)
+        c_f.LOGGER.info("Transforms: %s" % transforms)
 
     def initialize_data_and_label_setter(self):
         if self.data_and_label_setter is None:

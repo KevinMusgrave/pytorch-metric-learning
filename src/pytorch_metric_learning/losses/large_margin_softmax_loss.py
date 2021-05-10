@@ -74,8 +74,7 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         mask[torch.arange(batch_size), labels] = 1
         return mask
 
-    def modify_cosine_of_target_classes(self, cosine_of_target_classes, *args):
-        _, _, labels, _ = args
+    def modify_cosine_of_target_classes(self, cosine_of_target_classes):
         cos_with_margin = self.get_cos_with_margin(cosine_of_target_classes)
         angles = self.get_angles(cosine_of_target_classes)
         with torch.no_grad():
@@ -107,7 +106,7 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         cosine = self.get_cosine(embeddings)
         cosine_of_target_classes = cosine[mask == 1]
         modified_cosine_of_target_classes = self.modify_cosine_of_target_classes(
-            cosine_of_target_classes, cosine, embeddings, labels, mask
+            cosine_of_target_classes
         )
         diff = (modified_cosine_of_target_classes - cosine_of_target_classes).unsqueeze(
             1

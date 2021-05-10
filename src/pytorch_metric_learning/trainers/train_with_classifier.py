@@ -28,8 +28,6 @@ class TrainWithClassifier(MetricLossOnly):
             return self.models["classifier"](embeddings)
         return None
 
-    def allowed_model_keys(self):
-        return super().allowed_model_keys() + ["classifier"]
-
-    def allowed_loss_funcs_keys(self):
-        return super().allowed_loss_funcs_keys() + ["classifier_loss"]
+    def modify_schema(self):
+        self.schema["models"].keys += ["classifier"]
+        self.schema["loss_funcs"].keys += ["classifier_loss"]

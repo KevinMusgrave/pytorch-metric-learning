@@ -52,5 +52,5 @@ class TwoStreamMetricLoss(BaseTrainer):
         else:
             return lmu.get_all_triplets_indices(labels, labels.clone())
 
-    def allowed_mining_funcs_keys(self):
-        return ["tuple_miner"]
+    def modify_schema(self):
+        self.schema["mining_funcs"].keys = ["tuple_miner"]

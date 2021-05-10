@@ -12,7 +12,7 @@ from pytorch_metric_learning import losses, miners
 from pytorch_metric_learning.utils import common_functions as c_f
 from pytorch_metric_learning.utils import distributed
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, WITH_COLLECT_STATS
 
 
 # https://discuss.pytorch.org/t/check-if-models-have-same-weights/4351
@@ -115,21 +115,22 @@ def single_process_function(
         indices_tuple = miner_fn(outputs, labels[rank])
         loss = loss_fn(outputs, labels[rank], indices_tuple)
 
-    if is_tuple_loss:
-        pos_loss_size = loss_fn.loss.reducer.reducers["pos_loss"].losses_size
-        neg_loss_size = loss_fn.loss.reducer.reducers["neg_loss"].losses_size
-        correct_pos_loss_size = original_loss_fn.reducer.reducers[
-            "pos_loss"
-        ].losses_size
-        correct_neg_loss_size = original_loss_fn.reducer.reducers[
-            "neg_loss"
-        ].losses_size
-        assert pos_loss_size == correct_pos_loss_size
-        assert neg_loss_size == correct_neg_loss_size
-    else:
-        loss_size = loss_fn.loss.module.reducer.losses_size
-        correct_loss_size = original_loss_fn.reducer.losses_size
-        assert loss_size == correct_loss_size
+    if WITH_COLLECT_STATS:
+        if is_tuple_loss:
+            pos_loss_size = loss_fn.loss.reducer.reducers["pos_loss"].losses_size
+            neg_loss_size = loss_fn.loss.reducer.reducers["neg_loss"].losses_size
+            correct_pos_loss_size = original_loss_fn.reducer.reducers[
+                "pos_loss"
+            ].losses_size
+            correct_neg_loss_size = original_loss_fn.reducer.reducers[
+                "neg_loss"
+            ].losses_size
+            assert pos_loss_size == correct_pos_loss_size
+            assert neg_loss_size == correct_neg_loss_size
+        else:
+            loss_size = loss_fn.loss.module.reducer.losses_size
+            correct_loss_size = original_loss_fn.reducer.losses_size
+            assert loss_size == correct_loss_size
 
     assert torch.isclose(loss, torch.from_numpy(correct_loss).to(device))
     assert miner_fn.miner.num_pos_pairs == original_miner_fn.num_pos_pairs

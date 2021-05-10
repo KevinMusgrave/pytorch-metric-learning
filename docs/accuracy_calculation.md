@@ -94,7 +94,7 @@ If your dataset is large, you might find the k-nn search is very slow. This is b
 
 - **r_precision**:
 
-    - [See section 3.2 of A Metric Learning Reality Check](https://arxiv.org/pdf/2003.08505.pdf)
+    - [See chapter 8 (page 161) of Introduction to Information Retrieval](https://nlp.stanford.edu/IR-book/)
 
 
 **Important note**

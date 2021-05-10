@@ -21,7 +21,7 @@ class BaseMiner(ModuleWithRecordsAndDistance):
         """
         self.reset_stats()
         with torch.no_grad():
-            c_f.assert_embeddings_and_labels_are_same_size(embeddings, labels)
+            c_f.check_shapes(embeddings, labels)
             labels = c_f.to_device(labels, embeddings)
             ref_emb, ref_labels = self.set_ref_emb(
                 embeddings, labels, ref_emb, ref_labels
@@ -35,7 +35,7 @@ class BaseMiner(ModuleWithRecordsAndDistance):
             ref_labels = c_f.to_device(ref_labels, ref_emb)
         else:
             ref_emb, ref_labels = embeddings, labels
-        c_f.assert_embeddings_and_labels_are_same_size(ref_emb, ref_labels)
+        c_f.check_shapes(ref_emb, ref_labels)
         return ref_emb, ref_labels
 
 

@@ -409,6 +409,10 @@ Thanks to the contributors who made pull requests!
 	- optimized ```utils.loss_and_miner_utils.get_random_triplet_indices```
 - [JohnGiorgi](https://github.com/JohnGiorgi)
 	- ```all_gather``` in [utils.distributed](https://kevinmusgrave.github.io/pytorch-metric-learning/distributed)
+- [Hummer12007](https://github.com/Hummer12007)
+	- ```utils.key_checker```
+- [vltanh](https://github.com/vltanh)
+	- Made ```InferenceModel.train_indexer``` accept datasets
 - [btseytlin](https://github.com/btseytlin)
     - ```get_nearest_neighbors``` in [InferenceModel](https://kevinmusgrave.github.io/pytorch-metric-learning/inference_models)
 
@@ -429,6 +433,7 @@ Thanks to the contributors who made pull requests!
 - [fralik](https://github.com/fralik)
 - [joaqo](https://github.com/joaqo)
 - [JoOkuma](https://github.com/JoOkuma)
+- [gkouros](https://github.com/gkouros)
 
 ### Facebook AI
 Thank you to [Ser-Nam Lim](https://research.fb.com/people/lim-ser-nam/) at [Facebook AI](https://ai.facebook.com/), and my research advisor, [Professor Serge Belongie](https://vision.cornell.edu/se3/people/serge-belongie/). This project began during my internship at Facebook AI where I received valuable feedback from Ser-Nam, and his team of computer vision and machine learning engineers and research scientists. In particular, thanks to [Ashish Shah](https://www.linkedin.com/in/ashish217/) and [Austin Reiter](https://www.linkedin.com/in/austin-reiter-3962aa7/) for reviewing my code during its early stages of development.

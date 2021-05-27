@@ -127,7 +127,8 @@ class InferenceModel:
 
     def get_embeddings(self, x):
         if isinstance(x, list):
-            x = torch.stack(x)
+            if all(map(lambda x_: isinstance(x_, torch.Tensor), x)):
+                x = torch.stack(x)
 
         self.trunk.eval()
         self.embedder.eval()

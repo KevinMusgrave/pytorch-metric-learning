@@ -90,7 +90,7 @@ class TestInference(unittest.TestCase):
         inference_model = InferenceModel(trunk=model)
         inference_model.train_indexer(dataset)
         inference_model.add_to_indexer([["test1", "test2"], ["test3", "test4"]])
-        result = inference_model.get_nearest_neighbors([["dog", "cat"]], k=10)
+        result = inference_model.get_nearest_neighbors(["dog", "cat"], k=10)
 
     def helper_assertions(self, inference_model):
         self.assertTrue(inference_model.indexer.index.is_trained)

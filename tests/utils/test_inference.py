@@ -1,5 +1,6 @@
 import os
 import unittest
+import uuid
 
 import faiss
 import torch
@@ -10,6 +11,22 @@ from pytorch_metric_learning.utils import common_functions
 from pytorch_metric_learning.utils.inference import InferenceModel
 
 from .. import TEST_DEVICE
+
+
+class TextModel(torch.nn.Module):
+    def forward(self, list_of_text):
+        return torch.randn(len(list_of_text), 32)
+
+
+class TextDataset(torch.utils.data.Dataset):
+    def __init__(self):
+        self.data = [str(uuid.uuid4()) for _ in range(500)]
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        return self.data[idx], 0
 
 
 class TestInference(unittest.TestCase):
@@ -66,6 +83,14 @@ class TestInference(unittest.TestCase):
         inference_model.indexer.index = faiss.IndexFlatL2(512)
         inference_model.add_to_indexer(self.dataset)
         self.helper_assertions(inference_model)
+
+    def test_list_of_text(self):
+        model = TextModel()
+        dataset = TextDataset()
+        inference_model = InferenceModel(trunk=model)
+        inference_model.train_indexer(dataset)
+        inference_model.add_to_indexer([["test1", "test2"], ["test3", "test4"]])
+        result = inference_model.get_nearest_neighbors([["dog", "cat"]], k=10)
 
     def helper_assertions(self, inference_model):
         self.assertTrue(inference_model.indexer.index.is_trained)

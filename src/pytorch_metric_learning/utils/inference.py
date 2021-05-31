@@ -93,11 +93,9 @@ class InferenceModel:
         self.normalize_embeddings = normalize_embeddings
 
     def get_embeddings_from_tensor_or_dataset(self, inputs, batch_size):
-        if isinstance(inputs, list):
-            inputs = torch.stack(inputs)
-
+        inputs = self.process_if_list(inputs)
         embeddings = []
-        if torch.is_tensor(inputs):
+        if isinstance(inputs, (torch.Tensor, list)):
             for i in range(0, len(inputs), batch_size):
                 embeddings.append(self.get_embeddings(inputs[i : i + batch_size]))
         elif isinstance(inputs, torch.utils.data.Dataset):
@@ -109,12 +107,14 @@ class InferenceModel:
         return torch.cat(embeddings)
 
     def train_indexer(self, inputs, batch_size=64):
-        embeddings = self.get_embeddings_from_tensor_or_dataset(inputs, batch_size)
-        self.indexer.train_index(embeddings.cpu().numpy())
+        self.call_indexer(self.indexer.train_index, inputs, batch_size)
 
     def add_to_indexer(self, inputs, batch_size=64):
+        self.call_indexer(self.indexer.add_to_index, inputs, batch_size)
+
+    def call_indexer(self, func, inputs, batch_size):
         embeddings = self.get_embeddings_from_tensor_or_dataset(inputs, batch_size)
-        self.indexer.add_to_index(embeddings.cpu().numpy())
+        func(embeddings.cpu().numpy())
 
     def get_nearest_neighbors(self, query, k):
         if not self.indexer.index or not self.indexer.index.is_trained:
@@ -126,9 +126,7 @@ class InferenceModel:
         return indices, distances
 
     def get_embeddings(self, x):
-        if isinstance(x, list):
-            x = torch.stack(x)
-
+        x = self.process_if_list(x)
         self.trunk.eval()
         self.embedder.eval()
         with torch.no_grad():
@@ -158,6 +156,11 @@ class InferenceModel:
 
     def load_index(self, filename):
         self.indexer.load(filename)
+
+    def process_if_list(self, x):
+        if isinstance(x, list) and all(isinstance(x_, torch.Tensor) for x_ in x):
+            return torch.stack(x)
+        return x
 
 
 class LogitGetter(torch.nn.Module):

@@ -94,14 +94,6 @@ class TestTripletMarginLoss(unittest.TestCase):
                 torch.isclose(lossE, correct_smooth_loss / len(triplets), rtol=rtol)
             )
 
-            for L in loss_funcs:
-                testing_utils.is_not_none_if_condition(
-                    self,
-                    L,
-                    ["avg_triplet_margin", "pos_pair_dist", "neg_pair_dist"],
-                    WITH_COLLECT_STATS,
-                )
-
     def test_with_no_valid_triplets(self):
         loss_funcA = TripletMarginLoss(margin=0.2)
         loss_funcB = TripletMarginLoss(margin=0.2, reducer=MeanReducer())

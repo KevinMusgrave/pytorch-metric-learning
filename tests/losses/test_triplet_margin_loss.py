@@ -7,7 +7,8 @@ from pytorch_metric_learning.losses import TripletMarginLoss
 from pytorch_metric_learning.reducers import MeanReducer
 from pytorch_metric_learning.utils import common_functions as c_f
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, WITH_COLLECT_STATS
+from ..zzz_testing_utils import testing_utils
 
 
 class TestTripletMarginLoss(unittest.TestCase):
@@ -31,9 +32,10 @@ class TestTripletMarginLoss(unittest.TestCase):
             )  # 2D embeddings
             labels = torch.LongTensor([0, 0, 1, 1, 2])
 
+            loss_funcs = [loss_funcA, loss_funcB, loss_funcC, loss_funcD, loss_funcE]
+
             [lossA, lossB, lossC, lossD, lossE] = [
-                x(embeddings, labels)
-                for x in [loss_funcA, loss_funcB, loss_funcC, loss_funcD, loss_funcE]
+                x(embeddings, labels) for x in loss_funcs
             ]
 
             triplets = [
@@ -91,6 +93,14 @@ class TestTripletMarginLoss(unittest.TestCase):
             self.assertTrue(
                 torch.isclose(lossE, correct_smooth_loss / len(triplets), rtol=rtol)
             )
+
+            for L in loss_funcs:
+                testing_utils.is_not_none_if_condition(
+                    self,
+                    L,
+                    ["avg_triplet_margin", "pos_pair_dist", "neg_pair_dist"],
+                    WITH_COLLECT_STATS,
+                )
 
     def test_with_no_valid_triplets(self):
         loss_funcA = TripletMarginLoss(margin=0.2)

@@ -6,7 +6,8 @@ import torch
 from pytorch_metric_learning.losses import AngularLoss
 from pytorch_metric_learning.utils import common_functions as c_f
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, WITH_COLLECT_STATS
+from ..zzz_testing_utils import testing_utils
 
 
 class TestAngularLoss(unittest.TestCase):
@@ -57,6 +58,10 @@ class TestAngularLoss(unittest.TestCase):
                 total_loss += torch.log(1 + c)
             total_loss /= len(correct_losses)
             self.assertTrue(torch.isclose(loss, total_loss))
+
+            testing_utils.is_not_none_if_condition(
+                self, loss_func, ["average_angle"], WITH_COLLECT_STATS
+            )
 
     def test_with_no_valid_triplets(self):
         loss_func = AngularLoss(alpha=40)

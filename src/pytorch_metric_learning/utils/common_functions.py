@@ -11,7 +11,7 @@ import torch
 LOGGER_NAME = "PML"
 LOGGER = logging.getLogger(LOGGER_NAME)
 NUMPY_RANDOM = np.random
-COLLECT_STATS = True
+COLLECT_STATS = False
 
 
 def set_logger_name(name):

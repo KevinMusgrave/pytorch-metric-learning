@@ -6,7 +6,8 @@ import torch
 from pytorch_metric_learning.losses import TupletMarginLoss
 from pytorch_metric_learning.utils import common_functions as c_f
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, WITH_COLLECT_STATS
+from ..zzz_testing_utils import testing_utils
 
 
 class TestTupletMarginLoss(unittest.TestCase):
@@ -69,6 +70,10 @@ class TestTupletMarginLoss(unittest.TestCase):
             correct_total /= len(pos_pairs)
             rtol = 1e-2 if dtype == torch.float16 else 1e-5
             self.assertTrue(torch.isclose(loss, correct_total, rtol=rtol))
+
+            testing_utils.is_not_none_if_condition(
+                self, loss_func, ["avg_pos_angle", "avg_neg_angle"], WITH_COLLECT_STATS
+            )
 
     def test_with_no_valid_pairs(self):
         loss_func = TupletMarginLoss(0.1, 64)

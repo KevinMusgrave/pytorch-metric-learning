@@ -15,7 +15,7 @@ class TestAngularLoss(unittest.TestCase):
         loss_func = AngularLoss(alpha=40)
 
         for dtype in TEST_DTYPES:
-            embedding_angles = [0, 20, 40, 60, 80]
+            embedding_angles = [0, 20, 40, 60, 80, 100]
             embeddings = torch.tensor(
                 [c_f.angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
@@ -23,7 +23,7 @@ class TestAngularLoss(unittest.TestCase):
             ).to(
                 TEST_DEVICE
             )  # 2D embeddings
-            labels = torch.LongTensor([0, 0, 1, 1, 2])
+            labels = torch.LongTensor([0, 0, 1, 1, 2, 0])
 
             loss = loss_func(embeddings, labels)
             loss.backward()
@@ -35,18 +35,32 @@ class TestAngularLoss(unittest.TestCase):
                 (0, 1, 2),
                 (0, 1, 3),
                 (0, 1, 4),
+                (0, 5, 2),
+                (0, 5, 3),
+                (0, 5, 4),
                 (1, 0, 2),
                 (1, 0, 3),
                 (1, 0, 4),
+                (1, 5, 2),
+                (1, 5, 3),
+                (1, 5, 4),
                 (2, 3, 0),
                 (2, 3, 1),
                 (2, 3, 4),
                 (3, 2, 0),
                 (3, 2, 1),
                 (3, 2, 4),
+                (5, 0, 2),
+                (5, 0, 3),
+                (5, 0, 4),
+                (5, 1, 2),
+                (5, 1, 3),
+                (5, 1, 4),
             ]
 
-            correct_losses = [0, 0, 0, 0]
+            correct_losses = [
+                torch.tensor(0, device=TEST_DEVICE, dtype=dtype) for _ in range(6)
+            ]
             for a, p, n in triplets:
                 anchor, positive, negative = embeddings[a], embeddings[p], embeddings[n]
                 exponent = 4 * sq_tan_alpha * torch.matmul(
@@ -56,7 +70,7 @@ class TestAngularLoss(unittest.TestCase):
             total_loss = 0
             for c in correct_losses:
                 total_loss += torch.log(1 + c)
-            total_loss /= len(correct_losses)
+            total_loss /= 5  # there are 5 elements that have at least 1 positive
             self.assertTrue(torch.isclose(loss, total_loss))
 
             testing_utils.is_not_none_if_condition(

@@ -239,6 +239,11 @@ See [powerful-benchmarker](https://github.com/KevinMusgrave/powerful-benchmarker
 
 
 ## Development
+Development is done on the ```dev``` branch:
+```
+git checkout dev
+```
+
 Unit tests can be run with the default ```unittest``` library:
 ```bash
 python -m unittest discover

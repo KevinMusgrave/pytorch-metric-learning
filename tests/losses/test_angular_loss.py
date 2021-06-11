@@ -47,9 +47,11 @@ class TestAngularLoss(unittest.TestCase):
                 (2, 3, 0),
                 (2, 3, 1),
                 (2, 3, 4),
+                (2, 3, 5),
                 (3, 2, 0),
                 (3, 2, 1),
                 (3, 2, 4),
+                (3, 2, 5),
                 (5, 0, 2),
                 (5, 0, 3),
                 (5, 0, 4),
@@ -58,20 +60,31 @@ class TestAngularLoss(unittest.TestCase):
                 (5, 1, 4),
             ]
 
-            correct_losses = [
-                torch.tensor(0, device=TEST_DEVICE, dtype=dtype) for _ in range(6)
+            unique_pairs = [
+                (0, 1),
+                (0, 5),
+                (1, 0),
+                (1, 5),
+                (2, 3),
+                (3, 2),
+                (5, 0),
+                (5, 1),
             ]
-            for a, p, n in triplets:
+
+            correct_losses = [
+                torch.tensor(0, device=TEST_DEVICE, dtype=dtype) for _ in range(8)
+            ]
+            for (a, p, n) in triplets:
                 anchor, positive, negative = embeddings[a], embeddings[p], embeddings[n]
                 exponent = 4 * sq_tan_alpha * torch.matmul(
                     anchor + positive, negative
                 ) - 2 * (1 + sq_tan_alpha) * torch.matmul(anchor, positive)
-                correct_losses[a] += torch.exp(exponent)
+                correct_losses[unique_pairs.index((a, p))] += torch.exp(exponent)
             total_loss = 0
             for c in correct_losses:
                 total_loss += torch.log(1 + c)
-            total_loss /= 5  # there are 5 elements that have at least 1 positive
-            self.assertTrue(torch.isclose(loss, total_loss))
+            total_loss /= len(correct_losses)
+            self.assertTrue(torch.isclose(loss, total_loss, rtol=1e-2))
 
             testing_utils.is_not_none_if_condition(
                 self, loss_func, ["average_angle"], WITH_COLLECT_STATS

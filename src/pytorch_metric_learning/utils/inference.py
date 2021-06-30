@@ -81,6 +81,8 @@ class InferenceModel:
         match_finder=None,
         normalize_embeddings=True,
         indexer=None,
+        data_device=None,
+        dtype=None,
     ):
         self.trunk = trunk
         self.embedder = c_f.Identity() if embedder is None else embedder
@@ -91,6 +93,12 @@ class InferenceModel:
         )
         self.indexer = FaissIndexer() if indexer is None else indexer
         self.normalize_embeddings = normalize_embeddings
+        self.data_device = (
+            torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            if data_device is None
+            else data_device
+        )
+        self.dtype = dtype
 
     def get_embeddings_from_tensor_or_dataset(self, inputs, batch_size):
         inputs = self.process_if_list(inputs)
@@ -127,6 +135,8 @@ class InferenceModel:
 
     def get_embeddings(self, x):
         x = self.process_if_list(x)
+        if isinstance(x, torch.Tensor):
+            x = c_f.to_device(x, device=self.data_device, dtype=self.dtype)
         self.trunk.eval()
         self.embedder.eval()
         with torch.no_grad():

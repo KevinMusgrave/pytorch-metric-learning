@@ -199,6 +199,7 @@ class AccuracyCalculator:
         avg_of_avgs=False,
         k=None,
         label_comparison_fn=None,
+        device=None,
     ):
         self.function_keyword = "calculate_"
         function_names = [x for x in dir(self) if x.startswith(self.function_keyword)]
@@ -210,6 +211,7 @@ class AccuracyCalculator:
         self.original_function_dict = self.get_function_dict(include, exclude)
         self.curr_function_dict = self.get_function_dict()
         self.avg_of_avgs = avg_of_avgs
+        self.device = c_f.use_cuda_if_available() if device is None else device
 
         if (not (isinstance(k, int) and k > 0)) and (k not in [None, "max_bin_count"]):
             raise ValueError(
@@ -361,7 +363,7 @@ class AccuracyCalculator:
         exclude=(),
     ):
         [query, reference, query_labels, reference_labels] = [
-            c_f.numpy_to_torch(x)
+            c_f.numpy_to_torch(x).to(self.device)
             for x in [query, reference, query_labels, reference_labels]
         ]
 

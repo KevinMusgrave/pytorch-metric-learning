@@ -205,9 +205,7 @@ class BaseTrainer:
 
     def initialize_data_device(self):
         if self.data_device is None:
-            self.data_device = torch.device(
-                "cuda" if torch.cuda.is_available() else "cpu"
-            )
+            self.data_device = c_f.use_cuda_if_available()
 
     def initialize_label_mapper(self):
         self.label_mapper = c_f.LabelMapper(

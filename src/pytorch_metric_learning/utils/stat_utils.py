@@ -17,11 +17,12 @@ def add_to_index_and_search(index, reference_embeddings, test_embeddings, k):
     return index.search(test_embeddings, k)
 
 
-def try_gpu(cpu_index, reference_embeddings, test_embeddings, k):
+def try_gpu(cpu_index, reference_embeddings, test_embeddings, k, is_cuda):
     # https://github.com/facebookresearch/faiss/blob/master/faiss/gpu/utils/DeviceDefs.cuh
     gpu_index = None
     gpus_are_available = faiss.get_num_gpus() > 0
-    if gpus_are_available:
+    gpu_condition = is_cuda and gpus_are_available
+    if gpu_condition:
         max_k_for_gpu = 1024 if float(torch.version.cuda) < 9.5 else 2048
         if k <= max_k_for_gpu:
             gpu_index = faiss.index_cpu_to_all_gpus(cpu_index)
@@ -30,7 +31,7 @@ def try_gpu(cpu_index, reference_embeddings, test_embeddings, k):
             gpu_index, reference_embeddings, test_embeddings, k
         )
     except (AttributeError, RuntimeError) as e:
-        if gpus_are_available:
+        if gpu_condition:
             c_f.LOGGER.warning(
                 f"Using CPU for k-nn search because k = {k} > {max_k_for_gpu}, which is the maximum allowable on GPU."
             )
@@ -46,6 +47,7 @@ def get_knn(
     if embeddings_come_from_same_source:
         k = k + 1
     device = reference_embeddings.device
+    is_cuda = reference_embeddings.is_cuda
     reference_embeddings = c_f.to_numpy(reference_embeddings).astype(np.float32)
     test_embeddings = c_f.to_numpy(test_embeddings).astype(np.float32)
 
@@ -53,7 +55,9 @@ def get_knn(
     c_f.LOGGER.info("running k-nn with k=%d" % k)
     c_f.LOGGER.info("embedding dimensionality is %d" % d)
     cpu_index = faiss.IndexFlatL2(d)
-    distances, indices = try_gpu(cpu_index, reference_embeddings, test_embeddings, k)
+    distances, indices = try_gpu(
+        cpu_index, reference_embeddings, test_embeddings, k, is_cuda
+    )
     distances = c_f.to_device(torch.from_numpy(distances), device=device)
     indices = c_f.to_device(torch.from_numpy(indices), device=device)
     if embeddings_come_from_same_source:

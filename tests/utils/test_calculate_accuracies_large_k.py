@@ -5,6 +5,8 @@ import torch
 
 from pytorch_metric_learning.utils import accuracy_calculator, stat_utils
 
+from .. import TEST_DEVICE
+
 ### FROM https://gist.github.com/VChristlein/fd55016f8d1b38e95011a025cbff9ccc
 ### and https://github.com/KevinMusgrave/pytorch-metric-learning/issues/290
 
@@ -30,12 +32,16 @@ class TestCalculateAccuraciesLargeK(unittest.TestCase):
                     if max_k is None:
                         k = len(encs) - 1 if ecfss else len(encs)
                         accs = [
-                            accuracy_calculator.AccuracyCalculator(),
-                            accuracy_calculator.AccuracyCalculator(k=k),
+                            accuracy_calculator.AccuracyCalculator(device=TEST_DEVICE),
+                            accuracy_calculator.AccuracyCalculator(
+                                k=k, device=TEST_DEVICE
+                            ),
                         ]
                     elif max_k == "max_bin_count":
                         accs = [
-                            accuracy_calculator.AccuracyCalculator(k="max_bin_count")
+                            accuracy_calculator.AccuracyCalculator(
+                                k="max_bin_count", device=TEST_DEVICE
+                            )
                         ]
 
                     for acc in accs:

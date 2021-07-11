@@ -503,3 +503,7 @@ def exclude(it, targets):
 
 def append_map(it, suf):
     return [x + suf for x in it]
+
+
+def use_cuda_if_available():
+    return torch.device("cuda" if torch.cuda.is_available() else "cpu")

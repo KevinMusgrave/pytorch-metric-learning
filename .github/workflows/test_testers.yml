@@ -21,9 +21,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        pytorch-version: [1.6, 1.7, 1.8]
+        pytorch-version: [1.6, 1.7, 1.8, 1.9]
         python-version: [3.8]
-        with-collect-stats: [true, false]
+        with-collect-stats: [false]
         
     steps:
     - uses: actions/checkout@v2

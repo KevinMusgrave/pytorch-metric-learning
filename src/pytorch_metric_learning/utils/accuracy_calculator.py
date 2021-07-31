@@ -200,6 +200,8 @@ class AccuracyCalculator:
         k=None,
         label_comparison_fn=None,
         device=None,
+        knn_func=None,
+        kmeans_func=None,
     ):
         self.function_keyword = "calculate_"
         function_names = [x for x in dir(self) if x.startswith(self.function_keyword)]
@@ -212,6 +214,8 @@ class AccuracyCalculator:
         self.curr_function_dict = self.get_function_dict()
         self.avg_of_avgs = avg_of_avgs
         self.device = c_f.use_cuda_if_available() if device is None else device
+        self.knn_func = FaissKNN() if knn_func is None else knn_func
+        self.kmeans_func = FaissKMeans() if kmeans_func is None else kmeans_func
 
         if (not (isinstance(k, int) and k > 0)) and (k not in [None, "max_bin_count"]):
             raise ValueError(
@@ -254,7 +258,7 @@ class AccuracyCalculator:
 
     def get_cluster_labels(self, query, query_labels, **kwargs):
         num_clusters = len(torch.unique(query_labels.flatten()))
-        return stat_utils.run_kmeans(query, num_clusters)
+        return self.kmeans_func(query, num_clusters)
 
     def calculate_NMI(self, query_labels, cluster_labels, **kwargs):
         [query_labels, cluster_labels] = [
@@ -393,8 +397,8 @@ class AccuracyCalculator:
                 label_counts[1], len(reference), embeddings_come_from_same_source
             )
 
-            knn_indices, knn_distances = stat_utils.get_knn(
-                reference, query, num_k, embeddings_come_from_same_source
+            knn_indices, knn_distances = self.knn_func(
+                query, reference, num_k, embeddings_come_from_same_source
             )
 
             knn_labels = reference_labels[knn_indices]

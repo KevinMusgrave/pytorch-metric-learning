@@ -49,20 +49,19 @@ class MatchFinder:
 
 
 class FaissIndexer:
-    def __init__(self, index=None):
+    def __init__(self, index_cls=None):
         import faiss as faiss_module
 
         self.faiss_module = faiss_module
-        self.index = index
-
-    def train_index(self, embeddings):
-        self.index = self.faiss_module.IndexFlatL2(embeddings.shape[1])
-        self.add_to_index(embeddings)
+        self.index_cls = faiss_module.IndexFlatL2 if index_cls is None else index_cls
+        self.index = None
 
     def add_to_index(self, embeddings):
+        if self.index is None:
+            self.index = self.index_cls(embeddings.shape[1])
         self.index.add(embeddings)
 
-    def search_nn(self, query_batch, k):
+    def get_knn(self, query_batch, k):
         D, I = self.index.search(query_batch, k)
         return I, D
 
@@ -122,7 +121,7 @@ class InferenceModel:
 
     def call_indexer(self, func, inputs, batch_size):
         embeddings = self.get_embeddings_from_tensor_or_dataset(inputs, batch_size)
-        func(embeddings.cpu().numpy())
+        self.indexer(embeddings.cpu().numpy())
 
     def get_nearest_neighbors(self, query, k):
         if not self.indexer.index or not self.indexer.index.is_trained:

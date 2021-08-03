@@ -26,7 +26,7 @@ class BaseTrainer:
         freeze_these=(),
         freeze_trunk_batchnorm=False,
         label_hierarchy_level=0,
-        dataloader_num_workers=32,
+        dataloader_num_workers=2,
         data_and_label_getter=None,
         dataset_labels=None,
         set_min_label_to_zero=False,

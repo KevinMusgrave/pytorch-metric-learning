@@ -291,7 +291,7 @@ class AccuracyCalculator:
         not_lone_query_mask,
         embeddings_come_from_same_source,
         label_counts,
-        **kwargs
+        **kwargs,
     ):
         knn_labels, query_labels = try_getting_not_lone_labels(
             knn_labels, query_labels, not_lone_query_mask
@@ -313,7 +313,7 @@ class AccuracyCalculator:
         query_labels,
         not_lone_query_mask,
         embeddings_come_from_same_source,
-        **kwargs
+        **kwargs,
     ):
         knn_labels, query_labels = try_getting_not_lone_labels(
             knn_labels, query_labels, not_lone_query_mask
@@ -336,7 +336,7 @@ class AccuracyCalculator:
         not_lone_query_mask,
         embeddings_come_from_same_source,
         label_counts,
-        **kwargs
+        **kwargs,
     ):
         knn_labels, query_labels = try_getting_not_lone_labels(
             knn_labels, query_labels, not_lone_query_mask
@@ -432,10 +432,22 @@ class AccuracyCalculator:
         self, bin_counts, num_reference_embeddings, embeddings_come_from_same_source
     ):
         self_count = int(embeddings_come_from_same_source)
+        max_bin_count = torch.max(bin_counts).item()
         if self.k == "max_bin_count":
-            return torch.max(bin_counts).item() - self_count
+            return max_bin_count - self_count
         if self.k is None:
             return num_reference_embeddings - self_count
+        if self.k < max_bin_count:
+            intersection = set(self.get_curr_metrics()).intersection(
+                set({"r_precision", "mean_average_precision_at_r"})
+            )
+            if len(intersection) > 0:
+                warning_str = f"\nWarning: You are computing {intersection}, but the value for k ({self.k})"
+                warning_str += f" is less than the max bin count ({max_bin_count}) so the values for these metrics will be incorrect."
+                warning_str += " To fix this, set k='max_bin_count'."
+                warning_str += f"\nIf you're looking for MAP@{self.k} instead of MAP@R, then you should use 'mean_average_precision'"
+                warning_str += " rather than mean_average_precision_at_r"
+                c_f.LOGGER.warning(warning_str)
         return self.k
 
     def description(self):

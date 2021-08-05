@@ -56,7 +56,8 @@ class DistributedLossWrapper(torch.nn.Module):
 
     def forward(self, embeddings, labels, *args, **kwargs):
         embeddings, labels = all_gather_embeddings_labels(embeddings, labels)
-        return self.loss(embeddings, labels, *args, **kwargs)
+        world_size = torch.distributed.get_world_size()
+        return world_size * self.loss(embeddings, labels, *args, **kwargs)
 
 
 class DistributedMinerWrapper(torch.nn.Module):

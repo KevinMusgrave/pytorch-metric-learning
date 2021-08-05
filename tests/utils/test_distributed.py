@@ -132,7 +132,7 @@ def single_process_function(
             correct_loss_size = original_loss_fn.reducer.losses_size
             assert loss_size == correct_loss_size
 
-    assert torch.isclose(loss, torch.from_numpy(correct_loss).to(device))
+    assert torch.isclose(loss, torch.from_numpy(correct_loss).to(device) * world_size)
     assert miner_fn.miner.num_pos_pairs == original_miner_fn.num_pos_pairs
     assert miner_fn.miner.num_neg_pairs == original_miner_fn.num_neg_pairs
     for i in range(len(correct_indices_tuple)):
@@ -245,10 +245,7 @@ class TestDistributedLossWrapper(unittest.TestCase):
                     all_outputs, all_labels, correct_indices_tuple
                 )
 
-                if TEST_DEVICE == torch.device("cpu"):
-                    correct_loss.backward(retain_graph=True)
-                else:
-                    (correct_loss / world_size).backward(retain_graph=True)
+                correct_loss.backward(retain_graph=True)
                 optimizer.step()
                 if not is_tuple_loss:
                     for p in original_loss_fn.parameters():

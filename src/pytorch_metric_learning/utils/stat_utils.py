@@ -70,7 +70,13 @@ def get_knn(
     c_f.LOGGER.info("running k-nn with k=%d" % k)
     c_f.LOGGER.info("embedding dimensionality is %d" % d)
     if index is None:
-        index = faiss.IndexFlatL2(d)
+        # TODO hope and pray that this issue gets fixed
+        # https://github.com/facebookresearch/faiss/issues/1997
+        if is_cuda:
+            res = faiss.StandardGpuResources()
+            index = faiss.GpuIndexFlatL2(res, d)
+        else:
+            index = faiss.IndexFlatL2(d)
     distances, indices = try_gpu(
         index, reference_embeddings.float(), test_embeddings.float(), k, is_cuda
     )

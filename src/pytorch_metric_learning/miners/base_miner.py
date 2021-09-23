@@ -66,7 +66,7 @@ class BaseTupleMiner(BaseMiner):
             assert self.num_pos_pairs == len(output[1])
             assert self.num_neg_pairs == len(output[3])
         else:
-            raise BaseException
+            raise TypeError
 
 
 class BaseSubsetBatchMiner(BaseMiner):

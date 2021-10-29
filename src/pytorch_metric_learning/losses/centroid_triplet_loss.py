@@ -18,7 +18,6 @@ def concat_indices_tuple(x):
 class CentroidTripletLoss(BaseMetricLossFunction):
     def __init__(
         self,
-        allow_imbalanced=False,
         margin=0.05,
         swap=False,
         smooth_loss=False,
@@ -26,7 +25,6 @@ class CentroidTripletLoss(BaseMetricLossFunction):
         **kwargs
     ):
         super().__init__(**kwargs)
-        self.allow_imbalanced = allow_imbalanced
         self.margin = margin
         self.swap = swap
         self.smooth_loss = smooth_loss

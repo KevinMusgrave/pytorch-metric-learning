@@ -314,7 +314,7 @@ This library contains code that has been adapted and modified from the following
 - http://kaizhao.net/regularface
 
 ### Logo
-Thanks to [Jeff Musgrave](https://jeffmusgrave.com) for designing the logo.
+Thanks to [Jeff Musgrave](https://www.designgenius.ca/) for designing the logo.
 
 ## Citing this library
 If you'd like to cite pytorch-metric-learning in your paper, you can use this bibtex:

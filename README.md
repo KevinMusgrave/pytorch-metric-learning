@@ -200,6 +200,8 @@ To learn more about all of the above, [see the documentation](https://kevinmusgr
  - ```pytorch-metric-learning >= v0.9.90``` requires ```torch >= 1.6```
  - ```pytorch-metric-learning < v0.9.90``` doesn't have a version requirement, but was tested with ```torch >= 1.2```
 
+Other dependencies: ```numpy, scikit-learn, tqdm, torchvision```
+
 ### Pip
 ```
 pip install pytorch-metric-learning
@@ -216,12 +218,16 @@ pip install torch===1.6.0 torchvision===0.7.0 -f https://download.pytorch.org/wh
 pip install pytorch-metric-learning
 ```
 
-**To install with evaluation and logging capabilities (This will install the unofficial pypi version of faiss-gpu)**:
+**To install with evaluation and logging capabilities**
+
+(This will install the unofficial pypi version of faiss-gpu, plus record-keeper and tensorboard):
 ```
 pip install pytorch-metric-learning[with-hooks]
 ```
 
-**To install with evaluation and logging capabilities (CPU) (This will install the unofficial pypi version of faiss-cpu)**:
+**To install with evaluation and logging capabilities (CPU)**
+
+(This will install the unofficial pypi version of faiss-cpu, plus record-keeper and tensorboard):
 ```
 pip install pytorch-metric-learning[with-hooks-cpu]
 ```

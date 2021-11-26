@@ -43,10 +43,12 @@ def gather(embeddings, labels):
     dist_ref_emb, dist_ref_labels = all_gather_embeddings_and_labels(embeddings, labels)
     all_emb = torch.cat([embeddings, dist_ref_emb], dim=0)
     all_labels = torch.cat([labels, dist_ref_labels], dim=0)
-    return all_emb, all_labels, device
+    return all_emb, all_labels, labels, device
 
 
-def get_indices_tuple(labels, ref_labels, embeddings=None, ref_emb=None, miner=None):
+def get_indices_tuple(
+    labels, ref_labels, device, embeddings=None, ref_emb=None, miner=None
+):
     curr_batch_idx = torch.arange(len(labels), device=device)
     if miner:
         indices_tuple = miner(embeddings, labels, ref_emb, ref_labels)
@@ -68,10 +70,11 @@ class DistributedLossWrapper(torch.nn.Module):
         if world_size <= 1:
             return self.loss(embeddings, labels, indices_tuple)
 
-        all_emb, all_labels, device = gather(embeddings, labels)
+        all_emb, all_labels, labels, device = gather(embeddings, labels)
 
         if self.efficient:
-            indices_tuple = get_indices_tuple(labels, all_labels)
+            if indices_tuple is None:
+                indices_tuple = get_indices_tuple(labels, all_labels, device)
             loss = self.loss(embeddings, labels, indices_tuple, all_emb, all_labels)
         else:
             loss = self.loss(all_emb, all_labels, indices_tuple)
@@ -88,10 +91,10 @@ class DistributedMinerWrapper(torch.nn.Module):
         self.efficient = efficient
 
     def forward(self, embeddings, labels):
-        all_emb, all_labels, device = gather(embeddings, labels)
+        all_emb, all_labels, labels, device = gather(embeddings, labels)
         if self.efficient:
             return get_indices_tuple(
-                labels, all_labels, embeddings, all_emb, self.miner
+                labels, all_labels, device, embeddings, all_emb, self.miner
             )
         else:
             return self.miner(all_emb, all_labels)

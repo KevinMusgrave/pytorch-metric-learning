@@ -505,10 +505,10 @@ class TestCrossBatchMemory(unittest.TestCase):
                     self.assertTrue(
                         torch.all((labels[a2] - self.loss.label_memory[n]).bool())
                     )
-                    self.assertTrue(len(a1) == len(a1i) + len(a1ii))
-                    self.assertTrue(len(p) == len(pi) + len(pii))
-                    self.assertTrue(len(a2) == len(a2i) + len(a2ii))
-                    self.assertTrue(len(n) == len(ni) + len(nii))
+                    self.assertTrue(torch.all(a1 == torch.cat([a1i, a1ii])))
+                    self.assertTrue(torch.all(p == torch.cat([pi, pii])))
+                    self.assertTrue(torch.all(a2 == torch.cat([a2i, a2ii])))
+                    self.assertTrue(torch.all(n == torch.cat([ni, nii])))
 
 
 if __name__ == "__main__":

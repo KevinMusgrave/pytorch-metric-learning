@@ -28,12 +28,7 @@ def meshgrid_from_sizes(x, y, dim=0):
     return torch.meshgrid(a, b)
 
 
-def get_all_pairs_indices(labels, ref_labels=None):
-    """
-    Given a tensor of labels, this will return 4 tensors.
-    The first 2 tensors are the indices which form all positive pairs
-    The second 2 tensors are the indices which form all negative pairs
-    """
+def get_matches_and_diffs(labels, ref_labels=None):
     if ref_labels is None:
         ref_labels = labels
     labels1 = labels.unsqueeze(1)
@@ -42,6 +37,16 @@ def get_all_pairs_indices(labels, ref_labels=None):
     diffs = matches ^ 1
     if ref_labels is labels:
         matches.fill_diagonal_(0)
+    return matches, diffs
+
+
+def get_all_pairs_indices(labels, ref_labels=None):
+    """
+    Given a tensor of labels, this will return 4 tensors.
+    The first 2 tensors are the indices which form all positive pairs
+    The second 2 tensors are the indices which form all negative pairs
+    """
+    matches, diffs = get_matches_and_diffs(labels, ref_labels)
     a1_idx, p_idx = torch.where(matches)
     a2_idx, n_idx = torch.where(diffs)
     return a1_idx, p_idx, a2_idx, n_idx
@@ -80,14 +85,7 @@ def neg_pairs_from_tuple(indices_tuple):
 
 
 def get_all_triplets_indices(labels, ref_labels=None):
-    if ref_labels is None:
-        ref_labels = labels
-    labels1 = labels.unsqueeze(1)
-    labels2 = ref_labels.unsqueeze(0)
-    matches = (labels1 == labels2).byte()
-    diffs = matches ^ 1
-    if ref_labels is labels:
-        matches.fill_diagonal_(0)
+    matches, diffs = get_matches_and_diffs(labels, ref_labels)
     triplets = matches.unsqueeze(2) * diffs.unsqueeze(1)
     return torch.where(triplets)
 

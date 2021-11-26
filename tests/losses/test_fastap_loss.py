@@ -209,6 +209,8 @@ class TestFastAPLoss(unittest.TestCase):
         num_bins = 5
         loss_func = FastAPLoss(num_bins)
         original_loss_func = OriginalImplementationFastAPLoss(num_bins)
+        ref_emb = torch.randn(32, 32)
+        ref_labels = torch.randint(0, 10, (32,))
 
         for dtype in TEST_DTYPES:
             embedding_angles = torch.arange(0, 180)
@@ -226,3 +228,11 @@ class TestFastAPLoss(unittest.TestCase):
             original_loss = original_loss_func(embeddings, labels)
             rtol = 1e-2 if dtype == torch.float16 else 1e-5
             self.assertTrue(torch.isclose(loss, original_loss, rtol=rtol))
+
+            # fastap doesn't support ref_emb
+            self.assertRaises(
+                ValueError,
+                lambda: loss_func(
+                    embeddings, labels, ref_emb=ref_emb, ref_labels=ref_labels
+                ),
+            )

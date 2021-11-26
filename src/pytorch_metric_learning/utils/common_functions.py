@@ -412,7 +412,7 @@ def angle_to_coord(angle):
 
 
 def check_shapes(embeddings, labels):
-    if embeddings.size(0) != labels.size(0):
+    if embeddings.shape[0] != labels.shape[0]:
         raise ValueError("Number of embeddings must equal number of labels")
     if embeddings.ndim != 2:
         raise ValueError(
@@ -495,6 +495,26 @@ def to_device(x, tensor=None, device=None, dtype=None):
     if dtype is not None:
         x = to_dtype(x, dtype=dtype)
     return x
+
+
+def set_ref_emb(embeddings, labels, ref_emb, ref_labels):
+    if ref_emb is not None:
+        if not torch.is_tensor(ref_labels):
+            TypeError("if ref_emb is given, then ref_labels must also be given")
+        ref_labels = to_device(ref_labels, ref_emb)
+    else:
+        ref_emb, ref_labels = embeddings, labels
+    check_shapes(ref_emb, ref_labels)
+    return ref_emb, ref_labels
+
+
+def ref_not_supported(embeddings, labels, ref_emb, ref_labels):
+    if ref_emb is not embeddings or ref_labels is not labels:
+        raise ValueError("ref_emb is not supported for this loss function")
+
+
+def concatenate_indices_tuples(it1, it2):
+    return tuple([torch.cat([x, to_device(y, x)], dim=0) for x, y in zip(it1, it2)])
 
 
 def exclude(it, targets):

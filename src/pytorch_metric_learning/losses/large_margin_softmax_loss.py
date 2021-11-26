@@ -98,7 +98,8 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         self.cos_powers = c_f.to_device(self.cos_powers, device=device, dtype=dtype)
         self.alternating = c_f.to_device(self.alternating, device=device, dtype=dtype)
 
-    def compute_loss(self, embeddings, labels, indices_tuple):
+    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+        c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
         dtype, device = embeddings.dtype, embeddings.device
         self.cast_types(dtype, device)
         miner_weights = lmu.convert_to_weights(indices_tuple, labels, dtype=dtype)

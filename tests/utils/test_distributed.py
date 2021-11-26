@@ -116,15 +116,14 @@ def create_efficient_batch(x, i, batch_size):
 class TestDistributedLossWrapper(unittest.TestCase):
     def loss_and_miner_tester(self, loss_class, miner_class, efficient):
         torch.manual_seed(75210)
-        if TEST_DEVICE != torch.device("cpu"):
-            max_world_size = min(4, torch.cuda.device_count())
-            if max_world_size < 1:
-                logging.warning(
-                    "In GPU mode but no GPUs available. Skipping distributed test"
-                )
-                return
-        else:
-            max_world_size = 2
+        if TEST_DEVICE == torch.device("cpu"):
+            return
+        max_world_size = min(4, torch.cuda.device_count())
+        if max_world_size < 1:
+            logging.warning(
+                "In GPU mode but no GPUs available. Skipping distributed test"
+            )
+            return
         for dtype in TEST_DTYPES:
             if dtype == torch.float16:
                 continue

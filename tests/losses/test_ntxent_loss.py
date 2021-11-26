@@ -13,6 +13,7 @@ from .utils import get_pair_embeddings_with_ref
 
 class TestNTXentLoss(unittest.TestCase):
     def test_ntxent_loss(self):
+        torch.manual_seed(5430)
         for dtype in TEST_DTYPES:
             embedding_angles = [0, 10, 20, 50, 60, 80]
             embeddings = torch.tensor(
@@ -53,6 +54,7 @@ class TestNTXentLoss(unittest.TestCase):
             self.helper(embeddings, labels, pos_pairs, neg_pairs, dtype)
 
     def test_ntxent_loss_with_ref(self):
+        torch.manual_seed(139)
         for dtype in TEST_DTYPES:
             (
                 embeddings,

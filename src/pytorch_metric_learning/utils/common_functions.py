@@ -524,5 +524,5 @@ def merge_loss_dicts(x, y):
         curr_y = y[k]
         v["losses"] = torch.cat([v["losses"], curr_y["losses"]], dim=0)
         v["indices"] = concatenate_indices_tuples(v["indices"], curr_y["indices"])
-        if curr_y["reduction_type"] != "already_reduced":
-            v["reduction_type"] = curr_y["reduction_type"]
+        if v["reduction_type"] != curr_y["reduction_type"]:
+            raise ValueError("reduction types must be equal when merging loss dicts")

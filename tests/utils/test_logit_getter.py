@@ -25,6 +25,8 @@ class TestLogitGetter(unittest.TestCase):
         batch_size = 32
 
         for dtype in TEST_DTYPES:
+            if dtype == torch.float16:
+                continue
             embeddings = (
                 torch.randn(batch_size, embedding_size).to(TEST_DEVICE).type(dtype)
             )

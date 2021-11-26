@@ -209,3 +209,41 @@ def convert_to_weights(indices_tuple, labels, dtype):
     counts = c_f.to_dtype(counts, dtype=dtype) / torch.sum(counts)
     weights[indices] = counts / torch.max(counts)
     return weights
+
+
+def remove_self_comparisons(indices_tuple, curr_batch_idx, ref_size):
+    # remove self-comparisons
+    assert len(indices_tuple) in [3, 4]
+    s, e = curr_batch_idx[0], curr_batch_idx[-1]
+    if len(indices_tuple) == 3:
+        a, p, n = indices_tuple
+        keep_mask = not_self_comparisons(a, p, s, e, curr_batch_idx, ref_size)
+        a = a[keep_mask]
+        p = p[keep_mask]
+        n = n[keep_mask]
+        assert len(a) == len(p) == len(n)
+        return a, p, n
+    elif len(indices_tuple) == 4:
+        a1, p, a2, n = indices_tuple
+        keep_mask = not_self_comparisons(a1, p, s, e, curr_batch_idx, ref_size)
+        a1 = a1[keep_mask]
+        p = p[keep_mask]
+        assert len(a1) == len(p)
+        assert len(a2) == len(n)
+        return a1, p, a2, n
+
+
+# a: anchors
+# p: positives
+# s: curr batch start idx in queue
+# e: curr batch end idx in queue
+def not_self_comparisons(a, p, s, e, curr_batch_idx, ref_size):
+    curr_batch = torch.any(p.unsqueeze(1) == curr_batch_idx, dim=1)
+    a_c = a[curr_batch]
+    p_c = p[curr_batch]
+    p_c -= s
+    if e <= s:
+        p_c[p_c <= e - s] += ref_size
+    without_self_comparisons = curr_batch.clone()
+    without_self_comparisons[torch.where(curr_batch)[0][a_c == p_c]] = False
+    return without_self_comparisons | ~curr_batch

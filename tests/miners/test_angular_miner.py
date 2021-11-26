@@ -6,7 +6,8 @@ import torch
 from pytorch_metric_learning.miners import AngularMiner
 from pytorch_metric_learning.utils import common_functions as c_f
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, WITH_COLLECT_STATS
+from ..zzz_testing_utils import testing_utils
 
 
 class TestAngularMiner(unittest.TestCase):
@@ -57,6 +58,19 @@ class TestAngularMiner(unittest.TestCase):
                     [(a.item(), p.item(), n.item()) for a, p, n in zip(a1, p1, n1)]
                 )
                 self.assertTrue(mined_triplets == correct_triplets)
+                testing_utils.is_not_none_if_condition(
+                    self,
+                    miner,
+                    [
+                        "average_angle",
+                        "average_angle_above_threshold",
+                        "average_angle_below_threshold",
+                        "min_angle",
+                        "max_angle",
+                        "std_of_angle",
+                    ],
+                    WITH_COLLECT_STATS,
+                )
 
     def test_empty_output(self):
         for dtype in TEST_DTYPES:

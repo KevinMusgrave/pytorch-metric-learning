@@ -50,7 +50,8 @@ class TwoStreamMetricLoss(BaseTrainer):
                 anchors_embeddings, labels, posnegs_embeddings, labels.clone()
             )
         else:
+            labels = labels.to(embeddings[0].device)
             return lmu.get_all_triplets_indices(labels, labels.clone())
 
-    def allowed_mining_funcs_keys(self):
-        return ["tuple_miner"]
+    def modify_schema(self):
+        self.schema["mining_funcs"].keys = ["tuple_miner"]

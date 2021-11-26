@@ -24,7 +24,7 @@ class AngularLoss(BaseMetricLossFunction):
         self.add_to_recordable_attributes(list_of_names=["average_angle"], is_stat=True)
 
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
-        anchors, positives, keep_mask, anchor_idx = self.get_pairs(
+        anchors, positives, keep_mask, anchor_idx, positive_idx = self.get_pairs(
             embeddings, labels, indices_tuple, ref_emb, ref_labels
         )
         if anchors is None:
@@ -44,20 +44,20 @@ class AngularLoss(BaseMetricLossFunction):
         return {
             "loss": {
                 "losses": losses,
-                "indices": anchor_idx,
-                "reduction_type": "element",
+                "indices": (anchor_idx, positive_idx),
+                "reduction_type": "pos_pair",
             }
         }
 
     def get_pairs(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
         a1, p, a2, _ = lmu.convert_to_pairs(indices_tuple, labels, ref_labels)
         if len(a1) == 0 or len(a2) == 0:
-            return [None] * 4
+            return [None] * 5
         anchors = self.distance.normalize(embeddings[a1])
         positives = self.distance.normalize(ref_emb[p])
         keep_mask = labels[a1].unsqueeze(1) != ref_labels.unsqueeze(0)
         self.set_stats(anchors, positives, embeddings, ref_emb, keep_mask)
-        return anchors, positives, keep_mask, a1
+        return anchors, positives, keep_mask, a1, p
 
     def set_stats(self, anchors, positives, embeddings, ref_emb, keep_mask):
         if self.collect_stats:

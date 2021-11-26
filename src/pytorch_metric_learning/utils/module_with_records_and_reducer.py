@@ -39,13 +39,10 @@ class ModuleWithRecordsAndReducer(ModuleWithRecords):
 class ModuleWithRecordsAndDistance(ModuleWithRecords):
     def __init__(self, distance=None, **kwargs):
         super().__init__(**kwargs)
-        self.distance = self.get_distance() if distance is None else distance
+        self.distance = self.get_default_distance() if distance is None else distance
 
     def get_default_distance(self):
         return LpDistance(p=2)
-
-    def get_distance(self):
-        return self.get_default_distance()
 
 
 class ModuleWithRecordsReducerAndDistance(

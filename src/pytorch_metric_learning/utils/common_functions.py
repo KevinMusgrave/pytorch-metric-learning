@@ -11,7 +11,7 @@ import torch
 LOGGER_NAME = "PML"
 LOGGER = logging.getLogger(LOGGER_NAME)
 NUMPY_RANDOM = np.random
-COLLECT_STATS = True
+COLLECT_STATS = False
 
 
 def set_logger_name(name):
@@ -517,12 +517,13 @@ def concatenate_indices_tuples(it1, it2):
     return tuple([torch.cat([x, to_device(y, x)], dim=0) for x, y in zip(it1, it2)])
 
 
-def merge_loss_dicts(x, y):
-    if x.keys() != y.keys():
-        raise KeyError("Input loss dicts must have the same keys")
-    for k, v in x.items():
-        curr_y = y[k]
-        v["losses"] = torch.cat([v["losses"], curr_y["losses"]], dim=0)
-        v["indices"] = concatenate_indices_tuples(v["indices"], curr_y["indices"])
-        if v["reduction_type"] != curr_y["reduction_type"]:
-            raise ValueError("reduction types must be equal when merging loss dicts")
+def exclude(it, targets):
+    return [x for x in it if x not in targets]
+
+
+def append_map(it, suf):
+    return [x + suf for x in it]
+
+
+def use_cuda_if_available():
+    return torch.device("cuda" if torch.cuda.is_available() else "cpu")

@@ -7,7 +7,8 @@ from pytorch_metric_learning.losses import ContrastiveLoss
 from pytorch_metric_learning.reducers import MeanReducer
 from pytorch_metric_learning.utils import common_functions as c_f
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, WITH_COLLECT_STATS
+from ..zzz_testing_utils import testing_utils
 
 
 class TestContrastiveLoss(unittest.TestCase):
@@ -120,6 +121,19 @@ class TestContrastiveLoss(unittest.TestCase):
             self.assertTrue(torch.isclose(lossB, correct_losses[1], rtol=rtol))
             self.assertTrue(torch.isclose(lossC, correct_losses[2], rtol=rtol))
             self.assertTrue(torch.isclose(lossD, correct_losses[3], rtol=rtol))
+
+            for L in [loss_funcA, loss_funcB, loss_funcC, loss_funcD]:
+                testing_utils.is_not_none_if_condition(
+                    self,
+                    L.distance,
+                    [
+                        "initial_avg_query_norm",
+                        "initial_avg_ref_norm",
+                        "final_avg_query_norm",
+                        "final_avg_ref_norm",
+                    ],
+                    WITH_COLLECT_STATS,
+                )
 
     def test_with_no_valid_pairs(self):
         loss_funcA = ContrastiveLoss()

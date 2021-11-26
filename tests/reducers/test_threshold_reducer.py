@@ -4,12 +4,12 @@ import torch
 
 from pytorch_metric_learning.reducers import ThresholdReducer
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, WITH_COLLECT_STATS
 
 
 class TestThresholdReducer(unittest.TestCase):
     def test_threshold_reducer(self):
-        threshold = 0.5
+        threshold = 0.1
         reducer = ThresholdReducer(threshold)
         batch_size = 100
         embedding_size = 64
@@ -44,8 +44,14 @@ class TestThresholdReducer(unittest.TestCase):
                     }
                     output = reducer(loss_dict, embeddings, labels)
                     filtered_L = L[L > threshold]
-                    if len(filtered_L) > threshold:
+                    if len(filtered_L) > 0:
                         correct_output = torch.mean(filtered_L)
                     else:
                         correct_output = torch.mean(L) * 0
                     self.assertTrue(output == correct_output)
+
+                    stat_attr = getattr(reducer, f"{reduction_type}s_past_filter", None)
+                    if WITH_COLLECT_STATS:
+                        self.assertTrue(stat_attr == len(filtered_L))
+                    else:
+                        self.assertTrue(stat_attr is None)

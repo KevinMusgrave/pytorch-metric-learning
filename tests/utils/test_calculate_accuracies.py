@@ -42,7 +42,7 @@ class TestCalculateAccuracies(unittest.TestCase):
             ):
 
                 AC = accuracy_calculator.AccuracyCalculator(
-                    exclude=("NMI", "AMI"), avg_of_avgs=avg_of_avgs
+                    exclude=("NMI", "AMI"), avg_of_avgs=avg_of_avgs, device=TEST_DEVICE
                 )
                 kwargs = {
                     "query_labels": query_labels,
@@ -366,7 +366,7 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
             self._test_accuracy_calculator_float_custom_comparison_function(use_numpy)
 
     def _test_accuracy_calculator_and_faiss(self, use_numpy):
-        AC = accuracy_calculator.AccuracyCalculator()
+        AC = accuracy_calculator.AccuracyCalculator(device=TEST_DEVICE)
         if use_numpy:
             query = np.arange(10)[:, None]
             reference = np.arange(10)[:, None]
@@ -403,8 +403,12 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
         )
 
     def _test_accuracy_calculator_and_faiss_avg_of_avgs(self, use_numpy):
-        AC_global_average = accuracy_calculator.AccuracyCalculator(avg_of_avgs=False)
-        AC_per_class_average = accuracy_calculator.AccuracyCalculator(avg_of_avgs=True)
+        AC_global_average = accuracy_calculator.AccuracyCalculator(
+            avg_of_avgs=False, device=TEST_DEVICE
+        )
+        AC_per_class_average = accuracy_calculator.AccuracyCalculator(
+            avg_of_avgs=True, device=TEST_DEVICE
+        )
 
         query_labels = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
         reference_labels = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -447,6 +451,7 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
                 include=("NMI", "AMI"),
                 avg_of_avgs=False,
                 label_comparison_fn=label_comparison_fn,
+                device=TEST_DEVICE,
             ),
         )
 
@@ -454,12 +459,14 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
             exclude=("NMI", "AMI"),
             avg_of_avgs=False,
             label_comparison_fn=label_comparison_fn,
+            device=TEST_DEVICE,
         )
 
         AC_per_class_average = accuracy_calculator.AccuracyCalculator(
             exclude=("NMI", "AMI"),
             avg_of_avgs=True,
             label_comparison_fn=label_comparison_fn,
+            device=TEST_DEVICE,
         )
 
         query_labels = [
@@ -571,6 +578,7 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
                 include=("NMI", "AMI"),
                 avg_of_avgs=False,
                 label_comparison_fn=label_comparison_fn,
+                device=TEST_DEVICE,
             ),
         )
 
@@ -578,6 +586,7 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
             exclude=("NMI", "AMI"),
             avg_of_avgs=False,
             label_comparison_fn=label_comparison_fn,
+            device=TEST_DEVICE,
         )
 
         query_labels = [
@@ -638,3 +647,12 @@ class TestCalculateAccuraciesValidK(unittest.TestCase):
             self.assertRaises(
                 ValueError, lambda: accuracy_calculator.AccuracyCalculator(k=k)
             )
+
+    def test_k_warning(self):
+        for k in [10, 100, 2000, "max_bin_count"]:
+            AC = accuracy_calculator.AccuracyCalculator(k=k)
+            embeddings = torch.randn(10000, 32)
+            labels = torch.randint(0, 10, size=(10000,))
+            level = "WARNING" if k in [10, 100] else "INFO"
+            with self.assertLogs(level=level):
+                AC.get_accuracy(embeddings, embeddings, labels, labels, True)

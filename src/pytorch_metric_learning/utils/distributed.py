@@ -36,82 +36,62 @@ def all_gather_embeddings_and_labels(embeddings, labels):
     return ref_emb, ref_labels
 
 
-def gather_and_concat(embeddings, labels, ref_emb, ref_labels):
-    dist_ref_emb, dist_ref_labels = all_gather_embeddings_and_labels(
-        embeddings, labels
-    )
-    if None not in [dist_ref_emb, ref_emb]:
-        dist_ref_emb = torch.cat([dist_ref_emb, ref_emb], dim=0)
-        dist_ref_labels = torch.cat([dist_ref_labels, ref_labels], dim=0)
-    return dist_ref_emb, dist_ref_labels
+def gather(embeddings, labels):
+    device = embeddings.device
+    labels = c_f.to_device(labels, device=device)
+    rank = torch.distributed.get_rank()
+    dist_ref_emb, dist_ref_labels = all_gather_embeddings_and_labels(embeddings, labels)
+    all_emb = torch.cat([embeddings, dist_ref_emb], dim=0)
+    all_labels = torch.cat([labels, dist_ref_labels], dim=0)
+    return all_emb, all_labels, device
+
+
+def get_indices_tuple(labels, ref_labels, embeddings=None, ref_emb=None, miner=None):
+    curr_batch_idx = torch.arange(len(labels), device=device)
+    if miner:
+        indices_tuple = miner(embeddings, labels, ref_emb, ref_labels)
+    else:
+        indices_tuple = lmu.get_all_pairs_indices(labels, ref_labels)
+    return lmu.remove_self_comparisons(indices_tuple, curr_batch_idx, len(ref_labels))
 
 
 class DistributedLossWrapper(torch.nn.Module):
-    def __init__(self, loss):
+    def __init__(self, loss, efficient=False):
         super().__init__()
         if not isinstance(loss, BaseMetricLossFunction):
             raise TypeError("The input loss must extend BaseMetricLossFunction")
         self.loss = loss
-        self.reducer = self.loss.reducer
-        self.loss.reducer = DoNothingReducer()
+        self.efficient = efficient
 
-    def forward(
-        self, embeddings, labels, indices_tuple=None, ref_emb=None, ref_labels=None
-    ):
-        device = embeddings.device
-        labels = c_f.to_device(labels, device=device)
+    def forward(self, embeddings, labels, indices_tuple=None):
         world_size = torch.distributed.get_world_size()
-        rank = torch.distributed.get_rank()
-        if world_size > 1:
-            dist_ref_emb, dist_ref_labels = gather_and_concat(
-                embeddings, labels, ref_emb, ref_labels
-            )
-            if indices_tuple is not None:
-                raise ValueError("indices_tuple not supported yet")
-            
-            curr_batch_idx = torch.arange(len(embeddings), device=device)
-            curr_dist_ref_emb = torch.cat([embeddings, dist_ref_emb], dim=0)
-            curr_dist_ref_labels = torch.cat([labels, dist_ref_labels], dim=0)
-            indices_tuple = self.get_indices_tuple(
-                labels, curr_dist_ref_labels, curr_batch_idx
-            )
-            losses = self.loss(
-                embeddings, labels, indices_tuple, curr_dist_ref_emb, curr_dist_ref_labels
-            )
-            print(f"rank {rank} len(losses[pos_loss][losses])", len(losses["pos_loss"]["losses"]))
-            print(f"rank {rank} len(losses[neg_loss][losses])", len(losses["neg_loss"]["losses"]))
+        if world_size <= 1:
+            return self.loss(embeddings, labels, indices_tuple)
 
-            # losses2 = self.loss(
-            #     dist_ref_emb, dist_ref_labels, ref_emb=embeddings, ref_labels=labels
-            # )
-            # print(f"rank {rank} len(losses2[pos_loss][losses])", len(losses2["pos_loss"]["losses"]))
-            # print(f"rank {rank} len(losses2[neg_loss][losses])", len(losses2["neg_loss"]["losses"]))
-            # c_f.merge_loss_dicts(losses, losses2)
-            # print(f"rank {rank} len(final[pos_loss][losses])", len(losses["pos_loss"]["losses"]))
-            # print(f"rank {rank} len(final[neg_loss][losses])", len(losses["neg_loss"]["losses"]))
+        all_emb, all_labels, device = gather(embeddings, labels)
 
-            loss = self.reducer(losses, embeddings, labels)
+        if self.efficient:
+            indices_tuple = get_indices_tuple(labels, all_labels)
+            loss = self.loss(embeddings, labels, indices_tuple, all_emb, all_labels)
         else:
-            losses = self.loss(embeddings, labels, indices_tuple)
-            loss = self.reducer(losses, embeddings, labels)
-        return loss
+            loss = self.loss(all_emb, all_labels, indices_tuple)
 
-    def get_indices_tuple(self, labels, ref_labels, curr_batch_idx, ref_is_subset=False):
-        indices_tuple = lmu.get_all_pairs_indices(labels, ref_labels)
-        return lmu.remove_self_comparisons(
-            indices_tuple, curr_batch_idx, len(ref_labels), ref_is_subset
-        )
+        return loss * world_size
 
 
 class DistributedMinerWrapper(torch.nn.Module):
-    def __init__(self, miner):
+    def __init__(self, miner, efficient=False):
         super().__init__()
-        if not isinstance(loss, BaseMiner):
+        if not isinstance(miner, BaseMiner):
             raise TypeError("The input miner must extend BaseMiner")
         self.miner = miner
+        self.efficient = efficient
 
-    def forward(self, embeddings, labels, ref_emb=None, ref_labels=None):
-        dist_ref_emb, dist_ref_labels = gather_and_concat(
-            embeddings, labels, ref_emb, ref_labels
-        )
-        return self.miner(embeddings, labels, dist_ref_emb, dist_ref_labels)
+    def forward(self, embeddings, labels):
+        all_emb, all_labels, device = gather(embeddings, labels)
+        if self.efficient:
+            return get_indices_tuple(
+                labels, all_labels, embeddings, all_emb, self.miner
+            )
+        else:
+            return self.miner(all_emb, all_labels)

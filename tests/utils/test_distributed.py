@@ -18,18 +18,14 @@ from .. import TEST_DEVICE, TEST_DTYPES, WITH_COLLECT_STATS
 # https://discuss.pytorch.org/t/check-if-models-have-same-weights/4351
 def parameters_are_equal(model1, model2):
     for p1, p2 in zip(model1.parameters(), model2.parameters()):
-        num_elements = float(torch.numel(p2.data))
-        if torch.sum(torch.isclose(p1.data, p2.data, rtol=1e-2)) < (num_elements * 0.8):
-            print("p1.data", p1.data)
-            print("p2.data", p1.data)
-            return False
+        return torch.allclose(p1.data, p2.data, rtol=1e-2)
     return True
 
 
 ### from https://pytorch.org/tutorials/intermediate/ddp_tutorial.html ###
 def setup(rank, world_size):
     os.environ["MASTER_ADDR"] = "localhost"
-    os.environ["MASTER_PORT"] = "12355"
+    os.environ["MASTER_PORT"] = "12356"
 
     dist_type = "gloo" if TEST_DEVICE == torch.device("cpu") else "nccl"
     # initialize the process group
@@ -92,8 +88,6 @@ def single_process_function(
         indices_tuple = miner_fn(outputs, labels[rank])
     loss = loss_fn(outputs, labels[rank], indices_tuple)
 
-    print(f"rank {rank} loss {loss}")
-
     dist.barrier()
     loss.backward()
 
@@ -120,6 +114,8 @@ class TestDistributedLossWrapper(unittest.TestCase):
         else:
             max_world_size = 2
         for dtype in TEST_DTYPES:
+            if dtype == torch.float16:
+                continue
             for world_size in range(2, max_world_size + 1):
                 batch_size = 20
                 lr = 1
@@ -136,7 +132,7 @@ class TestDistributedLossWrapper(unittest.TestCase):
                 self.assertTrue(parameters_are_equal(original_model, model))
 
                 original_model = original_model.to(TEST_DEVICE)
-                original_loss_fn = loss_class(reducer=reducers.DoNothingReducer())
+                original_loss_fn = loss_class()
                 loss_fn = loss_class()
 
                 if miner_class:
@@ -152,27 +148,10 @@ class TestDistributedLossWrapper(unittest.TestCase):
                 all_labels = torch.cat(labels, dim=0).to(TEST_DEVICE)
                 all_outputs = original_model(all_inputs)
 
-                print("all_outputs", all_outputs)
                 indices_tuple = None
                 if original_miner_fn:
-                    indices_tuple = original_miner_fn(all_ouputs, all_labels)
+                    indices_tuple = original_miner_fn(all_outputs, all_labels)
                 loss = original_loss_fn(all_outputs, all_labels, indices_tuple)
-                print(
-                    "TRUE len(losses[pos_loss][losses])",
-                    len(loss["pos_loss"]["losses"]),
-                )
-                print(
-                    "TRUE len(losses[neg_loss][losses])",
-                    len(loss["neg_loss"]["losses"]),
-                )
-                loss1 = reducers.AvgNonZeroReducer()(
-                    {"pos_loss": loss["pos_loss"]}, all_inputs, all_labels
-                )
-                loss2 = reducers.AvgNonZeroReducer()(
-                    {"neg_loss": loss["neg_loss"]}, all_inputs, all_labels
-                )
-                loss = loss1 + loss2
-                print("loss", loss)
                 loss.backward()
                 optimizer.step()
 
@@ -196,15 +175,8 @@ class TestDistributedLossWrapper(unittest.TestCase):
     def test_distributed_tuple_loss(self):
         self.loss_and_miner_tester(losses.ContrastiveLoss, None)
 
-    # def test_distributed_tuple_loss_and_miner(self):
-    #     self.loss_and_miner_tester(
-    #         losses.ContrastiveLoss, miners.MultiSimilarityMiner
-    #     )
-
-    # def test_distributed_tuple_miner_with_ref_emb(self):
-    #     self.loss_and_miner_tester(
-    #         losses.ContrastiveLoss, miners.MultiSimilarityMiner, test_ref_emb=True
-    #     )
+    def test_distributed_tuple_loss_and_miner(self):
+        self.loss_and_miner_tester(losses.ContrastiveLoss, miners.MultiSimilarityMiner)
 
 
 if __name__ == "__main__":

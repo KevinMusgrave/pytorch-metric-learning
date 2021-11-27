@@ -2,6 +2,7 @@ import unittest
 
 import numpy as np
 import torch
+import torch.nn.functional as F
 
 from pytorch_metric_learning.losses import ArcFaceLoss
 from pytorch_metric_learning.utils import common_functions as c_f
@@ -30,7 +31,7 @@ class TestArcFaceLoss(unittest.TestCase):
             loss = loss_func(embeddings, labels)
             loss.backward()
 
-            weights = torch.nn.functional.normalize(loss_func.W, p=2, dim=0)
+            weights = F.normalize(loss_func.W, p=2, dim=0)
             logits = torch.matmul(embeddings, weights)
 
             for i, c in enumerate(labels):
@@ -39,9 +40,15 @@ class TestArcFaceLoss(unittest.TestCase):
                     acos + torch.tensor(np.radians(margin), dtype=dtype).to(TEST_DEVICE)
                 )
 
-            correct_loss = torch.nn.functional.cross_entropy(
-                logits * scale, labels.to(TEST_DEVICE)
-            )
+            correct_loss = F.cross_entropy(logits * scale, labels.to(TEST_DEVICE))
 
             rtol = 1e-2 if dtype == torch.float16 else 1e-5
             self.assertTrue(torch.isclose(loss, correct_loss, rtol=rtol))
+
+            # test get_logits
+            logits_out = loss_func.get_logits(embeddings)
+            self.assertTrue(
+                torch.allclose(
+                    logits_out, torch.matmul(F.normalize(embeddings), weights) * scale
+                )
+            )

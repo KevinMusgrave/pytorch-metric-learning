@@ -97,6 +97,25 @@ class TestLargeMarginSoftmaxLoss(unittest.TestCase):
             self.assertTrue(torch.isclose(lossA, correct_lossA, rtol=rtol))
             self.assertTrue(torch.isclose(lossB, correct_lossB, rtol=rtol))
 
+            # test get_logits
+            if dtype != torch.float16:
+                logits_outA = loss_funcA.get_logits(embeddings)
+                logits_outB = loss_funcB.get_logits(embeddings)
+                self.assertTrue(
+                    torch.allclose(
+                        logits_outA,
+                        torch.matmul(embeddings, weightsA) * scale,
+                        rtol=1e-2,
+                    )
+                )
+                self.assertTrue(
+                    torch.allclose(
+                        logits_outB,
+                        torch.matmul(embeddings, weightsB) * scale,
+                        rtol=1e-2,
+                    )
+                )
+
     def test_backward(self):
         margin = 10
         scale = 2

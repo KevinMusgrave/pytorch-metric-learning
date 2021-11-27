@@ -128,3 +128,7 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
 
     def get_default_distance(self):
         return CosineSimilarity()
+
+    def get_logits(self, embeddings):
+        logits = self.get_cosine(embeddings)
+        return self.scale_logits(logits, embeddings)

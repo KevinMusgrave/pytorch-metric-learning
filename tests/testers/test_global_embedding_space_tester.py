@@ -6,6 +6,8 @@ from pytorch_metric_learning.testers import GlobalEmbeddingSpaceTester
 from pytorch_metric_learning.utils import accuracy_calculator
 from pytorch_metric_learning.utils import common_functions as c_f
 
+from ..zzz_testing_utils.testing_utils import angle_to_coord
+
 
 class TestGlobalEmbeddingSpaceTester(unittest.TestCase):
     @classmethod

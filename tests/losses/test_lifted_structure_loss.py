@@ -6,7 +6,7 @@ from pytorch_metric_learning.losses import (
     GeneralizedLiftedStructureLoss,
     LiftedStructureLoss,
 )
-from pytorch_metric_learning.utils import common_functions as c_f
+from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 from .. import TEST_DEVICE, TEST_DTYPES
 
@@ -19,7 +19,7 @@ class TestLiftedStructure(unittest.TestCase):
         for dtype in TEST_DTYPES:
             embedding_angles = [0, 20, 40, 60, 80]
             embeddings = torch.tensor(
-                [c_f.angle_to_coord(a) for a in embedding_angles],
+                [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
             ).to(
@@ -51,6 +51,7 @@ class TestLiftedStructure(unittest.TestCase):
             ]
 
             total_loss = 0
+            embeddings = torch.nn.functional.normalize(embeddings)
             for a1, p in pos_pairs:
                 anchor, positive = embeddings[a1], embeddings[p]
                 pos_pair_component = torch.sqrt(torch.sum((anchor - positive) ** 2))
@@ -82,7 +83,7 @@ class TestLiftedStructure(unittest.TestCase):
         for dtype in TEST_DTYPES:
             embedding_angles = [0]
             embeddings = torch.tensor(
-                [c_f.angle_to_coord(a) for a in embedding_angles],
+                [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
             ).to(
@@ -102,7 +103,7 @@ class TestGeneralizedLiftedStructureLoss(unittest.TestCase):
         for dtype in TEST_DTYPES:
             embedding_angles = [0, 20, 40, 60, 80]
             embeddings = torch.tensor(
-                [c_f.angle_to_coord(a) for a in embedding_angles],
+                [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
             ).to(
@@ -133,6 +134,7 @@ class TestGeneralizedLiftedStructureLoss(unittest.TestCase):
                 (4, 3),
             ]
 
+            embeddings = torch.nn.functional.normalize(embeddings)
             correct_total = 0
             for i in range(len(embeddings)):
                 correct_pos_loss = 0
@@ -167,7 +169,7 @@ class TestGeneralizedLiftedStructureLoss(unittest.TestCase):
         for dtype in TEST_DTYPES:
             embedding_angles = [0]
             embeddings = torch.tensor(
-                [c_f.angle_to_coord(a) for a in embedding_angles],
+                [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
             ).to(

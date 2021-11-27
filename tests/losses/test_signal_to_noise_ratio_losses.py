@@ -4,7 +4,7 @@ import torch
 
 from pytorch_metric_learning.losses import SignalToNoiseRatioContrastiveLoss
 from pytorch_metric_learning.regularizers import ZeroMeanRegularizer
-from pytorch_metric_learning.utils import common_functions as c_f
+from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 from .. import TEST_DEVICE, TEST_DTYPES
 
@@ -22,7 +22,7 @@ class TestSNRContrastiveLoss(unittest.TestCase):
         for dtype in TEST_DTYPES:
             embedding_angles = [0, 20, 40, 60, 80]
             embeddings = torch.tensor(
-                [c_f.angle_to_coord(a) for a in embedding_angles],
+                [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
             ).to(
@@ -53,11 +53,12 @@ class TestSNRContrastiveLoss(unittest.TestCase):
                 (4, 3),
             ]
 
+            normalized_embeddings = torch.nn.functional.normalize(embeddings)
             correct_pos_loss = 0
             correct_neg_loss = 0
             num_non_zero = 0
             for a, p in pos_pairs:
-                anchor, positive = embeddings[a], embeddings[p]
+                anchor, positive = normalized_embeddings[a], normalized_embeddings[p]
                 curr_loss = torch.relu(
                     torch.var(anchor - positive) / torch.var(anchor) - pos_margin
                 )
@@ -69,7 +70,7 @@ class TestSNRContrastiveLoss(unittest.TestCase):
 
             num_non_zero = 0
             for a, n in neg_pairs:
-                anchor, negative = embeddings[a], embeddings[n]
+                anchor, negative = normalized_embeddings[a], normalized_embeddings[n]
                 curr_loss = torch.relu(
                     neg_margin - torch.var(anchor - negative) / torch.var(anchor)
                 )
@@ -98,7 +99,7 @@ class TestSNRContrastiveLoss(unittest.TestCase):
         for dtype in TEST_DTYPES:
             embedding_angles = [0]
             embeddings = torch.tensor(
-                [c_f.angle_to_coord(a) for a in embedding_angles],
+                [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
             ).to(

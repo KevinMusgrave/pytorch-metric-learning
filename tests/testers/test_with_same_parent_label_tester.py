@@ -12,13 +12,13 @@ class TestWithSameParentLabelTester(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         embedding_angles = [0, 9, 21, 29, 31, 39, 51, 59]
-        embeddings1 = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles])
+        embeddings1 = torch.tensor([angle_to_coord(a) for a in embedding_angles])
         parent_labels1 = torch.LongTensor([0, 0, 0, 0, 1, 1, 1, 1])
         child_labels1 = torch.LongTensor([2, 2, 3, 3, 4, 4, 5, 5])
         labels1 = torch.stack([child_labels1, parent_labels1], axis=1)
 
         embedding_angles = [2, 11, 23, 32, 33, 41, 53, 89, 90]
-        embeddings2 = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles])
+        embeddings2 = torch.tensor([angle_to_coord(a) for a in embedding_angles])
         parent_labels2 = torch.LongTensor([0, 0, 0, 0, 0, 1, 1, 1, 1])
         child_labels2 = torch.LongTensor([2, 2, 4, 3, 4, 4, 4, 5, 5])
         labels2 = torch.stack([child_labels2, parent_labels2], axis=1)

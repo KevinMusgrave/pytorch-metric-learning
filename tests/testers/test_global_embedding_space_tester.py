@@ -11,11 +11,11 @@ class TestGlobalEmbeddingSpaceTester(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         embedding_angles = [0, 10, 20, 30, 50, 60, 70, 80]
-        embeddings1 = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles])
+        embeddings1 = torch.tensor([angle_to_coord(a) for a in embedding_angles])
         labels1 = torch.LongTensor([0, 0, 0, 0, 1, 1, 1, 1])
 
         embedding_angles = [1, 11, 21, 31, 51, 59, 71, 81]
-        embeddings2 = torch.tensor([c_f.angle_to_coord(a) for a in embedding_angles])
+        embeddings2 = torch.tensor([angle_to_coord(a) for a in embedding_angles])
         labels2 = torch.LongTensor([1, 1, 1, 1, 1, 0, 0, 0])
 
         self.dataset_dict = {

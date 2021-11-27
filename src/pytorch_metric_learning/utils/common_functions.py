@@ -405,12 +405,6 @@ def return_input(x):
     return x
 
 
-def angle_to_coord(angle):
-    x = np.cos(np.radians(angle))
-    y = np.sin(np.radians(angle))
-    return x, y
-
-
 def check_shapes(embeddings, labels):
     if embeddings.shape[0] != labels.shape[0]:
         raise ValueError("Number of embeddings must equal number of labels")

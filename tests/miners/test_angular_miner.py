@@ -15,7 +15,7 @@ class TestAngularMiner(unittest.TestCase):
         for dtype in TEST_DTYPES:
             embedding_angles = torch.arange(0, 16)
             embeddings = torch.tensor(
-                [c_f.angle_to_coord(a) for a in embedding_angles],
+                [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
             ).to(

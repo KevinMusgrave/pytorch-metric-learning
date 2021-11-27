@@ -48,7 +48,7 @@ class TestBatchHardMiner(unittest.TestCase):
         for dtype in TEST_DTYPES:
             angles = [0, 20, 40, 60, 80, 100, 120, 140, 160]
             embeddings = torch.tensor(
-                [c_f.angle_to_coord(a) for a in angles], dtype=dtype
+                [angle_to_coord(a) for a in angles], dtype=dtype
             ).to(TEST_DEVICE)
             a, p, n = self.normalized_dist_miner(embeddings, self.labels)
             self.helper(a, p, n)
@@ -76,7 +76,7 @@ class TestBatchHardMiner(unittest.TestCase):
         for dtype in TEST_DTYPES:
             angles = [0, 20, 40, 60, 80, 100, 120, 140, 160]
             embeddings = torch.tensor(
-                [c_f.angle_to_coord(a) for a in angles], dtype=dtype
+                [angle_to_coord(a) for a in angles], dtype=dtype
             ).to(TEST_DEVICE)
             a, p, n = self.normalized_dist_miner_squared(embeddings, self.labels)
             self.helper(a, p, n)
@@ -104,7 +104,7 @@ class TestBatchHardMiner(unittest.TestCase):
         for dtype in TEST_DTYPES:
             angles = [0, 20, 40, 60, 80, 100, 120, 140, 160]
             embeddings = torch.tensor(
-                [c_f.angle_to_coord(a) for a in angles], dtype=dtype
+                [angle_to_coord(a) for a in angles], dtype=dtype
             ).to(TEST_DEVICE)
             a, p, n = self.sim_miner(embeddings, self.labels)
             self.helper(a, p, n)

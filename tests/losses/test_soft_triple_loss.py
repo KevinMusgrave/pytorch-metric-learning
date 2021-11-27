@@ -16,6 +16,7 @@ from torch.nn import init
 from torch.nn.parameter import Parameter
 
 from pytorch_metric_learning.utils import common_functions as c_f
+from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 
 class OriginalImplementationSoftTriple(nn.Module):
@@ -106,7 +107,7 @@ class TestSoftTripleLoss(unittest.TestCase):
 
                 embedding_angles = torch.arange(0, 180)
                 embeddings = torch.tensor(
-                    [c_f.angle_to_coord(a) for a in embedding_angles],
+                    [angle_to_coord(a) for a in embedding_angles],
                     requires_grad=True,
                     dtype=dtype,
                 ).to(
@@ -116,5 +117,5 @@ class TestSoftTripleLoss(unittest.TestCase):
 
                 loss = loss_func(embeddings, labels)
                 loss.backward()
-                correct_loss = original_loss_func(embeddings, labels)
+                correct_loss = original_loss_func(F.normalize(embeddings), labels)
                 self.assertTrue(torch.isclose(loss, correct_loss))

@@ -3,7 +3,7 @@ import unittest
 import torch
 
 from pytorch_metric_learning.losses import CircleLoss
-from pytorch_metric_learning.utils import common_functions as c_f
+from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 from .. import TEST_DEVICE, TEST_DTYPES
 
@@ -18,7 +18,7 @@ class TestCircleLoss(unittest.TestCase):
         for dtype in TEST_DTYPES:
             embedding_angles = [0, 20, 40, 60, 80]
             embeddings = torch.tensor(
-                [c_f.angle_to_coord(a) for a in embedding_angles],
+                [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
             ).to(
@@ -49,20 +49,27 @@ class TestCircleLoss(unittest.TestCase):
                 (4, 3),
             ]
 
+            normalized_embeddings = torch.nn.functional.normalize(embeddings)
             correct_total = 0
-            for i in range(len(embeddings)):
+            for i in range(len(normalized_embeddings)):
                 pos_logits = []
                 neg_logits = []
                 for a, p in pos_pairs:
                     if a == i:
-                        anchor, positive = embeddings[a], embeddings[p]
+                        anchor, positive = (
+                            normalized_embeddings[a],
+                            normalized_embeddings[p],
+                        )
                         ap_sim = torch.matmul(anchor, positive)
                         logit_p = -gamma * torch.relu(Op - ap_sim) * (ap_sim - delta_p)
                         pos_logits.append(logit_p.unsqueeze(0))
 
                 for a, n in neg_pairs:
                     if a == i:
-                        anchor, negative = embeddings[a], embeddings[n]
+                        anchor, negative = (
+                            normalized_embeddings[a],
+                            normalized_embeddings[n],
+                        )
                         an_sim = torch.matmul(anchor, negative)
                         logit_n = gamma * torch.relu(an_sim - On) * (an_sim - delta_n)
                         neg_logits.append(logit_n.unsqueeze(0))
@@ -94,7 +101,7 @@ class TestCircleLoss(unittest.TestCase):
         for dtype in TEST_DTYPES:
             embedding_angles = [0]
             embeddings = torch.tensor(
-                [c_f.angle_to_coord(a) for a in embedding_angles],
+                [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
             ).to(
@@ -111,7 +118,7 @@ class TestCircleLoss(unittest.TestCase):
         for dtype in TEST_DTYPES:
             embedding_angles = torch.arange(0, 180)
             embeddings = torch.tensor(
-                [c_f.angle_to_coord(a) for a in embedding_angles],
+                [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
             ).to(

@@ -17,7 +17,7 @@ class TestMultiSimilarityMiner(unittest.TestCase):
                 miner = MultiSimilarityMiner(epsilon, distance=distance)
                 embedding_angles = torch.arange(0, 64)
                 embeddings = torch.tensor(
-                    [c_f.angle_to_coord(a) for a in embedding_angles],
+                    [angle_to_coord(a) for a in embedding_angles],
                     requires_grad=True,
                     dtype=dtype,
                 ).to(

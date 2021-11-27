@@ -4,7 +4,7 @@ import torch
 
 from pytorch_metric_learning.losses import NPairsLoss
 from pytorch_metric_learning.regularizers import LpRegularizer
-from pytorch_metric_learning.utils import common_functions as c_f
+from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 from .. import TEST_DEVICE, TEST_DTYPES
 
@@ -18,7 +18,7 @@ class TestNPairsLoss(unittest.TestCase):
         for dtype in TEST_DTYPES:
             embedding_angles = list(range(0, 180, 20))[:7]
             embeddings = torch.tensor(
-                [c_f.angle_to_coord(a) for a in embedding_angles],
+                [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
             ).to(
@@ -35,6 +35,7 @@ class TestNPairsLoss(unittest.TestCase):
             pos_pairs = [(0, 1), (2, 3)]
             neg_pairs = [(0, 3), (2, 1)]
 
+            embeddings = torch.nn.functional.normalize(embeddings)
             total_loss = 0
             for a1, p in pos_pairs:
                 anchor, positive = embeddings[a1], embeddings[p]
@@ -50,7 +51,7 @@ class TestNPairsLoss(unittest.TestCase):
             total_loss /= len(pos_pairs[0])
             self.assertTrue(torch.isclose(lossA, total_loss))
             self.assertTrue(
-                torch.isclose(lossB, total_loss + (embedding_norm) ** 2)
+                torch.isclose(lossB, total_loss + torch.mean(torch.norm(embeddings_for_loss_fn, dim=1) ** 2))
             )  # l2_reg is going to be embedding_norm ** self.power
 
     def test_with_no_valid_pairs(self):
@@ -58,7 +59,7 @@ class TestNPairsLoss(unittest.TestCase):
             loss_func = NPairsLoss()
             embedding_angles = [0]
             embeddings = torch.tensor(
-                [c_f.angle_to_coord(a) for a in embedding_angles],
+                [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
             ).to(
@@ -77,7 +78,7 @@ class TestNPairsLoss(unittest.TestCase):
             for loss_func in [loss_funcA, loss_funcB]:
                 embedding_angles = list(range(0, 180, 20))[:7]
                 embeddings = torch.tensor(
-                    [c_f.angle_to_coord(a) for a in embedding_angles],
+                    [angle_to_coord(a) for a in embedding_angles],
                     requires_grad=True,
                     dtype=dtype,
                 ).to(

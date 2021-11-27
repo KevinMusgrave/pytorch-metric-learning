@@ -40,6 +40,8 @@ class TestNormalizedSoftmaxLoss(unittest.TestCase):
             logits_out = loss_func.get_logits(embeddings)
             self.assertTrue(
                 torch.allclose(
-                    logits_out, torch.matmul(embeddings, weights) / temperature, rtol=1e-2
+                    logits_out,
+                    torch.matmul(embeddings, weights) / temperature,
+                    rtol=1e-2,
                 )
             )

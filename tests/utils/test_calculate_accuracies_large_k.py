@@ -19,7 +19,7 @@ class TestCalculateAccuraciesLargeK(unittest.TestCase):
                     # make random features
                     encs = np.random.rand(num_embeddings, 5).astype(np.float32)
                     # and random labels of 100 classes
-                    labels = np.zeros((num_embeddings // 100, 100), dtype=np.int32)
+                    labels = np.zeros((num_embeddings // 100, 100), dtype=int)
                     for i in range(10):
                         labels[i] = np.arange(100)
                     labels = labels.ravel()

@@ -14,10 +14,10 @@ from pytorch_metric_learning.miners import (
     PairMarginMiner,
     TripletMarginMiner,
 )
-from pytorch_metric_learning.utils import common_functions as c_f
 from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
 
 from .. import TEST_DEVICE, TEST_DTYPES
+from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 
 class TestCrossBatchMemory(unittest.TestCase):
@@ -219,7 +219,7 @@ class TestCrossBatchMemory(unittest.TestCase):
             for i in range(20):
                 embedding_angles = torch.arange(0, 32)
                 embeddings = torch.tensor(
-                    [c_f.angle_to_coord(a) for a in embedding_angles],
+                    [angle_to_coord(a) for a in embedding_angles],
                     requires_grad=True,
                     dtype=dtype,
                 ).to(

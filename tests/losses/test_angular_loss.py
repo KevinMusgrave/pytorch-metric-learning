@@ -4,9 +4,9 @@ import numpy as np
 import torch
 
 from pytorch_metric_learning.losses import AngularLoss
-from pytorch_metric_learning.utils import common_functions as c_f
 
 from .. import TEST_DEVICE, TEST_DTYPES
+from ..zzz_testing_utils.testing_utils import angle_to_coord
 from .utils import get_triplet_embeddings_with_ref
 
 
@@ -79,7 +79,7 @@ class TestAngularLoss(unittest.TestCase):
         for dtype in TEST_DTYPES:
             embedding_angles = [0, 20, 40, 60, 80]
             embeddings = torch.tensor(
-                [c_f.angle_to_coord(a) for a in embedding_angles],
+                [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
             ).to(

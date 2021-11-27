@@ -6,9 +6,9 @@ import scipy
 import torch
 
 from pytorch_metric_learning.losses import LargeMarginSoftmaxLoss, SphereFaceLoss
-from pytorch_metric_learning.utils import common_functions as c_f
 
 from .. import TEST_DEVICE, TEST_DTYPES
+from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 
 class TestLargeMarginSoftmaxLoss(unittest.TestCase):
@@ -26,7 +26,7 @@ class TestLargeMarginSoftmaxLoss(unittest.TestCase):
             embedding_angles = torch.arange(0, 180)
             # multiply by 10 to make the embeddings unnormalized
             embeddings = torch.tensor(
-                np.array([c_f.angle_to_coord(a) for a in embedding_angles]) * 10,
+                np.array([angle_to_coord(a) for a in embedding_angles]) * 10,
                 requires_grad=True,
                 dtype=dtype,
             ).to(
@@ -130,7 +130,7 @@ class TestLargeMarginSoftmaxLoss(unittest.TestCase):
                 embedding_angles = torch.arange(0, 180)
                 # multiply by 10 to make the embeddings unnormalized
                 embeddings = torch.tensor(
-                    np.array([c_f.angle_to_coord(a) for a in embedding_angles]) * 10,
+                    np.array([angle_to_coord(a) for a in embedding_angles]) * 10,
                     requires_grad=True,
                     dtype=dtype,
                 ).to(

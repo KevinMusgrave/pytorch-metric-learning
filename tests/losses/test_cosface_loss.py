@@ -4,9 +4,9 @@ import torch
 import torch.nn.functional as F
 
 from pytorch_metric_learning.losses import CosFaceLoss
-from pytorch_metric_learning.utils import common_functions as c_f
 
 from .. import TEST_DEVICE, TEST_DTYPES
+from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 
 class TestCosFaceLoss(unittest.TestCase):
@@ -21,7 +21,7 @@ class TestCosFaceLoss(unittest.TestCase):
 
             embedding_angles = torch.arange(0, 180)
             embeddings = torch.tensor(
-                [c_f.angle_to_coord(a) for a in embedding_angles],
+                [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
             ).to(
@@ -33,7 +33,7 @@ class TestCosFaceLoss(unittest.TestCase):
             loss.backward()
 
             weights = F.normalize(loss_func.W, p=2, dim=0)
-            logits = torch.matmul(embeddings, weights)
+            logits = torch.matmul(F.normalize(embeddings), weights)
             for i, c in enumerate(labels):
                 logits[i, c] -= margin
 

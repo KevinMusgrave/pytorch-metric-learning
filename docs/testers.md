@@ -52,7 +52,7 @@ All trainers extend this class and therefore inherit its ```__init__``` argument
 testers.BaseTester(normalize_embeddings=True,
 					use_trunk_output=False,
 					batch_size=32,
-					dataloader_num_workers=32,
+					dataloader_num_workers=2,
 					pca=None,
 					data_device=None,
 					dtype=None,

@@ -77,9 +77,9 @@ import unittest
 import torch
 
 from pytorch_metric_learning.losses import ProxyAnchorLoss
-from pytorch_metric_learning.utils import common_functions as c_f
 
 from .. import TEST_DEVICE, TEST_DTYPES
+from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 
 class TestProxyAnchorLoss(unittest.TestCase):
@@ -112,7 +112,7 @@ class TestProxyAnchorLoss(unittest.TestCase):
 
                 embedding_angles = list(range(0, 180))
                 embeddings = torch.tensor(
-                    [c_f.angle_to_coord(a) for a in embedding_angles],
+                    [angle_to_coord(a) for a in embedding_angles],
                     requires_grad=True,
                     dtype=torch.float32,
                 ).to(

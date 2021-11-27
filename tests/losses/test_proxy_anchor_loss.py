@@ -132,6 +132,17 @@ class TestProxyAnchorLoss(unittest.TestCase):
 
                 self.assertTrue(torch.isclose(loss, correct_loss, rtol=rtol))
 
+                # test get_logits
+                logits_out = loss_func.get_logits(embeddings)
+                self.assertTrue(
+                    torch.allclose(
+                        logits_out,
+                        torch.matmul(
+                            F.normalize(embeddings), F.normalize(loss_func.proxies).t()
+                        ),
+                    )
+                )
+
 
 if __name__ == "__main__":
     unittest.main()

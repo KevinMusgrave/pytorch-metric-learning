@@ -36,7 +36,7 @@ class ProxyAnchorLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         ).unsqueeze(1)
         miner_weights = miner_weights - 1
 
-        cos = self.distance(embeddings, self.proxies)
+        cos = self.get_logits(embeddings)
 
         pos_mask = torch.nn.functional.one_hot(labels, self.num_classes)
         neg_mask = 1 - pos_mask
@@ -91,3 +91,6 @@ class ProxyAnchorLoss(WeightRegularizerMixin, BaseMetricLossFunction):
 
     def _sub_loss_names(self):
         return ["pos_loss", "neg_loss"]
+
+    def get_logits(self, embeddings):
+        return self.distance(embeddings, self.proxies)

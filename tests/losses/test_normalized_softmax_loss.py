@@ -35,3 +35,11 @@ class TestNormalizedSoftmaxLoss(unittest.TestCase):
             )
             rtol = 1e-2 if dtype == torch.float16 else 1e-5
             self.assertTrue(torch.isclose(loss, correct_loss, rtol=rtol))
+
+            # test get_logits
+            logits_out = loss_func.get_logits(embeddings)
+            self.assertTrue(
+                torch.allclose(
+                    logits_out, torch.matmul(embeddings, weights) / temperature, rtol=1e-2
+                )
+            )

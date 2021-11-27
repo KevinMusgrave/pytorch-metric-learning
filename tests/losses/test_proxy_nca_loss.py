@@ -10,6 +10,7 @@ from .. import TEST_DEVICE, TEST_DTYPES
 
 class TestProxyNCALoss(unittest.TestCase):
     def test_proxy_nca_loss(self):
+        torch.manual_seed(14892)
         for dtype in TEST_DTYPES:
             softmax_scale = 1 if dtype == torch.float16 else 10
             loss_func = ProxyNCALoss(
@@ -43,3 +44,12 @@ class TestProxyNCALoss(unittest.TestCase):
             correct_loss /= len(embeddings)
             rtol = 1e-2 if dtype == torch.float16 else 1e-5
             self.assertTrue(torch.isclose(loss, correct_loss, rtol=rtol))
+
+            # test get_logits
+            if dtype != torch.float16:
+                logits_out = loss_func.get_logits(embeddings)
+                self.assertTrue(
+                    torch.allclose(
+                        logits_out, torch.cdist(embeddings, proxies) ** 2, rtol=1e-2
+                    )
+                )

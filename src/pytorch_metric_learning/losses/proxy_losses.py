@@ -29,3 +29,6 @@ class ProxyNCALoss(WeightRegularizerMixin, NCALoss):
         )
         self.add_weight_regularization_to_loss_dict(loss_dict, self.proxies)
         return loss_dict
+
+    def get_logits(self, embeddings):
+        return self.distance(embeddings, self.proxies)

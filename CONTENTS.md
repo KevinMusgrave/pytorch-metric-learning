@@ -104,7 +104,6 @@
 | [**TorchInitWrapper**](https://kevinmusgrave.github.io/pytorch-metric-learning/common_functions/#torchinitwrapper) |
 | [**DistributedLossWrapper**](https://kevinmusgrave.github.io/pytorch-metric-learning/distributed/#distributedlosswrapper) |
 | [**DistributedMinerWrapper**](https://kevinmusgrave.github.io/pytorch-metric-learning/distributed/#distributedminerwrapper) |
-| [**LogitGetter**](https://kevinmusgrave.github.io/pytorch-metric-learning/inference_models/#logitgetter) |
 
 ### Base Classes, Mixins, and Wrappers
 | Name | Reference Papers |

@@ -12,10 +12,7 @@ class CrossBatchMemory(ModuleWithRecords):
         self.miner = miner
         self.embedding_size = embedding_size
         self.memory_size = memory_size
-        self.embedding_memory = torch.zeros(self.memory_size, self.embedding_size)
-        self.label_memory = torch.zeros(self.memory_size).long()
-        self.has_been_filled = False
-        self.queue_idx = 0
+        self.reset_queue()
         self.add_to_recordable_attributes(
             list_of_names=["embedding_size", "memory_size", "queue_idx"], is_stat=False
         )
@@ -118,3 +115,9 @@ class CrossBatchMemory(ModuleWithRecords):
             )
 
         return indices_tuple
+
+    def reset_queue(self):
+        self.embedding_memory = torch.zeros(self.memory_size, self.embedding_size)
+        self.label_memory = torch.zeros(self.memory_size).long()
+        self.has_been_filled = False
+        self.queue_idx = 0

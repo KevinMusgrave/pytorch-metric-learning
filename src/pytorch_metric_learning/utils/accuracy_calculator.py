@@ -5,7 +5,7 @@ import torch
 from sklearn.metrics import adjusted_mutual_info_score, normalized_mutual_info_score
 
 from . import common_functions as c_f
-from . import stat_utils
+from .stat_utils import FaissKMeans, FaissKNN
 
 EQUALITY = torch.eq
 

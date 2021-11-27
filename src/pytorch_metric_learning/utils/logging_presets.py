@@ -44,11 +44,11 @@ class HookContainer:
         record_these = [
             [
                 trainer.loss_tracker.losses,
-                {"input_group_name_for_non_objects": "loss_histories"},
+                {"parent_name": "loss_histories"},
             ],
             [
                 trainer.loss_tracker.loss_weights,
-                {"input_group_name_for_non_objects": "loss_weights"},
+                {"parent_name": "loss_weights"},
             ],
             [trainer.loss_funcs, {"recursive_types": [torch.nn.Module]}],
             [trainer.mining_funcs, {}],
@@ -105,9 +105,7 @@ class HookContainer:
             self.record_keeper.update_records(
                 accuracies,
                 epoch,
-                input_group_name_for_non_objects=self.record_group_name(
-                    tester, split_name
-                ),
+                parent_name=self.record_group_name(tester, split_name),
             )
             _, _, best_epoch, best_accuracy = self.is_new_best_accuracy(
                 tester, split_name, epoch
@@ -116,9 +114,7 @@ class HookContainer:
             self.record_keeper.update_records(
                 best,
                 epoch,
-                input_group_name_for_non_objects=self.record_group_name(
-                    tester, split_name
-                ),
+                parent_name=self.record_group_name(tester, split_name),
             )
 
     ############################################
@@ -385,7 +381,6 @@ def get_record_keeper(
     global_db_path=None,
     experiment_name=None,
     is_new_experiment=True,
-    save_figures=False,
     save_lists=False,
 ):
     try:
@@ -408,7 +403,6 @@ def get_record_keeper(
             tensorboard_writer=tensorboard_writer,
             record_writer=record_writer,
             attributes_to_search_for=c_f.list_of_recordable_attributes_list_names(),
-            save_figures=save_figures,
         )
         return record_keeper, record_writer, tensorboard_writer
     except ModuleNotFoundError as e:

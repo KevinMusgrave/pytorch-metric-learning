@@ -4,9 +4,9 @@ import torch
 
 from pytorch_metric_learning.losses import NPairsLoss
 from pytorch_metric_learning.regularizers import LpRegularizer
-from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 from .. import TEST_DEVICE, TEST_DTYPES
+from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 
 class TestNPairsLoss(unittest.TestCase):
@@ -51,7 +51,11 @@ class TestNPairsLoss(unittest.TestCase):
             total_loss /= len(pos_pairs[0])
             self.assertTrue(torch.isclose(lossA, total_loss))
             self.assertTrue(
-                torch.isclose(lossB, total_loss + torch.mean(torch.norm(embeddings_for_loss_fn, dim=1) ** 2))
+                torch.isclose(
+                    lossB,
+                    total_loss
+                    + torch.mean(torch.norm(embeddings_for_loss_fn, dim=1) ** 2),
+                )
             )  # l2_reg is going to be embedding_norm ** self.power
 
     def test_with_no_valid_pairs(self):

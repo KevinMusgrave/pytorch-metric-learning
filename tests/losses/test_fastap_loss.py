@@ -199,9 +199,9 @@ class OriginalImplementationFastAPLoss(torch.nn.Module):
 import unittest
 
 from pytorch_metric_learning.losses import FastAPLoss
-from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 from .. import TEST_DEVICE, TEST_DTYPES
+from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 
 class TestFastAPLoss(unittest.TestCase):
@@ -225,7 +225,9 @@ class TestFastAPLoss(unittest.TestCase):
 
             loss = loss_func(embeddings, labels)
             loss.backward()
-            original_loss = original_loss_func(torch.nn.functional.normalize(embeddings), labels)
+            original_loss = original_loss_func(
+                torch.nn.functional.normalize(embeddings), labels
+            )
             rtol = 1e-2 if dtype == torch.float16 else 1e-5
             self.assertTrue(torch.isclose(loss, original_loss, rtol=rtol))
 

@@ -5,9 +5,9 @@ import torch
 from pytorch_metric_learning.distances import CosineSimilarity
 from pytorch_metric_learning.losses import TripletMarginLoss
 from pytorch_metric_learning.reducers import MeanReducer
-from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 from .. import TEST_DEVICE, TEST_DTYPES
+from ..zzz_testing_utils.testing_utils import angle_to_coord
 from .utils import get_triplet_embeddings_with_ref
 
 

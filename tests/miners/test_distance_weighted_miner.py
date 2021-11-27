@@ -3,10 +3,10 @@ import unittest
 import torch
 
 from pytorch_metric_learning.miners import DistanceWeightedMiner
-from pytorch_metric_learning.utils import common_functions as c_f
 from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
 
 from .. import TEST_DEVICE, TEST_DTYPES
+from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 
 class TestDistanceWeightedMiner(unittest.TestCase):
@@ -14,7 +14,7 @@ class TestDistanceWeightedMiner(unittest.TestCase):
         for dtype in TEST_DTYPES:
             embedding_angles = torch.arange(0, 256)
             embeddings = torch.tensor(
-                [angle_to_coord(a) for a in embedding_angles],
+                [angle_to_coord(a, normalized=True) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
             ).to(

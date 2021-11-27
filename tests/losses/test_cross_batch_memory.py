@@ -14,10 +14,10 @@ from pytorch_metric_learning.miners import (
     PairMarginMiner,
     TripletMarginMiner,
 )
-from ..zzz_testing_utils.testing_utils import angle_to_coord
 from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
 
 from .. import TEST_DEVICE, TEST_DTYPES
+from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 
 class TestCrossBatchMemory(unittest.TestCase):

@@ -77,9 +77,9 @@ import unittest
 import torch
 
 from pytorch_metric_learning.losses import ProxyAnchorLoss
-from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 from .. import TEST_DEVICE, TEST_DTYPES
+from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 
 class TestProxyAnchorLoss(unittest.TestCase):

@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def is_not_none_if_condition(cls, x, y, condition):
     for i in y:
         attr = getattr(x, i, None)

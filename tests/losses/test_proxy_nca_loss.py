@@ -3,9 +3,9 @@ import unittest
 import torch
 
 from pytorch_metric_learning.losses import ProxyNCALoss
-from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 from .. import TEST_DEVICE, TEST_DTYPES
+from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 
 class TestProxyNCALoss(unittest.TestCase):
@@ -51,6 +51,8 @@ class TestProxyNCALoss(unittest.TestCase):
                 logits_out = loss_func.get_logits(embeddings)
                 self.assertTrue(
                     torch.allclose(
-                        logits_out, torch.cdist(normalized_embeddings, proxies) ** 2, rtol=1e-2
+                        logits_out,
+                        torch.cdist(normalized_embeddings, proxies) ** 2,
+                        rtol=1e-2,
                     )
                 )

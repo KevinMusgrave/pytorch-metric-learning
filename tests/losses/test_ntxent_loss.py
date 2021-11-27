@@ -5,9 +5,9 @@ import torch
 from pytorch_metric_learning.distances import LpDistance
 from pytorch_metric_learning.losses import NTXentLoss, SupConLoss
 from pytorch_metric_learning.reducers import AvgNonZeroReducer, PerAnchorReducer
-from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 from .. import TEST_DEVICE, TEST_DTYPES
+from ..zzz_testing_utils.testing_utils import angle_to_coord
 from .utils import get_pair_embeddings_with_ref
 
 

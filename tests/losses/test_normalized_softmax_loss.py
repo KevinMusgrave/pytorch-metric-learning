@@ -2,11 +2,11 @@ import unittest
 
 import torch
 
-from pytorch_metric_learning.losses import NormalizedSoftmaxLoss
 from pytorch_metric_learning.distances import DotProductSimilarity
-from ..zzz_testing_utils.testing_utils import angle_to_coord
+from pytorch_metric_learning.losses import NormalizedSoftmaxLoss
 
 from .. import TEST_DEVICE, TEST_DTYPES
+from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 
 class TestNormalizedSoftmaxLoss(unittest.TestCase):
@@ -14,7 +14,10 @@ class TestNormalizedSoftmaxLoss(unittest.TestCase):
         temperature = 0.1
         for dtype in TEST_DTYPES:
             loss_func = NormalizedSoftmaxLoss(
-                temperature=temperature, num_classes=10, embedding_size=2, distance=DotProductSimilarity(normalize_embeddings=False)
+                temperature=temperature,
+                num_classes=10,
+                embedding_size=2,
+                distance=DotProductSimilarity(normalize_embeddings=False),
             )
             embedding_angles = torch.arange(0, 180)
             embeddings = torch.tensor(

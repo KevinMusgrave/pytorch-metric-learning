@@ -4,10 +4,10 @@ import torch
 
 from pytorch_metric_learning.distances import CosineSimilarity, LpDistance
 from pytorch_metric_learning.miners import PairMarginMiner
-from pytorch_metric_learning.utils import common_functions as c_f
 
 from .. import TEST_DEVICE, TEST_DTYPES, WITH_COLLECT_STATS
 from ..zzz_testing_utils import testing_utils
+from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 
 class TestPairMarginMiner(unittest.TestCase):
@@ -16,7 +16,7 @@ class TestPairMarginMiner(unittest.TestCase):
             for distance in [LpDistance(), CosineSimilarity()]:
                 embedding_angles = torch.arange(0, 16)
                 embeddings = torch.tensor(
-                    [c_f.angle_to_coord(a) for a in embedding_angles],
+                    [angle_to_coord(a) for a in embedding_angles],
                     requires_grad=True,
                     dtype=dtype,
                 ).to(

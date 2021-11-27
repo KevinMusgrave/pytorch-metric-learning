@@ -50,16 +50,12 @@ class SoftTripleLoss(WeightRegularizerMixin, BaseMetricLossFunction):
     def cast_types(self, dtype, device):
         self.fc.data = c_f.to_device(self.fc.data, device=device, dtype=dtype)
 
-    def compute_loss(self, embeddings, labels, indices_tuple):
+    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+        c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
         dtype, device = embeddings.dtype, embeddings.device
         self.cast_types(dtype, device)
         miner_weights = lmu.convert_to_weights(indices_tuple, labels, dtype=dtype)
-        sim_to_centers = self.distance(embeddings, self.fc.t())
-        sim_to_centers = sim_to_centers.view(
-            -1, self.num_classes, self.centers_per_class
-        )
-        prob = F.softmax(sim_to_centers * self.gamma, dim=2)
-        sim_to_classes = torch.sum(prob * sim_to_centers, dim=2)
+        sim_to_classes = self.get_logits(embeddings)
         margin = torch.zeros(
             sim_to_classes.shape, dtype=dtype, device=embeddings.device
         )
@@ -83,3 +79,11 @@ class SoftTripleLoss(WeightRegularizerMixin, BaseMetricLossFunction):
 
     def get_default_weight_init_func(self):
         return c_f.TorchInitWrapper(torch.nn.init.kaiming_uniform_, a=math.sqrt(5))
+
+    def get_logits(self, embeddings):
+        sim_to_centers = self.distance(embeddings, self.fc.t())
+        sim_to_centers = sim_to_centers.view(
+            -1, self.num_classes, self.centers_per_class
+        )
+        prob = F.softmax(sim_to_centers * self.gamma, dim=2)
+        return torch.sum(prob * sim_to_centers, dim=2)

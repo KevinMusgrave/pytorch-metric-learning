@@ -77,9 +77,9 @@ import unittest
 import torch
 
 from pytorch_metric_learning.losses import ProxyAnchorLoss
-from pytorch_metric_learning.utils import common_functions as c_f
 
 from .. import TEST_DEVICE, TEST_DTYPES
+from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 
 class TestProxyAnchorLoss(unittest.TestCase):
@@ -112,7 +112,7 @@ class TestProxyAnchorLoss(unittest.TestCase):
 
                 embedding_angles = list(range(0, 180))
                 embeddings = torch.tensor(
-                    [c_f.angle_to_coord(a) for a in embedding_angles],
+                    [angle_to_coord(a) for a in embedding_angles],
                     requires_grad=True,
                     dtype=torch.float32,
                 ).to(
@@ -131,6 +131,17 @@ class TestProxyAnchorLoss(unittest.TestCase):
                 rtol = 1e-2 if dtype == torch.float16 or use_autocast else 1e-5
 
                 self.assertTrue(torch.isclose(loss, correct_loss, rtol=rtol))
+
+                # test get_logits
+                logits_out = loss_func.get_logits(embeddings)
+                self.assertTrue(
+                    torch.allclose(
+                        logits_out,
+                        torch.matmul(
+                            F.normalize(embeddings), F.normalize(loss_func.proxies).t()
+                        ),
+                    )
+                )
 
 
 if __name__ == "__main__":

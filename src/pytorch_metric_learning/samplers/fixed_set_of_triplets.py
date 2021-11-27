@@ -37,7 +37,7 @@ class FixedSetOfTriplets(Sampler):
         and negative.
         """
         assert self.num_triplets > 0
-        self.fixed_set_of_triplets = np.ones((self.num_triplets, 3), dtype=np.int) * -1
+        self.fixed_set_of_triplets = np.ones((self.num_triplets, 3), dtype=int) * -1
         label_list = list(self.labels_to_indices.keys())
         for i in range(self.num_triplets):
             anchor_label, negative_label = c_f.NUMPY_RANDOM.choice(

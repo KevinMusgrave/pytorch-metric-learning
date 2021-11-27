@@ -18,7 +18,7 @@ class TestTupletMarginLoss(unittest.TestCase):
         for dtype in TEST_DTYPES:
             embedding_angles = [0, 20, 40, 60, 80]
             embeddings = torch.tensor(
-                [c_f.angle_to_coord(a) for a in embedding_angles],
+                [testing_utils.angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
             ).to(
@@ -50,7 +50,7 @@ class TestTupletMarginLoss(unittest.TestCase):
             ]
 
             correct_total = 0
-
+            embeddings = torch.nn.functional.normalize(embeddings)
             for a1, p in pos_pairs:
                 curr_loss = 0
                 anchor1, positive = embeddings[a1], embeddings[p]
@@ -80,7 +80,7 @@ class TestTupletMarginLoss(unittest.TestCase):
         for dtype in TEST_DTYPES:
             embedding_angles = [0]
             embeddings = torch.tensor(
-                [c_f.angle_to_coord(a) for a in embedding_angles],
+                [testing_utils.angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
             ).to(

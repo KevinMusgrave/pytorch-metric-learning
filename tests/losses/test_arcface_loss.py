@@ -2,11 +2,12 @@ import unittest
 
 import numpy as np
 import torch
+import torch.nn.functional as F
 
 from pytorch_metric_learning.losses import ArcFaceLoss
-from pytorch_metric_learning.utils import common_functions as c_f
 
 from .. import TEST_DEVICE, TEST_DTYPES
+from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 
 class TestArcFaceLoss(unittest.TestCase):
@@ -19,7 +20,7 @@ class TestArcFaceLoss(unittest.TestCase):
             )
             embedding_angles = torch.arange(0, 180)
             embeddings = torch.tensor(
-                [c_f.angle_to_coord(a) for a in embedding_angles],
+                [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
             ).to(
@@ -30,8 +31,8 @@ class TestArcFaceLoss(unittest.TestCase):
             loss = loss_func(embeddings, labels)
             loss.backward()
 
-            weights = torch.nn.functional.normalize(loss_func.W, p=2, dim=0)
-            logits = torch.matmul(embeddings, weights)
+            weights = F.normalize(loss_func.W, p=2, dim=0)
+            logits = torch.matmul(F.normalize(embeddings), weights)
 
             for i, c in enumerate(labels):
                 acos = torch.acos(torch.clamp(logits[i, c], -1, 1))
@@ -39,9 +40,15 @@ class TestArcFaceLoss(unittest.TestCase):
                     acos + torch.tensor(np.radians(margin), dtype=dtype).to(TEST_DEVICE)
                 )
 
-            correct_loss = torch.nn.functional.cross_entropy(
-                logits * scale, labels.to(TEST_DEVICE)
-            )
+            correct_loss = F.cross_entropy(logits * scale, labels.to(TEST_DEVICE))
 
             rtol = 1e-2 if dtype == torch.float16 else 1e-5
             self.assertTrue(torch.isclose(loss, correct_loss, rtol=rtol))
+
+            # test get_logits
+            logits_out = loss_func.get_logits(embeddings)
+            self.assertTrue(
+                torch.allclose(
+                    logits_out, torch.matmul(F.normalize(embeddings), weights) * scale
+                )
+            )

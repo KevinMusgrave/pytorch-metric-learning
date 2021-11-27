@@ -7,17 +7,19 @@ from pytorch_metric_learning.miners import MultiSimilarityMiner
 from pytorch_metric_learning.utils import common_functions as c_f
 
 from .. import TEST_DEVICE, TEST_DTYPES
+from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 
 class TestMultiSimilarityMiner(unittest.TestCase):
     def test_multi_similarity_miner(self):
+        torch.manual_seed(9599)
         epsilon = 0.1
         for dtype in TEST_DTYPES:
             for distance in [CosineSimilarity(), LpDistance()]:
                 miner = MultiSimilarityMiner(epsilon, distance=distance)
                 embedding_angles = torch.arange(0, 64)
                 embeddings = torch.tensor(
-                    [c_f.angle_to_coord(a) for a in embedding_angles],
+                    [angle_to_coord(a) for a in embedding_angles],
                     requires_grad=True,
                     dtype=dtype,
                 ).to(

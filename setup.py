@@ -9,12 +9,12 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 extras_require_with_hooks = [
-    "record-keeper >= 0.9.30",
+    "record-keeper == 0.9.31.dev6",
     "faiss-gpu >= 1.6.3",
     "tensorboard",
 ]
 extras_require_with_hooks_cpu = [
-    "record-keeper >= 0.9.30",
+    "record-keeper == 0.9.31.dev6",
     "faiss-cpu >= 1.6.3",
     "tensorboard",
 ]

@@ -4,9 +4,9 @@ import torch
 
 from pytorch_metric_learning.distances import CosineSimilarity, LpDistance
 from pytorch_metric_learning.miners import HDCMiner
-from pytorch_metric_learning.utils import common_functions as c_f
 
 from .. import TEST_DEVICE, TEST_DTYPES
+from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 
 class TestHDCMiner(unittest.TestCase):
@@ -51,7 +51,7 @@ class TestHDCMiner(unittest.TestCase):
         for dtype in TEST_DTYPES:
             angles = [0, 20, 40, 60, 80, 100]
             embeddings = torch.tensor(
-                [c_f.angle_to_coord(a) for a in angles], dtype=dtype
+                [angle_to_coord(a, normalized=True) for a in angles], dtype=dtype
             ).to(TEST_DEVICE)
             a1, p, a2, n = self.normalized_dist_miner(embeddings, self.labels)
             pos_pairs = torch.stack([a1, p], dim=1)
@@ -62,7 +62,7 @@ class TestHDCMiner(unittest.TestCase):
         for dtype in TEST_DTYPES:
             angles = [0, 20, 40, 60, 80, 100]
             embeddings = torch.tensor(
-                [c_f.angle_to_coord(a) for a in angles], dtype=dtype
+                [angle_to_coord(a, normalized=True) for a in angles], dtype=dtype
             ).to(TEST_DEVICE)
             a1, p, a2, n = self.normalized_dist_miner_squared(embeddings, self.labels)
             pos_pairs = torch.stack([a1, p], dim=1)
@@ -73,7 +73,7 @@ class TestHDCMiner(unittest.TestCase):
         for dtype in TEST_DTYPES:
             angles = [0, 20, 40, 60, 80, 100]
             embeddings = torch.tensor(
-                [c_f.angle_to_coord(a) for a in angles], dtype=dtype
+                [angle_to_coord(a, normalized=True) for a in angles], dtype=dtype
             ).to(TEST_DEVICE)
             a1, p, a2, n = self.sim_miner(embeddings, self.labels)
             pos_pairs = torch.stack([a1, p], dim=1)

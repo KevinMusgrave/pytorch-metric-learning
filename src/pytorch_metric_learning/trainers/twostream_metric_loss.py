@@ -50,6 +50,7 @@ class TwoStreamMetricLoss(BaseTrainer):
                 anchors_embeddings, labels, posnegs_embeddings, labels.clone()
             )
         else:
+            labels = labels.to(embeddings[0].device)
             return lmu.get_all_triplets_indices(labels, labels.clone())
 
     def modify_schema(self):

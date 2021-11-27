@@ -22,15 +22,13 @@ class NormalizedSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
     def cast_types(self, dtype, device):
         self.W.data = c_f.to_device(self.W.data, device=device, dtype=dtype)
 
-    def compute_loss(self, embeddings, labels, indices_tuple):
+    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+        c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
         dtype, device = embeddings.dtype, embeddings.device
         self.cast_types(dtype, device)
         miner_weights = lmu.convert_to_weights(indices_tuple, labels, dtype=dtype)
-        normalized_W = self.distance.normalize(self.W, dim=0)
-        exponent = self.distance(embeddings, normalized_W.t()) / self.temperature
-        if not self.distance.is_inverted:
-            exponent = -exponent
-        unweighted_loss = self.cross_entropy(exponent, labels)
+        logits = self.get_logits(embeddings)
+        unweighted_loss = self.cross_entropy(logits, labels)
         miner_weighted_loss = unweighted_loss * miner_weights
         loss_dict = {
             "loss": {
@@ -44,3 +42,10 @@ class NormalizedSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
 
     def get_default_distance(self):
         return DotProductSimilarity()
+
+    def get_logits(self, embeddings):
+        normalized_W = self.distance.normalize(self.W, dim=0)
+        logits = self.distance(embeddings, normalized_W.t()) / self.temperature
+        if not self.distance.is_inverted:
+            logits = -logits
+        return logits

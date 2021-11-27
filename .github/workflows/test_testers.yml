@@ -21,10 +21,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        pytorch-version: [1.6, 1.7, 1.8]
         python-version: [3.8]
-        with-collect-stats: [true, false]
-        
+        with-collect-stats: [false]
+
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
@@ -33,11 +32,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        pip install numpy
-        pip install scikit-learn
-        pip install tqdm
         pip install .[with-hooks-cpu]
-        pip install torch==${{ matrix.pytorch-version }} --force-reinstall
     - name: Run unit tests
       run: |
         TEST_DTYPES=float32,float64 TEST_DEVICE=cpu WITH_COLLECT_STATS=${{ matrix.with-collect-stats }} python -m unittest discover -t . -s tests/testers 

@@ -647,3 +647,12 @@ class TestCalculateAccuraciesValidK(unittest.TestCase):
             self.assertRaises(
                 ValueError, lambda: accuracy_calculator.AccuracyCalculator(k=k)
             )
+
+    def test_k_warning(self):
+        for k in [10, 100, 2000, "max_bin_count"]:
+            AC = accuracy_calculator.AccuracyCalculator(k=k)
+            embeddings = torch.randn(10000, 32)
+            labels = torch.randint(0, 10, size=(10000,))
+            level = "WARNING" if k in [10, 100] else "INFO"
+            with self.assertLogs(level=level):
+                AC.get_accuracy(embeddings, embeddings, labels, labels, True)

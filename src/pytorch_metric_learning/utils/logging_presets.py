@@ -19,6 +19,7 @@ class HookContainer:
         primary_metric="mean_average_precision_at_r",
         validation_split_name="val",
         save_models=True,
+        log_freq=50,
     ):
         self.record_keeper = record_keeper
         self.record_group_name_prefix = record_group_name_prefix
@@ -32,6 +33,7 @@ class HookContainer:
         self.primary_metric = primary_metric
         self.validation_split_name = validation_split_name
         self.do_save_models = save_models
+        self.log_freq = log_freq
 
     ############################################
     ############################################
@@ -41,6 +43,8 @@ class HookContainer:
 
     ### Define the end_of_iteration hook. This will be executed at the end of every iteration. ###
     def end_of_iteration_hook(self, trainer):
+        if trainer.iteration % self.log_freq != 0:
+            return
         record_these = [
             [
                 trainer.loss_tracker.losses,

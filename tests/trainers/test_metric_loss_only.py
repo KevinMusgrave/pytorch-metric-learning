@@ -109,6 +109,7 @@ class TestMetricLossOnly(unittest.TestCase):
 
                 batch_size = 32
                 iterations_per_epoch = 10
+                log_freq = 2
                 model_dict = {"trunk": model}
                 optimizer_dict = {"trunk_optimizer": optimizer}
                 loss_fn_dict = {"metric_loss": loss_fn}
@@ -123,7 +124,7 @@ class TestMetricLossOnly(unittest.TestCase):
                     logs_folder, tensorboard_folder
                 )
                 hooks = logging_presets.get_hook_container(
-                    record_keeper, primary_metric="precision_at_1"
+                    record_keeper, primary_metric="precision_at_1", log_freq=log_freq
                 )
                 dataset_dict = {"train": train_dataset_for_eval, "val": val_dataset}
 
@@ -196,7 +197,7 @@ class TestMetricLossOnly(unittest.TestCase):
                 if splits_to_eval is None:
                     self.assertTrue(
                         len(loss_history["metric_loss"])
-                        == iterations_per_epoch * num_epochs
+                        == (iterations_per_epoch / log_freq) * num_epochs
                     )
 
                 curr_primary_metric = hooks.get_curr_primary_metric(tester, "val")

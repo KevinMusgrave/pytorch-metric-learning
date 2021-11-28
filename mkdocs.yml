@@ -26,7 +26,8 @@ theme:
   logo: imgs/TinyLogo.png
   favicon: imgs/Favicon.png
 markdown_extensions:
-  - codehilite
+  - pymdownx.highlight
+  - pymdownx.superfences 
   - toc:
       permalink: true
   - attr_list

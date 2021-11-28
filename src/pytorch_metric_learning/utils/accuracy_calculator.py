@@ -215,7 +215,11 @@ class AccuracyCalculator:
         self.avg_of_avgs = avg_of_avgs
         self.device = c_f.use_cuda_if_available() if device is None else device
         self.knn_func = FaissKNN() if knn_func is None else knn_func
-        self.kmeans_func = FaissKMeans() if kmeans_func is None else kmeans_func
+        self.kmeans_func = (
+            FaissKMeans(niter=20, gpu=self.device.type == "cuda")
+            if kmeans_func is None
+            else kmeans_func
+        )
 
         if (not (isinstance(k, int) and k > 0)) and (k not in [None, "max_bin_count"]):
             raise ValueError(

@@ -149,28 +149,14 @@ class InferenceModel:
         return x
 
 
-class Faiss:
-    def __init__(self, index_init_fn=None):
-        self.index = None
+class FaissKNN:
+    def __init__(self, reset_before=True, reset_after=True, index_init_fn=None):
+        self.reset()
+        self.reset_before = reset_before
+        self.reset_after = reset_after
         self.index_init_fn = (
             faiss.IndexFlatL2 if index_init_fn is None else index_init_fn
         )
-
-    def save(self, filename):
-        faiss.write_index(self.index, filename)
-
-    def load(self, filename):
-        self.index = faiss.read_index(filename)
-
-    def reset(self):
-        self.index = None
-
-
-class FaissKNN(Faiss):
-    def __init__(self, reset_before=True, reset_after=True, **kwargs):
-        super().__init__(**kwargs)
-        self.reset_before = reset_before
-        self.reset_after = reset_after
 
     def __call__(
         self,
@@ -210,9 +196,20 @@ class FaissKNN(Faiss):
     def add(self, embeddings):
         self.index.add(c_f.numpy_to_torch(embeddings).cpu())
 
+    def save(self, filename):
+        faiss.write_index(self.index, filename)
 
-class FaissKMeans(Faiss):
-    # modified from https://raw.githubusercontent.com/facebookresearch/deepcluster/
+    def load(self, filename):
+        self.index = faiss.read_index(filename)
+
+    def reset(self):
+        self.index = None
+
+
+class FaissKMeans:
+    def __init__(self, **kwargs):
+        self.kwargs = kwargs
+
     def __call__(self, x, nmb_clusters):
         device = x.device
         x = c_f.to_numpy(x).astype(np.float32)
@@ -221,16 +218,9 @@ class FaissKMeans(Faiss):
         c_f.LOGGER.info("embedding dimensionality is %d" % d)
 
         # faiss implementation of k-means
-        clus = faiss.Clustering(d, nmb_clusters)
-        clus.niter = 20
-        clus.max_points_per_centroid = 10000000
-        index = faiss.IndexFlatL2(d)
-        if faiss.get_num_gpus() > 0:
-            index = faiss.index_cpu_to_all_gpus(index)
-        # perform the training
-        clus.train(x, index)
-        _, idxs = index.search(x, 1)
-
+        kmeans = faiss.Kmeans(d, nmb_clusters, **self.kwargs)
+        kmeans.train(x)
+        _, idxs = kmeans.index.search(x, 1)
         return torch.tensor([int(n[0]) for n in idxs], dtype=int, device=device)
 
 

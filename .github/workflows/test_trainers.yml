@@ -9,16 +9,12 @@ on:
     paths:
       - 'src/**'
       - 'tests/**'
-    paths-ignore:
-      - 'docs/**'
   pull_request:
     branches: [ master, dev ]
     paths:
       - 'src/**'
       - 'tests/**'
-    paths-ignore:
-      - 'docs/**'
-
+      
 jobs:
   build:
 

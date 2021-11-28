@@ -4,7 +4,6 @@ import numpy as np
 import torch
 
 from pytorch_metric_learning.losses import TupletMarginLoss
-from pytorch_metric_learning.utils import common_functions as c_f
 
 from .. import TEST_DEVICE, TEST_DTYPES, WITH_COLLECT_STATS
 from ..zzz_testing_utils import testing_utils

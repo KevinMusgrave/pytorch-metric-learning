@@ -7,7 +7,6 @@ from torchvision import datasets
 
 from pytorch_metric_learning.losses import NTXentLoss, TripletMarginLoss
 from pytorch_metric_learning.trainers import (
-    CascadedEmbeddings,
     DeepAdversarialMetricLearning,
     MetricLossOnly,
     TrainWithClassifier,

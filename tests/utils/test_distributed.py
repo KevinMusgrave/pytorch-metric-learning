@@ -8,11 +8,10 @@ import torch.multiprocessing as mp
 import torch.optim as optim
 from torch.nn.parallel import DistributedDataParallel as DDP
 
-from pytorch_metric_learning import losses, miners, reducers
-from pytorch_metric_learning.utils import common_functions as c_f
+from pytorch_metric_learning import losses, miners
 from pytorch_metric_learning.utils import distributed
 
-from .. import TEST_DEVICE, TEST_DTYPES, WITH_COLLECT_STATS
+from .. import TEST_DEVICE, TEST_DTYPES
 
 
 # https://discuss.pytorch.org/t/check-if-models-have-same-weights/4351

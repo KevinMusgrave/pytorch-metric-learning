@@ -371,7 +371,7 @@ class AccuracyCalculator:
         exclude=(),
     ):
         [query, reference, query_labels, reference_labels] = [
-            c_f.numpy_to_torch(x).to(self.device)
+            c_f.numpy_to_torch(x).to(self.device).type(torch.float)
             for x in [query, reference, query_labels, reference_labels]
         ]
 

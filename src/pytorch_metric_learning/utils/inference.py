@@ -194,9 +194,7 @@ class FaissKNN:
         indices = c_f.to_device(indices, device=device)
         if self.reset_after:
             self.reset()
-        if embeddings_come_from_same_source:
-            return distances[:, 1:], indices[:, 1:]
-        return distances, indices
+        return return_results(distances, indices, embeddings_come_from_same_source)
 
     def train(self, embeddings):
         self.index = self.index_init_fn(embeddings.shape[1])
@@ -283,14 +281,18 @@ def run_pca(x, output_dimensionality):
     return c_f.to_device(torch.from_numpy(mat.apply_py(x)), device=device)
 
 
-# # copied from https://github.com/facebookresearch/faiss/issues/878#issuecomment-506795919
-# def index_cpu_to_gpu_multiple(resources, index, co=None, gpus=None):
-#     if gpus is None:
-#         gpus = range(len(resources))
-#     vres = faiss.GpuResourcesVector()
-#     vdev = faiss.Int32Vector()
-#     for i, res in zip(gpus, resources):
-#         vdev.push_back(i)
-#         vres.push_back(res)
-#     index = faiss.index_cpu_to_gpu_multiple(vres, vdev, index, co)
-#     return index
+def return_results(D, I, embeddings_come_from_same_source):
+    if embeddings_come_from_same_source:
+        return D[:, 1:], I[:, 1:]
+    return D, I
+
+
+class CustomKNN:
+    def __init__(self, distance):
+        self.distance = distance
+
+    def __call__(self, query, k, reference, embeddings_come_from_same_source=False):
+        mat = self.distance(query, reference)
+        largest = self.distance.is_inverted
+        distances, indices = torch.topk(mat, k, largest=largest, dim=1)
+        return return_results(distances, indices, embeddings_come_from_same_source)

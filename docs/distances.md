@@ -38,7 +38,7 @@ All **losses, miners, and regularizers** accept a ```distance``` argument. So yo
 All distances extend this class and therefore inherit its ```__init__``` parameters.
 
 ```python
-distances.BaseDistance(collect_stats = True,
+distances.BaseDistance(collect_stats = False,
 						normalize_embeddings=True, 
 						p=2, 
 						power=1, 
@@ -47,7 +47,7 @@ distances.BaseDistance(collect_stats = True,
 
 **Parameters**:
 
-* **collect_stats**: If True, will collect various statistics that may be useful to analyze during experiments. If False, these computations will be skipped. Want to make ```False``` the default? Set the global [COLLECT_STATS](common_functions.md#collect_stats) flag.
+* **collect_stats**: If True, will collect various statistics that may be useful to analyze during experiments. If False, these computations will be skipped. Want to make ```True``` the default? Set the global [COLLECT_STATS](common_functions.md#collect_stats) flag.
 * **normalize_embeddings**: If True, embeddings will be normalized to have an Lp norm of 1, before the distance/similarity matrix is computed.
 * **p**: The distance norm.
 * **power**: If not 1, each element of the distance/similarity matrix will be raised to this power.

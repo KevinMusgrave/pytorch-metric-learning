@@ -1,9 +1,12 @@
+import itertools
 import unittest
 
 import numpy as np
 import torch
 
+from pytorch_metric_learning.distances import LpDistance
 from pytorch_metric_learning.utils import accuracy_calculator
+from pytorch_metric_learning.utils.inference import CustomKNN, FaissKNN
 
 from .. import TEST_DEVICE
 
@@ -42,7 +45,7 @@ class TestCalculateAccuracies(unittest.TestCase):
             ):
 
                 AC = accuracy_calculator.AccuracyCalculator(
-                    exclude=("NMI", "AMI"), avg_of_avgs=avg_of_avgs
+                    exclude=("NMI", "AMI"), avg_of_avgs=avg_of_avgs, device=TEST_DEVICE
                 )
                 kwargs = {
                     "query_labels": query_labels,
@@ -366,45 +369,57 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
             self._test_accuracy_calculator_float_custom_comparison_function(use_numpy)
 
     def _test_accuracy_calculator_and_faiss(self, use_numpy):
-        AC = accuracy_calculator.AccuracyCalculator()
-        if use_numpy:
-            query = np.arange(10)[:, None]
-            reference = np.arange(10)[:, None]
-            query_labels = np.arange(10)
-            reference_labels = np.arange(10)
-        else:
-            query = torch.arange(10, device=TEST_DEVICE).unsqueeze(1)
-            reference = torch.arange(10, device=TEST_DEVICE).unsqueeze(1)
-            query_labels = torch.arange(10, device=TEST_DEVICE)
-            reference_labels = torch.arange(10, device=TEST_DEVICE)
-        acc = AC.get_accuracy(query, reference, query_labels, reference_labels, False)
-        self.assertTrue(isclose(acc["precision_at_1"], 1))
-        self.assertTrue(isclose(acc["r_precision"], 1))
-        self.assertTrue(isclose(acc["mean_average_precision_at_r"], 1))
-
-        if use_numpy:
-            reference = (np.arange(20) / 2.0)[:, None]
-            reference_labels = np.zeros(20)
-            reference_labels[::2] = query_labels
-            reference_labels[1::2] = np.ones(10)
-        else:
-            reference = (torch.arange(20, device=TEST_DEVICE) / 2.0).unsqueeze(1)
-            reference_labels = torch.zeros(20, device=TEST_DEVICE)
-            reference_labels[::2] = query_labels
-            reference_labels[1::2] = torch.ones(10)
-        acc = AC.get_accuracy(query, reference, query_labels, reference_labels, True)
-        self.assertTrue(isclose(acc["precision_at_1"], 1))
-        self.assertTrue(isclose(acc["r_precision"], 0.5))
-        self.assertTrue(
-            isclose(
-                acc["mean_average_precision_at_r"],
-                (1 + 2.0 / 2 + 3.0 / 5 + 4.0 / 7 + 5.0 / 9) / 10,
+        custom_knn = CustomKNN(LpDistance(normalize_embeddings=False, power=2))
+        for knn_func in [None, custom_knn]:
+            AC = accuracy_calculator.AccuracyCalculator(
+                device=TEST_DEVICE, knn_func=knn_func
             )
-        )
+            if use_numpy:
+                query = np.arange(10)[:, None]
+                reference = np.arange(10)[:, None]
+                query_labels = np.arange(10)
+                reference_labels = np.arange(10)
+            else:
+                query = torch.arange(10, device=TEST_DEVICE).unsqueeze(1)
+                reference = torch.arange(10, device=TEST_DEVICE).unsqueeze(1)
+                query_labels = torch.arange(10, device=TEST_DEVICE)
+                reference_labels = torch.arange(10, device=TEST_DEVICE)
+            acc = AC.get_accuracy(
+                query, reference, query_labels, reference_labels, False
+            )
+            self.assertTrue(isclose(acc["precision_at_1"], 1))
+            self.assertTrue(isclose(acc["r_precision"], 1))
+            self.assertTrue(isclose(acc["mean_average_precision_at_r"], 1))
+
+            if use_numpy:
+                reference = (np.arange(20) / 2.0)[:, None]
+                reference_labels = np.zeros(20)
+                reference_labels[::2] = query_labels
+                reference_labels[1::2] = np.ones(10)
+            else:
+                reference = (torch.arange(20, device=TEST_DEVICE) / 2.0).unsqueeze(1)
+                reference_labels = torch.zeros(20, device=TEST_DEVICE)
+                reference_labels[::2] = query_labels
+                reference_labels[1::2] = torch.ones(10)
+            acc = AC.get_accuracy(
+                query, reference, query_labels, reference_labels, True
+            )
+            self.assertTrue(isclose(acc["precision_at_1"], 1))
+            self.assertTrue(isclose(acc["r_precision"], 0.5))
+            self.assertTrue(
+                isclose(
+                    acc["mean_average_precision_at_r"],
+                    (1 + 2.0 / 2 + 3.0 / 5 + 4.0 / 7 + 5.0 / 9) / 10,
+                )
+            )
 
     def _test_accuracy_calculator_and_faiss_avg_of_avgs(self, use_numpy):
-        AC_global_average = accuracy_calculator.AccuracyCalculator(avg_of_avgs=False)
-        AC_per_class_average = accuracy_calculator.AccuracyCalculator(avg_of_avgs=True)
+        AC_global_average = accuracy_calculator.AccuracyCalculator(
+            avg_of_avgs=False, device=TEST_DEVICE
+        )
+        AC_per_class_average = accuracy_calculator.AccuracyCalculator(
+            avg_of_avgs=True, device=TEST_DEVICE
+        )
 
         query_labels = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
         reference_labels = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
@@ -447,6 +462,7 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
                 include=("NMI", "AMI"),
                 avg_of_avgs=False,
                 label_comparison_fn=label_comparison_fn,
+                device=TEST_DEVICE,
             ),
         )
 
@@ -454,12 +470,14 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
             exclude=("NMI", "AMI"),
             avg_of_avgs=False,
             label_comparison_fn=label_comparison_fn,
+            device=TEST_DEVICE,
         )
 
         AC_per_class_average = accuracy_calculator.AccuracyCalculator(
             exclude=("NMI", "AMI"),
             avg_of_avgs=True,
             label_comparison_fn=label_comparison_fn,
+            device=TEST_DEVICE,
         )
 
         query_labels = [
@@ -571,6 +589,7 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
                 include=("NMI", "AMI"),
                 avg_of_avgs=False,
                 label_comparison_fn=label_comparison_fn,
+                device=TEST_DEVICE,
             ),
         )
 
@@ -578,6 +597,7 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
             exclude=("NMI", "AMI"),
             avg_of_avgs=False,
             label_comparison_fn=label_comparison_fn,
+            device=TEST_DEVICE,
         )
 
         query_labels = [
@@ -638,3 +658,49 @@ class TestCalculateAccuraciesValidK(unittest.TestCase):
             self.assertRaises(
                 ValueError, lambda: accuracy_calculator.AccuracyCalculator(k=k)
             )
+
+    def test_k_warning(self):
+        for k in [10, 100, 2000, "max_bin_count"]:
+            AC = accuracy_calculator.AccuracyCalculator(k=k)
+            embeddings = torch.randn(10000, 32)
+            labels = torch.randint(0, 10, size=(10000,))
+            level = "WARNING" if k in [10, 100] else "INFO"
+            with self.assertLogs(level=level):
+                AC.get_accuracy(embeddings, embeddings, labels, labels, True)
+
+
+class TestCalculateAccuraciesFaissKNN(unittest.TestCase):
+    def test_specify_gpu(self):
+        max_world_size = min(4, torch.cuda.device_count())
+        for i in range(1, max_world_size + 1):
+            for gpus in itertools.combinations(range(max_world_size), i):
+                knn_func = FaissKNN(gpus=gpus)
+                AC = accuracy_calculator.AccuracyCalculator(knn_func=knn_func)
+                embeddings = torch.randn(1000, 32)
+                labels = torch.randint(0, 10, size=(1000,))
+                AC.get_accuracy(embeddings, embeddings, labels, labels, True)
+
+    def test_index_type(self):
+        import faiss
+
+        knn_func = FaissKNN(reset_after=False, index_init_fn=faiss.IndexFlatIP)
+        AC = accuracy_calculator.AccuracyCalculator(knn_func=knn_func)
+        embeddings = torch.randn(1000, 32)
+        labels = torch.randint(0, 10, size=(1000,))
+        AC.get_accuracy(embeddings, embeddings, labels, labels, True)
+        self.assertTrue(isinstance(AC.knn_func.index, faiss.IndexFlatIP))
+
+
+class TestCalculateAccuraciesCustomKNN(unittest.TestCase):
+    def test_custom_knn(self):
+        fn1 = CustomKNN(LpDistance(normalize_embeddings=False, power=2))
+        fn2 = FaissKNN()
+        AC1 = accuracy_calculator.AccuracyCalculator(knn_func=fn1)
+        AC2 = accuracy_calculator.AccuracyCalculator(knn_func=fn2)
+        embeddings = torch.randn(1000, 32)
+        labels = torch.randint(0, 10, size=(1000,))
+        acc1 = AC1.get_accuracy(embeddings, embeddings, labels, labels, True)
+        acc2 = AC2.get_accuracy(embeddings, embeddings, labels, labels, True)
+
+        for k, v in acc1.items():
+            self.assertTrue(np.isclose(v, acc2[k], rtol=1e-3))

@@ -27,9 +27,9 @@ class MarginLoss(BaseMetricLossFunction):
             list_of_names=["margin", "nu", "beta"], is_stat=False
         )
 
-    def compute_loss(self, embeddings, labels, indices_tuple):
+    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
         indices_tuple = lmu.convert_to_triplets(
-            indices_tuple, labels, self.triplets_per_anchor
+            indices_tuple, labels, ref_labels, self.triplets_per_anchor
         )
         anchor_idx, positive_idx, negative_idx = indices_tuple
         if len(anchor_idx) == 0:
@@ -38,7 +38,7 @@ class MarginLoss(BaseMetricLossFunction):
         beta = self.beta if len(self.beta) == 1 else self.beta[labels[anchor_idx]]
         beta = c_f.to_device(beta, device=embeddings.device, dtype=embeddings.dtype)
 
-        mat = self.distance(embeddings)
+        mat = self.distance(embeddings, ref_emb)
 
         d_ap = mat[anchor_idx, positive_idx]
         d_an = mat[anchor_idx, negative_idx]

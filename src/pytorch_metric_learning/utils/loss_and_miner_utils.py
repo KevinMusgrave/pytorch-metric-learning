@@ -28,12 +28,7 @@ def meshgrid_from_sizes(x, y, dim=0):
     return torch.meshgrid(a, b)
 
 
-def get_all_pairs_indices(labels, ref_labels=None):
-    """
-    Given a tensor of labels, this will return 4 tensors.
-    The first 2 tensors are the indices which form all positive pairs
-    The second 2 tensors are the indices which form all negative pairs
-    """
+def get_matches_and_diffs(labels, ref_labels=None):
     if ref_labels is None:
         ref_labels = labels
     labels1 = labels.unsqueeze(1)
@@ -42,12 +37,22 @@ def get_all_pairs_indices(labels, ref_labels=None):
     diffs = matches ^ 1
     if ref_labels is labels:
         matches.fill_diagonal_(0)
+    return matches, diffs
+
+
+def get_all_pairs_indices(labels, ref_labels=None):
+    """
+    Given a tensor of labels, this will return 4 tensors.
+    The first 2 tensors are the indices which form all positive pairs
+    The second 2 tensors are the indices which form all negative pairs
+    """
+    matches, diffs = get_matches_and_diffs(labels, ref_labels)
     a1_idx, p_idx = torch.where(matches)
     a2_idx, n_idx = torch.where(diffs)
     return a1_idx, p_idx, a2_idx, n_idx
 
 
-def convert_to_pairs(indices_tuple, labels):
+def convert_to_pairs(indices_tuple, labels, ref_labels=None):
     """
     This returns anchor-positive and anchor-negative indices,
     regardless of what the input indices_tuple is
@@ -57,7 +62,7 @@ def convert_to_pairs(indices_tuple, labels):
         labels: a tensor which has the label for each element in a batch
     """
     if indices_tuple is None:
-        return get_all_pairs_indices(labels)
+        return get_all_pairs_indices(labels, ref_labels)
     elif len(indices_tuple) == 4:
         return indices_tuple
     else:
@@ -80,14 +85,7 @@ def neg_pairs_from_tuple(indices_tuple):
 
 
 def get_all_triplets_indices(labels, ref_labels=None):
-    if ref_labels is None:
-        ref_labels = labels
-    labels1 = labels.unsqueeze(1)
-    labels2 = ref_labels.unsqueeze(0)
-    matches = (labels1 == labels2).byte()
-    diffs = matches ^ 1
-    if ref_labels is labels:
-        matches.fill_diagonal_(0)
+    matches, diffs = get_matches_and_diffs(labels, ref_labels)
     triplets = matches.unsqueeze(2) * diffs.unsqueeze(1)
     return torch.where(triplets)
 
@@ -178,16 +176,18 @@ def matched_size_indices(curr_p_idx, curr_n_idx):
     return p_idx, n_idx
 
 
-def convert_to_triplets(indices_tuple, labels, t_per_anchor=100):
+def convert_to_triplets(indices_tuple, labels, ref_labels=None, t_per_anchor=100):
     """
     This returns anchor-positive-negative triplets
     regardless of what the input indices_tuple is
     """
     if indices_tuple is None:
         if t_per_anchor == "all":
-            return get_all_triplets_indices(labels)
+            return get_all_triplets_indices(labels, ref_labels)
         else:
-            return get_random_triplet_indices(labels, t_per_anchor=t_per_anchor)
+            return get_random_triplet_indices(
+                labels, ref_labels, t_per_anchor=t_per_anchor
+            )
     elif len(indices_tuple) == 3:
         return indices_tuple
     else:
@@ -209,3 +209,49 @@ def convert_to_weights(indices_tuple, labels, dtype):
     counts = c_f.to_dtype(counts, dtype=dtype) / torch.sum(counts)
     weights[indices] = counts / torch.max(counts)
     return weights
+
+
+def remove_self_comparisons(
+    indices_tuple, curr_batch_idx, ref_size, ref_is_subset=False
+):
+    # remove self-comparisons
+    assert len(indices_tuple) in [3, 4]
+    s, e = curr_batch_idx[0], curr_batch_idx[-1]
+    if len(indices_tuple) == 3:
+        a, p, n = indices_tuple
+        keep_mask = not_self_comparisons(
+            a, p, s, e, curr_batch_idx, ref_size, ref_is_subset
+        )
+        a = a[keep_mask]
+        p = p[keep_mask]
+        n = n[keep_mask]
+        assert len(a) == len(p) == len(n)
+        return a, p, n
+    elif len(indices_tuple) == 4:
+        a1, p, a2, n = indices_tuple
+        keep_mask = not_self_comparisons(
+            a1, p, s, e, curr_batch_idx, ref_size, ref_is_subset
+        )
+        a1 = a1[keep_mask]
+        p = p[keep_mask]
+        assert len(a1) == len(p)
+        assert len(a2) == len(n)
+        return a1, p, a2, n
+
+
+# a: anchors
+# p: positives
+# s: curr batch start idx in queue
+# e: curr batch end idx in queue
+def not_self_comparisons(a, p, s, e, curr_batch_idx, ref_size, ref_is_subset=False):
+    if ref_is_subset:
+        a, p = p, a
+    curr_batch = torch.any(p.unsqueeze(1) == curr_batch_idx, dim=1)
+    a_c = a[curr_batch]
+    p_c = p[curr_batch]
+    p_c -= s
+    if e <= s:
+        p_c[p_c <= e - s] += ref_size
+    without_self_comparisons = curr_batch.clone()
+    without_self_comparisons[torch.where(curr_batch)[0][a_c == p_c]] = False
+    return without_self_comparisons | ~curr_batch

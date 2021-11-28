@@ -6,9 +6,9 @@ import scipy
 import torch
 
 from pytorch_metric_learning.losses import LargeMarginSoftmaxLoss, SphereFaceLoss
-from pytorch_metric_learning.utils import common_functions as c_f
 
 from .. import TEST_DEVICE, TEST_DTYPES
+from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 
 class TestLargeMarginSoftmaxLoss(unittest.TestCase):
@@ -26,7 +26,7 @@ class TestLargeMarginSoftmaxLoss(unittest.TestCase):
             embedding_angles = torch.arange(0, 180)
             # multiply by 10 to make the embeddings unnormalized
             embeddings = torch.tensor(
-                np.array([c_f.angle_to_coord(a) for a in embedding_angles]) * 10,
+                np.array([angle_to_coord(a) for a in embedding_angles]) * 10,
                 requires_grad=True,
                 dtype=dtype,
             ).to(
@@ -97,6 +97,25 @@ class TestLargeMarginSoftmaxLoss(unittest.TestCase):
             self.assertTrue(torch.isclose(lossA, correct_lossA, rtol=rtol))
             self.assertTrue(torch.isclose(lossB, correct_lossB, rtol=rtol))
 
+            # test get_logits
+            if dtype != torch.float16:
+                logits_outA = loss_funcA.get_logits(embeddings)
+                logits_outB = loss_funcB.get_logits(embeddings)
+                self.assertTrue(
+                    torch.allclose(
+                        logits_outA,
+                        torch.matmul(embeddings, weightsA) * scale,
+                        rtol=1e-2,
+                    )
+                )
+                self.assertTrue(
+                    torch.allclose(
+                        logits_outB,
+                        torch.matmul(embeddings, weightsB) * scale,
+                        rtol=1e-2,
+                    )
+                )
+
     def test_backward(self):
         margin = 10
         scale = 2
@@ -111,7 +130,7 @@ class TestLargeMarginSoftmaxLoss(unittest.TestCase):
                 embedding_angles = torch.arange(0, 180)
                 # multiply by 10 to make the embeddings unnormalized
                 embeddings = torch.tensor(
-                    np.array([c_f.angle_to_coord(a) for a in embedding_angles]) * 10,
+                    np.array([angle_to_coord(a) for a in embedding_angles]) * 10,
                     requires_grad=True,
                     dtype=dtype,
                 ).to(

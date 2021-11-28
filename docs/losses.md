@@ -17,12 +17,21 @@ miner_output = miner_func(embeddings, labels) # in your training for-loop
 loss = loss_func(embeddings, labels, miner_output)
 ```
 
-You can also specify how losses get reduced to a single value by using a [reducer](reducers.md):
+You can specify how losses get reduced to a single value by using a [reducer](reducers.md):
 ```python
 from pytorch_metric_learning import losses, reducers
 reducer = reducers.SomeReducer()
 loss_func = losses.SomeLoss(reducer=reducer)
 loss = loss_func(embeddings, labels) # in your training for-loop
+```
+
+For tuple losses, can separate the source of anchors and positives/negatives:
+```python
+from pytorch_metric_learning import losses
+loss_func = losses.SomeLoss()
+# anchors will come from embeddings
+# positives/negatives will come from ref_emb
+loss = loss_func(embeddings, labels, ref_emb=ref_emb, ref_labels=ref_labels)
 ```
 
 
@@ -103,7 +112,7 @@ loss_optimizer.step()
 All loss functions extend this class and therefore inherit its ```__init__``` parameters.
 
 ```python
-losses.BaseMetricLossFunction(collect_stats = True, 
+losses.BaseMetricLossFunction(collect_stats = False, 
 							reducer = None, 
 							distance = None, 
 							embedding_regularizer = None,
@@ -112,7 +121,7 @@ losses.BaseMetricLossFunction(collect_stats = True,
 
 **Parameters**:
 
-* **collect_stats**: If True, will collect various statistics that may be useful to analyze during experiments. If False, these computations will be skipped. Want to make ```False``` the default? Set the global [COLLECT_STATS](common_functions.md#collect_stats) flag.
+* **collect_stats**: If True, will collect various statistics that may be useful to analyze during experiments. If False, these computations will be skipped. Want to make ```True``` the default? Set the global [COLLECT_STATS](common_functions.md#collect_stats) flag.
 * **reducer**: A [reducer](reducers.md) object. If None, then the default reducer will be used.
 * **distance**: A [distance](distances.md) object. If None, then the default distance will be used.
 * **embedding_regularizer**: A [regularizer](regularizers.md) object that will be applied to embeddings. If None, then no embedding regularization will be used.

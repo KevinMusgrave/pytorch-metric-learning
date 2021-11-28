@@ -38,7 +38,8 @@ LP.HookContainer(record_keeper,
 	record_group_name_prefix=None, 
 	primary_metric="mean_average_precision_at_r", 
 	validation_split_name="val",
-	save_models=True)
+	save_models=True,
+	log_freq=50)
 ```
 
 **Parameters**:
@@ -52,6 +53,7 @@ LP.HookContainer(record_keeper,
 	* NMI
 * **validation_split_name**: Optional. Default value is "val". The name of your validation set in ```dataset_dict```.
 * **save_models**: Optional. Models will be saved if this is ```True```.
+* **log_freq**: Data will be logged every ```log_freq``` iterations.
 
 **Important functions**:
 

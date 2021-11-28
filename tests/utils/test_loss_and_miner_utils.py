@@ -231,6 +231,48 @@ class TestLossAndMinerUtils(unittest.TestCase):
                 a, p, n = lmu.get_random_triplet_indices(labels, ref_labels=ref_labels)
                 self.assertTrue(len(a) == len(p) == len(n) == 100)
 
+    def test_remove_self_comparisons(self):
+        labels = torch.tensor([0, 0, 1])
+        ref_labels = torch.tensor([1, 1, 0, 0])
+
+        for do_reverse in [False, True]:
+            if do_reverse:
+                all_labels = torch.cat([ref_labels, labels])
+                curr_batch_idx = torch.arange(4, 7)
+                correct_a1 = torch.tensor([0, 0, 0, 1, 1, 1, 2, 2])
+                correct_p = torch.tensor([2, 3, 5, 2, 3, 4, 0, 1])
+            else:
+                all_labels = torch.cat([labels, ref_labels])
+                curr_batch_idx = torch.arange(3)
+                correct_a1 = torch.tensor([0, 0, 0, 1, 1, 1, 2, 2])
+                correct_p = torch.tensor([1, 5, 6, 0, 5, 6, 3, 4])
+
+            indices_tuple = lmu.get_all_pairs_indices(labels, all_labels)
+            ref_size = len(all_labels)
+            indices_tuple = lmu.remove_self_comparisons(
+                indices_tuple, curr_batch_idx, ref_size
+            )
+            a1, p, a2, n = indices_tuple
+            self.assertTrue(torch.equal(a1, correct_a1))
+            self.assertTrue(torch.equal(p, correct_p))
+
+    def test_remove_self_comparisons_small_ref(self):
+        labels = torch.tensor([0, 0, 1])
+        labels2 = torch.tensor([1, 1, 0, 0])
+        all_labels = torch.cat([labels, labels2])
+        curr_batch_idx = torch.arange(3, 7)
+        correct_a1 = torch.tensor([0, 0, 1, 1, 2, 2, 3, 4, 5, 6])
+        correct_p = torch.tensor([2, 3, 2, 3, 0, 1, 1, 0, 3, 2])
+
+        indices_tuple = lmu.get_all_pairs_indices(all_labels, labels2)
+        ref_size = len(labels2)
+        indices_tuple = lmu.remove_self_comparisons(
+            indices_tuple, curr_batch_idx, ref_size, ref_is_subset=True
+        )
+        a1, p, a2, n = indices_tuple
+        self.assertTrue(torch.equal(a1, correct_a1))
+        self.assertTrue(torch.equal(p, correct_p))
+
 
 if __name__ == "__main__":
     unittest.main()

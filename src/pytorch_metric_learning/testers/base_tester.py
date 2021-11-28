@@ -7,7 +7,7 @@ import torch
 import tqdm
 
 from ..utils import common_functions as c_f
-from ..utils import stat_utils
+from ..utils import inference
 from ..utils.accuracy_calculator import AccuracyCalculator
 
 
@@ -17,7 +17,7 @@ class BaseTester:
         normalize_embeddings=True,
         use_trunk_output=False,
         batch_size=32,
-        dataloader_num_workers=32,
+        dataloader_num_workers=2,
         pca=None,
         data_device=None,
         dtype=None,
@@ -35,9 +35,7 @@ class BaseTester:
         self.use_trunk_output = use_trunk_output
         self.batch_size = int(batch_size)
         self.data_device = (
-            torch.device("cuda" if torch.cuda.is_available() else "cpu")
-            if data_device is None
-            else data_device
+            c_f.use_cuda_if_available() if data_device is None else data_device
         )
         self.dtype = dtype
         self.dataloader_num_workers = dataloader_num_workers
@@ -71,7 +69,7 @@ class BaseTester:
     def maybe_normalize(self, embeddings):
         if self.pca:
             for_pca = c_f.torch_standard_scaler(embeddings)
-            embeddings = stat_utils.run_pca(for_pca, self.pca)
+            embeddings = inference.run_pca(for_pca, self.pca)
         if self.normalize_embeddings:
             embeddings = torch.nn.functional.normalize(embeddings)
         return embeddings

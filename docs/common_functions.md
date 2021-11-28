@@ -25,10 +25,10 @@ c_f.LOGGER.info("Hello") # prints INFO:DOGS:Hello
 ```
 
 ## COLLECT_STATS
-Default value is ```True```. This is used by all distances, losses, miners, reducers, and regularizers. Set this to ```False``` if you want to turn off all statistics collection.
+Default value is ```False```. This is used by all distances, losses, miners, reducers, and regularizers. Set this to ```True``` if you want to turn on all statistics collection.
 ```python
 from pytorch_metric_learning.utils import common_functions as c_f
-c_f.COLLECT_STATS = False
+c_f.COLLECT_STATS = True
 ```
 
 ## NUMPY_RANDOM

@@ -5,9 +5,9 @@ import torch
 from pytorch_metric_learning.distances import CosineSimilarity, LpDistance
 from pytorch_metric_learning.losses import ContrastiveLoss
 from pytorch_metric_learning.reducers import MeanReducer
-from pytorch_metric_learning.utils import common_functions as c_f
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, WITH_COLLECT_STATS
+from ..zzz_testing_utils import testing_utils
 
 
 class TestContrastiveLoss(unittest.TestCase):
@@ -34,7 +34,7 @@ class TestContrastiveLoss(unittest.TestCase):
         for dtype in TEST_DTYPES:
             embedding_angles = [0, 20, 40, 60, 80]
             embeddings = torch.tensor(
-                [c_f.angle_to_coord(a) for a in embedding_angles],
+                [testing_utils.angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
             ).to(
@@ -46,6 +46,8 @@ class TestContrastiveLoss(unittest.TestCase):
             lossB = loss_funcB(embeddings, labels)
             lossC = loss_funcC(embeddings, labels)
             lossD = loss_funcD(embeddings, labels)
+
+            embeddings = torch.nn.functional.normalize(embeddings)
 
             pos_pairs = [(0, 1), (1, 0), (2, 3), (3, 2)]
             neg_pairs = [
@@ -121,13 +123,26 @@ class TestContrastiveLoss(unittest.TestCase):
             self.assertTrue(torch.isclose(lossC, correct_losses[2], rtol=rtol))
             self.assertTrue(torch.isclose(lossD, correct_losses[3], rtol=rtol))
 
+            for L in [loss_funcA, loss_funcB, loss_funcC, loss_funcD]:
+                testing_utils.is_not_none_if_condition(
+                    self,
+                    L.distance,
+                    [
+                        "initial_avg_query_norm",
+                        "initial_avg_ref_norm",
+                        "final_avg_query_norm",
+                        "final_avg_ref_norm",
+                    ],
+                    WITH_COLLECT_STATS,
+                )
+
     def test_with_no_valid_pairs(self):
         loss_funcA = ContrastiveLoss()
         loss_funcB = ContrastiveLoss(distance=CosineSimilarity())
         for dtype in TEST_DTYPES:
             embedding_angles = [0]
             embeddings = torch.tensor(
-                [c_f.angle_to_coord(a) for a in embedding_angles],
+                [testing_utils.angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
             ).to(
@@ -146,7 +161,7 @@ class TestContrastiveLoss(unittest.TestCase):
             for loss_func in [loss_funcA, loss_funcB]:
                 embedding_angles = [0]
                 embeddings = torch.tensor(
-                    [c_f.angle_to_coord(a) for a in embedding_angles],
+                    [testing_utils.angle_to_coord(a) for a in embedding_angles],
                     requires_grad=True,
                     dtype=dtype,
                 ).to(

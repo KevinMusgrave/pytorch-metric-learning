@@ -10,16 +10,11 @@ import numpy as np
 import torch
 
 
-def default_index_init_fn(d):
-    res = faiss.StandardGpuResources()
-    return faiss.GpuIndexFlatL2(res, d)
-
-
 class Faiss:
     def __init__(self, index_init_fn=None):
         self.index = None
         self.index_init_fn = (
-            default_index_init_fn if index_init_fn is None else index_init_fn
+            faiss.IndexFlatL2 if index_init_fn is None else index_init_fn
         )
 
     def save(self, filename):
@@ -27,9 +22,6 @@ class Faiss:
 
     def load(self, filename):
         self.index = faiss.read_index(filename)
-
-    def init_index(self, d):
-        self.index = self.index_init_fn(d)
 
 
 class FaissKNN(Faiss):
@@ -51,7 +43,7 @@ class FaissKNN(Faiss):
         d = reference.shape[1]
         c_f.LOGGER.info("running k-nn with k=%d" % k)
         c_f.LOGGER.info("embedding dimensionality is %d" % d)
-        self.init_index(d)
+        self.index = self.index_init_fn(d)
         distances, indices = try_gpu(
             self.index,
             query.float(),
@@ -119,7 +111,7 @@ def try_gpu(index, query, reference, k, is_cuda):
         if k <= max_k_for_gpu:
             gpu_index = convert_to_gpu_index(index)
     try:
-        return add_to_index_and_search(gpu_index, query, reference, k)
+        return add_to_index_and_search(gpu_index, query.cpu(), reference.cpu(), k)
     except (AttributeError, RuntimeError) as e:
         if gpu_condition:
             c_f.LOGGER.warning(

@@ -33,7 +33,7 @@ utils.distributed.DistributedMinerWrapper(miner, efficient=False)
 **Parameters**:
 
 * **miner**: The miner to wrap
-* **efficient**: If False, memory usage is not optimal, but the resulting gradients will be identical to the non-distributed code. If True, memory usage is decreased, but gradients will differ from non-distributed code. 
+* **efficient**: If your distributed loss function has ```efficient=True``` then you must also set the distributed miner's ```efficient``` to True.
 
 Example usage:
 ```python

@@ -605,7 +605,7 @@
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>miner</strong>: The miner to wrap</li>
-<li><strong>efficient</strong>: If False, memory usage is not optimal, but the resulting gradients will be identical to the non-distributed code. If True, memory usage is decreased, but gradients will differ from non-distributed code. </li>
+<li><strong>efficient</strong>: If your distributed loss function has <code>efficient=True</code> then you must also set the distributed miner's <code>efficient</code> to True.</li>
 </ul>
 <p>Example usage:
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">miners</span>

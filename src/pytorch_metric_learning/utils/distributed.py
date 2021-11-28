@@ -1,9 +1,7 @@
 import torch
-from torch.nn.parallel import DistributedDataParallel as DDP
 
 from ..losses import BaseMetricLossFunction
 from ..miners import BaseMiner
-from ..reducers import DoNothingReducer
 from ..utils import common_functions as c_f
 from ..utils import loss_and_miner_utils as lmu
 

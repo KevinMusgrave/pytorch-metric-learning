@@ -1,10 +1,14 @@
-import copy
-
 import numpy as np
 import torch
 
 from ..distances import CosineSimilarity
 from . import common_functions as c_f
+
+try:
+    import faiss
+    import faiss.contrib.torch_utils
+except ModuleNotFoundError:
+    pass
 
 
 class MatchFinder:
@@ -48,31 +52,6 @@ class MatchFinder:
             return output.cpu().numpy()
 
 
-class FaissIndexer:
-    def __init__(self, index=None):
-        import faiss as faiss_module
-
-        self.faiss_module = faiss_module
-        self.index = index
-
-    def train_index(self, embeddings):
-        self.index = self.faiss_module.IndexFlatL2(embeddings.shape[1])
-        self.add_to_index(embeddings)
-
-    def add_to_index(self, embeddings):
-        self.index.add(embeddings)
-
-    def search_nn(self, query_batch, k):
-        D, I = self.index.search(query_batch, k)
-        return I, D
-
-    def save(self, filename):
-        self.faiss_module.write_index(self.index, filename)
-
-    def load(self, filename):
-        self.index = self.faiss_module.read_index(filename)
-
-
 class InferenceModel:
     def __init__(
         self,
@@ -80,7 +59,7 @@ class InferenceModel:
         embedder=None,
         match_finder=None,
         normalize_embeddings=True,
-        indexer=None,
+        knn_func=None,
         data_device=None,
         dtype=None,
     ):
@@ -91,12 +70,14 @@ class InferenceModel:
             if match_finder is None
             else match_finder
         )
-        self.indexer = FaissIndexer() if indexer is None else indexer
+        self.knn_func = (
+            FaissKNN(reset_before=False, reset_after=False)
+            if knn_func is None
+            else knn_func
+        )
         self.normalize_embeddings = normalize_embeddings
         self.data_device = (
-            torch.device("cuda" if torch.cuda.is_available() else "cpu")
-            if data_device is None
-            else data_device
+            c_f.use_cuda_if_available() if data_device is None else data_device
         )
         self.dtype = dtype
 
@@ -114,24 +95,19 @@ class InferenceModel:
             raise TypeError(f"Indexing {type(inputs)} is not supported.")
         return torch.cat(embeddings)
 
-    def train_indexer(self, inputs, batch_size=64):
-        self.call_indexer(self.indexer.train_index, inputs, batch_size)
+    def train_knn(self, inputs, batch_size=64):
+        self.call_knn(self.knn_func.train, inputs, batch_size)
 
-    def add_to_indexer(self, inputs, batch_size=64):
-        self.call_indexer(self.indexer.add_to_index, inputs, batch_size)
+    def add_to_knn(self, inputs, batch_size=64):
+        self.call_knn(self.knn_func.add, inputs, batch_size)
 
-    def call_indexer(self, func, inputs, batch_size):
+    def call_knn(self, func, inputs, batch_size):
         embeddings = self.get_embeddings_from_tensor_or_dataset(inputs, batch_size)
-        func(embeddings.cpu().numpy())
+        func(embeddings)
 
     def get_nearest_neighbors(self, query, k):
-        if not self.indexer.index or not self.indexer.index.is_trained:
-            raise RuntimeError("Index must be trained by running `train_indexer`")
-
         query_emb = self.get_embeddings(query)
-
-        indices, distances = self.indexer.search_nn(query_emb.cpu().numpy(), k)
-        return indices, distances
+        return self.knn_func(query_emb, k)
 
     def get_embeddings(self, x):
         x = self.process_if_list(x)
@@ -161,13 +137,162 @@ class InferenceModel:
         y = self.get_embeddings(y)
         return self.match_finder.is_match(x, y, threshold)
 
-    def save_index(self, filename):
-        self.indexer.save(filename)
+    def save_knn_func(self, filename):
+        self.knn_func.save(filename)
 
-    def load_index(self, filename):
-        self.indexer.load(filename)
+    def load_knn_func(self, filename):
+        self.knn_func.load(filename)
 
     def process_if_list(self, x):
         if isinstance(x, list) and all(isinstance(x_, torch.Tensor) for x_ in x):
             return torch.stack(x)
         return x
+
+
+class FaissKNN:
+    def __init__(
+        self, reset_before=True, reset_after=True, index_init_fn=None, gpus=None
+    ):
+        self.reset()
+        self.reset_before = reset_before
+        self.reset_after = reset_after
+        self.index_init_fn = (
+            faiss.IndexFlatL2 if index_init_fn is None else index_init_fn
+        )
+        if gpus is not None:
+            if not isinstance(gpus, (list, tuple)):
+                raise TypeError("gpus must be a list")
+            if len(gpus) < 1:
+                raise ValueError("gpus must have length greater than 0")
+        self.gpus = gpus
+
+    def __call__(
+        self,
+        query,
+        k,
+        reference=None,
+        embeddings_come_from_same_source=False,
+    ):
+        if embeddings_come_from_same_source:
+            k = k + 1
+        device = query.device
+        is_cuda = query.is_cuda
+        d = query.shape[1]
+        c_f.LOGGER.info("running k-nn with k=%d" % k)
+        c_f.LOGGER.info("embedding dimensionality is %d" % d)
+        if self.reset_before:
+            self.index = self.index_init_fn(d)
+        distances, indices = try_gpu(
+            self.index,
+            query,
+            reference,
+            k,
+            is_cuda,
+            self.gpus,
+        )
+        distances = c_f.to_device(distances, device=device)
+        indices = c_f.to_device(indices, device=device)
+        if self.reset_after:
+            self.reset()
+        return return_results(distances, indices, embeddings_come_from_same_source)
+
+    def train(self, embeddings):
+        self.index = self.index_init_fn(embeddings.shape[1])
+        self.add(c_f.numpy_to_torch(embeddings).cpu())
+
+    def add(self, embeddings):
+        self.index.add(c_f.numpy_to_torch(embeddings).cpu())
+
+    def save(self, filename):
+        faiss.write_index(self.index, filename)
+
+    def load(self, filename):
+        self.index = faiss.read_index(filename)
+
+    def reset(self):
+        self.index = None
+
+
+class FaissKMeans:
+    def __init__(self, **kwargs):
+        self.kwargs = kwargs
+
+    def __call__(self, x, nmb_clusters):
+        device = x.device
+        x = c_f.to_numpy(x).astype(np.float32)
+        n_data, d = x.shape
+        c_f.LOGGER.info("running k-means clustering with k=%d" % nmb_clusters)
+        c_f.LOGGER.info("embedding dimensionality is %d" % d)
+
+        # faiss implementation of k-means
+        kmeans = faiss.Kmeans(d, nmb_clusters, **self.kwargs)
+        kmeans.train(x)
+        _, idxs = kmeans.index.search(x, 1)
+        return torch.tensor([int(n[0]) for n in idxs], dtype=int, device=device)
+
+
+def add_to_index_and_search(index, query, reference, k):
+    if reference is not None:
+        index.add(reference.float().cpu())
+    return index.search(query.float().cpu(), k)
+
+
+def convert_to_gpu_index(index, gpus):
+    if "Gpu" in str(type(index)):
+        return index
+    if gpus is None:
+        return faiss.index_cpu_to_all_gpus(index)
+    return faiss.index_cpu_to_gpus_list(index, gpus=gpus)
+
+
+def convert_to_cpu_index(index):
+    if "Gpu" not in str(type(index)):
+        return index
+    return faiss.index_gpu_to_cpu(index)
+
+
+def try_gpu(index, query, reference, k, is_cuda, gpus):
+    # https://github.com/facebookresearch/faiss/blob/master/faiss/gpu/utils/DeviceDefs.cuh
+    gpu_index = None
+    gpus_are_available = faiss.get_num_gpus() > 0
+    gpu_condition = (is_cuda or (gpus is not None)) and gpus_are_available
+    if gpu_condition:
+        max_k_for_gpu = 1024 if float(torch.version.cuda) < 9.5 else 2048
+        if k <= max_k_for_gpu:
+            gpu_index = convert_to_gpu_index(index, gpus)
+    try:
+        return add_to_index_and_search(gpu_index, query, reference, k)
+    except (AttributeError, RuntimeError) as e:
+        if gpu_condition:
+            c_f.LOGGER.warning(
+                f"Using CPU for k-nn search because k = {k} > {max_k_for_gpu}, which is the maximum allowable on GPU."
+            )
+        cpu_index = convert_to_cpu_index(index)
+        return add_to_index_and_search(cpu_index, query, reference, k)
+
+
+# modified from https://github.com/facebookresearch/faiss/wiki/Faiss-building-blocks:-clustering,-PCA,-quantization
+def run_pca(x, output_dimensionality):
+    device = x.device
+    x = c_f.to_numpy(x).astype(np.float32)
+    mat = faiss.PCAMatrix(x.shape[1], output_dimensionality)
+    mat.train(x)
+    assert mat.is_trained
+    return c_f.to_device(torch.from_numpy(mat.apply_py(x)), device=device)
+
+
+def return_results(D, I, embeddings_come_from_same_source):
+    if embeddings_come_from_same_source:
+        return D[:, 1:], I[:, 1:]
+    return D, I
+
+
+class CustomKNN:
+    def __init__(self, distance):
+        self.distance = distance
+
+    def __call__(self, query, k, reference, embeddings_come_from_same_source=False):
+        mat = self.distance(query, reference)
+        largest = self.distance.is_inverted
+        distances, indices = torch.topk(mat, k, largest=largest, dim=1)
+        return return_results(distances, indices, embeddings_come_from_same_source)

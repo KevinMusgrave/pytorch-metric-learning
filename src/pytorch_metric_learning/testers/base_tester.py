@@ -7,7 +7,7 @@ import torch
 import tqdm
 
 from ..utils import common_functions as c_f
-from ..utils import stat_utils
+from ..utils import inference
 from ..utils.accuracy_calculator import AccuracyCalculator
 
 
@@ -69,7 +69,7 @@ class BaseTester:
     def maybe_normalize(self, embeddings):
         if self.pca:
             for_pca = c_f.torch_standard_scaler(embeddings)
-            embeddings = stat_utils.run_pca(for_pca, self.pca)
+            embeddings = inference.run_pca(for_pca, self.pca)
         if self.normalize_embeddings:
             embeddings = torch.nn.functional.normalize(embeddings)
         return embeddings

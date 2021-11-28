@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 import torch
 
-from pytorch_metric_learning.utils import accuracy_calculator, stat_utils
+from pytorch_metric_learning.utils import accuracy_calculator, inference
 
 from .. import TEST_DEVICE
 
@@ -77,13 +77,14 @@ class TestCalculateAccuraciesLargeK(unittest.TestCase):
         # let's use Musgrave's knn
         torch_encs = torch.from_numpy(encs)
         k = len(encs) - 1 if ecfss else len(encs)
-        all_indices, _ = stat_utils.get_knn(torch_encs, torch_encs, k, ecfss)
+        knn_func = inference.FaissKNN()
+        _, all_indices = knn_func(torch_encs, k, torch_encs, ecfss)
         if max_k is None:
             max_k = k
             indices = all_indices
         elif max_k == "max_bin_count":
             max_k = int(max(np.bincount(labels))) - int(ecfss)
-            indices, _ = stat_utils.get_knn(torch_encs, torch_encs, max_k, ecfss)
+            _, indices = knn_func(torch_encs, max_k, torch_encs, ecfss)
 
         # let's use the most simple mAP implementation
         # of course this can be computed much faster using cumsum, etc.

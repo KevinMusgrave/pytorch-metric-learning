@@ -39,12 +39,12 @@ miners.AngularMiner(angle=20, **kwargs)
 ## BaseMiner
 All miners extend this class and therefore inherit its ```__init__``` parameters.
 ```python
-miners.BaseMiner(collect_stats=True, distance=None)
+miners.BaseMiner(collect_stats=False, distance=None)
 ```
 
 **Parameters**:
 
-* **collect_stats**: If True, will collect various statistics that may be useful to analyze during experiments. If False, these computations will be skipped. Want to make ```False``` the default? Set the global [COLLECT_STATS](common_functions.md#collect_stats) flag.
+* **collect_stats**: If True, will collect various statistics that may be useful to analyze during experiments. If False, these computations will be skipped. Want to make ```True``` the default? Set the global [COLLECT_STATS](common_functions.md#collect_stats) flag.
 * **distance**: A [distance](distances.md) object. If None, then the default distance will be used.
 
 **Default distance**: 

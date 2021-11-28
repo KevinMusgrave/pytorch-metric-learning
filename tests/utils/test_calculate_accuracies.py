@@ -1,9 +1,11 @@
+import itertools
 import unittest
 
 import numpy as np
 import torch
 
 from pytorch_metric_learning.utils import accuracy_calculator
+from pytorch_metric_learning.utils.inference import FaissKNN
 
 from .. import TEST_DEVICE
 
@@ -656,3 +658,25 @@ class TestCalculateAccuraciesValidK(unittest.TestCase):
             level = "WARNING" if k in [10, 100] else "INFO"
             with self.assertLogs(level=level):
                 AC.get_accuracy(embeddings, embeddings, labels, labels, True)
+
+
+class TestCalculateAccuraciesFaissKNN(unittest.TestCase):
+    def test_specify_gpu(self):
+        max_world_size = min(4, torch.cuda.device_count())
+        for i in range(1, max_world_size + 1):
+            for gpus in itertools.combinations(range(max_world_size), i):
+                knn_func = FaissKNN(gpus=gpus)
+                AC = accuracy_calculator.AccuracyCalculator(knn_func=knn_func)
+                embeddings = torch.randn(1000, 32)
+                labels = torch.randint(0, 10, size=(1000,))
+                AC.get_accuracy(embeddings, embeddings, labels, labels, True)
+
+    def test_index_type(self):
+        import faiss
+
+        knn_func = FaissKNN(reset_after=False, index_init_fn=faiss.IndexFlatIP)
+        AC = accuracy_calculator.AccuracyCalculator(knn_func=knn_func)
+        embeddings = torch.randn(1000, 32)
+        labels = torch.randint(0, 10, size=(1000,))
+        AC.get_accuracy(embeddings, embeddings, labels, labels, True)
+        self.assertTrue(isinstance(AC.knn_func.index, faiss.IndexFlatIP))

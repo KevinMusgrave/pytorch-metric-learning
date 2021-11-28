@@ -150,13 +150,21 @@ class InferenceModel:
 
 
 class FaissKNN:
-    def __init__(self, reset_before=True, reset_after=True, index_init_fn=None):
+    def __init__(
+        self, reset_before=True, reset_after=True, index_init_fn=None, gpus=None
+    ):
         self.reset()
         self.reset_before = reset_before
         self.reset_after = reset_after
         self.index_init_fn = (
             faiss.IndexFlatL2 if index_init_fn is None else index_init_fn
         )
+        if gpus is not None:
+            if not isinstance(gpus, (list, tuple)):
+                raise TypeError("gpus must be a list")
+            if len(gpus) < 1:
+                raise ValueError("gpus must have length greater than 0")
+        self.gpus = gpus
 
     def __call__(
         self,
@@ -180,6 +188,7 @@ class FaissKNN:
             reference,
             k,
             is_cuda,
+            self.gpus,
         )
         distances = c_f.to_device(distances, device=device)
         indices = c_f.to_device(indices, device=device)
@@ -230,10 +239,12 @@ def add_to_index_and_search(index, query, reference, k):
     return index.search(query.float().cpu(), k)
 
 
-def convert_to_gpu_index(index):
+def convert_to_gpu_index(index, gpus):
     if "Gpu" in str(type(index)):
         return index
-    return faiss.index_cpu_to_all_gpus(index)
+    if gpus is None:
+        return faiss.index_cpu_to_all_gpus(index)
+    return faiss.index_cpu_to_gpus_list(index, gpus=gpus)
 
 
 def convert_to_cpu_index(index):
@@ -242,15 +253,15 @@ def convert_to_cpu_index(index):
     return faiss.index_gpu_to_cpu(index)
 
 
-def try_gpu(index, query, reference, k, is_cuda):
+def try_gpu(index, query, reference, k, is_cuda, gpus):
     # https://github.com/facebookresearch/faiss/blob/master/faiss/gpu/utils/DeviceDefs.cuh
     gpu_index = None
     gpus_are_available = faiss.get_num_gpus() > 0
-    gpu_condition = is_cuda and gpus_are_available
+    gpu_condition = (is_cuda or (gpus is not None)) and gpus_are_available
     if gpu_condition:
         max_k_for_gpu = 1024 if float(torch.version.cuda) < 9.5 else 2048
         if k <= max_k_for_gpu:
-            gpu_index = convert_to_gpu_index(index)
+            gpu_index = convert_to_gpu_index(index, gpus)
     try:
         return add_to_index_and_search(gpu_index, query, reference, k)
     except (AttributeError, RuntimeError) as e:
@@ -270,3 +281,16 @@ def run_pca(x, output_dimensionality):
     mat.train(x)
     assert mat.is_trained
     return c_f.to_device(torch.from_numpy(mat.apply_py(x)), device=device)
+
+
+# # copied from https://github.com/facebookresearch/faiss/issues/878#issuecomment-506795919
+# def index_cpu_to_gpu_multiple(resources, index, co=None, gpus=None):
+#     if gpus is None:
+#         gpus = range(len(resources))
+#     vres = faiss.GpuResourcesVector()
+#     vdev = faiss.Int32Vector()
+#     for i, res in zip(gpus, resources):
+#         vdev.push_back(i)
+#         vres.push_back(res)
+#     index = faiss.index_cpu_to_gpu_multiple(vres, vdev, index, co)
+#     return index

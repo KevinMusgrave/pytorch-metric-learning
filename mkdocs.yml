@@ -23,6 +23,8 @@ theme:
   palette:
     primary: 'red'
     accent: 'red'
+  logo: imgs/TinyLogo.png
+  favicon: imgs/Favicon.png
 markdown_extensions:
   - codehilite
   - toc:

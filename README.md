@@ -1,6 +1,6 @@
 <h1 align="center">
 <a href="https://github.com/KevinMusgrave/pytorch-metric-learning">
-<img alt="Logo" src="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/docs/imgs/Logo.png">
+<img alt="Logo" src="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/docs/imgs/Logo2.png">
 </a>
 </h2>
 <p align="center">
@@ -200,6 +200,8 @@ To learn more about all of the above, [see the documentation](https://kevinmusgr
  - ```pytorch-metric-learning >= v0.9.90``` requires ```torch >= 1.6```
  - ```pytorch-metric-learning < v0.9.90``` doesn't have a version requirement, but was tested with ```torch >= 1.2```
 
+Other dependencies: ```numpy, scikit-learn, tqdm, torchvision```
+
 ### Pip
 ```
 pip install pytorch-metric-learning
@@ -216,12 +218,16 @@ pip install torch===1.6.0 torchvision===0.7.0 -f https://download.pytorch.org/wh
 pip install pytorch-metric-learning
 ```
 
-**To install with evaluation and logging capabilities (This will install the unofficial pypi version of faiss-gpu)**:
+**To install with evaluation and logging capabilities**
+
+(This will install the unofficial pypi version of faiss-gpu, plus record-keeper and tensorboard):
 ```
 pip install pytorch-metric-learning[with-hooks]
 ```
 
-**To install with evaluation and logging capabilities (CPU) (This will install the unofficial pypi version of faiss-cpu)**:
+**To install with evaluation and logging capabilities (CPU)**
+
+(This will install the unofficial pypi version of faiss-cpu, plus record-keeper and tensorboard):
 ```
 pip install pytorch-metric-learning[with-hooks-cpu]
 ```
@@ -239,6 +245,11 @@ See [powerful-benchmarker](https://github.com/KevinMusgrave/powerful-benchmarker
 
 
 ## Development
+Development is done on the ```dev``` branch:
+```
+git checkout dev
+```
+
 Unit tests can be run with the default ```unittest``` library:
 ```bash
 python -m unittest discover
@@ -303,7 +314,7 @@ This library contains code that has been adapted and modified from the following
 - http://kaizhao.net/regularface
 
 ### Logo
-Thanks to [Jeff Musgrave](https://jeffmusgrave.com) for designing the logo.
+Thanks to [Jeff Musgrave](https://www.designgenius.ca/) for designing the logo.
 
 ## Citing this library
 If you'd like to cite pytorch-metric-learning in your paper, you can use this bibtex:

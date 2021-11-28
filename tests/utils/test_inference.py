@@ -69,10 +69,10 @@ class TestInference(unittest.TestCase):
             for load_from_file in [False, True]:
                 inference_model = InferenceModel(trunk=self.model)
                 if load_from_file:
-                    inference_model.load_index(test_filename)
+                    inference_model.load_knn_func(test_filename)
                 else:
-                    inference_model.train_indexer(indexer_input)
-                    inference_model.save_index(test_filename)
+                    inference_model.train_knn(indexer_input)
+                    inference_model.save_knn_func(test_filename)
 
                 self.helper_assertions(inference_model)
 
@@ -80,21 +80,20 @@ class TestInference(unittest.TestCase):
 
     def test_add_to_indexer(self):
         inference_model = InferenceModel(trunk=self.model)
-        inference_model.indexer.index = faiss.IndexFlatL2(512)
-        inference_model.add_to_indexer(self.dataset)
+        inference_model.knn_func.index = faiss.IndexFlatL2(512)
+        inference_model.add_to_knn(self.dataset)
         self.helper_assertions(inference_model)
 
     def test_list_of_text(self):
         model = TextModel()
         dataset = TextDataset()
         inference_model = InferenceModel(trunk=model)
-        inference_model.train_indexer(dataset)
-        inference_model.add_to_indexer([["test1", "test2"], ["test3", "test4"]])
+        inference_model.train_knn(dataset)
+        inference_model.add_to_knn([["test1", "test2"], ["test3", "test4"]])
         result = inference_model.get_nearest_neighbors(["dog", "cat"], k=10)
 
     def helper_assertions(self, inference_model):
-        self.assertTrue(inference_model.indexer.index.is_trained)
-        indices, distances = inference_model.get_nearest_neighbors(
+        distances, indices = inference_model.get_nearest_neighbors(
             [self.train_vectors[0]], k=10
         )
         # The closest image is the query itself

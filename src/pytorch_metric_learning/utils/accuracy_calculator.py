@@ -5,7 +5,7 @@ import torch
 from sklearn.metrics import adjusted_mutual_info_score, normalized_mutual_info_score
 
 from . import common_functions as c_f
-from .stat_utils import FaissKMeans, FaissKNN
+from .inference import FaissKMeans, FaissKNN
 
 EQUALITY = torch.eq
 
@@ -397,8 +397,8 @@ class AccuracyCalculator:
                 label_counts[1], len(reference), embeddings_come_from_same_source
             )
 
-            knn_indices, knn_distances = self.knn_func(
-                query, reference, num_k, embeddings_come_from_same_source
+            knn_distances, knn_indices = self.knn_func(
+                query, num_k, reference, embeddings_come_from_same_source
             )
 
             knn_labels = reference_labels[knn_indices]

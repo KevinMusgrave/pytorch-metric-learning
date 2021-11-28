@@ -1,6 +1,4 @@
 
-
-
 <!doctype html>
 <html lang="en" class="no-js">
   <head>
@@ -10,8 +8,9 @@
       
       
       
-      <link rel="shortcut icon" href="../imgs/Favicon.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-5.5.0">
+      
+      <link rel="icon" href="../imgs/Favicon.png">
+      <meta name="generator" content="mkdocs-1.2.2, mkdocs-material-7.2.6">
     
     
       
@@ -19,28 +18,32 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.b5d04df8.min.css">
-      
-        <link rel="stylesheet" href="../assets/stylesheets/palette.9ab2c1f8.min.css">
-      
+      <link rel="stylesheet" href="../assets/stylesheets/main.802231af.min.css">
       
         
+        <link rel="stylesheet" href="../assets/stylesheets/palette.3f5d1f46.min.css">
         
-        <meta name="theme-color" content="#ef5350">
+          
+          
+          <meta name="theme-color" content="#ef5552">
+        
       
     
     
     
       
-        <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
-        <style>body,input{font-family:"Roboto",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono",SFMono-Regular,Consolas,Menlo,monospace}</style>
+        <style>:root{--md-text-font-family:"Roboto";--md-code-font-family:"Roboto Mono"}</style>
       
     
     
     
     
       
+
+
     
     
   </head>
@@ -49,8 +52,12 @@
     
     
     
+    
+    
     <body dir="ltr" data-md-color-scheme="" data-md-color-primary="red" data-md-color-accent="red">
   
+    
+    <script>function __prefix(e){return new URL("..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
@@ -68,46 +75,54 @@
     </div>
     
       <header class="md-header" data-md-component="header">
-  <nav class="md-header-nav md-grid" aria-label="Header">
-    <a href=".." title="PyTorch Metric Learning" class="md-header-nav__button md-logo" aria-label="PyTorch Metric Learning">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="PyTorch Metric Learning" class="md-header__button md-logo" aria-label="PyTorch Metric Learning" data-md-component="logo">
       
   <img src="../imgs/TinyLogo.png" alt="logo">
 
     </a>
-    <label class="md-header-nav__button md-icon" for="__drawer">
+    <label class="md-header__button md-icon" for="__drawer">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
     </label>
-    <div class="md-header-nav__title" data-md-component="header-title">
-      
-        <div class="md-header-nav__ellipsis">
-          <span class="md-header-nav__topic md-ellipsis">
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
             PyTorch Metric Learning
           </span>
-          <span class="md-header-nav__topic md-ellipsis">
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
             
               Accuracy Calculation
             
           </span>
         </div>
-      
+      </div>
     </div>
     
-      <label class="md-header-nav__button md-icon" for="__search">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
       </label>
       
 <div class="md-search" data-md-component="search" role="dialog">
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
       <label class="md-search__icon md-icon" for="__search">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
       </label>
-      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" data-md-component="search-reset" tabindex="-1">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
-      </button>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+        </button>
+      </nav>
+      
     </form>
     <div class="md-search__output">
       <div class="md-search__scrollwrap" data-md-scrollfix>
@@ -123,12 +138,12 @@
 </div>
     
     
-      <div class="md-header-nav__source">
+      <div class="md-header__source">
         
-<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/" title="Go to repository" class="md-source">
+<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05L244 40.45a28.87 28.87 0 00-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 01-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 000 40.81l195.61 195.6a28.86 28.86 0 0040.8 0l194.69-194.69a28.86 28.86 0 000-40.81z"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
   </div>
   <div class="md-source__repository">
     KevinMusgrave/pytorch-metric-learning
@@ -141,8 +156,6 @@
     
     <div class="md-container" data-md-component="container">
       
-        
-      
       
         
       
@@ -150,12 +163,16 @@
         <div class="md-main__inner md-grid">
           
             
-              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
-                    <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="PyTorch Metric Learning" class="md-nav__button md-logo" aria-label="PyTorch Metric Learning">
+    <a href=".." title="PyTorch Metric Learning" class="md-nav__button md-logo" aria-label="PyTorch Metric Learning" data-md-component="logo">
       
   <img src="../imgs/TinyLogo.png" alt="logo">
 
@@ -165,10 +182,10 @@
   
     <div class="md-nav__source">
       
-<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/" title="Go to repository" class="md-source">
+<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05L244 40.45a28.87 28.87 0 00-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 01-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 000 40.81l195.61 195.6a28.86 28.86 0 0040.8 0l194.69-194.69a28.86 28.86 0 000-40.81z"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
   </div>
   <div class="md-source__repository">
     KevinMusgrave/pytorch-metric-learning
@@ -182,108 +199,15 @@
       
       
 
-
-  <li class="md-nav__item">
-    <a href=".." title="Home" class="md-nav__link">
-      Home
-    </a>
-  </li>
-
-    
-      
-      
-      
-
-
-  <li class="md-nav__item">
-    <a href="../distances/" title="Distances" class="md-nav__link">
-      Distances
-    </a>
-  </li>
-
-    
-      
-      
-      
-
-
-  <li class="md-nav__item">
-    <a href="../losses/" title="Losses" class="md-nav__link">
-      Losses
-    </a>
-  </li>
-
-    
-      
-      
-      
-
-
-  <li class="md-nav__item">
-    <a href="../miners/" title="Miners" class="md-nav__link">
-      Miners
-    </a>
-  </li>
-
-    
-      
-      
-      
-
-
-  <li class="md-nav__item">
-    <a href="../reducers/" title="Reducers" class="md-nav__link">
-      Reducers
-    </a>
-  </li>
-
-    
-      
-      
-      
-
-
-  <li class="md-nav__item">
-    <a href="../regularizers/" title="Regularizers" class="md-nav__link">
-      Regularizers
-    </a>
-  </li>
-
-    
-      
-      
-      
-
-
-  <li class="md-nav__item">
-    <a href="../samplers/" title="Samplers" class="md-nav__link">
-      Samplers
-    </a>
-  </li>
-
-    
-      
-      
-      
-
-
-  <li class="md-nav__item">
-    <a href="../trainers/" title="Trainers" class="md-nav__link">
-      Trainers
-    </a>
-  </li>
-
-    
-      
-      
-      
-
-
-  <li class="md-nav__item">
-    <a href="../testers/" title="Testers" class="md-nav__link">
-      Testers
-    </a>
-  </li>
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        Home
+      </a>
+    </li>
+  
 
     
       
@@ -291,67 +215,183 @@
       
 
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../distances/" class="md-nav__link">
+        Distances
+      </a>
+    </li>
+  
 
+    
+      
+      
+      
 
-  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../losses/" class="md-nav__link">
+        Losses
+      </a>
+    </li>
+  
+
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-10" type="checkbox" id="nav-10" checked>
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../miners/" class="md-nav__link">
+        Miners
+      </a>
+    </li>
+  
+
     
-    <label class="md-nav__link" for="nav-10">
-      Utils
-      <span class="md-nav__icon md-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"/></svg>
-      </span>
-    </label>
-    <nav class="md-nav" aria-label="Utils" data-md-level="1">
-      <label class="md-nav__title" for="nav-10">
-        <span class="md-nav__icon md-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
-        </span>
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reducers/" class="md-nav__link">
+        Reducers
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../regularizers/" class="md-nav__link">
+        Regularizers
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../samplers/" class="md-nav__link">
+        Samplers
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../trainers/" class="md-nav__link">
+        Trainers
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testers/" class="md-nav__link">
+        Testers
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_10" type="checkbox" id="__nav_10" checked>
+      
+      <label class="md-nav__link" for="__nav_10">
         Utils
+        <span class="md-nav__icon md-icon"></span>
       </label>
-      <ul class="md-nav__list" data-md-scrollfix>
-        
-        
+      <nav class="md-nav" aria-label="Utils" data-md-level="1">
+        <label class="md-nav__title" for="__nav_10">
+          <span class="md-nav__icon md-icon"></span>
+          Utils
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
           
-          
-          
-
+            
   
-
-
-  <li class="md-nav__item md-nav__item--active">
+  
     
-    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
       
-    
-    
-      <label class="md-nav__link md-nav__link--active" for="__toc">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Accuracy Calculation
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         Accuracy Calculation
-        <span class="md-nav__icon md-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"/></svg>
-        </span>
-      </label>
-    
-    <a href="./" title="Accuracy Calculation" class="md-nav__link md-nav__link--active">
-      Accuracy Calculation
-    </a>
-    
+      </a>
       
+        
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
   
   
     
   
   
     <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
-      </span>
+      <span class="md-nav__icon md-icon"></span>
       Table of contents
     </label>
-    <ul class="md-nav__list" data-md-scrollfix>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
   <a href="#parameters" class="md-nav__link">
@@ -405,115 +445,117 @@
     </ul>
   
 </nav>
-    
-  </li>
+      
+    </li>
+  
 
-        
           
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../inference_models/" class="md-nav__link">
+        Inference Models
+      </a>
+    </li>
+  
+
           
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../logging_presets/" class="md-nav__link">
+        Logging Presets
+      </a>
+    </li>
+  
+
           
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../common_functions/" class="md-nav__link">
+        Common Functions
+      </a>
+    </li>
+  
 
-
-  <li class="md-nav__item">
-    <a href="../inference_models/" title="Inference Models" class="md-nav__link">
-      Inference Models
-    </a>
-  </li>
-
-        
           
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../distributed/" class="md-nav__link">
+        Distributed
+      </a>
+    </li>
+  
+
           
-          
-
-
-  <li class="md-nav__item">
-    <a href="../logging_presets/" title="Logging Presets" class="md-nav__link">
-      Logging Presets
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
-    <a href="../common_functions/" title="Common Functions" class="md-nav__link">
-      Common Functions
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
-    <a href="../distributed/" title="Distributed" class="md-nav__link">
-      Distributed
-    </a>
-  </li>
-
-        
-      </ul>
-    </nav>
-  </li>
+        </ul>
+      </nav>
+    </li>
+  
 
     
       
       
       
 
-
-  <li class="md-nav__item md-nav__item--nested">
+  
+  
+  
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-11" type="checkbox" id="nav-11">
-    
-    <label class="md-nav__link" for="nav-11">
-      How to extend this library
-      <span class="md-nav__icon md-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"/></svg>
-      </span>
-    </label>
-    <nav class="md-nav" aria-label="How to extend this library" data-md-level="1">
-      <label class="md-nav__title" for="nav-11">
-        <span class="md-nav__icon md-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
-        </span>
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_11" type="checkbox" id="__nav_11" >
+      
+      <label class="md-nav__link" for="__nav_11">
         How to extend this library
+        <span class="md-nav__icon md-icon"></span>
       </label>
-      <ul class="md-nav__list" data-md-scrollfix>
-        
-        
+      <nav class="md-nav" aria-label="How to extend this library" data-md-level="1">
+        <label class="md-nav__title" for="__nav_11">
+          <span class="md-nav__icon md-icon"></span>
+          How to extend this library
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
           
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../extend/losses/" class="md-nav__link">
+        Custom losses
+      </a>
+    </li>
+  
+
           
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../extend/miners/" class="md-nav__link">
+        Custom miners
+      </a>
+    </li>
+  
+
           
-
-
-  <li class="md-nav__item">
-    <a href="../extend/losses/" title="Custom losses" class="md-nav__link">
-      Custom losses
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
-    <a href="../extend/miners/" title="Custom miners" class="md-nav__link">
-      Custom miners
-    </a>
-  </li>
-
-        
-      </ul>
-    </nav>
-  </li>
+        </ul>
+      </nav>
+    </li>
+  
 
     
   </ul>
@@ -523,23 +565,23 @@
               </div>
             
             
-              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
                     
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
+  
     
   
   
     <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
-      </span>
+      <span class="md-nav__icon md-icon"></span>
       Table of contents
     </label>
-    <ul class="md-nav__list" data-md-scrollfix>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
   <a href="#parameters" class="md-nav__link">
@@ -598,7 +640,7 @@
               </div>
             
           
-          <div class="md-content">
+          <div class="md-content" data-md-component="content">
             <article class="md-content__inner md-typeset">
               
                 
@@ -607,20 +649,18 @@
                   </a>
                 
                 
-                  
-                
-                
                 <h1 id="accuracy-calculation">Accuracy Calculation<a class="headerlink" href="#accuracy-calculation" title="Permanent link">&para;</a></h1>
 <p>The AccuracyCalculator class computes several accuracy metrics given a query and reference embeddings. It can be easily extended to create custom accuracy metrics.</p>
-<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils.accuracy_calculator</span> <span class="kn">import</span> <span class="n">AccuracyCalculator</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils.accuracy_calculator</span> <span class="kn">import</span> <span class="n">AccuracyCalculator</span>
 <span class="n">AccuracyCalculator</span><span class="p">(</span><span class="n">include</span><span class="o">=</span><span class="p">(),</span>
                     <span class="n">exclude</span><span class="o">=</span><span class="p">(),</span>
                     <span class="n">avg_of_avgs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                     <span class="n">k</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                    <span class="n">label_comparison_fn</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+                    <span class="n">label_comparison_fn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">knn_func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                    <span class="n">kmeans_func</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
-
-
 <h3 id="parameters">Parameters<a class="headerlink" href="#parameters" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong>include</strong>: Optional. A list or tuple of strings, which are the names of metrics you want to calculate. If left empty, all default metrics will be calculated.</li>
@@ -633,18 +673,24 @@
 </ul>
 </li>
 <li><strong>label_comparison_fn</strong>: A function that compares two torch arrays of labels and returns a boolean array. The default is <code>torch.eq</code>. If a custom function is used, then you must exclude clustering based metrics ("NMI" and "AMI"). The following is an example of a custom function for two-dimensional labels. It returns <code>True</code> if the 0th column matches, and the 1st column does <strong>not</strong> match:</li>
-</ul>
-<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">example_label_comparison_fn</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+<li><strong>device</strong>: The device to move input tensors to. If <code>None</code>, will default to GPUs if available.</li>
+<li><strong>knn_func</strong>: A callable that takes in 4 arguments (<code>query, k, reference, embeddings_come_from_same_source</code>) and returns <code>distances, indices</code>. Default is <code>pytorch_metric_learning.utils.inference.FaissKNN</code>.</li>
+<li><strong>kmeans_func</strong>: A callable that takes in 2 arguments (<code>x, nmb_clusters</code>) and returns a 1-d tensor of cluster assignments. Default is <code>pytorch_metric_learning.utils.inference.FaissKMeans</code>.
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning.distances</span> <span class="kn">import</span> <span class="n">SNRDistance</span>
+<span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils.inference</span> <span class="kn">import</span> <span class="n">CustomKNN</span>
+
+<span class="k">def</span> <span class="nf">example_label_comparison_fn</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
     <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">y</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">x</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">y</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
 
+<span class="n">knn_func</span> <span class="o">=</span> <span class="n">CustomKNN</span><span class="p">(</span><span class="n">SNRDistance</span><span class="p">())</span>
 <span class="n">AccuracyCalculator</span><span class="p">(</span><span class="n">exclude</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;NMI&quot;</span><span class="p">,</span> <span class="s2">&quot;AMI&quot;</span><span class="p">),</span> 
-                    <span class="n">label_comparison_fn</span><span class="o">=</span><span class="n">example_label_comparison_fn</span><span class="p">)</span>
-</code></pre></div>
-
-
+                    <span class="n">label_comparison_fn</span><span class="o">=</span><span class="n">example_label_comparison_fn</span><span class="p">,</span>
+                    <span class="n">knn_func</span><span class="o">=</span><span class="n">knn_func</span><span class="p">)</span>
+</code></pre></div></li>
+</ul>
 <h3 id="getting-accuracy">Getting accuracy<a class="headerlink" href="#getting-accuracy" title="Permanent link">&para;</a></h3>
-<p>Call the <code>get_accuracy</code> method to obtain a dictionary of accuracies.</p>
-<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">get_accuracy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
+<p>Call the <code>get_accuracy</code> method to obtain a dictionary of accuracies.
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">get_accuracy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
     <span class="n">query</span><span class="p">,</span>      
     <span class="n">reference</span><span class="p">,</span> 
     <span class="n">query_labels</span><span class="p">,</span> 
@@ -660,9 +706,7 @@
 <span class="c1"># &quot;precision_at_1&quot;</span>
 <span class="c1"># &quot;r_precision&quot;</span>
 <span class="c1"># &quot;mean_average_precision_at_r&quot;</span>
-</code></pre></div>
-
-
+</code></pre></div></p>
 <ul>
 <li><strong>query</strong>: A 2D torch or numpy array of size <code>(Nq, D)</code>, where Nq is the number of query samples. For each query sample, nearest neighbors are retrieved and accuracy is computed.</li>
 <li><strong>reference</strong>: A 2D torch or numpy array of size <code>(Nr, D)</code>, where Nr is the number of reference samples. This is where nearest neighbors are retrieved from.</li>
@@ -724,7 +768,7 @@
 <p>AccuracyCalculator's <code>mean_average_precision_at_r</code> and <code>r_precision</code> are correct only if <code>k = None</code>, <strong>or</strong> <code>k = "max_bin_count"</code>, <strong>or</strong> <code>k &gt;= max(bincount(reference_labels))</code></p>
 <h3 id="adding-custom-accuracy-metrics">Adding custom accuracy metrics<a class="headerlink" href="#adding-custom-accuracy-metrics" title="Permanent link">&para;</a></h3>
 <p>Let's say you want to use the existing metrics but also compute precision @ 2, and a fancy mutual info method. You can extend the existing class, and write methods that start with the keyword <code>calculate_</code></p>
-<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils</span> <span class="kn">import</span> <span class="n">accuracy_calculator</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils</span> <span class="kn">import</span> <span class="n">accuracy_calculator</span>
 
 <span class="k">class</span> <span class="nc">YourCalculator</span><span class="p">(</span><span class="n">accuracy_calculator</span><span class="o">.</span><span class="n">AccuracyCalculator</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">calculate_precision_at_2</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">knn_labels</span><span class="p">,</span> <span class="n">query_labels</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -739,33 +783,25 @@
     <span class="k">def</span> <span class="nf">requires_knn</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">requires_knn</span><span class="p">()</span> <span class="o">+</span> <span class="p">[</span><span class="s2">&quot;precision_at_2&quot;</span><span class="p">]</span> 
 </code></pre></div>
-
-
-<p>Any method that starts with "calculate_" will be passed the following kwargs:</p>
-<div class="codehilite"><pre><span></span><code><span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;query&quot;</span><span class="p">:</span> <span class="n">query</span><span class="p">,</span>                    <span class="c1"># query embeddings</span>
+<p>Any method that starts with "calculate_" will be passed the following kwargs:
+<div class="highlight"><pre><span></span><code><span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;query&quot;</span><span class="p">:</span> <span class="n">query</span><span class="p">,</span>                    <span class="c1"># query embeddings</span>
     <span class="s2">&quot;reference&quot;</span><span class="p">:</span> <span class="n">reference</span><span class="p">,</span>                  <span class="c1"># reference embeddings</span>
     <span class="s2">&quot;query_labels&quot;</span><span class="p">:</span> <span class="n">query_labels</span><span class="p">,</span>        
     <span class="s2">&quot;reference_labels&quot;</span><span class="p">:</span> <span class="n">reference_labels</span><span class="p">,</span>
     <span class="s2">&quot;embeddings_come_from_same_source&quot;</span><span class="p">:</span> <span class="n">e</span><span class="p">}</span>  <span class="c1"># True if query is reference, or if query is a subset of reference.</span>
-</code></pre></div>
-
-
+</code></pre></div></p>
 <p>If your method requires a k-nearest neighbors search, then append your method's name to the <code>requires_knn</code> list, as shown in the above example. If any of your accuracy methods require k-nearest neighbors, they will also receive the following kwargs:</p>
-<div class="codehilite"><pre><span></span><code>    <span class="p">{</span><span class="s2">&quot;label_counts&quot;</span><span class="p">:</span> <span class="n">label_counts</span><span class="p">,</span>           <span class="c1"># A dictionary mapping from reference labels to the number of times they occur</span>
+<div class="highlight"><pre><span></span><code>    <span class="p">{</span><span class="s2">&quot;label_counts&quot;</span><span class="p">:</span> <span class="n">label_counts</span><span class="p">,</span>           <span class="c1"># A dictionary mapping from reference labels to the number of times they occur</span>
     <span class="s2">&quot;knn_labels&quot;</span><span class="p">:</span> <span class="n">knn_labels</span><span class="p">,</span>                <span class="c1"># A 2d array where each row is the labels of the nearest neighbors of each query. The neighbors are retrieved from the reference set</span>
     <span class="s2">&quot;knn_distances&quot;</span><span class="p">:</span> <span class="n">knn_distances</span>           <span class="c1"># The euclidean distance corresponding to each k-nearest neighbor in knn_labels</span>
     <span class="s2">&quot;lone_query_labels&quot;</span><span class="p">:</span> <span class="n">lone_query_labels</span>   <span class="c1"># The set of labels (in the form of a torch array) that have only 1 occurrence in reference_labels</span>
     <span class="s2">&quot;not_lone_query_mask&quot;</span><span class="p">:</span> <span class="n">not_lone_query_mask</span><span class="p">}</span> <span class="c1"># A boolean mask, where True means that a query element has at least 1 possible neighbor in reference.           </span>
 </code></pre></div>
-
-
 <p>If your method requires cluster labels, then append your method's name to the <code>requires_clustering</code> list, as shown in the above example. Then, if any of your methods need cluster labels, <code>self.get_cluster_labels()</code> will be called, and the kwargs will include:</p>
-<div class="codehilite"><pre><span></span><code>    <span class="p">{</span><span class="s2">&quot;cluster_labels&quot;</span><span class="p">:</span> <span class="n">cluster_labels</span><span class="p">}</span> <span class="c1"># A 1D array with a cluster label for each element in the query embeddings.</span>
+<div class="highlight"><pre><span></span><code>    <span class="p">{</span><span class="s2">&quot;cluster_labels&quot;</span><span class="p">:</span> <span class="n">cluster_labels</span><span class="p">}</span> <span class="c1"># A 1D array with a cluster label for each element in the query embeddings.</span>
 </code></pre></div>
-
-
-<p>Now when <code>get_accuracy</code> is called, the returned dictionary will contain <code>precision_at_2</code> and <code>fancy_mutual_info</code>:</p>
-<div class="codehilite"><pre><span></span><code><span class="n">calculator</span> <span class="o">=</span> <span class="n">YourCalculator</span><span class="p">()</span>
+<p>Now when <code>get_accuracy</code> is called, the returned dictionary will contain <code>precision_at_2</code> and <code>fancy_mutual_info</code>:
+<div class="highlight"><pre><span></span><code><span class="n">calculator</span> <span class="o">=</span> <span class="n">YourCalculator</span><span class="p">()</span>
 <span class="n">acc_dict</span> <span class="o">=</span> <span class="n">calculator</span><span class="o">.</span><span class="n">get_accuracy</span><span class="p">(</span><span class="n">query_embeddings</span><span class="p">,</span>
     <span class="n">reference_embeddings</span><span class="p">,</span>
     <span class="n">query_labels</span><span class="p">,</span>
@@ -774,19 +810,15 @@
 <span class="p">)</span>
 <span class="c1"># Now acc_dict contains the metrics &quot;precision_at_2&quot; and &quot;fancy_mutual_info&quot;</span>
 <span class="c1"># in addition to the original metrics from AccuracyCalculator</span>
-</code></pre></div>
-
-
-<p>You can use your custom calculator with the <a href="../testers/">tester</a> classes as well, by passing it in as an init argument. (By default, the testers use AccuracyCalculator.)</p>
-<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">testers</span>
+</code></pre></div></p>
+<p>You can use your custom calculator with the <a href="../testers/">tester</a> classes as well, by passing it in as an init argument. (By default, the testers use AccuracyCalculator.)
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">testers</span>
 <span class="n">t</span> <span class="o">=</span> <span class="n">testers</span><span class="o">.</span><span class="n">GlobalEmbeddingSpaceTester</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">accuracy_calculator</span><span class="o">=</span><span class="n">YourCalculator</span><span class="p">())</span>
-</code></pre></div>
-
-
+</code></pre></div></p>
 <h3 id="using-a-custom-label-comparison-function">Using a custom label comparison function<a class="headerlink" href="#using-a-custom-label-comparison-function" title="Permanent link">&para;</a></h3>
 <p>If you define your own <code>label_comparison_fn</code>, then <code>query_labels</code> and <code>reference_labels</code> can be 1D or 2D, and consist of integers or floating point numbers, as long as your <code>label_comparison_fn</code> can process them.</p>
-<p>Example of 2D labels:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">label_comparison_fn</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+<p>Example of 2D labels:
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">label_comparison_fn</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
     <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">y</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">y</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
 
 <span class="c1"># these are valid labels</span>
@@ -797,11 +829,9 @@
     <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
     <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span>
 <span class="p">])</span>
-</code></pre></div>
-
-
-<p>Example of floating point labels:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">label_comparison_fn</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+</code></pre></div></p>
+<p>Example of floating point labels:
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">label_comparison_fn</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span>
 
 <span class="c1"># these are valid labels</span>
@@ -811,9 +841,7 @@
     <span class="mf">0.04</span><span class="p">,</span>
     <span class="mf">0.05</span><span class="p">,</span>
 <span class="p">])</span>
-</code></pre></div>
-
-
+</code></pre></div></p>
 <h3 id="warning-for-versions-0997">Warning for versions &lt;= 0.9.97<a class="headerlink" href="#warning-for-versions-0997" title="Permanent link">&para;</a></h3>
 <p>The behavior of the <code>k</code> parameter described in the <a href="#parameters">Parameters</a> section is for versions &gt;= 0.9.98.</p>
 <p>For versions &lt;= 0.9.97, the behavior was:</p>
@@ -831,45 +859,46 @@
             </article>
           </div>
         </div>
+        
       </main>
       
         
 <footer class="md-footer">
   
-    <div class="md-footer-nav">
-      <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
+    <nav class="md-footer__inner md-grid" aria-label="Footer">
+      
         
-          <a href="../testers/" title="Testers" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
-            <div class="md-footer-nav__button md-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+        <a href="../testers/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Testers" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              Testers
             </div>
-            <div class="md-footer-nav__title">
-              <div class="md-ellipsis">
-                <span class="md-footer-nav__direction">
-                  Previous
-                </span>
-                Testers
-              </div>
-            </div>
-          </a>
+          </div>
+        </a>
+      
+      
         
-        
-          <a href="../inference_models/" title="Inference Models" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
-            <div class="md-footer-nav__title">
-              <div class="md-ellipsis">
-                <span class="md-footer-nav__direction">
-                  Next
-                </span>
-                Inference Models
-              </div>
+        <a href="../inference_models/" class="md-footer__link md-footer__link--next" aria-label="Next: Inference Models" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              Inference Models
             </div>
-            <div class="md-footer-nav__button md-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
-            </div>
-          </a>
-        
-      </nav>
-    </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
   
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
@@ -879,6 +908,7 @@
         <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
           Material for MkDocs
         </a>
+        
       </div>
       
     </div>
@@ -886,19 +916,13 @@
 </footer>
       
     </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": "..", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../assets/javascripts/workers/search.409db549.min.js", "version": null}</script>
     
-      <script src="../assets/javascripts/vendor.92ffa368.min.js"></script>
-      <script src="../assets/javascripts/bundle.5123e3d4.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
-      
-      <script>
-        app = initialize({
-          base: "..",
-          features: [],
-          search: Object.assign({
-            worker: "../assets/javascripts/worker/search.a68abb33.min.js"
-          }, typeof search !== "undefined" && search)
-        })
-      </script>
+    
+      <script src="../assets/javascripts/bundle.756773cc.min.js"></script>
       
     
   </body>

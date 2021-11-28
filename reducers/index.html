@@ -1,6 +1,4 @@
 
-
-
 <!doctype html>
 <html lang="en" class="no-js">
   <head>
@@ -10,8 +8,9 @@
       
       
       
-      <link rel="shortcut icon" href="../imgs/Favicon.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-5.5.0">
+      
+      <link rel="icon" href="../imgs/Favicon.png">
+      <meta name="generator" content="mkdocs-1.2.2, mkdocs-material-7.2.6">
     
     
       
@@ -19,28 +18,32 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.b5d04df8.min.css">
-      
-        <link rel="stylesheet" href="../assets/stylesheets/palette.9ab2c1f8.min.css">
-      
+      <link rel="stylesheet" href="../assets/stylesheets/main.802231af.min.css">
       
         
+        <link rel="stylesheet" href="../assets/stylesheets/palette.3f5d1f46.min.css">
         
-        <meta name="theme-color" content="#ef5350">
+          
+          
+          <meta name="theme-color" content="#ef5552">
+        
       
     
     
     
       
-        <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
-        <style>body,input{font-family:"Roboto",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono",SFMono-Regular,Consolas,Menlo,monospace}</style>
+        <style>:root{--md-text-font-family:"Roboto";--md-code-font-family:"Roboto Mono"}</style>
       
     
     
     
     
       
+
+
     
     
   </head>
@@ -49,8 +52,12 @@
     
     
     
+    
+    
     <body dir="ltr" data-md-color-scheme="" data-md-color-primary="red" data-md-color-accent="red">
   
+    
+    <script>function __prefix(e){return new URL("..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
@@ -68,46 +75,54 @@
     </div>
     
       <header class="md-header" data-md-component="header">
-  <nav class="md-header-nav md-grid" aria-label="Header">
-    <a href=".." title="PyTorch Metric Learning" class="md-header-nav__button md-logo" aria-label="PyTorch Metric Learning">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="PyTorch Metric Learning" class="md-header__button md-logo" aria-label="PyTorch Metric Learning" data-md-component="logo">
       
   <img src="../imgs/TinyLogo.png" alt="logo">
 
     </a>
-    <label class="md-header-nav__button md-icon" for="__drawer">
+    <label class="md-header__button md-icon" for="__drawer">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
     </label>
-    <div class="md-header-nav__title" data-md-component="header-title">
-      
-        <div class="md-header-nav__ellipsis">
-          <span class="md-header-nav__topic md-ellipsis">
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
             PyTorch Metric Learning
           </span>
-          <span class="md-header-nav__topic md-ellipsis">
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
             
               Reducers
             
           </span>
         </div>
-      
+      </div>
     </div>
     
-      <label class="md-header-nav__button md-icon" for="__search">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
       </label>
       
 <div class="md-search" data-md-component="search" role="dialog">
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
       <label class="md-search__icon md-icon" for="__search">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
       </label>
-      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" data-md-component="search-reset" tabindex="-1">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
-      </button>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+        </button>
+      </nav>
+      
     </form>
     <div class="md-search__output">
       <div class="md-search__scrollwrap" data-md-scrollfix>
@@ -123,12 +138,12 @@
 </div>
     
     
-      <div class="md-header-nav__source">
+      <div class="md-header__source">
         
-<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/" title="Go to repository" class="md-source">
+<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05L244 40.45a28.87 28.87 0 00-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 01-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 000 40.81l195.61 195.6a28.86 28.86 0 0040.8 0l194.69-194.69a28.86 28.86 0 000-40.81z"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
   </div>
   <div class="md-source__repository">
     KevinMusgrave/pytorch-metric-learning
@@ -141,8 +156,6 @@
     
     <div class="md-container" data-md-component="container">
       
-        
-      
       
         
       
@@ -150,12 +163,16 @@
         <div class="md-main__inner md-grid">
           
             
-              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
-                    <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="PyTorch Metric Learning" class="md-nav__button md-logo" aria-label="PyTorch Metric Learning">
+    <a href=".." title="PyTorch Metric Learning" class="md-nav__button md-logo" aria-label="PyTorch Metric Learning" data-md-component="logo">
       
   <img src="../imgs/TinyLogo.png" alt="logo">
 
@@ -165,10 +182,10 @@
   
     <div class="md-nav__source">
       
-<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/" title="Go to repository" class="md-source">
+<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05L244 40.45a28.87 28.87 0 00-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 01-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 000 40.81l195.61 195.6a28.86 28.86 0 0040.8 0l194.69-194.69a28.86 28.86 0 000-40.81z"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
   </div>
   <div class="md-source__repository">
     KevinMusgrave/pytorch-metric-learning
@@ -182,48 +199,15 @@
       
       
 
-
-  <li class="md-nav__item">
-    <a href=".." title="Home" class="md-nav__link">
-      Home
-    </a>
-  </li>
-
-    
-      
-      
-      
-
-
-  <li class="md-nav__item">
-    <a href="../distances/" title="Distances" class="md-nav__link">
-      Distances
-    </a>
-  </li>
-
-    
-      
-      
-      
-
-
-  <li class="md-nav__item">
-    <a href="../losses/" title="Losses" class="md-nav__link">
-      Losses
-    </a>
-  </li>
-
-    
-      
-      
-      
-
-
-  <li class="md-nav__item">
-    <a href="../miners/" title="Miners" class="md-nav__link">
-      Miners
-    </a>
-  </li>
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        Home
+      </a>
+    </li>
+  
 
     
       
@@ -231,40 +215,85 @@
       
 
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../distances/" class="md-nav__link">
+        Distances
+      </a>
+    </li>
+  
 
-
-  <li class="md-nav__item md-nav__item--active">
-    
-    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
     
       
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../losses/" class="md-nav__link">
+        Losses
+      </a>
+    </li>
+  
+
     
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../miners/" class="md-nav__link">
+        Miners
+      </a>
+    </li>
+  
+
     
-      <label class="md-nav__link md-nav__link--active" for="__toc">
+      
+      
+      
+
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Reducers
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         Reducers
-        <span class="md-nav__icon md-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"/></svg>
-        </span>
-      </label>
-    
-    <a href="./" title="Reducers" class="md-nav__link md-nav__link--active">
-      Reducers
-    </a>
-    
+      </a>
       
+        
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
   
   
     
   
   
     <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
-      </span>
+      <span class="md-nav__icon md-icon"></span>
       Table of contents
     </label>
-    <ul class="md-nav__list" data-md-scrollfix>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
   <a href="#avgnonzeroreducer" class="md-nav__link">
@@ -332,200 +361,213 @@
     </ul>
   
 </nav>
-    
-  </li>
+      
+    </li>
+  
 
     
       
       
       
 
-
-  <li class="md-nav__item">
-    <a href="../regularizers/" title="Regularizers" class="md-nav__link">
-      Regularizers
-    </a>
-  </li>
-
-    
-      
-      
-      
-
-
-  <li class="md-nav__item">
-    <a href="../samplers/" title="Samplers" class="md-nav__link">
-      Samplers
-    </a>
-  </li>
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../regularizers/" class="md-nav__link">
+        Regularizers
+      </a>
+    </li>
+  
 
     
       
       
       
 
-
-  <li class="md-nav__item">
-    <a href="../trainers/" title="Trainers" class="md-nav__link">
-      Trainers
-    </a>
-  </li>
-
-    
-      
-      
-      
-
-
-  <li class="md-nav__item">
-    <a href="../testers/" title="Testers" class="md-nav__link">
-      Testers
-    </a>
-  </li>
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../samplers/" class="md-nav__link">
+        Samplers
+      </a>
+    </li>
+  
 
     
       
       
       
 
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../trainers/" class="md-nav__link">
+        Trainers
+      </a>
+    </li>
+  
 
-  <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-10" type="checkbox" id="nav-10">
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testers/" class="md-nav__link">
+        Testers
+      </a>
+    </li>
+  
+
     
-    <label class="md-nav__link" for="nav-10">
-      Utils
-      <span class="md-nav__icon md-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"/></svg>
-      </span>
-    </label>
-    <nav class="md-nav" aria-label="Utils" data-md-level="1">
-      <label class="md-nav__title" for="nav-10">
-        <span class="md-nav__icon md-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
-        </span>
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_10" type="checkbox" id="__nav_10" >
+      
+      <label class="md-nav__link" for="__nav_10">
         Utils
+        <span class="md-nav__icon md-icon"></span>
       </label>
-      <ul class="md-nav__list" data-md-scrollfix>
-        
-        
+      <nav class="md-nav" aria-label="Utils" data-md-level="1">
+        <label class="md-nav__title" for="__nav_10">
+          <span class="md-nav__icon md-icon"></span>
+          Utils
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
           
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../accuracy_calculation/" class="md-nav__link">
+        Accuracy Calculation
+      </a>
+    </li>
+  
+
           
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../inference_models/" class="md-nav__link">
+        Inference Models
+      </a>
+    </li>
+  
+
           
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../logging_presets/" class="md-nav__link">
+        Logging Presets
+      </a>
+    </li>
+  
 
-
-  <li class="md-nav__item">
-    <a href="../accuracy_calculation/" title="Accuracy Calculation" class="md-nav__link">
-      Accuracy Calculation
-    </a>
-  </li>
-
-        
           
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../common_functions/" class="md-nav__link">
+        Common Functions
+      </a>
+    </li>
+  
+
           
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../distributed/" class="md-nav__link">
+        Distributed
+      </a>
+    </li>
+  
+
           
-
-
-  <li class="md-nav__item">
-    <a href="../inference_models/" title="Inference Models" class="md-nav__link">
-      Inference Models
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
-    <a href="../logging_presets/" title="Logging Presets" class="md-nav__link">
-      Logging Presets
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
-    <a href="../common_functions/" title="Common Functions" class="md-nav__link">
-      Common Functions
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
-    <a href="../distributed/" title="Distributed" class="md-nav__link">
-      Distributed
-    </a>
-  </li>
-
-        
-      </ul>
-    </nav>
-  </li>
+        </ul>
+      </nav>
+    </li>
+  
 
     
       
       
       
 
-
-  <li class="md-nav__item md-nav__item--nested">
+  
+  
+  
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-11" type="checkbox" id="nav-11">
-    
-    <label class="md-nav__link" for="nav-11">
-      How to extend this library
-      <span class="md-nav__icon md-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"/></svg>
-      </span>
-    </label>
-    <nav class="md-nav" aria-label="How to extend this library" data-md-level="1">
-      <label class="md-nav__title" for="nav-11">
-        <span class="md-nav__icon md-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
-        </span>
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_11" type="checkbox" id="__nav_11" >
+      
+      <label class="md-nav__link" for="__nav_11">
         How to extend this library
+        <span class="md-nav__icon md-icon"></span>
       </label>
-      <ul class="md-nav__list" data-md-scrollfix>
-        
-        
+      <nav class="md-nav" aria-label="How to extend this library" data-md-level="1">
+        <label class="md-nav__title" for="__nav_11">
+          <span class="md-nav__icon md-icon"></span>
+          How to extend this library
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
           
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../extend/losses/" class="md-nav__link">
+        Custom losses
+      </a>
+    </li>
+  
+
           
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../extend/miners/" class="md-nav__link">
+        Custom miners
+      </a>
+    </li>
+  
+
           
-
-
-  <li class="md-nav__item">
-    <a href="../extend/losses/" title="Custom losses" class="md-nav__link">
-      Custom losses
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
-    <a href="../extend/miners/" title="Custom miners" class="md-nav__link">
-      Custom miners
-    </a>
-  </li>
-
-        
-      </ul>
-    </nav>
-  </li>
+        </ul>
+      </nav>
+    </li>
+  
 
     
   </ul>
@@ -535,23 +577,23 @@
               </div>
             
             
-              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
                     
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
+  
     
   
   
     <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
-      </span>
+      <span class="md-nav__icon md-icon"></span>
       Table of contents
     </label>
-    <ul class="md-nav__list" data-md-scrollfix>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
   <a href="#avgnonzeroreducer" class="md-nav__link">
@@ -624,7 +666,7 @@
               </div>
             
           
-          <div class="md-content">
+          <div class="md-content" data-md-component="content">
             <article class="md-content__inner md-typeset">
               
                 
@@ -633,56 +675,43 @@
                   </a>
                 
                 
-                  
-                
-                
                 <h1 id="reducers">Reducers<a class="headerlink" href="#reducers" title="Permanent link">&para;</a></h1>
 <p>Reducers specify how to go from many loss values to a single loss value. For example, the <a href="../losses/#contrastiveloss">ContrastiveLoss</a> computes a loss for every positive and negative pair in a batch. A reducer will take all these per-pair losses, and reduce them to a single value. Here's where reducers fit in this library's flow of filters and computations:</p>
 <p><code>Your Data --&gt; Sampler --&gt; Miner --&gt; Loss --&gt; Reducer --&gt; Final loss value</code></p>
-<p>Reducers are passed into loss functions like this:</p>
-<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">losses</span><span class="p">,</span> <span class="n">reducers</span>
+<p>Reducers are passed into loss functions like this:
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">losses</span><span class="p">,</span> <span class="n">reducers</span>
 <span class="n">reducer</span> <span class="o">=</span> <span class="n">reducers</span><span class="o">.</span><span class="n">SomeReducer</span><span class="p">()</span>
 <span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">SomeLoss</span><span class="p">(</span><span class="n">reducer</span><span class="o">=</span><span class="n">reducer</span><span class="p">)</span>
 <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span> <span class="c1"># in your training for-loop</span>
 </code></pre></div>
-
-
-<p>Internally, the loss function creates a dictionary that contains the losses and other information. The reducer takes this dictionary, performs the reduction, and returns a single value on which <code>.backward()</code> can be called. Most reducers are written such that they can be passed into any loss function.</p>
+Internally, the loss function creates a dictionary that contains the losses and other information. The reducer takes this dictionary, performs the reduction, and returns a single value on which <code>.backward()</code> can be called. Most reducers are written such that they can be passed into any loss function.</p>
 <h2 id="avgnonzeroreducer">AvgNonZeroReducer<a class="headerlink" href="#avgnonzeroreducer" title="Permanent link">&para;</a></h2>
-<p>This computes the average loss, using only the losses that are greater than 0. For example, if the losses are <code>[0, 2, 0, 3]</code>, then this reducer will return <code>2.5</code>.</p>
-<div class="codehilite"><pre><span></span><code><span class="n">reducers</span><span class="o">.</span><span class="n">AvgNonZeroReducer</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<p>This computes the average loss, using only the losses that are greater than 0. For example, if the losses are <code>[0, 2, 0, 3]</code>, then this reducer will return <code>2.5</code>.
+<div class="highlight"><pre><span></span><code><span class="n">reducers</span><span class="o">.</span><span class="n">AvgNonZeroReducer</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
-
-
-<p>This class is equivalent to using <code>ThresholdReducer(low=0)</code>. See <a href="./#thresholdreducer">ThresholdReducer</a>.</p>
+This class is equivalent to using <code>ThresholdReducer(low=0)</code>. See <a href="./#thresholdreducer">ThresholdReducer</a>.</p>
 <h2 id="basereducer">BaseReducer<a class="headerlink" href="#basereducer" title="Permanent link">&para;</a></h2>
-<p>All reducers extend this class.</p>
-<div class="codehilite"><pre><span></span><code><span class="n">reducers</span><span class="o">.</span><span class="n">BaseReducer</span><span class="p">(</span><span class="n">collect_stats</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</code></pre></div>
-
-
+<p>All reducers extend this class.
+<div class="highlight"><pre><span></span><code><span class="n">reducers</span><span class="o">.</span><span class="n">BaseReducer</span><span class="p">(</span><span class="n">collect_stats</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</code></pre></div></p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>collect_stats</strong>: If True, will collect various statistics that may be useful to analyze during experiments. If False, these computations will be skipped. Want to make <code>False</code> the default? Set the global <a href="../common_functions/#collect_stats">COLLECT_STATS</a> flag.</li>
+<li><strong>collect_stats</strong>: If True, will collect various statistics that may be useful to analyze during experiments. If False, these computations will be skipped. Want to make <code>True</code> the default? Set the global <a href="../common_functions/#collect_stats">COLLECT_STATS</a> flag.</li>
 </ul>
 <h2 id="classweightedreducer">ClassWeightedReducer<a class="headerlink" href="#classweightedreducer" title="Permanent link">&para;</a></h2>
-<p>This multiplies each loss by a class weight, and then takes the average.</p>
-<div class="codehilite"><pre><span></span><code><span class="n">reducers</span><span class="o">.</span><span class="n">ClassWeightedReducer</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</code></pre></div>
-
-
+<p>This multiplies each loss by a class weight, and then takes the average.
+<div class="highlight"><pre><span></span><code><span class="n">reducers</span><span class="o">.</span><span class="n">ClassWeightedReducer</span><span class="p">(</span><span class="n">weights</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div></p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>weights</strong>: A tensor of weights, where <code>weights[i]</code> is the weight for the ith class.</li>
 </ul>
 <h2 id="divisorreducer">DivisorReducer<a class="headerlink" href="#divisorreducer" title="Permanent link">&para;</a></h2>
-<p>This divides each loss by a custom value specified inside the loss function. This is useful if you want to hardcode a reduction behavior in your loss function (i.e. by using DivisorReducer), while still having the option to use other reducers.</p>
-<div class="codehilite"><pre><span></span><code><span class="n">reducers</span><span class="o">.</span><span class="n">DivisorReducer</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<p>This divides each loss by a custom value specified inside the loss function. This is useful if you want to hardcode a reduction behavior in your loss function (i.e. by using DivisorReducer), while still having the option to use other reducers.
+<div class="highlight"><pre><span></span><code><span class="n">reducers</span><span class="o">.</span><span class="n">DivisorReducer</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
-
-
-<p>To use this reducer, the loss function must include <code>divisor</code> in its loss dictionary. For example, the <a href="../losses/#proxyanchorloss">ProxyAnchorLoss</a> uses <code>DivisorReducer</code> by default, and returns the following dictionary:</p>
-<div class="codehilite"><pre><span></span><code><span class="n">loss_dict</span> <span class="o">=</span> <span class="p">{</span>
+To use this reducer, the loss function must include <code>divisor</code> in its loss dictionary. For example, the <a href="../losses/#proxyanchorloss">ProxyAnchorLoss</a> uses <code>DivisorReducer</code> by default, and returns the following dictionary:</p>
+<div class="highlight"><pre><span></span><code><span class="n">loss_dict</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;pos_loss&quot;</span><span class="p">:</span> <span class="p">{</span>
         <span class="s2">&quot;losses&quot;</span><span class="p">:</span> <span class="n">pos_term</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
         <span class="s2">&quot;indices&quot;</span><span class="p">:</span> <span class="n">loss_indices</span><span class="p">,</span>
@@ -697,44 +726,34 @@
     <span class="p">},</span>
 <span class="p">}</span>
 </code></pre></div>
-
-
 <h2 id="donothingreducer">DoNothingReducer<a class="headerlink" href="#donothingreducer" title="Permanent link">&para;</a></h2>
-<p>This returns its input. In other words, no reduction is performed. The output will be the loss dictionary that is passed into it.</p>
-<div class="codehilite"><pre><span></span><code><span class="n">reducers</span><span class="o">.</span><span class="n">DoNothingReducer</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</code></pre></div>
-
-
+<p>This returns its input. In other words, no reduction is performed. The output will be the loss dictionary that is passed into it.
+<div class="highlight"><pre><span></span><code><span class="n">reducers</span><span class="o">.</span><span class="n">DoNothingReducer</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div></p>
 <h2 id="meanreducer">MeanReducer<a class="headerlink" href="#meanreducer" title="Permanent link">&para;</a></h2>
-<p>This will return the average of the losses.</p>
-<div class="codehilite"><pre><span></span><code><span class="n">reducers</span><span class="o">.</span><span class="n">MeanReducer</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</code></pre></div>
-
-
+<p>This will return the average of the losses.
+<div class="highlight"><pre><span></span><code><span class="n">reducers</span><span class="o">.</span><span class="n">MeanReducer</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div></p>
 <h2 id="multiplereducers">MultipleReducers<a class="headerlink" href="#multiplereducers" title="Permanent link">&para;</a></h2>
-<p>This wraps multiple reducers. Each reducer is applied to a different sub-loss, as specified in the host loss function. Then the reducer outputs are summed to obtain the final loss.</p>
-<div class="codehilite"><pre><span></span><code><span class="n">reducers</span><span class="o">.</span><span class="n">MultipleReducers</span><span class="p">(</span><span class="n">reducers</span><span class="p">,</span> <span class="n">default_reducer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</code></pre></div>
-
-
+<p>This wraps multiple reducers. Each reducer is applied to a different sub-loss, as specified in the host loss function. Then the reducer outputs are summed to obtain the final loss.
+<div class="highlight"><pre><span></span><code><span class="n">reducers</span><span class="o">.</span><span class="n">MultipleReducers</span><span class="p">(</span><span class="n">reducers</span><span class="p">,</span> <span class="n">default_reducer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div></p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>reducers</strong>: A dictionary mapping from strings to reducers. The strings must match sub-loss names of the host loss function.</li>
 <li><strong>default_reducer</strong>: This reducer will be used for any sub-losses that are not included in the keys of <code>reducers</code>. If None, then MeanReducer() will be the default.</li>
 </ul>
 <p><strong>Example usage</strong>:</p>
-<p>The <a href="../losses/#contrastiveloss">ContrastiveLoss</a> has two sub-losses: <code>pos_loss</code> for the positive pairs, and <code>neg_loss</code> for the negative pairs. In this example, a <a href="./#thresholdreducer">ThresholdReducer</a> is used for the <code>pos_loss</code> and a <a href="./#meanreducer">MeanReducer</a> is used for the <code>neg_loss</code>.</p>
-<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning.losses</span> <span class="kn">import</span> <span class="n">ContrastiveLoss</span>
+<p>The <a href="../losses/#contrastiveloss">ContrastiveLoss</a> has two sub-losses: <code>pos_loss</code> for the positive pairs, and <code>neg_loss</code> for the negative pairs. In this example, a <a href="./#thresholdreducer">ThresholdReducer</a> is used for the <code>pos_loss</code> and a <a href="./#meanreducer">MeanReducer</a> is used for the <code>neg_loss</code>.
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning.losses</span> <span class="kn">import</span> <span class="n">ContrastiveLoss</span>
 <span class="kn">from</span> <span class="nn">pytorch_metric_learning.reducers</span> <span class="kn">import</span> <span class="n">MultipleReducers</span><span class="p">,</span> <span class="n">ThresholdReducer</span><span class="p">,</span> <span class="n">MeanReducer</span>
 <span class="n">reducer_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;pos_loss&quot;</span><span class="p">:</span> <span class="n">ThresholdReducer</span><span class="p">(</span><span class="mf">0.1</span><span class="p">),</span> <span class="s2">&quot;neg_loss&quot;</span><span class="p">:</span> <span class="n">MeanReducer</span><span class="p">()}</span>
 <span class="n">reducer</span> <span class="o">=</span> <span class="n">MultipleReducers</span><span class="p">(</span><span class="n">reducer_dict</span><span class="p">)</span>
 <span class="n">loss_func</span> <span class="o">=</span> <span class="n">ContrastiveLoss</span><span class="p">(</span><span class="n">reducer</span><span class="o">=</span><span class="n">reducer</span><span class="p">)</span>
-</code></pre></div>
-
-
+</code></pre></div></p>
 <h2 id="peranchorreducer">PerAnchorReducer<a class="headerlink" href="#peranchorreducer" title="Permanent link">&para;</a></h2>
-<p>This converts unreduced pairs to unreduced elements. For example, <a href="../losses/#ntxentloss">NTXentLoss</a> returns losses per positive pair. If you used PerAnchorReducer with NTXentLoss, then the losses per pair would first be converted to losses per batch element, before being passed to the inner reducer.</p>
-<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">aggregation_func</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">num_per_row</span><span class="p">):</span>
+<p>This converts unreduced pairs to unreduced elements. For example, <a href="../losses/#ntxentloss">NTXentLoss</a> returns losses per positive pair. If you used PerAnchorReducer with NTXentLoss, then the losses per pair would first be converted to losses per batch element, before being passed to the inner reducer.
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">aggregation_func</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">num_per_row</span><span class="p">):</span>
     <span class="n">zero_denom</span> <span class="o">=</span> <span class="n">num_per_row</span> <span class="o">==</span> <span class="mi">0</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">num_per_row</span>
     <span class="n">x</span><span class="p">[</span><span class="n">zero_denom</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
@@ -743,9 +762,7 @@
 <span class="n">reducers</span><span class="o">.</span><span class="n">PerAnchorReducer</span><span class="p">(</span><span class="n">reducer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
                             <span class="n">aggregation_func</span><span class="o">=</span><span class="n">aggregation_func</span><span class="p">,</span> 
                             <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</code></pre></div>
-
-
+</code></pre></div></p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>reducer</strong>: The reducer that will be fed per-element losses. The default is <a href="#meanreducer">MeanReducer</a></li>
@@ -757,10 +774,8 @@
 </ul>
 <h2 id="thresholdreducer">ThresholdReducer<a class="headerlink" href="#thresholdreducer" title="Permanent link">&para;</a></h2>
 <p>This computes the average loss, using only the losses that fall within a specified range.</p>
-<div class="codehilite"><pre><span></span><code><span class="n">reducers</span><span class="o">.</span><span class="n">ThresholdReducer</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="kc">None</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">reducers</span><span class="o">.</span><span class="n">ThresholdReducer</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="kc">None</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
-
-
 <p>At least one of <code>low</code> or <code>high</code> must be specified.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -798,45 +813,46 @@
             </article>
           </div>
         </div>
+        
       </main>
       
         
 <footer class="md-footer">
   
-    <div class="md-footer-nav">
-      <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
+    <nav class="md-footer__inner md-grid" aria-label="Footer">
+      
         
-          <a href="../miners/" title="Miners" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
-            <div class="md-footer-nav__button md-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+        <a href="../miners/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Miners" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              Miners
             </div>
-            <div class="md-footer-nav__title">
-              <div class="md-ellipsis">
-                <span class="md-footer-nav__direction">
-                  Previous
-                </span>
-                Miners
-              </div>
-            </div>
-          </a>
+          </div>
+        </a>
+      
+      
         
-        
-          <a href="../regularizers/" title="Regularizers" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
-            <div class="md-footer-nav__title">
-              <div class="md-ellipsis">
-                <span class="md-footer-nav__direction">
-                  Next
-                </span>
-                Regularizers
-              </div>
+        <a href="../regularizers/" class="md-footer__link md-footer__link--next" aria-label="Next: Regularizers" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              Regularizers
             </div>
-            <div class="md-footer-nav__button md-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
-            </div>
-          </a>
-        
-      </nav>
-    </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
   
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
@@ -846,6 +862,7 @@
         <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
           Material for MkDocs
         </a>
+        
       </div>
       
     </div>
@@ -853,19 +870,13 @@
 </footer>
       
     </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": "..", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../assets/javascripts/workers/search.409db549.min.js", "version": null}</script>
     
-      <script src="../assets/javascripts/vendor.92ffa368.min.js"></script>
-      <script src="../assets/javascripts/bundle.5123e3d4.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
-      
-      <script>
-        app = initialize({
-          base: "..",
-          features: [],
-          search: Object.assign({
-            worker: "../assets/javascripts/worker/search.a68abb33.min.js"
-          }, typeof search !== "undefined" && search)
-        })
-      </script>
+    
+      <script src="../assets/javascripts/bundle.756773cc.min.js"></script>
       
     
   </body>

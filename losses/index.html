@@ -1,6 +1,4 @@
 
-
-
 <!doctype html>
 <html lang="en" class="no-js">
   <head>
@@ -10,8 +8,9 @@
       
       
       
-      <link rel="shortcut icon" href="../imgs/Favicon.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-5.5.0">
+      
+      <link rel="icon" href="../imgs/Favicon.png">
+      <meta name="generator" content="mkdocs-1.2.2, mkdocs-material-7.2.6">
     
     
       
@@ -19,28 +18,32 @@
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.b5d04df8.min.css">
-      
-        <link rel="stylesheet" href="../assets/stylesheets/palette.9ab2c1f8.min.css">
-      
+      <link rel="stylesheet" href="../assets/stylesheets/main.802231af.min.css">
       
         
+        <link rel="stylesheet" href="../assets/stylesheets/palette.3f5d1f46.min.css">
         
-        <meta name="theme-color" content="#ef5350">
+          
+          
+          <meta name="theme-color" content="#ef5552">
+        
       
     
     
     
       
-        <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
-        <style>body,input{font-family:"Roboto",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono",SFMono-Regular,Consolas,Menlo,monospace}</style>
+        <style>:root{--md-text-font-family:"Roboto";--md-code-font-family:"Roboto Mono"}</style>
       
     
     
     
     
       
+
+
     
     
   </head>
@@ -49,8 +52,12 @@
     
     
     
+    
+    
     <body dir="ltr" data-md-color-scheme="" data-md-color-primary="red" data-md-color-accent="red">
   
+    
+    <script>function __prefix(e){return new URL("..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
@@ -68,46 +75,54 @@
     </div>
     
       <header class="md-header" data-md-component="header">
-  <nav class="md-header-nav md-grid" aria-label="Header">
-    <a href=".." title="PyTorch Metric Learning" class="md-header-nav__button md-logo" aria-label="PyTorch Metric Learning">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="PyTorch Metric Learning" class="md-header__button md-logo" aria-label="PyTorch Metric Learning" data-md-component="logo">
       
   <img src="../imgs/TinyLogo.png" alt="logo">
 
     </a>
-    <label class="md-header-nav__button md-icon" for="__drawer">
+    <label class="md-header__button md-icon" for="__drawer">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
     </label>
-    <div class="md-header-nav__title" data-md-component="header-title">
-      
-        <div class="md-header-nav__ellipsis">
-          <span class="md-header-nav__topic md-ellipsis">
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
             PyTorch Metric Learning
           </span>
-          <span class="md-header-nav__topic md-ellipsis">
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
             
               Losses
             
           </span>
         </div>
-      
+      </div>
     </div>
     
-      <label class="md-header-nav__button md-icon" for="__search">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
       </label>
       
 <div class="md-search" data-md-component="search" role="dialog">
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
       <label class="md-search__icon md-icon" for="__search">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
       </label>
-      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" data-md-component="search-reset" tabindex="-1">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
-      </button>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+        </button>
+      </nav>
+      
     </form>
     <div class="md-search__output">
       <div class="md-search__scrollwrap" data-md-scrollfix>
@@ -123,12 +138,12 @@
 </div>
     
     
-      <div class="md-header-nav__source">
+      <div class="md-header__source">
         
-<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/" title="Go to repository" class="md-source">
+<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05L244 40.45a28.87 28.87 0 00-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 01-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 000 40.81l195.61 195.6a28.86 28.86 0 0040.8 0l194.69-194.69a28.86 28.86 0 000-40.81z"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
   </div>
   <div class="md-source__repository">
     KevinMusgrave/pytorch-metric-learning
@@ -141,8 +156,6 @@
     
     <div class="md-container" data-md-component="container">
       
-        
-      
       
         
       
@@ -150,12 +163,16 @@
         <div class="md-main__inner md-grid">
           
             
-              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
-                    <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href=".." title="PyTorch Metric Learning" class="md-nav__button md-logo" aria-label="PyTorch Metric Learning">
+    <a href=".." title="PyTorch Metric Learning" class="md-nav__button md-logo" aria-label="PyTorch Metric Learning" data-md-component="logo">
       
   <img src="../imgs/TinyLogo.png" alt="logo">
 
@@ -165,10 +182,10 @@
   
     <div class="md-nav__source">
       
-<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/" title="Go to repository" class="md-source">
+<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05L244 40.45a28.87 28.87 0 00-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 01-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 000 40.81l195.61 195.6a28.86 28.86 0 0040.8 0l194.69-194.69a28.86 28.86 0 000-40.81z"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
   </div>
   <div class="md-source__repository">
     KevinMusgrave/pytorch-metric-learning
@@ -182,24 +199,15 @@
       
       
 
-
-  <li class="md-nav__item">
-    <a href=".." title="Home" class="md-nav__link">
-      Home
-    </a>
-  </li>
-
-    
-      
-      
-      
-
-
-  <li class="md-nav__item">
-    <a href="../distances/" title="Distances" class="md-nav__link">
-      Distances
-    </a>
-  </li>
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        Home
+      </a>
+    </li>
+  
 
     
       
@@ -207,40 +215,55 @@
       
 
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../distances/" class="md-nav__link">
+        Distances
+      </a>
+    </li>
+  
 
-
-  <li class="md-nav__item md-nav__item--active">
-    
-    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
     
       
+      
+      
+
+  
+  
     
-    
-      <label class="md-nav__link md-nav__link--active" for="__toc">
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Losses
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         Losses
-        <span class="md-nav__icon md-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 9h14V7H3v2m0 4h14v-2H3v2m0 4h14v-2H3v2m16 0h2v-2h-2v2m0-10v2h2V7h-2m0 6h2v-2h-2v2z"/></svg>
-        </span>
-      </label>
-    
-    <a href="./" title="Losses" class="md-nav__link md-nav__link--active">
-      Losses
-    </a>
-    
+      </a>
       
+        
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
   
   
     
   
   
     <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
-      </span>
+      <span class="md-nav__icon md-icon"></span>
       Table of contents
     </label>
-    <ul class="md-nav__list" data-md-scrollfix>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
   <a href="#angularloss" class="md-nav__link">
@@ -448,224 +471,243 @@
     </ul>
   
 </nav>
-    
-  </li>
+      
+    </li>
+  
 
     
       
       
       
 
-
-  <li class="md-nav__item">
-    <a href="../miners/" title="Miners" class="md-nav__link">
-      Miners
-    </a>
-  </li>
-
-    
-      
-      
-      
-
-
-  <li class="md-nav__item">
-    <a href="../reducers/" title="Reducers" class="md-nav__link">
-      Reducers
-    </a>
-  </li>
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../miners/" class="md-nav__link">
+        Miners
+      </a>
+    </li>
+  
 
     
       
       
       
 
-
-  <li class="md-nav__item">
-    <a href="../regularizers/" title="Regularizers" class="md-nav__link">
-      Regularizers
-    </a>
-  </li>
-
-    
-      
-      
-      
-
-
-  <li class="md-nav__item">
-    <a href="../samplers/" title="Samplers" class="md-nav__link">
-      Samplers
-    </a>
-  </li>
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reducers/" class="md-nav__link">
+        Reducers
+      </a>
+    </li>
+  
 
     
       
       
       
 
-
-  <li class="md-nav__item">
-    <a href="../trainers/" title="Trainers" class="md-nav__link">
-      Trainers
-    </a>
-  </li>
-
-    
-      
-      
-      
-
-
-  <li class="md-nav__item">
-    <a href="../testers/" title="Testers" class="md-nav__link">
-      Testers
-    </a>
-  </li>
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../regularizers/" class="md-nav__link">
+        Regularizers
+      </a>
+    </li>
+  
 
     
       
       
       
 
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../samplers/" class="md-nav__link">
+        Samplers
+      </a>
+    </li>
+  
 
-  <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-10" type="checkbox" id="nav-10">
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../trainers/" class="md-nav__link">
+        Trainers
+      </a>
+    </li>
+  
+
     
-    <label class="md-nav__link" for="nav-10">
-      Utils
-      <span class="md-nav__icon md-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"/></svg>
-      </span>
-    </label>
-    <nav class="md-nav" aria-label="Utils" data-md-level="1">
-      <label class="md-nav__title" for="nav-10">
-        <span class="md-nav__icon md-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
-        </span>
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../testers/" class="md-nav__link">
+        Testers
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_10" type="checkbox" id="__nav_10" >
+      
+      <label class="md-nav__link" for="__nav_10">
         Utils
+        <span class="md-nav__icon md-icon"></span>
       </label>
-      <ul class="md-nav__list" data-md-scrollfix>
-        
-        
+      <nav class="md-nav" aria-label="Utils" data-md-level="1">
+        <label class="md-nav__title" for="__nav_10">
+          <span class="md-nav__icon md-icon"></span>
+          Utils
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
           
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../accuracy_calculation/" class="md-nav__link">
+        Accuracy Calculation
+      </a>
+    </li>
+  
+
           
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../inference_models/" class="md-nav__link">
+        Inference Models
+      </a>
+    </li>
+  
+
           
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../logging_presets/" class="md-nav__link">
+        Logging Presets
+      </a>
+    </li>
+  
 
-
-  <li class="md-nav__item">
-    <a href="../accuracy_calculation/" title="Accuracy Calculation" class="md-nav__link">
-      Accuracy Calculation
-    </a>
-  </li>
-
-        
           
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../common_functions/" class="md-nav__link">
+        Common Functions
+      </a>
+    </li>
+  
+
           
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../distributed/" class="md-nav__link">
+        Distributed
+      </a>
+    </li>
+  
+
           
-
-
-  <li class="md-nav__item">
-    <a href="../inference_models/" title="Inference Models" class="md-nav__link">
-      Inference Models
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
-    <a href="../logging_presets/" title="Logging Presets" class="md-nav__link">
-      Logging Presets
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
-    <a href="../common_functions/" title="Common Functions" class="md-nav__link">
-      Common Functions
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
-    <a href="../distributed/" title="Distributed" class="md-nav__link">
-      Distributed
-    </a>
-  </li>
-
-        
-      </ul>
-    </nav>
-  </li>
+        </ul>
+      </nav>
+    </li>
+  
 
     
       
       
       
 
-
-  <li class="md-nav__item md-nav__item--nested">
+  
+  
+  
     
-      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-11" type="checkbox" id="nav-11">
-    
-    <label class="md-nav__link" for="nav-11">
-      How to extend this library
-      <span class="md-nav__icon md-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.42z"/></svg>
-      </span>
-    </label>
-    <nav class="md-nav" aria-label="How to extend this library" data-md-level="1">
-      <label class="md-nav__title" for="nav-11">
-        <span class="md-nav__icon md-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
-        </span>
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_11" type="checkbox" id="__nav_11" >
+      
+      <label class="md-nav__link" for="__nav_11">
         How to extend this library
+        <span class="md-nav__icon md-icon"></span>
       </label>
-      <ul class="md-nav__list" data-md-scrollfix>
-        
-        
+      <nav class="md-nav" aria-label="How to extend this library" data-md-level="1">
+        <label class="md-nav__title" for="__nav_11">
+          <span class="md-nav__icon md-icon"></span>
+          How to extend this library
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
           
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../extend/losses/" class="md-nav__link">
+        Custom losses
+      </a>
+    </li>
+  
+
           
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../extend/miners/" class="md-nav__link">
+        Custom miners
+      </a>
+    </li>
+  
+
           
-
-
-  <li class="md-nav__item">
-    <a href="../extend/losses/" title="Custom losses" class="md-nav__link">
-      Custom losses
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
-    <a href="../extend/miners/" title="Custom miners" class="md-nav__link">
-      Custom miners
-    </a>
-  </li>
-
-        
-      </ul>
-    </nav>
-  </li>
+        </ul>
+      </nav>
+    </li>
+  
 
     
   </ul>
@@ -675,23 +717,23 @@
               </div>
             
             
-              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
                     
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
+  
     
   
   
     <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
-      </span>
+      <span class="md-nav__icon md-icon"></span>
       Table of contents
     </label>
-    <ul class="md-nav__list" data-md-scrollfix>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
   <a href="#angularloss" class="md-nav__link">
@@ -904,7 +946,7 @@
               </div>
             
           
-          <div class="md-content">
+          <div class="md-content" data-md-component="content">
             <article class="md-content__inner md-typeset">
               
                 
@@ -913,41 +955,37 @@
                   </a>
                 
                 
-                  
-                
-                
                 <h1 id="losses">Losses<a class="headerlink" href="#losses" title="Permanent link">&para;</a></h1>
 <p>All loss functions are used as follows:</p>
-<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">losses</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">losses</span>
 <span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">SomeLoss</span><span class="p">()</span>
 <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span> <span class="c1"># in your training for-loop</span>
 </code></pre></div>
-
-
 <p>Or if you are using a loss in conjunction with a <a href="../miners/">miner</a>:</p>
-<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">miners</span><span class="p">,</span> <span class="n">losses</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">miners</span><span class="p">,</span> <span class="n">losses</span>
 <span class="n">miner_func</span> <span class="o">=</span> <span class="n">miners</span><span class="o">.</span><span class="n">SomeMiner</span><span class="p">()</span>
 <span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">SomeLoss</span><span class="p">()</span>
 <span class="n">miner_output</span> <span class="o">=</span> <span class="n">miner_func</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span> <span class="c1"># in your training for-loop</span>
 <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">miner_output</span><span class="p">)</span>
 </code></pre></div>
-
-
-<p>You can also specify how losses get reduced to a single value by using a <a href="../reducers/">reducer</a>:</p>
-<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">losses</span><span class="p">,</span> <span class="n">reducers</span>
+<p>You can specify how losses get reduced to a single value by using a <a href="../reducers/">reducer</a>:
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">losses</span><span class="p">,</span> <span class="n">reducers</span>
 <span class="n">reducer</span> <span class="o">=</span> <span class="n">reducers</span><span class="o">.</span><span class="n">SomeReducer</span><span class="p">()</span>
 <span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">SomeLoss</span><span class="p">(</span><span class="n">reducer</span><span class="o">=</span><span class="n">reducer</span><span class="p">)</span>
 <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span> <span class="c1"># in your training for-loop</span>
-</code></pre></div>
-
-
+</code></pre></div></p>
+<p>For tuple losses, can separate the source of anchors and positives/negatives:
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">losses</span>
+<span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">SomeLoss</span><span class="p">()</span>
+<span class="c1"># anchors will come from embeddings</span>
+<span class="c1"># positives/negatives will come from ref_emb</span>
+<span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">ref_emb</span><span class="o">=</span><span class="n">ref_emb</span><span class="p">,</span> <span class="n">ref_labels</span><span class="o">=</span><span class="n">ref_labels</span><span class="p">)</span>
+</code></pre></div></p>
 <h2 id="angularloss">AngularLoss<a class="headerlink" href="#angularloss" title="Permanent link">&para;</a></h2>
-<p><a href="https://arxiv.org/pdf/1708.01682.pdf" target="_blank">Deep Metric Learning with Angular Loss</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">AngularLoss</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<p><a href="https://arxiv.org/pdf/1708.01682.pdf" target="_blank">Deep Metric Learning with Angular Loss</a>
+<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">AngularLoss</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
-
-
-<p><strong>Equation</strong>:</p>
+<strong>Equation</strong>:</p>
 <p><img alt="angular_loss_equation" src="../imgs/angular_loss_equation.png" style="height:200px" /></p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -972,10 +1010,8 @@
 </ul>
 <h2 id="arcfaceloss">ArcFaceLoss<a class="headerlink" href="#arcfaceloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1801.07698.pdf" target="_blank">ArcFace: Additive Angular Margin Loss for Deep Face Recognition</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">ArcFaceLoss</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">margin</span><span class="o">=</span><span class="mf">28.6</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">ArcFaceLoss</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">margin</span><span class="o">=</span><span class="mf">28.6</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
-
-
 <p><strong>Equation</strong>:</p>
 <p><img alt="arcface_loss_equation" src="../imgs/arcface_loss_equation.png" style="height:80px" /></p>
 <p><strong>Parameters</strong>:</p>
@@ -988,15 +1024,13 @@
 <p><strong>Other info</strong>: </p>
 <ul>
 <li>This also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts <code>weight_regularizer</code>, <code>weight_reg_weight</code>, and <code>weight_init_func</code> as optional arguments.</li>
-<li>This loss <strong>requires an optimizer</strong>. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:</li>
-</ul>
-<div class="codehilite"><pre><span></span><code><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">ArcFaceLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span><span class="p">))</span>
+<li>This loss <strong>requires an optimizer</strong>. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
+<div class="highlight"><pre><span></span><code><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">ArcFaceLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span><span class="p">))</span>
 <span class="n">loss_optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">SGD</span><span class="p">(</span><span class="n">loss_func</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
 <span class="c1"># then during training:</span>
 <span class="n">loss_optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
-</code></pre></div>
-
-
+</code></pre></div></li>
+</ul>
 <p><strong>Default distance</strong>: </p>
 <ul>
 <li><a href="../distances/#cosinesimilarity"><code>CosineSimilarity()</code></a><ul>
@@ -1014,17 +1048,15 @@
 </ul>
 <h2 id="basemetriclossfunction">BaseMetricLossFunction<a class="headerlink" href="#basemetriclossfunction" title="Permanent link">&para;</a></h2>
 <p>All loss functions extend this class and therefore inherit its <code>__init__</code> parameters.</p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">BaseMetricLossFunction</span><span class="p">(</span><span class="n">collect_stats</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> 
+<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">BaseMetricLossFunction</span><span class="p">(</span><span class="n">collect_stats</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> 
                             <span class="n">reducer</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
                             <span class="n">distance</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> 
                             <span class="n">embedding_regularizer</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                             <span class="n">embedding_reg_weight</span> <span class="o">=</span> <span class="mi">1</span><span class="p">)</span>
 </code></pre></div>
-
-
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>collect_stats</strong>: If True, will collect various statistics that may be useful to analyze during experiments. If False, these computations will be skipped. Want to make <code>False</code> the default? Set the global <a href="../common_functions/#collect_stats">COLLECT_STATS</a> flag.</li>
+<li><strong>collect_stats</strong>: If True, will collect various statistics that may be useful to analyze during experiments. If False, these computations will be skipped. Want to make <code>True</code> the default? Set the global <a href="../common_functions/#collect_stats">COLLECT_STATS</a> flag.</li>
 <li><strong>reducer</strong>: A <a href="../reducers/">reducer</a> object. If None, then the default reducer will be used.</li>
 <li><strong>distance</strong>: A <a href="../distances/">distance</a> object. If None, then the default distance will be used.</li>
 <li><strong>embedding_regularizer</strong>: A <a href="../regularizers/">regularizer</a> object that will be applied to embeddings. If None, then no embedding regularization will be used.</li>
@@ -1042,18 +1074,14 @@
 <ul>
 <li><strong>embedding_reg_loss</strong>: Only exists if an embedding regularizer is used. It contains the loss per element in the batch. Reduction type is <code>"already_reduced"</code>. </li>
 </ul>
-<p><strong>Required Implementations</strong>:</p>
-<div class="codehilite"><pre><span></span><code><span class="k">def</span> <span class="nf">compute_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">indices_tuple</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<p><strong>Required Implementations</strong>:
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">compute_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">indices_tuple</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="k">raise</span> <span class="ne">NotImplementedError</span>
-</code></pre></div>
-
-
+</code></pre></div></p>
 <h2 id="circleloss">CircleLoss<a class="headerlink" href="#circleloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/2002.10857.pdf" target="_blank">Circle Loss: A Unified Perspective of Pair Similarity Optimization</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">CircleLoss</span><span class="p">(</span><span class="n">m</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">CircleLoss</span><span class="p">(</span><span class="n">m</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
-
-
 <p><strong>Equations</strong>:</p>
 <p><img alt="circle_loss_equation1" src="../imgs/circle_loss_equation1.png" style="height:150px" /></p>
 <p>where</p>
@@ -1087,10 +1115,8 @@
 <li><strong>loss</strong>: The loss per element in the batch. Reduction type is <code>"element"</code>.</li>
 </ul>
 <h2 id="contrastiveloss">ContrastiveLoss<a class="headerlink" href="#contrastiveloss" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">ContrastiveLoss</span><span class="p">(</span><span class="n">pos_margin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">neg_margin</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">ContrastiveLoss</span><span class="p">(</span><span class="n">pos_margin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">neg_margin</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 </code></pre></div>
-
-
 <p><strong>Equation</strong>:</p>
 <p>If using a distance metric like <a href="../distances/#lpdistance">LpDistance</a>, the loss is:</p>
 <p><img alt="contrastive_loss_equation" src="../imgs/contrastive_loss_equation.png" style="height:37px" /></p>
@@ -1117,10 +1143,8 @@
 </ul>
 <h2 id="cosfaceloss">CosFaceLoss<a class="headerlink" href="#cosfaceloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1801.09414.pdf" target="_blank">CosFace: Large Margin Cosine Loss for Deep Face Recognition</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">CosFaceLoss</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">margin</span><span class="o">=</span><span class="mf">0.35</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">CosFaceLoss</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">margin</span><span class="o">=</span><span class="mf">0.35</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
-
-
 <p><strong>Equation</strong>:</p>
 <p><img alt="cosface_loss_equation" src="../imgs/cosface_loss_equation.png" style="height:80px" /></p>
 <p><strong>Parameters</strong>:</p>
@@ -1133,15 +1157,13 @@
 <p><strong>Other info</strong>: </p>
 <ul>
 <li>This also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts <code>weight_regularizer</code>, <code>weight_reg_weight</code>, and <code>weight_init_func</code> as optional arguments.</li>
-<li>This loss <strong>requires an optimizer</strong>. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:</li>
-</ul>
-<div class="codehilite"><pre><span></span><code><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">CosFaceLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span><span class="p">))</span>
+<li>This loss <strong>requires an optimizer</strong>. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
+<div class="highlight"><pre><span></span><code><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">CosFaceLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span><span class="p">))</span>
 <span class="n">loss_optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">SGD</span><span class="p">(</span><span class="n">loss_func</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
 <span class="c1"># then during training:</span>
 <span class="n">loss_optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
-</code></pre></div>
-
-
+</code></pre></div></li>
+</ul>
 <p><strong>Default distance</strong>: </p>
 <ul>
 <li>
@@ -1161,10 +1183,8 @@
 </ul>
 <h2 id="crossbatchmemory">CrossBatchMemory<a class="headerlink" href="#crossbatchmemory" title="Permanent link">&para;</a></h2>
 <p>This wraps a loss function, and implements <a href="https://arxiv.org/pdf/1912.06798.pdf" target="_blank">Cross-Batch Memory for Embedding Learning</a>. It stores embeddings from previous iterations in a queue, and uses them to form more pairs/triplets with the current iteration's embeddings.</p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">CrossBatchMemory</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">memory_size</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">miner</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">CrossBatchMemory</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">memory_size</span><span class="o">=</span><span class="mi">1024</span><span class="p">,</span> <span class="n">miner</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
-
-
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>loss</strong>: The loss function to be wrapped. For example, you could pass in <code>ContrastiveLoss()</code>.</li>
@@ -1172,21 +1192,17 @@
 <li><strong>memory_size</strong>: The size of the memory queue.</li>
 <li><strong>miner</strong>: An optional <a href="../miners/">tuple miner</a>, which will be used to mine pairs/triplets from the memory queue.</li>
 </ul>
-<p><strong>Forward function</strong></p>
-<div class="codehilite"><pre><span></span><code><span class="n">loss_fn</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">indices_tuple</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">enqueue_idx</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-</code></pre></div>
-
-
+<p><strong>Forward function</strong>
+<div class="highlight"><pre><span></span><code><span class="n">loss_fn</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">indices_tuple</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">enqueue_idx</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</code></pre></div></p>
 <p>As shown above, CrossBatchMemory comes with a 4th argument in its <code>forward</code> function:</p>
 <ul>
 <li><strong>enqueue_idx</strong>: The indices of <code>embeddings</code> that will be added to the memory queue. In other words, only <code>embeddings[enqueue_idx]</code> will be added to memory. This enables CrossBatchMemory to be used in self-supervision frameworks like <a href="https://arxiv.org/pdf/1911.05722.pdf">MoCo</a>. Check out the <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples#simple-examples">MoCo on CIFAR100</a> notebook to see how this works.</li>
 </ul>
 <h2 id="fastaploss">FastAPLoss<a class="headerlink" href="#fastaploss" title="Permanent link">&para;</a></h2>
 <p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Cakir_Deep_Metric_Learning_to_Rank_CVPR_2019_paper.pdf" target="_blank">Deep Metric Learning to Rank</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">FastAPLoss</span><span class="p">(</span><span class="n">num_bins</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">FastAPLoss</span><span class="p">(</span><span class="n">num_bins</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
-
-
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>num_bins</strong>: The number of soft histogram bins for calculating average precision. The paper suggests using 10.</li>
@@ -1207,29 +1223,23 @@
 <li><strong>loss</strong>: The loss per element that has at least 1 positive in the batch. Reduction type is <code>"element"</code>.</li>
 </ul>
 <h2 id="genericpairloss">GenericPairLoss<a class="headerlink" href="#genericpairloss" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">GenericPairLoss</span><span class="p">(</span><span class="n">mat_based_loss</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<p><div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">GenericPairLoss</span><span class="p">(</span><span class="n">mat_based_loss</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
-
-
-<p><strong>Parameters</strong>:</p>
+<strong>Parameters</strong>:</p>
 <ul>
 <li><strong>mat_based_loss</strong>: See required implementations.</li>
 </ul>
-<p><strong>Required Implementations</strong>:</p>
-<div class="codehilite"><pre><span></span><code><span class="c1"># If mat_based_loss is True, then this takes in mat, pos_mask, neg_mask</span>
+<p><strong>Required Implementations</strong>:
+<div class="highlight"><pre><span></span><code><span class="c1"># If mat_based_loss is True, then this takes in mat, pos_mask, neg_mask</span>
 <span class="c1"># If False, this takes in pos_pair, neg_pair, indices_tuple</span>
 <span class="k">def</span> <span class="nf">_compute_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
     <span class="k">raise</span> <span class="ne">NotImplementedError</span>
-</code></pre></div>
-
-
+</code></pre></div></p>
 <h2 id="generalizedliftedstructureloss">GeneralizedLiftedStructureLoss<a class="headerlink" href="#generalizedliftedstructureloss" title="Permanent link">&para;</a></h2>
 <p>This was presented in <a href="https://arxiv.org/pdf/1703.07737.pdf" target="_blank">In Defense of the Triplet Loss for Person Re-Identification</a>. It is a modification of the original <a href="./#liftedstructureloss">LiftedStructureLoss</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">GeneralizedLiftedStructureLoss</span><span class="p">(</span><span class="n">neg_margin</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">pos_margin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<p><div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">GeneralizedLiftedStructureLoss</span><span class="p">(</span><span class="n">neg_margin</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">pos_margin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
-
-
-<p><strong>Equation</strong>:</p>
+<strong>Equation</strong>:</p>
 <p><img alt="generalized_lifted_structure_loss_equation" src="../imgs/generalized_lifted_structure_loss_equation.png" style="height:250px" /></p>
 <p><strong>Parameters</strong>:</p>
 <ul>
@@ -1249,11 +1259,9 @@
 <li><strong>loss</strong>: The loss per element in the batch. Reduction type is <code>"element"</code>.</li>
 </ul>
 <h2 id="intrapairvarianceloss">IntraPairVarianceLoss<a class="headerlink" href="#intrapairvarianceloss" title="Permanent link">&para;</a></h2>
-<p><a href="http://openaccess.thecvf.com/content_ICCV_2019/papers/Yu_Deep_Metric_Learning_With_Tuplet_Margin_Loss_ICCV_2019_paper.pdf" target="_blank">Deep Metric Learning with Tuplet Margin Loss</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">IntraPairVarianceLoss</span><span class="p">(</span><span class="n">pos_eps</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">neg_eps</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</code></pre></div>
-
-
+<p><a href="http://openaccess.thecvf.com/content_ICCV_2019/papers/Yu_Deep_Metric_Learning_With_Tuplet_Margin_Loss_ICCV_2019_paper.pdf" target="_blank">Deep Metric Learning with Tuplet Margin Loss</a>
+<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">IntraPairVarianceLoss</span><span class="p">(</span><span class="n">pos_eps</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">neg_eps</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div></p>
 <p><strong>Equations</strong>:</p>
 <p><img alt="intra_pair_variance_loss_equation1" src="../imgs/intra_pair_variance_loss_equation1.png" style="height:39px" /></p>
 <p><img alt="intra_pair_variance_loss_equation2" src="../imgs/intra_pair_variance_loss_equation2.png" style="height:34px" /></p>
@@ -1262,13 +1270,11 @@
 <li><strong>pos_eps</strong>: The epsilon in the L<sub>pos</sub> equation. The paper uses 0.01.</li>
 <li><strong>neg_eps</strong>: The epsilon in the L<sub>neg</sub> equation. The paper uses 0.01.</li>
 </ul>
-<p>You should probably use this in conjunction with another loss, as described in the paper. You can accomplish this by using <a href="./#multiplelosses">MultipleLosses</a>:</p>
-<div class="codehilite"><pre><span></span><code><span class="n">main_loss</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">TupletMarginLoss</span><span class="p">()</span>
+<p>You should probably use this in conjunction with another loss, as described in the paper. You can accomplish this by using <a href="./#multiplelosses">MultipleLosses</a>:
+<div class="highlight"><pre><span></span><code><span class="n">main_loss</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">TupletMarginLoss</span><span class="p">()</span>
 <span class="n">var_loss</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">IntraPairVarianceLoss</span><span class="p">()</span>
 <span class="n">complete_loss</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">MultipleLosses</span><span class="p">([</span><span class="n">main_loss</span><span class="p">,</span> <span class="n">var_loss</span><span class="p">],</span> <span class="n">weights</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">])</span>
-</code></pre></div>
-
-
+</code></pre></div></p>
 <p><strong>Default distance</strong>: </p>
 <ul>
 <li><a href="../distances/#lpdistance"><code>LpDistance(normalize_embeddings=True, p=2, power=1)</code></a></li>
@@ -1284,14 +1290,12 @@
 </ul>
 <h2 id="largemarginsoftmaxloss">LargeMarginSoftmaxLoss<a class="headerlink" href="#largemarginsoftmaxloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1612.02295.pdf" target="_blank">Large-Margin Softmax Loss for Convolutional Neural Networks</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">LargeMarginSoftmaxLoss</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> 
+<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">LargeMarginSoftmaxLoss</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> 
                             <span class="n">embedding_size</span><span class="p">,</span> 
                             <span class="n">margin</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> 
                             <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
                             <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
-
-
 <p><strong>Equations</strong>:</p>
 <p><img alt="large_margin_softmax_loss_equation1" src="../imgs/large_margin_softmax_loss_equation1.png" style="height:80px" /></p>
 <p>where</p>
@@ -1306,15 +1310,13 @@
 <p><strong>Other info</strong>: </p>
 <ul>
 <li>This also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts <code>weight_regularizer</code>, <code>weight_reg_weight</code>, and <code>weight_init_func</code> as optional arguments.</li>
-<li>This loss <strong>requires an optimizer</strong>. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:</li>
-</ul>
-<div class="codehilite"><pre><span></span><code><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">LargeMarginSoftmaxLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span><span class="p">))</span>
+<li>This loss <strong>requires an optimizer</strong>. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
+<div class="highlight"><pre><span></span><code><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">LargeMarginSoftmaxLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span><span class="p">))</span>
 <span class="n">loss_optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">SGD</span><span class="p">(</span><span class="n">loss_func</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
 <span class="c1"># then during training:</span>
 <span class="n">loss_optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
-</code></pre></div>
-
-
+</code></pre></div></li>
+</ul>
 <p><strong>Default distance</strong>: </p>
 <ul>
 <li>
@@ -1334,10 +1336,8 @@
 </ul>
 <h2 id="liftedstructureloss">LiftedStructureLoss<a class="headerlink" href="#liftedstructureloss" title="Permanent link">&para;</a></h2>
 <p>The original lifted structure loss as presented in <a href="https://arxiv.org/pdf/1511.06452.pdf" target="_blank">Deep Metric Learning via Lifted Structured Feature Embedding</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">LiftedStructureLoss</span><span class="p">(</span><span class="n">neg_margin</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">pos_margin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">LiftedStructureLoss</span><span class="p">(</span><span class="n">neg_margin</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">pos_margin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 </code></pre></div>
-
-
 <p><strong>Equation</strong>:</p>
 <p><img alt="lifted_structure_loss_equation" src="../imgs/lifted_structure_loss_equation.png" style="height:150px" /></p>
 <p><strong>Parameters</strong>:</p>
@@ -1358,17 +1358,15 @@
 <li><strong>loss</strong>: The loss per positive pair in the batch. Reduction type is <code>"pos_pair"</code>.</li>
 </ul>
 <h2 id="marginloss">MarginLoss<a class="headerlink" href="#marginloss" title="Permanent link">&para;</a></h2>
-<p><a href="https://arxiv.org/pdf/1706.07567.pdf" target="_blank">Sampling Matters in Deep Embedding Learning</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">MarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> 
+<p><a href="https://arxiv.org/pdf/1706.07567.pdf" target="_blank">Sampling Matters in Deep Embedding Learning</a>
+<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">MarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> 
                 <span class="n">nu</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> 
                 <span class="n">beta</span><span class="o">=</span><span class="mf">1.2</span><span class="p">,</span> 
                 <span class="n">triplets_per_anchor</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span> 
                 <span class="n">learn_beta</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
                 <span class="n">num_classes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
                 <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</code></pre></div>
-
-
+</code></pre></div></p>
 <p><strong>Equations</strong>:</p>
 <p><img alt="margin_loss_equation2" src="../imgs/margin_loss_equation2.png" style="height:60px" /></p>
 <p>where</p>
@@ -1396,23 +1394,19 @@
 <li><strong>beta_reg_loss</strong>: The regularization loss per element in <code>self.beta</code>. Reduction type is <code>"already_reduced"</code> if <code>self.num_classes = None</code>. Otherwise it is <code>"element"</code>.</li>
 </ul>
 <h2 id="multiplelosses">MultipleLosses<a class="headerlink" href="#multiplelosses" title="Permanent link">&para;</a></h2>
-<p>This is a simple wrapper for multiple losses. Pass in a list of already-initialized loss functions. Then, when you call forward on this object, it will return the sum of all wrapped losses.</p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">MultipleLosses</span><span class="p">(</span><span class="n">losses</span><span class="p">,</span> <span class="n">miners</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<p>This is a simple wrapper for multiple losses. Pass in a list of already-initialized loss functions. Then, when you call forward on this object, it will return the sum of all wrapped losses.
+<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">MultipleLosses</span><span class="p">(</span><span class="n">losses</span><span class="p">,</span> <span class="n">miners</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
-
-
-<p><strong>Parameters</strong>:</p>
+<strong>Parameters</strong>:</p>
 <ul>
 <li><strong>losses</strong>: A list or dictionary of initialized loss functions. On the forward call of MultipleLosses, each wrapped loss will be computed, and then the average will be returned.</li>
 <li><strong>miners</strong>: Optional. A list or dictionary of mining functions. This allows you to pair mining functions with loss functions. For example, if <code>losses = [loss_A, loss_B]</code>, and <code>miners = [None, miner_B]</code> then no mining will be done for <code>loss_A</code>, but the output of <code>miner_B</code> will be passed to <code>loss_B</code>. The same logic applies if <code>losses = {"loss_A": loss_A, "loss_B": loss_B}</code> and <code>miners = {"loss_B": miner_B}</code>.</li>
 <li><strong>weights</strong>: Optional. A list or dictionary of loss weights, which will be multiplied by the corresponding losses obtained by the loss functions. The default is to multiply each loss by 1. If <code>losses</code> is a list, then <code>weights</code> must be a list. If <code>losses</code> is a dictionary, <code>weights</code> must contain the same keys as <code>losses</code>. </li>
 </ul>
 <h2 id="multisimilarityloss">MultiSimilarityLoss<a class="headerlink" href="#multisimilarityloss" title="Permanent link">&para;</a></h2>
-<p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf" target="_blank">Multi-Similarity Loss with General Pair Weighting for Deep Metric Learning</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">MultiSimilarityLoss</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</code></pre></div>
-
-
+<p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf" target="_blank">Multi-Similarity Loss with General Pair Weighting for Deep Metric Learning</a>
+<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">MultiSimilarityLoss</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div></p>
 <p><strong>Equation</strong>:</p>
 <p><img alt="multi_similarity_loss_equation" src="../imgs/multi_similarity_loss_equation.png" style="height:150px" /></p>
 <p><strong>Parameters</strong>:</p>
@@ -1434,11 +1428,9 @@
 <li><strong>loss</strong>: The loss per element in the batch. Reduction type is <code>"element"</code>.</li>
 </ul>
 <h2 id="ncaloss">NCALoss<a class="headerlink" href="#ncaloss" title="Permanent link">&para;</a></h2>
-<p><a href="https://www.cs.toronto.edu/~hinton/absps/nca.pdf" target="_blank">Neighbourhood Components Analysis</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">NCALoss</span><span class="p">(</span><span class="n">softmax_scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</code></pre></div>
-
-
+<p><a href="https://www.cs.toronto.edu/~hinton/absps/nca.pdf" target="_blank">Neighbourhood Components Analysis</a>
+<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">NCALoss</span><span class="p">(</span><span class="n">softmax_scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div></p>
 <p><strong>Equations</strong>:</p>
 <p><img alt="nca_loss_equation1" src="../imgs/nca_loss_equation1.png" style="height:50px" /></p>
 <p>where</p>
@@ -1462,11 +1454,9 @@
 <li><strong>loss</strong>: The loss per element in the batch, that results in a non zero exponent in the cross entropy expression. Reduction type is <code>"element"</code>.</li>
 </ul>
 <h2 id="normalizedsoftmaxloss">NormalizedSoftmaxLoss<a class="headerlink" href="#normalizedsoftmaxloss" title="Permanent link">&para;</a></h2>
-<p><a href="https://arxiv.org/pdf/1811.12649.pdf" target="_blank">Classification is a Strong Baseline for Deep Metric Learning</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">NormalizedSoftmaxLoss</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</code></pre></div>
-
-
+<p><a href="https://arxiv.org/pdf/1811.12649.pdf" target="_blank">Classification is a Strong Baseline for Deep Metric Learning</a>
+<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">NormalizedSoftmaxLoss</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div></p>
 <p><strong>Equation</strong>:</p>
 <p><img alt="normalized_softmax_loss_equation" src="../imgs/normalized_softmax_loss_equation.png" style="height:80px" /></p>
 <p><strong>Parameters</strong>:</p>
@@ -1478,15 +1468,13 @@
 <p><strong>Other info</strong></p>
 <ul>
 <li>This also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts <code>weight_regularizer</code>, <code>weight_reg_weight</code>, and <code>weight_init_func</code> as optional arguments.</li>
-<li>This loss <strong>requires an optimizer</strong>. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:</li>
-</ul>
-<div class="codehilite"><pre><span></span><code><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">NormalizedSoftmaxLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span><span class="p">))</span>
+<li>This loss <strong>requires an optimizer</strong>. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
+<div class="highlight"><pre><span></span><code><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">NormalizedSoftmaxLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span><span class="p">))</span>
 <span class="n">loss_optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">SGD</span><span class="p">(</span><span class="n">loss_func</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
 <span class="c1"># then during training:</span>
 <span class="n">loss_optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
-</code></pre></div>
-
-
+</code></pre></div></li>
+</ul>
 <p><strong>Default distance</strong>: </p>
 <ul>
 <li><a href="../distances/#dotproductsimilarity"><code>DotProductSimilarity()</code></a></li>
@@ -1502,10 +1490,8 @@
 <h2 id="npairsloss">NPairsLoss<a class="headerlink" href="#npairsloss" title="Permanent link">&para;</a></h2>
 <p><a href="http://www.nec-labs.com/uploads/images/Department-Images/MediaAnalytics/papers/nips16_npairmetriclearning.pdf" target="_blank">Improved Deep Metric Learning with Multi-class N-pair Loss Objective</a></p>
 <p>If your batch has more than 2 samples per label, then you should use <a href="#ntxentloss">NTXentLoss</a>.</p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">NPairsLoss</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">NPairsLoss</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
-
-
 <p><strong>Default distance</strong>: </p>
 <ul>
 <li><a href="../distances/#dotproductsimilarity"><code>DotProductSimilarity()</code></a></li>
@@ -1523,12 +1509,10 @@
 <ul>
 <li><a href="https://arxiv.org/pdf/1807.03748.pdf" target="_blank">Representation Learning with Contrastive Predictive Coding</a></li>
 <li><a href="https://arxiv.org/pdf/1911.05722.pdf" target="_blank">Momentum Contrast for Unsupervised Visual Representation Learning</a></li>
-<li><a href="https://arxiv.org/pdf/2002.05709.pdf" target="_blank">A Simple Framework for Contrastive Learning of Visual Representations</a></li>
+<li><a href="https://arxiv.org/pdf/2002.05709.pdf" target="_blank">A Simple Framework for Contrastive Learning of Visual Representations</a>
+<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">NTXentLoss</span><span class="p">(</span><span class="n">temperature</span><span class="o">=</span><span class="mf">0.07</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div></li>
 </ul>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">NTXentLoss</span><span class="p">(</span><span class="n">temperature</span><span class="o">=</span><span class="mf">0.07</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</code></pre></div>
-
-
 <p><strong>Equation</strong>:</p>
 <p><img alt="ntxent_loss_equation" src="../imgs/ntxent_loss_equation.png" style="height:70px" /></p>
 <p><strong>Parameters</strong>:</p>
@@ -1548,11 +1532,9 @@
 <li><strong>loss</strong>: The loss per positive pair in the batch. Reduction type is <code>"pos_pair"</code>.</li>
 </ul>
 <h2 id="proxyanchorloss">ProxyAnchorLoss<a class="headerlink" href="#proxyanchorloss" title="Permanent link">&para;</a></h2>
-<p><a href="https://arxiv.org/pdf/2003.13911.pdf" target="_blank">Proxy Anchor Loss for Deep Metric Learning</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">ProxyAnchorLoss</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">margin</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="mi">32</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</code></pre></div>
-
-
+<p><a href="https://arxiv.org/pdf/2003.13911.pdf" target="_blank">Proxy Anchor Loss for Deep Metric Learning</a>
+<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">ProxyAnchorLoss</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">margin</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="mi">32</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div></p>
 <p><strong>Equation</strong>:</p>
 <p><img alt="proxy_anchor_loss_equation" src="../imgs/proxy_anchor_loss_equation.png" style="height:150px" /></p>
 <p><strong>Parameters</strong>:</p>
@@ -1565,15 +1547,13 @@
 <p><strong>Other info</strong></p>
 <ul>
 <li>This also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts <code>weight_regularizer</code>, <code>weight_reg_weight</code>, and <code>weight_init_func</code> as optional arguments.</li>
-<li>This loss <strong>requires an optimizer</strong>. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:</li>
-</ul>
-<div class="codehilite"><pre><span></span><code><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">ProxyAnchorLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span><span class="p">))</span>
+<li>This loss <strong>requires an optimizer</strong>. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
+<div class="highlight"><pre><span></span><code><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">ProxyAnchorLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span><span class="p">))</span>
 <span class="n">loss_optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">SGD</span><span class="p">(</span><span class="n">loss_func</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
 <span class="c1"># then during training:</span>
 <span class="n">loss_optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
-</code></pre></div>
-
-
+</code></pre></div></li>
+</ul>
 <p><strong>Default distance</strong>: </p>
 <ul>
 <li><a href="../distances/#cosinesimilarity"><code>CosineSimilarity()</code></a></li>
@@ -1588,11 +1568,9 @@
 <li><strong>neg_loss</strong>: The negative pair loss per proxy. Reduction type is <code>"element"</code>.</li>
 </ul>
 <h2 id="proxyncaloss">ProxyNCALoss<a class="headerlink" href="#proxyncaloss" title="Permanent link">&para;</a></h2>
-<p><a href="https://arxiv.org/pdf/1703.07464.pdf" target="_blank">No Fuss Distance Metric Learning using Proxies</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">ProxyNCALoss</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">softmax_scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</code></pre></div>
-
-
+<p><a href="https://arxiv.org/pdf/1703.07464.pdf" target="_blank">No Fuss Distance Metric Learning using Proxies</a>
+<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">ProxyNCALoss</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">softmax_scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div></p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>num_classes</strong>: The number of classes in your training dataset.</li>
@@ -1602,15 +1580,13 @@
 <p><strong>Other info</strong></p>
 <ul>
 <li>This also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts <code>weight_regularizer</code>, <code>weight_reg_weight</code>, and <code>weight_init_func</code> as optional arguments.</li>
-<li>This loss <strong>requires an optimizer</strong>. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:</li>
-</ul>
-<div class="codehilite"><pre><span></span><code><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">ProxyNCALoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span><span class="p">))</span>
+<li>This loss <strong>requires an optimizer</strong>. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
+<div class="highlight"><pre><span></span><code><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">ProxyNCALoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span><span class="p">))</span>
 <span class="n">loss_optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">SGD</span><span class="p">(</span><span class="n">loss_func</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
 <span class="c1"># then during training:</span>
 <span class="n">loss_optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
-</code></pre></div>
-
-
+</code></pre></div></li>
+</ul>
 <p><strong>Default distance</strong>: </p>
 <ul>
 <li><a href="../distances/#lpdistance"><code>LpDistance(normalize_embeddings=True, p=2, power=2)</code></a></li>
@@ -1624,11 +1600,9 @@
 <li><strong>loss</strong>: The loss per element in the batch, that results in a non zero exponent in the cross entropy expression. Reduction type is <code>"element"</code>.</li>
 </ul>
 <h2 id="signaltonoiseratiocontrastiveloss">SignalToNoiseRatioContrastiveLoss<a class="headerlink" href="#signaltonoiseratiocontrastiveloss" title="Permanent link">&para;</a></h2>
-<p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Yuan_Signal-To-Noise_Ratio_A_Robust_Distance_Metric_for_Deep_Metric_Learning_CVPR_2019_paper.pdf" target="_blank">Signal-to-Noise Ratio: A Robust Distance Metric for Deep Metric Learning</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">SignalToNoiseRatioContrastiveLoss</span><span class="p">(</span><span class="n">pos_margin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">neg_margin</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</code></pre></div>
-
-
+<p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Yuan_Signal-To-Noise_Ratio_A_Robust_Distance_Metric_for_Deep_Metric_Learning_CVPR_2019_paper.pdf" target="_blank">Signal-to-Noise Ratio: A Robust Distance Metric for Deep Metric Learning</a>
+<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">SignalToNoiseRatioContrastiveLoss</span><span class="p">(</span><span class="n">pos_margin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">neg_margin</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</code></pre></div></p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>pos_margin</strong>: The noise-to-signal ratio over which positive pairs will contribute to the loss.</li>
@@ -1651,17 +1625,15 @@
 <li><strong>neg_loss</strong>: The loss per negative pair in the batch. Reduction type is <code>"neg_pair"</code>.</li>
 </ul>
 <h2 id="softtripleloss">SoftTripleLoss<a class="headerlink" href="#softtripleloss" title="Permanent link">&para;</a></h2>
-<p><a href="http://openaccess.thecvf.com/content_ICCV_2019/papers/Qian_SoftTriple_Loss_Deep_Metric_Learning_Without_Triplet_Sampling_ICCV_2019_paper.pdf" target="_blank">SoftTriple Loss: Deep Metric Learning Without Triplet Sampling</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">SoftTripleLoss</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> 
+<p><a href="http://openaccess.thecvf.com/content_ICCV_2019/papers/Qian_SoftTriple_Loss_Deep_Metric_Learning_Without_Triplet_Sampling_ICCV_2019_paper.pdf" target="_blank">SoftTriple Loss: Deep Metric Learning Without Triplet Sampling</a>
+<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">SoftTripleLoss</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> 
                     <span class="n">embedding_size</span><span class="p">,</span> 
                     <span class="n">centers_per_class</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> 
                     <span class="n">la</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> 
                     <span class="n">gamma</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> 
                     <span class="n">margin</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span>
                     <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</code></pre></div>
-
-
+</code></pre></div></p>
 <p><strong>Equations</strong>:</p>
 <p><img alt="soft_triple_loss_equation1" src="../imgs/soft_triple_loss_equation1.png" style="height:100px" /></p>
 <p>where</p>
@@ -1678,15 +1650,13 @@
 <p><strong>Other info</strong></p>
 <ul>
 <li>This also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts <code>weight_regularizer</code>, <code>weight_reg_weight</code>, and <code>weight_init_func</code> as optional arguments.</li>
-<li>This loss <strong>requires an optimizer</strong>. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:</li>
-</ul>
-<div class="codehilite"><pre><span></span><code><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">SoftTripleLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span><span class="p">))</span>
+<li>This loss <strong>requires an optimizer</strong>. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
+<div class="highlight"><pre><span></span><code><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">SoftTripleLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span><span class="p">))</span>
 <span class="n">loss_optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">SGD</span><span class="p">(</span><span class="n">loss_func</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
 <span class="c1"># then during training:</span>
 <span class="n">loss_optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
-</code></pre></div>
-
-
+</code></pre></div></li>
+</ul>
 <p><strong>Default distance</strong>: </p>
 <ul>
 <li><a href="../distances/#cosinesimilarity"><code>CosineSimilarity()</code></a><ul>
@@ -1704,28 +1674,24 @@
 </ul>
 <h2 id="spherefaceloss">SphereFaceLoss<a class="headerlink" href="#spherefaceloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/1704.08063.pdf" target="_blank">SphereFace: Deep Hypersphere Embedding for Face Recognition</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">SphereFaceLoss</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> 
+<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">SphereFaceLoss</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> 
                     <span class="n">embedding_size</span><span class="p">,</span> 
                     <span class="n">margin</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> 
                     <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
                     <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
-
-
 <p><strong>Parameters</strong>:</p>
 <p>See <a href="./#largemarginsoftmaxloss">LargeMarginSoftmaxLoss</a></p>
 <p><strong>Other info</strong></p>
 <ul>
 <li>This also extends <a href="./#weightregularizermixin">WeightRegularizerMixin</a>, so it accepts <code>weight_regularizer</code>, <code>weight_reg_weight</code>, and <code>weight_init_func</code> as optional arguments.</li>
-<li>This loss <strong>requires an optimizer</strong>. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:</li>
-</ul>
-<div class="codehilite"><pre><span></span><code><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">SphereFaceLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span><span class="p">))</span>
+<li>This loss <strong>requires an optimizer</strong>. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
+<div class="highlight"><pre><span></span><code><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">SphereFaceLoss</span><span class="p">(</span><span class="o">...</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span><span class="p">))</span>
 <span class="n">loss_optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">SGD</span><span class="p">(</span><span class="n">loss_func</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">lr</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
 <span class="c1"># then during training:</span>
 <span class="n">loss_optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
-</code></pre></div>
-
-
+</code></pre></div></li>
+</ul>
 <p><strong>Default distance</strong>: </p>
 <ul>
 <li>
@@ -1744,11 +1710,9 @@
 <li><strong>loss</strong>: The loss per element in the batch. Reduction type is <code>"element"</code>.</li>
 </ul>
 <h2 id="supconloss">SupConLoss<a class="headerlink" href="#supconloss" title="Permanent link">&para;</a></h2>
-<p>Described in <a href="https://arxiv.org/abs/2004.11362" target="_blank">Supervised Contrastive Learning</a>.</p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">SupConLoss</span><span class="p">(</span><span class="n">temperature</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</code></pre></div>
-
-
+<p>Described in <a href="https://arxiv.org/abs/2004.11362" target="_blank">Supervised Contrastive Learning</a>.
+<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">SupConLoss</span><span class="p">(</span><span class="n">temperature</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div></p>
 <p><strong>Equation</strong>:</p>
 <p><img alt="supcon_loss_equation" src="../imgs/supcon_loss_equation.png" style="height:90px" /></p>
 <p><strong>Parameters</strong>:</p>
@@ -1768,14 +1732,12 @@
 <li><strong>loss</strong>: The loss per element in the batch. If an element has only negative pairs or no pairs, it's ignored thanks to <code>AvgNonZeroReducer</code>. Reduction type is <code>"element"</code>.</li>
 </ul>
 <h2 id="tripletmarginloss">TripletMarginLoss<a class="headerlink" href="#tripletmarginloss" title="Permanent link">&para;</a></h2>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">TripletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">TripletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
                         <span class="n">swap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                         <span class="n">smooth_loss</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                         <span class="n">triplets_per_anchor</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span>
                         <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
-
-
 <p><strong>Equation</strong>:</p>
 <p><img alt="triplet_margin_loss_equation" src="../imgs/triplet_margin_loss_equation.png" style="height:35px" /></p>
 <p><strong>Parameters</strong>:</p>
@@ -1798,11 +1760,9 @@
 <li><strong>loss</strong>: The loss per triplet in the batch. Reduction type is <code>"triplet"</code>.</li>
 </ul>
 <h2 id="tupletmarginloss">TupletMarginLoss<a class="headerlink" href="#tupletmarginloss" title="Permanent link">&para;</a></h2>
-<p><a href="http://openaccess.thecvf.com/content_ICCV_2019/papers/Yu_Deep_Metric_Learning_With_Tuplet_Margin_Loss_ICCV_2019_paper.pdf" target="_blank">Deep Metric Learning with Tuplet Margin Loss</a></p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">TupletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mf">5.73</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</code></pre></div>
-
-
+<p><a href="http://openaccess.thecvf.com/content_ICCV_2019/papers/Yu_Deep_Metric_Learning_With_Tuplet_Margin_Loss_ICCV_2019_paper.pdf" target="_blank">Deep Metric Learning with Tuplet Margin Loss</a>
+<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">TupletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mf">5.73</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div></p>
 <p><strong>Equation</strong>:</p>
 <p><img alt="tuplet_margin_loss_equation" src="../imgs/tuplet_margin_loss_equation.png" style="height:80px" /></p>
 <p><strong>Parameters</strong>:</p>
@@ -1810,13 +1770,11 @@
 <li><strong>margin</strong>: The angular margin (in degrees) applied to positive pairs. This is beta in the above equation. The paper uses a value of 5.73 degrees (0.1 radians).</li>
 <li><strong>scale</strong>: This is <code>s</code> in the above equation.</li>
 </ul>
-<p>The paper combines this loss with <a href="./#intrapairvarianceloss">IntraPairVarianceLoss</a>. You can accomplish this by using <a href="./#multiplelosses">MultipleLosses</a>:</p>
-<div class="codehilite"><pre><span></span><code><span class="n">main_loss</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">TupletMarginLoss</span><span class="p">()</span>
+<p>The paper combines this loss with <a href="./#intrapairvarianceloss">IntraPairVarianceLoss</a>. You can accomplish this by using <a href="./#multiplelosses">MultipleLosses</a>:
+<div class="highlight"><pre><span></span><code><span class="n">main_loss</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">TupletMarginLoss</span><span class="p">()</span>
 <span class="n">var_loss</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">IntraPairVarianceLoss</span><span class="p">()</span>
 <span class="n">complete_loss</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">MultipleLosses</span><span class="p">([</span><span class="n">main_loss</span><span class="p">,</span> <span class="n">var_loss</span><span class="p">],</span> <span class="n">weights</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">])</span>
-</code></pre></div>
-
-
+</code></pre></div></p>
 <p><strong>Default distance</strong>: </p>
 <ul>
 <li>
@@ -1835,11 +1793,9 @@
 <li><strong>loss</strong>: The loss per positive pair in the batch. Reduction type is <code>"pos_pair"</code>.</li>
 </ul>
 <h2 id="weightregularizermixin">WeightRegularizerMixin<a class="headerlink" href="#weightregularizermixin" title="Permanent link">&para;</a></h2>
-<p>Losses can extend this class in addition to BaseMetricLossFunction. You should extend this class if your loss function contains a learnable weight matrix.</p>
-<div class="codehilite"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">WeightRegularizerMixin</span><span class="p">(</span><span class="n">weight_init_func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight_regularizer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight_reg_weight</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</code></pre></div>
-
-
+<p>Losses can extend this class in addition to BaseMetricLossFunction. You should extend this class if your loss function contains a learnable weight matrix.
+<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">WeightRegularizerMixin</span><span class="p">(</span><span class="n">weight_init_func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight_regularizer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight_reg_weight</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div></p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>weight_init_func</strong>: An <a href="../common_functions/#torchinitwrapper">TorchInitWrapper</a> object, which will be used to initialize the weights of the loss function.</li>
@@ -1867,45 +1823,46 @@
             </article>
           </div>
         </div>
+        
       </main>
       
         
 <footer class="md-footer">
   
-    <div class="md-footer-nav">
-      <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
+    <nav class="md-footer__inner md-grid" aria-label="Footer">
+      
         
-          <a href="../distances/" title="Distances" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
-            <div class="md-footer-nav__button md-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+        <a href="../distances/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Distances" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              Distances
             </div>
-            <div class="md-footer-nav__title">
-              <div class="md-ellipsis">
-                <span class="md-footer-nav__direction">
-                  Previous
-                </span>
-                Distances
-              </div>
-            </div>
-          </a>
+          </div>
+        </a>
+      
+      
         
-        
-          <a href="../miners/" title="Miners" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
-            <div class="md-footer-nav__title">
-              <div class="md-ellipsis">
-                <span class="md-footer-nav__direction">
-                  Next
-                </span>
-                Miners
-              </div>
+        <a href="../miners/" class="md-footer__link md-footer__link--next" aria-label="Next: Miners" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              Miners
             </div>
-            <div class="md-footer-nav__button md-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
-            </div>
-          </a>
-        
-      </nav>
-    </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
   
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
@@ -1915,6 +1872,7 @@
         <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
           Material for MkDocs
         </a>
+        
       </div>
       
     </div>
@@ -1922,19 +1880,13 @@
 </footer>
       
     </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": "..", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../assets/javascripts/workers/search.409db549.min.js", "version": null}</script>
     
-      <script src="../assets/javascripts/vendor.92ffa368.min.js"></script>
-      <script src="../assets/javascripts/bundle.5123e3d4.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
-      
-      <script>
-        app = initialize({
-          base: "..",
-          features: [],
-          search: Object.assign({
-            worker: "../assets/javascripts/worker/search.a68abb33.min.js"
-          }, typeof search !== "undefined" && search)
-        })
-      </script>
+    
+      <script src="../assets/javascripts/bundle.756773cc.min.js"></script>
       
     
   </body>

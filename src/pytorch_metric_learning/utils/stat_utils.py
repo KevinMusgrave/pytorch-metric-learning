@@ -33,6 +33,10 @@ class Faiss:
 
 
 class FaissKNN(Faiss):
+    def __init__(self, reset_after_use=True, **kwargs):
+        super().__init__(**kwargs)
+        self.reset_after_use = reset_after_use
+
     def __call__(
         self,
         query,
@@ -57,6 +61,8 @@ class FaissKNN(Faiss):
         )
         distances = c_f.to_device(distances, device=device)
         indices = c_f.to_device(indices, device=device)
+        if self.reset_after_use:
+            self.index = None
         if embeddings_come_from_same_source:
             return indices[:, 1:], distances[:, 1:]
         return indices, distances
@@ -120,7 +126,7 @@ def try_gpu(index, query, reference, k, is_cuda):
                 f"Using CPU for k-nn search because k = {k} > {max_k_for_gpu}, which is the maximum allowable on GPU."
             )
         cpu_index = convert_to_cpu_index(index)
-        return add_to_index_and_search(cpu_index, reference.cpu(), query.cpu(), k)
+        return add_to_index_and_search(cpu_index, query.cpu(), reference.cpu(), k)
 
 
 # modified from https://github.com/facebookresearch/faiss/wiki/Faiss-building-blocks:-clustering,-PCA,-quantization

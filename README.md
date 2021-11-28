@@ -63,6 +63,12 @@
 
 ## News
 
+**November 28**: v1.0.0 includes:
+- Reference embeddings for tuple losses
+- Efficient mode for DistributedLossWrapper
+- Customized k-nn functions for AccuracyCalculator
+- See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v1.0.0)
+
 **May 9**: v0.9.99 includes:
 - [HierarchicalSampler](https://kevinmusgrave.github.io/pytorch-metric-learning/samplers/#hierarchicalsampler)
 - Improvements to logging, trainer key-verification, and InferenceModel
@@ -73,12 +79,6 @@
 - A bug fix for compatibility with autocast
 - New behavior for the ```k``` parameter of AccuracyCalculator. (Apologies for the breaking change. I'm hoping to have things stable and following semantic versioning when v1.0 arrives.)
 - See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.98)
-
-**March 3**: v0.9.97 has various bug fixes and improvements: 
-- Bug fixes for [NTXentLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#ntxentloss)
-- Efficiency improvement for [AccuracyCalculator](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/), by using torch instead of numpy
-- [UniformHistogramMiner](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#uniformhistogramminer), which is like DistanceWeightedMiner except that it works well with high dimensional embeddings, and with any distance metric.
-- See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.97) for details.
 
 ## Documentation
 - [**View the documentation here**](https://kevinmusgrave.github.io/pytorch-metric-learning/)
@@ -297,6 +297,9 @@ Thanks to the contributors who made pull requests!
 | [joaqo](https://github.com/joaqo) | |
 | [JoOkuma](https://github.com/JoOkuma) | |
 | [gkouros](https://github.com/gkouros) | |
+| [yutanakamura-tky](https://github.com/yutanakamura-tky) | |
+| [KinglittleQ](https://github.com/KinglittleQ) | |
+
 
 ### Facebook AI
 Thank you to [Ser-Nam Lim](https://research.fb.com/people/lim-ser-nam/) at [Facebook AI](https://ai.facebook.com/), and my research advisor, [Professor Serge Belongie](https://vision.cornell.edu/se3/people/serge-belongie/). This project began during my internship at Facebook AI where I received valuable feedback from Ser-Nam, and his team of computer vision and machine learning engineers and research scientists. In particular, thanks to [Ashish Shah](https://www.linkedin.com/in/ashish217/) and [Austin Reiter](https://www.linkedin.com/in/austin-reiter-3962aa7/) for reviewing my code during its early stages of development.

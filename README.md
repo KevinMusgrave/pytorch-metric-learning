@@ -206,6 +206,8 @@ Other dependencies: ```numpy, scikit-learn, tqdm, torchvision```
 ```
 pip install pytorch-metric-learning
 ```
+<details>
+  <summary>Other installation options</summary>
 
 **To get the latest dev version**:
 ```
@@ -231,13 +233,16 @@ pip install pytorch-metric-learning[with-hooks]
 ```
 pip install pytorch-metric-learning[with-hooks-cpu]
 ```
-
+	
 ### Conda
 ```
 conda install pytorch-metric-learning -c metric-learning -c pytorch
 ```
 
 **To use the testing module, you'll need faiss, which can be installed via conda as well. See the [installation instructions for faiss](https://github.com/facebookresearch/faiss/blob/master/INSTALL.md).**
+
+</details>
+	
 
 
 ## Benchmark results

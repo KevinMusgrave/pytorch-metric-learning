@@ -587,7 +587,11 @@
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>loss</strong>: The loss function to wrap</li>
-<li><strong>efficient</strong>: If False, memory usage is not optimal, but the resulting gradients will be identical to the non-distributed code. If True, memory usage is decreased, but gradients will differ from non-distributed code. </li>
+<li><strong>efficient</strong>:<ul>
+<li><code>True</code>: each process uses its own embeddings for anchors, and the gathered embeddings for positives/negatives. Gradients will <strong>not</strong> be equal to those in non-distributed code, but the benefit is reduced memory and faster training.</li>
+<li><code>False</code>: each process uses gathered embeddings for both anchors and positives/negatives. Gradients will be equal to those in non-distributed code, but at the cost of doing unnecessary operations (i.e. doing computations where both anchors and positives/negatives have no gradient).</li>
+</ul>
+</li>
 </ul>
 <p>Example usage:
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">losses</span>

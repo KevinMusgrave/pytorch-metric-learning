@@ -8,21 +8,10 @@
      <img alt="PyPi version" src="https://badge.fury.io/py/pytorch-metric-learning.svg">
  </a>
  
-<a href="https://pypistats.org/packages/pytorch-metric-learning">
-     <img alt="PyPi stats" src="https://img.shields.io/pypi/dm/pytorch-metric-learning">
- </a>
- 
  <a href="https://anaconda.org/metric-learning/pytorch-metric-learning">
      <img alt="Anaconda version" src="https://img.shields.io/conda/v/metric-learning/pytorch-metric-learning?color=bright-green">
  </a>
-
-<a href="https://anaconda.org/metric-learning/pytorch-metric-learning">
-     <img alt="Anaconda downloads" src="https://img.shields.io/conda/dn/metric-learning/pytorch-metric-learning?color=bright-green">
- </a>
  
-</p>
-
- <p align="center">
 <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/commits/master">
      <img alt="Commit activity" src="https://img.shields.io/github/commit-activity/m/KevinMusgrave/pytorch-metric-learning">
  </a>

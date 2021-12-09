@@ -11,7 +11,9 @@ utils.distributed.DistributedLossWrapper(loss, efficient=False)
 **Parameters**:
 
 * **loss**: The loss function to wrap
-* **efficient**: If False, memory usage is not optimal, but the resulting gradients will be identical to the non-distributed code. If True, memory usage is decreased, but gradients will differ from non-distributed code. 
+* **efficient**:
+    * ```True```: each process uses its own embeddings for anchors, and the gathered embeddings for positives/negatives. Gradients will **not** be equal to those in non-distributed code, but the benefit is reduced memory and faster training.
+    * ```False```: each process uses gathered embeddings for both anchors and positives/negatives. Gradients will be equal to those in non-distributed code, but at the cost of doing unnecessary operations (i.e. doing computations where both anchors and positives/negatives have no gradient).
 
 Example usage:
 ```python
@@ -33,7 +35,7 @@ utils.distributed.DistributedMinerWrapper(miner, efficient=False)
 **Parameters**:
 
 * **miner**: The miner to wrap
-* **efficient**: If False, memory usage is not optimal, but the resulting gradients will be identical to the non-distributed code. If True, memory usage is decreased, but gradients will differ from non-distributed code. 
+* **efficient**: If your distributed loss function has ```efficient=True``` then you must also set the distributed miner's ```efficient``` to True.
 
 Example usage:
 ```python

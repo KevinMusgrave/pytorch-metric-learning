@@ -10,7 +10,7 @@ loss = loss_func(embeddings, labels) # in your training for-loop
 Or if you are using a loss in conjunction with a [miner](miners.md):
 
 ```python
-from pytorch_metric_learning import miners, losses
+from pytorch_metric_learning import miners
 miner_func = miners.SomeMiner()
 loss_func = losses.SomeLoss()
 miner_output = miner_func(embeddings, labels) # in your training for-loop
@@ -19,7 +19,7 @@ loss = loss_func(embeddings, labels, miner_output)
 
 You can specify how losses get reduced to a single value by using a [reducer](reducers.md):
 ```python
-from pytorch_metric_learning import losses, reducers
+from pytorch_metric_learning import reducers
 reducer = reducers.SomeReducer()
 loss_func = losses.SomeLoss(reducer=reducer)
 loss = loss_func(embeddings, labels) # in your training for-loop
@@ -27,11 +27,16 @@ loss = loss_func(embeddings, labels) # in your training for-loop
 
 For tuple losses, can separate the source of anchors and positives/negatives:
 ```python
-from pytorch_metric_learning import losses
 loss_func = losses.SomeLoss()
 # anchors will come from embeddings
 # positives/negatives will come from ref_emb
 loss = loss_func(embeddings, labels, ref_emb=ref_emb, ref_labels=ref_labels)
+```
+
+For classification losses, you can get logits using the ```get_logits``` function:
+```python
+loss_func = losses.SomeClassificationLoss()
+logits = loss_func.get_logits(embeddings)
 ```
 
 

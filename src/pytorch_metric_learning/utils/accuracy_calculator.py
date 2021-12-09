@@ -229,8 +229,12 @@ class AccuracyCalculator:
         self.check_primary_metrics(include, exclude)
         self.original_function_dict = self.get_function_dict(include, exclude)
         self.curr_function_dict = self.get_function_dict()
+
+        if avg_of_avgs and return_per_class:
+            raise ValueError("avg_of_avgs and return_per_class are mutually exclusive")
         self.avg_of_avgs = avg_of_avgs
         self.return_per_class = return_per_class
+
         self.device = c_f.use_cuda_if_available() if device is None else device
         self.knn_func = FaissKNN() if knn_func is None else knn_func
         self.kmeans_func = (

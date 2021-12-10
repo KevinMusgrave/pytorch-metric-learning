@@ -23,12 +23,12 @@ This class is equivalent to using ```ThresholdReducer(low=0)```. See [ThresholdR
 ## BaseReducer
 All reducers extend this class.
 ```python
-reducers.BaseReducer(collect_stats=True)
+reducers.BaseReducer(collect_stats=False)
 ```
 
 **Parameters**:
 
-* **collect_stats**: If True, will collect various statistics that may be useful to analyze during experiments. If False, these computations will be skipped. Want to make ```False``` the default? Set the global [COLLECT_STATS](common_functions.md#collect_stats) flag.
+* **collect_stats**: If True, will collect various statistics that may be useful to analyze during experiments. If False, these computations will be skipped. Want to make ```True``` the default? Set the global [COLLECT_STATS](common_functions.md#collect_stats) flag.
 
 
 ## ClassWeightedReducer

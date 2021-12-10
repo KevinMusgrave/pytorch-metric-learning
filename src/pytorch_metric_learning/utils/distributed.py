@@ -1,7 +1,9 @@
 import torch
-from torch.nn.parallel import DistributedDataParallel as DDP
 
+from ..losses import BaseMetricLossFunction
+from ..miners import BaseMiner
 from ..utils import common_functions as c_f
+from ..utils import loss_and_miner_utils as lmu
 
 
 # modified from https://github.com/allenai/allennlp
@@ -10,62 +12,87 @@ def is_distributed():
 
 
 # modified from https://github.com/JohnGiorgi/DeCLUTR
-def all_gather(embeddings, labels):
-    labels = c_f.to_device(labels, embeddings)
+def all_gather(x):
+    world_size = torch.distributed.get_world_size()
+    if world_size > 1:
+        rank = torch.distributed.get_rank()
+        x_list = [torch.ones_like(x) for _ in range(world_size)]
+        torch.distributed.all_gather(x_list, x.contiguous())
+        # remove curr rank
+        x_list.pop(rank)
+        return torch.cat(x_list, dim=0)
+    return None
+
+
+# modified from https://github.com/JohnGiorgi/DeCLUTR
+def all_gather_embeddings_and_labels(embeddings, labels):
     # If we are not using distributed training, this is a no-op.
     if not is_distributed():
-        return embeddings, labels
-    world_size = torch.distributed.get_world_size()
+        return None, None
+    ref_emb = all_gather(embeddings)
+    ref_labels = all_gather(labels)
+    return ref_emb, ref_labels
+
+
+def gather(embeddings, labels):
+    device = embeddings.device
+    labels = c_f.to_device(labels, device=device)
     rank = torch.distributed.get_rank()
-    # Gather the embeddings on all replicas
-    embeddings_list = [torch.ones_like(embeddings) for _ in range(world_size)]
-    labels_list = [torch.ones_like(labels) for _ in range(world_size)]
-    torch.distributed.all_gather(embeddings_list, embeddings.contiguous())
-    torch.distributed.all_gather(labels_list, labels.contiguous())
-    # The gathered copy of the current replicas embeddings have no gradients, so we overwrite
-    # them with the embeddings generated on this replica, which DO have gradients.
-    embeddings_list[rank] = embeddings
-    labels_list[rank] = labels
-    # Finally, we concatenate the embeddings
-    embeddings = torch.cat(embeddings_list)
-    labels = torch.cat(labels_list)
-    return embeddings, labels
+    dist_ref_emb, dist_ref_labels = all_gather_embeddings_and_labels(embeddings, labels)
+    all_emb = torch.cat([embeddings, dist_ref_emb], dim=0)
+    all_labels = torch.cat([labels, dist_ref_labels], dim=0)
+    return all_emb, all_labels, labels, device
 
 
-def all_gather_embeddings_labels(embeddings, labels):
-    if c_f.is_list_or_tuple(embeddings):
-        assert c_f.is_list_or_tuple(labels)
-        all_embeddings, all_labels = [], []
-        for i in range(len(embeddings)):
-            E, L = all_gather(embeddings[i], labels[i])
-            all_embeddings.append(E)
-            all_labels.append(L)
-        embeddings = torch.cat(all_embeddings, dim=0)
-        labels = torch.cat(all_labels, dim=0)
+def get_indices_tuple(
+    labels, ref_labels, device, embeddings=None, ref_emb=None, miner=None
+):
+    curr_batch_idx = torch.arange(len(labels), device=device)
+    if miner:
+        indices_tuple = miner(embeddings, labels, ref_emb, ref_labels)
     else:
-        embeddings, labels = all_gather(embeddings, labels)
-
-    return embeddings, labels
+        indices_tuple = lmu.get_all_pairs_indices(labels, ref_labels)
+    return lmu.remove_self_comparisons(indices_tuple, curr_batch_idx, len(ref_labels))
 
 
 class DistributedLossWrapper(torch.nn.Module):
-    def __init__(self, loss, **kwargs):
+    def __init__(self, loss, efficient=False):
         super().__init__()
-        has_parameters = len([p for p in loss.parameters()]) > 0
-        self.loss = DDP(loss, **kwargs) if has_parameters else loss
+        if not isinstance(loss, BaseMetricLossFunction):
+            raise TypeError("The input loss must extend BaseMetricLossFunction")
+        self.loss = loss
+        self.efficient = efficient
 
-    def forward(self, embeddings, labels, *args, **kwargs):
-        embeddings, labels = all_gather_embeddings_labels(embeddings, labels)
-        return self.loss(embeddings, labels, *args, **kwargs)
+    def forward(self, embeddings, labels, indices_tuple=None):
+        world_size = torch.distributed.get_world_size()
+        if world_size <= 1:
+            return self.loss(embeddings, labels, indices_tuple)
+
+        all_emb, all_labels, labels, device = gather(embeddings, labels)
+
+        if self.efficient:
+            if indices_tuple is None:
+                indices_tuple = get_indices_tuple(labels, all_labels, device)
+            loss = self.loss(embeddings, labels, indices_tuple, all_emb, all_labels)
+        else:
+            loss = self.loss(all_emb, all_labels, indices_tuple)
+
+        return loss * world_size
 
 
 class DistributedMinerWrapper(torch.nn.Module):
-    def __init__(self, miner):
+    def __init__(self, miner, efficient=False):
         super().__init__()
+        if not isinstance(miner, BaseMiner):
+            raise TypeError("The input miner must extend BaseMiner")
         self.miner = miner
+        self.efficient = efficient
 
-    def forward(self, embeddings, labels, ref_emb=None, ref_labels=None):
-        embeddings, labels = all_gather_embeddings_labels(embeddings, labels)
-        if ref_emb is not None:
-            ref_emb, ref_labels = all_gather_embeddings_labels(ref_emb, ref_labels)
-        return self.miner(embeddings, labels, ref_emb, ref_labels)
+    def forward(self, embeddings, labels):
+        all_emb, all_labels, labels, device = gather(embeddings, labels)
+        if self.efficient:
+            return get_indices_tuple(
+                labels, all_labels, device, embeddings, all_emb, self.miner
+            )
+        else:
+            return self.miner(all_emb, all_labels)

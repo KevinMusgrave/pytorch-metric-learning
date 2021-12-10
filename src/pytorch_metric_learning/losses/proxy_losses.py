@@ -16,7 +16,8 @@ class ProxyNCALoss(WeightRegularizerMixin, NCALoss):
     def cast_types(self, dtype, device):
         self.proxies.data = c_f.to_device(self.proxies.data, device=device, dtype=dtype)
 
-    def compute_loss(self, embeddings, labels, indices_tuple):
+    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+        c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
         dtype, device = embeddings.dtype, embeddings.device
         self.cast_types(dtype, device)
         loss_dict = self.nca_computation(
@@ -28,3 +29,6 @@ class ProxyNCALoss(WeightRegularizerMixin, NCALoss):
         )
         self.add_weight_regularization_to_loss_dict(loss_dict, self.proxies)
         return loss_dict
+
+    def get_logits(self, embeddings):
+        return self.distance(embeddings, self.proxies)

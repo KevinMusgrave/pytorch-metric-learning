@@ -8,7 +8,10 @@ AccuracyCalculator(include=(),
                     exclude=(),
                     avg_of_avgs=False,
                     k=None,
-                    label_comparison_fn=None)
+                    label_comparison_fn=None,
+                    device=None,
+                    knn_func=None,
+                    kmeans_func=None)
 ```
 ### Parameters
 
@@ -20,12 +23,20 @@ AccuracyCalculator(include=(),
     * An integer greater than 0. This means k will be set to the input integer.
     * ```"max_bin_count"```. This means k will be set to ```max(bincount(reference_labels)) - self_count``` where ```self_count == 1``` if the query and reference embeddings come from the same source.
 * **label_comparison_fn**: A function that compares two torch arrays of labels and returns a boolean array. The default is ```torch.eq```. If a custom function is used, then you must exclude clustering based metrics ("NMI" and "AMI"). The following is an example of a custom function for two-dimensional labels. It returns ```True``` if the 0th column matches, and the 1st column does **not** match:
+* **device**: The device to move input tensors to. If ```None```, will default to GPUs if available.
+* **knn_func**: A callable that takes in 4 arguments (```query, k, reference, embeddings_come_from_same_source```) and returns ```distances, indices```. Default is ```pytorch_metric_learning.utils.inference.FaissKNN```.
+* **kmeans_func**: A callable that takes in 2 arguments (```x, nmb_clusters```) and returns a 1-d tensor of cluster assignments. Default is ```pytorch_metric_learning.utils.inference.FaissKMeans```.
 ```python
+from pytorch_metric_learning.distances import SNRDistance
+from pytorch_metric_learning.utils.inference import CustomKNN
+
 def example_label_comparison_fn(x, y):
     return (x[:, 0] == y[:, 0]) & (x[:, 1] != y[:, 1])
 
+knn_func = CustomKNN(SNRDistance())
 AccuracyCalculator(exclude=("NMI", "AMI"), 
-                    label_comparison_fn=example_label_comparison_fn)
+                    label_comparison_fn=example_label_comparison_fn,
+                    knn_func=knn_func)
 ```
 
 ### Getting accuracy
@@ -49,6 +60,7 @@ def get_accuracy(self,
 # "r_precision"
 # "mean_average_precision_at_r"
 ```
+
 * **query**: A 2D torch or numpy array of size ```(Nq, D)```, where Nq is the number of query samples. For each query sample, nearest neighbors are retrieved and accuracy is computed.
 * **reference**: A 2D torch or numpy array of size ```(Nr, D)```, where Nr is the number of reference samples. This is where nearest neighbors are retrieved from.
 * **query_labels**: A 1D torch or numpy array of size ```(Nq)```. Each element should be an integer representing the sample's label.

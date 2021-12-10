@@ -4,9 +4,9 @@ import numpy as np
 import torch
 
 from pytorch_metric_learning.losses import TupletMarginLoss
-from pytorch_metric_learning.utils import common_functions as c_f
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, WITH_COLLECT_STATS
+from ..zzz_testing_utils import testing_utils
 
 
 class TestTupletMarginLoss(unittest.TestCase):
@@ -17,7 +17,7 @@ class TestTupletMarginLoss(unittest.TestCase):
         for dtype in TEST_DTYPES:
             embedding_angles = [0, 20, 40, 60, 80]
             embeddings = torch.tensor(
-                [c_f.angle_to_coord(a) for a in embedding_angles],
+                [testing_utils.angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
             ).to(
@@ -49,7 +49,7 @@ class TestTupletMarginLoss(unittest.TestCase):
             ]
 
             correct_total = 0
-
+            embeddings = torch.nn.functional.normalize(embeddings)
             for a1, p in pos_pairs:
                 curr_loss = 0
                 anchor1, positive = embeddings[a1], embeddings[p]
@@ -70,12 +70,16 @@ class TestTupletMarginLoss(unittest.TestCase):
             rtol = 1e-2 if dtype == torch.float16 else 1e-5
             self.assertTrue(torch.isclose(loss, correct_total, rtol=rtol))
 
+            testing_utils.is_not_none_if_condition(
+                self, loss_func, ["avg_pos_angle", "avg_neg_angle"], WITH_COLLECT_STATS
+            )
+
     def test_with_no_valid_pairs(self):
         loss_func = TupletMarginLoss(0.1, 64)
         for dtype in TEST_DTYPES:
             embedding_angles = [0]
             embeddings = torch.tensor(
-                [c_f.angle_to_coord(a) for a in embedding_angles],
+                [testing_utils.angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
             ).to(

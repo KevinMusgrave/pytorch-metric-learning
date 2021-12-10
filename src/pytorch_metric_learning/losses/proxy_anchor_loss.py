@@ -27,7 +27,8 @@ class ProxyAnchorLoss(WeightRegularizerMixin, BaseMetricLossFunction):
     def cast_types(self, dtype, device):
         self.proxies.data = c_f.to_device(self.proxies.data, device=device, dtype=dtype)
 
-    def compute_loss(self, embeddings, labels, indices_tuple):
+    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+        c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
         dtype, device = embeddings.dtype, embeddings.device
         self.cast_types(dtype, device)
         miner_weights = lmu.convert_to_weights(
@@ -35,7 +36,7 @@ class ProxyAnchorLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         ).unsqueeze(1)
         miner_weights = miner_weights - 1
 
-        cos = self.distance(embeddings, self.proxies)
+        cos = self.get_logits(embeddings)
 
         pos_mask = torch.nn.functional.one_hot(labels, self.num_classes)
         neg_mask = 1 - pos_mask
@@ -90,3 +91,6 @@ class ProxyAnchorLoss(WeightRegularizerMixin, BaseMetricLossFunction):
 
     def _sub_loss_names(self):
         return ["pos_loss", "neg_loss"]
+
+    def get_logits(self, embeddings):
+        return self.distance(embeddings, self.proxies)

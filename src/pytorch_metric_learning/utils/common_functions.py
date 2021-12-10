@@ -11,7 +11,7 @@ import torch
 LOGGER_NAME = "PML"
 LOGGER = logging.getLogger(LOGGER_NAME)
 NUMPY_RANDOM = np.random
-COLLECT_STATS = True
+COLLECT_STATS = False
 
 
 def set_logger_name(name):
@@ -223,7 +223,7 @@ def get_labels_to_indices(labels):
     for i, label in enumerate(labels):
         labels_to_indices[label].append(i)
     for k, v in labels_to_indices.items():
-        labels_to_indices[k] = np.array(v, dtype=np.int)
+        labels_to_indices[k] = np.array(v, dtype=int)
     return labels_to_indices
 
 
@@ -265,7 +265,7 @@ class LabelMapper:
             return labels
         else:
             return np.array(
-                [self.label_map[hierarchy_level][x] for x in labels], dtype=np.int
+                [self.label_map[hierarchy_level][x] for x in labels], dtype=int
             )
 
 
@@ -405,14 +405,8 @@ def return_input(x):
     return x
 
 
-def angle_to_coord(angle):
-    x = np.cos(np.radians(angle))
-    y = np.sin(np.radians(angle))
-    return x, y
-
-
 def check_shapes(embeddings, labels):
-    if embeddings.size(0) != labels.size(0):
+    if embeddings.shape[0] != labels.shape[0]:
         raise ValueError("Number of embeddings must equal number of labels")
     if embeddings.ndim != 2:
         raise ValueError(
@@ -497,9 +491,33 @@ def to_device(x, tensor=None, device=None, dtype=None):
     return x
 
 
+def set_ref_emb(embeddings, labels, ref_emb, ref_labels):
+    if ref_emb is not None:
+        if not torch.is_tensor(ref_labels):
+            TypeError("if ref_emb is given, then ref_labels must also be given")
+        ref_labels = to_device(ref_labels, ref_emb)
+    else:
+        ref_emb, ref_labels = embeddings, labels
+    check_shapes(ref_emb, ref_labels)
+    return ref_emb, ref_labels
+
+
+def ref_not_supported(embeddings, labels, ref_emb, ref_labels):
+    if ref_emb is not embeddings or ref_labels is not labels:
+        raise ValueError("ref_emb is not supported for this loss function")
+
+
+def concatenate_indices_tuples(it1, it2):
+    return tuple([torch.cat([x, to_device(y, x)], dim=0) for x, y in zip(it1, it2)])
+
+
 def exclude(it, targets):
     return [x for x in it if x not in targets]
 
 
 def append_map(it, suf):
     return [x + suf for x in it]
+
+
+def use_cuda_if_available():
+    return torch.device("cuda" if torch.cuda.is_available() else "cpu")

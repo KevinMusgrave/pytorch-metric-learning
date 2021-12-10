@@ -108,7 +108,8 @@ class TestMetricLossOnly(unittest.TestCase):
                 )
 
                 batch_size = 32
-                iterations_per_epoch = None if splits_to_eval is None else 1
+                iterations_per_epoch = 10
+                log_freq = 2
                 model_dict = {"trunk": model}
                 optimizer_dict = {"trunk_optimizer": optimizer}
                 loss_fn_dict = {"metric_loss": loss_fn}
@@ -123,7 +124,7 @@ class TestMetricLossOnly(unittest.TestCase):
                     logs_folder, tensorboard_folder
                 )
                 hooks = logging_presets.get_hook_container(
-                    record_keeper, primary_metric="precision_at_1"
+                    record_keeper, primary_metric="precision_at_1", log_freq=log_freq
                 )
                 dataset_dict = {"train": train_dataset_for_eval, "val": val_dataset}
 
@@ -134,7 +135,7 @@ class TestMetricLossOnly(unittest.TestCase):
                     ),
                     data_device=TEST_DEVICE,
                     dtype=dtype,
-                    dataloader_num_workers=32,
+                    dataloader_num_workers=2,
                 )
 
                 end_of_epoch_hook = hooks.end_of_epoch_hook(
@@ -156,21 +157,18 @@ class TestMetricLossOnly(unittest.TestCase):
                     sampler=sampler,
                     data_device=TEST_DEVICE,
                     dtype=dtype,
-                    dataloader_num_workers=32,
+                    dataloader_num_workers=2,
                     iterations_per_epoch=iterations_per_epoch,
                     freeze_trunk_batchnorm=True,
                     end_of_iteration_hook=hooks.end_of_iteration_hook,
                     end_of_epoch_hook=end_of_epoch_hook,
                 )
 
-                num_epochs = 3
+                num_epochs = 2
                 trainer.train(num_epochs=num_epochs)
                 best_epoch, best_accuracy = hooks.get_best_epoch_and_accuracy(
                     tester, "val"
                 )
-                if splits_to_eval is None:
-                    self.assertTrue(best_epoch == 3)
-                    self.assertTrue(best_accuracy > 0.2)
 
                 accuracies, primary_metric_key = hooks.get_accuracies_of_best_epoch(
                     tester, "val"
@@ -199,7 +197,7 @@ class TestMetricLossOnly(unittest.TestCase):
                 if splits_to_eval is None:
                     self.assertTrue(
                         len(loss_history["metric_loss"])
-                        == (len(sampler) / batch_size) * num_epochs
+                        == (iterations_per_epoch / log_freq) * num_epochs
                     )
 
                 curr_primary_metric = hooks.get_curr_primary_metric(tester, "val")

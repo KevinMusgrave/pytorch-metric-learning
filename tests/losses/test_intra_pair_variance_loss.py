@@ -3,9 +3,9 @@ import unittest
 import torch
 
 from pytorch_metric_learning.losses import IntraPairVarianceLoss
-from pytorch_metric_learning.utils import common_functions as c_f
 
 from .. import TEST_DEVICE, TEST_DTYPES
+from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 
 class TestIntraPairVarianceLoss(unittest.TestCase):
@@ -16,7 +16,7 @@ class TestIntraPairVarianceLoss(unittest.TestCase):
         for dtype in TEST_DTYPES:
             embedding_angles = [0, 20, 40, 60, 80]
             embeddings = torch.tensor(
-                [c_f.angle_to_coord(a) for a in embedding_angles],
+                [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
             ).to(
@@ -50,6 +50,7 @@ class TestIntraPairVarianceLoss(unittest.TestCase):
             pos_total, neg_total = 0, 0
             mean_pos = 0
             mean_neg = 0
+            embeddings = torch.nn.functional.normalize(embeddings)
             for a, p in pos_pairs:
                 mean_pos += torch.matmul(embeddings[a], embeddings[p])
             for a, n in neg_pairs:
@@ -89,7 +90,7 @@ class TestIntraPairVarianceLoss(unittest.TestCase):
         for dtype in TEST_DTYPES:
             embedding_angles = [0]
             embeddings = torch.tensor(
-                [c_f.angle_to_coord(a) for a in embedding_angles],
+                [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
             ).to(

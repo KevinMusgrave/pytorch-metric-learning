@@ -11,7 +11,6 @@ import numpy as np
 import copy
 from collections import defaultdict
 
-
 def concat_indices_tuple(x):
     return [torch.cat(y) for y in zip(*x)]
 
@@ -46,9 +45,8 @@ class CentroidTripletLoss(BaseMetricLossFunction):
         "During training stage each mini-batch contains 𝑃 distinct item
         classes with 𝑀 samples per class, resulting in batch size of 𝑃 × 𝑀."
         '''
-        masks, class_masks, labels_dict, query_indices = self.create_masks_train(labels)
-        unique_classes = list(labels_dict.keys())
-        labels_list = list(labels_dict.values())
+        masks, class_masks, labels_list, query_indices = self.create_masks_train(labels)
+     
         P = len(labels_list)
         M = max([len(instances) for instances in labels_list])
         DIM = embeddings.size(-1)
@@ -95,7 +93,7 @@ class CentroidTripletLoss(BaseMetricLossFunction):
         query_labels = query_labels.view((P, M)).transpose(0, 1)
         positive_centroids_emb = positive_centroids_emb.view((P, M, -1)).transpose(0, 1)
         valid_mask = valid_mask.view((P, M)).transpose(0, 1)
-        
+
         labels_collect = []
         embeddings_collect = []
         tuple_indices_collect = []
@@ -129,7 +127,6 @@ class CentroidTripletLoss(BaseMetricLossFunction):
                 # make only neg_centroids be negative examples
                 indices_tuple = [x.chunk(len(one_labels), dim=1)[-1].flatten() for x in indices_tuple]
 
-                # print("embeddings_concat", embeddings_concat)
 
                 tuple_indices_collect.append(indices_tuple)
                 embeddings_collect.append(embeddings_concat)
@@ -174,7 +171,7 @@ class CentroidTripletLoss(BaseMetricLossFunction):
                     masks[matrix_idx, ones] = 1
                 else:
                     query_indices.append(0)
-        return masks, class_masks, labels_dict, query_indices
+        return masks, class_masks, labels_list, query_indices
 
     def get_default_reducer(self):
         return AvgNonZeroReducer()

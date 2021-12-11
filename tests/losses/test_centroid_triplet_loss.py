@@ -1,7 +1,6 @@
 import unittest
 
 import torch
-
 from itertools import chain
 
 from pytorch_metric_learning.distances import CosineSimilarity
@@ -91,7 +90,7 @@ class TestCentroidTripletLoss(unittest.TestCase):
                 [[30, 40, 55], [0, 10, 20]],
                 [[30, 40, 55], [60, 70, 80, 90]],
                 [[30, 40, 50], [0, 10, 20]],
-                [[30, 50, 50], [60, 70, 80, 90]],
+                [[30, 40, 50], [60, 70, 80, 90]],
 
                 [[70, 80, 90], [0, 10, 20]],
                 [[70, 80, 90], [30, 40, 50, 55]],
@@ -111,7 +110,6 @@ class TestCentroidTripletLoss(unittest.TestCase):
                 (1, (3, 0), (3, 1)),
                 (2, (4, 0), (4, 1)),
                 (2, (5, 0), (5, 1)),
-
                 (3, (6, 0), (6, 1)),
                 (3, (7, 0), (7, 1)),
                 (4, (8, 0), (8, 1)),
@@ -120,7 +118,6 @@ class TestCentroidTripletLoss(unittest.TestCase):
                 (5, (11, 0), (11, 1)),
                 (6, (12, 0), (12, 1)),
                 (6, (13, 0), (13, 1)),
-
                 (7, (14, 0), (14, 1)),
                 (7, (15, 0), (15, 1)),
                 (8, (16, 0), (16, 1)),
@@ -135,16 +132,6 @@ class TestCentroidTripletLoss(unittest.TestCase):
         
     
     def helper(self, embedding_angles, centroid_makers, labels, triplets, dtype, ref_emb=None, ref_labels=None):
-        margin = 0.2
-        loss_funcA = CentroidTripletLoss(margin=margin)
-        loss_funcB = CentroidTripletLoss(margin=margin, reducer=MeanReducer())
-        loss_funcC = CentroidTripletLoss(margin=margin, distance=CosineSimilarity())
-        loss_funcD = CentroidTripletLoss(
-            margin=margin, reducer=MeanReducer(), distance=CosineSimilarity()
-        )
-        loss_funcE = CentroidTripletLoss(margin=margin, smooth_loss=True)
-        
-        # embedding_angles = chain(*per_class_angles)
         embeddings = torch.tensor(
             [angle_to_coord(a) for a in embedding_angles],
             requires_grad=True,
@@ -158,14 +145,23 @@ class TestCentroidTripletLoss(unittest.TestCase):
                     requires_grad=True,
                     dtype=dtype).to(TEST_DEVICE) 
                     for a in coords
-                ]).sum(-2) / len(coords)
+                ]).mean(-2)
                 for coords in one_maker
             ] for one_maker in centroid_makers
         ]
-            
-            
+         
+
+        margin = 0.2
+        loss_funcA = CentroidTripletLoss(margin=margin)
+        loss_funcB = CentroidTripletLoss(margin=margin, reducer=MeanReducer())
+        loss_funcC = CentroidTripletLoss(margin=margin, distance=CosineSimilarity())
+        loss_funcD = CentroidTripletLoss(
+            margin=margin, reducer=MeanReducer(), distance=CosineSimilarity()
+        )
+        loss_funcE = CentroidTripletLoss(margin=margin, smooth_loss=True)
+                    
         [lossA, lossB, lossC, lossD, lossE] = [
-            x(embeddings, labels)
+            x(embeddings, labels, ref_emb=ref_emb, ref_labels=ref_labels)
             for x in [loss_funcA, loss_funcB, loss_funcC, loss_funcD, loss_funcE]
         ]
 
@@ -177,15 +173,9 @@ class TestCentroidTripletLoss(unittest.TestCase):
         
         for a, pc, nc in triplets:
             anchor = embeddings[a]
-            if type(pc) == int:
-                positive = embeddings[pc]
-            else:
-                positive = centroids[pc[0]][pc[1]]
-
-            if type(nc) == int:
-                negative = embeddings[nc]
-            else:
-                negative = centroids[nc[0]][nc[1]]
+           
+            positive = centroids[pc[0]][pc[1]]
+            negative = centroids[nc[0]][nc[1]]
 
             anchor = normalize(anchor)
             positive = normalize(positive)
@@ -198,7 +188,6 @@ class TestCentroidTripletLoss(unittest.TestCase):
             curr_loss_cosine = torch.relu(
                 torch.sum(anchor * negative) - torch.sum(anchor * positive) + margin
             )
-
             correct_smooth_loss += torch.nn.functional.softplus(
                 ap_dist - an_dist + margin
             )
@@ -209,18 +198,11 @@ class TestCentroidTripletLoss(unittest.TestCase):
             correct_loss += curr_loss
             correct_loss_cosine += curr_loss_cosine
 
-        
         rtol = 1e-2 if dtype == torch.float16 else 1e-5
-            
         self.assertTrue(
             torch.isclose(lossA, correct_loss / num_non_zero_triplets, rtol=rtol)
         )
-        self.assertTrue(
-            torch.isclose(lossB, correct_loss / len(triplets), rtol=rtol)
-        )
-
-        print("lossC", lossC)
-        print("correct_loss_cosine / num_non_zero_triplets_cosine", correct_loss_cosine / num_non_zero_triplets_cosine)
+        self.assertTrue(torch.isclose(lossB, correct_loss / len(triplets), rtol=rtol))
         self.assertTrue(
             torch.isclose(
                 lossC, correct_loss_cosine / num_non_zero_triplets_cosine, rtol=rtol
@@ -229,12 +211,9 @@ class TestCentroidTripletLoss(unittest.TestCase):
         self.assertTrue(
             torch.isclose(lossD, correct_loss_cosine / len(triplets), rtol=rtol)
         )
-        print("lossE", lossE)
-        print("correct_smooth_loss / len(triplets)", correct_smooth_loss / len(triplets))
         self.assertTrue(
             torch.isclose(lossE, correct_smooth_loss / len(triplets), rtol=rtol)
         )
-        print()
 
             
     def test_backward(self):

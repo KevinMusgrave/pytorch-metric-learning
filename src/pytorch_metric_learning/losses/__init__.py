@@ -26,4 +26,3 @@ from .sphereface_loss import SphereFaceLoss
 from .supcon_loss import SupConLoss
 from .triplet_margin_loss import TripletMarginLoss
 from .tuplet_margin_loss import TupletMarginLoss
-

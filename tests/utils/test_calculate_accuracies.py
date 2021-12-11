@@ -11,12 +11,14 @@ from pytorch_metric_learning.utils.inference import CustomKNN, FaissKNN
 from .. import TEST_DEVICE
 
 
-def isclose(x, y):
+def isclose(x, y, many=False):
     rtol = 0
     if TEST_DEVICE == torch.device("cpu"):
         atol = 1e-15
     else:
         atol = 1e-7
+    if many:
+        return np.allclose(x, y, atol=atol, rtol=rtol)
     return np.isclose(x, y, atol=atol, rtol=rtol)
 
 
@@ -40,75 +42,109 @@ class TestCalculateAccuracies(unittest.TestCase):
         label_counts2 = ([6, 7, 8, 9], [3, 5, 4, 5])
 
         for avg_of_avgs in [False, True]:
-            for i, (knn_labels, label_counts) in enumerate(
-                [(knn_labels1, label_counts1), (knn_labels2, label_counts2)]
-            ):
+            for return_per_class in [False, True]:
+                for i, (knn_labels, label_counts) in enumerate(
+                    [(knn_labels1, label_counts1), (knn_labels2, label_counts2)]
+                ):
+                    init_kwargs = {
+                        "exclude": ("NMI", "AMI"),
+                        "avg_of_avgs": avg_of_avgs,
+                        "return_per_class": return_per_class,
+                        "device": TEST_DEVICE,
+                    }
 
-                AC = accuracy_calculator.AccuracyCalculator(
-                    exclude=("NMI", "AMI"), avg_of_avgs=avg_of_avgs, device=TEST_DEVICE
-                )
-                kwargs = {
-                    "query_labels": query_labels,
-                    "label_counts": label_counts,
-                    "knn_labels": knn_labels,
-                    "not_lone_query_mask": torch.ones(5, dtype=torch.bool)
-                    if i == 0
-                    else torch.zeros(5, dtype=torch.bool),
-                }
+                    if avg_of_avgs and return_per_class:
+                        self.assertRaises(
+                            ValueError,
+                            lambda: accuracy_calculator.AccuracyCalculator(
+                                **init_kwargs
+                            ),
+                        )
+                        continue
 
-                function_dict = AC.get_function_dict()
+                    AC = accuracy_calculator.AccuracyCalculator(**init_kwargs)
+                    kwargs = {
+                        "query_labels": query_labels,
+                        "label_counts": label_counts,
+                        "knn_labels": knn_labels,
+                        "not_lone_query_mask": torch.ones(5, dtype=torch.bool)
+                        if i == 0
+                        else torch.zeros(5, dtype=torch.bool),
+                    }
 
-                for ecfss in [False, True]:
-                    if ecfss:
-                        kwargs["knn_labels"] = kwargs["knn_labels"][:, 1:]
-                    kwargs["embeddings_come_from_same_source"] = ecfss
-                    acc = AC._get_accuracy(function_dict, **kwargs)
-                    if i == 1:
-                        self.assertTrue(acc["precision_at_1"] == 0)
-                        self.assertTrue(acc["r_precision"] == 0)
-                        self.assertTrue(acc["mean_average_precision_at_r"] == 0)
-                        self.assertTrue(acc["mean_average_precision"] == 0)
-                    else:
-                        self.assertTrue(
-                            isclose(
-                                acc["precision_at_1"],
-                                self.correct_precision_at_1(ecfss, avg_of_avgs),
-                            )
-                        )
-                        self.assertTrue(
-                            isclose(
-                                acc["r_precision"],
-                                self.correct_r_precision(ecfss, avg_of_avgs),
-                            )
-                        )
-                        self.assertTrue(
-                            isclose(
-                                acc["mean_average_precision_at_r"],
-                                self.correct_mean_average_precision_at_r(
-                                    ecfss, avg_of_avgs
-                                ),
-                            )
-                        )
-                        self.assertTrue(
-                            isclose(
-                                acc["mean_average_precision"],
-                                self.correct_mean_average_precision(ecfss, avg_of_avgs),
-                            )
-                        )
+                    function_dict = AC.get_function_dict()
 
-    def correct_precision_at_1(self, embeddings_come_from_same_source, avg_of_avgs):
+                    for ecfss in [False, True]:
+                        if ecfss:
+                            kwargs["knn_labels"] = kwargs["knn_labels"][:, 1:]
+                        kwargs["embeddings_come_from_same_source"] = ecfss
+                        acc = AC._get_accuracy(function_dict, **kwargs)
+                        if i == 1:
+                            zero_acc = 0 if not return_per_class else [0, 0, 0, 0]
+                            self.assertTrue(acc["precision_at_1"] == zero_acc)
+                            self.assertTrue(acc["r_precision"] == zero_acc)
+                            self.assertTrue(
+                                acc["mean_average_precision_at_r"] == zero_acc
+                            )
+                            self.assertTrue(acc["mean_average_precision"] == zero_acc)
+                        else:
+                            self.assertTrue(
+                                isclose(
+                                    acc["precision_at_1"],
+                                    self.correct_precision_at_1(
+                                        ecfss, avg_of_avgs, return_per_class
+                                    ),
+                                    many=return_per_class,
+                                )
+                            )
+                            self.assertTrue(
+                                isclose(
+                                    acc["r_precision"],
+                                    self.correct_r_precision(
+                                        ecfss, avg_of_avgs, return_per_class
+                                    ),
+                                    many=return_per_class,
+                                )
+                            )
+                            self.assertTrue(
+                                isclose(
+                                    acc["mean_average_precision_at_r"],
+                                    self.correct_mean_average_precision_at_r(
+                                        ecfss, avg_of_avgs, return_per_class
+                                    ),
+                                    many=return_per_class,
+                                )
+                            )
+                            self.assertTrue(
+                                isclose(
+                                    acc["mean_average_precision"],
+                                    self.correct_mean_average_precision(
+                                        ecfss, avg_of_avgs, return_per_class
+                                    ),
+                                    many=return_per_class,
+                                )
+                            )
+
+    def correct_precision_at_1(
+        self, embeddings_come_from_same_source, avg_of_avgs, return_per_class
+    ):
         if not embeddings_come_from_same_source:
-            if not avg_of_avgs:
+            accs = [0.5, 0, 1, 0]
+            if not (avg_of_avgs or return_per_class):
                 return 0.4
-            else:
-                return (0.5 + 0 + 1 + 0) / 4
         else:
-            if not avg_of_avgs:
-                return 1.0 / 5
-            else:
-                return (0.5 + 0 + 0 + 0) / 4
+            accs = [0.5, 0, 0, 0]
+            if not (avg_of_avgs or return_per_class):
+                return 0.2
 
-    def correct_r_precision(self, embeddings_come_from_same_source, avg_of_avgs):
+        if avg_of_avgs:
+            return np.mean(accs)
+        if return_per_class:
+            return accs
+
+    def correct_r_precision(
+        self, embeddings_come_from_same_source, avg_of_avgs, return_per_class
+    ):
         if not embeddings_come_from_same_source:
             acc0 = 2.0 / 3
             acc1 = 2.0 / 3
@@ -121,13 +157,16 @@ class TestCalculateAccuracies(unittest.TestCase):
             acc2 = 1.0 / 4
             acc3 = 1.0 / 3
             acc4 = 1.0 / 4
-        if not avg_of_avgs:
-            return np.mean([acc0, acc1, acc2, acc3, acc4])
+        accs = [(acc0 + acc1) / 2, acc2, acc3, acc4]
+        if avg_of_avgs:
+            return np.mean(accs)
+        elif return_per_class:
+            return accs
         else:
-            return np.mean([(acc0 + acc1) / 2, acc2, acc3, acc4])
+            return np.mean([acc0, acc1, acc2, acc3, acc4])
 
     def correct_mean_average_precision_at_r(
-        self, embeddings_come_from_same_source, avg_of_avgs
+        self, embeddings_come_from_same_source, avg_of_avgs, return_per_class
     ):
         if not embeddings_come_from_same_source:
             acc0 = (1.0 / 2 + 2.0 / 3) / 3
@@ -141,13 +180,16 @@ class TestCalculateAccuracies(unittest.TestCase):
             acc2 = (1.0 / 4) / 4
             acc3 = (1.0 / 2) / 3
             acc4 = (1.0 / 2) / 4
-        if not avg_of_avgs:
-            return np.mean([acc0, acc1, acc2, acc3, acc4])
+        accs = [(acc0 + acc1) / 2, acc2, acc3, acc4]
+        if avg_of_avgs:
+            return np.mean(accs)
+        elif return_per_class:
+            return accs
         else:
-            return np.mean([(acc0 + acc1) / 2, acc2, acc3, acc4])
+            return np.mean([acc0, acc1, acc2, acc3, acc4])
 
     def correct_mean_average_precision(
-        self, embeddings_come_from_same_source, avg_of_avgs
+        self, embeddings_come_from_same_source, avg_of_avgs, return_per_class
     ):
         if not embeddings_come_from_same_source:
             acc0 = (1.0 / 2 + 2.0 / 3) / 2
@@ -161,10 +203,13 @@ class TestCalculateAccuracies(unittest.TestCase):
             acc2 = 1.0 / 4
             acc3 = (1.0 / 2 + 2.0 / 4) / 2
             acc4 = 1.0 / 2
-        if not avg_of_avgs:
-            return np.mean([acc0, acc1, acc2, acc3, acc4])
+        accs = [(acc0 + acc1) / 2, acc2, acc3, acc4]
+        if avg_of_avgs:
+            return np.mean(accs)
+        elif return_per_class:
+            return accs
         else:
-            return np.mean([(acc0 + acc1) / 2, acc2, acc3, acc4])
+            return np.mean([acc0, acc1, acc2, acc3, acc4])
 
     def test_get_lone_query_labels_custom(self):
         def fn1(x, y):

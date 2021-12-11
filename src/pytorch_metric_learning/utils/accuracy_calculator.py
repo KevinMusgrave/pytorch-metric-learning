@@ -10,11 +10,15 @@ from .inference import FaissKMeans, FaissKNN
 EQUALITY = torch.eq
 
 
+def get_unique_labels(labels):
+    return torch.unique(labels, dim=0)
+
+
 def maybe_get_avg_of_avgs(
     accuracy_per_sample, sample_labels, avg_of_avgs, return_per_class
 ):
     if avg_of_avgs or return_per_class:
-        unique_labels = torch.unique(sample_labels, dim=0)
+        unique_labels = get_unique_labels(sample_labels)
         mask = c_f.torch_all_from_dim_to_end(
             sample_labels == unique_labels.unsqueeze(1), 2
         )
@@ -152,7 +156,7 @@ def precision_at_k(
 
 
 def get_label_match_counts(query_labels, reference_labels, label_comparison_fn):
-    unique_query_labels = torch.unique(query_labels, dim=0)
+    unique_query_labels = get_unique_labels(query_labels)
     if label_comparison_fn is EQUALITY:
         comparison = unique_query_labels[:, None] == reference_labels
         match_counts = torch.sum(c_f.torch_all_from_dim_to_end(comparison, 2), dim=1)
@@ -205,6 +209,12 @@ def try_getting_not_lone_labels(knn_labels, query_labels, not_lone_query_mask):
         knn_labels[not_lone_query_mask],
         query_labels[not_lone_query_mask],
     )
+
+
+def zero_accuracy(unique_labels, return_per_class):
+    if return_per_class:
+        return [0 for _ in range(len(unique_labels))]
+    return 0
 
 
 class AccuracyCalculator:
@@ -299,13 +309,13 @@ class AccuracyCalculator:
         return adjusted_mutual_info_score(query_labels, cluster_labels)
 
     def calculate_precision_at_1(
-        self, knn_labels, query_labels, not_lone_query_mask, **kwargs
+        self, knn_labels, query_labels, not_lone_query_mask, label_counts, **kwargs
     ):
         knn_labels, query_labels = try_getting_not_lone_labels(
             knn_labels, query_labels, not_lone_query_mask
         )
         if knn_labels is None:
-            return 0
+            return zero_accuracy(label_counts[0], self.return_per_class)
         return precision_at_k(
             knn_labels,
             query_labels[:, None],
@@ -328,7 +338,7 @@ class AccuracyCalculator:
             knn_labels, query_labels, not_lone_query_mask
         )
         if knn_labels is None:
-            return 0
+            return zero_accuracy(label_counts[0], self.return_per_class)
         return mean_average_precision_at_r(
             knn_labels,
             query_labels[:, None],
@@ -345,13 +355,14 @@ class AccuracyCalculator:
         query_labels,
         not_lone_query_mask,
         embeddings_come_from_same_source,
+        label_counts,
         **kwargs,
     ):
         knn_labels, query_labels = try_getting_not_lone_labels(
             knn_labels, query_labels, not_lone_query_mask
         )
         if knn_labels is None:
-            return 0
+            return zero_accuracy(label_counts[0], self.return_per_class)
 
         return mean_average_precision(
             knn_labels,
@@ -375,7 +386,7 @@ class AccuracyCalculator:
             knn_labels, query_labels, not_lone_query_mask
         )
         if knn_labels is None:
-            return 0
+            return zero_accuracy(label_counts[0], self.return_per_class)
         return r_precision(
             knn_labels,
             query_labels[:, None],

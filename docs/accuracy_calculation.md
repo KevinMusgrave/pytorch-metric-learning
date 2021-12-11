@@ -7,6 +7,7 @@ from pytorch_metric_learning.utils.accuracy_calculator import AccuracyCalculator
 AccuracyCalculator(include=(),
                     exclude=(),
                     avg_of_avgs=False,
+                    return_per_class=False,
                     k=None,
                     label_comparison_fn=None,
                     device=None,
@@ -18,6 +19,7 @@ AccuracyCalculator(include=(),
 * **include**: Optional. A list or tuple of strings, which are the names of metrics you want to calculate. If left empty, all default metrics will be calculated.
 * **exclude**: Optional. A list or tuple of strings, which are the names of metrics you **do not** want to calculate.
 * **avg_of_avgs**: If True, the average accuracy per class is computed, and then the average of those averages is returned. This can be useful if your dataset has unbalanced classes. If False, the global average will be returned.
+* **return_per_class**: If True, the average accuracy per class is computed and returned.
 * **k**: The number of nearest neighbors that will be retrieved for metrics that require k-nearest neighbors. The allowed values are:
     * ```None```. This means k will be set to the total number of reference embeddings.
     * An integer greater than 0. This means k will be set to the input integer.

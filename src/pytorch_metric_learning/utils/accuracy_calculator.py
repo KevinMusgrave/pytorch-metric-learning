@@ -10,9 +10,15 @@ from .inference import FaissKMeans, FaissKNN
 EQUALITY = torch.eq
 
 
-def maybe_get_avg_of_avgs(accuracy_per_sample, sample_labels, avg_of_avgs):
-    if avg_of_avgs:
-        unique_labels = torch.unique(sample_labels, dim=0)
+def get_unique_labels(labels):
+    return torch.unique(labels, dim=0)
+
+
+def maybe_get_avg_of_avgs(
+    accuracy_per_sample, sample_labels, avg_of_avgs, return_per_class
+):
+    if avg_of_avgs or return_per_class:
+        unique_labels = get_unique_labels(sample_labels)
         mask = c_f.torch_all_from_dim_to_end(
             sample_labels == unique_labels.unsqueeze(1), 2
         )
@@ -20,6 +26,8 @@ def maybe_get_avg_of_avgs(accuracy_per_sample, sample_labels, avg_of_avgs):
         acc_sum_per_class = torch.sum(accuracy_per_sample.unsqueeze(1) * mask, dim=0)
         mask_sum_per_class = torch.sum(mask, dim=0)
         average_per_class = acc_sum_per_class / mask_sum_per_class
+        if return_per_class:
+            return average_per_class.cpu().tolist()
         return torch.mean(average_per_class).item()
     return torch.mean(accuracy_per_sample).item()
 
@@ -48,6 +56,7 @@ def r_precision(
     embeddings_come_from_same_source,
     label_counts,
     avg_of_avgs,
+    return_per_class,
     label_comparison_fn,
 ):
     relevance_mask = get_relevance_mask(
@@ -64,7 +73,9 @@ def r_precision(
         c_f.to_dtype(matches_per_row, dtype=torch.float64)
         / max_possible_matches_per_row
     )
-    return maybe_get_avg_of_avgs(accuracy_per_sample, gt_labels, avg_of_avgs)
+    return maybe_get_avg_of_avgs(
+        accuracy_per_sample, gt_labels, avg_of_avgs, return_per_class
+    )
 
 
 def mean_average_precision(
@@ -72,6 +83,7 @@ def mean_average_precision(
     gt_labels,
     embeddings_come_from_same_source,
     avg_of_avgs,
+    return_per_class,
     label_comparison_fn,
     relevance_mask=None,
     at_r=False,
@@ -97,7 +109,9 @@ def mean_average_precision(
         max_possible_matches_per_row = torch.sum(equality, dim=1)
         max_possible_matches_per_row[max_possible_matches_per_row == 0] = 1
     accuracy_per_sample = summed_precision_per_row / max_possible_matches_per_row
-    return maybe_get_avg_of_avgs(accuracy_per_sample, gt_labels, avg_of_avgs)
+    return maybe_get_avg_of_avgs(
+        accuracy_per_sample, gt_labels, avg_of_avgs, return_per_class
+    )
 
 
 def mean_average_precision_at_r(
@@ -106,6 +120,7 @@ def mean_average_precision_at_r(
     embeddings_come_from_same_source,
     label_counts,
     avg_of_avgs,
+    return_per_class,
     label_comparison_fn,
 ):
     relevance_mask = get_relevance_mask(
@@ -120,23 +135,28 @@ def mean_average_precision_at_r(
         gt_labels,
         embeddings_come_from_same_source,
         avg_of_avgs,
+        return_per_class,
         label_comparison_fn,
         relevance_mask=relevance_mask,
         at_r=True,
     )
 
 
-def precision_at_k(knn_labels, gt_labels, k, avg_of_avgs, label_comparison_fn):
+def precision_at_k(
+    knn_labels, gt_labels, k, avg_of_avgs, return_per_class, label_comparison_fn
+):
     curr_knn_labels = knn_labels[:, :k]
     same_label = label_comparison_fn(gt_labels, curr_knn_labels)
     accuracy_per_sample = (
         c_f.to_dtype(torch.sum(same_label, dim=1), dtype=torch.float64) / k
     )
-    return maybe_get_avg_of_avgs(accuracy_per_sample, gt_labels, avg_of_avgs)
+    return maybe_get_avg_of_avgs(
+        accuracy_per_sample, gt_labels, avg_of_avgs, return_per_class
+    )
 
 
 def get_label_match_counts(query_labels, reference_labels, label_comparison_fn):
-    unique_query_labels = torch.unique(query_labels, dim=0)
+    unique_query_labels = get_unique_labels(query_labels)
     if label_comparison_fn is EQUALITY:
         comparison = unique_query_labels[:, None] == reference_labels
         match_counts = torch.sum(c_f.torch_all_from_dim_to_end(comparison, 2), dim=1)
@@ -191,12 +211,19 @@ def try_getting_not_lone_labels(knn_labels, query_labels, not_lone_query_mask):
     )
 
 
+def zero_accuracy(unique_labels, return_per_class):
+    if return_per_class:
+        return [0 for _ in range(len(unique_labels))]
+    return 0
+
+
 class AccuracyCalculator:
     def __init__(
         self,
         include=(),
         exclude=(),
         avg_of_avgs=False,
+        return_per_class=False,
         k=None,
         label_comparison_fn=None,
         device=None,
@@ -212,7 +239,12 @@ class AccuracyCalculator:
         self.check_primary_metrics(include, exclude)
         self.original_function_dict = self.get_function_dict(include, exclude)
         self.curr_function_dict = self.get_function_dict()
+
+        if avg_of_avgs and return_per_class:
+            raise ValueError("avg_of_avgs and return_per_class are mutually exclusive")
         self.avg_of_avgs = avg_of_avgs
+        self.return_per_class = return_per_class
+
         self.device = c_f.use_cuda_if_available() if device is None else device
         self.knn_func = FaissKNN() if knn_func is None else knn_func
         self.kmeans_func = (
@@ -277,18 +309,19 @@ class AccuracyCalculator:
         return adjusted_mutual_info_score(query_labels, cluster_labels)
 
     def calculate_precision_at_1(
-        self, knn_labels, query_labels, not_lone_query_mask, **kwargs
+        self, knn_labels, query_labels, not_lone_query_mask, label_counts, **kwargs
     ):
         knn_labels, query_labels = try_getting_not_lone_labels(
             knn_labels, query_labels, not_lone_query_mask
         )
         if knn_labels is None:
-            return 0
+            return zero_accuracy(label_counts[0], self.return_per_class)
         return precision_at_k(
             knn_labels,
             query_labels[:, None],
             1,
             self.avg_of_avgs,
+            self.return_per_class,
             self.label_comparison_fn,
         )
 
@@ -305,13 +338,14 @@ class AccuracyCalculator:
             knn_labels, query_labels, not_lone_query_mask
         )
         if knn_labels is None:
-            return 0
+            return zero_accuracy(label_counts[0], self.return_per_class)
         return mean_average_precision_at_r(
             knn_labels,
             query_labels[:, None],
             embeddings_come_from_same_source,
             label_counts,
             self.avg_of_avgs,
+            self.return_per_class,
             self.label_comparison_fn,
         )
 
@@ -321,19 +355,21 @@ class AccuracyCalculator:
         query_labels,
         not_lone_query_mask,
         embeddings_come_from_same_source,
+        label_counts,
         **kwargs,
     ):
         knn_labels, query_labels = try_getting_not_lone_labels(
             knn_labels, query_labels, not_lone_query_mask
         )
         if knn_labels is None:
-            return 0
+            return zero_accuracy(label_counts[0], self.return_per_class)
 
         return mean_average_precision(
             knn_labels,
             query_labels[:, None],
             embeddings_come_from_same_source,
             self.avg_of_avgs,
+            self.return_per_class,
             self.label_comparison_fn,
         )
 
@@ -350,13 +386,14 @@ class AccuracyCalculator:
             knn_labels, query_labels, not_lone_query_mask
         )
         if knn_labels is None:
-            return 0
+            return zero_accuracy(label_counts[0], self.return_per_class)
         return r_precision(
             knn_labels,
             query_labels[:, None],
             embeddings_come_from_same_source,
             label_counts,
             self.avg_of_avgs,
+            self.return_per_class,
             self.label_comparison_fn,
         )
 

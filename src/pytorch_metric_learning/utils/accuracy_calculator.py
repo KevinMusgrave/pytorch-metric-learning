@@ -100,6 +100,44 @@ def mean_average_precision(
     return maybe_get_avg_of_avgs(accuracy_per_sample, gt_labels, avg_of_avgs)
 
 
+def mean_reciprocal_rank(
+    knn_labels,
+    gt_labels,
+    embeddings_come_from_same_source,
+    avg_of_avgs,
+    label_comparison_fn,
+    relevance_mask=None,
+    at_r=False,
+):
+    device = gt_labels.device
+    num_samples, num_k = knn_labels.shape[:2]
+
+    is_same_label = label_comparison_fn(gt_labels, knn_labels)
+
+    # find & remove zero true correct returns
+    sum_per_row = is_same_label.sum(-1)
+    zero_remove_mask = sum_per_row > 0
+    n_zeros = (~zero_remove_mask).sum()
+
+    nonzero_labels = is_same_label[zero_remove_mask] 
+    
+    indices = torch.arange(nonzero_labels.shape[1], 0, -1)
+    tmp = nonzero_labels * indices
+    indices = torch.argmax(tmp, 1, keepdim=True) 
+
+    
+
+    
+
+
+
+
+    distances = 1. / indices
+    mrr = distances.mean()
+
+    return maybe_get_avg_of_avgs(accuracy_per_sample, gt_labels, avg_of_avgs)
+
+
 def mean_average_precision_at_r(
     knn_labels,
     gt_labels,
@@ -336,6 +374,29 @@ class AccuracyCalculator:
             self.avg_of_avgs,
             self.label_comparison_fn,
         )
+    
+    def calculate_mean_reciprocal_rank(
+        self,
+        knn_labels,
+        query_labels,
+        not_lone_query_mask,
+        embeddings_come_from_same_source,
+        **kwargs,
+    ):
+        knn_labels, query_labels = try_getting_not_lone_labels(
+            knn_labels, query_labels, not_lone_query_mask
+        )
+        if knn_labels is None:
+            return 0
+
+        return mean_reciprocal_rank(
+            knn_labels,
+            query_labels[:, None],
+            embeddings_come_from_same_source,
+            self.avg_of_avgs,
+            self.label_comparison_fn,
+        )
+
 
     def calculate_r_precision(
         self,

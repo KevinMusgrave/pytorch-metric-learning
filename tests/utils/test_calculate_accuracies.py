@@ -124,6 +124,15 @@ class TestCalculateAccuracies(unittest.TestCase):
                                     many=return_per_class,
                                 )
                             )
+                            self.assertTrue(
+                            isclose(
+                                acc["mean_reciprocal_rank"],
+                                self.correct_mean_reciprocal_rank(
+                                    ecfss, avg_of_avgs, return_per_class
+                                ),
+                                many=return_per_class,
+                            )
+                        )
 
     def correct_precision_at_1(
         self, embeddings_come_from_same_source, avg_of_avgs, return_per_class
@@ -203,6 +212,31 @@ class TestCalculateAccuracies(unittest.TestCase):
             acc2 = 1.0 / 4
             acc3 = (1.0 / 2 + 2.0 / 4) / 2
             acc4 = 1.0 / 2
+        accs = [(acc0 + acc1) / 2, acc2, acc3, acc4]
+        if avg_of_avgs:
+            return np.mean(accs)
+        elif return_per_class:
+            return accs
+        else:
+            return np.mean([acc0, acc1, acc2, acc3, acc4])
+
+    def correct_mean_reciprocal_rank(
+        self, embeddings_come_from_same_source, avg_of_avgs, return_per_class
+    ):
+        # doesnt matter whether embeddings_come_from_same_source
+        if not embeddings_come_from_same_source:
+            acc0 = 1/2
+            acc1 = 1
+            acc2 = 1/5
+            acc3 = 1
+            acc4 = 1/3
+        else:
+            acc0 = 1
+            acc1 = 1/2
+            acc2 = 1/4
+            acc3 = 1/2
+            acc4 = 1/2
+
         accs = [(acc0 + acc1) / 2, acc2, acc3, acc4]
         if avg_of_avgs:
             return np.mean(accs)

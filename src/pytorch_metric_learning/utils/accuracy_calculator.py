@@ -114,6 +114,31 @@ def mean_average_precision(
     )
 
 
+def mean_reciprocal_rank(
+    knn_labels,
+    gt_labels,
+    avg_of_avgs,
+    return_per_class,
+    label_comparison_fn,
+):
+    device = gt_labels.device
+    is_same_label = label_comparison_fn(gt_labels, knn_labels)
+
+    # find & remove caeses where it has 0 correct results
+    sum_per_row = is_same_label.sum(-1)
+    zero_remove_mask = sum_per_row > 0
+    indices = torch.arange(is_same_label.shape[1], 0, -1, device=device)
+    tmp = is_same_label * indices
+    indices = torch.argmax(tmp, 1, keepdim=True) + 1.0
+
+    indices[zero_remove_mask] = 1.0 / indices[zero_remove_mask]
+    indices[~zero_remove_mask] = 0.0
+
+    indices = indices.flatten()
+
+    return maybe_get_avg_of_avgs(indices, gt_labels, avg_of_avgs, return_per_class)
+
+
 def mean_average_precision_at_r(
     knn_labels,
     gt_labels,
@@ -368,6 +393,28 @@ class AccuracyCalculator:
             knn_labels,
             query_labels[:, None],
             embeddings_come_from_same_source,
+            self.avg_of_avgs,
+            self.return_per_class,
+            self.label_comparison_fn,
+        )
+
+    def calculate_mean_reciprocal_rank(
+        self,
+        knn_labels,
+        query_labels,
+        not_lone_query_mask,
+        label_counts,
+        **kwargs,
+    ):
+        knn_labels, query_labels = try_getting_not_lone_labels(
+            knn_labels, query_labels, not_lone_query_mask
+        )
+        if knn_labels is None:
+            return zero_accuracy(label_counts[0], self.return_per_class)
+
+        return mean_reciprocal_rank(
+            knn_labels,
+            query_labels[:, None],
             self.avg_of_avgs,
             self.return_per_class,
             self.label_comparison_fn,

@@ -59,6 +59,7 @@ def get_accuracy(self,
 # "precision_at_1"
 # "r_precision"
 # "mean_average_precision_at_r"
+# "mean_reciprocal_rank"
 ```
 
 * **query**: A 2D torch or numpy array of size ```(Nq, D)```, where Nq is the number of query samples. For each query sample, nearest neighbors are retrieved and accuracy is computed.
@@ -96,6 +97,9 @@ If your dataset is large, you might find the k-nn search is very slow. This is b
 
     - [Slides from Stanford](https://web.stanford.edu/class/cs276/handouts/EvaluationNew-handout-1-per.pdf)
 
+- **mean_reciprocal_rank**:
+
+    - [Slides from Stanford](https://web.stanford.edu/class/cs276/handouts/EvaluationNew-handout-1-per.pdf)
 - **mean_average_precision_at_r**:
 
     - [See section 3.2 of A Metric Learning Reality Check](https://arxiv.org/pdf/2003.08505.pdf)

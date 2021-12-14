@@ -114,28 +114,19 @@ def mean_reciprocal_rank(
 
     is_same_label = label_comparison_fn(gt_labels, knn_labels)
 
-    # find & remove zero true correct returns
+    # find & remove caeses where it has 0 correct results
     sum_per_row = is_same_label.sum(-1)
     zero_remove_mask = sum_per_row > 0
-    n_zeros = (~zero_remove_mask).sum()
-
-    nonzero_labels = is_same_label[zero_remove_mask] 
+    indices = torch.arange(is_same_label.shape[1], 0, -1).to(device)
+    tmp = is_same_label * indices
+    indices = torch.argmax(tmp, 1, keepdim=True) + 1.0
     
-    indices = torch.arange(nonzero_labels.shape[1], 0, -1)
-    tmp = nonzero_labels * indices
-    indices = torch.argmax(tmp, 1, keepdim=True) 
+    indices[zero_remove_mask] = 1. / indices[zero_remove_mask]
+    indices[~zero_remove_mask] = 0.
 
-    
+    indices = indices.flatten()
 
-    
-
-
-
-
-    distances = 1. / indices
-    mrr = distances.mean()
-
-    return maybe_get_avg_of_avgs(accuracy_per_sample, gt_labels, avg_of_avgs)
+    return maybe_get_avg_of_avgs(indices, gt_labels, avg_of_avgs)
 
 
 def mean_average_precision_at_r(

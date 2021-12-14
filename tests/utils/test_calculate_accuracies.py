@@ -96,7 +96,6 @@ class TestCalculateAccuracies(unittest.TestCase):
                                 self.correct_mean_average_precision(ecfss, avg_of_avgs),
                             )
                         )
-                        print("mrr", self.correct_mean_reciprocal_rank(ecfss, avg_of_avgs),)
                         self.assertTrue(
                             isclose(
                                 acc["mean_reciprocal_rank"],
@@ -177,12 +176,19 @@ class TestCalculateAccuracies(unittest.TestCase):
         self, embeddings_come_from_same_source, avg_of_avgs
     ):
         # doesnt matter whether embeddings_come_from_same_source
-        acc0 = 1/2
-        acc1 = 1
-        acc2 = 1/5
-        acc3 = 1
-        acc4 = 1/3
-        
+        if not embeddings_come_from_same_source:
+            acc0 = 1/2
+            acc1 = 1
+            acc2 = 1/5
+            acc3 = 1
+            acc4 = 1/3
+        else:
+            acc0 = 1
+            acc1 = 1/2
+            acc2 = 1/4
+            acc3 = 1/2
+            acc4 = 1/2
+
         if not avg_of_avgs:
             return np.mean([acc0, acc1, acc2, acc3, acc4])
         else:

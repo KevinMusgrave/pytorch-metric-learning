@@ -74,6 +74,10 @@ def get_accuracy(self,
 Note that labels can be 2D if a [custom label comparison function](#using-a-custom-label-comparison-function) is used.
 
 
+### Lone query labels
+If some query labels doesn't appear in the reference set, then it's impossible for those labels to have non-zero k-nn accuracy. Zero accuracy for these labels doesn't indicate anything about the quality of the embedding space. So these lone query labels are excluded from k-nn based accuracy calculations.
+
+
 ### CPU/GPU usage
 
 * If you installed ```faiss-cpu``` then the CPU will always be used.
@@ -101,6 +105,10 @@ If your dataset is large, you might find the k-nn search is very slow. This is b
 - **mean_average_precision_at_r**:
 
     - [See section 3.2 of A Metric Learning Reality Check](https://arxiv.org/pdf/2003.08505.pdf)
+
+- **mean_reciprocal_rank**:
+
+    - [Slides from Stanford](https://web.stanford.edu/class/cs276/handouts/EvaluationNew-handout-1-per.pdf)
 
 - **precision_at_1**:
 

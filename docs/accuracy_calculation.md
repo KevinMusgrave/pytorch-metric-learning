@@ -75,7 +75,9 @@ Note that labels can be 2D if a [custom label comparison function](#using-a-cust
 
 
 ### Lone query labels
-If some query labels doesn't appear in the reference set, then it's impossible for those labels to have non-zero k-nn accuracy. Zero accuracy for these labels doesn't indicate anything about the quality of the embedding space. So these lone query labels are excluded from k-nn based accuracy calculations.
+If some query labels don't appear in the reference set, then it's impossible for those labels to have non-zero k-nn accuracy. Zero accuracy for these labels doesn't indicate anything about the quality of the embedding space. So these lone query labels are excluded from k-nn based accuracy calculations.
+
+For example, if the input ```query_labels``` is ```[0,0,1,1]``` and ```reference_labels``` is ```[1,1,1,2,2]```, then 0 is considered a lone query label.
 
 
 ### CPU/GPU usage

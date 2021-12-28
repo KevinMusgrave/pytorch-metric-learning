@@ -152,6 +152,22 @@ def compute_loss(self, embeddings, labels, indices_tuple=None):
 ```
 
 
+## CentroidTripletLoss
+[On the Unreasonable Effectiveness of Centroids in Image Retrieval](https://arxiv.org/pdf/2104.13643.pdf){target=_blank}
+
+This is like [TripletMarginLoss](losses.md#tripletmarginloss), except the positives and negatives are class centroids.
+
+```python
+losses.CentroidTripletLoss(margin=0.05,
+                            swap=False,
+                            smooth_loss=False,
+                            triplets_per_anchor="all")
+```
+**Parameters**:
+
+See [TripletMarginLoss](losses.md#tripletmarginloss)
+
+
 ## CircleLoss 
 [Circle Loss: A Unified Perspective of Pair Similarity Optimization](https://arxiv.org/pdf/2002.10857.pdf){target=_blank}
 

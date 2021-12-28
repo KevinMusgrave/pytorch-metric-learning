@@ -38,6 +38,7 @@ class VICRegLoss(BaseMetricLossFunction):
         )
         variance_loss1, variance_loss2 = self.variance_loss(embeddings, ref_emb)
         covariance_loss = self.covariance_v * self.covariance_loss(embeddings, ref_emb)
+        var_loss_size = c_f.torch_arange_from_size(variance_loss1)
         return {
             "invariance_loss": {
                 "losses": invariance_loss,
@@ -46,12 +47,12 @@ class VICRegLoss(BaseMetricLossFunction):
             },
             "variance_loss1": {
                 "losses": self.variance_mu * variance_loss1,
-                "indices": c_f.torch_arange_from_size(variance_loss1),
+                "indices": var_loss_size,
                 "reduction_type": "element",
             },
             "variance_loss2": {
                 "losses": self.variance_mu * variance_loss2,
-                "indices": c_f.torch_arange_from_size(variance_loss2),
+                "indices": var_loss_size,
                 "reduction_type": "element",
             },
             "covariance_loss": {

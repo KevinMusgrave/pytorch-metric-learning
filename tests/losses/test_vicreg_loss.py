@@ -6,7 +6,6 @@ import torch.nn.functional as F
 from pytorch_metric_learning.losses import VICRegLoss
 
 from .. import TEST_DEVICE, TEST_DTYPES
-from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 HYPERPARAMETERS = [[25, 25, 1, 1e-4], [10, 10, 2, 1e-5], [5, 5, 5, 1e-6]]
 

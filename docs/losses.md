@@ -152,6 +152,31 @@ def compute_loss(self, embeddings, labels, indices_tuple=None):
 ```
 
 
+## CentroidTripletLoss
+[On the Unreasonable Effectiveness of Centroids in Image Retrieval](https://arxiv.org/pdf/2104.13643.pdf){target=_blank}
+
+This is like [TripletMarginLoss](losses.md#tripletmarginloss), except the positives and negatives are class centroids.
+
+```python
+losses.CentroidTripletLoss(margin=0.05,
+                            swap=False,
+                            smooth_loss=False,
+                            triplets_per_anchor="all",
+                            **kwargs)
+```
+**Parameters**:
+
+See [TripletMarginLoss](losses.md#tripletmarginloss)
+
+**Default distance**: 
+
+See [TripletMarginLoss](losses.md#tripletmarginloss)
+
+**Default reducer**: 
+
+ - [AvgNonZeroReducer](reducers.md#avgnonzeroreducer)
+
+
 ## CircleLoss 
 [Circle Loss: A Unified Perspective of Pair Similarity Optimization](https://arxiv.org/pdf/2002.10857.pdf){target=_blank}
 
@@ -1025,3 +1050,59 @@ Extended by:
 * [ProxyNCALoss](losses.md#proxyncaloss)
 * [SoftTripleLoss](losses.md#softtripleloss)
 * [SphereFaceLoss](losses.md#spherefaceloss)
+
+
+## VICRegLoss
+[VICReg: Variance-Invariance-Covariance Regularization for Self-Supervised Learning](https://arxiv.org/pdf/2105.04906.pdf){target=_blank}
+```python
+losses.VICRegLoss(invariance_lambda=25, 
+                variance_mu=25, 
+                covariance_v=1, 
+                eps=1e-4, 
+                **kwargs)
+```
+
+**Usage**:
+
+Unlike other loss functions, ```VICRegLoss``` does not accept ```labels``` or ```indices_tuple```:
+
+```python
+loss_fn = VICRegLoss()
+loss = loss_fn(embeddings, ref_emb)
+```
+
+**Equations**:
+
+![vicreg_total](imgs/vicreg_total.png){: style="height:40px"}
+
+where
+
+![vicreg_total](imgs/vicreg_invariance.png){: style="height:70px"}
+
+![vicreg_total](imgs/vicreg_variance.png){: style="height:90px"}
+
+![vicreg_total](imgs/vicreg_variance_detail.png){: style="height:40px"}
+
+![vicreg_total](imgs/vicreg_covariance.png){: style="height:70px"}
+
+**Parameters**:
+
+* **invariance_lambda**: The weight of the invariance term.
+* **variance_mu**: The weight of the variance term.
+* **covariance_v**: The weight of the covariance term.
+* **eps**: Small scalar to prevent numerical instability.
+
+**Default distance**: 
+
+ - Not applicable. You cannot pass in a distance function.
+
+**Default reducer**: 
+
+ - [MeanReducer](reducers.md#meanreducer)
+
+**Reducer input**:
+
+* **invariance_loss**: The MSE loss between ```embeddings[i]``` and ```ref_emb[i]```. Reduction type is ```"element"```.
+* **variance_loss1**: The variance loss for ```embeddings```. Reduction type is ```"element"```.
+* **variance_loss2**: The variance loss for ```ref_emb```. Reduction type is ```"element"```.
+* **covariance_loss**: The covariance loss. This loss is already reduced to a single value.

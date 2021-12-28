@@ -7,6 +7,7 @@ from pytorch_metric_learning.utils.accuracy_calculator import AccuracyCalculator
 AccuracyCalculator(include=(),
                     exclude=(),
                     avg_of_avgs=False,
+                    return_per_class=False,
                     k=None,
                     label_comparison_fn=None,
                     device=None,
@@ -18,6 +19,7 @@ AccuracyCalculator(include=(),
 * **include**: Optional. A list or tuple of strings, which are the names of metrics you want to calculate. If left empty, all default metrics will be calculated.
 * **exclude**: Optional. A list or tuple of strings, which are the names of metrics you **do not** want to calculate.
 * **avg_of_avgs**: If True, the average accuracy per class is computed, and then the average of those averages is returned. This can be useful if your dataset has unbalanced classes. If False, the global average will be returned.
+* **return_per_class**: If True, the average accuracy per class is computed and returned.
 * **k**: The number of nearest neighbors that will be retrieved for metrics that require k-nearest neighbors. The allowed values are:
     * ```None```. This means k will be set to the total number of reference embeddings.
     * An integer greater than 0. This means k will be set to the input integer.
@@ -72,6 +74,12 @@ def get_accuracy(self,
 Note that labels can be 2D if a [custom label comparison function](#using-a-custom-label-comparison-function) is used.
 
 
+### Lone query labels
+If some query labels don't appear in the reference set, then it's impossible for those labels to have non-zero k-nn accuracy. Zero accuracy for these labels doesn't indicate anything about the quality of the embedding space. So these lone query labels are excluded from k-nn based accuracy calculations.
+
+For example, if the input ```query_labels``` is ```[0,0,1,1]``` and ```reference_labels``` is ```[1,1,1,2,2]```, then 0 is considered a lone query label.
+
+
 ### CPU/GPU usage
 
 * If you installed ```faiss-cpu``` then the CPU will always be used.
@@ -99,6 +107,10 @@ If your dataset is large, you might find the k-nn search is very slow. This is b
 - **mean_average_precision_at_r**:
 
     - [See section 3.2 of A Metric Learning Reality Check](https://arxiv.org/pdf/2003.08505.pdf)
+
+- **mean_reciprocal_rank**:
+
+    - [Slides from Stanford](https://web.stanford.edu/class/cs276/handouts/EvaluationNew-handout-1-per.pdf)
 
 - **precision_at_1**:
 

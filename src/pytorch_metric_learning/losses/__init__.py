@@ -1,6 +1,7 @@
 from .angular_loss import AngularLoss
 from .arcface_loss import ArcFaceLoss
 from .base_metric_loss_function import BaseMetricLossFunction, MultipleLosses
+from .centroid_triplet_loss import CentroidTripletLoss
 from .circle_loss import CircleLoss
 from .contrastive_loss import ContrastiveLoss
 from .cosface_loss import CosFaceLoss
@@ -25,3 +26,4 @@ from .sphereface_loss import SphereFaceLoss
 from .supcon_loss import SupConLoss
 from .triplet_margin_loss import TripletMarginLoss
 from .tuplet_margin_loss import TupletMarginLoss
+from .vicreg_loss import VICRegLoss

@@ -12,7 +12,7 @@ from .mixins import EmbeddingRegularizerMixin
 class BaseMetricLossFunction(
     EmbeddingRegularizerMixin, ModuleWithRecordsReducerAndDistance
 ):
-    def compute_loss(self, embeddings, labels, indices_tuple=None):
+    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
         """
         This has to be implemented and is what actually computes the loss.
         """

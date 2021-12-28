@@ -507,6 +507,11 @@ def ref_not_supported(embeddings, labels, ref_emb, ref_labels):
         raise ValueError("ref_emb is not supported for this loss function")
 
 
+def indices_tuple_not_supported(indices_tuple):
+    if indices_tuple is not None:
+        raise ValueError("indices_tuple is not supported for this loss function")
+
+
 def concatenate_indices_tuples(it1, it2):
     return tuple([torch.cat([x, to_device(y, x)], dim=0) for x, y in zip(it1, it2)])
 

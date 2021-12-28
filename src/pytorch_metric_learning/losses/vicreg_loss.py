@@ -9,6 +9,8 @@ class VICRegLoss(BaseMetricLossFunction):
     def __init__(
         self, invariance_lambda=25, variance_mu=25, covariance_v=1, eps=1e-4, **kwargs
     ):
+        if "distance" in kwargs:
+            raise ValueError("VICRegLoss cannot use a distance function")
         if "embedding_regularizer" in kwargs:
             raise ValueError("VICRegLoss cannot use a regularizer")
         super().__init__(**kwargs)

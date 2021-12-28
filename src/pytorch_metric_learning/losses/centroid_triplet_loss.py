@@ -4,6 +4,7 @@ import numpy as np
 import torch
 
 from ..reducers import AvgNonZeroReducer
+from ..utils import common_functions as c_f
 from ..utils import loss_and_miner_utils as lmu
 from .base_metric_loss_function import BaseMetricLossFunction
 from .triplet_margin_loss import TripletMarginLoss
@@ -34,7 +35,8 @@ class CentroidTripletLoss(BaseMetricLossFunction):
     def compute_loss(
         self, embeddings, labels, indices_tuple=None, ref_emb=None, ref_labels=None
     ):
-
+        c_f.indices_tuple_not_supported(indices_tuple)
+        c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
         """
         "During training stage each mini-batch contains 𝑃 distinct item
         classes with 𝑀 samples per class, resulting in batch size of 𝑃 × 𝑀."

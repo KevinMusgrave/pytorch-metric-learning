@@ -287,6 +287,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#centroidtripletloss" class="md-nav__link">
+    CentroidTripletLoss
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#circleloss" class="md-nav__link">
     CircleLoss
   </a>
@@ -464,6 +471,13 @@
         <li class="md-nav__item">
   <a href="#weightregularizermixin" class="md-nav__link">
     WeightRegularizerMixin
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#vicregloss" class="md-nav__link">
+    VICRegLoss
   </a>
   
 </li>
@@ -757,6 +771,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#centroidtripletloss" class="md-nav__link">
+    CentroidTripletLoss
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#circleloss" class="md-nav__link">
     CircleLoss
   </a>
@@ -938,6 +959,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#vicregloss" class="md-nav__link">
+    VICRegLoss
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1081,6 +1109,23 @@
 <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">compute_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">indices_tuple</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 </code></pre></div></p>
+<h2 id="centroidtripletloss">CentroidTripletLoss<a class="headerlink" href="#centroidtripletloss" title="Permanent link">&para;</a></h2>
+<p><a href="https://arxiv.org/pdf/2104.13643.pdf" target="_blank">On the Unreasonable Effectiveness of Centroids in Image Retrieval</a></p>
+<p>This is like <a href="./#tripletmarginloss">TripletMarginLoss</a>, except the positives and negatives are class centroids.</p>
+<p><div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">CentroidTripletLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+                            <span class="n">swap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                            <span class="n">smooth_loss</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                            <span class="n">triplets_per_anchor</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span>
+                            <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div>
+<strong>Parameters</strong>:</p>
+<p>See <a href="./#tripletmarginloss">TripletMarginLoss</a></p>
+<p><strong>Default distance</strong>: </p>
+<p>See <a href="./#tripletmarginloss">TripletMarginLoss</a></p>
+<p><strong>Default reducer</strong>: </p>
+<ul>
+<li><a href="../reducers/#avgnonzeroreducer">AvgNonZeroReducer</a></li>
+</ul>
 <h2 id="circleloss">CircleLoss<a class="headerlink" href="#circleloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/2002.10857.pdf" target="_blank">Circle Loss: A Unified Perspective of Pair Similarity Optimization</a></p>
 <div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">CircleLoss</span><span class="p">(</span><span class="n">m</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -1815,6 +1860,48 @@
 <li><a href="./#proxyncaloss">ProxyNCALoss</a></li>
 <li><a href="./#softtripleloss">SoftTripleLoss</a></li>
 <li><a href="./#spherefaceloss">SphereFaceLoss</a></li>
+</ul>
+<h2 id="vicregloss">VICRegLoss<a class="headerlink" href="#vicregloss" title="Permanent link">&para;</a></h2>
+<p><a href="https://arxiv.org/pdf/2105.04906.pdf" target="_blank">VICReg: Variance-Invariance-Covariance Regularization for Self-Supervised Learning</a>
+<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">VICRegLoss</span><span class="p">(</span><span class="n">invariance_lambda</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> 
+                <span class="n">variance_mu</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span> 
+                <span class="n">covariance_v</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
+                <span class="n">eps</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> 
+                <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div></p>
+<p><strong>Usage</strong>:</p>
+<p>Unlike other loss functions, <code>VICRegLoss</code> does not accept <code>labels</code> or <code>indices_tuple</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="n">loss_fn</span> <span class="o">=</span> <span class="n">VICRegLoss</span><span class="p">()</span>
+<span class="n">loss</span> <span class="o">=</span> <span class="n">loss_fn</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">ref_emb</span><span class="p">)</span>
+</code></pre></div>
+<p><strong>Equations</strong>:</p>
+<p><img alt="vicreg_total" src="../imgs/vicreg_total.png" style="height:40px" /></p>
+<p>where</p>
+<p><img alt="vicreg_total" src="../imgs/vicreg_invariance.png" style="height:70px" /></p>
+<p><img alt="vicreg_total" src="../imgs/vicreg_variance.png" style="height:90px" /></p>
+<p><img alt="vicreg_total" src="../imgs/vicreg_variance_detail.png" style="height:40px" /></p>
+<p><img alt="vicreg_total" src="../imgs/vicreg_covariance.png" style="height:70px" /></p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>invariance_lambda</strong>: The weight of the invariance term.</li>
+<li><strong>variance_mu</strong>: The weight of the variance term.</li>
+<li><strong>covariance_v</strong>: The weight of the covariance term.</li>
+<li><strong>eps</strong>: Small scalar to prevent numerical instability.</li>
+</ul>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li>Not applicable. You cannot pass in a distance function.</li>
+</ul>
+<p><strong>Default reducer</strong>: </p>
+<ul>
+<li><a href="../reducers/#meanreducer">MeanReducer</a></li>
+</ul>
+<p><strong>Reducer input</strong>:</p>
+<ul>
+<li><strong>invariance_loss</strong>: The MSE loss between <code>embeddings[i]</code> and <code>ref_emb[i]</code>. Reduction type is <code>"element"</code>.</li>
+<li><strong>variance_loss1</strong>: The variance loss for <code>embeddings</code>. Reduction type is <code>"element"</code>.</li>
+<li><strong>variance_loss2</strong>: The variance loss for <code>ref_emb</code>. Reduction type is <code>"element"</code>.</li>
+<li><strong>covariance_loss</strong>: The covariance loss. This loss is already reduced to a single value.</li>
 </ul>
                 
               

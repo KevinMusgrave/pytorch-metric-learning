@@ -408,6 +408,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#lone-query-labels" class="md-nav__link">
+    Lone query labels
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cpugpu-usage" class="md-nav__link">
     CPU/GPU usage
   </a>
@@ -598,6 +605,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#lone-query-labels" class="md-nav__link">
+    Lone query labels
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cpugpu-usage" class="md-nav__link">
     CPU/GPU usage
   </a>
@@ -655,6 +669,7 @@
 <span class="n">AccuracyCalculator</span><span class="p">(</span><span class="n">include</span><span class="o">=</span><span class="p">(),</span>
                     <span class="n">exclude</span><span class="o">=</span><span class="p">(),</span>
                     <span class="n">avg_of_avgs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">return_per_class</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                     <span class="n">k</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">label_comparison_fn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -666,6 +681,7 @@
 <li><strong>include</strong>: Optional. A list or tuple of strings, which are the names of metrics you want to calculate. If left empty, all default metrics will be calculated.</li>
 <li><strong>exclude</strong>: Optional. A list or tuple of strings, which are the names of metrics you <strong>do not</strong> want to calculate.</li>
 <li><strong>avg_of_avgs</strong>: If True, the average accuracy per class is computed, and then the average of those averages is returned. This can be useful if your dataset has unbalanced classes. If False, the global average will be returned.</li>
+<li><strong>return_per_class</strong>: If True, the average accuracy per class is computed and returned.</li>
 <li><strong>k</strong>: The number of nearest neighbors that will be retrieved for metrics that require k-nearest neighbors. The allowed values are:<ul>
 <li><code>None</code>. This means k will be set to the total number of reference embeddings.</li>
 <li>An integer greater than 0. This means k will be set to the input integer.</li>
@@ -717,6 +733,9 @@
 <li><strong>exclude</strong>: Optional. A list or tuple of strings, which are the names of metrics you do not want to calculate.</li>
 </ul>
 <p>Note that labels can be 2D if a <a href="#using-a-custom-label-comparison-function">custom label comparison function</a> is used.</p>
+<h3 id="lone-query-labels">Lone query labels<a class="headerlink" href="#lone-query-labels" title="Permanent link">&para;</a></h3>
+<p>If some query labels don't appear in the reference set, then it's impossible for those labels to have non-zero k-nn accuracy. Zero accuracy for these labels doesn't indicate anything about the quality of the embedding space. So these lone query labels are excluded from k-nn based accuracy calculations.</p>
+<p>For example, if the input <code>query_labels</code> is <code>[0,0,1,1]</code> and <code>reference_labels</code> is <code>[1,1,1,2,2]</code>, then 0 is considered a lone query label.</p>
 <h3 id="cpugpu-usage">CPU/GPU usage<a class="headerlink" href="#cpugpu-usage" title="Permanent link">&para;</a></h3>
 <ul>
 <li>If you installed <code>faiss-cpu</code> then the CPU will always be used.</li>
@@ -749,6 +768,12 @@
 <p><strong>mean_average_precision_at_r</strong>:</p>
 <ul>
 <li><a href="https://arxiv.org/pdf/2003.08505.pdf">See section 3.2 of A Metric Learning Reality Check</a></li>
+</ul>
+</li>
+<li>
+<p><strong>mean_reciprocal_rank</strong>:</p>
+<ul>
+<li><a href="https://web.stanford.edu/class/cs276/handouts/EvaluationNew-handout-1-per.pdf">Slides from Stanford</a></li>
 </ul>
 </li>
 <li>

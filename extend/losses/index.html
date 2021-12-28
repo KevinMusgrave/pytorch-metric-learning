@@ -641,7 +641,7 @@
 <span class="kn">import</span> <span class="nn">torch</span>
 
 <span class="k">class</span> <span class="nc">BarebonesLoss</span><span class="p">(</span><span class="n">BaseMetricLossFunction</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">compute_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">indices_tuple</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">compute_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">indices_tuple</span><span class="p">,</span> <span class="n">ref_emb</span><span class="p">,</span> <span class="n">ref_labels</span><span class="p">):</span>
         <span class="c1"># perform some calculation #</span>
         <span class="n">some_loss</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">embeddings</span><span class="p">)</span>
 
@@ -663,7 +663,7 @@
 <span class="kn">import</span> <span class="nn">torch</span>
 
 <span class="k">class</span> <span class="nc">FullFeaturedLoss</span><span class="p">(</span><span class="n">BaseMetricLossFunction</span><span class="p">):</span>
-    <span class="k">def</span> <span class="nf">compute_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">indices_tuple</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">compute_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">indices_tuple</span><span class="p">,</span> <span class="n">ref_emb</span><span class="p">,</span> <span class="n">ref_labels</span><span class="p">):</span>
         <span class="n">indices_tuple</span> <span class="o">=</span> <span class="n">lmu</span><span class="o">.</span><span class="n">convert_to_triplets</span><span class="p">(</span><span class="n">indices_tuple</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
         <span class="n">anchors</span><span class="p">,</span> <span class="n">positives</span><span class="p">,</span> <span class="n">negatives</span> <span class="o">=</span> <span class="n">indices_tuple</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">anchors</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>

@@ -52,22 +52,17 @@
 
 ## News
 
-**November 28**: v1.0.0 includes:
+**December 27**: v1.1.0
+- New loss functions: CentroidTripletLoss and VICRegLoss
+- Mean reciprocal rank + per-class accuracies
+- See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v1.1.0)
+- Thanks to contributors [codeandproduce](https://github.com/codeandproduce) and [mlw214](https://github.com/mlw214)
+
+**November 28**: v1.0.0 includes
 - Reference embeddings for tuple losses
 - Efficient mode for DistributedLossWrapper
 - Customized k-nn functions for AccuracyCalculator
 - See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v1.0.0)
-
-**May 9**: v0.9.99 includes:
-- [HierarchicalSampler](https://kevinmusgrave.github.io/pytorch-metric-learning/samplers/#hierarchicalsampler)
-- Improvements to logging, trainer key-verification, and InferenceModel
-- See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.99)
-
-**April 2**: v0.9.98 includes:
-- [SupConLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#supconloss)
-- A bug fix for compatibility with autocast
-- New behavior for the ```k``` parameter of AccuracyCalculator. (Apologies for the breaking change. I'm hoping to have things stable and following semantic versioning when v1.0 arrives.)
-- See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v0.9.98)
 
 ## Documentation
 - [**View the documentation here**](https://kevinmusgrave.github.io/pytorch-metric-learning/)
@@ -273,8 +268,9 @@ Thanks to the contributors who made pull requests!
 
 | Contributor | Highlights |
 | -- | -- |
-|[marijnl](https://github.com/marijnl)| - [BatchEasyHardMiner](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#batcheasyhardminer) <br/> - [TwoStreamMetricLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#twostreammetricloss) <br/> - [GlobalTwoStreamEmbeddingSpaceTester](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#globaltwostreamembeddingspacetester) <br/> - [Example using trainers.TwoStreamMetricLoss](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/TwoStreamMetricLoss.ipynb) |
+|[codeandproduce](https://github.com/codeandproduce) | - [CentroidTripletLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#centroidtripletloss) <br/> - [VICRegLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#vicregloss) <br/> - Added mean reciprocal rank accuracy to [AccuracyCalculator](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/) |
 |[mlopezantequera](https://github.com/mlopezantequera) | - Made the [testers](https://kevinmusgrave.github.io/pytorch-metric-learning/testers) work on any combination of query and reference sets <br/> - Made [AccuracyCalculator](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/) work with arbitrary label comparisons |
+|[marijnl](https://github.com/marijnl)| - [BatchEasyHardMiner](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#batcheasyhardminer) <br/> - [TwoStreamMetricLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#twostreammetricloss) <br/> - [GlobalTwoStreamEmbeddingSpaceTester](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#globaltwostreamembeddingspacetester) <br/> - [Example using trainers.TwoStreamMetricLoss](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/TwoStreamMetricLoss.ipynb) |
 | [elias-ramzi](https://github.com/elias-ramzi) | [HierarchicalSampler](https://kevinmusgrave.github.io/pytorch-metric-learning/samplers/#hierarchicalsampler) |
 | [fjsj](https://github.com/fjsj) | [SupConLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#supconloss) |
 | [AlenUbuntu](https://github.com/AlenUbuntu) | [CircleLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#circleloss) |
@@ -284,6 +280,7 @@ Thanks to the contributors who made pull requests!
 | [Hummer12007](https://github.com/Hummer12007) | ```utils.key_checker``` |
 | [vltanh](https://github.com/vltanh) | Made ```InferenceModel.train_indexer``` accept datasets |
 | [btseytlin](https://github.com/btseytlin) | ```get_nearest_neighbors``` in [InferenceModel](https://kevinmusgrave.github.io/pytorch-metric-learning/inference_models) |
+| [mlw214](https://github.com/mlw214) | Added ```return_per_class``` to [AccuracyCalculator](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/) |
 | [z1w](https://github.com/z1w) | |
 | [thinline72](https://github.com/thinline72) | |
 | [tpanum](https://github.com/tpanum) | |

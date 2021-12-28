@@ -167,6 +167,14 @@ losses.CentroidTripletLoss(margin=0.05,
 
 See [TripletMarginLoss](losses.md#tripletmarginloss)
 
+**Default distance**: 
+
+See [TripletMarginLoss](losses.md#tripletmarginloss)
+
+**Default reducer**: 
+
+ - [AvgNonZeroReducer](reducers.md#avgnonzeroreducer)
+
 
 ## CircleLoss 
 [Circle Loss: A Unified Perspective of Pair Similarity Optimization](https://arxiv.org/pdf/2002.10857.pdf){target=_blank}

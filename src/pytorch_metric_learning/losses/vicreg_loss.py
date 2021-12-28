@@ -1,21 +1,16 @@
-import warnings
-
 import torch
 import torch.nn.functional as F
 
-from .base_metric_loss_function import BaseMetricLossFunction
 from ..utils import common_functions as c_f
+from .base_metric_loss_function import BaseMetricLossFunction
 
 
 class VICRegLoss(BaseMetricLossFunction):
     def __init__(
-        self,
-        invariance_lambda=25,
-        variance_mu=25,
-        covariance_v=1,
-        eps=1e-4,
-        **kwargs
+        self, invariance_lambda=25, variance_mu=25, covariance_v=1, eps=1e-4, **kwargs
     ):
+        if "embedding_regularizer" in kwargs:
+            raise ValueError("VICRegLoss cannot use a regularizer")
         super().__init__(**kwargs)
         """
         The overall loss function is a weighted average of the invariance, variance and covariance terms:
@@ -33,34 +28,46 @@ class VICRegLoss(BaseMetricLossFunction):
         """
         self.reset_stats()
         loss_dict = self.compute_loss(embeddings, ref_emb)
-        return self.reducer(loss_dict, embeddings, c_f.torch_arange_from_size(embeddings))
+        return self.reducer(
+            loss_dict, embeddings, c_f.torch_arange_from_size(embeddings)
+        )
 
-
-    def compute_loss(
-        self, embeddings, ref_emb
-    ):
-
-        invariance_loss = self.invariance_loss(embeddings, ref_emb)
-        variance_loss = self.variance_loss(embeddings, ref_emb)
-        covariance_loss = self.covariance_loss(embeddings, ref_emb)
-
-        loss = self.invariance_lambda * invariance_loss + self.variance_mu * variance_loss + self.covariance_v * covariance_loss
+    def compute_loss(self, embeddings, ref_emb):
+        invariance_loss = self.invariance_lambda * self.invariance_loss(
+            embeddings, ref_emb
+        )
+        variance_loss1, variance_loss2 = self.variance_loss(embeddings, ref_emb)
+        covariance_loss = self.covariance_v * self.covariance_loss(embeddings, ref_emb)
         return {
-            "loss": {
-                "losses": loss,
+            "invariance_loss": {
+                "losses": invariance_loss,
+                "indices": c_f.torch_arange_from_size(invariance_loss),
+                "reduction_type": "element",
+            },
+            "variance_loss1": {
+                "losses": self.variance_mu * variance_loss1,
+                "indices": c_f.torch_arange_from_size(variance_loss1),
+                "reduction_type": "element",
+            },
+            "variance_loss2": {
+                "losses": self.variance_mu * variance_loss2,
+                "indices": c_f.torch_arange_from_size(variance_loss2),
+                "reduction_type": "element",
+            },
+            "covariance_loss": {
+                "losses": covariance_loss,
                 "indices": None,
                 "reduction_type": "already_reduced",
-            }
+            },
         }
 
     def invariance_loss(self, emb, ref_emb):
-        return F.mse_loss(emb, ref_emb)
+        return torch.mean((emb - ref_emb) ** 2, dim=1)
 
     def variance_loss(self, emb, ref_emb):
         std_emb = torch.sqrt(emb.var(dim=0) + self.eps)
         std_ref_emb = torch.sqrt(ref_emb.var(dim=0) + self.eps)
-        var_loss = torch.mean(F.relu(1 - std_emb)) + torch.mean(F.relu(1 - std_ref_emb))
-        return var_loss
+        return F.relu(1 - std_emb), F.relu(1 - std_ref_emb)
 
     def covariance_loss(self, emb, ref_emb):
         _, D = emb.size()
@@ -68,7 +75,16 @@ class VICRegLoss(BaseMetricLossFunction):
         cov_ref_emb = torch.cov(ref_emb.T)
 
         diag = torch.eye(D, device=cov_emb.device)
-        cov_loss = cov_emb[~diag.bool()].pow_(2).sum() / D + cov_ref_emb[~diag.bool()].pow_(2).sum() / D
+        cov_loss = (
+            cov_emb[~diag.bool()].pow_(2).sum() / D
+            + cov_ref_emb[~diag.bool()].pow_(2).sum() / D
+        )
         return cov_loss
-        
 
+    def _sub_loss_names(self):
+        return [
+            "invariance_loss",
+            "variance_loss1",
+            "variance_loss2",
+            "covariance_loss",
+        ]

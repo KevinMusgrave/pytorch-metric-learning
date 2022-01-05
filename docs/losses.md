@@ -305,28 +305,6 @@ loss_optimizer.step()
 * **loss**: The loss per element in the batch. Reduction type is ```"element"```.
 
 
-## CrossBatchMemory 
-This wraps a loss function, and implements [Cross-Batch Memory for Embedding Learning](https://arxiv.org/pdf/1912.06798.pdf){target=_blank}. It stores embeddings from previous iterations in a queue, and uses them to form more pairs/triplets with the current iteration's embeddings.
-
-```python
-losses.CrossBatchMemory(loss, embedding_size, memory_size=1024, miner=None)
-```
-
-**Parameters**:
-
-* **loss**: The loss function to be wrapped. For example, you could pass in ```ContrastiveLoss()```.
-* **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set ```embedding_size``` to 512.
-* **memory_size**: The size of the memory queue.
-* **miner**: An optional [tuple miner](miners.md), which will be used to mine pairs/triplets from the memory queue.
-
-**Forward function**
-```python
-loss_fn(embeddings, labels, indices_tuple=None, enqueue_idx=None)
-```
-
-As shown above, CrossBatchMemory comes with a 4th argument in its ```forward``` function:
-
-* **enqueue_idx**: The indices of ```embeddings``` that will be added to the memory queue. In other words, only ```embeddings[enqueue_idx]``` will be added to memory. This enables CrossBatchMemory to be used in self-supervision frameworks like [MoCo](https://arxiv.org/pdf/1911.05722.pdf). Check out the [MoCo on CIFAR100](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples#simple-examples) notebook to see how this works.
 
 ## FastAPLoss
 [Deep Metric Learning to Rank](http://openaccess.thecvf.com/content_CVPR_2019/papers/Cakir_Deep_Metric_Learning_to_Rank_CVPR_2019_paper.pdf){target=_blank}
@@ -413,11 +391,11 @@ losses.IntraPairVarianceLoss(pos_eps=0.01, neg_eps=0.01, **kwargs)
 * **pos_eps**: The epsilon in the L<sub>pos</sub> equation. The paper uses 0.01.
 * **neg_eps**: The epsilon in the L<sub>neg</sub> equation. The paper uses 0.01.
 
-You should probably use this in conjunction with another loss, as described in the paper. You can accomplish this by using [MultipleLosses](losses.md#multiplelosses):
+You should probably use this in conjunction with another loss, as described in the paper. You can accomplish this by using [MultipleLosses](wrappers.md#multiplelosses):
 ```python
 main_loss = losses.TupletMarginLoss()
 var_loss = losses.IntraPairVarianceLoss()
-complete_loss = losses.MultipleLosses([main_loss, var_loss], weights=[1, 0.5])
+complete_loss = wrappers.MultipleLosses([main_loss, var_loss], weights=[1, 0.5])
 ```
 
 **Default distance**: 
@@ -561,17 +539,6 @@ where
 * **margin_loss**: The loss per triplet in the batch. Reduction type is ```"triplet"```.
 * **beta_reg_loss**: The regularization loss per element in ```self.beta```. Reduction type is ```"already_reduced"``` if ```self.num_classes = None```. Otherwise it is ```"element"```.
 
-
-## MultipleLosses
-This is a simple wrapper for multiple losses. Pass in a list of already-initialized loss functions. Then, when you call forward on this object, it will return the sum of all wrapped losses.
-```python
-losses.MultipleLosses(losses, miners=None, weights=None)
-```
-**Parameters**:
-
-* **losses**: A list or dictionary of initialized loss functions. On the forward call of MultipleLosses, each wrapped loss will be computed, and then the average will be returned.
-* **miners**: Optional. A list or dictionary of mining functions. This allows you to pair mining functions with loss functions. For example, if ```losses = [loss_A, loss_B]```, and ```miners = [None, miner_B]``` then no mining will be done for ```loss_A```, but the output of ```miner_B``` will be passed to ```loss_B```. The same logic applies if ```losses = {"loss_A": loss_A, "loss_B": loss_B}``` and ```miners = {"loss_B": miner_B}```.
-* **weights**: Optional. A list or dictionary of loss weights, which will be multiplied by the corresponding losses obtained by the loss functions. The default is to multiply each loss by 1. If ```losses``` is a list, then ```weights``` must be a list. If ```losses``` is a dictionary, ```weights``` must contain the same keys as ```losses```. 
 
 ## MultiSimilarityLoss
 [Multi-Similarity Loss with General Pair Weighting for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf){target=_blank}
@@ -1007,11 +974,11 @@ losses.TupletMarginLoss(margin=5.73, scale=64, **kwargs)
 * **margin**: The angular margin (in degrees) applied to positive pairs. This is beta in the above equation. The paper uses a value of 5.73 degrees (0.1 radians).
 * **scale**: This is ```s``` in the above equation.
 
-The paper combines this loss with [IntraPairVarianceLoss](losses.md#intrapairvarianceloss). You can accomplish this by using [MultipleLosses](losses.md#multiplelosses):
+The paper combines this loss with [IntraPairVarianceLoss](losses.md#intrapairvarianceloss). You can accomplish this by using [MultipleLosses](wrappers.md#multiplelosses):
 ```python
 main_loss = losses.TupletMarginLoss()
 var_loss = losses.IntraPairVarianceLoss()
-complete_loss = losses.MultipleLosses([main_loss, var_loss], weights=[1, 0.5])
+complete_loss = wrappers.MultipleLosses([main_loss, var_loss], weights=[1, 0.5])
 ```
 
 **Default distance**: 

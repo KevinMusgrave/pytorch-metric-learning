@@ -67,6 +67,11 @@ class BaseMetricLossFunction(
 class MultipleLosses(torch.nn.Module):
     def __init__(self, losses, miners=None, weights=None):
         super().__init__()
+        warnings.warn(
+            "Importing MultipleLosses from losses is deprecated. Import MultipleLossesWrapper from pytorch_metric_learning.wrappers instead.",
+            DeprecationWarning
+        )
+
         self.is_dict = isinstance(losses, dict)
         self.losses = (
             torch.nn.ModuleDict(losses) if self.is_dict else torch.nn.ModuleList(losses)

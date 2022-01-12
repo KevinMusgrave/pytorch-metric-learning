@@ -11,43 +11,6 @@
  <a href="https://anaconda.org/metric-learning/pytorch-metric-learning">
      <img alt="Anaconda version" src="https://img.shields.io/conda/v/metric-learning/pytorch-metric-learning?color=bright-green">
  </a>
- 
-<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/commits/master">
-     <img alt="Commit activity" src="https://img.shields.io/github/commit-activity/m/KevinMusgrave/pytorch-metric-learning">
- </a>
- 
-<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/LICENSE">
-     <img alt="License" src="https://img.shields.io/github/license/KevinMusgrave/pytorch-metric-learning?color=bright-green">
- </a>
-</p>
-
- <p align="center">
-<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/.github/workflows/test_losses.yml">
-    <img alt="Losses unit tests" src="https://github.com/KevinMusgrave/pytorch-metric-learning/workflows/losses/badge.svg">
- </a>
-<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/.github/workflows/test_miners.yml">
-    <img alt="Miners unit tests" src="https://github.com/KevinMusgrave/pytorch-metric-learning/workflows/miners/badge.svg">
- </a>
-	<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/.github/workflows/test_reducers.yml">
-    <img alt="Reducers unit tests" src="https://github.com/KevinMusgrave/pytorch-metric-learning/workflows/reducers/badge.svg">
- </a>
-	<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/.github/workflows/test_regularizers.yml">
-    <img alt="Regularizers unit tests" src="https://github.com/KevinMusgrave/pytorch-metric-learning/workflows/regularizers/badge.svg">
- </a>
-</p>
- <p align="center">
-	<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/.github/workflows/test_samplers.yml">
-    <img alt="Samplers unit tests" src="https://github.com/KevinMusgrave/pytorch-metric-learning/workflows/samplers/badge.svg">
- </a>
-	<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/.github/workflows/test_testers.yml">
-    <img alt="Testers unit tests" src="https://github.com/KevinMusgrave/pytorch-metric-learning/workflows/testers/badge.svg">
- </a>
-	<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/.github/workflows/test_trainers.yml">
-    <img alt="Trainers unit tests" src="https://github.com/KevinMusgrave/pytorch-metric-learning/workflows/trainers/badge.svg">
- </a>
-	<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/.github/workflows/test_utils.yml">
-    <img alt="Utils unit tests" src="https://github.com/KevinMusgrave/pytorch-metric-learning/workflows/utils/badge.svg">
- </a>
 </p>
 
 ## News

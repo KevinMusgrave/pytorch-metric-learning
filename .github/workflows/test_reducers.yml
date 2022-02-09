@@ -5,12 +5,12 @@ name: reducers
 
 on:
   push:
-    branches: [ master, dev ]
+    branches: [ master, dev, v2.0 ]
     paths:
       - 'src/**'
       - 'tests/**'
   pull_request:
-    branches: [ master, dev ]
+    branches: [ master, dev, v2.0 ]
     paths:
       - 'src/**'
       - 'tests/**'

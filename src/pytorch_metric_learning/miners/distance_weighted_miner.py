@@ -30,7 +30,7 @@ class DistanceWeightedMiner(BaseTupleMiner):
 
         # See the first equation from Section 4 of the paper
         log_weights = (2.0 - d) * torch.log(mat) - ((d - 3) / 2) * torch.log(
-            1.0 - 0.25 * (mat ** 2.0)
+            1.0 - 0.25 * (mat**2.0)
         )
 
         inf_or_nan = torch.isinf(log_weights) | torch.isnan(log_weights)

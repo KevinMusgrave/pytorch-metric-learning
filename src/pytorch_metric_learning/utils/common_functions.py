@@ -236,7 +236,9 @@ def make_label_to_rank_dict(label_set):
     Returns:
         A dictionary mapping each label to its numeric rank in the original set
     """
-    ranked = scipy.stats.rankdata(label_set) - 1
+    if len(set(label_set)) != len(label_set):
+        raise ValueError("label set must not have duplicates")
+    ranked = scipy.stats.rankdata(label_set).astype(int) - 1
     return {k: v for k, v in zip(label_set, ranked)}
 
 

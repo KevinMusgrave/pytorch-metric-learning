@@ -15,7 +15,7 @@ class CenterInvariantRegularizer(BaseRegularizer):
         deviations_from_mean = squared_weight_norms - torch.mean(squared_weight_norms)
         return {
             "loss": {
-                "losses": (deviations_from_mean ** 2) / 4,
+                "losses": (deviations_from_mean**2) / 4,
                 "indices": c_f.torch_arange_from_size(weights),
                 "reduction_type": "element",
             }

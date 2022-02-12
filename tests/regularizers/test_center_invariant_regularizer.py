@@ -49,7 +49,7 @@ class TestCenterInvariantRegularizer(unittest.TestCase):
                     torch.norm(loss_func.W[:, i], p=2) ** 2
                     - average_squared_weight_norms
                 )
-                correct_reg_loss += (deviation ** 2) / 4
+                correct_reg_loss += (deviation**2) / 4
             correct_reg_loss /= num_classes
 
             correct_total_loss = correct_class_loss + (correct_reg_loss * reg_weight)

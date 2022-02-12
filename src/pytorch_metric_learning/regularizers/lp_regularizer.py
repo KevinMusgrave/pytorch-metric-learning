@@ -14,7 +14,7 @@ class LpRegularizer(BaseRegularizer):
     def compute_loss(self, embeddings):
         reg = torch.norm(embeddings, p=self.p, dim=1)
         if self.power != 1:
-            reg = reg ** self.power
+            reg = reg**self.power
         return {
             "loss": {
                 "losses": reg,

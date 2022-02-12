@@ -61,12 +61,12 @@ class TestLargeMarginSoftmaxLoss(unittest.TestCase):
                     curr_valA = (
                         c
                         * (curr_cosineA ** (margin - (2 * z)))
-                        * ((1 - curr_cosineA ** 2) ** z)
+                        * ((1 - curr_cosineA**2) ** z)
                     )
                     curr_valB = (
                         c
                         * (curr_cosineB ** (margin - (2 * z)))
-                        * ((1 - curr_cosineB ** 2) ** z)
+                        * ((1 - curr_cosineB**2) ** z)
                     )
                     if z % 2 == 1:
                         curr_valA *= -1

@@ -86,11 +86,12 @@ def get_hierarchy_label(batch_labels, hierarchy_level):
 def map_labels(label_map, labels):
     labels = to_numpy(labels)
     if labels.ndim == 2:
+        new_labels = np.zeros(labels.shape, dtype=int)
         for h in range(labels.shape[1]):
-            labels[:, h] = label_map(labels[:, h], h)
+            new_labels[:, h] = label_map(labels[:, h], h)
     else:
-        labels = label_map(labels, 0)
-    return labels
+        new_labels = label_map(labels, 0)
+    return new_labels
 
 
 def process_label(labels, hierarchy_level, label_map):
@@ -235,7 +236,9 @@ def make_label_to_rank_dict(label_set):
     Returns:
         A dictionary mapping each label to its numeric rank in the original set
     """
-    ranked = scipy.stats.rankdata(label_set) - 1
+    if len(set(label_set)) != len(label_set):
+        raise ValueError("label set must not have duplicates")
+    ranked = scipy.stats.rankdata(label_set).astype(int) - 1
     return {k: v for k, v in zip(label_set, ranked)}
 
 

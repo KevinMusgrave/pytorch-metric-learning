@@ -789,3 +789,14 @@ class TestCalculateAccuraciesCustomKNN(unittest.TestCase):
 
         for k, v in acc1.items():
             self.assertTrue(np.isclose(v, acc2[k], rtol=1e-3))
+
+
+class TestWithinAutocast(unittest.TestCase):
+    def test_within_autocast(self):
+        if TEST_DEVICE == torch.device("cpu"):
+            return
+        AC = accuracy_calculator.AccuracyCalculator()
+        embeddings = torch.randn(1000, 32)
+        labels = torch.randint(0, 10, size=(1000,))
+        with torch.autocast(device_type="cuda", dtype=torch.float16):
+            acc = AC.get_accuracy(embeddings, embeddings, labels, labels, True)

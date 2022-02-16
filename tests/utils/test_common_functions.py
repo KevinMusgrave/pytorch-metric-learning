@@ -57,10 +57,15 @@ class TestCommonFunctions(unittest.TestCase):
 
     def test_collect_stats_flag(self):
         self.assertTrue(c_f.COLLECT_STATS == WITH_COLLECT_STATS)
-        loss_fn = TripletMarginLoss()
-        self.assertTrue(loss_fn.collect_stats == WITH_COLLECT_STATS)
-        self.assertTrue(loss_fn.distance.collect_stats == WITH_COLLECT_STATS)
-        self.assertTrue(loss_fn.reducer.collect_stats == WITH_COLLECT_STATS)
+        for x in [True, False, True, False, WITH_COLLECT_STATS]:
+            c_f.COLLECT_STATS = x
+            loss_fn = TripletMarginLoss()
+            self.assertTrue(loss_fn.collect_stats == x)
+            self.assertTrue(loss_fn.distance.collect_stats == x)
+            self.assertTrue(loss_fn.reducer.collect_stats == x)
+        for x in [True, False]:
+            loss_fn = TripletMarginLoss(collect_stats=x)
+            self.assertTrue(loss_fn.collect_stats == x)
 
     def test_check_shapes(self):
         embeddings = torch.randn(32, 512, 3)

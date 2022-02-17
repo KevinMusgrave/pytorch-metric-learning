@@ -27,7 +27,7 @@ class BaseDistance(ModuleWithRecords):
         )
         mat = self.compute_mat(query_emb_normalized, ref_emb_normalized)
         if self.power != 1:
-            mat = mat ** self.power
+            mat = mat**self.power
         assert mat.size() == torch.Size((query_emb.size(0), ref_emb.size(0)))
         return mat
 

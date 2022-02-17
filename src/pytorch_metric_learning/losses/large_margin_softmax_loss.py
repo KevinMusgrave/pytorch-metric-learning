@@ -46,8 +46,8 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         cosine = cosine.unsqueeze(1)
         for attr in ["n_range", "margin_choose_n", "cos_powers", "alternating"]:
             setattr(self, attr, c_f.to_device(getattr(self, attr), cosine))
-        cos_powered = cosine ** self.cos_powers
-        sin_powered = (1 - cosine ** 2) ** self.n_range
+        cos_powered = cosine**self.cos_powers
+        sin_powered = (1 - cosine**2) ** self.n_range
         terms = (
             self.alternating * self.margin_choose_n * cos_powered * sin_powered
         )  # Equation 7 in the paper

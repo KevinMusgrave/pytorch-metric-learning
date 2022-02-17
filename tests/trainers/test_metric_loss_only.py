@@ -8,6 +8,7 @@ import torch
 from torchvision import datasets, transforms
 
 from pytorch_metric_learning.losses import NTXentLoss
+from pytorch_metric_learning.reducers import AvgNonZeroReducer
 from pytorch_metric_learning.samplers import MPerClassSampler
 from pytorch_metric_learning.testers import GlobalEmbeddingSpaceTester
 from pytorch_metric_learning.trainers import MetricLossOnly
@@ -36,7 +37,7 @@ class TestMetricLossOnly(unittest.TestCase):
             )
         )
 
-        loss_fn = NTXentLoss()
+        loss_fn = NTXentLoss(reducer=AvgNonZeroReducer())
 
         normalize_transform = transforms.Normalize(
             mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
@@ -166,6 +167,18 @@ class TestMetricLossOnly(unittest.TestCase):
 
                 num_epochs = 2
                 trainer.train(num_epochs=num_epochs)
+
+                for record_name in [
+                    "metric_loss_NTXentLoss",
+                    "metric_loss_NTXentLoss__modules_distance_CosineSimilarity",
+                    "metric_loss_NTXentLoss__modules_reducer_AvgNonZeroReducer",
+                ]:
+                    self.assertTrue(record_keeper.table_exists(record_name))
+                    self.assertTrue(
+                        len(record_keeper.query(f"SELECT * FROM {record_name}"))
+                        == num_epochs * iterations_per_epoch / log_freq
+                    )
+
                 best_epoch, best_accuracy = hooks.get_best_epoch_and_accuracy(
                     tester, "val"
                 )

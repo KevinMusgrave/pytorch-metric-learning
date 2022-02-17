@@ -4,6 +4,7 @@ import torch
 
 import pytorch_metric_learning.losses as losses
 from pytorch_metric_learning.wrappers import CrossBatchMemoryWrapper
+# from pytorch_metric_learning.losses import CrossBatchMemory as CrossBatchMemoryWrapper
 from pytorch_metric_learning.losses import (
     ContrastiveLoss,
     MultiSimilarityLoss,

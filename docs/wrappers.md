@@ -37,7 +37,7 @@ loss = loss_fn(embeddings, labels)
 This wraps a loss function, and implements [Cross-Batch Memory for Embedding Learning](https://arxiv.org/pdf/1912.06798.pdf){target=_blank}. It stores embeddings from previous iterations in a queue, and uses them to form more pairs/triplets with the current iteration's embeddings.
 
 ```python
-wrappers.CrossBatchMemory(loss, embedding_size, memory_size=1024, miner=None)
+wrappers.CrossBatchMemoryWrapper(loss, embedding_size, memory_size=1024, miner=None)
 ```
 
 **Parameters**:
@@ -73,10 +73,10 @@ As shown above, CrossBatchMemory comes with a 4th argument in its ```forward``` 
 
 
 
-## MultipleLosses
+## MultipleLossesWrapper
 This is a simple wrapper for multiple losses. Pass in a list of already-initialized loss functions. Then, when you call forward on this object, it will return the sum of all wrapped losses.
 ```python
-losses.MultipleLosses(losses, miners=None, weights=None)
+wrappers.MultipleLossesWrapper(losses, miners=None, weights=None)
 ```
 **Parameters**:
 

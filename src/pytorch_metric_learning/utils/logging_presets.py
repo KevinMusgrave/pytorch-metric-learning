@@ -54,7 +54,7 @@ class HookContainer:
                 trainer.loss_tracker.loss_weights,
                 {"parent_name": "loss_weights"},
             ],
-            [trainer.loss_funcs, {"recursive_types": [torch.nn.Module]}],
+            [trainer.loss_funcs, {"recursive_types": [torch.nn.Module, dict]}],
             [trainer.mining_funcs, {}],
             [trainer.models, {}],
             [trainer.optimizers, {"custom_attr_func": self.optimizer_custom_attr_func}],

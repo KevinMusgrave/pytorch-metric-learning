@@ -1,9 +1,7 @@
 import unittest
-
 import numpy as np
 import torch
 import torch.nn.functional as F
-
 from pytorch_metric_learning.losses import ArcFaceLoss
 
 from .. import TEST_DEVICE, TEST_DTYPES

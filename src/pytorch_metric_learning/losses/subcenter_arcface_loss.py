@@ -4,7 +4,7 @@ import math
 from .large_margin_softmax_loss import ArcFaceLoss
 
 
-class SubCenterArcFaceLoss(losses.ArcFaceLoss):
+class SubCenterArcFaceLoss(ArcFaceLoss):
     """
     Implementation of https://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123560715.pdf
     """
@@ -27,12 +27,11 @@ class SubCenterArcFaceLoss(losses.ArcFaceLoss):
             labels = labels.flatten()
         if normalize:
             embeddings = F.normalize(embeddings, p=2, dim=1)
-        device = self.W.device
         cos_thresh = math.cos(math.pi * threshold / 180.)
         outliers = []
         dominant_centers = torch.Tensor(embeddings.shape[1], self.num_classes)
         with torch.set_grad_enabled(False):
-            for label in range(self.num_classes):
+            for label in range(labels.unique()):
                 target_samples = labels == label
                 target_indeces = target_samples.nonzero()
                 target_embeddings = embeddings[target_samples]

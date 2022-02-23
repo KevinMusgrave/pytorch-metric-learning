@@ -26,7 +26,9 @@ class NCALoss(BaseMetricLossFunction):
         self, query, reference, query_labels, reference_labels, indices_tuple
     ):
         dtype = query.dtype
-        miner_weights = lmu.convert_to_weights(indices_tuple, query_labels, dtype=dtype)
+        miner_weights = lmu.convert_to_weights(
+            indices_tuple, query_labels, dtype=dtype, using_ref=query is not reference
+        )
         mat = self.distance(query, reference)
         if not self.distance.is_inverted:
             mat = -mat

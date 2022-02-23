@@ -56,10 +56,4 @@ class TestClassWeightedReducer(unittest.TestCase):
                     )
                 correct_output /= len(losses)
                 rtol = 1e-2 if dtype == torch.float16 else 1e-5
-                if not torch.isclose(output, correct_output, rtol=rtol):
-                    print(
-                        "ClassWeightedReducer test failed. Printing outputs, because this seems to happen randomly"
-                    )
-                    print("output", output)
-                    print("correct_output", correct_output)
                 self.assertTrue(torch.isclose(output, correct_output, rtol=rtol))

@@ -3,8 +3,6 @@ import unittest
 import torch
 
 import pytorch_metric_learning.losses as losses
-
-# from pytorch_metric_learning.losses import CrossBatchMemory as CrossBatchMemoryWrapper
 from pytorch_metric_learning.losses import (
     ContrastiveLoss,
     MultiSimilarityLoss,
@@ -528,7 +526,7 @@ class TestCrossBatchMemoryWrapper(unittest.TestCase):
             num_labels = 10
             num_iter = 10
             batch_size = 32
-            for inner_loss in self.load_valid_loss_fns(num_labels=num_labels):
+            for inner_loss in self.load_valid_loss_fns():
                 self.loss = CrossBatchMemoryWrapper(
                     loss=inner_loss,
                     embedding_size=self.embedding_size,
@@ -538,12 +536,12 @@ class TestCrossBatchMemoryWrapper(unittest.TestCase):
                 all_embeddings = torch.tensor([], dtype=dtype).to(TEST_DEVICE)
                 all_labels = torch.LongTensor([]).to(TEST_DEVICE)
                 for i in range(num_iter):
-                    embeddings = (
-                        torch.randn(batch_size, self.embedding_size)
-                        .to(TEST_DEVICE)
-                        .type(dtype)
+                    embeddings = torch.randn(
+                        batch_size, self.embedding_size, device=TEST_DEVICE, dtype=dtype
                     )
-                    labels = torch.randint(0, num_labels, (batch_size,)).to(TEST_DEVICE)
+                    labels = torch.randint(
+                        0, num_labels, (batch_size,), device=TEST_DEVICE
+                    )
 
                     loss = self.loss(embeddings, labels)
 
@@ -565,7 +563,7 @@ class TestCrossBatchMemoryWrapper(unittest.TestCase):
                     )
                     self.assertTrue(torch.isclose(loss, correct_loss))
 
-    def load_valid_loss_fns(self, num_labels):
+    def load_valid_loss_fns(self):
         """
         Leaving invalid loss functions as comments at this point of the implementation.
         Unless otherwise specified, the commented-out loss functions fail because it does not implement
@@ -574,73 +572,30 @@ class TestCrossBatchMemoryWrapper(unittest.TestCase):
         Losses that require partciular added attention are:
         1. torch.isclose() fails in test_all_losses
             losses.MarginLoss()
-
-        2. Moved to wrappers/
-            losses.MultiplePairsLoss
-        3. Runs into a CUDA error;
+        2. Runs into a CUDA error;
             losses.NCALoss()
         """
         supported_losses = CrossBatchMemoryWrapper.supported_losses()
 
         loss_fns = [
             losses.AngularLoss(),
-            # losses.ArcFaceLoss(
-            #     num_classes=num_labels,
-            #     embedding_size=self.embedding_size
-            # ),
-            # losses.CentroidTripletLoss(),
             losses.CircleLoss(),
             losses.ContrastiveLoss(),
-            # losses.CosFaceLoss(
-            #     num_classes=num_labels,
-            #     embedding_size=self.embedding_size
-            # ),
-            # losses.FastAPLoss(
-            #     num_bins=10
-            # ),
             losses.GeneralizedLiftedStructureLoss(),
             losses.IntraPairVarianceLoss(),
-            # losses.LargeMarginSoftmaxLoss(
-            #     num_classes=num_labels,
-            #     embedding_size=self.embedding_size
-            # ),
             losses.LiftedStructureLoss(),
-            # losses.MarginLoss(), # torch.isclose() fails
-            # losses.MultiplePairsLoss -> wrappers
+            # losses.MarginLoss(),  # torch.isclose() fails
             losses.MultiSimilarityLoss(),
-            # losses.NCALoss(), # runs into a CUDA error
-            # losses.NormalizedSoftmaxLoss(
-            #     num_classes=num_labels,
-            #     embedding_size=self.embedding_size
-            # ),
+            losses.NCALoss(),  # runs into a CUDA error
             losses.NTXentLoss(),
-            # losses.ProxyAnchorLoss(
-            #     num_classes=num_labels,
-            #     embedding_size=self.embedding_size
-            # ),
-            # losses.ProxyNCALoss(
-            #     num_classes=num_labels,
-            #     embedding_size=self.embedding_size
-            # ),
             losses.SignalToNoiseRatioContrastiveLoss(),
-            # losses.SoftTripleLoss(
-            #     num_classes=num_labels,
-            #     embedding_size=self.embedding_size
-            # )
-            # losses.SphereFaceLoss(
-            #     num_classes=num_labels,
-            #     embedding_size=self.embedding_size
-            # ),
             losses.SupConLoss(),
             losses.TripletMarginLoss(),
             losses.TupletMarginLoss(),
-            # losses.VICRegLoss()
         ]
 
         loaded_loss_names = [type(loss).__name__ for loss in loss_fns]
-        assert set(loaded_loss_names).intersection(set(supported_losses)) == set(
-            supported_losses
-        )
+        assert set(loaded_loss_names) == set(supported_losses)
 
         return loss_fns
 

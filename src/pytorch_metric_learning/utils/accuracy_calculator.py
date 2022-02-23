@@ -229,7 +229,7 @@ def try_getting_not_lone_labels(knn_labels, query_labels, not_lone_query_mask):
     )
 
 
-def zero_accuracy(unique_labels, return_per_class):
+def nan_accuracy(unique_labels, return_per_class):
     if return_per_class:
         return [float("nan") for _ in range(len(unique_labels))]
     return float("nan")
@@ -333,7 +333,7 @@ class AccuracyCalculator:
             knn_labels, query_labels, not_lone_query_mask
         )
         if knn_labels is None:
-            return zero_accuracy(label_counts[0], self.return_per_class)
+            return nan_accuracy(label_counts[0], self.return_per_class)
         return precision_at_k(
             knn_labels,
             query_labels[:, None],
@@ -356,7 +356,7 @@ class AccuracyCalculator:
             knn_labels, query_labels, not_lone_query_mask
         )
         if knn_labels is None:
-            return zero_accuracy(label_counts[0], self.return_per_class)
+            return nan_accuracy(label_counts[0], self.return_per_class)
         return mean_average_precision_at_r(
             knn_labels,
             query_labels[:, None],
@@ -380,7 +380,7 @@ class AccuracyCalculator:
             knn_labels, query_labels, not_lone_query_mask
         )
         if knn_labels is None:
-            return zero_accuracy(label_counts[0], self.return_per_class)
+            return nan_accuracy(label_counts[0], self.return_per_class)
 
         return mean_average_precision(
             knn_labels,
@@ -403,7 +403,7 @@ class AccuracyCalculator:
             knn_labels, query_labels, not_lone_query_mask
         )
         if knn_labels is None:
-            return zero_accuracy(label_counts[0], self.return_per_class)
+            return nan_accuracy(label_counts[0], self.return_per_class)
 
         return mean_reciprocal_rank(
             knn_labels,
@@ -426,7 +426,7 @@ class AccuracyCalculator:
             knn_labels, query_labels, not_lone_query_mask
         )
         if knn_labels is None:
-            return zero_accuracy(label_counts[0], self.return_per_class)
+            return nan_accuracy(label_counts[0], self.return_per_class)
         return r_precision(
             knn_labels,
             query_labels[:, None],

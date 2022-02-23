@@ -231,8 +231,8 @@ def try_getting_not_lone_labels(knn_labels, query_labels, not_lone_query_mask):
 
 def zero_accuracy(unique_labels, return_per_class):
     if return_per_class:
-        return [0 for _ in range(len(unique_labels))]
-    return 0
+        return [float("nan") for _ in range(len(unique_labels))]
+    return float("nan")
 
 
 class AccuracyCalculator:

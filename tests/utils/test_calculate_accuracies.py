@@ -78,14 +78,17 @@ class TestCalculateAccuracies(unittest.TestCase):
                         kwargs["embeddings_come_from_same_source"] = ecfss
                         acc = AC._get_accuracy(function_dict, **kwargs)
                         if i == 1:
-                            zero_acc = 0 if not return_per_class else [0, 0, 0, 0, 0]
-                            self.assertTrue(acc["precision_at_1"] == zero_acc)
-                            self.assertTrue(acc["r_precision"] == zero_acc)
+                            self.assertTrue(np.all(np.isnan(acc["precision_at_1"])))
+                            self.assertTrue(np.all(np.isnan(acc["r_precision"])))
                             self.assertTrue(
-                                acc["mean_average_precision_at_r"] == zero_acc
+                                np.all(np.isnan(acc["mean_average_precision_at_r"]))
                             )
-                            self.assertTrue(acc["mean_average_precision"] == zero_acc)
-                            self.assertTrue(acc["mean_reciprocal_rank"] == zero_acc)
+                            self.assertTrue(
+                                np.all(np.isnan(acc["mean_average_precision"]))
+                            )
+                            self.assertTrue(
+                                np.all(np.isnan(acc["mean_reciprocal_rank"]))
+                            )
                         else:
                             self.assertTrue(
                                 isclose(

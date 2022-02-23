@@ -1,7 +1,7 @@
 import torch
 import torch.nn.functional as F
 import math
-from .large_margin_softmax_loss import ArcFaceLoss
+from .arcface_loss import ArcFaceLoss
 
 
 class SubCenterArcFaceLoss(ArcFaceLoss):
@@ -10,8 +10,8 @@ class SubCenterArcFaceLoss(ArcFaceLoss):
     """
 
     def __init__(self, *args, margin=28.6, scale=64, sub_centers=3, **kwargs):
-        num_classes, embedding_size = args
-        super().__init__(num_classes * sub_centers, embedding_size, margin=margin, scale=scale, **kwargs)
+        num_classes, embedding_size = kwargs['num_classes'], kwargs['embedding_size']
+        super().__init__(num_classes * sub_centers, embedding_size, margin=margin, scale=scale)
         self.sub_centers = sub_centers
         self.num_classes = num_classes
 
@@ -27,12 +27,15 @@ class SubCenterArcFaceLoss(ArcFaceLoss):
             labels = labels.flatten()
         if normalize:
             embeddings = F.normalize(embeddings, p=2, dim=1)
+        dtype, device = embeddings.dtype, embeddings.device
+        self.cast_types(dtype, device)
         cos_thresh = math.cos(math.pi * threshold / 180.)
         outliers = []
-        dominant_centers = torch.Tensor(embeddings.shape[1], self.num_classes)
+        dominant_centers = torch.Tensor(embeddings.shape[1], self.num_classes).to(dtype=dtype, device=device)
         with torch.set_grad_enabled(False):
-            for label in range(labels.unique()):
+            for label in range(self.num_classes):
                 target_samples = labels == label
+                if (target_samples==False).all():continue
                 target_indeces = target_samples.nonzero()
                 target_embeddings = embeddings[target_samples]
 

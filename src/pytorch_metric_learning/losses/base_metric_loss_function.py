@@ -1,9 +1,6 @@
 #! /usr/bin/env python3
 
 import inspect
-import warnings
-
-import torch
 
 from ..utils import common_functions as c_f
 from ..utils.module_with_records_and_reducer import ModuleWithRecordsReducerAndDistance
@@ -63,4 +60,3 @@ class BaseMetricLossFunction(
                 if getattr(self, "{}_regularizer".format(descriptor)):
                     reg_names.extend(base_class.regularization_loss_names(self))
         return reg_names
-

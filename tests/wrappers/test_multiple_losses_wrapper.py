@@ -2,12 +2,9 @@ import unittest
 
 import torch
 
-from pytorch_metric_learning.wrappers import MultipleLossesWrapper
-from pytorch_metric_learning.losses import (
-    ContrastiveLoss,
-    TripletMarginLoss,
-)
+from pytorch_metric_learning.losses import ContrastiveLoss, TripletMarginLoss
 from pytorch_metric_learning.miners import MultiSimilarityMiner
+from pytorch_metric_learning.wrappers import MultipleLossesWrapper
 
 from .. import TEST_DEVICE, TEST_DTYPES
 from ..zzz_testing_utils.testing_utils import angle_to_coord
@@ -111,7 +108,8 @@ class TestMultipleLossesWrapper(unittest.TestCase):
         lossA = ContrastiveLoss()
         lossB = TripletMarginLoss(0.1)
         self.assertRaises(
-            AssertionError, lambda: MultipleLossesWrapper(losses=[lossA, lossB], weights=[1])
+            AssertionError,
+            lambda: MultipleLossesWrapper(losses=[lossA, lossB], weights=[1]),
         )
 
         minerA = MultiSimilarityMiner()

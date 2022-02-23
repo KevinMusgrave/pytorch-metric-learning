@@ -3,7 +3,7 @@ import unittest
 import torch
 
 import pytorch_metric_learning.losses as losses
-from pytorch_metric_learning.wrappers import CrossBatchMemoryWrapper
+
 # from pytorch_metric_learning.losses import CrossBatchMemory as CrossBatchMemoryWrapper
 from pytorch_metric_learning.losses import (
     ContrastiveLoss,
@@ -17,6 +17,7 @@ from pytorch_metric_learning.miners import (
     TripletMarginMiner,
 )
 from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
+from pytorch_metric_learning.wrappers import CrossBatchMemoryWrapper
 
 from .. import TEST_DEVICE, TEST_DTYPES
 from ..zzz_testing_utils.testing_utils import angle_to_coord
@@ -565,7 +566,7 @@ class TestCrossBatchMemoryWrapper(unittest.TestCase):
                     self.assertTrue(torch.isclose(loss, correct_loss))
 
     def load_valid_loss_fns(self, num_labels):
-        '''
+        """
         Leaving invalid loss functions as comments at this point of the implementation.
         Unless otherwise specified, the commented-out loss functions fail because it does not implement
         ref_emb, ref_labels functionality.
@@ -578,7 +579,7 @@ class TestCrossBatchMemoryWrapper(unittest.TestCase):
             losses.MultiplePairsLoss
         3. Runs into a CUDA error;
             losses.NCALoss()
-        '''
+        """
         supported_losses = CrossBatchMemoryWrapper.supported_losses()
 
         loss_fns = [
@@ -605,7 +606,7 @@ class TestCrossBatchMemoryWrapper(unittest.TestCase):
             # ),
             losses.LiftedStructureLoss(),
             # losses.MarginLoss(), # torch.isclose() fails
-            #losses.MultiplePairsLoss -> wrappers
+            # losses.MultiplePairsLoss -> wrappers
             losses.MultiSimilarityLoss(),
             # losses.NCALoss(), # runs into a CUDA error
             # losses.NormalizedSoftmaxLoss(
@@ -634,12 +635,15 @@ class TestCrossBatchMemoryWrapper(unittest.TestCase):
             losses.TripletMarginLoss(),
             losses.TupletMarginLoss(),
             # losses.VICRegLoss()
-        ]    
-        
-        loaded_loss_names = [type(loss).__name__ for loss in loss_fns]
-        assert set(loaded_loss_names).intersection(set(supported_losses)) == set(supported_losses) 
+        ]
 
-        return loss_fns  
+        loaded_loss_names = [type(loss).__name__ for loss in loss_fns]
+        assert set(loaded_loss_names).intersection(set(supported_losses)) == set(
+            supported_losses
+        )
+
+        return loss_fns
+
 
 if __name__ == "__main__":
     unittest.main()

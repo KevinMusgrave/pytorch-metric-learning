@@ -11,7 +11,13 @@ class ArcFaceLoss(LargeMarginSoftmaxLoss):
     """
 
     def __init__(self, num_classes, embedding_size, margin=28.6, scale=64, **kwargs):
-        super().__init__(num_classes=num_classes, embedding_size=embedding_size, margin=margin, scale=scale, **kwargs)
+        super().__init__(
+            num_classes=num_classes,
+            embedding_size=embedding_size,
+            margin=margin,
+            scale=scale,
+            **kwargs
+        )
 
     def init_margin(self):
         self.margin = np.radians(self.margin)

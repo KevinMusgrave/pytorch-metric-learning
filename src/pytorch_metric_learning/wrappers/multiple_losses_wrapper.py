@@ -2,14 +2,14 @@ import torch
 
 from ..utils import common_functions as c_f
 
+
 class MultipleLossesWrapper(torch.nn.Module):
     def __init__(self, losses, miners=None, weights=None):
         super().__init__()
         self.is_dict = isinstance(losses, dict)
         self.losses = (
             torch.nn.ModuleDict(losses) if self.is_dict else torch.nn.ModuleList(losses)
-        )  
-
+        )
 
         if miners is not None:
             self.assertions_if_not_none(miners, match_all_keys=False)
@@ -30,7 +30,6 @@ class MultipleLossesWrapper(torch.nn.Module):
                 if self.is_dict
                 else [1] * len(losses)
             )
-
 
     def forward(self, embeddings, labels, indices_tuple=None):
         if self.miners:

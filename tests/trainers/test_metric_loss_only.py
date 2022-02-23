@@ -153,7 +153,6 @@ class TestMetricLossOnly(unittest.TestCase):
                     optimizers=optimizer_dict,
                     batch_size=batch_size,
                     loss_funcs=loss_fn_dict,
-                    mining_funcs={},
                     dataset=train_dataset,
                     sampler=sampler,
                     data_device=TEST_DEVICE,

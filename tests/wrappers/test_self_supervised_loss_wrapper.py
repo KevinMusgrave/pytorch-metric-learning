@@ -114,24 +114,6 @@ class TestSelfSupervisedLossWrapper(unittest.TestCase):
         return loss_fns
 
     def load_valid_loss_fns(self):
-        """
-        losses.LiftedStructureLoss leads to:
-            File "/workspace/chanwookim/pytorch-metric-learning/tests/wrappers/test_self_supervised_loss_wrapper.py", line 66, in test_ssl_wrapper_all
-                real_losses = self.run_all_loss_fns(embeddings, labels, ref_emb, labels)
-            File "/workspace/chanwookim/pytorch-metric-learning/tests/wrappers/test_self_supervised_loss_wrapper.py", line 85, in run_all_loss_fns
-                ref_labels=ref_labels
-            File "/opt/conda/envs/ACW/lib/python3.7/site-packages/torch/nn/modules/module.py", line 1102, in _call_impl
-                return forward_call(*input, **kwargs)
-            File "src/pytorch_metric_learning/losses/base_metric_loss_function.py", line 38, in forward
-                embeddings, labels, indices_tuple, ref_emb, ref_labels
-            File "src/pytorch_metric_learning/losses/generic_pair_loss.py", line 19, in compute_loss
-                return self.loss_method(mat, indices_tuple)
-            File "src/pytorch_metric_learning/losses/generic_pair_loss.py", line 38, in pair_based_loss
-                return self._compute_loss(pos_pair, neg_pair, indices_tuple)
-            File "src/pytorch_metric_learning/losses/lifted_structure_loss.py", line 19, in _compute_loss
-                dtype = pos_pairs.dtype
-            AttributeError: 'list' object has no attribute 'dtype'
-        """
         reqparams = ["embeddings", "labels", "ref_emb", "ref_labels"]
         supported_losses = SelfSupervisedLossWrapper.supported_losses()
 

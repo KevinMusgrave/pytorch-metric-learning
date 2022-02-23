@@ -564,17 +564,6 @@ class TestCrossBatchMemoryWrapper(unittest.TestCase):
                     self.assertTrue(torch.isclose(loss, correct_loss))
 
     def load_valid_loss_fns(self):
-        """
-        Leaving invalid loss functions as comments at this point of the implementation.
-        Unless otherwise specified, the commented-out loss functions fail because it does not implement
-        ref_emb, ref_labels functionality.
-
-        Losses that require partciular added attention are:
-        1. torch.isclose() fails in test_all_losses
-            losses.MarginLoss()
-        2. Runs into a CUDA error;
-            losses.NCALoss()
-        """
         supported_losses = CrossBatchMemoryWrapper.supported_losses()
 
         loss_fns = [
@@ -584,9 +573,9 @@ class TestCrossBatchMemoryWrapper(unittest.TestCase):
             losses.GeneralizedLiftedStructureLoss(),
             losses.IntraPairVarianceLoss(),
             losses.LiftedStructureLoss(),
-            # losses.MarginLoss(),  # torch.isclose() fails
+            losses.MarginLoss(),
             losses.MultiSimilarityLoss(),
-            losses.NCALoss(),  # runs into a CUDA error
+            losses.NCALoss(),
             losses.NTXentLoss(),
             losses.SignalToNoiseRatioContrastiveLoss(),
             losses.SupConLoss(),

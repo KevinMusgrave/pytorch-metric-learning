@@ -27,7 +27,7 @@ class CrossBatchMemoryWrapper(BaseLossWrapper, ModuleWithRecords):
             "GeneralizedLiftedStructureLoss",
             "IntraPairVarianceLoss",
             "LiftedStructureLoss",
-            # "MarginLoss",
+            "MarginLoss",
             "MultiSimilarityLoss",
             "NCALoss",
             "NTXentLoss",

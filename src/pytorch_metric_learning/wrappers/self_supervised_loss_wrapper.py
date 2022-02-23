@@ -49,7 +49,7 @@ class SelfSupervisedLossWrapper(BaseLossWrapper):
             "ContrastiveLoss",
             "GeneralizedLiftedStructureLoss",
             "IntraPairVarianceLoss",
-            # "LiftedStructureLoss",
+            "LiftedStructureLoss",
             "MultiSimilarityLoss",
             "NTXentLoss",
             "SignalToNoiseRatioContrastiveLoss",

@@ -90,21 +90,23 @@ class TestSubCenterArcFaceLoss(unittest.TestCase):
                 TEST_DEVICE
             )  # 2D embeddings
             labels = torch.randint(low=0, high=10, size=(180,))
-            # check if subcenters are included
+
             outliers, dominant_centers = loss_func.get_outliers(embeddings, labels, threshold=threshold)
-            
+                        
             self.assertTrue(len(outliers) < len(labels))
             
             self.assertTrue(dominant_centers.shape[1] == num_classes)
-
-            cos_thresh = math.cos(math.pi * threshold / 180.)
+                
+            cos_threshold = math.cos(math.pi * threshold / 180.)
             distances = torch.mm(F.normalize(embeddings), dominant_centers)
             outliers_labels = labels[outliers]
             outliers_distances = distances[outliers, outliers_labels]
-            self.assertTrue((outliers_distances < cos_thresh).all())
+            # check of outliers are below the threshold
+            self.assertTrue((outliers_distances < cos_threshold).all())
             
             all_indeces = torch.arange(len(labels))
-            normal_indeces = torch.masked_select(all_indeces, distances[all_indeces, labels] >= cos_thresh)
+            normal_indeces = torch.masked_select(all_indeces, distances[all_indeces, labels] >= cos_threshold)
+            # check if all indeces present
             self.assertTrue((normal_indeces.shape[0] + outliers.shape[0] == labels.shape[0]))
-            
+            # check if there's no intersection between indeces of 2 sets            
             self.assertTrue(len(np.intersect1d(normal_indeces, outliers)) == 0)

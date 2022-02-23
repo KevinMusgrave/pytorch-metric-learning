@@ -29,7 +29,7 @@ class SubCenterArcFaceLoss(ArcFaceLoss):
             embeddings = F.normalize(embeddings, p=2, dim=1)
         dtype, device = embeddings.dtype, embeddings.device
         self.cast_types(dtype, device)
-        cos_thresh = math.cos(math.pi * threshold / 180.)
+        cos_threshold = math.cos(math.pi * threshold / 180.)
         outliers = []
         dominant_centers = torch.Tensor(embeddings.shape[1], self.num_classes).to(dtype=dtype, device=device)
         with torch.set_grad_enabled(False):
@@ -49,7 +49,7 @@ class SubCenterArcFaceLoss(ArcFaceLoss):
                 dominant_centers[:, label] = dominant_center
                 
                 dominant_dist = distances[:, dominant_idx]
-                drop_dists = dominant_dist < cos_thresh
+                drop_dists = dominant_dist < cos_threshold
                 drop_idxs = target_indeces[drop_dists] 
                 outliers.extend(drop_idxs.detach().tolist())
         outliers = torch.tensor(outliers).flatten()

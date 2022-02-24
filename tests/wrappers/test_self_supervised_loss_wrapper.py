@@ -140,33 +140,3 @@ class TestSelfSupervisedLossWrapper(unittest.TestCase):
 
         return loss_fns
 
-        # loss_names = [
-        #     loss for loss in dir(losses)
-        #         if not (loss.startswith("__") or loss.endswith("__"))
-        #         and (loss[0].isupper())
-        #         and loss not in BLACKLIST
-        # ]
-
-        # loss_fns = dict()
-        # for module_name in loss_names:
-        #     loss_fn = getattr(losses, module_name)
-        #     '''
-        #     1. if the loss_fn does not support ref_emb or ref_labels
-        #     '''
-        #     if "compute_loss" not in dir(loss_fn):
-        #         continue
-
-        #     args = inspect.getfullargspec(loss_fn.compute_loss).args
-        #     if len(set(args).intersection(set(REQPARAMS))) != 4:
-        #         continue
-
-        #     '''
-        #     2. loss function does not have full default values for its parameters. ([1:] for "self")
-        #     '''
-        #     initparams = inspect.getfullargspec(loss_fn.__init__)
-        #     if initparams.defaults is None or len(initparams.args[1:]) != len(initparams.defaults):
-        #         continue
-
-        #     loss_fns[module_name] = loss_fn()
-
-        return loss_fns

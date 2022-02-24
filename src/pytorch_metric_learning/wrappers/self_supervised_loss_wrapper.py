@@ -84,31 +84,3 @@ class SelfSupervisedLossWrapper(BaseLossWrapper):
     def forward(self, embeddings, ref_emb, *args):
         return self.compute_loss(embeddings, ref_emb, *args)
 
-    @staticmethod
-    def get_blacklist():
-        return [
-            # Not loss functions
-            "BaseMetricLossFunction",
-            "EmbeddingRegularizerMixin",
-            "GenericPairLoss",
-            "MultipleLosses",
-            # Requires num_classes at initialization
-            "ArcFaceLoss",
-            "LargeMarginSoftmaxLoss",
-            "NormalizedSoftmaxLoss",
-            "ProxyAnchorLoss",
-            "ProxyNCALoss",
-            "SignalToNoiseRatioContrastiveLoss",
-            "SoftTripleLoss",
-            "SphereFaceLoss",
-            # Requires "num_pairs" at initialization
-            "NPairsLoss",
-            # Not applicable
-            "FastAPLoss",
-            "CentroidTripletLoss",
-            "VICRegLoss",
-            "AngularLoss",
-            "LiftedStructureLoss",
-            "NCALoss",
-            "TupletMarginLoss",
-        ]

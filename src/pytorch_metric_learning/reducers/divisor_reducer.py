@@ -1,5 +1,6 @@
 import torch
 
+from ..utils import common_functions as c_f
 from .base_reducer import BaseReducer
 
 
@@ -16,7 +17,11 @@ class DivisorReducer(BaseReducer):
 
     def sum_and_divide(self, losses, embeddings, divisor):
         if divisor != 0:
-            return torch.sum(losses) / divisor
+            output = torch.sum(losses) / divisor
+            if torch.isnan(output) and losses.dtype == torch.float16:
+                output = torch.sum(c_f.to_dtype(losses, dtype=torch.float32)) / divisor
+                output = c_f.to_dtype(output, dtype=torch.float16)
+            return output
         return self.zero_loss(embeddings)
 
     def element_reduction(self, losses, loss_indices, embeddings, labels, divisor=1):

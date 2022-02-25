@@ -1,11 +1,10 @@
 from .angular_loss import AngularLoss
 from .arcface_loss import ArcFaceLoss
-from .base_metric_loss_function import BaseMetricLossFunction, MultipleLosses
+from .base_metric_loss_function import BaseMetricLossFunction
 from .centroid_triplet_loss import CentroidTripletLoss
 from .circle_loss import CircleLoss
 from .contrastive_loss import ContrastiveLoss
 from .cosface_loss import CosFaceLoss
-from .cross_batch_memory import CrossBatchMemory
 from .fast_ap_loss import FastAPLoss
 from .generic_pair_loss import GenericPairLoss
 from .intra_pair_variance_loss import IntraPairVarianceLoss

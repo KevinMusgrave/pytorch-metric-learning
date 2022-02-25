@@ -146,6 +146,24 @@ class TestLossAndMinerUtils(unittest.TestCase):
             )
             self.assertTrue(torch.all(weights == correct_weights))
 
+        # Case where convert_to_weights is used with ref_emb.
+        # In this case, indices_tuple will include indices
+        # that point to ref_emb, which may be larger than the query
+        batch_size = 32
+        labels = torch.randint(0, 10, size=(batch_size,)).to(TEST_DEVICE)
+        a = torch.randint(0, batch_size, size=(256,)).to(TEST_DEVICE)
+        p = torch.randint(0, batch_size * 2, size=(256,)).to(TEST_DEVICE)
+        n = torch.randint(0, batch_size * 2, size=(256,)).to(TEST_DEVICE)
+        for dtype in TEST_DTYPES:
+            weights = lmu.convert_to_weights(
+                (a, p, n), labels=labels, dtype=dtype, using_ref=True
+            )
+
+            _, counts = torch.unique(a, return_counts=True, sorted=True)
+            counts = counts.type(weights.dtype) / torch.max(counts)
+            # Will fail on cuda if there is an indexing error
+            self.assertTrue(torch.equal(weights, counts))
+
     def test_get_random_triplet_indices(self):
         for dtype in TEST_DTYPES:
             for _ in range(10):

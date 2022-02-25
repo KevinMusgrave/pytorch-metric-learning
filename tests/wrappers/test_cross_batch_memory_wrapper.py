@@ -2,9 +2,9 @@ import unittest
 
 import torch
 
+import pytorch_metric_learning.losses as losses
 from pytorch_metric_learning.losses import (
     ContrastiveLoss,
-    CrossBatchMemory,
     MultiSimilarityLoss,
     NTXentLoss,
 )
@@ -15,12 +15,13 @@ from pytorch_metric_learning.miners import (
     TripletMarginMiner,
 )
 from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
+from pytorch_metric_learning.wrappers import CrossBatchMemoryWrapper
 
 from .. import TEST_DEVICE, TEST_DTYPES
 from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 
-class TestCrossBatchMemory(unittest.TestCase):
+class TestCrossBatchMemoryWrapper(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.embedding_size = 128
@@ -33,7 +34,7 @@ class TestCrossBatchMemory(unittest.TestCase):
     def test_remove_self_comparisons(self):
         for dtype in TEST_DTYPES:
             batch_size = 32
-            loss = CrossBatchMemory(
+            loss = CrossBatchMemoryWrapper(
                 loss=None,
                 embedding_size=self.embedding_size,
                 memory_size=self.memory_size,
@@ -135,12 +136,12 @@ class TestCrossBatchMemory(unittest.TestCase):
                 for memory_size in range(20, 40, 5):
                     inner_loss = NTXentLoss(temperature=0.1)
                     inner_miner = TripletMarginMiner(margin=0.1)
-                    loss = CrossBatchMemory(
+                    loss = CrossBatchMemoryWrapper(
                         loss=inner_loss,
                         embedding_size=self.embedding_size,
                         memory_size=memory_size,
                     )
-                    loss_with_miner = CrossBatchMemory(
+                    loss_with_miner = CrossBatchMemoryWrapper(
                         loss=inner_loss,
                         embedding_size=self.embedding_size,
                         memory_size=memory_size,
@@ -210,7 +211,7 @@ class TestCrossBatchMemory(unittest.TestCase):
             memory_size = 256
             inner_loss = NTXentLoss(temperature=0.1)
             inner_miner = DistanceWeightedMiner(cutoff=0.5, nonzero_loss_cutoff=1.4)
-            loss_with_miner = CrossBatchMemory(
+            loss_with_miner = CrossBatchMemoryWrapper(
                 loss=inner_loss,
                 embedding_size=2,
                 memory_size=memory_size,
@@ -238,18 +239,18 @@ class TestCrossBatchMemory(unittest.TestCase):
             for inner_loss in [ContrastiveLoss(), MultiSimilarityLoss()]:
                 inner_miner = MultiSimilarityMiner(0.3)
                 outer_miner = MultiSimilarityMiner(0.2)
-                self.loss = CrossBatchMemory(
+                self.loss = CrossBatchMemoryWrapper(
                     loss=inner_loss,
                     embedding_size=self.embedding_size,
                     memory_size=self.memory_size,
                 )
-                self.loss_with_miner = CrossBatchMemory(
+                self.loss_with_miner = CrossBatchMemoryWrapper(
                     loss=inner_loss,
                     miner=inner_miner,
                     embedding_size=self.embedding_size,
                     memory_size=self.memory_size,
                 )
-                self.loss_with_miner2 = CrossBatchMemory(
+                self.loss_with_miner2 = CrossBatchMemoryWrapper(
                     loss=inner_loss,
                     miner=inner_miner,
                     embedding_size=self.embedding_size,
@@ -339,7 +340,7 @@ class TestCrossBatchMemory(unittest.TestCase):
             for dtype in TEST_DTYPES:
                 batch_size = 32
                 enqueue_batch_size = 15
-                self.loss = CrossBatchMemory(
+                self.loss = CrossBatchMemoryWrapper(
                     loss=ContrastiveLoss(),
                     embedding_size=self.embedding_size,
                     memory_size=self.memory_size,
@@ -423,7 +424,7 @@ class TestCrossBatchMemory(unittest.TestCase):
             batch_size = 32
             pair_miner = PairMarginMiner(pos_margin=0, neg_margin=1)
             triplet_miner = TripletMarginMiner(margin=1)
-            self.loss = CrossBatchMemory(
+            self.loss = CrossBatchMemoryWrapper(
                 loss=ContrastiveLoss(),
                 embedding_size=self.embedding_size,
                 memory_size=self.memory_size,
@@ -476,7 +477,7 @@ class TestCrossBatchMemory(unittest.TestCase):
             batch_size = 32
             pair_miner = PairMarginMiner(pos_margin=0, neg_margin=1)
             triplet_miner = TripletMarginMiner(margin=1)
-            self.loss = CrossBatchMemory(
+            self.loss = CrossBatchMemoryWrapper(
                 loss=ContrastiveLoss(),
                 embedding_size=self.embedding_size,
                 memory_size=self.memory_size,
@@ -519,6 +520,73 @@ class TestCrossBatchMemory(unittest.TestCase):
                     self.assertTrue(torch.all(p == torch.cat([pi, pii])))
                     self.assertTrue(torch.all(a2 == torch.cat([a2i, a2ii])))
                     self.assertTrue(torch.all(n == torch.cat([ni, nii])))
+
+    def test_all_losses(self):
+        for dtype in TEST_DTYPES:
+            num_labels = 10
+            num_iter = 10
+            batch_size = 32
+            for inner_loss in self.load_valid_loss_fns():
+                self.loss = CrossBatchMemoryWrapper(
+                    loss=inner_loss,
+                    embedding_size=self.embedding_size,
+                    memory_size=self.memory_size,
+                )
+
+                all_embeddings = torch.tensor([], dtype=dtype).to(TEST_DEVICE)
+                all_labels = torch.LongTensor([]).to(TEST_DEVICE)
+                for i in range(num_iter):
+                    embeddings = torch.randn(
+                        batch_size, self.embedding_size, device=TEST_DEVICE, dtype=dtype
+                    )
+                    labels = torch.randint(
+                        0, num_labels, (batch_size,), device=TEST_DEVICE
+                    )
+
+                    loss = self.loss(embeddings, labels)
+
+                    all_embeddings = torch.cat([all_embeddings, embeddings])
+                    all_labels = torch.cat([all_labels, labels])
+
+                    # loss with no inner miner
+                    indices_tuple = lmu.get_all_pairs_indices(labels, all_labels)
+                    a1, p, a2, n = lmu.remove_self_comparisons(
+                        indices_tuple, self.loss.curr_batch_idx, self.loss.memory_size
+                    )
+
+                    correct_loss = inner_loss(
+                        embeddings,
+                        labels,
+                        (a1, p, a2, n),
+                        all_embeddings,
+                        all_labels,
+                    )
+                    self.assertTrue(torch.isclose(loss, correct_loss))
+
+    def load_valid_loss_fns(self):
+        supported_losses = CrossBatchMemoryWrapper.supported_losses()
+
+        loss_fns = [
+            losses.AngularLoss(),
+            losses.CircleLoss(),
+            losses.ContrastiveLoss(),
+            losses.GeneralizedLiftedStructureLoss(),
+            losses.IntraPairVarianceLoss(),
+            losses.LiftedStructureLoss(),
+            losses.MarginLoss(),
+            losses.MultiSimilarityLoss(),
+            losses.NCALoss(),
+            losses.NTXentLoss(),
+            losses.SignalToNoiseRatioContrastiveLoss(),
+            losses.SupConLoss(),
+            losses.TripletMarginLoss(),
+            losses.TupletMarginLoss(),
+        ]
+
+        loaded_loss_names = [type(loss).__name__ for loss in loss_fns]
+        assert set(loaded_loss_names) == set(supported_losses)
+
+        return loss_fns
 
 
 if __name__ == "__main__":

@@ -3,11 +3,12 @@ import torch
 from ..utils import common_functions as c_f
 from ..utils import loss_and_miner_utils as lmu
 from ..utils.module_with_records import ModuleWithRecords
+from .base_loss_wrapper import BaseLossWrapper
 
 
-class CrossBatchMemory(ModuleWithRecords):
+class CrossBatchMemoryWrapper(BaseLossWrapper, ModuleWithRecords):
     def __init__(self, loss, embedding_size, memory_size=1024, miner=None, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__(loss=loss, **kwargs)
         self.loss = loss
         self.miner = miner
         self.embedding_size = embedding_size
@@ -16,6 +17,30 @@ class CrossBatchMemory(ModuleWithRecords):
         self.add_to_recordable_attributes(
             list_of_names=["embedding_size", "memory_size", "queue_idx"], is_stat=False
         )
+
+    @staticmethod
+    def supported_losses():
+        return [
+            "AngularLoss",
+            "CircleLoss",
+            "ContrastiveLoss",
+            "GeneralizedLiftedStructureLoss",
+            "IntraPairVarianceLoss",
+            "LiftedStructureLoss",
+            "MarginLoss",
+            "MultiSimilarityLoss",
+            "NCALoss",
+            "NTXentLoss",
+            "SignalToNoiseRatioContrastiveLoss",
+            "SupConLoss",
+            "TripletMarginLoss",
+            "TupletMarginLoss",
+        ]
+
+    @classmethod
+    def check_loss_support(cls, loss_name):
+        if loss_name not in cls.supported_losses():
+            raise Exception(f"CrossBatchMemoryWrapper not supported for {loss_name}")
 
     def forward(self, embeddings, labels, indices_tuple=None, enqueue_idx=None):
         if enqueue_idx is not None:

@@ -12,50 +12,6 @@ from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 
 class TestSelfSupervisedLossWrapper(unittest.TestCase):
-    def test_ssl_wrapper_same(self):
-        """
-        Test for distance ~ 0 when given same input embeddings
-        for distance metrics where this is true.
-
-        Other distance metrics that are in supported_loses() not included here (commented)
-        have caveats that prevent it from reaching 0 values.
-
-        Another thing to note is distance -> 0 is less true the
-            1. smaller the embedding sizes are
-            2. the less embeddings there are to consider.
-        This is why the test here uses 200 embeddings of size 512 and atol=1e-3
-        """
-        for dtype in TEST_DTYPES:
-            loss_fns = [
-                SelfSupervisedLossWrapper(losses.AngularLoss()),
-                SelfSupervisedLossWrapper(losses.CircleLoss()),
-                SelfSupervisedLossWrapper(losses.ContrastiveLoss()),
-                # SelfSupervisedLossWrapper(losses.GeneralizedLiftedStructureLoss()),
-                SelfSupervisedLossWrapper(losses.IntraPairVarianceLoss()),
-                SelfSupervisedLossWrapper(losses.LiftedStructureLoss()),
-                SelfSupervisedLossWrapper(losses.MultiSimilarityLoss()),
-                SelfSupervisedLossWrapper(losses.NTXentLoss()),
-                SelfSupervisedLossWrapper(losses.SignalToNoiseRatioContrastiveLoss()),
-                SelfSupervisedLossWrapper(losses.SupConLoss()),
-                SelfSupervisedLossWrapper(losses.TripletMarginLoss()),
-                # SelfSupervisedLossWrapper(losses.NCALoss()),
-                SelfSupervisedLossWrapper(losses.TupletMarginLoss()),
-            ]
-            embeddings = torch.randn(
-                300,
-                1024,
-                requires_grad=True,
-                dtype=dtype,
-            ).to(TEST_DEVICE)
-            embeddings = torch.nn.functional.normalize(embeddings)
-            ref_emb = embeddings
-            zero = torch.tensor(0.0, dtype=dtype).to(TEST_DEVICE)
-
-            atol = 1e-2
-            for loss_fn in loss_fns:
-                loss = loss_fn(embeddings, ref_emb)
-                self.assertTrue(torch.isclose(zero, loss, atol=atol))
-
     def test_ssl_wrapper_all(self):
         for dtype in TEST_DTYPES:
             embeddings = torch.randn(

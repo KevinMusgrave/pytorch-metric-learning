@@ -52,6 +52,6 @@ class SubCenterArcFaceLoss(ArcFaceLoss):
                 drop_dists = dominant_dist < cos_threshold
                 drop_idxs = target_indeces[drop_dists] 
                 outliers.extend(drop_idxs.detach().tolist())
-        outliers = torch.tensor(outliers).flatten()
+        outliers = torch.tensor(outliers, device=device).flatten()
         return outliers if not return_dominant_centers else outliers, dominant_centers
     

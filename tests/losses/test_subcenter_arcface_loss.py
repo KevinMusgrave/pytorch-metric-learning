@@ -66,6 +66,8 @@ class TestSubCenterArcFaceLoss(unittest.TestCase):
                 )
     
     def test_inference_subcenter_arcface(self):
+        batch_size = 64
+        embedding_size = 32
         margin = 30
         scale = 64
         num_classes = 10
@@ -73,19 +75,12 @@ class TestSubCenterArcFaceLoss(unittest.TestCase):
         threshold = 75
         for dtype in TEST_DTYPES:
             loss_func = SubCenterArcFaceLoss(
-                margin=margin, scale=scale, num_classes=num_classes, embedding_size=2, sub_centers=sub_centers
+                margin=margin, scale=scale, num_classes=num_classes, embedding_size=embedding_size, sub_centers=sub_centers
             ).to(
                 TEST_DEVICE
             )
-            embedding_angles = torch.arange(0, 180)
-            embeddings = torch.tensor(
-                [angle_to_coord(a) for a in embedding_angles],
-                requires_grad=True,
-                dtype=dtype,
-            ).to(
-                TEST_DEVICE
-            )  # 2D embeddings
-            labels = torch.randint(low=0, high=10, size=(180,))
+            embeddings = torch.randn(batch_size, embedding_size).to(TEST_DEVICE).type(dtype)
+            labels = torch.randint(low=0, high=num_classes, size=(batch_size,)).to(TEST_DEVICE)
 
             outliers, dominant_centers = loss_func.get_outliers(embeddings, labels, threshold=threshold)
                         
@@ -100,9 +95,9 @@ class TestSubCenterArcFaceLoss(unittest.TestCase):
             # check of outliers are below the threshold
             self.assertTrue((outliers_distances < cos_threshold).all())
             
-            all_indeces = torch.arange(len(labels))
-            normal_indeces = torch.masked_select(all_indeces, distances[all_indeces, labels] >= cos_threshold)
+            all_indices = torch.arange(len(labels), device=TEST_DEVICE)
+            normal_indices = torch.masked_select(all_indices, distances[all_indices, labels] >= cos_threshold)
             # check if all indeces present
-            self.assertTrue((normal_indeces.shape[0] + outliers.shape[0] == labels.shape[0]))
+            self.assertTrue((normal_indices.shape[0] + outliers.shape[0] == labels.shape[0]))
             # check if there's no intersection between indeces of 2 sets            
-            self.assertTrue(len(np.intersect1d(normal_indeces, outliers)) == 0)
+            self.assertTrue(len(np.intersect1d(normal_indices.cpu().numpy(), outliers.cpu().numpy())) == 0)

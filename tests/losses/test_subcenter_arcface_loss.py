@@ -6,44 +6,35 @@ from pytorch_metric_learning.losses import SubCenterArcFaceLoss
 import math
 
 from .. import TEST_DEVICE, TEST_DTYPES
-from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 
 class TestSubCenterArcFaceLoss(unittest.TestCase):
     def test_subcenter_arcface_loss(self):
+        batch_size = 64
+        embedding_size = 32
         margin = 30
         scale = 64
         num_classes = 10
         sub_centers = 3
         for dtype in TEST_DTYPES:
             loss_func = SubCenterArcFaceLoss(
-                margin=margin, scale=scale, num_classes=num_classes, embedding_size=2, sub_centers=sub_centers
+                margin=margin, scale=scale, num_classes=num_classes, embedding_size=embedding_size, sub_centers=sub_centers
             )
-            embedding_angles = torch.arange(0, 180)
-            embeddings = torch.tensor(
-                [angle_to_coord(a) for a in embedding_angles],
-                requires_grad=True,
-                dtype=dtype,
-            ).to(
-                TEST_DEVICE
-            )  # 2D embeddings
-            labels = torch.randint(low=0, high=10, size=(180,))
+
+            embeddings = torch.randn(batch_size, embedding_size).to(TEST_DEVICE).type(dtype)
+            labels = torch.randint(low=0, high=num_classes, size=(batch_size,)).to(TEST_DEVICE)
             # check if subcenters are included
-            self.assertTrue(
-                    loss_func.W.shape[1] == num_classes * sub_centers
-                
-            )
+            self.assertTrue(loss_func.W.shape[1] == num_classes * sub_centers)
             
             loss = loss_func(embeddings, labels)
             loss.backward()
-            
-            
+
             weights = F.normalize(loss_func.W, p=2, dim=0)
             logits = torch.matmul(F.normalize(embeddings), weights)
             # include only closest sub centers
             logits = logits.view(-1, num_classes, sub_centers)
             logits, _ = logits.max(axis=2)
-            
+
             for i, c in enumerate(labels):
                 acos = torch.acos(torch.clamp(logits[i, c], -1, 1))
                 logits[i, c] = torch.cos(
@@ -57,8 +48,7 @@ class TestSubCenterArcFaceLoss(unittest.TestCase):
             
             # test get_logits
             logits_out = loss_func.get_logits(embeddings)
-            #print(logits_out.shape)
-            self.assertTrue(logits_out.shape[1] == num_classes)
+            self.assertTrue(logits_out.shape == torch.Size([batch_size, num_classes]))
             logits = torch.matmul(F.normalize(embeddings), weights)
             # include only closest sub centers
             logits = logits.view(-1, num_classes, sub_centers)

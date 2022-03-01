@@ -1,6 +1,5 @@
 from .angular_loss import AngularLoss
 from .arcface_loss import ArcFaceLoss
-from .subcenter_arcface_loss import SubCenterArcFaceLoss
 from .base_metric_loss_function import BaseMetricLossFunction, MultipleLosses
 from .centroid_triplet_loss import CentroidTripletLoss
 from .circle_loss import CircleLoss
@@ -24,6 +23,7 @@ from .proxy_losses import ProxyNCALoss
 from .signal_to_noise_ratio_losses import SignalToNoiseRatioContrastiveLoss
 from .soft_triple_loss import SoftTripleLoss
 from .sphereface_loss import SphereFaceLoss
+from .subcenter_arcface_loss import SubCenterArcFaceLoss
 from .supcon_loss import SupConLoss
 from .triplet_margin_loss import TripletMarginLoss
 from .tuplet_margin_loss import TupletMarginLoss

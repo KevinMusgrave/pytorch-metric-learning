@@ -29,7 +29,6 @@ class SubCenterArcFaceLoss(ArcFaceLoss):
     def get_outliers(
         self, embeddings, labels, threshold=75, return_dominant_centers=True
     ):
-        self.eval()
         c_f.check_shapes(embeddings, labels)
         dtype, device = embeddings.dtype, embeddings.device
         self.cast_types(dtype, device)

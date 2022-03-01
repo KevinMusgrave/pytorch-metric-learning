@@ -72,32 +72,34 @@ class TestSubCenterArcFaceLoss(unittest.TestCase):
         scale = 64
         num_classes = 10
         sub_centers = 3
-        threshold = 75
         for dtype in TEST_DTYPES:
-            loss_func = SubCenterArcFaceLoss(
-                margin=margin, scale=scale, num_classes=num_classes, embedding_size=embedding_size, sub_centers=sub_centers
-            ).to(
-                TEST_DEVICE
-            )
-            embeddings = torch.randn(batch_size, embedding_size).to(TEST_DEVICE).type(dtype)
-            labels = torch.randint(low=0, high=num_classes, size=(batch_size,)).to(TEST_DEVICE)
+            for threshold in [75, 90, 180]:
+                loss_func = SubCenterArcFaceLoss(
+                    margin=margin, scale=scale, num_classes=num_classes, embedding_size=embedding_size, sub_centers=sub_centers
+                ).to(
+                    TEST_DEVICE
+                )
+                embeddings = torch.randn(batch_size, embedding_size).to(TEST_DEVICE).type(dtype)
+                labels = torch.randint(low=0, high=num_classes, size=(batch_size,)).to(TEST_DEVICE)
 
-            outliers, dominant_centers = loss_func.get_outliers(embeddings, labels, threshold=threshold)
-                        
-            self.assertTrue(len(outliers) < len(labels))
-            
-            self.assertTrue(dominant_centers.shape[1] == num_classes)
+                outliers, dominant_centers = loss_func.get_outliers(embeddings, labels, threshold=threshold)
+                            
+                if threshold == 180:
+                    self.assertTrue(len(outliers) == 0)
+                    continue
+                self.assertTrue(len(outliers) < len(labels))
+                self.assertTrue(dominant_centers.shape == torch.Size([embedding_size, num_classes]))
+                    
+                cos_threshold = math.cos(math.pi * threshold / 180.)
+                distances = torch.mm(F.normalize(embeddings), F.normalize(dominant_centers, dim=0))
+                outliers_labels = labels[outliers]
+                outliers_distances = distances[outliers, outliers_labels]
+                # check if outliers are below the threshold
+                self.assertTrue((outliers_distances < cos_threshold).all())
                 
-            cos_threshold = math.cos(math.pi * threshold / 180.)
-            distances = torch.mm(F.normalize(embeddings), dominant_centers)
-            outliers_labels = labels[outliers]
-            outliers_distances = distances[outliers, outliers_labels]
-            # check of outliers are below the threshold
-            self.assertTrue((outliers_distances < cos_threshold).all())
-            
-            all_indices = torch.arange(len(labels), device=TEST_DEVICE)
-            normal_indices = torch.masked_select(all_indices, distances[all_indices, labels] >= cos_threshold)
-            # check if all indeces present
-            self.assertTrue((normal_indices.shape[0] + outliers.shape[0] == labels.shape[0]))
-            # check if there's no intersection between indeces of 2 sets            
-            self.assertTrue(len(np.intersect1d(normal_indices.cpu().numpy(), outliers.cpu().numpy())) == 0)
+                all_indices = torch.arange(len(labels), device=TEST_DEVICE)
+                normal_indices = torch.masked_select(all_indices, distances[all_indices, labels] >= cos_threshold)
+                # check if all indices present
+                self.assertTrue((normal_indices.shape[0] + outliers.shape[0] == labels.shape[0]))
+                # check if there's no intersection between indeces of 2 sets            
+                self.assertTrue(len(np.intersect1d(normal_indices.cpu().numpy(), outliers.cpu().numpy())) == 0)

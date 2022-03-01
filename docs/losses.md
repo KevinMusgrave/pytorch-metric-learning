@@ -932,6 +932,45 @@ loss_optimizer.step()
 * **loss**: The loss per element in the batch. Reduction type is ```"element"```.
 
 
+## SubCenterArcFaceLoss 
+[Sub-center ArcFace: Boosting Face Recognition by Large-scale Noisy Web Faces](https://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123560715.pdf){target=_blank}
+
+This loss extends [ArcFaceLoss](losses.md#arcfaceloss). It uses multiple sub centers per class, instead of just a single center, hence the name Sub-center ArcFace.
+
+```python
+losses.SubCenterArcFaceLoss(
+    num_classes, 
+    embedding_size, 
+    margin=28.6, 
+    scale=64, 
+    sub_centers=3, 
+    **kwargs
+)
+```
+
+**Parameters**:
+
+* **sub_centers**: The number of sub centers per class.
+
+See [ArcFaceLoss](losses.md#arcfaceloss) for a description of the other parameters.
+
+
+**Other info**: 
+
+* This loss **requires an optimizer**. See [ArcFaceLoss](losses.md#arcfaceloss) for details.
+* See [ArcFaceLoss](losses.md#arcfaceloss) for default distance, reducer, and reducer input.
+
+
+**Getting outliers and dominant centers**
+
+Outliers and dominant centers can be computed as described in the paper.
+```python
+outliers, dominant_centers = loss_func.get_outliers(
+    embeddings, labels, threshold=75, return_dominant_centers=True
+)
+```
+
+
 ## SupConLoss
 Described in [Supervised Contrastive Learning](https://arxiv.org/abs/2004.11362){target=_blank}.
 ```python

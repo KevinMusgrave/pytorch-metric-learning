@@ -8,7 +8,8 @@ import torch.multiprocessing as mp
 import torch.optim as optim
 from torch.nn.parallel import DistributedDataParallel as DDP
 
-from pytorch_metric_learning import losses, miners
+from pytorch_metric_learning.losses import ContrastiveLoss, CrossBatchMemory
+from pytorch_metric_learning.miners import MultiSimilarityMiner
 from pytorch_metric_learning.utils import distributed
 
 from .. import TEST_DEVICE, TEST_DTYPES
@@ -52,6 +53,7 @@ def single_process_function(
     rank,
     world_size,
     lr,
+    iterations,
     model,
     inputs,
     labels,
@@ -83,20 +85,23 @@ def single_process_function(
         )
 
     optimizer = optim.SGD(ddp_mp_model.parameters(), lr=lr)
-    optimizer.zero_grad()
-    outputs = ddp_mp_model(inputs[rank].to(device))
-    indices_tuple = None
-    if miner_fn:
-        indices_tuple = miner_fn(outputs, labels[rank])
-    loss = loss_fn(outputs, labels[rank], indices_tuple)
-
-    dist.barrier()
-    loss.backward()
 
     original_model = original_model.to(device)
     assert not parameters_are_equal(original_model, ddp_mp_model.module)
-    dist.barrier()
-    optimizer.step()
+
+    for i in range(iterations):
+        optimizer.zero_grad()
+        outputs = ddp_mp_model(inputs[i][rank].to(device))
+        indices_tuple = None
+        if miner_fn:
+            indices_tuple = miner_fn(outputs, labels[i][rank])
+        loss = loss_fn(outputs, labels[i][rank], indices_tuple)
+
+        dist.barrier()
+        loss.backward()
+        dist.barrier()
+        optimizer.step()
+
     dist.barrier()
     assert parameters_are_equal(original_model, ddp_mp_model.module)
     dist.barrier()
@@ -113,7 +118,7 @@ def create_efficient_batch(x, i, batch_size):
 
 
 class TestDistributedLossWrapper(unittest.TestCase):
-    def loss_and_miner_tester(self, loss_class, miner_class, efficient):
+    def loss_and_miner_tester(self, loss_class, miner_class, efficient, xbm):
         torch.manual_seed(75210)
         if TEST_DEVICE == torch.device("cpu"):
             return
@@ -129,13 +134,7 @@ class TestDistributedLossWrapper(unittest.TestCase):
             for world_size in range(2, max_world_size + 1):
                 batch_size = 20
                 lr = 1
-                inputs = [
-                    torch.randn(batch_size, 10).type(dtype) for _ in range(world_size)
-                ]
-                labels = [
-                    torch.randint(low=0, high=2, size=(batch_size,))
-                    for _ in range(world_size)
-                ]
+                iterations = 10
                 original_model = ToyMpModel().type(dtype)
                 model = ToyMpModel().type(dtype)
                 model.load_state_dict(original_model.state_dict())
@@ -144,6 +143,11 @@ class TestDistributedLossWrapper(unittest.TestCase):
                 original_model = original_model.to(TEST_DEVICE)
                 original_loss_fn = loss_class()
                 loss_fn = loss_class()
+                if xbm:
+                    original_loss_fn = CrossBatchMemory(
+                        original_loss_fn, embedding_size=5
+                    )
+                    loss_fn = CrossBatchMemory(loss_fn, embedding_size=5)
 
                 if miner_class:
                     original_miner_fn = miner_class()
@@ -153,54 +157,68 @@ class TestDistributedLossWrapper(unittest.TestCase):
                     miner_fn = None
 
                 optimizer = optim.SGD(original_model.parameters(), lr=lr)
-                optimizer.zero_grad()
-                all_inputs = torch.cat(inputs, dim=0).to(TEST_DEVICE)
-                all_labels = torch.cat(labels, dim=0).to(TEST_DEVICE)
-                all_outputs = original_model(all_inputs)
-                indices_tuple = None
-                if efficient:
-                    losses = []
-                    for i in range(len(inputs)):
-                        curr_emb, other_emb = create_efficient_batch(
-                            all_outputs, i, batch_size
-                        )
-                        curr_labels, other_labels = create_efficient_batch(
-                            all_labels, i, batch_size
-                        )
-                        if original_miner_fn:
-                            indices_tuple = distributed.get_indices_tuple(
+                inputs = [
+                    [torch.randn(batch_size, 10).type(dtype) for _ in range(world_size)]
+                    for _ in range(iterations)
+                ]
+                labels = [
+                    [
+                        torch.randint(low=0, high=2, size=(batch_size,))
+                        for _ in range(world_size)
+                    ]
+                    for _ in range(iterations)
+                ]
+
+                for aaa in range(iterations):
+                    optimizer.zero_grad()
+                    all_inputs = torch.cat(inputs[aaa], dim=0).to(TEST_DEVICE)
+                    all_labels = torch.cat(labels[aaa], dim=0).to(TEST_DEVICE)
+                    all_outputs = original_model(all_inputs)
+                    indices_tuple = None
+                    if efficient:
+                        losses = []
+                        for i in range(len(inputs[aaa])):
+                            curr_emb, other_emb = create_efficient_batch(
+                                all_outputs, i, batch_size
+                            )
+                            curr_labels, other_labels = create_efficient_batch(
+                                all_labels, i, batch_size
+                            )
+                            if original_miner_fn:
+                                indices_tuple = distributed.get_indices_tuple(
+                                    curr_labels,
+                                    other_labels,
+                                    TEST_DEVICE,
+                                    embeddings=curr_emb,
+                                    ref_emb=other_emb,
+                                    miner=original_miner_fn,
+                                )
+                            else:
+                                indices_tuple = distributed.get_indices_tuple(
+                                    curr_labels, other_labels, TEST_DEVICE
+                                )
+                            loss = original_loss_fn(
+                                curr_emb,
                                 curr_labels,
+                                indices_tuple,
+                                other_emb,
                                 other_labels,
-                                TEST_DEVICE,
-                                embeddings=curr_emb,
-                                ref_emb=other_emb,
-                                miner=original_miner_fn,
                             )
-                        else:
-                            indices_tuple = distributed.get_indices_tuple(
-                                curr_labels, other_labels, TEST_DEVICE
-                            )
-                        loss = original_loss_fn(
-                            curr_emb,
-                            curr_labels,
-                            indices_tuple,
-                            other_emb,
-                            other_labels,
-                        )
-                        losses.append(loss)
-                    loss = sum(losses)
-                else:
-                    if original_miner_fn:
-                        indices_tuple = original_miner_fn(all_outputs, all_labels)
-                    loss = original_loss_fn(all_outputs, all_labels, indices_tuple)
-                loss.backward()
-                optimizer.step()
+                            losses.append(loss)
+                        loss = sum(losses)
+                    else:
+                        if original_miner_fn:
+                            indices_tuple = original_miner_fn(all_outputs, all_labels)
+                        loss = original_loss_fn(all_outputs, all_labels, indices_tuple)
+                    loss.backward()
+                    optimizer.step()
 
                 mp.spawn(
                     single_process_function,
                     args=(
                         world_size,
                         lr,
+                        iterations,
                         model,
                         inputs,
                         labels,
@@ -215,19 +233,21 @@ class TestDistributedLossWrapper(unittest.TestCase):
                 )
 
     def test_distributed_tuple_loss(self):
-        self.loss_and_miner_tester(losses.ContrastiveLoss, None, False)
+        for xbm in [False, True]:
+            self.loss_and_miner_tester(ContrastiveLoss, None, False, xbm)
 
     def test_distributed_tuple_loss_and_miner(self):
-        self.loss_and_miner_tester(
-            losses.ContrastiveLoss, miners.MultiSimilarityMiner, False
-        )
+        for xbm in [False, True]:
+            self.loss_and_miner_tester(
+                ContrastiveLoss, MultiSimilarityMiner, False, xbm
+            )
 
     def test_distributed_tuple_loss_efficient(self):
-        self.loss_and_miner_tester(losses.ContrastiveLoss, None, True)
+        self.loss_and_miner_tester(ContrastiveLoss, None, True, xbm=False)
 
     def test_distributed_tuple_loss_and_miner_efficient(self):
         self.loss_and_miner_tester(
-            losses.ContrastiveLoss, miners.MultiSimilarityMiner, True
+            ContrastiveLoss, MultiSimilarityMiner, True, xbm=False
         )
 
 

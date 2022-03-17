@@ -182,6 +182,10 @@ class FaissKNN:
         c_f.LOGGER.info("embedding dimensionality is %d" % d)
         if self.reset_before:
             self.index = self.index_init_fn(d)
+        if self.index is None:
+            raise ValueError(
+                "self.index is None. It needs to be initialized before being used."
+            )
         distances, indices = try_gpu(
             self.index,
             query,

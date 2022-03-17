@@ -1,6 +1,6 @@
 import torch
 
-from ..losses import BaseMetricLossFunction
+from ..losses import BaseMetricLossFunction, CrossBatchMemory
 from ..miners import BaseMiner
 from ..utils import common_functions as c_f
 from ..utils import loss_and_miner_utils as lmu
@@ -58,8 +58,14 @@ def get_indices_tuple(
 class DistributedLossWrapper(torch.nn.Module):
     def __init__(self, loss, efficient=False):
         super().__init__()
-        if not isinstance(loss, BaseMetricLossFunction):
-            raise TypeError("The input loss must extend BaseMetricLossFunction")
+        if not isinstance(loss, (BaseMetricLossFunction, CrossBatchMemory)):
+            raise TypeError(
+                "The input loss must extend BaseMetricLossFunction or CrossBatchMemory"
+            )
+        if isinstance(loss, CrossBatchMemory) and efficient:
+            raise ValueError(
+                "CrossBatchMemory with efficient=True is not currently supported"
+            )
         self.loss = loss
         self.efficient = efficient
 

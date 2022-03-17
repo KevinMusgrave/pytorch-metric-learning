@@ -61,7 +61,7 @@ class TestInference(unittest.TestCase):
     def test_untrained_indexer(self):
         inference_model = InferenceModel(trunk=self.model)
         with self.assertRaises(RuntimeError):
-            inference_model.get_nearest_neighbors(self.dataset[0][0], k=10)
+            inference_model.get_nearest_neighbors(self.dataset[0][0].unsqueeze(0), k=10)
 
     def test_get_nearest_neighbors(self):
         test_filename = "test_inference.index"

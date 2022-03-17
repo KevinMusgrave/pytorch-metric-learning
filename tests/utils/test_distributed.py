@@ -1,6 +1,7 @@
 import logging
 import os
 import unittest
+from contextlib import nullcontext
 
 import torch
 import torch.distributed as dist
@@ -8,7 +9,8 @@ import torch.multiprocessing as mp
 import torch.optim as optim
 from torch.nn.parallel import DistributedDataParallel as DDP
 
-from pytorch_metric_learning import losses, miners
+from pytorch_metric_learning.losses import ContrastiveLoss, CrossBatchMemory
+from pytorch_metric_learning.miners import MultiSimilarityMiner
 from pytorch_metric_learning.utils import distributed
 
 from .. import TEST_DEVICE, TEST_DTYPES
@@ -117,7 +119,7 @@ def create_efficient_batch(x, i, batch_size):
 
 
 class TestDistributedLossWrapper(unittest.TestCase):
-    def loss_and_miner_tester(self, loss_class, miner_class, efficient):
+    def loss_and_miner_tester(self, loss_class, miner_class, efficient, xbm):
         torch.manual_seed(75210)
         if TEST_DEVICE == torch.device("cpu"):
             return
@@ -142,6 +144,11 @@ class TestDistributedLossWrapper(unittest.TestCase):
                 original_model = original_model.to(TEST_DEVICE)
                 original_loss_fn = loss_class()
                 loss_fn = loss_class()
+                if xbm:
+                    original_loss_fn = CrossBatchMemory(
+                        original_loss_fn, embedding_size=5
+                    )
+                    loss_fn = CrossBatchMemory(loss_fn, embedding_size=5)
 
                 if miner_class:
                     original_miner_fn = miner_class()
@@ -227,19 +234,21 @@ class TestDistributedLossWrapper(unittest.TestCase):
                 )
 
     def test_distributed_tuple_loss(self):
-        self.loss_and_miner_tester(losses.ContrastiveLoss, None, False)
+        for xbm in [False, True]:
+            self.loss_and_miner_tester(ContrastiveLoss, None, False, xbm)
 
     def test_distributed_tuple_loss_and_miner(self):
-        self.loss_and_miner_tester(
-            losses.ContrastiveLoss, miners.MultiSimilarityMiner, False
-        )
+        for xbm in [False, True]:
+            self.loss_and_miner_tester(
+                ContrastiveLoss, MultiSimilarityMiner, False, xbm
+            )
 
     def test_distributed_tuple_loss_efficient(self):
-        self.loss_and_miner_tester(losses.ContrastiveLoss, None, True)
+        self.loss_and_miner_tester(ContrastiveLoss, None, True, xbm=False)
 
     def test_distributed_tuple_loss_and_miner_efficient(self):
         self.loss_and_miner_tester(
-            losses.ContrastiveLoss, miners.MultiSimilarityMiner, True
+            ContrastiveLoss, MultiSimilarityMiner, True, xbm=False
         )
 
 

@@ -52,6 +52,7 @@ def single_process_function(
     rank,
     world_size,
     lr,
+    iterations,
     model,
     inputs,
     labels,
@@ -83,20 +84,23 @@ def single_process_function(
         )
 
     optimizer = optim.SGD(ddp_mp_model.parameters(), lr=lr)
-    optimizer.zero_grad()
-    outputs = ddp_mp_model(inputs[rank].to(device))
-    indices_tuple = None
-    if miner_fn:
-        indices_tuple = miner_fn(outputs, labels[rank])
-    loss = loss_fn(outputs, labels[rank], indices_tuple)
-
-    dist.barrier()
-    loss.backward()
 
     original_model = original_model.to(device)
     assert not parameters_are_equal(original_model, ddp_mp_model.module)
-    dist.barrier()
-    optimizer.step()
+
+    for i in range(iterations):
+        optimizer.zero_grad()
+        outputs = ddp_mp_model(inputs[i][rank].to(device))
+        indices_tuple = None
+        if miner_fn:
+            indices_tuple = miner_fn(outputs, labels[i][rank])
+        loss = loss_fn(outputs, labels[i][rank], indices_tuple)
+
+        dist.barrier()
+        loss.backward()
+        dist.barrier()
+        optimizer.step()
+
     dist.barrier()
     assert parameters_are_equal(original_model, ddp_mp_model.module)
     dist.barrier()
@@ -129,13 +133,7 @@ class TestDistributedLossWrapper(unittest.TestCase):
             for world_size in range(2, max_world_size + 1):
                 batch_size = 20
                 lr = 1
-                inputs = [
-                    torch.randn(batch_size, 10).type(dtype) for _ in range(world_size)
-                ]
-                labels = [
-                    torch.randint(low=0, high=2, size=(batch_size,))
-                    for _ in range(world_size)
-                ]
+                iterations = 10
                 original_model = ToyMpModel().type(dtype)
                 model = ToyMpModel().type(dtype)
                 model.load_state_dict(original_model.state_dict())
@@ -153,54 +151,68 @@ class TestDistributedLossWrapper(unittest.TestCase):
                     miner_fn = None
 
                 optimizer = optim.SGD(original_model.parameters(), lr=lr)
-                optimizer.zero_grad()
-                all_inputs = torch.cat(inputs, dim=0).to(TEST_DEVICE)
-                all_labels = torch.cat(labels, dim=0).to(TEST_DEVICE)
-                all_outputs = original_model(all_inputs)
-                indices_tuple = None
-                if efficient:
-                    losses = []
-                    for i in range(len(inputs)):
-                        curr_emb, other_emb = create_efficient_batch(
-                            all_outputs, i, batch_size
-                        )
-                        curr_labels, other_labels = create_efficient_batch(
-                            all_labels, i, batch_size
-                        )
-                        if original_miner_fn:
-                            indices_tuple = distributed.get_indices_tuple(
+                inputs = [
+                    [torch.randn(batch_size, 10).type(dtype) for _ in range(world_size)]
+                    for _ in range(iterations)
+                ]
+                labels = [
+                    [
+                        torch.randint(low=0, high=2, size=(batch_size,))
+                        for _ in range(world_size)
+                    ]
+                    for _ in range(iterations)
+                ]
+
+                for aaa in range(iterations):
+                    optimizer.zero_grad()
+                    all_inputs = torch.cat(inputs[aaa], dim=0).to(TEST_DEVICE)
+                    all_labels = torch.cat(labels[aaa], dim=0).to(TEST_DEVICE)
+                    all_outputs = original_model(all_inputs)
+                    indices_tuple = None
+                    if efficient:
+                        losses = []
+                        for i in range(len(inputs[aaa])):
+                            curr_emb, other_emb = create_efficient_batch(
+                                all_outputs, i, batch_size
+                            )
+                            curr_labels, other_labels = create_efficient_batch(
+                                all_labels, i, batch_size
+                            )
+                            if original_miner_fn:
+                                indices_tuple = distributed.get_indices_tuple(
+                                    curr_labels,
+                                    other_labels,
+                                    TEST_DEVICE,
+                                    embeddings=curr_emb,
+                                    ref_emb=other_emb,
+                                    miner=original_miner_fn,
+                                )
+                            else:
+                                indices_tuple = distributed.get_indices_tuple(
+                                    curr_labels, other_labels, TEST_DEVICE
+                                )
+                            loss = original_loss_fn(
+                                curr_emb,
                                 curr_labels,
+                                indices_tuple,
+                                other_emb,
                                 other_labels,
-                                TEST_DEVICE,
-                                embeddings=curr_emb,
-                                ref_emb=other_emb,
-                                miner=original_miner_fn,
                             )
-                        else:
-                            indices_tuple = distributed.get_indices_tuple(
-                                curr_labels, other_labels, TEST_DEVICE
-                            )
-                        loss = original_loss_fn(
-                            curr_emb,
-                            curr_labels,
-                            indices_tuple,
-                            other_emb,
-                            other_labels,
-                        )
-                        losses.append(loss)
-                    loss = sum(losses)
-                else:
-                    if original_miner_fn:
-                        indices_tuple = original_miner_fn(all_outputs, all_labels)
-                    loss = original_loss_fn(all_outputs, all_labels, indices_tuple)
-                loss.backward()
-                optimizer.step()
+                            losses.append(loss)
+                        loss = sum(losses)
+                    else:
+                        if original_miner_fn:
+                            indices_tuple = original_miner_fn(all_outputs, all_labels)
+                        loss = original_loss_fn(all_outputs, all_labels, indices_tuple)
+                    loss.backward()
+                    optimizer.step()
 
                 mp.spawn(
                     single_process_function,
                     args=(
                         world_size,
                         lr,
+                        iterations,
                         model,
                         inputs,
                         labels,

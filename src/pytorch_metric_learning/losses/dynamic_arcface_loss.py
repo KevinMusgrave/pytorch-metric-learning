@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+from ..utils import common_functions as c_f
 
 from .subcenter_arcface_loss import SubCenterArcFaceLoss
 from .arcface_loss import ArcFaceLoss
@@ -10,15 +11,15 @@ class DynamicArcFaceLoss(torch.nn.Module):
     Implementation of https://arxiv.org/pdf/2010.05350.pdf
     """
 
-    def __init__(self, loss_fn, n, lambda0=0.25, a=0.5, b=0.05):
+    def __init__(self, n, loss_func=SubCenterArcFaceLoss, lambda0=0.25, a=0.5, b=0.05, **kwargs):
         super().__init__()
-        assert isinstance(loss_fn, (ArcFaceLoss, SubCenterArcFaceLoss)), 'Loss function should be Arcface-based'
+
         self.lambda0 = lambda0
         self.a = a
         self.b = b
-        
-        self.loss_fn = loss_fn
-        self.n = n if len(n.shape) == 2 else n[..., None]
+
+        self.loss_func = loss_func(**kwargs)
+        self.n = n.flatten()
         self.init_margins()
 
     def init_margins(self):
@@ -28,10 +29,15 @@ class DynamicArcFaceLoss(torch.nn.Module):
         return self.margins[labels]
     
     def set_margins(self, batch_margins):
-        self.loss_fn.margin = batch_margins
+        self.loss_func.margin = batch_margins
     
-    def forward(self,  embeddings, labels):
+    def cast_types(self, tensor, dtype, device):
+        return c_f.to_device(tensor, device=device, dtype=dtype)
+    
+    def forward(self, embeddings, labels):
         batch_margins = self.get_batch_margins(labels)
+        dtype, device = embeddings.dtype, embeddings.device
+        batch_margins = self.cast_types(batch_margins, dtype, device)
         self.set_margins(batch_margins)
-        return self.loss_fn(embeddings, labels)
+        return self.loss_func(embeddings, labels)
 

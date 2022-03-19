@@ -13,9 +13,9 @@ from ..zzz_testing_utils.testing_utils import angle_to_coord
 class TestDynamicArcFaceLoss(unittest.TestCase):
     def test_dynamicarcface_loss(self):
         scale = 64
-        n = torch.tensor([4,5,2,3,1,2,3,4,4,5])
         sub_centers = 3
         num_classes = 10
+        n = torch.randint(low=1, high=200, size=(num_classes,))
         a = 0.5
         b = 0.05
         lambda0 = 0.25

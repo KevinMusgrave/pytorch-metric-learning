@@ -308,6 +308,8 @@ class CustomKNN:
             self.distance = distance
 
     def __call__(self, query, k, reference, embeddings_come_from_same_source=False):
+        if embeddings_come_from_same_source:
+            k = k + 1
         get_largest = self.distance.is_inverted
         if isinstance(self.distance, BatchedDistance):
             distances, indices = [], []

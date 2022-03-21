@@ -34,3 +34,16 @@ class TestBatchedDistance(unittest.TestCase):
                             normalized_emb = torch.nn.functional.normalize(embeddings)
                         mat = torch.cat(mat, dim=0)
                         self.assertTrue(torch.allclose(mat, correct_mat))
+
+    def test_attr(self):
+        dist_fn = CosineSimilarity()
+        distance = BatchedDistance(dist_fn, None)
+        # via getattr
+        for attr in ["is_inverted", "normalize_embeddings", "p", "power"]:
+            self.assertTrue(getattr(distance, attr) == getattr(dist_fn, attr))
+
+        # using dot
+        self.assertTrue(dist_fn.is_inverted == distance.is_inverted)
+        self.assertTrue(dist_fn.normalize_embeddings == distance.normalize_embeddings)
+        self.assertTrue(dist_fn.p == distance.p)
+        self.assertTrue(dist_fn.power == distance.power)

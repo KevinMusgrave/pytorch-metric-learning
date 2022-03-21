@@ -16,3 +16,9 @@ class BatchedDistance(torch.nn.Module):
             L = query_emb[s:e]
             mat = self.distance(L, ref_emb)
             self.iter_fn(mat, s, e)
+
+    def __getattr__(self, name):
+        try:
+            return super().__getattr__(name)
+        except AttributeError:
+            return getattr(self.distance, name)

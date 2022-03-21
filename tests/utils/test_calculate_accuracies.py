@@ -8,7 +8,7 @@ import torch
 from pytorch_metric_learning.distances import LpDistance
 from pytorch_metric_learning.utils import accuracy_calculator
 from pytorch_metric_learning.utils.common_functions import LOGGER
-from pytorch_metric_learning.utils.inference import CustomKNN, FaissKNN
+from pytorch_metric_learning.utils.inference import CustomKNN, FaissKMeans, FaissKNN
 
 from .. import TEST_DEVICE
 
@@ -829,3 +829,38 @@ class TestWithinAutocast(unittest.TestCase):
         labels = torch.randint(0, 10, size=(1000,))
         with torch.autocast(device_type="cuda", dtype=torch.float16):
             acc = AC.get_accuracy(embeddings, embeddings, labels, labels, True)
+
+
+class TestMutualInformation(unittest.TestCase):
+    def test_mutual_information(self):
+        from sklearn.cluster import KMeans
+        from sklearn.metrics import (
+            adjusted_mutual_info_score,
+            normalized_mutual_info_score,
+        )
+
+        def sklearn_kmeans(x, nmb_clusters):
+            return KMeans(n_clusters=2).fit_predict(x.cpu().numpy())
+
+        dataset_size = 2000
+        for offset in [0.5, 1]:
+            for kmeans_func in [None, FaissKMeans(niter=300, nredo=10), sklearn_kmeans]:
+                emb1 = torch.randn(dataset_size, 32)
+                emb2 = torch.randn(dataset_size, 32) + offset
+                labels1 = torch.zeros(dataset_size)
+                labels2 = torch.ones(dataset_size)
+                emb = torch.cat([emb1, emb2], dim=0)
+                labels = torch.cat([labels1, labels2], dim=0)
+
+                AC = accuracy_calculator.AccuracyCalculator(
+                    kmeans_func=kmeans_func, include=("AMI", "NMI")
+                )
+                acc = AC.get_accuracy(emb, emb, labels, labels, False)
+
+                # compute directly
+                kmeans = KMeans(n_clusters=2).fit_predict(emb)
+                correct_ami = adjusted_mutual_info_score(labels.numpy(), kmeans)
+                correct_nmi = normalized_mutual_info_score(labels.numpy(), kmeans)
+
+                self.assertTrue(np.isclose(acc["AMI"], correct_ami, rtol=1e-1))
+                self.assertTrue(np.isclose(acc["NMI"], correct_nmi, rtol=1e-1))

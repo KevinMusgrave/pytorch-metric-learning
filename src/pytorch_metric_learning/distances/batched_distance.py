@@ -2,7 +2,7 @@ import torch
 
 
 class BatchedDistance(torch.nn.Module):
-    def __init__(self, distance, iter_fn, batch_size=32):
+    def __init__(self, distance, iter_fn=None, batch_size=32):
         super().__init__()
         self.distance = distance
         self.iter_fn = iter_fn

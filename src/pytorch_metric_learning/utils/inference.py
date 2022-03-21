@@ -303,7 +303,7 @@ def get_topk(distances, indices, k, get_largest):
 class CustomKNN:
     def __init__(self, distance, batch_size=None):
         if batch_size:
-            self.distance = BatchedDistance(distance, None, batch_size)
+            self.distance = BatchedDistance(distance, batch_size=batch_size)
         else:
             self.distance = distance
 

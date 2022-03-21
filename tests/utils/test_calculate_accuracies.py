@@ -455,7 +455,10 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
 
     def _test_accuracy_calculator_and_faiss(self, use_numpy):
         custom_knn = CustomKNN(LpDistance(normalize_embeddings=False, power=2))
-        for knn_func in [None, custom_knn]:
+        custom_knn2 = CustomKNN(
+            LpDistance(normalize_embeddings=False, power=2), batch_size=3
+        )
+        for knn_func in [None, custom_knn, custom_knn2]:
             AC = accuracy_calculator.AccuracyCalculator(
                 device=TEST_DEVICE, knn_func=knn_func
             )
@@ -778,17 +781,18 @@ class TestCalculateAccuraciesFaissKNN(unittest.TestCase):
 
 class TestCalculateAccuraciesCustomKNN(unittest.TestCase):
     def test_custom_knn(self):
-        fn1 = CustomKNN(LpDistance(normalize_embeddings=False, power=2))
-        fn2 = FaissKNN()
-        AC1 = accuracy_calculator.AccuracyCalculator(knn_func=fn1)
-        AC2 = accuracy_calculator.AccuracyCalculator(knn_func=fn2)
-        embeddings = torch.randn(1000, 32)
-        labels = torch.randint(0, 10, size=(1000,))
-        acc1 = AC1.get_accuracy(embeddings, embeddings, labels, labels, True)
-        acc2 = AC2.get_accuracy(embeddings, embeddings, labels, labels, True)
+        for batch_size in [None, 32, 33, 2000]:
+            fn1 = CustomKNN(LpDistance(normalize_embeddings=False, power=2), batch_size)
+            fn2 = FaissKNN()
+            AC1 = accuracy_calculator.AccuracyCalculator(knn_func=fn1)
+            AC2 = accuracy_calculator.AccuracyCalculator(knn_func=fn2)
+            embeddings = torch.randn(1000, 32)
+            labels = torch.randint(0, 10, size=(1000,))
+            acc1 = AC1.get_accuracy(embeddings, embeddings, labels, labels, True)
+            acc2 = AC2.get_accuracy(embeddings, embeddings, labels, labels, True)
 
-        for k, v in acc1.items():
-            self.assertTrue(np.isclose(v, acc2[k], rtol=1e-3))
+            for k, v in acc1.items():
+                self.assertTrue(np.isclose(v, acc2[k], rtol=1e-3))
 
 
 class TestWithinAutocast(unittest.TestCase):

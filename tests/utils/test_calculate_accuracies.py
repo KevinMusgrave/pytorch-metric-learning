@@ -784,34 +784,39 @@ class TestCalculateAccuraciesFaissKNN(unittest.TestCase):
 class TestCalculateAccuraciesCustomKNN(unittest.TestCase):
     def test_custom_knn(self):
         LOGGER.setLevel(logging.CRITICAL)
-        for batch_size in [None, 32, 33, 2000]:
-            for embeddings_come_from_same_source in [False, True]:
-                for k in [1, 2, 10, 100]:
-                    fn1 = CustomKNN(
-                        LpDistance(normalize_embeddings=False, power=2), batch_size
-                    )
-                    fn2 = FaissKNN()
-                    AC1 = accuracy_calculator.AccuracyCalculator(k=k, knn_func=fn1)
-                    AC2 = accuracy_calculator.AccuracyCalculator(k=k, knn_func=fn2)
-                    embeddings = torch.randn(1000, 32)
-                    labels = torch.randint(0, 10, size=(1000,))
-                    acc1 = AC1.get_accuracy(
-                        embeddings,
-                        embeddings,
-                        labels,
-                        labels,
-                        embeddings_come_from_same_source,
-                    )
-                    acc2 = AC2.get_accuracy(
-                        embeddings,
-                        embeddings,
-                        labels,
-                        labels,
-                        embeddings_come_from_same_source,
-                    )
+        for dataset_size in [200, 1000]:
+            for batch_size in [None, 32, 33, 2000]:
+                for embeddings_come_from_same_source in [False, True]:
+                    for k in [None, 1, 2, 10, 100]:
+                        fn1 = CustomKNN(
+                            LpDistance(normalize_embeddings=False, power=2), batch_size
+                        )
+                        fn2 = FaissKNN()
+                        AC1 = accuracy_calculator.AccuracyCalculator(
+                            k=k, knn_func=fn1, exclude=("AMI", "NMI")
+                        )
+                        AC2 = accuracy_calculator.AccuracyCalculator(
+                            k=k, knn_func=fn2, exclude=("AMI", "NMI")
+                        )
+                        embeddings = torch.randn(dataset_size, 32)
+                        labels = torch.randint(0, 10, size=(dataset_size,))
+                        acc1 = AC1.get_accuracy(
+                            embeddings,
+                            embeddings,
+                            labels,
+                            labels,
+                            embeddings_come_from_same_source,
+                        )
+                        acc2 = AC2.get_accuracy(
+                            embeddings,
+                            embeddings,
+                            labels,
+                            labels,
+                            embeddings_come_from_same_source,
+                        )
 
-                    for k, v in acc1.items():
-                        self.assertTrue(np.isclose(v, acc2[k], rtol=1e-3))
+                        for k, v in acc1.items():
+                            self.assertTrue(np.isclose(v, acc2[k], rtol=1e-3))
         LOGGER.setLevel(logging.INFO)
 
 

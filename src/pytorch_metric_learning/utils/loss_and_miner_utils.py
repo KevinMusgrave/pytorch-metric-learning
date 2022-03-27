@@ -25,7 +25,7 @@ def logsumexp(x, keep_mask=None, add_one=True, dim=1):
 def meshgrid_from_sizes(x, y, dim=0):
     a = torch.arange(x.size(dim), device=x.device)
     b = torch.arange(y.size(dim), device=y.device)
-    return torch.meshgrid(a, b)
+    return torch.meshgrid(a, b, indexing="ij")
 
 
 def get_matches_and_diffs(labels, ref_labels=None):

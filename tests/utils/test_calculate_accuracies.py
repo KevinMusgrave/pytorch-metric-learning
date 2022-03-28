@@ -1,4 +1,5 @@
 import itertools
+import logging
 import unittest
 
 import numpy as np
@@ -6,7 +7,8 @@ import torch
 
 from pytorch_metric_learning.distances import LpDistance
 from pytorch_metric_learning.utils import accuracy_calculator
-from pytorch_metric_learning.utils.inference import CustomKNN, FaissKNN
+from pytorch_metric_learning.utils.common_functions import LOGGER
+from pytorch_metric_learning.utils.inference import CustomKNN, FaissKMeans, FaissKNN
 
 from .. import TEST_DEVICE
 
@@ -455,7 +457,10 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
 
     def _test_accuracy_calculator_and_faiss(self, use_numpy):
         custom_knn = CustomKNN(LpDistance(normalize_embeddings=False, power=2))
-        for knn_func in [None, custom_knn]:
+        custom_knn2 = CustomKNN(
+            LpDistance(normalize_embeddings=False, power=2), batch_size=3
+        )
+        for knn_func in [None, custom_knn, custom_knn2]:
             AC = accuracy_calculator.AccuracyCalculator(
                 device=TEST_DEVICE, knn_func=knn_func
             )
@@ -778,17 +783,41 @@ class TestCalculateAccuraciesFaissKNN(unittest.TestCase):
 
 class TestCalculateAccuraciesCustomKNN(unittest.TestCase):
     def test_custom_knn(self):
-        fn1 = CustomKNN(LpDistance(normalize_embeddings=False, power=2))
-        fn2 = FaissKNN()
-        AC1 = accuracy_calculator.AccuracyCalculator(knn_func=fn1)
-        AC2 = accuracy_calculator.AccuracyCalculator(knn_func=fn2)
-        embeddings = torch.randn(1000, 32)
-        labels = torch.randint(0, 10, size=(1000,))
-        acc1 = AC1.get_accuracy(embeddings, embeddings, labels, labels, True)
-        acc2 = AC2.get_accuracy(embeddings, embeddings, labels, labels, True)
+        LOGGER.setLevel(logging.CRITICAL)
+        for dataset_size in [200, 1000]:
+            for batch_size in [None, 32, 33, 2000]:
+                for embeddings_come_from_same_source in [False, True]:
+                    for k in [None, 1, 2, 10, 100]:
+                        fn1 = CustomKNN(
+                            LpDistance(normalize_embeddings=False, power=2), batch_size
+                        )
+                        fn2 = FaissKNN()
+                        AC1 = accuracy_calculator.AccuracyCalculator(
+                            k=k, knn_func=fn1, exclude=("AMI", "NMI")
+                        )
+                        AC2 = accuracy_calculator.AccuracyCalculator(
+                            k=k, knn_func=fn2, exclude=("AMI", "NMI")
+                        )
+                        embeddings = torch.randn(dataset_size, 32)
+                        labels = torch.randint(0, 10, size=(dataset_size,))
+                        acc1 = AC1.get_accuracy(
+                            embeddings,
+                            embeddings,
+                            labels,
+                            labels,
+                            embeddings_come_from_same_source,
+                        )
+                        acc2 = AC2.get_accuracy(
+                            embeddings,
+                            embeddings,
+                            labels,
+                            labels,
+                            embeddings_come_from_same_source,
+                        )
 
-        for k, v in acc1.items():
-            self.assertTrue(np.isclose(v, acc2[k], rtol=1e-3))
+                        for k, v in acc1.items():
+                            self.assertTrue(np.isclose(v, acc2[k], rtol=1e-3))
+        LOGGER.setLevel(logging.INFO)
 
 
 class TestWithinAutocast(unittest.TestCase):
@@ -800,3 +829,38 @@ class TestWithinAutocast(unittest.TestCase):
         labels = torch.randint(0, 10, size=(1000,))
         with torch.autocast(device_type="cuda", dtype=torch.float16):
             acc = AC.get_accuracy(embeddings, embeddings, labels, labels, True)
+
+
+class TestMutualInformation(unittest.TestCase):
+    def test_mutual_information(self):
+        from sklearn.cluster import KMeans
+        from sklearn.metrics import (
+            adjusted_mutual_info_score,
+            normalized_mutual_info_score,
+        )
+
+        def sklearn_kmeans(x, nmb_clusters):
+            return KMeans(n_clusters=2).fit_predict(x.cpu().numpy())
+
+        dataset_size = 2000
+        for offset in [0.5, 1]:
+            for kmeans_func in [None, FaissKMeans(niter=300, nredo=10), sklearn_kmeans]:
+                emb1 = torch.randn(dataset_size, 32)
+                emb2 = torch.randn(dataset_size, 32) + offset
+                labels1 = torch.zeros(dataset_size)
+                labels2 = torch.ones(dataset_size)
+                emb = torch.cat([emb1, emb2], dim=0)
+                labels = torch.cat([labels1, labels2], dim=0)
+
+                AC = accuracy_calculator.AccuracyCalculator(
+                    kmeans_func=kmeans_func, include=("AMI", "NMI")
+                )
+                acc = AC.get_accuracy(emb, emb, labels, labels, False)
+
+                # compute directly
+                kmeans = KMeans(n_clusters=2).fit_predict(emb)
+                correct_ami = adjusted_mutual_info_score(labels.numpy(), kmeans)
+                correct_nmi = normalized_mutual_info_score(labels.numpy(), kmeans)
+
+                self.assertTrue(np.isclose(acc["AMI"], correct_ami, rtol=1e-1))
+                self.assertTrue(np.isclose(acc["NMI"], correct_nmi, rtol=1e-1))

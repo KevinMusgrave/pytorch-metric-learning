@@ -743,11 +743,12 @@
 <h2 id="customknn">CustomKNN<a class="headerlink" href="#customknn" title="Permanent link">&para;</a></h2>
 <p>Uses a <a href="../distances/">distance function</a> to determine similarity between datapoints, and then computes k-nearest-neighbors.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils.inference</span> <span class="kn">import</span> <span class="n">CustomKNN</span>
-<span class="n">CustomKNN</span><span class="p">(</span><span class="n">distance</span><span class="p">)</span>
+<span class="n">CustomKNN</span><span class="p">(</span><span class="n">distance</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>distance</strong>: A <a href="../distances/">distance function</a></li>
+<li><strong>batch_size</strong>: If specified, k-nn will be computed incrementally. For example, if there are 50000 reference embeddings and the batch size is 32, then CustomKNN will iterate through all embeddings, using distance matrices of size (32, 50000). The final result is equal to the  <code>batch_size=None</code> setting, but saves memory because the full (50000, 50000) matrix does not need to be computed all at once.</li>
 </ul>
 <p>Example:
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning.distances</span> <span class="kn">import</span> <span class="n">SNRDistance</span>

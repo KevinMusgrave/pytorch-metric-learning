@@ -1151,13 +1151,19 @@
 <h2 id="centroidtripletloss">CentroidTripletLoss<a class="headerlink" href="#centroidtripletloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/2104.13643.pdf" target="_blank">On the Unreasonable Effectiveness of Centroids in Image Retrieval</a></p>
 <p>This is like <a href="./#tripletmarginloss">TripletMarginLoss</a>, except the positives and negatives are class centroids.</p>
-<p><div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">CentroidTripletLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">CentroidTripletLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
                             <span class="n">swap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                             <span class="n">smooth_loss</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                             <span class="n">triplets_per_anchor</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span>
                             <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
-<strong>Parameters</strong>:</p>
+<p>Unlike many other losses, the instance of this class can only be called as the following:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">losses</span>
+<span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">CentroidTripletLoss</span><span class="p">()</span>
+<span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span> 
+</code></pre></div>
+<p>and does not allow for use of <code>ref_embs</code>, <code>ref_labels</code>. Furthermore, there must be at least 2 embeddings associated with each label. Refer to <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/issues/451">this issue</a> for details.</p>
+<p><strong>Parameters</strong>:</p>
 <p>See <a href="./#tripletmarginloss">TripletMarginLoss</a></p>
 <p><strong>Default distance</strong>: </p>
 <p>See <a href="./#tripletmarginloss">TripletMarginLoss</a></p>

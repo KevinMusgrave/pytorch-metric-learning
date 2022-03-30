@@ -259,6 +259,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#batcheddistance" class="md-nav__link">
+    BatchedDistance
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cosinesimilarity" class="md-nav__link">
     CosineSimilarity
   </a>
@@ -599,6 +606,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#batcheddistance" class="md-nav__link">
+    BatchedDistance
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#cosinesimilarity" class="md-nav__link">
     CosineSimilarity
   </a>
@@ -696,6 +710,31 @@ With a similarity measure, the TripletMarginLoss internally swaps the anchor-pos
 <span class="c1"># the distance/similarity between query_emb[j] and ref_emb[j]</span>
 <span class="k">def</span> <span class="nf">pairwise_distance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query_emb</span><span class="p">,</span> <span class="n">ref_emb</span><span class="p">):</span>
     <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+</code></pre></div></p>
+<h2 id="batcheddistance">BatchedDistance<a class="headerlink" href="#batcheddistance" title="Permanent link">&para;</a></h2>
+<p>Computes distance matrices iteratively, passing each matrix into <code>iter_fn</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="n">distances</span><span class="o">.</span><span class="n">BatchedDistance</span><span class="p">(</span><span class="n">distance</span><span class="p">,</span> <span class="n">iter_fn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">)</span>
+</code></pre></div>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>distance</strong>: The wrapped distance function.</li>
+<li><strong>iter_fn</strong>: This function will be called at every iteration. It receives <code>(mat, s, e)</code> as input, where <code>mat</code> is the current distance matrix, and <code>s, e</code> is the range of query embeddings used to construct <code>mat</code>.</li>
+<li><strong>batch_size</strong>: Each distance matrix will be size <code>(batch_size, len(ref_emb))</code>.</li>
+</ul>
+<p><strong>Example usage</strong>:
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning.distances</span> <span class="kn">import</span> <span class="n">BatchedDistance</span><span class="p">,</span> <span class="n">CosineSimilarity</span>
+
+<span class="k">def</span> <span class="nf">fn</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">e</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;At query indices </span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="n">distance</span> <span class="o">=</span> <span class="n">BatchedDistance</span><span class="p">(</span><span class="n">CosineSimilarity</span><span class="p">(),</span> <span class="n">fn</span><span class="p">)</span>
+
+<span class="c1"># Works like a regular distance function, except nothing is returned.</span>
+<span class="c1"># So any persistent changes need to be done in the supplied iter_fn.</span>
+<span class="c1"># query vs query</span>
+<span class="n">distance</span><span class="p">(</span><span class="n">embeddings</span><span class="p">)</span>
+<span class="c1"># query vs ref</span>
+<span class="n">distance</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">ref_emb</span><span class="p">)</span>
 </code></pre></div></p>
 <h2 id="cosinesimilarity">CosineSimilarity<a class="headerlink" href="#cosinesimilarity" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><span class="n">distances</span><span class="o">.</span><span class="n">CosineSimilarity</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>

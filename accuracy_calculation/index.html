@@ -713,7 +713,7 @@
 <li><code>"max_bin_count"</code>. This means k will be set to <code>max(bincount(reference_labels)) - self_count</code> where <code>self_count == 1</code> if the query and reference embeddings come from the same source.</li>
 </ul>
 </li>
-<li><strong>label_comparison_fn</strong>: A function that compares two torch arrays of labels and returns a boolean array. The default is <code>torch.eq</code>. If a custom function is used, then you must exclude clustering based metrics ("NMI" and "AMI"). The following is an example of a custom function for two-dimensional labels. It returns <code>True</code> if the 0th column matches, and the 1st column does <strong>not</strong> match:</li>
+<li><strong>label_comparison_fn</strong>: A function that compares two torch arrays of labels and returns a boolean array. The default is <code>torch.eq</code>. If a custom function is used, then you must exclude clustering based metrics ("NMI" and "AMI"). The example below shows a custom function for two-dimensional labels. It returns <code>True</code> if the 0th column matches, and the 1st column does <strong>not</strong> match.</li>
 <li><strong>device</strong>: The device to move input tensors to. If <code>None</code>, will default to GPUs if available.</li>
 <li><strong>knn_func</strong>: A callable that takes in 4 arguments (<code>query, k, reference, embeddings_come_from_same_source</code>) and returns <code>distances, indices</code>. Default is <code>pytorch_metric_learning.utils.inference.FaissKNN</code>.</li>
 <li><strong>kmeans_func</strong>: A callable that takes in 2 arguments (<code>x, nmb_clusters</code>) and returns a 1-d tensor of cluster assignments. Default is <code>pytorch_metric_learning.utils.inference.FaissKMeans</code>.

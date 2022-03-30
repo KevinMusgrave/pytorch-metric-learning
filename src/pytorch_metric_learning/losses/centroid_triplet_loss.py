@@ -21,7 +21,7 @@ class CentroidTripletLoss(BaseMetricLossFunction):
         swap=False,
         smooth_loss=False,
         triplets_per_anchor="all",
-        **kwargs
+        **kwargs,
     ):
         super().__init__(**kwargs)
         self.triplet_loss = TripletMarginLoss(
@@ -29,7 +29,7 @@ class CentroidTripletLoss(BaseMetricLossFunction):
             swap=swap,
             smooth_loss=smooth_loss,
             triplets_per_anchor=triplets_per_anchor,
-            **kwargs
+            **kwargs,
         )
 
     def compute_loss(
@@ -43,8 +43,10 @@ class CentroidTripletLoss(BaseMetricLossFunction):
         """
         masks, class_masks, labels_list, query_indices = self.create_masks_train(labels)
 
-        P = len(labels_list) # number of classes
-        M = max([len(instances) for instances in labels_list]) # max number of samples per class
+        P = len(labels_list)  # number of classes
+        M = max(
+            [len(instances) for instances in labels_list]
+        )  # max number of samples per class
         DIM = embeddings.size(-1)
 
         """
@@ -96,7 +98,7 @@ class CentroidTripletLoss(BaseMetricLossFunction):
         tuple_indices_collect = []
         starting_idx = 0
 
-        '''
+        """
         valid_mask[i][j] is True if jth class has an ith sample.
         Example: [0, 0, 1, 1, 1, 2, 2, 3]
         valid_mask= [
@@ -104,14 +106,14 @@ class CentroidTripletLoss(BaseMetricLossFunction):
                         [ True,  True,  True, False],
                         [False,  True, False, False]
                     ]
-        '''
+        """
         for inst_idx in range(M):
             one_mask = valid_mask[inst_idx]
             if torch.sum(one_mask) > 1:
                 anchors = query_embeddings[inst_idx][one_mask]
                 pos_centroids = positive_centroids_emb[inst_idx][one_mask]
                 one_labels = query_labels[inst_idx][one_mask]
-            
+
                 embeddings_concat = torch.cat(
                     (anchors, pos_centroids, negative_centroids_emb)
                 )
@@ -160,11 +162,11 @@ class CentroidTripletLoss(BaseMetricLossFunction):
         return loss
 
     def create_masks_train(self, class_labels):
-        '''Create masks for indexing embeddings and labels.
+        """Create masks for indexing embeddings and labels.
 
         Args:
             class_labels (`torch.Tensor`): Labels for embeddings. (e.g. [0, 0, 1, 1, 1, 2, 2, 3])
-        
+
         Returns:
             labels_list (`list`): an organized index of class_labels, where labels_list[i] == list of indices
                 for class i corresponding to class_labels. Example (for labels in Args documentation): `[[0, 1], [2, 3, 4], [5, 6], [7]]`
@@ -177,7 +179,7 @@ class CentroidTripletLoss(BaseMetricLossFunction):
             class_masks (`torch.Tensor`): A mask for indexing same-class embeddings. `class_masks[i]` is a boolean row whose values are `True` for input embeddings
                 that belong in class `i`.
 
-        '''
+        """
         labels_dict = defaultdict(list)
         class_labels = class_labels.detach().cpu().numpy()
         for idx, pid in enumerate(class_labels):
@@ -188,10 +190,12 @@ class CentroidTripletLoss(BaseMetricLossFunction):
         lens_list = [len(item) for item in labels_list]
 
         if min(lens_list) <= 1:
+            singleton_labels = [k for k, v in labels_dict.items() if len(v) == 1]
             raise ValueError(
-                'The input embeddings and labels such be that it implies no class '
-                f'with just one embedding as member but is {class_labels}. '
-                'Refer to the documentation at https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#centroidtripletloss for more details.')
+                "There must be at least 2 embeddings for every label, "
+                f"but the following labels have only 1 embedding: {singleton_labels}. "
+                "Refer to the documentation at https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#centroidtripletloss for more details."
+            )
         lens_list_cs = np.cumsum(lens_list)
 
         M = max(len(instances) for instances in labels_list)

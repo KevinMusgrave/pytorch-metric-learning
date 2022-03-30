@@ -15,15 +15,14 @@
 
 ## News
 
-**February 28**: v1.2.0
-- New loss function: SubCenterArcFaceLoss. See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v1.2.0)
-- Thanks to contributor [chingisooinar](https://github.com/chingisooinar)
+**March 30**: v1.3.0
+- Added a ```batch_size``` parameter to CustomKNN, and fixed a couple of bugs. See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v1.3.0).
+- Thanks to contributor [cwkeam](https://github.com/cwkeam).
 
-**December 27**: v1.1.0
-- New loss functions: CentroidTripletLoss and VICRegLoss
-- Mean reciprocal rank + per-class accuracies
-- See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v1.1.0)
-- Thanks to contributors [cwkeam](https://github.com/cwkeam) and [mlw214](https://github.com/mlw214)
+**February 28**: v1.2.0
+- New loss function: SubCenterArcFaceLoss. See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v1.2.0).
+- Thanks to contributor [chingisooinar](https://github.com/chingisooinar).
+
 
 ## Documentation
 - [**View the documentation here**](https://kevinmusgrave.github.io/pytorch-metric-learning/)

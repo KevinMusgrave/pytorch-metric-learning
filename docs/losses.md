@@ -169,15 +169,11 @@ Unlike many other losses, the instance of this class can only be called as the f
 
 ```python
 from pytorch_metric_learning import losses
-loss_func = losses.SomeLoss()
-
-embeddings = torch.randn(8, 32)
-labels = torch.tensor([0, 0, 0, 0, 0, 0, 1, 1])
+loss_func = losses.CentroidTripletLoss()
 loss = loss_func(embeddings, labels) 
 ```
 
-and does not allow for use of `ref_embs`, `ref_labels`. Furthermore, the labels can't imply classes with just one 
-embedding in it (e.g. if there was only one label with value `1` in the above example). Refer to a [previous issue](https://github.com/KevinMusgrave/pytorch-metric-learning/issues/451) about this topic.
+and does not allow for use of `ref_embs`, `ref_labels`. Furthermore, there must be at least 2 embeddings associated with each label. Refer to [this issue](https://github.com/KevinMusgrave/pytorch-metric-learning/issues/451) for details.
 
 **Parameters**:
 

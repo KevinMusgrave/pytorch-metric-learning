@@ -784,6 +784,7 @@ class TestCalculateAccuraciesFaissKNN(unittest.TestCase):
 class TestCalculateAccuraciesCustomKNN(unittest.TestCase):
     def test_custom_knn(self):
         LOGGER.setLevel(logging.CRITICAL)
+        torch.manual_seed(6920)
         for dataset_size in [200, 1000]:
             for batch_size in [None, 32, 33, 2000]:
                 for embeddings_come_from_same_source in [False, True]:
@@ -815,8 +816,8 @@ class TestCalculateAccuraciesCustomKNN(unittest.TestCase):
                             embeddings_come_from_same_source,
                         )
 
-                        for k, v in acc1.items():
-                            self.assertTrue(np.isclose(v, acc2[k], rtol=1e-3))
+                        for acc_name, v in acc1.items():
+                            self.assertTrue(np.isclose(v, acc2[acc_name], rtol=1e-3))
         LOGGER.setLevel(logging.INFO)
 
 

@@ -292,10 +292,10 @@ def return_results(D, I, embeddings_come_from_same_source):
 
 
 def get_topk(distances, indices, k, get_largest):
-    def fn(mat, *_):
+    def fn(mat, s, e):
         D, I = torch.topk(mat, k, largest=get_largest, dim=1)
-        distances.append(D)
-        indices.append(I)
+        distances[s:e] = D
+        indices[s:e] = I
 
     return fn
 
@@ -312,11 +312,11 @@ class CustomKNN:
             k = k + 1
         get_largest = self.distance.is_inverted
         if isinstance(self.distance, BatchedDistance):
-            distances, indices = [], []
+            device = query.device
+            distances = torch.zeros(len(query), k, device=device)
+            indices = torch.zeros(len(query), k, device=device, dtype=torch.long)
             self.distance.iter_fn = get_topk(distances, indices, k, get_largest)
             self.distance(query, reference)
-            distances = torch.cat(distances, dim=0)
-            indices = torch.cat(indices, dim=0)
         else:
             mat = self.distance(query, reference)
             distances, indices = torch.topk(mat, k, largest=get_largest, dim=1)

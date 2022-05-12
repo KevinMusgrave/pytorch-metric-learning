@@ -70,12 +70,14 @@ class VICRegLoss(BaseMetricLossFunction):
     def variance_loss(self, emb, ref_emb):
         std_emb = torch.sqrt(emb.var(dim=0) + self.eps)
         std_ref_emb = torch.sqrt(ref_emb.var(dim=0) + self.eps)
-        return F.relu(1 - std_emb), F.relu(1 - std_ref_emb)
+        return F.relu(1 - std_emb) / 2, F.relu(1 - std_ref_emb) / 2 # / 2 for averaging
 
     def covariance_loss(self, emb, ref_emb):
-        _, D = emb.size()
-        cov_emb = torch.cov(emb.T)
-        cov_ref_emb = torch.cov(ref_emb.T)
+        N, D = emb.size()
+        emb = emb - emb.mean(dim=0)
+        ref_emb = ref_emb - ref_emb.mean(dim=0)
+        cov_emb = (emb.T @ emb) / (N - 1)
+        cov_ref_emb = (ref_emb.T @ ref_emb) / (N - 1)
 
         diag = torch.eye(D, device=cov_emb.device)
         cov_loss = (

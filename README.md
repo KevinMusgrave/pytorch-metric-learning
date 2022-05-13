@@ -15,17 +15,14 @@
 
 ## News
 
-**December 27**: v1.1.0
-- New loss functions: CentroidTripletLoss and VICRegLoss
-- Mean reciprocal rank + per-class accuracies
-- See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v1.1.0)
-- Thanks to contributors [cwkeam](https://github.com/cwkeam) and [mlw214](https://github.com/mlw214)
+**March 30**: v1.3.0
+- Added a ```batch_size``` parameter to CustomKNN, and fixed a couple of bugs. See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v1.3.0).
+- Thanks to contributor [cwkeam](https://github.com/cwkeam).
 
-**November 28**: v1.0.0 includes
-- Reference embeddings for tuple losses
-- Efficient mode for DistributedLossWrapper
-- Customized k-nn functions for AccuracyCalculator
-- See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v1.0.0)
+**February 28**: v1.2.0
+- New loss function: SubCenterArcFaceLoss. See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v1.2.0).
+- Thanks to contributor [chingisooinar](https://github.com/chingisooinar).
+
 
 ## Documentation
 - [**View the documentation here**](https://kevinmusgrave.github.io/pytorch-metric-learning/)
@@ -234,6 +231,7 @@ Thanks to the contributors who made pull requests!
 |[cwkeam](https://github.com/cwkeam) | - [CentroidTripletLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#centroidtripletloss) <br/> - [VICRegLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#vicregloss) <br/> - Added mean reciprocal rank accuracy to [AccuracyCalculator](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/) |
 |[mlopezantequera](https://github.com/mlopezantequera) | - Made the [testers](https://kevinmusgrave.github.io/pytorch-metric-learning/testers) work on any combination of query and reference sets <br/> - Made [AccuracyCalculator](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/) work with arbitrary label comparisons |
 |[marijnl](https://github.com/marijnl)| - [BatchEasyHardMiner](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#batcheasyhardminer) <br/> - [TwoStreamMetricLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#twostreammetricloss) <br/> - [GlobalTwoStreamEmbeddingSpaceTester](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#globaltwostreamembeddingspacetester) <br/> - [Example using trainers.TwoStreamMetricLoss](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/TwoStreamMetricLoss.ipynb) |
+| [chingisooinar](https://github.com/chingisooinar) | [SubCenterArcFaceLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#subcenterarcfaceloss) |
 | [elias-ramzi](https://github.com/elias-ramzi) | [HierarchicalSampler](https://kevinmusgrave.github.io/pytorch-metric-learning/samplers/#hierarchicalsampler) |
 | [fjsj](https://github.com/fjsj) | [SupConLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#supconloss) |
 | [AlenUbuntu](https://github.com/AlenUbuntu) | [CircleLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#circleloss) |

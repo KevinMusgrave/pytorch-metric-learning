@@ -42,7 +42,7 @@ class TestVICRegLoss(unittest.TestCase):
                     variance_loss = torch.mean(F.relu(1 - std_emb)) + torch.mean(
                         F.relu(1 - std_ref_emb)
                     )
-                    variance_loss = variance_loss / 2 # for averaging
+                    variance_loss = variance_loss / 2  # for averaging
 
                     # covariance loss, a more manual version
                     N, D = emb.size()

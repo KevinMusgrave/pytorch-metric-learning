@@ -21,9 +21,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        pytorch-version: [1.6, 1.11]
         python-version: [3.8]
+        pytorch-version: [1.6, 1.11]
+        torchvision-version: [0.7.0, 0.12.0]
         with-collect-stats: [false]
+        exclude:
+          - pytorch-version: 1.6
+            torchvision-version: 0.12.0
+          - pytorch-version: 1.11
+            torchvision-version: 0.7.0
 
     steps:
     - uses: actions/checkout@v2
@@ -34,7 +40,7 @@ jobs:
     - name: Install dependencies
       run: |
         pip install .[with-hooks-cpu]
-        pip install torch==${{ matrix.pytorch-version }} --force-reinstall
+        pip install torch==${{ matrix.pytorch-version }} torchvision==${{ matrix.torchvision-version }} --force-reinstall
     - name: Run unit tests
       run: |
         TEST_DTYPES=float32,float64 TEST_DEVICE=cpu WITH_COLLECT_STATS=${{ matrix.with-collect-stats }} python -m unittest discover -t . -s tests/trainers 

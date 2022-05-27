@@ -29,12 +29,16 @@ class ThresholdReducer(BaseReducer):
         return self.element_reduction_helper(losses, embeddings, "triplets")
 
     def element_reduction_helper(self, losses, embeddings, attr_name):
-        low_condition = losses > self.low if self.low is not None else True
-        high_condition = losses < self.high if self.high is not None else True
-        threshold_condition = low_condition & high_condition
-        num_past_filter = torch.sum(threshold_condition)
+        low_condition, high_condition = None, None
+        if self.low is not None:
+            low_condition = losses > self.low
+            losses = losses[low_condition]
+        if self.high is not None:
+            high_condition = losses < self.high
+            losses = losses[high_condition]
+        num_past_filter = len(losses)
         if num_past_filter >= 1:
-            loss = torch.mean(losses[threshold_condition])
+            loss = torch.mean(losses)
         else:
             loss = self.zero_loss(embeddings)
         self.set_stats(low_condition, high_condition, num_past_filter, attr_name)
@@ -44,7 +48,7 @@ class ThresholdReducer(BaseReducer):
         if self.collect_stats:
             curr_attr_name = "{}_past_filter".format(attr_name)
             self.add_to_recordable_attributes(name=curr_attr_name, is_stat=True)
-            setattr(self, curr_attr_name, num_past_filter.item())
+            setattr(self, curr_attr_name, num_past_filter)
             with torch.no_grad():
                 if self.low is not None:
                     curr_attr_name = "{}_above_low".format(attr_name)

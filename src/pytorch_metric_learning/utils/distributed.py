@@ -69,10 +69,10 @@ class DistributedLossWrapper(torch.nn.Module):
         self.loss = loss
         self.efficient = efficient
 
-    def forward(self, embeddings, labels, indices_tuple=None):
+    def forward(self, embeddings, labels, indices_tuple=None, **kwargs):
         world_size = torch.distributed.get_world_size()
         if world_size <= 1:
-            return self.loss(embeddings, labels, indices_tuple)
+            return self.loss(embeddings, labels, indices_tuple, **kwargs)
 
         all_emb, all_labels, labels, device = gather(embeddings, labels)
 
@@ -81,7 +81,7 @@ class DistributedLossWrapper(torch.nn.Module):
                 indices_tuple = get_indices_tuple(labels, all_labels, device)
             loss = self.loss(embeddings, labels, indices_tuple, all_emb, all_labels)
         else:
-            loss = self.loss(all_emb, all_labels, indices_tuple)
+            loss = self.loss(all_emb, all_labels, indices_tuple, **kwargs)
 
         return loss * world_size
 

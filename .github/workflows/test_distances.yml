@@ -6,11 +6,13 @@ on:
     paths:
       - 'src/**'
       - 'tests/**'
+      - '.github/workflows/**'
   pull_request:
     branches: [ master, dev ]
     paths:
       - 'src/**'
       - 'tests/**'
+      - '.github/workflows/**'
 
 jobs:
   call-base-test-workflow:

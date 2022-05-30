@@ -1,12 +1,6 @@
 name: run_linter
 
 on:
-  push:
-    branches: [ master, dev ]
-    paths:
-      - 'src/**'
-      - 'tests/**'
-      - '.github/workflows/**'
   pull_request:
     branches: [ master, dev ]
     paths:

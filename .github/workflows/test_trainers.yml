@@ -1,6 +1,3 @@
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
-
 name: trainers
 
 on:
@@ -9,38 +6,16 @@ on:
     paths:
       - 'src/**'
       - 'tests/**'
+      - '.github/workflows/**'
   pull_request:
     branches: [ master, dev ]
     paths:
       - 'src/**'
       - 'tests/**'
-      
+      - '.github/workflows/**'
+
 jobs:
-  build:
-
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: [3.8]
-        pytorch-version: [1.6, 1.11]
-        torchvision-version: [0.7.0, 0.12.0]
-        with-collect-stats: [false]
-        exclude:
-          - pytorch-version: 1.6
-            torchvision-version: 0.12.0
-          - pytorch-version: 1.11
-            torchvision-version: 0.7.0
-
-    steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        pip install .[with-hooks-cpu]
-        pip install torch==${{ matrix.pytorch-version }} torchvision==${{ matrix.torchvision-version }} --force-reinstall
-    - name: Run unit tests
-      run: |
-        TEST_DTYPES=float32,float64 TEST_DEVICE=cpu WITH_COLLECT_STATS=${{ matrix.with-collect-stats }} python -m unittest discover -t . -s tests/trainers 
+  call-base-test-workflow:
+    uses: ./.github/workflows/base_test_workflow.yml
+    with:
+      module-to-test: trainers

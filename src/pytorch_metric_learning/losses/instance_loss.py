@@ -21,6 +21,10 @@ class InstanceLoss(GenericPairLoss):
         super().__init__(mat_based_loss=True, **kwargs)
         c_f.assert_distance_type(self, CosineSimilarity)
         self.gamma = gamma
+        self.add_to_recordable_attributes(
+            list_of_names=["gamma"],
+            is_stat=False,
+        )
 
     def compute_loss(self, embeddings, labels=None):
         normed_feature = l2_norm(feature)

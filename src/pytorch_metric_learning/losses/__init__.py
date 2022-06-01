@@ -8,6 +8,7 @@ from .cosface_loss import CosFaceLoss
 from .cross_batch_memory import CrossBatchMemory
 from .fast_ap_loss import FastAPLoss
 from .generic_pair_loss import GenericPairLoss
+from .instance_loss import InstanceLoss
 from .intra_pair_variance_loss import IntraPairVarianceLoss
 from .large_margin_softmax_loss import LargeMarginSoftmaxLoss
 from .lifted_structure_loss import GeneralizedLiftedStructureLoss, LiftedStructureLoss

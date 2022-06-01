@@ -1,5 +1,6 @@
 import torch
 
+from ..distances import CosineSimilarity
 from ..reducers import AvgNonZeroReducer
 from ..utils import common_functions as c_f
 from ..utils import loss_and_miner_utils as lmu

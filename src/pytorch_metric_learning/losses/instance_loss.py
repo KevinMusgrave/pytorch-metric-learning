@@ -4,7 +4,7 @@ from ..distances import CosineSimilarity
 from ..reducers import AvgNonZeroReducer
 from ..utils import common_functions as c_f
 from ..utils import loss_and_miner_utils as lmu
-from .base_metric_loss_function import BaseMetricLossFunction
+from .generic_pair_loss import GenericPairLoss
 
 def l2_norm(v):
     fnorm = torch.norm(v, p=2, dim=1, keepdim=True) + 1e-6
@@ -18,7 +18,7 @@ class InstanceLoss(BaseMetricLossFunction):
     using cross-entropy loss for every sample if label is not available, else use given label.
     """
     def __init__(self, gamma=64, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__(mat_based_loss=True, **kwargs)
         c_f.assert_distance_type(self, CosineSimilarity)
         self.gamma = gamma
 

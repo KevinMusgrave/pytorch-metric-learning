@@ -4,9 +4,11 @@ from . import common_functions as c_f
 
 
 class ModuleWithRecords(torch.nn.Module):
-    def __init__(self, collect_stats=c_f.COLLECT_STATS):
+    def __init__(self, collect_stats=None):
         super().__init__()
-        self.collect_stats = collect_stats
+        self.collect_stats = (
+            c_f.COLLECT_STATS if collect_stats is None else collect_stats
+        )
 
     def add_to_recordable_attributes(
         self, name=None, list_of_names=None, is_stat=False

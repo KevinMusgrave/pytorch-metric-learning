@@ -11,58 +11,18 @@
  <a href="https://anaconda.org/metric-learning/pytorch-metric-learning">
      <img alt="Anaconda version" src="https://img.shields.io/conda/v/metric-learning/pytorch-metric-learning?color=bright-green">
  </a>
- 
-<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/commits/master">
-     <img alt="Commit activity" src="https://img.shields.io/github/commit-activity/m/KevinMusgrave/pytorch-metric-learning">
- </a>
- 
-<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/LICENSE">
-     <img alt="License" src="https://img.shields.io/github/license/KevinMusgrave/pytorch-metric-learning?color=bright-green">
- </a>
-</p>
-
- <p align="center">
-<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/.github/workflows/test_losses.yml">
-    <img alt="Losses unit tests" src="https://github.com/KevinMusgrave/pytorch-metric-learning/workflows/losses/badge.svg">
- </a>
-<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/.github/workflows/test_miners.yml">
-    <img alt="Miners unit tests" src="https://github.com/KevinMusgrave/pytorch-metric-learning/workflows/miners/badge.svg">
- </a>
-	<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/.github/workflows/test_reducers.yml">
-    <img alt="Reducers unit tests" src="https://github.com/KevinMusgrave/pytorch-metric-learning/workflows/reducers/badge.svg">
- </a>
-	<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/.github/workflows/test_regularizers.yml">
-    <img alt="Regularizers unit tests" src="https://github.com/KevinMusgrave/pytorch-metric-learning/workflows/regularizers/badge.svg">
- </a>
-</p>
- <p align="center">
-	<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/.github/workflows/test_samplers.yml">
-    <img alt="Samplers unit tests" src="https://github.com/KevinMusgrave/pytorch-metric-learning/workflows/samplers/badge.svg">
- </a>
-	<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/.github/workflows/test_testers.yml">
-    <img alt="Testers unit tests" src="https://github.com/KevinMusgrave/pytorch-metric-learning/workflows/testers/badge.svg">
- </a>
-	<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/.github/workflows/test_trainers.yml">
-    <img alt="Trainers unit tests" src="https://github.com/KevinMusgrave/pytorch-metric-learning/workflows/trainers/badge.svg">
- </a>
-	<a href="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/.github/workflows/test_utils.yml">
-    <img alt="Utils unit tests" src="https://github.com/KevinMusgrave/pytorch-metric-learning/workflows/utils/badge.svg">
- </a>
 </p>
 
 ## News
 
-**December 27**: v1.1.0
-- New loss functions: CentroidTripletLoss and VICRegLoss
-- Mean reciprocal rank + per-class accuracies
-- See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v1.1.0)
-- Thanks to contributors [codeandproduce](https://github.com/codeandproduce) and [mlw214](https://github.com/mlw214)
+**March 30**: v1.3.0
+- Added a ```batch_size``` parameter to CustomKNN, and fixed a couple of bugs. See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v1.3.0).
+- Thanks to contributor [cwkeam](https://github.com/cwkeam).
 
-**November 28**: v1.0.0 includes
-- Reference embeddings for tuple losses
-- Efficient mode for DistributedLossWrapper
-- Customized k-nn functions for AccuracyCalculator
-- See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v1.0.0)
+**February 28**: v1.2.0
+- New loss function: SubCenterArcFaceLoss. See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v1.2.0).
+- Thanks to contributor [chingisooinar](https://github.com/chingisooinar).
+
 
 ## Documentation
 - [**View the documentation here**](https://kevinmusgrave.github.io/pytorch-metric-learning/)
@@ -268,9 +228,10 @@ Thanks to the contributors who made pull requests!
 
 | Contributor | Highlights |
 | -- | -- |
-|[codeandproduce](https://github.com/codeandproduce) | - [CentroidTripletLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#centroidtripletloss) <br/> - [VICRegLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#vicregloss) <br/> - Added mean reciprocal rank accuracy to [AccuracyCalculator](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/) |
+|[cwkeam](https://github.com/cwkeam) | - [CentroidTripletLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#centroidtripletloss) <br/> - [VICRegLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#vicregloss) <br/> - Added mean reciprocal rank accuracy to [AccuracyCalculator](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/) |
 |[mlopezantequera](https://github.com/mlopezantequera) | - Made the [testers](https://kevinmusgrave.github.io/pytorch-metric-learning/testers) work on any combination of query and reference sets <br/> - Made [AccuracyCalculator](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/) work with arbitrary label comparisons |
 |[marijnl](https://github.com/marijnl)| - [BatchEasyHardMiner](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#batcheasyhardminer) <br/> - [TwoStreamMetricLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#twostreammetricloss) <br/> - [GlobalTwoStreamEmbeddingSpaceTester](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#globaltwostreamembeddingspacetester) <br/> - [Example using trainers.TwoStreamMetricLoss](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/TwoStreamMetricLoss.ipynb) |
+| [chingisooinar](https://github.com/chingisooinar) | [SubCenterArcFaceLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#subcenterarcfaceloss) |
 | [elias-ramzi](https://github.com/elias-ramzi) | [HierarchicalSampler](https://kevinmusgrave.github.io/pytorch-metric-learning/samplers/#hierarchicalsampler) |
 | [fjsj](https://github.com/fjsj) | [SupConLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#supconloss) |
 | [AlenUbuntu](https://github.com/AlenUbuntu) | [CircleLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#circleloss) |

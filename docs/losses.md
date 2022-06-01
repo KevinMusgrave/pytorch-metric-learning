@@ -164,6 +164,17 @@ losses.CentroidTripletLoss(margin=0.05,
                             triplets_per_anchor="all",
                             **kwargs)
 ```
+
+Unlike many other losses, the instance of this class can only be called as the following:
+
+```python
+from pytorch_metric_learning import losses
+loss_func = losses.CentroidTripletLoss()
+loss = loss_func(embeddings, labels) 
+```
+
+and does not allow for use of `ref_embs`, `ref_labels`. Furthermore, there must be at least 2 embeddings associated with each label. Refer to [this issue](https://github.com/KevinMusgrave/pytorch-metric-learning/issues/451) for details.
+
 **Parameters**:
 
 See [TripletMarginLoss](losses.md#tripletmarginloss)
@@ -930,6 +941,45 @@ loss_optimizer.step()
 **Reducer input**:
 
 * **loss**: The loss per element in the batch. Reduction type is ```"element"```.
+
+
+## SubCenterArcFaceLoss 
+[Sub-center ArcFace: Boosting Face Recognition by Large-scale Noisy Web Faces](https://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123560715.pdf){target=_blank}
+
+This loss extends [ArcFaceLoss](losses.md#arcfaceloss). It uses multiple sub centers per class, instead of just a single center, hence the name Sub-center ArcFace.
+
+```python
+losses.SubCenterArcFaceLoss(
+    num_classes, 
+    embedding_size, 
+    margin=28.6, 
+    scale=64, 
+    sub_centers=3, 
+    **kwargs
+)
+```
+
+**Parameters**:
+
+* **sub_centers**: The number of sub centers per class.
+
+See [ArcFaceLoss](losses.md#arcfaceloss) for a description of the other parameters.
+
+
+**Other info**: 
+
+* This loss **requires an optimizer**. See [ArcFaceLoss](losses.md#arcfaceloss) for details.
+* See [ArcFaceLoss](losses.md#arcfaceloss) for default distance, reducer, and reducer input.
+
+
+**Getting outliers and dominant centers**
+
+Outliers and dominant centers can be computed as described in the paper.
+```python
+outliers, dominant_centers = loss_func.get_outliers(
+    embeddings, labels, threshold=75, return_dominant_centers=True
+)
+```
 
 
 ## SupConLoss

@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-from ..distances import CosineSimilarity
+from ..distances import BatchedDistance, CosineSimilarity
 from . import common_functions as c_f
 
 try:
@@ -182,6 +182,10 @@ class FaissKNN:
         c_f.LOGGER.info("embedding dimensionality is %d" % d)
         if self.reset_before:
             self.index = self.index_init_fn(d)
+        if self.index is None:
+            raise ValueError(
+                "self.index is None. It needs to be initialized before being used."
+            )
         distances, indices = try_gpu(
             self.index,
             query,
@@ -287,12 +291,33 @@ def return_results(D, I, embeddings_come_from_same_source):
     return D, I
 
 
+def get_topk(distances, indices, k, get_largest):
+    def fn(mat, s, e):
+        D, I = torch.topk(mat, k, largest=get_largest, dim=1)
+        distances[s:e] = D
+        indices[s:e] = I
+
+    return fn
+
+
 class CustomKNN:
-    def __init__(self, distance):
-        self.distance = distance
+    def __init__(self, distance, batch_size=None):
+        if batch_size:
+            self.distance = BatchedDistance(distance, batch_size=batch_size)
+        else:
+            self.distance = distance
 
     def __call__(self, query, k, reference, embeddings_come_from_same_source=False):
-        mat = self.distance(query, reference)
-        largest = self.distance.is_inverted
-        distances, indices = torch.topk(mat, k, largest=largest, dim=1)
+        if embeddings_come_from_same_source:
+            k = k + 1
+        get_largest = self.distance.is_inverted
+        if isinstance(self.distance, BatchedDistance):
+            device = query.device
+            distances = torch.zeros(len(query), k, device=device)
+            indices = torch.zeros(len(query), k, device=device, dtype=torch.long)
+            self.distance.iter_fn = get_topk(distances, indices, k, get_largest)
+            self.distance(query, reference)
+        else:
+            mat = self.distance(query, reference)
+            distances, indices = torch.topk(mat, k, largest=get_largest, dim=1)
         return return_results(distances, indices, embeddings_come_from_same_source)

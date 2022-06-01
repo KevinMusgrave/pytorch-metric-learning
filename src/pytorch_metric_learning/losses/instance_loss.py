@@ -11,7 +11,7 @@ def l2_norm(v):
     v = v.div(fnorm.expand_as(v))
     return v
 
-class InstanceLoss(BaseMetricLossFunction):
+class InstanceLoss(GenericPairLoss):
     """
     Implementation of  Dual-Path Convolutional Image-Text Embeddings with Instance Loss, ACM TOMM 2020 
     https://arxiv.org/abs/1711.05535 

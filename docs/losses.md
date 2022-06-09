@@ -407,6 +407,17 @@ losses.GeneralizedLiftedStructureLoss(neg_margin=1, pos_margin=0, **kwargs)
 
 * **loss**: The loss per element in the batch. Reduction type is ```"element"```.
 
+## InstanceLoss
+[Dual-Path Convolutional Image-Text Embeddings with Instance Loss](https://arxiv.org/pdf/1711.05535.pdf)
+```python
+losses.InstanceLoss(gamma=64, **kwargs)
+```
+
+**Parameters**:
+
+* **gamma**: The cosine similarity matrix is scaled by this amount.
+
+
 ## IntraPairVarianceLoss
 [Deep Metric Learning with Tuplet Margin Loss](http://openaccess.thecvf.com/content_ICCV_2019/papers/Yu_Deep_Metric_Learning_With_Tuplet_Margin_Loss_ICCV_2019_paper.pdf){target=_blank}
 ```python

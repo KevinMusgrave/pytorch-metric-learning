@@ -242,6 +242,7 @@ Thanks to the contributors who made pull requests!
 | [vltanh](https://github.com/vltanh) | Made ```InferenceModel.train_indexer``` accept datasets |
 | [btseytlin](https://github.com/btseytlin) | ```get_nearest_neighbors``` in [InferenceModel](https://kevinmusgrave.github.io/pytorch-metric-learning/inference_models) |
 | [mlw214](https://github.com/mlw214) | Added ```return_per_class``` to [AccuracyCalculator](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/) |
+| [layumi](https://github.com/layumi) | Added [InstanceLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#instanceloss) |
 | [z1w](https://github.com/z1w) | |
 | [thinline72](https://github.com/thinline72) | |
 | [tpanum](https://github.com/tpanum) | |

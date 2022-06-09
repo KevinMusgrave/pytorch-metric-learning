@@ -15,13 +15,13 @@
 
 ## News
 
+**June 9**: v1.4.0
+- Added [InstanceLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#instanceloss).
+- Thanks to contributor [layumi](https://github.com/layumi).
+
 **March 30**: v1.3.0
 - Added a ```batch_size``` parameter to CustomKNN, and fixed a couple of bugs. See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v1.3.0).
 - Thanks to contributor [cwkeam](https://github.com/cwkeam).
-
-**February 28**: v1.2.0
-- New loss function: SubCenterArcFaceLoss. See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v1.2.0).
-- Thanks to contributor [chingisooinar](https://github.com/chingisooinar).
 
 
 ## Documentation
@@ -242,7 +242,7 @@ Thanks to the contributors who made pull requests!
 | [vltanh](https://github.com/vltanh) | Made ```InferenceModel.train_indexer``` accept datasets |
 | [btseytlin](https://github.com/btseytlin) | ```get_nearest_neighbors``` in [InferenceModel](https://kevinmusgrave.github.io/pytorch-metric-learning/inference_models) |
 | [mlw214](https://github.com/mlw214) | Added ```return_per_class``` to [AccuracyCalculator](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/) |
-| [layumi](https://github.com/layumi) | Added [InstanceLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#instanceloss) |
+| [layumi](https://github.com/layumi) | [InstanceLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#instanceloss) |
 | [z1w](https://github.com/z1w) | |
 | [thinline72](https://github.com/thinline72) | |
 | [tpanum](https://github.com/tpanum) | |

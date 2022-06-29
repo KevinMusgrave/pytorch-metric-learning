@@ -17,6 +17,12 @@ miner_output = miner_func(embeddings, labels) # in your training for-loop
 loss = loss_func(embeddings, labels, miner_output)
 ```
 
+For some losses ([ContrastiveLoss](#contrastiveloss), [NTXentLoss](#ntxentloss), [TripletMarginLoss](#tripletmarginloss) etc.), you don't need to pass in labels if you are already passing in pair/triplet indices:
+```python
+loss = loss_func(embeddings, indices_tuple=pairs)
+```
+
+
 You can specify how losses get reduced to a single value by using a [reducer](reducers.md):
 ```python
 from pytorch_metric_learning import reducers

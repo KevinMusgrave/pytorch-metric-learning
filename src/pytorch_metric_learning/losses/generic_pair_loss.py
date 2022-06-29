@@ -1,5 +1,6 @@
 import torch
 
+from ..utils import common_functions as c_f
 from ..utils import loss_and_miner_utils as lmu
 from .base_metric_loss_function import BaseMetricLossFunction
 
@@ -12,6 +13,7 @@ class GenericPairLoss(BaseMetricLossFunction):
         )
 
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+        c_f.labels_or_indices_tuple_required(labels, indices_tuple)
         indices_tuple = lmu.convert_to_pairs(indices_tuple, labels, ref_labels)
         if all(len(x) <= 1 for x in indices_tuple):
             return self.zero_losses()

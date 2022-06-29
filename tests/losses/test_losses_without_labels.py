@@ -47,8 +47,8 @@ def get_incompatible_losses():
 
 class TestLossesWithoutLabels(unittest.TestCase):
     def test(self):
-        emb = torch.randn(64, 32, device=TEST_DEVICE)
-        labels = torch.randint(0, 10, size=(64,), device=TEST_DEVICE)
+        emb = torch.randn(32, 32, device=TEST_DEVICE)
+        labels = torch.randint(0, 10, size=(32,), device=TEST_DEVICE)
         pairs1 = get_all_pairs_indices(labels)
         pairs2 = MultiSimilarityMiner()(emb, labels)
         pairs3 = TripletMarginMiner()(emb, labels)

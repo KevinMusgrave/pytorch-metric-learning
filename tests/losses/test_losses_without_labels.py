@@ -30,7 +30,6 @@ def get_incompatible_losses():
     return [
         losses.AngularLoss(),
         losses.ArcFaceLoss(10, 32),
-        losses.CentroidTripletLoss(),
         losses.CosFaceLoss(10, 32),
         losses.FastAPLoss(),
         losses.InstanceLoss(),
@@ -67,8 +66,10 @@ class TestLossesWithoutLabels(unittest.TestCase):
             for loss_fn in compatible_losses:
                 with self.assertRaises(ValueError):
                     loss_fn(emb)
+                with self.assertRaises(ValueError):
                     loss_fn(emb, ref_emb=emb)
 
             for loss_fn in incompatible_losses:
+                loss_fn(emb, labels)  # should work
                 with self.assertRaises(ValueError):
                     loss_fn(emb, indices_tuple=p)

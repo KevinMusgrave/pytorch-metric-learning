@@ -15,14 +15,13 @@
 
 ## News
 
+**June 29**: v1.5.0
+- Made labels optional (if `indices_tuple` is provided) for most contrastive losses. 
+- See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v1.5.0).
+
 **June 9**: v1.4.0
 - Added [InstanceLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#instanceloss).
 - Thanks to contributor [layumi](https://github.com/layumi).
-
-**March 30**: v1.3.0
-- Added a ```batch_size``` parameter to CustomKNN, and fixed a couple of bugs. See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v1.3.0).
-- Thanks to contributor [cwkeam](https://github.com/cwkeam).
-
 
 ## Documentation
 - [**View the documentation here**](https://kevinmusgrave.github.io/pytorch-metric-learning/)

@@ -24,6 +24,7 @@ class AngularLoss(BaseMetricLossFunction):
         self.add_to_recordable_attributes(list_of_names=["average_angle"], is_stat=True)
 
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+        c_f.labels_required(labels)
         anchors, positives, keep_mask, anchor_idx, positive_idx = self.get_pairs(
             embeddings, labels, indices_tuple, ref_emb, ref_labels
         )

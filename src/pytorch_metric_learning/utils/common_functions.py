@@ -409,13 +409,13 @@ def return_input(x):
 
 
 def check_shapes(embeddings, labels):
-    if embeddings.shape[0] != labels.shape[0]:
+    if labels is not None and embeddings.shape[0] != labels.shape[0]:
         raise ValueError("Number of embeddings must equal number of labels")
     if embeddings.ndim != 2:
         raise ValueError(
             "embeddings must be a 2D tensor of shape (batch_size, embedding_size)"
         )
-    if labels.ndim != 1:
+    if labels is not None and labels.ndim != 1:
         raise ValueError("labels must be a 1D tensor of shape (batch_size,)")
 
 
@@ -498,7 +498,8 @@ def set_ref_emb(embeddings, labels, ref_emb, ref_labels):
     if ref_emb is not None:
         if not torch.is_tensor(ref_labels):
             TypeError("if ref_emb is given, then ref_labels must also be given")
-        ref_labels = to_device(ref_labels, ref_emb)
+        if ref_labels is not None:
+            ref_labels = to_device(ref_labels, ref_emb)
     else:
         ref_emb, ref_labels = embeddings, labels
     check_shapes(ref_emb, ref_labels)
@@ -513,6 +514,16 @@ def ref_not_supported(embeddings, labels, ref_emb, ref_labels):
 def indices_tuple_not_supported(indices_tuple):
     if indices_tuple is not None:
         raise ValueError("indices_tuple is not supported for this loss function")
+
+
+def labels_required(labels):
+    if labels is None:
+        raise ValueError("labels are required for this loss function")
+
+
+def labels_or_indices_tuple_required(labels, indices_tuple):
+    if labels is None and indices_tuple is None:
+        raise ValueError("labels and indices_tuple cannot both be None")
 
 
 def concatenate_indices_tuples(it1, it2):

@@ -24,6 +24,7 @@ class InstanceLoss(BaseMetricLossFunction):
         )
 
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+        c_f.labels_required(labels)
         c_f.indices_tuple_not_supported(indices_tuple)
         c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
         sim1 = self.distance(embeddings) * self.gamma

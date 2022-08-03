@@ -13,7 +13,7 @@
     
     
       
-        <title>Distributed - PyTorch Metric Learning</title>
+        <title>Frequently Asked Questions - PyTorch Metric Learning</title>
       
     
     
@@ -64,7 +64,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#distributed" class="md-skip">
+        <a href="#frequently-asked-questions" class="md-skip">
           Skip to content
         </a>
       
@@ -96,7 +96,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Distributed
+              Frequently Asked Questions
             
           </span>
         </div>
@@ -338,14 +338,12 @@
 
   
   
-    
-  
   
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_10" type="checkbox" id="__nav_10" checked>
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_10" type="checkbox" id="__nav_10" >
       
       
       
@@ -422,59 +420,11 @@
               
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          Distributed
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../distributed/" class="md-nav__link">
         Distributed
       </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#distributedlosswrapper" class="md-nav__link">
-    DistributedLossWrapper
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#distributedminerwrapper" class="md-nav__link">
-    DistributedMinerWrapper
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -554,11 +504,52 @@
 
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="../faq/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Frequently Asked Questions
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         Frequently Asked Questions
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#large-batch-sizes-and-the-int_max-error" class="md-nav__link">
+    Large batch sizes and the INT_MAX error
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -590,15 +581,8 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#distributedlosswrapper" class="md-nav__link">
-    DistributedLossWrapper
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#distributedminerwrapper" class="md-nav__link">
-    DistributedMinerWrapper
+  <a href="#large-batch-sizes-and-the-int_max-error" class="md-nav__link">
+    Large batch sizes and the INT_MAX error
   </a>
   
 </li>
@@ -615,56 +599,17 @@
             <article class="md-content__inner md-typeset">
               
                 
-  <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/edit/master/docs/distributed.md" title="Edit this page" class="md-content__button md-icon">
+  <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/edit/master/docs/faq.md" title="Edit this page" class="md-content__button md-icon">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
   </a>
 
 
 
-<h1 id="distributed">Distributed<a class="headerlink" href="#distributed" title="Permanent link">&para;</a></h1>
-<p>Wrap a tuple loss or miner with these when using PyTorch's <a href="https://pytorch.org/tutorials/intermediate/ddp_tutorial.html">DistributedDataParallel</a> (i.e. multiprocessing).</p>
-<h2 id="distributedlosswrapper">DistributedLossWrapper<a class="headerlink" href="#distributedlosswrapper" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><span class="n">utils</span><span class="o">.</span><span class="n">distributed</span><span class="o">.</span><span class="n">DistributedLossWrapper</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="n">efficient</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-</code></pre></div>
-<p><strong>Parameters</strong>:</p>
-<ul>
-<li><strong>loss</strong>: The loss function to wrap</li>
-<li><strong>efficient</strong>:<ul>
-<li><code>True</code>: each process uses its own embeddings for anchors, and the gathered embeddings for positives/negatives. Gradients will <strong>not</strong> be equal to those in non-distributed code, but the benefit is reduced memory and faster training.</li>
-<li><code>False</code>: each process uses gathered embeddings for both anchors and positives/negatives. Gradients will be equal to those in non-distributed code, but at the cost of doing unnecessary operations (i.e. doing computations where both anchors and positives/negatives have no gradient).</li>
-</ul>
-</li>
-</ul>
-<p>Example usage:
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">losses</span>
-<span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils</span> <span class="kn">import</span> <span class="n">distributed</span> <span class="k">as</span> <span class="n">pml_dist</span>
-
-<span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">ContrastiveLoss</span><span class="p">()</span>
-<span class="n">loss_func</span> <span class="o">=</span> <span class="n">pml_dist</span><span class="o">.</span><span class="n">DistributedLossWrapper</span><span class="p">(</span><span class="n">loss_func</span><span class="p">)</span>
-
-<span class="c1"># in each process during training</span>
-<span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
-</code></pre></div></p>
-<h2 id="distributedminerwrapper">DistributedMinerWrapper<a class="headerlink" href="#distributedminerwrapper" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><span class="n">utils</span><span class="o">.</span><span class="n">distributed</span><span class="o">.</span><span class="n">DistributedMinerWrapper</span><span class="p">(</span><span class="n">miner</span><span class="p">,</span> <span class="n">efficient</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-</code></pre></div>
-<p><strong>Parameters</strong>:</p>
-<ul>
-<li><strong>miner</strong>: The miner to wrap</li>
-<li><strong>efficient</strong>: If your distributed loss function has <code>efficient=True</code> then you must also set the distributed miner's <code>efficient</code> to True.</li>
-</ul>
-<p>Example usage:
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">miners</span>
-<span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils</span> <span class="kn">import</span> <span class="n">distributed</span> <span class="k">as</span> <span class="n">pml_dist</span>
-
-<span class="n">miner</span> <span class="o">=</span> <span class="n">miners</span><span class="o">.</span><span class="n">MultiSimilarityMiner</span><span class="p">()</span>
-<span class="n">miner</span> <span class="o">=</span> <span class="n">pml_dist</span><span class="o">.</span><span class="n">DistributedMinerWrapper</span><span class="p">(</span><span class="n">miner</span><span class="p">)</span>
-
-<span class="c1"># in each process</span>
-<span class="n">tuples</span> <span class="o">=</span> <span class="n">miner</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
-<span class="c1"># pass into a DistributedLossWrapper</span>
-<span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">indices_tuple</span><span class="p">)</span>
-</code></pre></div></p>
+<h1 id="frequently-asked-questions">Frequently Asked Questions<a class="headerlink" href="#frequently-asked-questions" title="Permanent link">&para;</a></h1>
+<h2 id="large-batch-sizes-and-the-int_max-error">Large batch sizes and the <code>INT_MAX</code> error<a class="headerlink" href="#large-batch-sizes-and-the-int_max-error" title="Permanent link">&para;</a></h2>
+<p>A large batch size results in a huge number of pairs/triplets. When the <code>loss_and_miner_utils</code> code processes a huge number of tuples, it can cause a PyTorch error:</p>
+<p><code>RuntimeError: nonzero is not supported for tensors with more than INT_MAX element</code></p>
+<p>To fix this error, lower your batch size.</p>
 
               
             </article>
@@ -680,7 +625,7 @@
     <nav class="md-footer__inner md-grid" aria-label="Footer" >
       
         
-        <a href="../common_functions/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Common Functions" rel="prev">
+        <a href="../extend/miners/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Custom miners" rel="prev">
           <div class="md-footer__button md-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
           </div>
@@ -689,26 +634,11 @@
               <span class="md-footer__direction">
                 Previous
               </span>
-              Common Functions
+              Custom miners
             </div>
           </div>
         </a>
       
-      
-        
-        <a href="../extend/losses/" class="md-footer__link md-footer__link--next" aria-label="Next: Custom losses" rel="next">
-          <div class="md-footer__title">
-            <div class="md-ellipsis">
-              <span class="md-footer__direction">
-                Next
-              </span>
-              Custom losses
-            </div>
-          </div>
-          <div class="md-footer__button md-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
-          </div>
-        </a>
       
     </nav>
   

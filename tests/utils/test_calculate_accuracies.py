@@ -483,14 +483,16 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
 
             if use_numpy:
                 reference = (np.arange(20) / 2.0)[:, None]
+                reference = np.concatenate([reference[::2], reference[1::2]], axis=0)
                 reference_labels = np.zeros(20)
-                reference_labels[::2] = query_labels
-                reference_labels[1::2] = np.ones(10)
+                reference_labels[: len(query)] = query_labels
+                reference_labels[len(query) :] = np.ones(10)
             else:
                 reference = (torch.arange(20, device=TEST_DEVICE) / 2.0).unsqueeze(1)
+                reference = torch.cat([reference[::2], reference[1::2]], dim=0)
                 reference_labels = torch.zeros(20, device=TEST_DEVICE)
-                reference_labels[::2] = query_labels
-                reference_labels[1::2] = torch.ones(10)
+                reference_labels[: len(query)] = query_labels
+                reference_labels[len(query) :] = torch.ones(10)
             acc = AC.get_accuracy(
                 query, reference, query_labels, reference_labels, True
             )
@@ -704,12 +706,12 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
 
         if use_numpy:
             query = np.array([0, 3])[:, None]
-            reference = np.arange(4)[:, None]
+            reference = np.array([0, 3, 1, 2])[:, None]
             query_labels = np.array(query_labels)
             reference_labels = np.array(reference_labels)
         else:
             query = torch.tensor([0, 3], device=TEST_DEVICE).unsqueeze(1)
-            reference = torch.arange(4, device=TEST_DEVICE).unsqueeze(1)
+            reference = torch.tensor([0, 3, 1, 2], device=TEST_DEVICE).unsqueeze(1)
             query_labels = torch.tensor(
                 query_labels,
                 device=TEST_DEVICE,
@@ -865,3 +867,41 @@ class TestMutualInformation(unittest.TestCase):
 
                 self.assertTrue(np.isclose(acc["AMI"], correct_ami, rtol=1e-1))
                 self.assertTrue(np.isclose(acc["NMI"], correct_nmi, rtol=1e-1))
+
+
+class TestEmbeddingsComeFromSameSource(unittest.TestCase):
+    def test_tied_distances(self):
+        # Embeddings with different labels colocated.
+        # The "skip first index" approach might remove the wrong item.
+        # So this is to test that the correct item is removed.
+        emb = torch.tensor([[10], [10], [20], [20]])
+        labels = torch.tensor([1, 0, 1, 0])
+        AC = accuracy_calculator.AccuracyCalculator(include=("precision_at_1",))
+        accuracies = AC.get_accuracy(emb, emb, labels, labels, True)
+        self.assertEqual(accuracies["precision_at_1"], 0)
+
+    def test_many_tied_distances(self):
+        # This tests for the avoidance of a shape error
+        emb = torch.zeros(10000, 2)
+        labels = torch.randint(0, 2, size=(10000,))
+        AC = accuracy_calculator.AccuracyCalculator(include=("precision_at_1",), k=1)
+        accuracies = AC.get_accuracy(emb, emb, labels, labels, True)
+        self.assertTrue(np.isclose(accuracies["precision_at_1"], 0.5, rtol=0.1))
+
+    def test_query_within_reference(self):
+        query = torch.tensor([0, 10, 20]).unsqueeze(1)
+        ref = torch.tensor([0, 5, 10, 15, 20]).unsqueeze(1)
+        query_labels = torch.tensor([0, 1, 2])
+        ref_labels = torch.tensor([0, 9, 1, 8, 2, 7])
+        AC = accuracy_calculator.AccuracyCalculator(include=("precision_at_1",))
+
+        # should work with False
+        AC.get_accuracy(query, ref, query_labels, ref_labels, False)
+
+        # query != ref[:len(query)]
+        with self.assertRaises(ValueError):
+            AC.get_accuracy(query, ref, query_labels, ref_labels, True)
+
+        # query == ref[:len(query)]
+        ref = torch.tensor([0, 10, 20, 5, 15]).unsqueeze(1)
+        AC.get_accuracy(query, ref, query_labels, ref_labels, True)

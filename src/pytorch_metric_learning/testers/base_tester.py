@@ -238,8 +238,12 @@ class BaseTester:
             set(query_splits)
         ), "Unsupported: Evaluating a query split more than once"
         splits_to_compute_embeddings = set()
-        for query_split, reference_splits in splits_to_eval:
+        for i, (query_split, reference_splits) in enumerate(splits_to_eval):
             splits_to_compute_embeddings.update(reference_splits + [query_split])
+            if query_split in reference_splits:
+                # AccuracyCalculator requires that query be at the beginning of ref
+                reference_splits.remove(query_split)
+                splits_to_eval[i] = (query_split, [query_split] + reference_splits)
         return splits_to_eval, list(splits_to_compute_embeddings)
 
     def get_all_embeddings_for_all_splits(

@@ -32,7 +32,7 @@ class TestGlobalEmbeddingSpaceTester(unittest.TestCase):
         correct = [
             (None, {"train": 1, "val": 6.0 / 8}),
             (
-                [("train", ["train", "val"]), ("val", ["val", "train"])],
+                [("train", ["train", "val"]), ("val", ["train", "val"])],
                 {"train": 1.0 / 8, "val": 1.0 / 8},
             ),
             ([("train", ["train"]), ("val", ["train"])], {"train": 1, "val": 1.0 / 8}),

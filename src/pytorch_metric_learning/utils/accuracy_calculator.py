@@ -452,6 +452,13 @@ class AccuracyCalculator:
             for x in [query, reference, query_labels, reference_labels]
         ]
 
+        if embeddings_come_from_same_source and not torch.allclose(
+            query, reference[: len(query)]
+        ):
+            raise ValueError(
+                "When embeddings_come_from_same_source is True, the first len(query) elements of reference must be equal to query."
+            )
+
         self.curr_function_dict = self.get_function_dict(include, exclude)
 
         kwargs = {

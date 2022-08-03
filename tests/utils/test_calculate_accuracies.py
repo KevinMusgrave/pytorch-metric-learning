@@ -880,6 +880,14 @@ class TestEmbeddingsComeFromSameSource(unittest.TestCase):
         accuracies = AC.get_accuracy(emb, emb, labels, labels, True)
         self.assertEqual(accuracies["precision_at_1"], 0)
 
+    def test_many_tied_distances(self):
+        # This tests for the avoidance of a shape error
+        emb = torch.zeros(10000, 2)
+        labels = torch.randint(0, 2, size=(10000,))
+        AC = accuracy_calculator.AccuracyCalculator(include=("precision_at_1",), k=1)
+        accuracies = AC.get_accuracy(emb, emb, labels, labels, True)
+        self.assertTrue(np.isclose(accuracies["precision_at_1"], 0.5, rtol=0.1))
+
     def test_query_within_reference(self):
         query = torch.tensor([0, 10, 20]).unsqueeze(1)
         ref = torch.tensor([0, 5, 10, 15, 20]).unsqueeze(1)

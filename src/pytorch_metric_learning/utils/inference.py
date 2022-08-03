@@ -285,9 +285,16 @@ def run_pca(x, output_dimensionality):
     return c_f.to_device(torch.from_numpy(mat.apply_py(x)), device=device)
 
 
+def mask_reshape_knn_idx(x, mask):
+    return x[mask].view(x.shape[0], -1)
+
+
 def return_results(D, I, embeddings_come_from_same_source):
     if embeddings_come_from_same_source:
-        return D[:, 1:], I[:, 1:]
+        self_idx = torch.arange(len(I), device=I.device)
+        mask = I != self_idx.unsqueeze(1)
+        I = mask_reshape_knn_idx(I, mask)
+        D = mask_reshape_knn_idx(D, mask)
     return D, I
 
 

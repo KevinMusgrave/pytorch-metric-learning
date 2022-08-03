@@ -865,3 +865,15 @@ class TestMutualInformation(unittest.TestCase):
 
                 self.assertTrue(np.isclose(acc["AMI"], correct_ami, rtol=1e-1))
                 self.assertTrue(np.isclose(acc["NMI"], correct_nmi, rtol=1e-1))
+
+
+class TestEmbeddingsComeFromSameSource(unittest.TestCase):
+    def test_tied_distances(self):
+        # Embeddings with different labels colocated.
+        # The "skip first index" approach might remove the wrong item.
+        # So this is to test that the correct item is removed.
+        emb = torch.tensor([[10], [10], [20], [20]])
+        labels = torch.tensor([1, 0, 1, 0])
+        AC = accuracy_calculator.AccuracyCalculator(include=("precision_at_1",))
+        accuracies = AC.get_accuracy(emb, emb, labels, labels, True)
+        self.assertEqual(accuracies["precision_at_1"], 0)

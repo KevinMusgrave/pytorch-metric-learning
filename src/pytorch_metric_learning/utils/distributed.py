@@ -34,29 +34,27 @@ def all_gather_embeddings_and_labels(emb, labels):
     return ref_emb, ref_labels
 
 
-def gather(emb, labels, ref_emb=None, ref_labels=None):
+def gather(emb, labels):
     device = emb.device
     labels = c_f.to_device(labels, device=device)
-
     dist_emb, dist_labels = all_gather_embeddings_and_labels(emb, labels)
     all_emb = torch.cat([emb, dist_emb], dim=0)
     all_labels = torch.cat([labels, dist_labels], dim=0)
-
-    if ref_emb != None and ref_labels != None:
-        dist_ref_emb, dist_ref_labels = all_gather_embeddings_and_labels(
-            ref_emb, ref_labels
-        )
-        all_ref_emb = torch.cat([ref_emb, dist_ref_emb], dim=0)
-        all_ref_labels = torch.cat([ref_labels, dist_ref_labels], dim=0)
-    else:
-        all_ref_emb, all_ref_labels = None, None
-
-    return all_emb, all_labels, all_ref_emb, all_ref_labels, labels, device
+    return all_emb, all_labels
 
 
-def get_indices_tuple(
-    labels, ref_labels, device, embeddings=None, ref_emb=None, miner=None
-):
+def gather_emb_and_ref(emb, labels, ref_emb=None, ref_labels=None):
+    all_emb, all_labels = gather(emb, labels)
+    all_ref_emb, all_ref_labels = None, None
+
+    if ref_emb is not None and ref_labels is not None:
+        all_ref_emb, all_ref_labels = gather(ref_emb, ref_labels)
+
+    return all_emb, all_labels, all_ref_emb, all_ref_labels, labels
+
+
+def get_indices_tuple(labels, ref_labels, embeddings=None, ref_emb=None, miner=None):
+    device = labels.device
     curr_batch_idx = torch.arange(len(labels), device=device)
     if miner:
         indices_tuple = miner(embeddings, labels, ref_emb, ref_labels)
@@ -92,13 +90,13 @@ class DistributedLossWrapper(torch.nn.Module):
         if world_size <= 1:
             return self.loss(emb, labels, indices_tuple, ref_emb, ref_labels)
 
-        all_emb, all_labels, all_ref_emb, all_ref_labels, labels, device = gather(
+        all_emb, all_labels, all_ref_emb, all_ref_labels, labels = gather_emb_and_ref(
             emb, labels, ref_emb, ref_labels
         )
 
         if self.efficient:
             if indices_tuple is None:
-                indices_tuple = get_indices_tuple(labels, all_labels, device)
+                indices_tuple = get_indices_tuple(labels, all_labels)
             loss = self.loss(
                 all_emb, all_labels, indices_tuple, all_ref_emb, all_ref_labels
             )
@@ -120,7 +118,9 @@ class DistributedLossWrapper(torch.nn.Module):
         if world_size <= 1:
             return self.loss(emb, labels, indices_tuple)
 
-        all_emb, all_labels, _, _, _, _ = gather(emb, labels, ref_emb, ref_labels)
+        all_emb, all_labels, _, _, _ = gather_emb_and_ref(
+            emb, labels, ref_emb, ref_labels
+        )
         loss = self.loss(all_emb, all_labels, indices_tuple)
         return loss * world_size
 
@@ -134,14 +134,14 @@ class DistributedMinerWrapper(torch.nn.Module):
         self.efficient = efficient
 
     def forward(self, emb, labels, ref_emb=None, ref_labels=None):
-        all_emb, all_labels, all_ref_emb, all_ref_labels, labels, device = gather(
+        all_emb, all_labels, all_ref_emb, all_ref_labels, labels = gather_emb_and_ref(
             emb, labels, ref_emb, ref_labels
         )
         if self.efficient:
             input_ref_labels = all_labels if all_ref_labels is None else all_ref_labels
             input_ref_emb = all_emb if all_ref_emb is None else all_ref_emb
             return get_indices_tuple(
-                labels, input_ref_labels, device, emb, input_ref_emb, self.miner
+                labels, input_ref_labels, emb, input_ref_emb, self.miner
             )
         else:
             return self.miner(all_emb, all_labels, all_ref_emb, all_ref_labels)

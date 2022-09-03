@@ -359,7 +359,7 @@ class TestCrossBatchMemory(unittest.TestCase):
                         enqueue_idx = None
 
                     self.assertTrue(q == (i * B) % self.memory_size)
-                    loss = self.loss(embeddings, labels, enqueue_idx=enqueue_idx)
+                    self.loss(embeddings, labels, enqueue_idx=enqueue_idx)
 
                     start_idx = q
                     if q + B == self.memory_size:
@@ -435,7 +435,7 @@ class TestCrossBatchMemory(unittest.TestCase):
                     .type(dtype)
                 )
                 labels = torch.arange(batch_size).to(TEST_DEVICE)
-                loss = self.loss(embeddings, labels)
+                self.loss(embeddings, labels)
 
                 a1, p, a2, n = lmu.get_all_pairs_indices(labels, self.loss.label_memory)
                 self.assertTrue(

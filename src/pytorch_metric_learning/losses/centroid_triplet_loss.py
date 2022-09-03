@@ -1,6 +1,5 @@
 from collections import defaultdict
 
-import numpy as np
 import torch
 
 from ..reducers import AvgNonZeroReducer
@@ -50,18 +49,16 @@ class CentroidTripletLoss(BaseMetricLossFunction):
         )  # max number of samples per class
         DIM = embeddings.size(-1)
 
-        """
-        "...each sample from S𝑘 is used as a query 𝑞𝑘 and the rest 
-        𝑀 −1 samples are used to build a prototype centroid"
-        i.e. for each class k of M items, we make M pairs of (query, centroid),
-        making a total of P*M total pairs.
-        masks = (M*P x len(embeddings)) matrix
-        labels_list[i] = indicies of embeddings belonging to ith class
-        centroids_emd.shape == (M*P, DIM)
-        i.e.    centroids_emb[0] == centroid vector for 0th class, where the first embedding is the query vector
-                centroids_emb[1] == centroid vector for 0th class, where the second embedding is the query vector
-                centroids_emb[M+1] == centroid vector for 1th class, where the first embedding is the query vector
-        """
+        # "...each sample from S𝑘 is used as a query 𝑞𝑘 and the rest
+        # 𝑀 −1 samples are used to build a prototype centroid"
+        # i.e. for each class k of M items, we make M pairs of (query, centroid),
+        # making a total of P*M total pairs.
+        # masks = (M*P x len(embeddings)) matrix
+        # labels_list[i] = indicies of embeddings belonging to ith class
+        # centroids_emd.shape == (M*P, DIM)
+        # i.e.    centroids_emb[0] == centroid vector for 0th class, where the first embedding is the query vector
+        #         centroids_emb[1] == centroid vector for 0th class, where the second embedding is the query vector
+        #         centroids_emb[M+1] == centroid vector for 1th class, where the first embedding is the query vector
 
         # masks, class_masks but 1.0 for True and 0.0 for False, for counting purposes.
         masks_float = masks.type(embeddings.type()).to(embeddings.device)
@@ -197,7 +194,6 @@ class CentroidTripletLoss(BaseMetricLossFunction):
                 f"but the following labels have only 1 embedding: {singleton_labels}. "
                 "Refer to the documentation at https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#centroidtripletloss for more details."
             )
-        lens_list_cs = np.cumsum(lens_list)
 
         M = max(len(instances) for instances in labels_list)
         P = len(unique_classes)

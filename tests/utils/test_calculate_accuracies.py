@@ -831,7 +831,7 @@ class TestWithinAutocast(unittest.TestCase):
         embeddings = torch.randn(1000, 32)
         labels = torch.randint(0, 10, size=(1000,))
         with torch.autocast(device_type="cuda", dtype=torch.float16):
-            acc = AC.get_accuracy(embeddings, embeddings, labels, labels, True)
+            AC.get_accuracy(embeddings, embeddings, labels, labels, True)
 
 
 class TestMutualInformation(unittest.TestCase):

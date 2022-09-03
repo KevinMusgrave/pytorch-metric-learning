@@ -22,7 +22,7 @@ class TestCentroidTripletLoss(unittest.TestCase):
         for labels_arr in [[0, 0, 0, 0, 0, 0, 0, 0, 1], [0, 0, 1, 1, 1, 2, 2, 3]]:
             embeddings = torch.randn(len(labels_arr), 32, device=TEST_DEVICE)
             labels = torch.tensor(labels_arr, device=TEST_DEVICE)
-            with self.assertRaises(ValueError) as context:
+            with self.assertRaises(ValueError):
                 loss_fn(embeddings, labels)
 
     def test_centroid_triplet_loss(self):

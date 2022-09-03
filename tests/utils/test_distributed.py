@@ -9,7 +9,7 @@ import torch.optim as optim
 from torch.nn.parallel import DistributedDataParallel as DDP
 
 from pytorch_metric_learning.losses import ContrastiveLoss, CrossBatchMemory
-from pytorch_metric_learning.miners import MultiSimilarityMiner
+from pytorch_metric_learning.miners import PairMarginMiner
 from pytorch_metric_learning.utils import distributed
 
 from .. import TEST_DEVICE, TEST_DTYPES
@@ -26,7 +26,7 @@ def parameters_are_equal(model1, model2):
 ### from https://pytorch.org/tutorials/intermediate/ddp_tutorial.html ###
 def setup(rank, world_size):
     os.environ["MASTER_ADDR"] = "localhost"
-    os.environ["MASTER_PORT"] = "12357"
+    os.environ["MASTER_PORT"] = "12358"
 
     dist_type = "gloo" if TEST_DEVICE == torch.device("cpu") else "nccl"
     # initialize the process group
@@ -117,12 +117,17 @@ def single_process_function(
     cleanup()
 
 
-def create_efficient_batch(x, i, batch_size):
+def create_efficient_batch(all_outputs, all_ref_outputs, i, batch_size):
+    curr_source = all_outputs
+    other_source = all_outputs if all_ref_outputs is None else all_ref_outputs
     s = i * batch_size
     e = (i + 1) * batch_size
-    curr = x[s:e]
-    others = torch.cat([x[:s], x[e:]], dim=0).detach()
-    others = torch.cat([curr, others], dim=0)
+    curr = curr_source[s:e]
+    others = torch.cat([other_source[:s], other_source[e:]], dim=0).detach()
+    if all_ref_outputs is None:
+        others = torch.cat([curr, others], dim=0)
+    else:
+        others = torch.cat([other_source[s:e], others], dim=0)
     return curr, others
 
 
@@ -148,8 +153,19 @@ def get_all_outputs_and_labels(inputs, labels, model, iteration):
 
 
 class TestDistributedLossWrapper(unittest.TestCase):
-    def loss_and_miner_tester(self, loss_class, miner_class, efficient, xbm, use_ref):
+    def loss_and_miner_tester(
+        self,
+        loss_class,
+        miner_class,
+        efficient,
+        xbm,
+        use_ref,
+        loss_kwargs=None,
+        miner_kwargs=None,
+    ):
         torch.manual_seed(75210)
+        loss_kwargs = {} if loss_kwargs is None else loss_kwargs
+        miner_kwargs = {} if miner_kwargs is None else miner_kwargs
         if TEST_DEVICE == torch.device("cpu"):
             return
         max_world_size = min(4, torch.cuda.device_count())
@@ -164,15 +180,15 @@ class TestDistributedLossWrapper(unittest.TestCase):
             for world_size in range(2, max_world_size + 1):
                 batch_size = 20
                 lr = 0.1
-                iterations = 5
+                iterations = 10
                 original_model = ToyMpModel().type(dtype)
                 model = ToyMpModel().type(dtype)
                 model.load_state_dict(original_model.state_dict())
                 self.assertTrue(parameters_are_equal(original_model, model))
 
                 original_model = original_model.to(TEST_DEVICE)
-                original_loss_fn = loss_class()
-                loss_fn = loss_class()
+                original_loss_fn = loss_class(**loss_kwargs)
+                loss_fn = loss_class(**loss_kwargs)
                 if xbm:
                     original_loss_fn = CrossBatchMemory(
                         original_loss_fn, embedding_size=5
@@ -180,8 +196,8 @@ class TestDistributedLossWrapper(unittest.TestCase):
                     loss_fn = CrossBatchMemory(loss_fn, embedding_size=5)
 
                 if miner_class:
-                    original_miner_fn = miner_class()
-                    miner_fn = miner_class()
+                    original_miner_fn = miner_class(**miner_kwargs)
+                    miner_fn = miner_class(**miner_kwargs)
                 else:
                     original_miner_fn = None
                     miner_fn = None
@@ -216,23 +232,22 @@ class TestDistributedLossWrapper(unittest.TestCase):
                         losses = []
                         for i in range(len(inputs[aaa])):
                             curr_emb, other_emb = create_efficient_batch(
-                                all_outputs, i, batch_size
+                                all_outputs, all_ref_outputs, i, batch_size
                             )
                             curr_labels, other_labels = create_efficient_batch(
-                                all_labels, i, batch_size
+                                all_labels, all_ref_labels, i, batch_size
                             )
                             if original_miner_fn:
                                 indices_tuple = distributed.get_indices_tuple(
                                     curr_labels,
                                     other_labels,
-                                    TEST_DEVICE,
                                     embeddings=curr_emb,
                                     ref_emb=other_emb,
                                     miner=original_miner_fn,
                                 )
                             else:
                                 indices_tuple = distributed.get_indices_tuple(
-                                    curr_labels, other_labels, TEST_DEVICE
+                                    curr_labels, other_labels
                                 )
                             loss = original_loss_fn(
                                 curr_emb,
@@ -297,7 +312,12 @@ class TestDistributedLossWrapper(unittest.TestCase):
                 if xbm and use_ref:
                     continue
                 self.loss_and_miner_tester(
-                    ContrastiveLoss, MultiSimilarityMiner, False, xbm, use_ref
+                    ContrastiveLoss,
+                    PairMarginMiner,
+                    False,
+                    xbm,
+                    use_ref,
+                    miner_kwargs={"pos_margin": 0.5, "neg_margin": 0.5},
                 )
 
     def test_distributed_tuple_loss_efficient(self):
@@ -307,7 +327,12 @@ class TestDistributedLossWrapper(unittest.TestCase):
     def test_distributed_tuple_loss_and_miner_efficient(self):
         for use_ref in [False, True]:
             self.loss_and_miner_tester(
-                ContrastiveLoss, MultiSimilarityMiner, True, False, use_ref
+                ContrastiveLoss,
+                PairMarginMiner,
+                True,
+                False,
+                use_ref,
+                miner_kwargs={"pos_margin": 0.5, "neg_margin": 0.5},
             )
 
 

@@ -61,8 +61,6 @@ def numpy_to_torch(v):
 
 
 def to_numpy(v):
-    if is_list_or_tuple(v):
-        return np.stack([to_numpy(sub_v) for sub_v in v], axis=1)
     try:
         return v.cpu().numpy()
     except AttributeError:
@@ -84,7 +82,10 @@ def get_hierarchy_label(batch_labels, hierarchy_level):
 
 
 def map_labels(label_map, labels):
-    labels = to_numpy(labels)
+    if is_list_or_tuple(labels):
+        labels = np.stack([to_numpy(sub) for sub in labels], axis=1)
+    else:
+        labels = to_numpy(labels)
     if labels.ndim == 2:
         new_labels = np.zeros(labels.shape, dtype=int)
         for h in range(labels.shape[1]):

@@ -44,7 +44,9 @@ def gather(emb, labels, ref_emb=None, ref_labels=None):
     all_labels = torch.cat([labels, dist_labels], dim=0)
 
     if ref_emb != None and ref_labels != None:
-        dist_ref_emb, dist_ref_labels = all_gather_embeddings_and_labels(ref_emb, ref_labels)
+        dist_ref_emb, dist_ref_labels = all_gather_embeddings_and_labels(
+            ref_emb, ref_labels
+        )
         all_ref_emb = torch.cat([ref_emb, dist_ref_emb], dim=0)
         all_ref_labels = torch.cat([ref_labels, dist_ref_labels], dim=0)
     else:
@@ -83,14 +85,20 @@ class DistributedLossWrapper(torch.nn.Module):
         if world_size <= 1:
             return self.loss(emb, labels, indices_tuple, ref_emb, ref_labels)
 
-        all_emb, all_labels, all_ref_emb, all_ref_labels, labels, device = gather(emb, labels, ref_emb, ref_labels)
+        all_emb, all_labels, all_ref_emb, all_ref_labels, labels, device = gather(
+            emb, labels, ref_emb, ref_labels
+        )
 
         if self.efficient:
             if indices_tuple is None:
                 indices_tuple = get_indices_tuple(labels, all_labels, device)
-            loss = self.loss(all_emb, all_labels, indices_tuple, all_ref_emb, all_ref_labels)
+            loss = self.loss(
+                all_emb, all_labels, indices_tuple, all_ref_emb, all_ref_labels
+            )
         else:
-            loss = self.loss(all_emb, all_labels, indices_tuple, all_ref_emb, all_ref_labels)
+            loss = self.loss(
+                all_emb, all_labels, indices_tuple, all_ref_emb, all_ref_labels
+            )
 
         return loss * world_size
 
@@ -104,7 +112,9 @@ class DistributedMinerWrapper(torch.nn.Module):
         self.efficient = efficient
 
     def forward(self, emb, labels, ref_emb=None, ref_labels=None):
-        all_emb, all_labels, all_ref_emb, all_ref_labels, labels, device = gather(emb, labels, ref_emb, ref_labels)
+        all_emb, all_labels, all_ref_emb, all_ref_labels, labels, device = gather(
+            emb, labels, ref_emb, ref_labels
+        )
         if self.efficient:
             return get_indices_tuple(
                 all_labels, all_ref_labels, device, all_emb, all_ref_emb, self.miner

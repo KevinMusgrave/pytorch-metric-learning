@@ -40,15 +40,15 @@ def gather(emb, labels):
     dist_emb, dist_labels = all_gather_embeddings_and_labels(emb, labels)
     all_emb = torch.cat([emb, dist_emb], dim=0)
     all_labels = torch.cat([labels, dist_labels], dim=0)
-    return all_emb, all_labels
+    return all_emb, all_labels, labels
 
 
 def gather_emb_and_ref(emb, labels, ref_emb=None, ref_labels=None):
-    all_emb, all_labels = gather(emb, labels)
+    all_emb, all_labels, labels = gather(emb, labels)
     all_ref_emb, all_ref_labels = None, None
 
     if ref_emb is not None and ref_labels is not None:
-        all_ref_emb, all_ref_labels = gather(ref_emb, ref_labels)
+        all_ref_emb, all_ref_labels, _ = gather(ref_emb, ref_labels)
 
     return all_emb, all_labels, all_ref_emb, all_ref_labels, labels
 
@@ -61,6 +61,10 @@ def get_indices_tuple(labels, ref_labels, embeddings=None, ref_emb=None, miner=N
     else:
         indices_tuple = lmu.get_all_pairs_indices(labels, ref_labels)
     return lmu.remove_self_comparisons(indices_tuple, curr_batch_idx, len(ref_labels))
+
+
+def select_ref_or_regular(regular, ref):
+    return regular if ref is None else ref
 
 
 class DistributedLossWrapper(torch.nn.Module):
@@ -95,11 +99,11 @@ class DistributedLossWrapper(torch.nn.Module):
         )
 
         if self.efficient:
+            all_labels = select_ref_or_regular(all_labels, all_ref_labels)
+            all_emb = select_ref_or_regular(all_emb, all_ref_emb)
             if indices_tuple is None:
                 indices_tuple = get_indices_tuple(labels, all_labels)
-            loss = self.loss(
-                all_emb, all_labels, indices_tuple, all_ref_emb, all_ref_labels
-            )
+            loss = self.loss(emb, labels, indices_tuple, all_emb, all_labels)
         else:
             loss = self.loss(
                 all_emb, all_labels, indices_tuple, all_ref_emb, all_ref_labels
@@ -138,10 +142,8 @@ class DistributedMinerWrapper(torch.nn.Module):
             emb, labels, ref_emb, ref_labels
         )
         if self.efficient:
-            input_ref_labels = all_labels if all_ref_labels is None else all_ref_labels
-            input_ref_emb = all_emb if all_ref_emb is None else all_ref_emb
-            return get_indices_tuple(
-                labels, input_ref_labels, emb, input_ref_emb, self.miner
-            )
+            all_labels = select_ref_or_regular(all_labels, all_ref_labels)
+            all_emb = select_ref_or_regular(all_emb, all_ref_emb)
+            return get_indices_tuple(labels, all_labels, emb, all_emb, self.miner)
         else:
             return self.miner(all_emb, all_labels, all_ref_emb, all_ref_labels)

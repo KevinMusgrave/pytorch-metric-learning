@@ -81,6 +81,14 @@ class DistributedLossWrapper(torch.nn.Module):
 
     def forward(self, emb, labels, indices_tuple=None, ref_emb=None, ref_labels=None):
         world_size = torch.distributed.get_world_size()
+        common_args = [emb, labels, indices_tuple, ref_emb, ref_labels, world_size]
+        if isinstance(self.loss, CrossBatchMemory):
+            return self.forward_cross_batch(*common_args)
+        return self.forward_regular_loss(*common_args)
+
+    def forward_regular_loss(
+        self, emb, labels, indices_tuple, ref_emb, ref_labels, world_size
+    ):
         if world_size <= 1:
             return self.loss(emb, labels, indices_tuple, ref_emb, ref_labels)
 
@@ -99,6 +107,21 @@ class DistributedLossWrapper(torch.nn.Module):
                 all_emb, all_labels, indices_tuple, all_ref_emb, all_ref_labels
             )
 
+        return loss * world_size
+
+    def forward_cross_batch(
+        self, emb, labels, indices_tuple, ref_emb, ref_labels, world_size
+    ):
+        if ref_emb is not None or ref_labels is not None:
+            raise ValueError(
+                "CrossBatchMemory is not compatible with ref_emb and ref_labels"
+            )
+
+        if world_size <= 1:
+            return self.loss(emb, labels, indices_tuple)
+
+        all_emb, all_labels, _, _, _, _ = gather(emb, labels, ref_emb, ref_labels)
+        loss = self.loss(all_emb, all_labels, indices_tuple)
         return loss * world_size
 
 

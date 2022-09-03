@@ -37,7 +37,6 @@ def all_gather_embeddings_and_labels(emb, labels):
 def gather(emb, labels, ref_emb=None, ref_labels=None):
     device = emb.device
     labels = c_f.to_device(labels, device=device)
-    rank = torch.distributed.get_rank()
 
     dist_emb, dist_labels = all_gather_embeddings_and_labels(emb, labels)
     all_emb = torch.cat([emb, dist_emb], dim=0)
@@ -116,8 +115,10 @@ class DistributedMinerWrapper(torch.nn.Module):
             emb, labels, ref_emb, ref_labels
         )
         if self.efficient:
+            input_ref_labels = all_labels if all_ref_labels is None else all_ref_labels
+            input_ref_emb = all_emb if all_ref_emb is None else all_ref_emb
             return get_indices_tuple(
-                all_labels, all_ref_labels, device, all_emb, all_ref_emb, self.miner
+                labels, input_ref_labels, device, emb, input_ref_emb, self.miner
             )
         else:
             return self.miner(all_emb, all_labels, all_ref_emb, all_ref_labels)

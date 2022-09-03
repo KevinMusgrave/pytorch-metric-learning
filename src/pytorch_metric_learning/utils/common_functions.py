@@ -394,9 +394,9 @@ def latest_version(folder, string_to_glob="trunk_*.pth", best=False):
     if items == []:
         return (0, None)
     model_regex = (
-        regex_wrapper("best[0-9]+\.pth$") if best else regex_wrapper("[0-9]+\.pth$")
+        regex_wrapper(r"best[0-9]+\.pth$") if best else regex_wrapper(r"[0-9]+\.pth$")
     )
-    epoch_regex = regex_wrapper("[0-9]+\.pth$")
+    epoch_regex = regex_wrapper(r"[0-9]+\.pth$")
     items = [x for x in items if model_regex.search(x)]
     version = [int(epoch_regex.findall(x)[-1].split(".")[0]) for x in items]
     resume_epoch = max(version)

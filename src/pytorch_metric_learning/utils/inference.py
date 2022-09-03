@@ -266,7 +266,7 @@ def try_gpu(index, query, reference, k, is_cuda, gpus):
             gpu_index = convert_to_gpu_index(index, gpus)
     try:
         return add_to_index_and_search(gpu_index, query, reference, k)
-    except (AttributeError, RuntimeError) as e:
+    except (AttributeError, RuntimeError):
         if gpu_condition:
             c_f.LOGGER.warning(
                 f"Using CPU for k-nn search because k = {k} > {max_k_for_gpu}, which is the maximum allowable on GPU."

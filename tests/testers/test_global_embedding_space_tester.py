@@ -70,7 +70,7 @@ class TestGlobalEmbeddingSpaceTester(unittest.TestCase):
             accuracy_calculator=AC,
             end_of_testing_hook=end_of_testing_hook,
         )
-        all_accuracies = tester.test(dataset_dict, 0, model)
+        tester.test(dataset_dict, 0, model)
         self.assertTrue(not hasattr(tester, "embeddings_and_labels"))
 
     @classmethod

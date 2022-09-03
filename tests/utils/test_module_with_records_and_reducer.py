@@ -15,7 +15,7 @@ class TestModuleWithRecordsAndReducer(unittest.TestCase):
         )
         embeddings = torch.randn(128, 64)
         labels = torch.randint(low=0, high=10, size=(128,))
-        loss = loss_fn(embeddings, labels)
+        loss_fn(embeddings, labels)
 
         if WITH_COLLECT_STATS:
             self.assertTrue(

@@ -16,7 +16,7 @@ class KeyCheckerDict:
             self._verify_prop(getattr(obj, k, None), k, v)
 
     def _verify_prop(self, obj, obj_name, s):
-        val = lambda x: x(s, self.children) if callable(x) else x
+        val = lambda x: x(s, self.children) if callable(x) else x  # noqa: E731
 
         if s.warn_empty and obj in [None, {}]:
             c_f.LOGGER.warning("%s is empty" % obj_name)

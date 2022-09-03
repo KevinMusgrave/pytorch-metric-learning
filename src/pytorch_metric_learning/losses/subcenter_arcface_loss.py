@@ -40,7 +40,7 @@ class SubCenterArcFaceLoss(ArcFaceLoss):
         with torch.no_grad():
             for label in range(self.num_classes):
                 target_samples = labels == label
-                if (target_samples is False).all():
+                if not target_samples.any():
                     continue
                 target_indices = target_samples.nonzero()
                 target_embeddings = embeddings[target_samples]

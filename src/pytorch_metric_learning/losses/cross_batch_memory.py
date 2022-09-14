@@ -17,7 +17,7 @@ class CrossBatchMemory(ModuleWithRecords):
             list_of_names=["embedding_size", "memory_size", "queue_idx"], is_stat=False
         )
 
-    def forward(self, embeddings, labels, indices_tuple=None, enqueue_idx=None):
+    def forward(self, embeddings, labels, indices_tuple=None, enqueue_idx=None,do_remove_self_comparisons=True):
         if enqueue_idx is not None:
             assert len(enqueue_idx) <= len(self.embedding_memory)
             assert len(enqueue_idx) < len(embeddings)
@@ -44,7 +44,6 @@ class CrossBatchMemory(ModuleWithRecords):
         else:
             emb_for_queue = embeddings
             labels_for_queue = labels
-            do_remove_self_comparisons = True
 
         batch_size = len(embeddings)
         queue_batch_size = len(emb_for_queue)

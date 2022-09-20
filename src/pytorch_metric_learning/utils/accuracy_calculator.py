@@ -423,11 +423,16 @@ class AccuracyCalculator:
             for x in [query, reference, query_labels, reference_labels]
         ]
 
-        if embeddings_come_from_same_source and not torch.allclose(
-            query, reference[: len(query)]
+        if len(query) != len(query_labels) or len(reference) != len(reference_labels):
+            raise ValueError("embeddings and labels must have the same length")
+
+        if embeddings_come_from_same_source and not (
+            torch.allclose(query, reference[: len(query)])
+            and torch.allclose(query_labels, reference_labels[: len(query)])
         ):
             raise ValueError(
-                "When embeddings_come_from_same_source is True, the first len(query) elements of reference must be equal to query."
+                "When embeddings_come_from_same_source is True, the first len(query) elements of reference must be equal to query.\n"
+                "Likewise, the first len(query_labels) elements of reference_lbels must be equal to query_labels.\n"
             )
 
         self.curr_function_dict = self.get_function_dict(include, exclude)

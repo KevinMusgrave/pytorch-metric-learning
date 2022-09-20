@@ -13,6 +13,7 @@ from .. import TEST_DEVICE
 
 class TestCalculateAccuraciesLargeK(unittest.TestCase):
     def test_accuracy_calculator_large_k(self):
+        np.random.seed(493)
         for ecfss in [False, True]:
             for max_k in [None, 98, "max_bin_count"]:
                 for num_embeddings in [1000, 2100]:

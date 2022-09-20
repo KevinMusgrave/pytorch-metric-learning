@@ -480,6 +480,7 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
             self.assertTrue(isclose(acc["precision_at_1"], 1))
             self.assertTrue(isclose(acc["r_precision"], 1))
             self.assertTrue(isclose(acc["mean_average_precision_at_r"], 1))
+            self.assertTrue(isclose(acc["mean_average_precision"], 1))
 
             if use_numpy:
                 reference = (np.arange(20) / 2.0)[:, None]
@@ -502,6 +503,24 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
                 isclose(
                     acc["mean_average_precision_at_r"],
                     (1 + 2.0 / 2 + 3.0 / 5 + 4.0 / 7 + 5.0 / 9) / 10,
+                )
+            )
+            self.assertTrue(
+                isclose(
+                    acc["mean_average_precision"],
+                    (
+                        1
+                        + 2.0 / 2
+                        + 3.0 / 5
+                        + 4.0 / 7
+                        + 5.0 / 9
+                        + 6.0 / 11
+                        + 7.0 / 13
+                        + 8.0 / 15
+                        + 9.0 / 17
+                        + 10.0 / 19
+                    )
+                    / 10,
                 )
             )
 

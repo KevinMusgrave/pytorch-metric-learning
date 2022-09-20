@@ -109,7 +109,7 @@ class TestCalculateAccuraciesLargeK(unittest.TestCase):
                     if k < all_rel:
                         prec_at_r.append(rel / float(k + 1))
 
-            avg_precision = np.mean(precisions) if len(precisions) > 0 else 0
+            avg_precision = np.sum(precisions) / min(all_rel, max_k)
             mAP.append(avg_precision)
             # mAP@R
             avg_prec_at_r = np.sum(prec_at_r) / all_rel if all_rel > 0 else 0

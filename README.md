@@ -15,13 +15,13 @@
 
 ## News
 
+**September 3**: v1.6.0
+- `DistributedLossWrapper` and `DistributedMinerWrapper` now support `ref_emb` and `ref_labels`.
+- Thanks to contributor [NoTody](https://github.com/NoTody).
+
 **June 29**: v1.5.0
 - Made labels optional (if `indices_tuple` is provided) for most contrastive losses. 
 - See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v1.5.0).
-
-**June 9**: v1.4.0
-- Added [InstanceLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#instanceloss).
-- Thanks to contributor [layumi](https://github.com/layumi).
 
 ## Documentation
 - [**View the documentation here**](https://kevinmusgrave.github.io/pytorch-metric-learning/)
@@ -242,6 +242,7 @@ Thanks to the contributors who made pull requests!
 | [btseytlin](https://github.com/btseytlin) | ```get_nearest_neighbors``` in [InferenceModel](https://kevinmusgrave.github.io/pytorch-metric-learning/inference_models) |
 | [mlw214](https://github.com/mlw214) | Added ```return_per_class``` to [AccuracyCalculator](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/) |
 | [layumi](https://github.com/layumi) | [InstanceLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#instanceloss) |
+| [NoTody](https://github.com/NoTody) | Helped add `ref_emb` and `ref_labels` to the distributed wrappers. |
 | [z1w](https://github.com/z1w) | |
 | [thinline72](https://github.com/thinline72) | |
 | [tpanum](https://github.com/tpanum) | |

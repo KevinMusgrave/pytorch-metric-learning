@@ -60,14 +60,14 @@ class TestCalculateAccuraciesLargeK(unittest.TestCase):
                                 ),
                             )
 
-                            self.assertTrue(np.isclose(correct_p1, d["precision_at_1"]))
-                            self.assertTrue(
-                                np.isclose(correct_map, d["mean_average_precision"])
+                            self.assertAlmostEqual(
+                                correct_p1, d["precision_at_1"], places=6
                             )
-                            self.assertTrue(
-                                np.isclose(
-                                    correct_mapr, d["mean_average_precision_at_r"]
-                                )
+                            self.assertAlmostEqual(
+                                correct_map, d["mean_average_precision"], places=6
+                            )
+                            self.assertAlmostEqual(
+                                correct_mapr, d["mean_average_precision_at_r"], places=6
                             )
 
     def evaluate(self, encs, labels, max_k=None, ecfss=False):

@@ -206,18 +206,18 @@ class TestCalculateAccuracies(unittest.TestCase):
         self, embeddings_come_from_same_source, avg_of_avgs, return_per_class
     ):
         if not embeddings_come_from_same_source:
-            acc0 = (1.0 / 2 + 2.0 / 3) / 2
+            acc0 = (1.0 / 2 + 2.0 / 3) / 3
             acc1 = (1 + 2.0 / 3 + 3.0 / 4) / 3
-            acc2 = (1.0 / 5) / 1
-            acc3 = (1 + 2.0 / 3 + 3.0 / 5) / 3
-            acc4 = (1.0 / 3) / 1
+            acc2 = (1.0 / 5) / 5
+            acc3 = (1 + 2.0 / 3 + 3.0 / 5) / 4
+            acc4 = (1.0 / 3) / 5
             acc5 = 0
         else:
             acc0 = 1
             acc1 = (1.0 / 2 + 2.0 / 3) / 2
-            acc2 = 1.0 / 4
-            acc3 = (1.0 / 2 + 2.0 / 4) / 2
-            acc4 = 1.0 / 2
+            acc2 = (1.0 / 4) / 4
+            acc3 = (1.0 / 2 + 2.0 / 4) / 3
+            acc4 = (1.0 / 2) / 4
             acc5 = 0
         accs = [acc5, (acc0 + acc1) / 2, acc2, acc3, acc4]
         if avg_of_avgs:

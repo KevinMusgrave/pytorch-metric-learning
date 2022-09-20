@@ -206,18 +206,18 @@ class TestCalculateAccuracies(unittest.TestCase):
         self, embeddings_come_from_same_source, avg_of_avgs, return_per_class
     ):
         if not embeddings_come_from_same_source:
-            acc0 = (1.0 / 2 + 2.0 / 3) / 2
+            acc0 = (1.0 / 2 + 2.0 / 3) / 3
             acc1 = (1 + 2.0 / 3 + 3.0 / 4) / 3
-            acc2 = (1.0 / 5) / 1
-            acc3 = (1 + 2.0 / 3 + 3.0 / 5) / 3
-            acc4 = (1.0 / 3) / 1
+            acc2 = (1.0 / 5) / 5
+            acc3 = (1 + 2.0 / 3 + 3.0 / 5) / 4
+            acc4 = (1.0 / 3) / 5
             acc5 = 0
         else:
             acc0 = 1
             acc1 = (1.0 / 2 + 2.0 / 3) / 2
-            acc2 = 1.0 / 4
-            acc3 = (1.0 / 2 + 2.0 / 4) / 2
-            acc4 = 1.0 / 2
+            acc2 = (1.0 / 4) / 4
+            acc3 = (1.0 / 2 + 2.0 / 4) / 3
+            acc4 = (1.0 / 2) / 4
             acc5 = 0
         accs = [acc5, (acc0 + acc1) / 2, acc2, acc3, acc4]
         if avg_of_avgs:
@@ -480,6 +480,7 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
             self.assertTrue(isclose(acc["precision_at_1"], 1))
             self.assertTrue(isclose(acc["r_precision"], 1))
             self.assertTrue(isclose(acc["mean_average_precision_at_r"], 1))
+            self.assertTrue(isclose(acc["mean_average_precision"], 1))
 
             if use_numpy:
                 reference = (np.arange(20) / 2.0)[:, None]
@@ -502,6 +503,24 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
                 isclose(
                     acc["mean_average_precision_at_r"],
                     (1 + 2.0 / 2 + 3.0 / 5 + 4.0 / 7 + 5.0 / 9) / 10,
+                )
+            )
+            self.assertTrue(
+                isclose(
+                    acc["mean_average_precision"],
+                    (
+                        1
+                        + 2.0 / 2
+                        + 3.0 / 5
+                        + 4.0 / 7
+                        + 5.0 / 9
+                        + 6.0 / 11
+                        + 7.0 / 13
+                        + 8.0 / 15
+                        + 9.0 / 17
+                        + 10.0 / 19
+                    )
+                    / 10,
                 )
             )
 
@@ -536,6 +555,7 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
         self.assertTrue(isclose(acc["precision_at_1"], 0.9))
         self.assertTrue(isclose(acc["r_precision"], 0.9))
         self.assertTrue(isclose(acc["mean_average_precision_at_r"], 0.9))
+        self.assertTrue(isclose(acc["mean_average_precision"], 0.9 + 0.01))
 
         acc = AC_per_class_average.get_accuracy(
             query, reference, query_labels, reference_labels, False
@@ -543,6 +563,7 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
         self.assertTrue(isclose(acc["precision_at_1"], 0.5))
         self.assertTrue(isclose(acc["r_precision"], 0.5))
         self.assertTrue(isclose(acc["mean_average_precision_at_r"], 0.5))
+        self.assertTrue(isclose(acc["mean_average_precision"], (1 + 0.1) / 2))
 
     def _test_accuracy_calculator_custom_comparison_function(self, use_numpy):
         def label_comparison_fn(x, y):
@@ -618,6 +639,7 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
         self.assertTrue(isclose(acc["precision_at_1"], 0.9))
         self.assertTrue(isclose(acc["r_precision"], 0.9))
         self.assertTrue(isclose(acc["mean_average_precision_at_r"], 0.9))
+        self.assertTrue(isclose(acc["mean_average_precision"], 0.9 + 0.01))
 
         acc = AC_per_class_average.get_accuracy(
             query, reference, query_labels, reference_labels, False
@@ -625,6 +647,7 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
         self.assertTrue(isclose(acc["precision_at_1"], 0.5))
         self.assertTrue(isclose(acc["r_precision"], 0.5))
         self.assertTrue(isclose(acc["mean_average_precision_at_r"], 0.5))
+        self.assertTrue(isclose(acc["mean_average_precision"], (1 + 0.1) / 2))
 
         query_labels = [
             (1, 3),
@@ -655,6 +678,7 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
             "precision_at_1": 0.5,
             "r_precision": (1.0 / 3 + 1) / 2,
             "mean_average_precision_at_r": ((1.0 / 3) / 3 + 1) / 2,
+            "mean_average_precision": ((1.0 / 3 + 2.0 / 4 + 3.0 / 5) / 3 + 1) / 2,
         }
 
         acc = AC_global_average.get_accuracy(
@@ -725,17 +749,28 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
             "precision_at_1": (0 + 1) / 2,
             "r_precision": (2 / 3 + 3 / 3) / 2,
             "mean_average_precision_at_r": ((0 + 1 / 2 + 2 / 3) / 3 + 1) / 2,
+            "mean_average_precision": ((0 + 1 / 2 + 2 / 3 + 3 / 4) / 3 + 1) / 2,
         }
         acc = AC_global_average.get_accuracy(
             query, reference, query_labels, reference_labels, False
         )
+
         for k in correct:
             self.assertTrue(isclose(acc[k], correct[k]))
 
+        # for the query in ref case
+        reference_labels = [0.01, 0.02, 10, 0.03]
+        reference_labels = (
+            np.array(reference_labels)
+            if use_numpy
+            else torch.tensor(reference_labels, device=TEST_DEVICE)
+        )
+
         correct = {
-            "precision_at_1": 1.0,
-            "r_precision": 1.0,
-            "mean_average_precision_at_r": 1.0,
+            "precision_at_1": 0.5,
+            "r_precision": 0.5,
+            "mean_average_precision_at_r": ((0 + 1 / 2) / 2 + (1) / 2) / 2,
+            "mean_average_precision": ((0 + 1 / 2 + 2 / 3) / 2 + (1 + 2 / 3) / 2) / 2,
         }
         acc = AC_global_average.get_accuracy(
             query, reference, query_labels, reference_labels, True
@@ -892,7 +927,7 @@ class TestEmbeddingsComeFromSameSource(unittest.TestCase):
         query = torch.tensor([0, 10, 20]).unsqueeze(1)
         ref = torch.tensor([0, 5, 10, 15, 20]).unsqueeze(1)
         query_labels = torch.tensor([0, 1, 2])
-        ref_labels = torch.tensor([0, 9, 1, 8, 2, 7])
+        ref_labels = torch.tensor([0, 9, 1, 8, 2])
         AC = accuracy_calculator.AccuracyCalculator(include=("precision_at_1",))
 
         # should work with False
@@ -904,4 +939,5 @@ class TestEmbeddingsComeFromSameSource(unittest.TestCase):
 
         # query == ref[:len(query)]
         ref = torch.tensor([0, 10, 20, 5, 15]).unsqueeze(1)
+        ref_labels[:3] = query_labels
         AC.get_accuracy(query, ref, query_labels, ref_labels, True)

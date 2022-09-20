@@ -36,6 +36,9 @@ def get_relevance_mask(
     label_counts,
 ):
     relevance_mask = torch.zeros(size=shape, dtype=torch.bool, device=gt_labels.device)
+    count_per_query = torch.zeros(
+        len(gt_labels), dtype=torch.long, device=gt_labels.device
+    )
 
     for label, count in zip(*label_counts):
         matching_rows = torch.where(
@@ -43,7 +46,8 @@ def get_relevance_mask(
         )[0]
         max_column = count - 1 if embeddings_come_from_same_source else count
         relevance_mask[matching_rows, :max_column] = True
-    return relevance_mask
+        count_per_query[matching_rows] = max_column
+    return relevance_mask, count_per_query
 
 
 def r_precision(
@@ -55,7 +59,7 @@ def r_precision(
     return_per_class,
     label_comparison_fn,
 ):
-    relevance_mask = get_relevance_mask(
+    relevance_mask, _ = get_relevance_mask(
         knn_labels.shape[:2],
         gt_labels,
         embeddings_come_from_same_source,
@@ -84,7 +88,7 @@ def mean_average_precision(
 ):
     device = gt_labels.device
     num_samples, num_k = knn_labels.shape[:2]
-    relevance_mask = get_relevance_mask(
+    relevance_mask, count_per_query = get_relevance_mask(
         knn_labels.shape[:2],
         gt_labels,
         embeddings_come_from_same_source,
@@ -101,8 +105,7 @@ def mean_average_precision(
     k_idx = torch.arange(1, num_k + 1, device=device).repeat(num_samples, 1)
     precision_at_ks = (cumulative_correct * equality).type(torch.float64) / k_idx
     summed_precision_per_row = torch.sum(precision_at_ks * knn_mask, dim=1)
-    max_possible_matches_per_row = torch.sum(relevance_mask, dim=1)
-    accuracy_per_sample = summed_precision_per_row / max_possible_matches_per_row
+    accuracy_per_sample = summed_precision_per_row / count_per_query
     return maybe_get_avg_of_avgs(
         accuracy_per_sample, gt_labels, avg_of_avgs, return_per_class
     )

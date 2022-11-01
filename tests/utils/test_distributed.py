@@ -335,6 +335,21 @@ class TestDistributedLossWrapper(unittest.TestCase):
                 miner_kwargs={"pos_margin": 0.5, "neg_margin": 0.5},
             )
 
+    def test_single_proc(self):
+        setup(0, 1)
+        _loss_fn = ContrastiveLoss()
+        _miner_fn = PairMarginMiner()
+        loss_fn = distributed.DistributedLossWrapper(loss=_loss_fn)
+        miner_fn = distributed.DistributedMinerWrapper(miner=_miner_fn)
+
+        emb = torch.randn(32, 128, device=TEST_DEVICE)
+        labels = torch.randint(0, 3, size=(32,))
+        pairs = miner_fn(emb, labels)
+        loss = loss_fn(emb, labels, indices_tuple=pairs)
+        cleanup()
+
+        self.assertEqual(loss, _loss_fn(emb, indices_tuple=_miner_fn(emb, labels)))
+
 
 if __name__ == "__main__":
     unittest.main()

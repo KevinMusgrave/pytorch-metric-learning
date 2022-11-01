@@ -138,6 +138,10 @@ class DistributedMinerWrapper(torch.nn.Module):
         self.efficient = efficient
 
     def forward(self, emb, labels, ref_emb=None, ref_labels=None):
+        world_size = torch.distributed.get_world_size()
+        if world_size <= 1:
+            return self.miner(emb, labels, ref_emb, ref_labels)
+
         all_emb, all_labels, all_ref_emb, all_ref_labels, labels = gather_emb_and_ref(
             emb, labels, ref_emb, ref_labels
         )

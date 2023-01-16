@@ -28,10 +28,10 @@ class ArcFaceLoss(LargeMarginSoftmaxLoss):
 
         # Keep the cost function monotonically decreasing
         unscaled_logits = torch.where(
-                                      angles <= np.deg2rad(180) - self.margin, 
-                                      cos_theta_plus_margin,
-                                      cos_theta - self.margin * np.sin(self.margin)
-                                      )
+            angles <= np.deg2rad(180) - self.margin,
+            cos_theta_plus_margin,
+            cos_theta - self.margin * np.sin(self.margin),
+        )
 
         return unscaled_logits
 

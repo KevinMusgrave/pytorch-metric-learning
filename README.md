@@ -149,8 +149,6 @@ Other dependencies: ```numpy, scikit-learn, tqdm, torchvision```
 ```
 pip install pytorch-metric-learning
 ```
-<details>
-  <summary>Other installation options</summary>
 
 **To get the latest dev version**:
 ```

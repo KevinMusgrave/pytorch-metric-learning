@@ -8,8 +8,8 @@
      <img alt="PyPi version" src="https://badge.fury.io/py/pytorch-metric-learning.svg">
  </a>
  
- <a href="https://anaconda.org/metric-learning/pytorch-metric-learning">
-     <img alt="Anaconda version" src="https://img.shields.io/conda/v/metric-learning/pytorch-metric-learning?color=bright-green">
+ <a href="https://anaconda.org/conda-forge/pytorch-metric-learning">
+     <img alt="Anaconda version" src="https://img.shields.io/conda/v/conda-forge/pytorch-metric-learning?color=bright-green">
  </a>
 </p>
 
@@ -179,7 +179,7 @@ pip install pytorch-metric-learning[with-hooks-cpu]
 	
 ### Conda
 ```
-conda install pytorch-metric-learning -c metric-learning -c pytorch
+conda install -c conda-forge pytorch-metric-learning
 ```
 
 **To use the testing module, you'll need faiss, which can be installed via conda as well. See the [installation instructions for faiss](https://github.com/facebookresearch/faiss/blob/master/INSTALL.md).**

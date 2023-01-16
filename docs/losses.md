@@ -218,15 +218,11 @@ losses.CircleLoss(m=0.4, gamma=80, **kwargs)
 
 **Equations**:
 
-![circle_loss_equation1](imgs/circle_loss_equation1.png){: style="height:150px"}
+![circle_loss_equation1](imgs/circle_loss_equation1.png){: style="height:60px"}
 
 where
 
 ![circle_loss_equation2](imgs/circle_loss_equation2.png){: style="height:70px"}
-
-![circle_loss_equation7](imgs/circle_loss_equation7.png){: style="height:25px"}
-
-![circle_loss_equation8](imgs/circle_loss_equation8.png){: style="height:25px"}
 
 ![circle_loss_equation3](imgs/circle_loss_equation3.png){: style="height:25px"}
 

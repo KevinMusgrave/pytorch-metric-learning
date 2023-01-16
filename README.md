@@ -15,13 +15,13 @@
 
 ## News
 
+**January 16**: v1.7.0
+- Fixes an edge case in ArcFaceLoss. See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v1.7.0).
+- Thanks to contributor [ElisonSherton](https://github.com/ElisonSherton).
+
 **September 3**: v1.6.0
 - `DistributedLossWrapper` and `DistributedMinerWrapper` now support `ref_emb` and `ref_labels`.
 - Thanks to contributor [NoTody](https://github.com/NoTody).
-
-**June 29**: v1.5.0
-- Made labels optional (if `indices_tuple` is provided) for most contrastive losses. 
-- See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v1.5.0).
 
 ## Documentation
 - [**View the documentation here**](https://kevinmusgrave.github.io/pytorch-metric-learning/)
@@ -243,6 +243,7 @@ Thanks to the contributors who made pull requests!
 | [mlw214](https://github.com/mlw214) | Added ```return_per_class``` to [AccuracyCalculator](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/) |
 | [layumi](https://github.com/layumi) | [InstanceLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#instanceloss) |
 | [NoTody](https://github.com/NoTody) | Helped add `ref_emb` and `ref_labels` to the distributed wrappers. |
+| [ElisonSherton](https://github.com/ElisonSherton) | Fixed an edge case in ArcFaceLoss. |
 | [z1w](https://github.com/z1w) | |
 | [thinline72](https://github.com/thinline72) | |
 | [tpanum](https://github.com/tpanum) | |
@@ -252,6 +253,9 @@ Thanks to the contributors who made pull requests!
 | [gkouros](https://github.com/gkouros) | |
 | [yutanakamura-tky](https://github.com/yutanakamura-tky) | |
 | [KinglittleQ](https://github.com/KinglittleQ) | |
+| [martin0258](https://github.com/martin0258) | |
+| [michaeldeyzel](https://github.com/michaeldeyzel) | |
+
 
 
 ### Facebook AI

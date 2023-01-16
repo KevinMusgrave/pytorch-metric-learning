@@ -788,18 +788,13 @@
 
 
 <h1 id="miners">Miners<a class="headerlink" href="#miners" title="Permanent link">&para;</a></h1>
-<p>Mining functions come in two flavors:</p>
+<p>Mining functions take a batch of <code>n</code> embeddings and return <code>k</code> pairs/triplets to be used for calculating the loss:</p>
 <ul>
-<li><strong><a href="./#basesubsetbatchminer">Subset Batch Miners</a></strong> take a batch of <code>N</code> embeddings and return a subset <code>n</code> to be used by a tuple miner, or directly by a loss function. Without a subset batch miner, <code>n == N</code>.</li>
-<li><strong><a href="./#basetupleminer">Tuple Miners</a></strong> take a batch of <code>n</code> embeddings and return <code>k</code> pairs/triplets to be used for calculating the loss:<ul>
 <li>Pair miners output a tuple of size 4: (anchors, positives, anchors, negatives).</li>
 <li>Triplet miners output a tuple of size 3: (anchors, positives, negatives).</li>
 <li>Without a tuple miner, loss functions will by default use all possible pairs/triplets in the batch.</li>
-<li>Almost all current miners are tuple miners.</li>
 </ul>
-</li>
-</ul>
-<p>You might be familiar with the terminology: "online" and "offline" miners. Tuple miners are online, while subset batch miners are a mix between online and offline. Completely offline miners should be implemented as a <a href="../samplers/">PyTorch Sampler</a>.</p>
+<p>You might be familiar with the terminology: "online" and "offline" miners. Tuple miners are online. Offline miners should be implemented as a <a href="../samplers/">PyTorch Sampler</a>.</p>
 <p>Tuple miners are used with loss functions as follows:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">miners</span><span class="p">,</span> <span class="n">losses</span>
 <span class="n">miner_func</span> <span class="o">=</span> <span class="n">miners</span><span class="o">.</span><span class="n">SomeMiner</span><span class="p">()</span>
@@ -858,7 +853,7 @@ Note: by default, <code>embeddings == ref_emb</code> and <code>labels == ref_lab
 <p>If you write your own miner, the <code>mine</code> function should work such that anchor indices correspond to <code>embeddings</code> and <code>labels</code>, and all other indices correspond to <code>ref_emb</code> and <code>ref_labels</code>. By default, <code>embeddings == ref_emb</code> and <code>labels == ref_labels</code>, but separating the anchor source from the positive/negative source allows for interesting use cases. For example, see <a href="../losses/#crossbatchmemory">CrossBatchMemory</a>.</p>
 <p>See <a href="../extend/miners/">custom miners</a> for details on how to write your own miner.</p>
 <h2 id="basesubsetbatchminer">BaseSubsetBatchMiner<a class="headerlink" href="#basesubsetbatchminer" title="Permanent link">&para;</a></h2>
-<p>This extends <a href="./#baseminer">BaseMiner</a>. It outputs indices corresponding to a subset of the input batch. The idea is to use these miners with torch.no_grad(), and with a large input batch size.
+<p>This extends <a href="./#baseminer">BaseMiner</a>. It takes a batch of <code>N</code> embeddings and return a subset <code>n</code> to be used by a tuple miner, or directly by a loss function. Without a subset batch miner, <code>n == N</code>. You probably aren't going to use this type of miner.
 <div class="highlight"><pre><span></span><code><span class="n">miners</span><span class="o">.</span><span class="n">BaseSubsetBatchMiner</span><span class="p">(</span><span class="n">output_batch_size</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div></p>
 <p><strong>Parameters</strong></p>

@@ -1066,16 +1066,35 @@
 <span class="n">miner_output</span> <span class="o">=</span> <span class="n">miner_func</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span> <span class="c1"># in your training for-loop</span>
 <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">miner_output</span><span class="p">)</span>
 </code></pre></div>
-<p>For some losses (<a href="#contrastiveloss">ContrastiveLoss</a>, <a href="#ntxentloss">NTXentLoss</a>, <a href="#tripletmarginloss">TripletMarginLoss</a> etc.), you don't need to pass in labels if you are already passing in pair/triplet indices:
+<p>For some losses, you don't need to pass in labels if you are already passing in pair/triplet indices:
 <div class="highlight"><pre><span></span><code><span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">indices_tuple</span><span class="o">=</span><span class="n">pairs</span><span class="p">)</span>
+<span class="c1"># it also works with ref_emb</span>
+<span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">indices_tuple</span><span class="o">=</span><span class="n">pairs</span><span class="p">,</span> <span class="n">ref_emb</span><span class="o">=</span><span class="n">ref_emb</span><span class="p">)</span>
 </code></pre></div></p>
+<details class="note">
+<summary>Losses for which you can pass in <code>indices_tuple</code> without <code>labels</code></summary>
+<ul>
+<li>CircleLoss</li>
+<li>ContrastiveLoss</li>
+<li>IntraPairVarianceLoss</li>
+<li>GeneralizedLiftedStructureLoss</li>
+<li>LiftedStructureLoss</li>
+<li>MarginLoss</li>
+<li>MultiSimilarityLoss</li>
+<li>NTXentLoss</li>
+<li>SignalToNoiseRatioContrastiveLoss</li>
+<li>SupConLoss</li>
+<li>TripletMarginLoss</li>
+<li>TupletMarginLoss</li>
+</ul>
+</details>
 <p>You can specify how losses get reduced to a single value by using a <a href="../reducers/">reducer</a>:
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">reducers</span>
 <span class="n">reducer</span> <span class="o">=</span> <span class="n">reducers</span><span class="o">.</span><span class="n">SomeReducer</span><span class="p">()</span>
 <span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">SomeLoss</span><span class="p">(</span><span class="n">reducer</span><span class="o">=</span><span class="n">reducer</span><span class="p">)</span>
 <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span> <span class="c1"># in your training for-loop</span>
 </code></pre></div></p>
-<p>For tuple losses, can separate the source of anchors and positives/negatives:
+<p>For tuple losses, you can separate the source of anchors and positives/negatives:
 <div class="highlight"><pre><span></span><code><span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">SomeLoss</span><span class="p">()</span>
 <span class="c1"># anchors will come from embeddings</span>
 <span class="c1"># positives/negatives will come from ref_emb</span>
@@ -1120,9 +1139,9 @@
 <p><img alt="arcface_loss_equation" src="../imgs/arcface_loss_equation.png" style="height:80px" /></p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>margin</strong>: The angular margin penalty in degrees. In the above equation, <code>m = radians(margin)</code>. The paper uses 0.5 radians, which is 28.6 degrees.</li>
 <li><strong>num_classes</strong>: The number of classes in your training dataset.</li>
 <li><strong>embedding_size</strong>: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set <code>embedding_size</code> to 512.</li>
+<li><strong>margin</strong>: The angular margin penalty in degrees. In the above equation, <code>m = radians(margin)</code>. The paper uses 0.5 radians, which is 28.6 degrees.</li>
 <li><strong>scale</strong>: This is <code>s</code> in the above equation. The paper uses 64.</li>
 </ul>
 <p><strong>Other info</strong>: </p>
@@ -1179,7 +1198,7 @@
 <li><strong>embedding_reg_loss</strong>: Only exists if an embedding regularizer is used. It contains the loss per element in the batch. Reduction type is <code>"already_reduced"</code>. </li>
 </ul>
 <p><strong>Required Implementations</strong>:
-<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">compute_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">indices_tuple</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">compute_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">indices_tuple</span><span class="p">,</span> <span class="n">ref_emb</span><span class="p">,</span> <span class="n">ref_labels</span><span class="p">):</span>
     <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 </code></pre></div></p>
 <h2 id="centroidtripletloss">CentroidTripletLoss<a class="headerlink" href="#centroidtripletloss" title="Permanent link">&para;</a></h2>
@@ -1276,9 +1295,9 @@
 <p><img alt="cosface_loss_equation" src="../imgs/cosface_loss_equation.png" style="height:80px" /></p>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>margin</strong>: The cosine margin penalty (m in the above equation). The paper used values between 0.25 and 0.45.</li>
 <li><strong>num_classes</strong>: The number of classes in your training dataset.</li>
 <li><strong>embedding_size</strong>: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set <code>embedding_size</code> to 512.</li>
+<li><strong>margin</strong>: The cosine margin penalty (m in the above equation). The paper used values between 0.25 and 0.45.</li>
 <li><strong>scale</strong>: This is <code>s</code> in the above equation. The paper uses 64.</li>
 </ul>
 <p><strong>Other info</strong>: </p>
@@ -1326,6 +1345,10 @@
 <ul>
 <li><strong>enqueue_idx</strong>: The indices of <code>embeddings</code> that will be added to the memory queue. In other words, only <code>embeddings[enqueue_idx]</code> will be added to memory. This enables CrossBatchMemory to be used in self-supervision frameworks like <a href="https://arxiv.org/pdf/1911.05722.pdf">MoCo</a>. Check out the <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples#simple-examples">MoCo on CIFAR100</a> notebook to see how this works.</li>
 </ul>
+<p><strong>Reset queue</strong></p>
+<p>The queue can be cleared like this:
+<div class="highlight"><pre><span></span><code><span class="n">loss_fn</span><span class="o">.</span><span class="n">reset_queue</span><span class="p">()</span>
+</code></pre></div></p>
 <h2 id="fastaploss">FastAPLoss<a class="headerlink" href="#fastaploss" title="Permanent link">&para;</a></h2>
 <p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Cakir_Deep_Metric_Learning_to_Rank_CVPR_2019_paper.pdf" target="_blank">Deep Metric Learning to Rank</a></p>
 <div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">FastAPLoss</span><span class="p">(</span><span class="n">num_bins</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>

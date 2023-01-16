@@ -5,7 +5,7 @@
 </h2>
 <p align="center">
  <a href="https://badge.fury.io/py/pytorch-metric-learning">
-     <img alt="PyPi version" src="https://badge.fury.io/py/pytorch-metric-learning.svg">
+     <img alt="PyPi version" src="https://badge.fury.io/py/pytorch-metric-learning.svg?">
  </a>
  
  <a href="https://anaconda.org/conda-forge/pytorch-metric-learning">

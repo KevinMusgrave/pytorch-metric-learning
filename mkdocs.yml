@@ -27,6 +27,8 @@ theme:
   logo: imgs/TinyLogo.png
   favicon: imgs/Favicon.png
 markdown_extensions:
+  - admonition
+  - pymdownx.details
   - pymdownx.highlight
   - pymdownx.superfences 
   - toc:

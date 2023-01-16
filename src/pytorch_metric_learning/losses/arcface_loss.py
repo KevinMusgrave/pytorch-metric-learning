@@ -21,7 +21,19 @@ class ArcFaceLoss(LargeMarginSoftmaxLoss):
 
     def modify_cosine_of_target_classes(self, cosine_of_target_classes):
         angles = self.get_angles(cosine_of_target_classes)
-        return torch.cos(angles + self.margin)
+
+        # Compute cos of (theta + margin) and cos of theta
+        cos_theta_plus_margin = torch.cos(angles + self.margin)
+        cos_theta = torch.cos(angles)
+
+        # Keep the cost function monotonically decreasing
+        unscaled_logits = torch.where(
+            angles <= np.deg2rad(180) - self.margin,
+            cos_theta_plus_margin,
+            cos_theta - self.margin * np.sin(self.margin),
+        )
+
+        return unscaled_logits
 
     def scale_logits(self, logits, *_):
         return logits * self.scale

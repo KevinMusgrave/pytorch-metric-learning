@@ -17,10 +17,25 @@ miner_output = miner_func(embeddings, labels) # in your training for-loop
 loss = loss_func(embeddings, labels, miner_output)
 ```
 
-For some losses ([ContrastiveLoss](#contrastiveloss), [NTXentLoss](#ntxentloss), [TripletMarginLoss](#tripletmarginloss) etc.), you don't need to pass in labels if you are already passing in pair/triplet indices:
+For some losses, you don't need to pass in labels if you are already passing in pair/triplet indices:
 ```python
 loss = loss_func(embeddings, indices_tuple=pairs)
+# it also works with ref_emb
+loss = loss_func(embeddings, indices_tuple=pairs, ref_emb=ref_emb)
 ```
+??? note "Losses for which you can pass in `indices_tuple` without `labels`"
+    - CircleLoss
+    - ContrastiveLoss
+    - IntraPairVarianceLoss
+    - GeneralizedLiftedStructureLoss
+    - LiftedStructureLoss
+    - MarginLoss
+    - MultiSimilarityLoss
+    - NTXentLoss
+    - SignalToNoiseRatioContrastiveLoss
+    - SupConLoss
+    - TripletMarginLoss
+    - TupletMarginLoss
 
 
 You can specify how losses get reduced to a single value by using a [reducer](reducers.md):
@@ -31,7 +46,7 @@ loss_func = losses.SomeLoss(reducer=reducer)
 loss = loss_func(embeddings, labels) # in your training for-loop
 ```
 
-For tuple losses, can separate the source of anchors and positives/negatives:
+For tuple losses, you can separate the source of anchors and positives/negatives:
 ```python
 loss_func = losses.SomeLoss()
 # anchors will come from embeddings
@@ -89,9 +104,9 @@ losses.ArcFaceLoss(num_classes, embedding_size, margin=28.6, scale=64, **kwargs)
 
 **Parameters**:
 
-* **margin**: The angular margin penalty in degrees. In the above equation, ```m = radians(margin)```. The paper uses 0.5 radians, which is 28.6 degrees.
 * **num_classes**: The number of classes in your training dataset.
 * **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set ```embedding_size``` to 512.
+* **margin**: The angular margin penalty in degrees. In the above equation, ```m = radians(margin)```. The paper uses 0.5 radians, which is 28.6 degrees.
 * **scale**: This is ```s``` in the above equation. The paper uses 64.
 
 **Other info**: 
@@ -153,7 +168,7 @@ losses.BaseMetricLossFunction(collect_stats = False,
 
 **Required Implementations**:
 ```python
-def compute_loss(self, embeddings, labels, indices_tuple=None):
+def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
     raise NotImplementedError
 ```
 
@@ -203,15 +218,11 @@ losses.CircleLoss(m=0.4, gamma=80, **kwargs)
 
 **Equations**:
 
-![circle_loss_equation1](imgs/circle_loss_equation1.png){: style="height:150px"}
+![circle_loss_equation1](imgs/circle_loss_equation1.png){: style="height:60px"}
 
 where
 
 ![circle_loss_equation2](imgs/circle_loss_equation2.png){: style="height:70px"}
-
-![circle_loss_equation7](imgs/circle_loss_equation7.png){: style="height:25px"}
-
-![circle_loss_equation8](imgs/circle_loss_equation8.png){: style="height:25px"}
 
 ![circle_loss_equation3](imgs/circle_loss_equation3.png){: style="height:25px"}
 
@@ -291,9 +302,9 @@ losses.CosFaceLoss(num_classes, embedding_size, margin=0.35, scale=64, **kwargs)
 
 **Parameters**:
 
-* **margin**: The cosine margin penalty (m in the above equation). The paper used values between 0.25 and 0.45.
 * **num_classes**: The number of classes in your training dataset.
 * **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set ```embedding_size``` to 512.
+* **margin**: The cosine margin penalty (m in the above equation). The paper used values between 0.25 and 0.45.
 * **scale**: This is ```s``` in the above equation. The paper uses 64.
 
 **Other info**: 
@@ -344,6 +355,13 @@ loss_fn(embeddings, labels, indices_tuple=None, enqueue_idx=None)
 As shown above, CrossBatchMemory comes with a 4th argument in its ```forward``` function:
 
 * **enqueue_idx**: The indices of ```embeddings``` that will be added to the memory queue. In other words, only ```embeddings[enqueue_idx]``` will be added to memory. This enables CrossBatchMemory to be used in self-supervision frameworks like [MoCo](https://arxiv.org/pdf/1911.05722.pdf). Check out the [MoCo on CIFAR100](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples#simple-examples) notebook to see how this works.
+
+**Reset queue**
+
+The queue can be cleared like this:
+```python
+loss_fn.reset_queue()
+```
 
 ## FastAPLoss
 [Deep Metric Learning to Rank](http://openaccess.thecvf.com/content_CVPR_2019/papers/Cakir_Deep_Metric_Learning_to_Rank_CVPR_2019_paper.pdf){target=_blank}

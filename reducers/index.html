@@ -355,6 +355,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#sumreducer" class="md-nav__link">
+    SumReducer
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#thresholdreducer" class="md-nav__link">
     ThresholdReducer
   </a>
@@ -693,6 +700,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#sumreducer" class="md-nav__link">
+    SumReducer
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#thresholdreducer" class="md-nav__link">
     ThresholdReducer
   </a>
@@ -814,6 +828,10 @@ To use this reducer, the loss function must include <code>divisor</code> in its 
 </ul>
 </li>
 </ul>
+<h2 id="sumreducer">SumReducer<a class="headerlink" href="#sumreducer" title="Permanent link">&para;</a></h2>
+<p>This will return the sum of the losses.
+<div class="highlight"><pre><span></span><code><span class="n">reducers</span><span class="o">.</span><span class="n">SumReducer</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div></p>
 <h2 id="thresholdreducer">ThresholdReducer<a class="headerlink" href="#thresholdreducer" title="Permanent link">&para;</a></h2>
 <p>This computes the average loss, using only the losses that fall within a specified range.</p>
 <div class="highlight"><pre><span></span><code><span class="n">reducers</span><span class="o">.</span><span class="n">ThresholdReducer</span><span class="p">(</span><span class="n">low</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="kc">None</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>

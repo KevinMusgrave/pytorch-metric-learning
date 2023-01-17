@@ -64,6 +64,7 @@ def single_process_function(
     miner_fn,
     original_model,
     efficient,
+    pass_labels_to_loss_fn,
 ):
     setup(rank, world_size)
     if TEST_DEVICE == torch.device("cpu"):
@@ -102,9 +103,12 @@ def single_process_function(
         indices_tuple = None
         if miner_fn:
             indices_tuple = miner_fn(outputs, curr_labels, ref_outputs, curr_ref_labels)
-        loss = loss_fn(
-            outputs, curr_labels, indices_tuple, ref_outputs, curr_ref_labels
-        )
+        if miner_fn and not pass_labels_to_loss_fn:
+            loss = loss_fn(outputs, indices_tuple=indices_tuple, ref_emb=ref_outputs)
+        else:
+            loss = loss_fn(
+                outputs, curr_labels, indices_tuple, ref_outputs, curr_ref_labels
+            )
 
         dist.barrier()
         loss.backward()
@@ -162,6 +166,7 @@ class TestDistributedLossWrapper(unittest.TestCase):
         use_ref,
         loss_kwargs=None,
         miner_kwargs=None,
+        pass_labels_to_loss_fn=True,
     ):
         torch.manual_seed(75210)
         loss_kwargs = {} if loss_kwargs is None else loss_kwargs
@@ -294,6 +299,7 @@ class TestDistributedLossWrapper(unittest.TestCase):
                         miner_fn,
                         original_model,
                         efficient,
+                        pass_labels_to_loss_fn,
                     ),
                     nprocs=world_size,
                     join=True,
@@ -309,16 +315,18 @@ class TestDistributedLossWrapper(unittest.TestCase):
     def test_distributed_tuple_loss_and_miner(self):
         for xbm in [False, True]:
             for use_ref in [False, True]:
-                if xbm and use_ref:
-                    continue
-                self.loss_and_miner_tester(
-                    ContrastiveLoss,
-                    PairMarginMiner,
-                    False,
-                    xbm,
-                    use_ref,
-                    miner_kwargs={"pos_margin": 0.5, "neg_margin": 0.5},
-                )
+                for pass_labels_to_loss_fn in [False, True]:
+                    if xbm and use_ref or xbm and not pass_labels_to_loss_fn:
+                        continue
+                    self.loss_and_miner_tester(
+                        ContrastiveLoss,
+                        PairMarginMiner,
+                        False,
+                        xbm,
+                        use_ref,
+                        miner_kwargs={"pos_margin": 0.5, "neg_margin": 0.5},
+                        pass_labels_to_loss_fn=pass_labels_to_loss_fn,
+                    )
 
     def test_distributed_tuple_loss_efficient(self):
         for use_ref in [False, True]:
@@ -326,14 +334,16 @@ class TestDistributedLossWrapper(unittest.TestCase):
 
     def test_distributed_tuple_loss_and_miner_efficient(self):
         for use_ref in [False, True]:
-            self.loss_and_miner_tester(
-                ContrastiveLoss,
-                PairMarginMiner,
-                True,
-                False,
-                use_ref,
-                miner_kwargs={"pos_margin": 0.5, "neg_margin": 0.5},
-            )
+            for pass_labels_to_loss_fn in [False, True]:
+                self.loss_and_miner_tester(
+                    ContrastiveLoss,
+                    PairMarginMiner,
+                    True,
+                    False,
+                    use_ref,
+                    miner_kwargs={"pos_margin": 0.5, "neg_margin": 0.5},
+                    pass_labels_to_loss_fn=pass_labels_to_loss_fn,
+                )
 
     def test_single_proc(self):
         setup(0, 1)

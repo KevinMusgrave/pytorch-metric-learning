@@ -30,16 +30,19 @@ def all_gather_embeddings_and_labels(emb, labels):
     if not is_distributed():
         return None, None
     ref_emb = all_gather(emb)
-    ref_labels = all_gather(labels)
+    ref_labels = all_gather(labels) if labels is not None else None
     return ref_emb, ref_labels
 
 
 def gather(emb, labels):
     device = emb.device
-    labels = c_f.to_device(labels, device=device)
+    if labels is not None:
+        labels = c_f.to_device(labels, device=device)
     dist_emb, dist_labels = all_gather_embeddings_and_labels(emb, labels)
     all_emb = torch.cat([emb, dist_emb], dim=0)
-    all_labels = torch.cat([labels, dist_labels], dim=0)
+    all_labels = (
+        torch.cat([labels, dist_labels], dim=0) if dist_labels is not None else None
+    )
     return all_emb, all_labels, labels
 
 
@@ -47,7 +50,7 @@ def gather_emb_and_ref(emb, labels, ref_emb=None, ref_labels=None):
     all_emb, all_labels, labels = gather(emb, labels)
     all_ref_emb, all_ref_labels = None, None
 
-    if ref_emb is not None and ref_labels is not None:
+    if ref_emb is not None:
         all_ref_emb, all_ref_labels, _ = gather(ref_emb, ref_labels)
 
     return all_emb, all_labels, all_ref_emb, all_ref_labels, labels
@@ -81,7 +84,9 @@ class DistributedLossWrapper(torch.nn.Module):
         self.loss = loss
         self.efficient = efficient
 
-    def forward(self, emb, labels, indices_tuple=None, ref_emb=None, ref_labels=None):
+    def forward(
+        self, emb, labels=None, indices_tuple=None, ref_emb=None, ref_labels=None
+    ):
         world_size = torch.distributed.get_world_size()
         common_args = [emb, labels, indices_tuple, ref_emb, ref_labels, world_size]
         if isinstance(self.loss, CrossBatchMemory):
@@ -99,7 +104,8 @@ class DistributedLossWrapper(torch.nn.Module):
         )
 
         if self.efficient:
-            all_labels = select_ref_or_regular(all_labels, all_ref_labels)
+            if all_labels is not None:
+                all_labels = select_ref_or_regular(all_labels, all_ref_labels)
             all_emb = select_ref_or_regular(all_emb, all_ref_emb)
             if indices_tuple is None:
                 indices_tuple = get_indices_tuple(labels, all_labels)

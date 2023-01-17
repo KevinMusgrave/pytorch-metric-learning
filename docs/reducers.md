@@ -122,6 +122,13 @@ reducers.PerAnchorReducer(reducer=None,
    	* ```num_per_row``` is a size N array which indicates how many non-zero losses there are per-row of ```x```.
 
 
+## SumReducer
+This will return the sum of the losses.
+```python
+reducers.SumReducer(**kwargs)
+```
+
+
 ## ThresholdReducer
 This computes the average loss, using only the losses that fall within a specified range.
 

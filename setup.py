@@ -42,7 +42,6 @@ setuptools.setup(
         "scikit-learn",
         "tqdm",
         "torch >= 1.6.0",
-        "torchvision",
     ],
     extras_require={
         "with-hooks": extras_require_with_hooks,

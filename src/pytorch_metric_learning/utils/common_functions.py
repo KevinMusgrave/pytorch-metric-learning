@@ -412,10 +412,6 @@ def return_input(x):
 def check_shapes(embeddings, labels):
     if labels is not None and embeddings.shape[0] != labels.shape[0]:
         raise ValueError("Number of embeddings must equal number of labels")
-    if embeddings.ndim != 2:
-        raise ValueError(
-            "embeddings must be a 2D tensor of shape (batch_size, embedding_size)"
-        )
     if labels is not None and labels.ndim != 1:
         raise ValueError("labels must be a 1D tensor of shape (batch_size,)")
 

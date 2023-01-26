@@ -1,8 +1,7 @@
-<h1 align="center">
 <a href="https://github.com/KevinMusgrave/pytorch-metric-learning">
 <img alt="Logo" src="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/docs/imgs/Logo2.png">
 </a>
-</h2>
+
 <p align="center">
  <a href="https://pypi.org/project/pytorch-metric-learning">
      <img alt="PyPi version" src="https://img.shields.io/pypi/v/pytorch-metric-learning?color=bright-green">

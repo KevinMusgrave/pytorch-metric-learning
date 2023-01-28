@@ -358,17 +358,15 @@ class TestDistributedLossWrapper(unittest.TestCase):
                 for pass_labels_to_loss_fn in [False, True]:
                     if xbm and use_ref or xbm and not pass_labels_to_loss_fn:
                         continue
-                    for use_xbm_enqueue_idx in [False, True]:
-                        self.loss_and_miner_tester(
-                            ContrastiveLoss,
-                            PairMarginMiner,
-                            False,
-                            xbm,
-                            use_ref,
-                            miner_kwargs={"pos_margin": 0.5, "neg_margin": 0.5},
-                            pass_labels_to_loss_fn=pass_labels_to_loss_fn,
-                            use_xbm_enqueue_idx=use_xbm_enqueue_idx,
-                        )
+                    self.loss_and_miner_tester(
+                        ContrastiveLoss,
+                        PairMarginMiner,
+                        False,
+                        xbm,
+                        use_ref,
+                        miner_kwargs={"pos_margin": 0.5, "neg_margin": 0.5},
+                        pass_labels_to_loss_fn=pass_labels_to_loss_fn,
+                    )
 
     def test_distributed_tuple_loss_efficient(self):
         for use_ref in [False, True]:

@@ -18,6 +18,8 @@ class CrossBatchMemory(ModuleWithRecords):
         )
 
     def forward(self, embeddings, labels, indices_tuple=None, enqueue_idx=None):
+        if indices_tuple is not None and enqueue_idx is not None:
+            raise ValueError("indices_tuple and enqueue_idx are mutually exclusive")
         if enqueue_idx is not None:
             assert len(enqueue_idx) <= len(self.embedding_memory)
             assert len(enqueue_idx) < len(embeddings)

@@ -280,12 +280,11 @@ Thanks to [Jeff Musgrave](https://www.designgenius.ca/) for designing the logo.
 ## Citing this library
 If you'd like to cite pytorch-metric-learning in your paper, you can use this bibtex:
 ```latex
-@misc{musgrave2020pytorch,
-    title={PyTorch Metric Learning},
-    author={Kevin Musgrave and Serge Belongie and Ser-Nam Lim},
-    year={2020},
-    eprint={2008.09164},
-    archivePrefix={arXiv},
-    primaryClass={cs.CV}
+@article{Musgrave2020PyTorchML,
+  title={PyTorch Metric Learning},
+  author={Kevin Musgrave and Serge J. Belongie and Ser-Nam Lim},
+  journal={ArXiv},
+  year={2020},
+  volume={abs/2008.09164}
 }
 ```

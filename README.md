@@ -1,12 +1,15 @@
-<h1 align="center">
+<h1>
 <a href="https://github.com/KevinMusgrave/pytorch-metric-learning">
-<img alt="Logo" src="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/docs/imgs/Logo2.png">
+<img alt="PyTorch Metric Learning" src="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/docs/imgs/Logo2.png">
 </a>
-</h2>
+</h1>
+
 <p align="center">
- <a href="https://badge.fury.io/py/pytorch-metric-learning">
-     <img alt="PyPi version" src="https://badge.fury.io/py/pytorch-metric-learning.svg?">
+ <a href="https://pypi.org/project/pytorch-metric-learning">
+     <img alt="PyPi version" src="https://img.shields.io/pypi/v/pytorch-metric-learning?color=bright-green">
  </a>
+	
+	
  
  <a href="https://anaconda.org/conda-forge/pytorch-metric-learning">
      <img alt="Anaconda version" src="https://img.shields.io/conda/v/conda-forge/pytorch-metric-learning?color=bright-green">
@@ -277,12 +280,11 @@ Thanks to [Jeff Musgrave](https://www.designgenius.ca/) for designing the logo.
 ## Citing this library
 If you'd like to cite pytorch-metric-learning in your paper, you can use this bibtex:
 ```latex
-@misc{musgrave2020pytorch,
-    title={PyTorch Metric Learning},
-    author={Kevin Musgrave and Serge Belongie and Ser-Nam Lim},
-    year={2020},
-    eprint={2008.09164},
-    archivePrefix={arXiv},
-    primaryClass={cs.CV}
+@article{Musgrave2020PyTorchML,
+  title={PyTorch Metric Learning},
+  author={Kevin Musgrave and Serge J. Belongie and Ser-Nam Lim},
+  journal={ArXiv},
+  year={2020},
+  volume={abs/2008.09164}
 }
 ```

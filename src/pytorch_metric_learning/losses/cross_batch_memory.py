@@ -46,7 +46,6 @@ class CrossBatchMemory(ModuleWithRecords):
             labels_for_queue = labels
             do_remove_self_comparisons = True
 
-        batch_size = len(embeddings)
         queue_batch_size = len(emb_for_queue)
         self.add_to_memory(emb_for_queue, labels_for_queue, queue_batch_size)
 
@@ -58,7 +57,6 @@ class CrossBatchMemory(ModuleWithRecords):
             L_mem = self.label_memory
 
         indices_tuple = self.create_indices_tuple(
-            batch_size,
             embeddings,
             labels,
             E_mem,
@@ -85,7 +83,6 @@ class CrossBatchMemory(ModuleWithRecords):
 
     def create_indices_tuple(
         self,
-        batch_size,
         embeddings,
         labels,
         E_mem,
@@ -117,7 +114,9 @@ class CrossBatchMemory(ModuleWithRecords):
         return indices_tuple
 
     def reset_queue(self):
-        self.embedding_memory = torch.zeros(self.memory_size, self.embedding_size)
-        self.label_memory = torch.zeros(self.memory_size).long()
+        self.register_buffer(
+            "embedding_memory", torch.zeros(self.memory_size, self.embedding_size)
+        )
+        self.register_buffer("label_memory", torch.zeros(self.memory_size).long())
         self.has_been_filled = False
         self.queue_idx = 0

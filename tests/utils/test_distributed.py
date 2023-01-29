@@ -158,7 +158,7 @@ def create_labels(batch_size, world_size, iterations):
 def create_enqueue_mask(batch_size, world_size):
     # enqueue every other embedding
     local_enqueue_mask = [
-        (torch.randint(0, 1, size=(batch_size,))).bool() for _ in range(world_size)
+        (torch.randint(0, 2, size=(batch_size,))).bool() for _ in range(world_size)
     ]
     global_enqueue_mask = torch.cat(local_enqueue_mask, dim=0)
     return local_enqueue_mask, global_enqueue_mask

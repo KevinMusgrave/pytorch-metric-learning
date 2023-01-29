@@ -254,7 +254,7 @@ class BaseTrainer:
 
     def initialize_models(self):
         if "embedder" not in self.models:
-            self.models["embedder"] = c_f.Identity()
+            self.models["embedder"] = torch.nn.Identity()
 
     def verify_dict_keys(self):
         self.allowed_lr_scheduler_key_suffixes = {

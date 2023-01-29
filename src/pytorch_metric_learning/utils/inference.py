@@ -64,7 +64,7 @@ class InferenceModel:
         dtype=None,
     ):
         self.trunk = trunk
-        self.embedder = c_f.Identity() if embedder is None else embedder
+        self.embedder = torch.nn.Identity() if embedder is None else embedder
         self.match_finder = (
             MatchFinder(distance=CosineSimilarity(), threshold=0.9)
             if match_finder is None

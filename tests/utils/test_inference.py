@@ -7,7 +7,6 @@ import torch
 import torchvision
 from torchvision import datasets, transforms
 
-from pytorch_metric_learning.utils import common_functions
 from pytorch_metric_learning.utils.inference import InferenceModel
 
 from .. import TEST_DEVICE
@@ -33,7 +32,7 @@ class TestInference(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         trunk = torchvision.models.resnet18(pretrained=True)
-        trunk.fc = common_functions.Identity()
+        trunk.fc = torch.nn.Identity()
         trunk = trunk.to(TEST_DEVICE)
 
         cls.model = trunk

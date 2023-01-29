@@ -5,7 +5,6 @@ import torch
 
 from pytorch_metric_learning.testers import GlobalTwoStreamEmbeddingSpaceTester
 from pytorch_metric_learning.utils import accuracy_calculator
-from pytorch_metric_learning.utils import common_functions as c_f
 
 from ..zzz_testing_utils.testing_utils import angle_to_coord
 
@@ -34,7 +33,7 @@ class TestGlobalTwoStreamEmbeddingSpaceTester(unittest.TestCase):
             "train": FakeDataset(embeddings1, embeddings2, labels),
         }
 
-        model = c_f.Identity()
+        model = torch.nn.Identity()
         AC = accuracy_calculator.AccuracyCalculator(include=("precision_at_1",))
 
         tester = GlobalTwoStreamEmbeddingSpaceTester(

@@ -96,7 +96,7 @@ class TestMetricLossOnly(unittest.TestCase):
                     map_location=TEST_DEVICE,
                 )
                 model.load_state_dict(checkpoint["state_dict"])
-                model.module.linear = c_f.Identity()
+                model.module.linear = torch.nn.Identity()
                 if TEST_DEVICE == torch.device("cpu"):
                     model = model.module
                 model = model.to(TEST_DEVICE).type(dtype)

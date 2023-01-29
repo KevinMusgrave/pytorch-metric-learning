@@ -1,10 +1,9 @@
 import torch
 
-from ..losses import BaseMetricLossFunction
+from ..losses import BaseMetricLossFunction, CrossBatchMemory
 from ..miners import BaseMiner
 from ..utils import common_functions as c_f
 from ..utils import loss_and_miner_utils as lmu
-from ..wrappers import CrossBatchMemory
 
 
 # modified from https://github.com/allenai/allennlp

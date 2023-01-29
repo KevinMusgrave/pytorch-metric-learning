@@ -5,6 +5,7 @@ import torch
 import pytorch_metric_learning.losses as losses
 from pytorch_metric_learning.losses import (
     ContrastiveLoss,
+    CrossBatchMemory,
     MultiSimilarityLoss,
     NTXentLoss,
 )
@@ -15,7 +16,6 @@ from pytorch_metric_learning.miners import (
     TripletMarginMiner,
 )
 from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
-from pytorch_metric_learning.wrappers import CrossBatchMemory
 
 from .. import TEST_DEVICE, TEST_DTYPES
 from ..zzz_testing_utils.testing_utils import angle_to_coord

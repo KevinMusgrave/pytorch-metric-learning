@@ -8,10 +8,9 @@ import torch.multiprocessing as mp
 import torch.optim as optim
 from torch.nn.parallel import DistributedDataParallel as DDP
 
-from pytorch_metric_learning.losses import ContrastiveLoss
+from pytorch_metric_learning.losses import ContrastiveLoss, CrossBatchMemory
 from pytorch_metric_learning.miners import PairMarginMiner
 from pytorch_metric_learning.utils import distributed
-from pytorch_metric_learning.wrappers import CrossBatchMemory
 
 from .. import TEST_DEVICE, TEST_DTYPES
 

@@ -35,7 +35,7 @@ class TestCrossBatchMemory(unittest.TestCase):
         for dtype in TEST_DTYPES:
             batch_size = 32
             loss = CrossBatchMemory(
-                loss=None,
+                loss=ContrastiveLoss(),
                 embedding_size=self.embedding_size,
                 memory_size=self.memory_size,
             )

@@ -13,7 +13,7 @@ from .. import TEST_DEVICE, TEST_DTYPES
 from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 
-class TestMultipleLossesWrapper(unittest.TestCase):
+class TestMultipleLosses(unittest.TestCase):
     def test_multiple_losses(self):
         lossA = ContrastiveLoss()
         lossB = TripletMarginLoss(0.1)

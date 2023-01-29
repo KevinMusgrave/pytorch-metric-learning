@@ -7,7 +7,7 @@ import pytorch_metric_learning.losses as losses
 from .. import TEST_DEVICE, TEST_DTYPES
 
 
-class TestSelfSupervisedLossWrapper(unittest.TestCase):
+class TestSelfSupervisedLoss(unittest.TestCase):
     def test_ssl_wrapper_all(self):
         for dtype in TEST_DTYPES:
             embeddings = torch.randn(

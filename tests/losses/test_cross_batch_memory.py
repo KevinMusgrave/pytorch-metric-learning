@@ -21,7 +21,7 @@ from .. import TEST_DEVICE, TEST_DTYPES
 from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 
-class TestCrossBatchMemoryWrapper(unittest.TestCase):
+class TestCrossBatchMemory(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         self.embedding_size = 128

@@ -470,14 +470,19 @@ def to_device(x, tensor=None, device=None, dtype=None):
 
 def set_ref_emb(embeddings, labels, ref_emb, ref_labels):
     if ref_emb is not None:
-        if not torch.is_tensor(ref_labels):
-            TypeError("if ref_emb is given, then ref_labels must also be given")
         if ref_labels is not None:
             ref_labels = to_device(ref_labels, ref_emb)
     else:
         ref_emb, ref_labels = embeddings, labels
     check_shapes(ref_emb, ref_labels)
     return ref_emb, ref_labels
+
+
+def labels_not_supported(labels, ref_labels):
+    if labels is not None or ref_labels is not None:
+        raise ValueError(
+            "labels are ref_labels are not supported for this loss function"
+        )
 
 
 def ref_not_supported(embeddings, labels, ref_emb, ref_labels):

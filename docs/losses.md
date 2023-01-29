@@ -1084,7 +1084,7 @@ Unlike other loss functions, ```VICRegLoss``` does not accept ```labels``` or ``
 
 ```python
 loss_fn = VICRegLoss()
-loss = loss_fn(embeddings, ref_emb)
+loss = loss_fn(embeddings, ref_emb=ref_emb)
 ```
 
 **Equations**:

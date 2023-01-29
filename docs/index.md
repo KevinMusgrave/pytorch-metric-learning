@@ -74,22 +74,18 @@ This customized triplet loss has the following properties:
 
 ### Using loss functions for unsupervised / self-supervised learning
 
-The TripletMarginLoss is an embedding-based or tuple-based loss. This means that internally, there is no real notion of "classes". Tuples (pairs or triplets) are formed at each iteration, based on the labels it receives. The labels don't have to represent classes. They simply need to indicate the positive and negative relationships between the embeddings. Thus, it is easy to use these loss functions for unsupervised or self-supervised learning. 
-
-For example, the code below is a simplified version of the augmentation strategy commonly used in self-supervision. The dataset does not come with any labels. Instead, the labels are created in the training loop, solely to indicate which embeddings are positive pairs.
+A `SelfSupervisedLoss` wrapper is provided for self-supervised learning:
 
 ```python
+from pytorch_metric_learning.losses import SelfSupervisedLoss
+loss_func = SelfSupervisedLoss(TripletMarginLoss())
+
 # your training for-loop
 for i, data in enumerate(dataloader):
 	optimizer.zero_grad()
 	embeddings = your_model(data)
 	augmented = your_model(your_augmentation(data))
-	labels = torch.arange(embeddings.size(0))
-
-	embeddings = torch.cat([embeddings, augmented], dim=0)
-	labels = torch.cat([labels, labels], dim=0)
-
-	loss = loss_func(embeddings, labels)
+	loss = loss_func(embeddings, augmented)
 	loss.backward()
 	optimizer.step()
 ```

@@ -224,12 +224,3 @@ labels = torch.tensor([
 ])
 ```
 
-
-### Warning for versions <= 0.9.97
-
-The behavior of the ```k``` parameter described in the [Parameters](#parameters) section is for versions >= 0.9.98.
-
-For versions <= 0.9.97, the behavior was:
-
-* If ```k = None```, then ```k = min(1023, max(bincount(reference_labels)))```
-* Otherwise ```k = k```

@@ -5,9 +5,9 @@ Mining functions take a batch of ```n``` embeddings and return ```k``` pairs/tri
 - Triplet miners output a tuple of size 3: (anchors, positives, negatives).
 - Without a tuple miner, loss functions will by default use all possible pairs/triplets in the batch.
 
-You might be familiar with the terminology: "online" and "offline" miners. Tuple miners are online. Offline miners should be implemented as a [PyTorch Sampler](samplers.md).
+You might be familiar with the terminology: "online" and "offline" miners. These miners are online. Offline miners should be implemented as a [PyTorch Sampler](samplers.md).
 
-Tuple miners are used with loss functions as follows:
+Miners are used with loss functions as follows:
 
 ```python
 from pytorch_metric_learning import miners, losses
@@ -39,12 +39,10 @@ All miners extend this class and therefore inherit its ```__init__``` parameters
 miners.BaseMiner(collect_stats=False, distance=None)
 ```
 
-It outputs a tuple of indices:
+Every miner outputs a tuple of indices:
 
 * Pair miners output a tuple of size 4: (anchors, positives, anchors, negatives)
 * Triplet miners output a tuple of size 3: (anchors, positives, negatives) 
-
-If you write your own miner, the ```mine``` function should work such that anchor indices correspond to ```embeddings``` and ```labels```, and all other indices correspond to ```ref_emb``` and ```ref_labels```. By default, ```embeddings == ref_emb``` and ```labels == ref_labels```, but separating the anchor source from the positive/negative source allows for interesting use cases. For example, see [CrossBatchMemory](losses.md#crossbatchmemory).
 
 See [custom miners](extend/miners.md) for details on how to write your own miner.
 

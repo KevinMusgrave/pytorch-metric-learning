@@ -30,7 +30,7 @@ class TestVICRegLoss(unittest.TestCase):
                 emb_ = ref_emb_ + augmentation_noise
 
                 for emb, ref_emb in [(emb_, ref_emb_), (ref_emb_, emb_)]:
-                    loss = loss_func(ref_emb, emb)
+                    loss = loss_func(emb, ref_emb=ref_emb)
                     loss.backward()
 
                     # invariance_loss

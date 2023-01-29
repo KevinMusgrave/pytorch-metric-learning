@@ -1,10 +1,10 @@
 import torch
 
 from ..utils import loss_and_miner_utils as lmu
-from .base_miner import BaseTupleMiner
+from .base_miner import BaseMiner
 
 
-class UniformHistogramMiner(BaseTupleMiner):
+class UniformHistogramMiner(BaseMiner):
     def __init__(self, num_bins=100, pos_per_bin=10, neg_per_bin=10, **kwargs):
         super().__init__(**kwargs)
         self.num_bins = num_bins

@@ -1,6 +1,3 @@
-#! /usr/bin/env python3
-
-
 from collections import defaultdict
 
 import torch
@@ -112,7 +109,7 @@ class BaseTester:
         return_as_numpy=False,
     ):
         if embedder_model is None:
-            embedder_model = c_f.Identity()
+            embedder_model = torch.nn.Identity()
         if eval:
             trunk_model.eval()
             embedder_model.eval()
@@ -267,7 +264,7 @@ class BaseTester:
     ):
         raise NotImplementedError
 
-    def embeddings_come_from_same_source(self, query_split_name, reference_split_names):
+    def ref_includes_query(self, query_split_name, reference_split_names):
         return query_split_name in reference_split_names
 
     def test(
@@ -281,7 +278,7 @@ class BaseTester:
     ):
         c_f.LOGGER.info("Evaluating epoch {}".format(epoch))
         if embedder_model is None:
-            embedder_model = c_f.Identity()
+            embedder_model = torch.nn.Identity()
         trunk_model.eval()
         embedder_model.eval()
         (

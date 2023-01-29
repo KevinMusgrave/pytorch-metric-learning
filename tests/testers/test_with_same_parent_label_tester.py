@@ -31,7 +31,7 @@ class TestWithSameParentLabelTester(unittest.TestCase):
         }
 
     def test_with_same_parent_label_tester(self):
-        model = c_f.Identity()
+        model = torch.nn.Identity()
         AC = accuracy_calculator.AccuracyCalculator(include=("precision_at_1",))
 
         correct = [

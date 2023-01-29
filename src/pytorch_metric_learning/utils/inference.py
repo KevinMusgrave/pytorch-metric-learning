@@ -64,7 +64,7 @@ class InferenceModel:
         dtype=None,
     ):
         self.trunk = trunk
-        self.embedder = c_f.Identity() if embedder is None else embedder
+        self.embedder = torch.nn.Identity() if embedder is None else embedder
         self.match_finder = (
             MatchFinder(distance=CosineSimilarity(), threshold=0.9)
             if match_finder is None
@@ -171,9 +171,9 @@ class FaissKNN:
         query,
         k,
         reference=None,
-        embeddings_come_from_same_source=False,
+        ref_includes_query=False,
     ):
-        if embeddings_come_from_same_source:
+        if ref_includes_query:
             k = k + 1
         device = query.device
         is_cuda = query.is_cuda
@@ -198,7 +198,7 @@ class FaissKNN:
         indices = c_f.to_device(indices, device=device)
         if self.reset_after:
             self.reset()
-        return return_results(distances, indices, embeddings_come_from_same_source)
+        return return_results(distances, indices, ref_includes_query)
 
     def train(self, embeddings):
         self.index = self.index_init_fn(embeddings.shape[1])
@@ -289,8 +289,8 @@ def mask_reshape_knn_idx(x, matches_self_idx):
     return x[~matches_self_idx].view(x.shape[0], -1)
 
 
-def return_results(D, I, embeddings_come_from_same_source):
-    if embeddings_come_from_same_source:
+def return_results(D, I, ref_includes_query):
+    if ref_includes_query:
         self_idx = torch.arange(len(I), device=I.device)
         matches_self_idx = I == self_idx.unsqueeze(1)
         row_has_match = torch.any(matches_self_idx, dim=1)
@@ -320,8 +320,8 @@ class CustomKNN:
         else:
             self.distance = distance
 
-    def __call__(self, query, k, reference, embeddings_come_from_same_source=False):
-        if embeddings_come_from_same_source:
+    def __call__(self, query, k, reference, ref_includes_query=False):
+        if ref_includes_query:
             k = k + 1
         get_largest = self.distance.is_inverted
         if isinstance(self.distance, BatchedDistance):
@@ -333,4 +333,4 @@ class CustomKNN:
         else:
             mat = self.distance(query, reference)
             distances, indices = torch.topk(mat, k, largest=get_largest, dim=1)
-        return return_results(distances, indices, embeddings_come_from_same_source)
+        return return_results(distances, indices, ref_includes_query)

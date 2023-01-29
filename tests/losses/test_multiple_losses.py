@@ -111,7 +111,8 @@ class TestMultipleLosses(unittest.TestCase):
         lossA = ContrastiveLoss()
         lossB = TripletMarginLoss(0.1)
         self.assertRaises(
-            AssertionError, lambda: MultipleLosses(losses=[lossA, lossB], weights=[1])
+            AssertionError,
+            lambda: MultipleLosses(losses=[lossA, lossB], weights=[1]),
         )
 
         minerA = MultiSimilarityMiner()

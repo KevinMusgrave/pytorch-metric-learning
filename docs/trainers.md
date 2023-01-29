@@ -80,7 +80,7 @@ If not specified, then the original labels are used.
 * **end_of_iteration_hook**: This is an optional function that has one input argument (the trainer object), and performs some action (e.g. logging data) at the end of every iteration. Here are some things you might want to log:
 	* ```trainer.losses```: this dictionary contains all loss values at the current iteration. 
 	* ```trainer.loss_funcs``` and ```trainer.mining_funcs```: these dictionaries contain the loss and mining functions. 
-		* Some loss and mining functions have attributes called ```_record_these``` or ```_record_these_stats```. These are lists of names of other attributes that might be useful to log. (The list of attributes might change depending on the value of [COLLECT_STATS](common_functions.md#collect_stats).) For example, the ```_record_these_stats``` list for ```BaseTupleMiner``` is ```["num_pos_pairs", "num_neg_pairs", "num_triplets"]```, so at each iteration you could log the value of ```trainer.mining_funcs["tuple_miner"].num_pos_pairs```. To accomplish this programmatically, you can use [record-keeper](https://github.com/KevinMusgrave/record-keeper). Or you can do it yourself: first check if the object has ```_record_these``` or ```_record_these_stats```, and use the python function ```getattr``` to retrieve the specified attributes. 
+		* Some loss and mining functions have attributes called ```_record_these``` or ```_record_these_stats```. These are lists of names of other attributes that might be useful to log. (The list of attributes might change depending on the value of [COLLECT_STATS](common_functions.md#collect_stats).) For example, the ```_record_these_stats``` list for ```BaseMiner``` is ```["num_pos_pairs", "num_neg_pairs", "num_triplets"]```, so at each iteration you could log the value of ```trainer.mining_funcs["tuple_miner"].num_pos_pairs```. To accomplish this programmatically, you can use [record-keeper](https://github.com/KevinMusgrave/record-keeper). Or you can do it yourself: first check if the object has ```_record_these``` or ```_record_these_stats```, and use the python function ```getattr``` to retrieve the specified attributes. 
 	* If you want ready-to-use hooks, take a look at the [logging_presets module](logging_presets.md).
 * **end_of_epoch_hook**: This is an optional function that operates like ```end_of_iteration_hook```, except this occurs at the end of every epoch, so this might be a suitable place to run validation and save models. 
 	* To end training early, your hook should return the boolean value False. Note, it must specifically ```return False```, not ```None```, ```0```, ```[]``` etc.
@@ -180,19 +180,6 @@ trainers.DeepAdversarialMetricLearning(metric_alone_epochs=0,
 		* Optionally include "classifier_loss": classifier_loss
 		* "g_reg_loss" and "g_hard_loss" refer to the regularization losses described in the paper.
 		
-
-## UnsupervisedEmbeddingsUsingAugmentations
-This is an implementation of a general approach that has been used in recent unsupervised learning papers, e.g. [Unsupervised Embedding Learning via Invariant and Spreading
-Instance Feature
-](https://arxiv.org/pdf/1904.03436.pdf) and [Unsupervised Deep Metric Learning via Auxiliary Rotation Loss](https://arxiv.org/abs/1911.07072). The idea is that augmented versions of a datapoint should be close to each other in the embedding space.
-```python
-trainers.UnsupervisedEmbeddingsUsingAugmentations(transforms, data_and_label_setter=None, *args, **kwargs)
-```
-
-**Parameters**:
-
-* **transforms**: A list of transforms. For every sample in a batch, each transform will be applied to the sample. If there are N transforms and the batch size is B, then there will be a total of B*N augmented samples. 
-* **data_and_label_setter**: A function that takes in a tuple of (augmented_data, pseudo_labels) and outputs whatever is expected by self.data_and_label_getter.
 
 
 ## TwoStreamMetricLoss

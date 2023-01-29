@@ -11,24 +11,25 @@ class ThresholdReducer(BaseReducer):
         ), "At least one of low or high must be specified"
         self.low = low
         self.high = high
-        if self.low is not None:
-            self.add_to_recordable_attributes(list_of_names=["low"], is_stat=False)
-        if self.high is not None:
-            self.add_to_recordable_attributes(list_of_names=["high"], is_stat=False)
+        self.add_to_recordable_attributes(list_of_names=["low", "high"], is_stat=False)
+        self.add_to_recordable_attributes(
+            list_of_names=["num_past_filter", "num_above_low", "num_below_high"],
+            is_stat=True,
+        )
 
     def element_reduction(self, losses, loss_indices, embeddings, labels):
-        return self.element_reduction_helper(losses, embeddings, "elements")
+        return self.element_reduction_helper(losses, embeddings)
 
     def pos_pair_reduction(self, losses, loss_indices, embeddings, labels):
-        return self.element_reduction_helper(losses, embeddings, "pos_pairs")
+        return self.element_reduction_helper(losses, embeddings)
 
     def neg_pair_reduction(self, losses, loss_indices, embeddings, labels):
-        return self.element_reduction_helper(losses, embeddings, "neg_pairs")
+        return self.element_reduction_helper(losses, embeddings)
 
     def triplet_reduction(self, losses, loss_indices, embeddings, labels):
-        return self.element_reduction_helper(losses, embeddings, "triplets")
+        return self.element_reduction_helper(losses, embeddings)
 
-    def element_reduction_helper(self, losses, embeddings, attr_name):
+    def element_reduction_helper(self, losses, embeddings):
         low_condition, high_condition = None, None
         if self.low is not None:
             low_condition = losses > self.low
@@ -41,20 +42,14 @@ class ThresholdReducer(BaseReducer):
             loss = torch.mean(losses)
         else:
             loss = self.zero_loss(embeddings)
-        self.set_stats(low_condition, high_condition, num_past_filter, attr_name)
+        self.set_stats(low_condition, high_condition, num_past_filter)
         return loss
 
-    def set_stats(self, low_condition, high_condition, num_past_filter, attr_name):
+    def set_stats(self, low_condition, high_condition, num_past_filter):
         if self.collect_stats:
-            curr_attr_name = "{}_past_filter".format(attr_name)
-            self.add_to_recordable_attributes(name=curr_attr_name, is_stat=True)
-            setattr(self, curr_attr_name, num_past_filter)
+            self.num_past_filter = num_past_filter
             with torch.no_grad():
                 if self.low is not None:
-                    curr_attr_name = "{}_above_low".format(attr_name)
-                    self.add_to_recordable_attributes(name=curr_attr_name, is_stat=True)
-                    setattr(self, curr_attr_name, torch.sum(low_condition).item())
+                    self.num_above_low = torch.sum(low_condition).item()
                 if self.high is not None:
-                    curr_attr_name = "{}_below_high".format(attr_name)
-                    self.add_to_recordable_attributes(name=curr_attr_name, is_stat=True)
-                    setattr(self, curr_attr_name, torch.sum(high_condition).item())
+                    self.num_above_high = torch.sum(high_condition).item()

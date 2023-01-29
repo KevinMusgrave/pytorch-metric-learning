@@ -173,42 +173,6 @@ def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
 ```
 
 
-## CentroidTripletLoss
-[On the Unreasonable Effectiveness of Centroids in Image Retrieval](https://arxiv.org/pdf/2104.13643.pdf){target=_blank}
-
-This is like [TripletMarginLoss](losses.md#tripletmarginloss), except the positives and negatives are class centroids.
-
-```python
-losses.CentroidTripletLoss(margin=0.05,
-                            swap=False,
-                            smooth_loss=False,
-                            triplets_per_anchor="all",
-                            **kwargs)
-```
-
-Unlike many other losses, the instance of this class can only be called as the following:
-
-```python
-from pytorch_metric_learning import losses
-loss_func = losses.CentroidTripletLoss()
-loss = loss_func(embeddings, labels) 
-```
-
-and does not allow for use of `ref_embs`, `ref_labels`. Furthermore, there must be at least 2 embeddings associated with each label. Refer to [this issue](https://github.com/KevinMusgrave/pytorch-metric-learning/issues/451) for details.
-
-**Parameters**:
-
-See [TripletMarginLoss](losses.md#tripletmarginloss)
-
-**Default distance**: 
-
-See [TripletMarginLoss](losses.md#tripletmarginloss)
-
-**Default reducer**: 
-
- - [AvgNonZeroReducer](reducers.md#avgnonzeroreducer)
-
-
 ## CircleLoss 
 [Circle Loss: A Unified Perspective of Pair Similarity Optimization](https://arxiv.org/pdf/2002.10857.pdf){target=_blank}
 

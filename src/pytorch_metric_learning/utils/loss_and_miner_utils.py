@@ -196,7 +196,7 @@ def convert_to_triplets(indices_tuple, labels, ref_labels=None, t_per_anchor=100
         return a1[p_idx], p[p_idx], n[n_idx]
 
 
-def convert_to_weights(indices_tuple, labels, dtype):
+def convert_to_weights(indices_tuple, labels, dtype, using_ref=False):
     """
     Returns a weight for each batch element, based on
     how many times they appear in indices_tuple.
@@ -205,9 +205,13 @@ def convert_to_weights(indices_tuple, labels, dtype):
     weights = c_f.to_dtype(weights, dtype=dtype)
     if (indices_tuple is None) or (all(len(x) == 0 for x in indices_tuple)):
         return weights + 1
-    indices, counts = torch.unique(torch.cat(indices_tuple, dim=0), return_counts=True)
-    counts = c_f.to_dtype(counts, dtype=dtype) / torch.sum(counts)
-    weights[indices] = counts / torch.max(counts)
+    if using_ref:
+        # if using ref, then only the anchors refer to the query set
+        indices = get_anchors(indices_tuple)
+    else:
+        indices = torch.cat(indices_tuple, dim=0)
+    indices, counts = torch.unique(indices, return_counts=True)
+    weights[indices] = c_f.to_dtype(counts, dtype=dtype) / torch.max(counts)
     return weights
 
 
@@ -255,3 +259,10 @@ def not_self_comparisons(a, p, s, e, curr_batch_idx, ref_size, ref_is_subset=Fal
     without_self_comparisons = curr_batch.clone()
     without_self_comparisons[torch.where(curr_batch)[0][a_c == p_c]] = False
     return without_self_comparisons | ~curr_batch
+
+
+def get_anchors(indices_tuple):
+    if len(indices_tuple) == 3:
+        return indices_tuple[0]
+    elif len(indices_tuple) == 4:
+        return torch.cat([indices_tuple[0], indices_tuple[2]], dim=0)

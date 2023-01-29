@@ -13,8 +13,8 @@ class BaseTrainer:
         optimizers,
         batch_size,
         loss_funcs,
-        mining_funcs,
         dataset,
+        mining_funcs=None,
         iterations_per_epoch=None,
         data_device=None,
         dtype=None,
@@ -37,8 +37,8 @@ class BaseTrainer:
         self.optimizers = optimizers
         self.batch_size = batch_size
         self.loss_funcs = loss_funcs
-        self.mining_funcs = mining_funcs
         self.dataset = dataset
+        self.mining_funcs = {} if mining_funcs is None else mining_funcs
         self.iterations_per_epoch = iterations_per_epoch
         self.data_device = data_device
         self.dtype = dtype
@@ -254,7 +254,7 @@ class BaseTrainer:
 
     def initialize_models(self):
         if "embedder" not in self.models:
-            self.models["embedder"] = c_f.Identity()
+            self.models["embedder"] = torch.nn.Identity()
 
     def verify_dict_keys(self):
         self.allowed_lr_scheduler_key_suffixes = {

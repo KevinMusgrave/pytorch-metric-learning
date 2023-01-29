@@ -7,7 +7,6 @@ from torchvision import datasets, models, transforms
 
 from pytorch_metric_learning.miners import MultiSimilarityMiner
 from pytorch_metric_learning.samplers import TuplesToWeightsSampler
-from pytorch_metric_learning.utils import common_functions as c_f
 
 from .. import TEST_DEVICE
 
@@ -15,7 +14,7 @@ from .. import TEST_DEVICE
 class TestTuplesToWeightsSampler(unittest.TestCase):
     def test_tuplestoweights_sampler(self):
         model = models.resnet18(pretrained=True)
-        model.fc = c_f.Identity()
+        model.fc = torch.nn.Identity()
         model = torch.nn.DataParallel(model)
         model.to(TEST_DEVICE)
 

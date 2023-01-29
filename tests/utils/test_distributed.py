@@ -65,8 +65,8 @@ def single_process_function(
     original_model,
     efficient,
     pass_labels_to_loss_fn,
-    use_xbm_enqueue_idx,
-    enqueue_idx,
+    use_xbm_enqueue_mask,
+    enqueue_mask,
 ):
     setup(rank, world_size)
     if TEST_DEVICE == torch.device("cpu"):
@@ -107,9 +107,9 @@ def single_process_function(
             indices_tuple = miner_fn(outputs, curr_labels, ref_outputs, curr_ref_labels)
         if miner_fn and not pass_labels_to_loss_fn:
             loss = loss_fn(outputs, indices_tuple=indices_tuple, ref_emb=ref_outputs)
-        elif use_xbm_enqueue_idx and isinstance(loss_fn.loss, CrossBatchMemory):
+        elif use_xbm_enqueue_mask and isinstance(loss_fn.loss, CrossBatchMemory):
             loss = loss_fn(
-                outputs, curr_labels, indices_tuple, enqueue_idx=enqueue_idx[rank]
+                outputs, curr_labels, indices_tuple, enqueue_mask=enqueue_mask[rank]
             )
         else:
             loss = loss_fn(
@@ -155,20 +155,13 @@ def create_labels(batch_size, world_size, iterations):
     ]
 
 
-def create_enqueue_idx(batch_size, world_size):
+def create_enqueue_mask(batch_size, world_size):
     # enqueue every other embedding
-    local_enqueue_idx = [
-        (torch.randint(0, batch_size, size=(batch_size // 4,))).long()
-        for _ in range(world_size)
+    local_enqueue_mask = [
+        (torch.randint(0, 2, size=(batch_size,))).bool() for _ in range(world_size)
     ]
-    global_enqueue_idx = []
-    for i, x in enumerate(local_enqueue_idx):
-        if i == 0:
-            global_enqueue_idx.append(x)
-        else:
-            global_enqueue_idx.append(x + batch_size)
-    global_enqueue_idx = torch.cat(global_enqueue_idx, dim=0)
-    return local_enqueue_idx, global_enqueue_idx
+    global_enqueue_mask = torch.cat(local_enqueue_mask, dim=0)
+    return local_enqueue_mask, global_enqueue_mask
 
 
 def get_all_outputs_and_labels(inputs, labels, model, iteration):
@@ -189,7 +182,7 @@ class TestDistributedLossWrapper(unittest.TestCase):
         loss_kwargs=None,
         miner_kwargs=None,
         pass_labels_to_loss_fn=True,
-        use_xbm_enqueue_idx=False,
+        use_xbm_enqueue_mask=False,
     ):
         torch.manual_seed(75210)
         loss_kwargs = {} if loss_kwargs is None else loss_kwargs
@@ -245,7 +238,7 @@ class TestDistributedLossWrapper(unittest.TestCase):
                     )
                     ref_labels = create_labels(batch_size, world_size, iterations)
 
-                local_enqueue_idx, global_enqueue_idx = create_enqueue_idx(
+                local_enqueue_mask, global_enqueue_mask = create_enqueue_mask(
                     batch_size, world_size
                 )
 
@@ -296,11 +289,11 @@ class TestDistributedLossWrapper(unittest.TestCase):
                                 all_outputs, all_labels, all_ref_outputs, all_ref_labels
                             )
                         if xbm:
-                            enqueue_idx = (
-                                global_enqueue_idx if use_xbm_enqueue_idx else None
+                            enqueue_mask = (
+                                global_enqueue_mask if use_xbm_enqueue_mask else None
                             )
                             loss = original_loss_fn(
-                                all_outputs, all_labels, indices_tuple, enqueue_idx
+                                all_outputs, all_labels, indices_tuple, enqueue_mask
                             )
                         else:
                             loss = original_loss_fn(
@@ -330,8 +323,8 @@ class TestDistributedLossWrapper(unittest.TestCase):
                         original_model,
                         efficient,
                         pass_labels_to_loss_fn,
-                        use_xbm_enqueue_idx,
-                        local_enqueue_idx,
+                        use_xbm_enqueue_mask,
+                        local_enqueue_mask,
                     ),
                     nprocs=world_size,
                     join=True,
@@ -340,7 +333,7 @@ class TestDistributedLossWrapper(unittest.TestCase):
     def test_distributed_tuple_loss(self):
         for xbm in [False, True]:
             for use_ref in [False, True]:
-                for use_xbm_enqueue_idx in [False, True]:
+                for use_xbm_enqueue_mask in [False, True]:
                     if xbm and use_ref:
                         continue
                     self.loss_and_miner_tester(
@@ -349,7 +342,7 @@ class TestDistributedLossWrapper(unittest.TestCase):
                         False,
                         xbm,
                         use_ref,
-                        use_xbm_enqueue_idx=use_xbm_enqueue_idx,
+                        use_xbm_enqueue_mask=use_xbm_enqueue_mask,
                     )
 
     def test_distributed_tuple_loss_and_miner(self):

@@ -3,11 +3,12 @@ import torch
 from ..utils import common_functions as c_f
 from ..utils import loss_and_miner_utils as lmu
 from ..utils.module_with_records import ModuleWithRecords
+from .base_loss_wrapper import BaseLossWrapper
 
 
-class CrossBatchMemory(ModuleWithRecords):
+class CrossBatchMemory(BaseLossWrapper, ModuleWithRecords):
     def __init__(self, loss, embedding_size, memory_size=1024, miner=None, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__(loss=loss, **kwargs)
         self.loss = loss
         self.miner = miner
         self.embedding_size = embedding_size
@@ -17,12 +18,35 @@ class CrossBatchMemory(ModuleWithRecords):
             list_of_names=["embedding_size", "memory_size", "queue_idx"], is_stat=False
         )
 
-    def forward(self, embeddings, labels, indices_tuple=None, enqueue_idx=None):
-        if indices_tuple is not None and enqueue_idx is not None:
-            raise ValueError("indices_tuple and enqueue_idx are mutually exclusive")
-        if enqueue_idx is not None:
-            assert len(enqueue_idx) <= len(self.embedding_memory)
-            assert len(enqueue_idx) < len(embeddings)
+    @staticmethod
+    def supported_losses():
+        return [
+            "AngularLoss",
+            "CircleLoss",
+            "ContrastiveLoss",
+            "GeneralizedLiftedStructureLoss",
+            "IntraPairVarianceLoss",
+            "LiftedStructureLoss",
+            "MarginLoss",
+            "MultiSimilarityLoss",
+            "NCALoss",
+            "NTXentLoss",
+            "SignalToNoiseRatioContrastiveLoss",
+            "SupConLoss",
+            "TripletMarginLoss",
+            "TupletMarginLoss",
+        ]
+
+    @classmethod
+    def check_loss_support(cls, loss_name):
+        if loss_name not in cls.supported_losses():
+            raise Exception(f"CrossBatchMemory not supported for {loss_name}")
+
+    def forward(self, embeddings, labels, indices_tuple=None, enqueue_mask=None):
+        if indices_tuple is not None and enqueue_mask is not None:
+            raise ValueError("indices_tuple and enqueue_mask are mutually exclusive")
+        if enqueue_mask is not None:
+            assert len(enqueue_mask) == len(embeddings)
         else:
             assert len(embeddings) <= len(self.embedding_memory)
         self.reset_stats()
@@ -35,13 +59,11 @@ class CrossBatchMemory(ModuleWithRecords):
             self.label_memory, device=device, dtype=labels.dtype
         )
 
-        if enqueue_idx is not None:
-            mask = torch.zeros(len(embeddings), device=device, dtype=torch.bool)
-            mask[enqueue_idx] = True
-            emb_for_queue = embeddings[mask]
-            labels_for_queue = labels[mask]
-            embeddings = embeddings[~mask]
-            labels = labels[~mask]
+        if enqueue_mask is not None:
+            emb_for_queue = embeddings[enqueue_mask]
+            labels_for_queue = labels[enqueue_mask]
+            embeddings = embeddings[~enqueue_mask]
+            labels = labels[~enqueue_mask]
             do_remove_self_comparisons = False
         else:
             emb_for_queue = embeddings

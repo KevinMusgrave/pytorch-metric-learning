@@ -173,42 +173,6 @@ def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
 ```
 
 
-## CentroidTripletLoss
-[On the Unreasonable Effectiveness of Centroids in Image Retrieval](https://arxiv.org/pdf/2104.13643.pdf){target=_blank}
-
-This is like [TripletMarginLoss](losses.md#tripletmarginloss), except the positives and negatives are class centroids.
-
-```python
-losses.CentroidTripletLoss(margin=0.05,
-                            swap=False,
-                            smooth_loss=False,
-                            triplets_per_anchor="all",
-                            **kwargs)
-```
-
-Unlike many other losses, the instance of this class can only be called as the following:
-
-```python
-from pytorch_metric_learning import losses
-loss_func = losses.CentroidTripletLoss()
-loss = loss_func(embeddings, labels) 
-```
-
-and does not allow for use of `ref_embs`, `ref_labels`. Furthermore, there must be at least 2 embeddings associated with each label. Refer to [this issue](https://github.com/KevinMusgrave/pytorch-metric-learning/issues/451) for details.
-
-**Parameters**:
-
-See [TripletMarginLoss](losses.md#tripletmarginloss)
-
-**Default distance**: 
-
-See [TripletMarginLoss](losses.md#tripletmarginloss)
-
-**Default reducer**: 
-
- - [AvgNonZeroReducer](reducers.md#avgnonzeroreducer)
-
-
 ## CircleLoss 
 [Circle Loss: A Unified Perspective of Pair Similarity Optimization](https://arxiv.org/pdf/2002.10857.pdf){target=_blank}
 
@@ -349,12 +313,28 @@ losses.CrossBatchMemory(loss, embedding_size, memory_size=1024, miner=None)
 
 **Forward function**
 ```python
-loss_fn(embeddings, labels, indices_tuple=None, enqueue_idx=None)
+loss_fn(embeddings, labels, indices_tuple=None, enqueue_mask=None)
 ```
 
 As shown above, CrossBatchMemory comes with a 4th argument in its ```forward``` function:
 
-* **enqueue_idx**: The indices of ```embeddings``` that will be added to the memory queue. In other words, only ```embeddings[enqueue_idx]``` will be added to memory. This enables CrossBatchMemory to be used in self-supervision frameworks like [MoCo](https://arxiv.org/pdf/1911.05722.pdf). Check out the [MoCo on CIFAR100](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples#simple-examples) notebook to see how this works.
+* **enqueue_mask**: A boolean tensor where `enqueue_mask[i]` is True if `embeddings[i]` should be added to the memory queue. This enables CrossBatchMemory to be used in self-supervision frameworks like [MoCo](https://arxiv.org/pdf/1911.05722.pdf). Check out the [MoCo on CIFAR100](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples#simple-examples) notebook to see how this works.
+
+
+**Supported Loss Functions**:
+ - [AngularLoss](losses.md#AngularLoss)
+ - [CircleLoss](losses.md#CircleLoss)
+ - [ContrastiveLoss](losses.md#ContrastiveLoss)
+ - [GeneralizedLiftedStructureLoss](losses.md#GeneralizedLiftedStructureLoss)
+ - [IntraPairVarianceLoss](losses.md#IntraPairVarianceLoss)
+ - [LiftedStructureLoss](losses.md#LiftedStructureLoss)
+ - [MultiSimilarityLoss](losses.md#MultiSimilarityLoss)
+ - [NTXentLoss](losses.md#NTXentLoss)
+ - [SignalToNoiseRatioContrastiveLoss](losses.md#SignalToNoiseRatioContrastiveLoss)
+ - [SupConLoss](losses.md#SupConLoss)
+ - [TripletMarginLoss](losses.md#TripletMarginLoss)
+ - [TupletMarginLoss](losses.md#TupletMarginLoss)
+
 
 **Reset queue**
 
@@ -608,17 +588,6 @@ where
 * **beta_reg_loss**: The regularization loss per element in ```self.beta```. Reduction type is ```"already_reduced"``` if ```self.num_classes = None```. Otherwise it is ```"element"```.
 
 
-## MultipleLosses
-This is a simple wrapper for multiple losses. Pass in a list of already-initialized loss functions. Then, when you call forward on this object, it will return the sum of all wrapped losses.
-```python
-losses.MultipleLosses(losses, miners=None, weights=None)
-```
-**Parameters**:
-
-* **losses**: A list or dictionary of initialized loss functions. On the forward call of MultipleLosses, each wrapped loss will be computed, and then the average will be returned.
-* **miners**: Optional. A list or dictionary of mining functions. This allows you to pair mining functions with loss functions. For example, if ```losses = [loss_A, loss_B]```, and ```miners = [None, miner_B]``` then no mining will be done for ```loss_A```, but the output of ```miner_B``` will be passed to ```loss_B```. The same logic applies if ```losses = {"loss_A": loss_A, "loss_B": loss_B}``` and ```miners = {"loss_B": miner_B}```.
-* **weights**: Optional. A list or dictionary of loss weights, which will be multiplied by the corresponding losses obtained by the loss functions. The default is to multiply each loss by 1. If ```losses``` is a list, then ```weights``` must be a list. If ```losses``` is a dictionary, ```weights``` must contain the same keys as ```losses```. 
-
 ## MultiSimilarityLoss
 [Multi-Similarity Loss with General Pair Weighting for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf){target=_blank}
 ```python
@@ -647,6 +616,18 @@ losses.MultiSimilarityLoss(alpha=2, beta=50, base=0.5, **kwargs)
 **Reducer input**:
 
 * **loss**: The loss per element in the batch. Reduction type is ```"element"```.
+
+## MultipleLosses
+This is a simple wrapper for multiple losses. Pass in a list of already-initialized loss functions. Then, when you call forward on this object, it will return the sum of all wrapped losses.
+```python
+losses.MultipleLosses(losses, miners=None, weights=None)
+```
+**Parameters**:
+
+* **losses**: A list or dictionary of initialized loss functions. On the forward call of MultipleLosses, each wrapped loss will be computed, and then the average will be returned.
+* **miners**: Optional. A list or dictionary of mining functions. This allows you to pair mining functions with loss functions. For example, if ```losses = [loss_A, loss_B]```, and ```miners = [None, miner_B]``` then no mining will be done for ```loss_A```, but the output of ```miner_B``` will be passed to ```loss_B```. The same logic applies if ```losses = {"loss_A": loss_A, "loss_B": loss_B}``` and ```miners = {"loss_B": miner_B}```.
+* **weights**: Optional. A list or dictionary of loss weights, which will be multiplied by the corresponding losses obtained by the loss functions. The default is to multiply each loss by 1. If ```losses``` is a list, then ```weights``` must be a list. If ```losses``` is a dictionary, ```weights``` must contain the same keys as ```losses```. 
+
 
 ## NCALoss
 [Neighbourhood Components Analysis](https://www.cs.toronto.edu/~hinton/absps/nca.pdf){target=_blank}
@@ -854,6 +835,30 @@ loss_optimizer.step()
 **Reducer input**:
 
 * **loss**: The loss per element in the batch, that results in a non zero exponent in the cross entropy expression. Reduction type is ```"element"```.
+
+
+## SelfSupervisedLoss
+
+A common use case is to have embeddings and ref_emb be augmented versions of each other. For most losses right now you have to create labels to indicate which embeddings correspond with which ref_emb. `SelfSupervisedLoss` automates this.
+
+```python
+loss_fn = losses.TripletMarginLoss()
+loss_fn = SelfSupervisedLoss(loss_fn)
+loss = loss_fn(embeddings, labels)
+```
+
+**Supported Loss Functions**:
+ - [AngularLoss](losses.md#AngularLoss)
+ - [CircleLoss](losses.md#CircleLoss)
+ - [ContrastiveLoss](losses.md#ContrastiveLoss)
+ - [IntraPairVarianceLoss](losses.md#IntraPairVarianceLoss)
+ - [MultiSimilarityLoss](losses.md#MultiSimilarityLoss)
+ - [NTXentLoss](losses.md#NTXentLoss)
+ - [SignalToNoiseRatioContrastiveLoss](losses.md#SignalToNoiseRatioContrastiveLoss)
+ - [SupConLoss](losses.md#SupConLoss)
+ - [TripletMarginLoss](losses.md#TripletMarginLoss)
+ - [TupletMarginLoss](losses.md#TupletMarginLoss)
+
 
 
 ## SignalToNoiseRatioContrastiveLoss
@@ -1153,7 +1158,7 @@ Unlike other loss functions, ```VICRegLoss``` does not accept ```labels``` or ``
 
 ```python
 loss_fn = VICRegLoss()
-loss = loss_fn(embeddings, ref_emb)
+loss = loss_fn(embeddings, ref_emb=ref_emb)
 ```
 
 **Equations**:

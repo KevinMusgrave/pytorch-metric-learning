@@ -1,15 +1,15 @@
 # How to write custom mining functions
 
-1. Extend ```BaseTupleMiner```
+1. Extend ```BaseMiner```
 2. Implement the ```mine``` method
 3. Inside ```mine```, return a tuple of tensors
 
 ## An example pair miner
 ```python
-from pytorch_metric_learning.miners import BaseTupleMiner
+from pytorch_metric_learning.miners import BaseMiner
 from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
 
-class ExamplePairMiner(BaseTupleMiner):
+class ExamplePairMiner(BaseMiner):
     def __init__(self, margin=0.1, **kwargs):
         super().__init__(**kwargs)
         self.margin = margin
@@ -50,10 +50,10 @@ pairs = miner(embeddings, labels)
 
 ## An example triplet miner
 ```python
-from pytorch_metric_learning.miners import BaseTupleMiner
+from pytorch_metric_learning.miners import BaseMiner
 from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
 
-class ExampleTripletMiner(BaseTupleMiner):
+class ExampleTripletMiner(BaseMiner):
     def __init__(self, margin=0.1, **kwargs):
         super().__init__(**kwargs)
         self.margin = margin
@@ -72,7 +72,7 @@ This miner works similarly to ```ExamplePairMiner```, but finds triplets instead
 
 
 ## What is ```ref_emb```?
-The forward function of ```BaseTupleMiner``` has optional ```ref_emb``` and ```ref_labels``` arguments. The miner should return anchors from ```embeddings``` and positives and negatives from ```ref_emb```. For example:
+The forward function of ```BaseMiner``` has optional ```ref_emb``` and ```ref_labels``` arguments. The miner should return anchors from ```embeddings``` and positives and negatives from ```ref_emb```. For example:
 
 ```python
 miner = ExamplePairMiner()

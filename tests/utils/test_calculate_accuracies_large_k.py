@@ -50,8 +50,8 @@ class TestCalculateAccuraciesLargeK(unittest.TestCase):
                         for acc in accs:
                             d = acc.get_accuracy(
                                 encs,
-                                encs,
                                 labels,
+                                encs,
                                 labels,
                                 ecfss,
                                 include=(

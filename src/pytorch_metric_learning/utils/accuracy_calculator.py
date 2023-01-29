@@ -32,7 +32,7 @@ def maybe_get_avg_of_avgs(
 def get_relevance_mask(
     shape,
     gt_labels,
-    embeddings_come_from_same_source,
+    ref_includes_query,
     label_counts,
 ):
     relevance_mask = torch.zeros(size=shape, dtype=torch.bool, device=gt_labels.device)
@@ -44,7 +44,7 @@ def get_relevance_mask(
         matching_rows = torch.where(
             c_f.torch_all_from_dim_to_end(gt_labels == label, 1)
         )[0]
-        max_column = count - 1 if embeddings_come_from_same_source else count
+        max_column = count - 1 if ref_includes_query else count
         relevance_mask[matching_rows, :max_column] = True
         count_per_query[matching_rows] = max_column
     return relevance_mask, count_per_query
@@ -53,7 +53,7 @@ def get_relevance_mask(
 def r_precision(
     knn_labels,
     gt_labels,
-    embeddings_come_from_same_source,
+    ref_includes_query,
     label_counts,
     avg_of_avgs,
     return_per_class,
@@ -62,7 +62,7 @@ def r_precision(
     relevance_mask, _ = get_relevance_mask(
         knn_labels.shape[:2],
         gt_labels,
-        embeddings_come_from_same_source,
+        ref_includes_query,
         label_counts,
     )
     same_label = label_comparison_fn(gt_labels, knn_labels)
@@ -79,7 +79,7 @@ def r_precision(
 def mean_average_precision(
     knn_labels,
     gt_labels,
-    embeddings_come_from_same_source,
+    ref_includes_query,
     label_counts,
     avg_of_avgs,
     return_per_class,
@@ -91,7 +91,7 @@ def mean_average_precision(
     relevance_mask, count_per_query = get_relevance_mask(
         knn_labels.shape[:2],
         gt_labels,
-        embeddings_come_from_same_source,
+        ref_includes_query,
         label_counts,
     )
     knn_mask = (
@@ -170,11 +170,11 @@ def get_label_match_counts(query_labels, reference_labels, label_comparison_fn):
 def get_lone_query_labels(
     query_labels,
     label_counts,
-    embeddings_come_from_same_source,
+    ref_includes_query,
     label_comparison_fn,
 ):
     unique_labels, match_counts = label_counts
-    if embeddings_come_from_same_source:
+    if ref_includes_query:
         label_matches_itself = label_comparison_fn(unique_labels, unique_labels)
         lone_condition = match_counts - label_matches_itself.type(torch.long) <= 0
     else:
@@ -201,10 +201,10 @@ def try_getting_not_lone_labels(knn_labels, query_labels, not_lone_query_mask):
     )
 
 
-def zero_accuracy(unique_labels, return_per_class):
+def nan_accuracy(unique_labels, return_per_class):
     if return_per_class:
-        return [0 for _ in range(len(unique_labels))]
-    return 0
+        return [float("nan") for _ in range(len(unique_labels))]
+    return float("nan")
 
 
 class AccuracyCalculator:
@@ -305,7 +305,7 @@ class AccuracyCalculator:
             knn_labels, query_labels, not_lone_query_mask
         )
         if knn_labels is None:
-            return zero_accuracy(label_counts[0], self.return_per_class)
+            return nan_accuracy(label_counts[0], self.return_per_class)
         return precision_at_k(
             knn_labels,
             query_labels[:, None],
@@ -320,7 +320,7 @@ class AccuracyCalculator:
         knn_labels,
         query_labels,
         not_lone_query_mask,
-        embeddings_come_from_same_source,
+        ref_includes_query,
         label_counts,
         **kwargs,
     ):
@@ -328,11 +328,11 @@ class AccuracyCalculator:
             knn_labels, query_labels, not_lone_query_mask
         )
         if knn_labels is None:
-            return zero_accuracy(label_counts[0], self.return_per_class)
+            return nan_accuracy(label_counts[0], self.return_per_class)
         return mean_average_precision(
             knn_labels,
             query_labels[:, None],
-            embeddings_come_from_same_source,
+            ref_includes_query,
             label_counts,
             self.avg_of_avgs,
             self.return_per_class,
@@ -345,7 +345,7 @@ class AccuracyCalculator:
         knn_labels,
         query_labels,
         not_lone_query_mask,
-        embeddings_come_from_same_source,
+        ref_includes_query,
         label_counts,
         **kwargs,
     ):
@@ -353,12 +353,12 @@ class AccuracyCalculator:
             knn_labels, query_labels, not_lone_query_mask
         )
         if knn_labels is None:
-            return zero_accuracy(label_counts[0], self.return_per_class)
+            return nan_accuracy(label_counts[0], self.return_per_class)
 
         return mean_average_precision(
             knn_labels,
             query_labels[:, None],
-            embeddings_come_from_same_source,
+            ref_includes_query,
             label_counts,
             self.avg_of_avgs,
             self.return_per_class,
@@ -377,7 +377,7 @@ class AccuracyCalculator:
             knn_labels, query_labels, not_lone_query_mask
         )
         if knn_labels is None:
-            return zero_accuracy(label_counts[0], self.return_per_class)
+            return nan_accuracy(label_counts[0], self.return_per_class)
 
         return mean_reciprocal_rank(
             knn_labels,
@@ -392,7 +392,7 @@ class AccuracyCalculator:
         knn_labels,
         query_labels,
         not_lone_query_mask,
-        embeddings_come_from_same_source,
+        ref_includes_query,
         label_counts,
         **kwargs,
     ):
@@ -400,11 +400,11 @@ class AccuracyCalculator:
             knn_labels, query_labels, not_lone_query_mask
         )
         if knn_labels is None:
-            return zero_accuracy(label_counts[0], self.return_per_class)
+            return nan_accuracy(label_counts[0], self.return_per_class)
         return r_precision(
             knn_labels,
             query_labels[:, None],
-            embeddings_come_from_same_source,
+            ref_includes_query,
             label_counts,
             self.avg_of_avgs,
             self.return_per_class,
@@ -414,13 +414,18 @@ class AccuracyCalculator:
     def get_accuracy(
         self,
         query,
-        reference,
         query_labels,
-        reference_labels,
-        embeddings_come_from_same_source,
+        reference=None,
+        reference_labels=None,
+        ref_includes_query=False,
         include=(),
         exclude=(),
     ):
+        if reference is None:
+            reference = query
+            reference_labels = query_labels
+            ref_includes_query = True
+
         [query, reference, query_labels, reference_labels] = [
             c_f.numpy_to_torch(x).to(self.device).type(torch.float)
             for x in [query, reference, query_labels, reference_labels]
@@ -429,12 +434,12 @@ class AccuracyCalculator:
         if len(query) != len(query_labels) or len(reference) != len(reference_labels):
             raise ValueError("embeddings and labels must have the same length")
 
-        if embeddings_come_from_same_source and not (
+        if ref_includes_query and not (
             torch.allclose(query, reference[: len(query)])
             and torch.allclose(query_labels, reference_labels[: len(query)])
         ):
             raise ValueError(
-                "When embeddings_come_from_same_source is True, the first len(query) elements of reference must be equal to query.\n"
+                "When ref_includes_query is True, the first len(query) elements of reference must be equal to query.\n"
                 "Likewise, the first len(query_labels) elements of reference_lbels must be equal to query_labels.\n"
             )
 
@@ -445,7 +450,7 @@ class AccuracyCalculator:
             "reference": reference,
             "query_labels": query_labels,
             "reference_labels": reference_labels,
-            "embeddings_come_from_same_source": embeddings_come_from_same_source,
+            "ref_includes_query": ref_includes_query,
             "label_comparison_fn": self.label_comparison_fn,
         }
 
@@ -456,16 +461,16 @@ class AccuracyCalculator:
             lone_query_labels, not_lone_query_mask = get_lone_query_labels(
                 query_labels,
                 label_counts,
-                embeddings_come_from_same_source,
+                ref_includes_query,
                 self.label_comparison_fn,
             )
 
             num_k = self.determine_k(
-                label_counts[1], len(reference), embeddings_come_from_same_source
+                label_counts[1], len(reference), ref_includes_query
             )
 
             knn_distances, knn_indices = self.knn_func(
-                query, num_k, reference, embeddings_come_from_same_source
+                query, num_k, reference, ref_includes_query
             )
 
             knn_labels = reference_labels[knn_indices]
@@ -499,10 +504,8 @@ class AccuracyCalculator:
                     )
                 )
 
-    def determine_k(
-        self, bin_counts, num_reference_embeddings, embeddings_come_from_same_source
-    ):
-        self_count = int(embeddings_come_from_same_source)
+    def determine_k(self, bin_counts, num_reference_embeddings, ref_includes_query):
+        self_count = int(ref_includes_query)
         max_bin_count = torch.max(bin_counts).item()
         if self.k == "max_bin_count":
             return max_bin_count - self_count

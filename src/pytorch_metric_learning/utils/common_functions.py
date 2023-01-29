@@ -21,14 +21,6 @@ def set_logger_name(name):
     LOGGER = logging.getLogger(LOGGER_NAME)
 
 
-class Identity(torch.nn.Module):
-    def __init__(self):
-        super().__init__()
-
-    def forward(self, x):
-        return x
-
-
 def pos_inf(dtype):
     return torch.finfo(dtype).max
 
@@ -148,17 +140,6 @@ def safe_random_choice(input_data, size):
     return NUMPY_RANDOM.choice(input_data, size=size, replace=replace)
 
 
-def longest_list(list_of_lists):
-    return max(list_of_lists, key=len)
-
-
-def slice_by_n(input_array, n):
-    output = []
-    for i in range(n):
-        output.append(input_array[i::n])
-    return output
-
-
 def unslice_by_n(input_tensors):
     n = len(input_tensors)
     rows, cols = input_tensors[0].size()
@@ -208,10 +189,6 @@ def get_eval_dataloader(dataset, batch_size, num_workers, collate_fn):
         shuffle=False,
         pin_memory=False,
     )
-
-
-def try_torch_operation(torch_op, input_val):
-    return torch_op(input_val) if torch.is_tensor(input_val) else input_val
 
 
 def get_labels_to_indices(labels):
@@ -493,14 +470,19 @@ def to_device(x, tensor=None, device=None, dtype=None):
 
 def set_ref_emb(embeddings, labels, ref_emb, ref_labels):
     if ref_emb is not None:
-        if not torch.is_tensor(ref_labels):
-            TypeError("if ref_emb is given, then ref_labels must also be given")
         if ref_labels is not None:
             ref_labels = to_device(ref_labels, ref_emb)
     else:
         ref_emb, ref_labels = embeddings, labels
     check_shapes(ref_emb, ref_labels)
     return ref_emb, ref_labels
+
+
+def labels_not_supported(labels, ref_labels):
+    if labels is not None or ref_labels is not None:
+        raise ValueError(
+            "labels are ref_labels are not supported for this loss function"
+        )
 
 
 def ref_not_supported(embeddings, labels, ref_emb, ref_labels):

@@ -53,30 +53,10 @@ class SelfSupervisedLoss(BaseLossWrapper):
                     is an additional representation of an augmented version of the input.
                     i.e. ref_emb2, ref_emb3, ...
         """
-        embeddings_size = embeddings.size()
-        ref_emb_size = ref_emb.size()
-
-        embeddings_type = embeddings.type()
-        ref_emb_type = ref_emb.type()
-
-        embeddings_device = embeddings.get_device()
-        ref_emb_device = ref_emb.get_device()
-
-        if embeddings_size != ref_emb_size:
-            raise Exception(
-                f"Input parameters embeddings and ref_emb must be of the same size. Found '{embeddings_size}' and '{ref_emb_size}' instead."
-            )
-        if embeddings_type != ref_emb_type:
-            raise Exception(
-                f"Input parameters embeddings and ref_emb must be of the type. Found '{embeddings_type}' and '{ref_emb_type}' instead."
-            )
-        if embeddings_device != ref_emb_device:
-            raise Exception(
-                f"Input parameters embeddings and ref_emb must be on the same device. Found '{embeddings_device}' and '{ref_emb_device}' instead."
-            )
-
-        batch_size = embeddings_size[0]
-        labels = torch.arange(batch_size).type(embeddings_type).to(embeddings_device)
+        labels = torch.arange(embeddings.shape[0])
         return self.loss(
-            embeddings=embeddings, labels=labels, ref_emb=ref_emb, ref_labels=labels
+            embeddings=embeddings,
+            labels=labels,
+            ref_emb=ref_emb,
+            ref_labels=labels.clone(),
         )

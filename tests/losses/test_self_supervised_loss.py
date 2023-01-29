@@ -28,7 +28,9 @@ class TestSelfSupervisedLoss(unittest.TestCase):
 
             labels = torch.arange(100).to(TEST_DEVICE)
 
-            real_losses = self.run_all_loss_fns(embeddings, labels, ref_emb, labels)
+            real_losses = self.run_all_loss_fns(
+                embeddings, labels, ref_emb, labels.clone()
+            )
             losses = self.run_all_loss_fns_wrapped(embeddings, ref_emb)
 
             atol = 1e-3

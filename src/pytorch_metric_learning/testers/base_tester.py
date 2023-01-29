@@ -267,7 +267,7 @@ class BaseTester:
     ):
         raise NotImplementedError
 
-    def embeddings_come_from_same_source(self, query_split_name, reference_split_names):
+    def ref_includes_query(self, query_split_name, reference_split_names):
         return query_split_name in reference_split_names
 
     def test(

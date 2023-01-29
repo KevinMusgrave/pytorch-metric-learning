@@ -77,7 +77,7 @@ class TestCalculateAccuracies(unittest.TestCase):
                     for ecfss in [False, True]:
                         if ecfss:
                             kwargs["knn_labels"] = kwargs["knn_labels"][:, 1:]
-                        kwargs["embeddings_come_from_same_source"] = ecfss
+                        kwargs["ref_includes_query"] = ecfss
                         acc = AC._get_accuracy(function_dict, **kwargs)
                         if i == 1:
                             self.assertTrue(np.all(np.isnan(acc["precision_at_1"])))
@@ -138,10 +138,8 @@ class TestCalculateAccuracies(unittest.TestCase):
                                 )
                             )
 
-    def correct_precision_at_1(
-        self, embeddings_come_from_same_source, avg_of_avgs, return_per_class
-    ):
-        if not embeddings_come_from_same_source:
+    def correct_precision_at_1(self, ref_includes_query, avg_of_avgs, return_per_class):
+        if not ref_includes_query:
             accs = [0, 0.5, 0, 1, 0]
             if not (avg_of_avgs or return_per_class):
                 return 2.0 / 6
@@ -155,10 +153,8 @@ class TestCalculateAccuracies(unittest.TestCase):
         if return_per_class:
             return accs
 
-    def correct_r_precision(
-        self, embeddings_come_from_same_source, avg_of_avgs, return_per_class
-    ):
-        if not embeddings_come_from_same_source:
+    def correct_r_precision(self, ref_includes_query, avg_of_avgs, return_per_class):
+        if not ref_includes_query:
             acc0 = 2.0 / 3
             acc1 = 2.0 / 3
             acc2 = 1.0 / 5
@@ -181,9 +177,9 @@ class TestCalculateAccuracies(unittest.TestCase):
             return np.mean([acc0, acc1, acc2, acc3, acc4, acc5])
 
     def correct_mean_average_precision_at_r(
-        self, embeddings_come_from_same_source, avg_of_avgs, return_per_class
+        self, ref_includes_query, avg_of_avgs, return_per_class
     ):
-        if not embeddings_come_from_same_source:
+        if not ref_includes_query:
             acc0 = (1.0 / 2 + 2.0 / 3) / 3
             acc1 = (1 + 2.0 / 3) / 3
             acc2 = (1.0 / 5) / 5
@@ -206,9 +202,9 @@ class TestCalculateAccuracies(unittest.TestCase):
             return np.mean([acc0, acc1, acc2, acc3, acc4, acc5])
 
     def correct_mean_average_precision(
-        self, embeddings_come_from_same_source, avg_of_avgs, return_per_class
+        self, ref_includes_query, avg_of_avgs, return_per_class
     ):
-        if not embeddings_come_from_same_source:
+        if not ref_includes_query:
             acc0 = (1.0 / 2 + 2.0 / 3) / 3
             acc1 = (1 + 2.0 / 3 + 3.0 / 4) / 3
             acc2 = (1.0 / 5) / 5
@@ -231,9 +227,9 @@ class TestCalculateAccuracies(unittest.TestCase):
             return np.mean([acc0, acc1, acc2, acc3, acc4, acc5])
 
     def correct_mean_reciprocal_rank(
-        self, embeddings_come_from_same_source, avg_of_avgs, return_per_class
+        self, ref_includes_query, avg_of_avgs, return_per_class
     ):
-        if not embeddings_come_from_same_source:
+        if not ref_includes_query:
             acc0 = 1 / 2
             acc1 = 1
             acc2 = 1 / 5
@@ -827,7 +823,7 @@ class TestCalculateAccuraciesCustomKNN(unittest.TestCase):
         torch.manual_seed(6920)
         for dataset_size in [200, 1000]:
             for batch_size in [None, 32, 33, 2000]:
-                for embeddings_come_from_same_source in [False, True]:
+                for ref_includes_query in [False, True]:
                     for k in [None, 1, 2, 10, 100]:
                         fn1 = CustomKNN(
                             LpDistance(normalize_embeddings=False, power=2), batch_size
@@ -846,14 +842,14 @@ class TestCalculateAccuraciesCustomKNN(unittest.TestCase):
                             labels,
                             embeddings,
                             labels,
-                            embeddings_come_from_same_source,
+                            ref_includes_query,
                         )
                         acc2 = AC2.get_accuracy(
                             embeddings,
                             labels,
                             embeddings,
                             labels,
-                            embeddings_come_from_same_source,
+                            ref_includes_query,
                         )
 
                         for acc_name, v in acc1.items():

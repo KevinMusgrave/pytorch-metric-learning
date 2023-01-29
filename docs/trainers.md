@@ -181,19 +181,6 @@ trainers.DeepAdversarialMetricLearning(metric_alone_epochs=0,
 		* "g_reg_loss" and "g_hard_loss" refer to the regularization losses described in the paper.
 		
 
-## UnsupervisedEmbeddingsUsingAugmentations
-This is an implementation of a general approach that has been used in recent unsupervised learning papers, e.g. [Unsupervised Embedding Learning via Invariant and Spreading
-Instance Feature
-](https://arxiv.org/pdf/1904.03436.pdf) and [Unsupervised Deep Metric Learning via Auxiliary Rotation Loss](https://arxiv.org/abs/1911.07072). The idea is that augmented versions of a datapoint should be close to each other in the embedding space.
-```python
-trainers.UnsupervisedEmbeddingsUsingAugmentations(transforms, data_and_label_setter=None, *args, **kwargs)
-```
-
-**Parameters**:
-
-* **transforms**: A list of transforms. For every sample in a batch, each transform will be applied to the sample. If there are N transforms and the batch size is B, then there will be a total of B*N augmented samples. 
-* **data_and_label_setter**: A function that takes in a tuple of (augmented_data, pseudo_labels) and outputs whatever is expected by self.data_and_label_getter.
-
 
 ## TwoStreamMetricLoss
 This trainer is the same as [MetricLossOnly](trainers.md#metriclossonly) but operates on separate streams of anchors and positives/negatives.

@@ -140,17 +140,6 @@ def safe_random_choice(input_data, size):
     return NUMPY_RANDOM.choice(input_data, size=size, replace=replace)
 
 
-def longest_list(list_of_lists):
-    return max(list_of_lists, key=len)
-
-
-def slice_by_n(input_array, n):
-    output = []
-    for i in range(n):
-        output.append(input_array[i::n])
-    return output
-
-
 def unslice_by_n(input_tensors):
     n = len(input_tensors)
     rows, cols = input_tensors[0].size()
@@ -200,10 +189,6 @@ def get_eval_dataloader(dataset, batch_size, num_workers, collate_fn):
         shuffle=False,
         pin_memory=False,
     )
-
-
-def try_torch_operation(torch_op, input_val):
-    return torch_op(input_val) if torch.is_tensor(input_val) else input_val
 
 
 def get_labels_to_indices(labels):

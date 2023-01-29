@@ -149,8 +149,8 @@ class TestCrossBatchMemory(unittest.TestCase):
                     )
                     for i in range(10):
                         if test_enqueue_mask:
-                            enqueue_mask = torch.arange(memory_size, memory_size * 2)
-                            not_enqueue_mask = torch.arange(memory_size)
+                            enqueue_mask = torch.zeros(memory_size * 2).bool()
+                            enqueue_mask[memory_size:] = True
                             batch_size = memory_size * 2
                         else:
                             enqueue_mask = None
@@ -163,8 +163,8 @@ class TestCrossBatchMemory(unittest.TestCase):
                         labels = torch.randint(0, 4, (batch_size,)).to(TEST_DEVICE)
 
                         if test_enqueue_mask:
-                            not_enqueue_emb = embeddings[not_enqueue_mask]
-                            not_enqueue_labels = labels[not_enqueue_mask]
+                            not_enqueue_emb = embeddings[~enqueue_mask]
+                            not_enqueue_labels = labels[~enqueue_mask]
                             enqueue_emb = embeddings[enqueue_mask]
                             enqueue_labels = labels[enqueue_mask]
 
@@ -177,7 +177,7 @@ class TestCrossBatchMemory(unittest.TestCase):
                                 not_enqueue_labels,
                                 pairs,
                                 enqueue_emb,
-                                enqueue_mask,
+                                enqueue_labels,
                             )
                         else:
                             inner_loss_val = inner_loss(embeddings, labels)
@@ -355,7 +355,8 @@ class TestCrossBatchMemory(unittest.TestCase):
                     q = self.loss.queue_idx
                     B = enqueue_batch_size if test_enqueue_mask else batch_size
                     if test_enqueue_mask:
-                        enqueue_mask = torch.arange(enqueue_batch_size) * 2
+                        enqueue_mask = torch.zeros(batch_size).bool()
+                        enqueue_mask[:-2:2] = True
                     else:
                         enqueue_mask = None
 

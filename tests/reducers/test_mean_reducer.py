@@ -2,7 +2,7 @@ import unittest
 
 import torch
 
-from pytorch_metric_learning.reducers import MeanReducer
+from pytorch_metric_learning.reducers import MeanReducer, SumReducer
 
 from .. import TEST_DEVICE, TEST_DTYPES
 
@@ -10,6 +10,7 @@ from .. import TEST_DEVICE, TEST_DTYPES
 class TestMeanReducer(unittest.TestCase):
     def test_mean_reducer(self):
         reducer = MeanReducer()
+        sum_reducer = SumReducer()
         batch_size = 100
         embedding_size = 64
         for dtype in TEST_DTYPES:
@@ -41,4 +42,8 @@ class TestMeanReducer(unittest.TestCase):
                 }
                 output = reducer(loss_dict, embeddings, labels)
                 correct_output = torch.mean(losses)
+                self.assertTrue(output == correct_output)
+
+                output = sum_reducer(loss_dict, embeddings, labels)
+                correct_output = torch.sum(losses)
                 self.assertTrue(output == correct_output)

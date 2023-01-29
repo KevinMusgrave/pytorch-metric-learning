@@ -18,6 +18,7 @@ nav:
     - How to extend this library:
       - Custom losses: extend/losses.md
       - Custom miners: extend/miners.md
+    - Frequently Asked Questions: faq.md
 theme:
   name: 'material'
   palette:
@@ -26,6 +27,8 @@ theme:
   logo: imgs/TinyLogo.png
   favicon: imgs/Favicon.png
 markdown_extensions:
+  - admonition
+  - pymdownx.details
   - pymdownx.highlight
   - pymdownx.superfences 
   - toc:

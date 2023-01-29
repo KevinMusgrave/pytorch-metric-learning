@@ -36,9 +36,16 @@ class TestArcFaceLoss(unittest.TestCase):
 
             for i, c in enumerate(labels):
                 acos = torch.acos(torch.clamp(logits[i, c], -1, 1))
-                logits[i, c] = torch.cos(
-                    acos + torch.tensor(np.radians(margin), dtype=dtype).to(TEST_DEVICE)
-                )
+                if acos <= (np.pi - np.radians(margin)):
+                    logits[i, c] = torch.cos(
+                        acos
+                        + torch.tensor(np.radians(margin), dtype=dtype).to(TEST_DEVICE)
+                    )
+                else:
+                    mg = np.radians(margin)
+                    logits[i, c] -= torch.tensor(mg * np.sin(mg), dtype=dtype).to(
+                        TEST_DEVICE
+                    )
 
             correct_loss = F.cross_entropy(logits * scale, labels.to(TEST_DEVICE))
 

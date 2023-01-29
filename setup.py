@@ -9,15 +9,17 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 extras_require_with_hooks = [
-    "record-keeper >= 0.9.31",
+    "record-keeper >= 0.9.32",
     "faiss-gpu >= 1.6.3",
     "tensorboard",
 ]
 extras_require_with_hooks_cpu = [
-    "record-keeper >= 0.9.31",
+    "record-keeper >= 0.9.32",
     "faiss-cpu >= 1.6.3",
     "tensorboard",
 ]
+extras_require_docs = ["mkdocs-material"]
+extras_require_dev = ["black", "isort", "nbqa", "flake8"]
 
 setuptools.setup(
     name="pytorch-metric-learning",
@@ -40,10 +42,11 @@ setuptools.setup(
         "scikit-learn",
         "tqdm",
         "torch >= 1.6.0",
-        "torchvision",
     ],
     extras_require={
         "with-hooks": extras_require_with_hooks,
         "with-hooks-cpu": extras_require_with_hooks_cpu,
+        "docs": extras_require_docs,
+        "dev": extras_require_dev,
     },
 )

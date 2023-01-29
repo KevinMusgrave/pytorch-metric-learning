@@ -17,6 +17,14 @@ def normalize(embeddings):
 
 
 class TestCentroidTripletLoss(unittest.TestCase):
+    def test_indices_tuple_failure(self):
+        loss_fn = CentroidTripletLoss()
+        for labels_arr in [[0, 0, 0, 0, 0, 0, 0, 0, 1], [0, 0, 1, 1, 1, 2, 2, 3]]:
+            embeddings = torch.randn(len(labels_arr), 32, device=TEST_DEVICE)
+            labels = torch.tensor(labels_arr, device=TEST_DEVICE)
+            with self.assertRaises(ValueError):
+                loss_fn(embeddings, labels)
+
     def test_centroid_triplet_loss(self):
         for dtype in TEST_DTYPES:
             embedding_angles = [0, 10, 20, 30, 40, 50]

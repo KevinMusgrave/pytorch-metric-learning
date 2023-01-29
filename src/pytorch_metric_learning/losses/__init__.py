@@ -7,6 +7,7 @@ from .contrastive_loss import ContrastiveLoss
 from .cosface_loss import CosFaceLoss
 from .fast_ap_loss import FastAPLoss
 from .generic_pair_loss import GenericPairLoss
+from .instance_loss import InstanceLoss
 from .intra_pair_variance_loss import IntraPairVarianceLoss
 from .large_margin_softmax_loss import LargeMarginSoftmaxLoss
 from .lifted_structure_loss import GeneralizedLiftedStructureLoss, LiftedStructureLoss
@@ -22,6 +23,7 @@ from .proxy_losses import ProxyNCALoss
 from .signal_to_noise_ratio_losses import SignalToNoiseRatioContrastiveLoss
 from .soft_triple_loss import SoftTripleLoss
 from .sphereface_loss import SphereFaceLoss
+from .subcenter_arcface_loss import SubCenterArcFaceLoss
 from .supcon_loss import SupConLoss
 from .triplet_margin_loss import TripletMarginLoss
 from .tuplet_margin_loss import TupletMarginLoss

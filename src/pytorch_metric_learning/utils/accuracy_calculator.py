@@ -1,6 +1,3 @@
-#! /usr/bin/env python3
-
-
 import torch
 from sklearn.metrics import adjusted_mutual_info_score, normalized_mutual_info_score
 
@@ -37,9 +34,11 @@ def get_relevance_mask(
     gt_labels,
     embeddings_come_from_same_source,
     label_counts,
-    label_comparison_fn,
 ):
     relevance_mask = torch.zeros(size=shape, dtype=torch.bool, device=gt_labels.device)
+    count_per_query = torch.zeros(
+        len(gt_labels), dtype=torch.long, device=gt_labels.device
+    )
 
     for label, count in zip(*label_counts):
         matching_rows = torch.where(
@@ -47,7 +46,8 @@ def get_relevance_mask(
         )[0]
         max_column = count - 1 if embeddings_come_from_same_source else count
         relevance_mask[matching_rows, :max_column] = True
-    return relevance_mask
+        count_per_query[matching_rows] = max_column
+    return relevance_mask, count_per_query
 
 
 def r_precision(
@@ -59,12 +59,11 @@ def r_precision(
     return_per_class,
     label_comparison_fn,
 ):
-    relevance_mask = get_relevance_mask(
+    relevance_mask, _ = get_relevance_mask(
         knn_labels.shape[:2],
         gt_labels,
         embeddings_come_from_same_source,
         label_counts,
-        label_comparison_fn,
     )
     same_label = label_comparison_fn(gt_labels, knn_labels)
     matches_per_row = torch.sum(same_label * relevance_mask, dim=1)
@@ -81,31 +80,32 @@ def mean_average_precision(
     knn_labels,
     gt_labels,
     embeddings_come_from_same_source,
+    label_counts,
     avg_of_avgs,
     return_per_class,
     label_comparison_fn,
-    relevance_mask=None,
     at_r=False,
 ):
     device = gt_labels.device
     num_samples, num_k = knn_labels.shape[:2]
-    relevance_mask = (
-        torch.ones((num_samples, num_k), dtype=torch.bool, device=device)
-        if relevance_mask is None
-        else relevance_mask
+    relevance_mask, count_per_query = get_relevance_mask(
+        knn_labels.shape[:2],
+        gt_labels,
+        embeddings_come_from_same_source,
+        label_counts,
+    )
+    knn_mask = (
+        relevance_mask
+        if at_r
+        else torch.ones((num_samples, num_k), dtype=torch.bool, device=device)
     )
     is_same_label = label_comparison_fn(gt_labels, knn_labels)
-    equality = is_same_label * relevance_mask
+    equality = is_same_label * knn_mask
     cumulative_correct = torch.cumsum(equality, dim=1)
     k_idx = torch.arange(1, num_k + 1, device=device).repeat(num_samples, 1)
     precision_at_ks = (cumulative_correct * equality).type(torch.float64) / k_idx
-    summed_precision_per_row = torch.sum(precision_at_ks * relevance_mask, dim=1)
-    if at_r:
-        max_possible_matches_per_row = torch.sum(relevance_mask, dim=1)
-    else:
-        max_possible_matches_per_row = torch.sum(equality, dim=1)
-        max_possible_matches_per_row[max_possible_matches_per_row == 0] = 1
-    accuracy_per_sample = summed_precision_per_row / max_possible_matches_per_row
+    summed_precision_per_row = torch.sum(precision_at_ks * knn_mask, dim=1)
+    accuracy_per_sample = summed_precision_per_row / count_per_query
     return maybe_get_avg_of_avgs(
         accuracy_per_sample, gt_labels, avg_of_avgs, return_per_class
     )
@@ -134,34 +134,6 @@ def mean_reciprocal_rank(
     indices = indices.flatten()
 
     return maybe_get_avg_of_avgs(indices, gt_labels, avg_of_avgs, return_per_class)
-
-
-def mean_average_precision_at_r(
-    knn_labels,
-    gt_labels,
-    embeddings_come_from_same_source,
-    label_counts,
-    avg_of_avgs,
-    return_per_class,
-    label_comparison_fn,
-):
-    relevance_mask = get_relevance_mask(
-        knn_labels.shape[:2],
-        gt_labels,
-        embeddings_come_from_same_source,
-        label_counts,
-        label_comparison_fn,
-    )
-    return mean_average_precision(
-        knn_labels,
-        gt_labels,
-        embeddings_come_from_same_source,
-        avg_of_avgs,
-        return_per_class,
-        label_comparison_fn,
-        relevance_mask=relevance_mask,
-        at_r=True,
-    )
 
 
 def precision_at_k(
@@ -357,7 +329,7 @@ class AccuracyCalculator:
         )
         if knn_labels is None:
             return nan_accuracy(label_counts[0], self.return_per_class)
-        return mean_average_precision_at_r(
+        return mean_average_precision(
             knn_labels,
             query_labels[:, None],
             embeddings_come_from_same_source,
@@ -365,6 +337,7 @@ class AccuracyCalculator:
             self.avg_of_avgs,
             self.return_per_class,
             self.label_comparison_fn,
+            at_r=True,
         )
 
     def calculate_mean_average_precision(
@@ -386,6 +359,7 @@ class AccuracyCalculator:
             knn_labels,
             query_labels[:, None],
             embeddings_come_from_same_source,
+            label_counts,
             self.avg_of_avgs,
             self.return_per_class,
             self.label_comparison_fn,
@@ -451,6 +425,18 @@ class AccuracyCalculator:
             c_f.numpy_to_torch(x).to(self.device).type(torch.float)
             for x in [query, reference, query_labels, reference_labels]
         ]
+
+        if len(query) != len(query_labels) or len(reference) != len(reference_labels):
+            raise ValueError("embeddings and labels must have the same length")
+
+        if embeddings_come_from_same_source and not (
+            torch.allclose(query, reference[: len(query)])
+            and torch.allclose(query_labels, reference_labels[: len(query)])
+        ):
+            raise ValueError(
+                "When embeddings_come_from_same_source is True, the first len(query) elements of reference must be equal to query.\n"
+                "Likewise, the first len(query_labels) elements of reference_lbels must be equal to query_labels.\n"
+            )
 
         self.curr_function_dict = self.get_function_dict(include, exclude)
 

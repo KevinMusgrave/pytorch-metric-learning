@@ -34,7 +34,7 @@ class TestInference(unittest.TestCase):
     def setUpClass(cls):
         trunk = torchvision.models.resnet18(pretrained=True)
         trunk.fc = common_functions.Identity()
-        trunk = torch.nn.DataParallel(trunk.to(TEST_DEVICE))
+        trunk = trunk.to(TEST_DEVICE)
 
         cls.model = trunk
 
@@ -59,15 +59,17 @@ class TestInference(unittest.TestCase):
         torch.cuda.empty_cache()
 
     def test_untrained_indexer(self):
-        inference_model = InferenceModel(trunk=self.model)
-        with self.assertRaises(RuntimeError):
-            inference_model.get_nearest_neighbors(self.dataset[0][0], k=10)
+        inference_model = InferenceModel(trunk=self.model, data_device=TEST_DEVICE)
+        with self.assertRaises(ValueError):
+            inference_model.get_nearest_neighbors(self.dataset[0][0].unsqueeze(0), k=10)
 
     def test_get_nearest_neighbors(self):
         test_filename = "test_inference.index"
         for indexer_input in [self.train_vectors, self.dataset]:
             for load_from_file in [False, True]:
-                inference_model = InferenceModel(trunk=self.model)
+                inference_model = InferenceModel(
+                    trunk=self.model, data_device=TEST_DEVICE
+                )
                 if load_from_file:
                     inference_model.load_knn_func(test_filename)
                 else:
@@ -79,7 +81,7 @@ class TestInference(unittest.TestCase):
         os.remove(test_filename)
 
     def test_add_to_indexer(self):
-        inference_model = InferenceModel(trunk=self.model)
+        inference_model = InferenceModel(trunk=self.model, data_device=TEST_DEVICE)
         inference_model.knn_func.index = faiss.IndexFlatL2(512)
         inference_model.add_to_knn(self.dataset)
         self.helper_assertions(inference_model)
@@ -87,10 +89,10 @@ class TestInference(unittest.TestCase):
     def test_list_of_text(self):
         model = TextModel()
         dataset = TextDataset()
-        inference_model = InferenceModel(trunk=model)
+        inference_model = InferenceModel(trunk=model, data_device=TEST_DEVICE)
         inference_model.train_knn(dataset)
         inference_model.add_to_knn([["test1", "test2"], ["test3", "test4"]])
-        result = inference_model.get_nearest_neighbors(["dog", "cat"], k=10)
+        inference_model.get_nearest_neighbors(["dog", "cat"], k=10)
 
     def helper_assertions(self, inference_model):
         distances, indices = inference_model.get_nearest_neighbors(

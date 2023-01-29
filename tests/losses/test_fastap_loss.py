@@ -121,10 +121,10 @@ class OriginalImplementationFastAP(torch.autograd.Function):
         dist2 = Variable(ctx.dist2, requires_grad=False)
         I_pos = Variable(ctx.I_pos, requires_grad=False)
         I_neg = Variable(ctx.I_neg, requires_grad=False)
-        h = Variable(ctx.h, requires_grad=False)
+        h = Variable(ctx.h, requires_grad=False)  # noqa: F841
         H = Variable(ctx.H, requires_grad=False)
         h_pos = Variable(ctx.h_pos, requires_grad=False)
-        h_neg = Variable(ctx.h_neg, requires_grad=False)
+        h_neg = Variable(ctx.h_neg, requires_grad=False)  # noqa: F841
         H_pos = Variable(ctx.H_pos, requires_grad=False)
         N_pos = Variable(ctx.N_pos, requires_grad=False)
 

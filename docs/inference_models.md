@@ -119,12 +119,13 @@ Uses a [distance function](distances.md) to determine similarity between datapoi
 
 ```python
 from pytorch_metric_learning.utils.inference import CustomKNN
-CustomKNN(distance)
+CustomKNN(distance, batch_size=None)
 ```
 
 **Parameters**:
 
 * **distance**: A [distance function](distances.md)
+* **batch_size**: If specified, k-nn will be computed incrementally. For example, if there are 50000 reference embeddings and the batch size is 32, then CustomKNN will iterate through all embeddings, using distance matrices of size (32, 50000). The final result is equal to the  ```batch_size=None``` setting, but saves memory because the full (50000, 50000) matrix does not need to be computed all at once.
 
 Example:
 ```python

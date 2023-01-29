@@ -360,7 +360,7 @@ class TestCrossBatchMemoryWrapper(unittest.TestCase):
                         enqueue_idx = None
 
                     self.assertTrue(q == (i * B) % self.memory_size)
-                    loss = self.loss(embeddings, labels, enqueue_idx=enqueue_idx)
+                    self.loss(embeddings, labels, enqueue_idx=enqueue_idx)
 
                     start_idx = q
                     if q + B == self.memory_size:
@@ -436,7 +436,7 @@ class TestCrossBatchMemoryWrapper(unittest.TestCase):
                     .type(dtype)
                 )
                 labels = torch.arange(batch_size).to(TEST_DEVICE)
-                loss = self.loss(embeddings, labels)
+                self.loss(embeddings, labels)
 
                 a1, p, a2, n = lmu.get_all_pairs_indices(labels, self.loss.label_memory)
                 self.assertTrue(
@@ -502,7 +502,6 @@ class TestCrossBatchMemoryWrapper(unittest.TestCase):
                         indices_tuple, self.loss.curr_batch_idx, self.loss.memory_size
                     )
                     a1, p, a2, n = self.loss.create_indices_tuple(
-                        batch_size,
                         embeddings,
                         labels,
                         self.loss.embedding_memory,
@@ -587,6 +586,26 @@ class TestCrossBatchMemoryWrapper(unittest.TestCase):
         assert set(loaded_loss_names) == set(supported_losses)
 
         return loss_fns
+
+    def test_reset_queue(self):
+        self.loss = CrossBatchMemory(
+            loss=ContrastiveLoss(),
+            embedding_size=self.embedding_size,
+            memory_size=self.memory_size,
+        )
+
+        init_emb = torch.zeros(self.memory_size, self.embedding_size)
+        init_label = torch.zeros(self.memory_size).long()
+        self.assertTrue(torch.equal(self.loss.embedding_memory, init_emb))
+        self.assertTrue(torch.equal(self.loss.label_memory, init_label))
+
+        self.loss(torch.randn(32, 128), torch.randint(0, 2, size=(32,)))
+        self.assertTrue(not torch.equal(self.loss.embedding_memory, init_emb))
+        self.assertTrue(not torch.equal(self.loss.label_memory, init_label))
+
+        self.loss.reset_queue()
+        self.assertTrue(torch.equal(self.loss.embedding_memory, init_emb))
+        self.assertTrue(torch.equal(self.loss.label_memory, init_label))
 
 
 if __name__ == "__main__":

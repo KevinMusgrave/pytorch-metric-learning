@@ -43,6 +43,8 @@ class CrossBatchMemoryWrapper(BaseLossWrapper, ModuleWithRecords):
             raise Exception(f"CrossBatchMemoryWrapper not supported for {loss_name}")
 
     def forward(self, embeddings, labels, indices_tuple=None, enqueue_idx=None):
+        if indices_tuple is not None and enqueue_idx is not None:
+            raise ValueError("indices_tuple and enqueue_idx are mutually exclusive")
         if enqueue_idx is not None:
             assert len(enqueue_idx) <= len(self.embedding_memory)
             assert len(enqueue_idx) < len(embeddings)
@@ -71,7 +73,6 @@ class CrossBatchMemoryWrapper(BaseLossWrapper, ModuleWithRecords):
             labels_for_queue = labels
             do_remove_self_comparisons = True
 
-        batch_size = len(embeddings)
         queue_batch_size = len(emb_for_queue)
         self.add_to_memory(emb_for_queue, labels_for_queue, queue_batch_size)
 
@@ -83,7 +84,6 @@ class CrossBatchMemoryWrapper(BaseLossWrapper, ModuleWithRecords):
             L_mem = self.label_memory
 
         indices_tuple = self.create_indices_tuple(
-            batch_size,
             embeddings,
             labels,
             E_mem,
@@ -110,7 +110,6 @@ class CrossBatchMemoryWrapper(BaseLossWrapper, ModuleWithRecords):
 
     def create_indices_tuple(
         self,
-        batch_size,
         embeddings,
         labels,
         E_mem,
@@ -142,7 +141,9 @@ class CrossBatchMemoryWrapper(BaseLossWrapper, ModuleWithRecords):
         return indices_tuple
 
     def reset_queue(self):
-        self.embedding_memory = torch.zeros(self.memory_size, self.embedding_size)
-        self.label_memory = torch.zeros(self.memory_size).long()
+        self.register_buffer(
+            "embedding_memory", torch.zeros(self.memory_size, self.embedding_size)
+        )
+        self.register_buffer("label_memory", torch.zeros(self.memory_size).long())
         self.has_been_filled = False
         self.queue_idx = 0

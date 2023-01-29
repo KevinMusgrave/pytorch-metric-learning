@@ -61,8 +61,6 @@ def numpy_to_torch(v):
 
 
 def to_numpy(v):
-    if is_list_or_tuple(v):
-        return np.stack([to_numpy(sub_v) for sub_v in v], axis=1)
     try:
         return v.cpu().numpy()
     except AttributeError:
@@ -84,7 +82,10 @@ def get_hierarchy_label(batch_labels, hierarchy_level):
 
 
 def map_labels(label_map, labels):
-    labels = to_numpy(labels)
+    if is_list_or_tuple(labels):
+        labels = np.stack([to_numpy(sub) for sub in labels], axis=1)
+    else:
+        labels = to_numpy(labels)
     if labels.ndim == 2:
         new_labels = np.zeros(labels.shape, dtype=int)
         for h in range(labels.shape[1]):
@@ -394,9 +395,9 @@ def latest_version(folder, string_to_glob="trunk_*.pth", best=False):
     if items == []:
         return (0, None)
     model_regex = (
-        regex_wrapper("best[0-9]+\.pth$") if best else regex_wrapper("[0-9]+\.pth$")
+        regex_wrapper(r"best[0-9]+\.pth$") if best else regex_wrapper(r"[0-9]+\.pth$")
     )
-    epoch_regex = regex_wrapper("[0-9]+\.pth$")
+    epoch_regex = regex_wrapper(r"[0-9]+\.pth$")
     items = [x for x in items if model_regex.search(x)]
     version = [int(epoch_regex.findall(x)[-1].split(".")[0]) for x in items]
     resume_epoch = max(version)
@@ -409,13 +410,9 @@ def return_input(x):
 
 
 def check_shapes(embeddings, labels):
-    if embeddings.shape[0] != labels.shape[0]:
+    if labels is not None and embeddings.shape[0] != labels.shape[0]:
         raise ValueError("Number of embeddings must equal number of labels")
-    if embeddings.ndim != 2:
-        raise ValueError(
-            "embeddings must be a 2D tensor of shape (batch_size, embedding_size)"
-        )
-    if labels.ndim != 1:
+    if labels is not None and labels.ndim != 1:
         raise ValueError("labels must be a 1D tensor of shape (batch_size,)")
 
 
@@ -498,7 +495,8 @@ def set_ref_emb(embeddings, labels, ref_emb, ref_labels):
     if ref_emb is not None:
         if not torch.is_tensor(ref_labels):
             TypeError("if ref_emb is given, then ref_labels must also be given")
-        ref_labels = to_device(ref_labels, ref_emb)
+        if ref_labels is not None:
+            ref_labels = to_device(ref_labels, ref_emb)
     else:
         ref_emb, ref_labels = embeddings, labels
     check_shapes(ref_emb, ref_labels)
@@ -513,6 +511,16 @@ def ref_not_supported(embeddings, labels, ref_emb, ref_labels):
 def indices_tuple_not_supported(indices_tuple):
     if indices_tuple is not None:
         raise ValueError("indices_tuple is not supported for this loss function")
+
+
+def labels_required(labels):
+    if labels is None:
+        raise ValueError("labels are required for this loss function")
+
+
+def labels_or_indices_tuple_required(labels, indices_tuple):
+    if labels is None and indices_tuple is None:
+        raise ValueError("labels and indices_tuple cannot both be None")
 
 
 def concatenate_indices_tuples(it1, it2):

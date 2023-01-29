@@ -17,6 +17,27 @@ miner_output = miner_func(embeddings, labels) # in your training for-loop
 loss = loss_func(embeddings, labels, miner_output)
 ```
 
+For some losses, you don't need to pass in labels if you are already passing in pair/triplet indices:
+```python
+loss = loss_func(embeddings, indices_tuple=pairs)
+# it also works with ref_emb
+loss = loss_func(embeddings, indices_tuple=pairs, ref_emb=ref_emb)
+```
+??? note "Losses for which you can pass in `indices_tuple` without `labels`"
+    - CircleLoss
+    - ContrastiveLoss
+    - IntraPairVarianceLoss
+    - GeneralizedLiftedStructureLoss
+    - LiftedStructureLoss
+    - MarginLoss
+    - MultiSimilarityLoss
+    - NTXentLoss
+    - SignalToNoiseRatioContrastiveLoss
+    - SupConLoss
+    - TripletMarginLoss
+    - TupletMarginLoss
+
+
 You can specify how losses get reduced to a single value by using a [reducer](reducers.md):
 ```python
 from pytorch_metric_learning import reducers
@@ -25,7 +46,7 @@ loss_func = losses.SomeLoss(reducer=reducer)
 loss = loss_func(embeddings, labels) # in your training for-loop
 ```
 
-For tuple losses, can separate the source of anchors and positives/negatives:
+For tuple losses, you can separate the source of anchors and positives/negatives:
 ```python
 loss_func = losses.SomeLoss()
 # anchors will come from embeddings
@@ -83,9 +104,9 @@ losses.ArcFaceLoss(num_classes, embedding_size, margin=28.6, scale=64, **kwargs)
 
 **Parameters**:
 
-* **margin**: The angular margin penalty in degrees. In the above equation, ```m = radians(margin)```. The paper uses 0.5 radians, which is 28.6 degrees.
 * **num_classes**: The number of classes in your training dataset.
 * **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set ```embedding_size``` to 512.
+* **margin**: The angular margin penalty in degrees. In the above equation, ```m = radians(margin)```. The paper uses 0.5 radians, which is 28.6 degrees.
 * **scale**: This is ```s``` in the above equation. The paper uses 64.
 
 **Other info**: 
@@ -147,7 +168,7 @@ losses.BaseMetricLossFunction(collect_stats = False,
 
 **Required Implementations**:
 ```python
-def compute_loss(self, embeddings, labels, indices_tuple=None):
+def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
     raise NotImplementedError
 ```
 
@@ -164,6 +185,17 @@ losses.CentroidTripletLoss(margin=0.05,
                             triplets_per_anchor="all",
                             **kwargs)
 ```
+
+Unlike many other losses, the instance of this class can only be called as the following:
+
+```python
+from pytorch_metric_learning import losses
+loss_func = losses.CentroidTripletLoss()
+loss = loss_func(embeddings, labels) 
+```
+
+and does not allow for use of `ref_embs`, `ref_labels`. Furthermore, there must be at least 2 embeddings associated with each label. Refer to [this issue](https://github.com/KevinMusgrave/pytorch-metric-learning/issues/451) for details.
+
 **Parameters**:
 
 See [TripletMarginLoss](losses.md#tripletmarginloss)
@@ -186,15 +218,11 @@ losses.CircleLoss(m=0.4, gamma=80, **kwargs)
 
 **Equations**:
 
-![circle_loss_equation1](imgs/circle_loss_equation1.png){: style="height:150px"}
+![circle_loss_equation1](imgs/circle_loss_equation1.png){: style="height:60px"}
 
 where
 
 ![circle_loss_equation2](imgs/circle_loss_equation2.png){: style="height:70px"}
-
-![circle_loss_equation7](imgs/circle_loss_equation7.png){: style="height:25px"}
-
-![circle_loss_equation8](imgs/circle_loss_equation8.png){: style="height:25px"}
 
 ![circle_loss_equation3](imgs/circle_loss_equation3.png){: style="height:25px"}
 
@@ -274,9 +302,9 @@ losses.CosFaceLoss(num_classes, embedding_size, margin=0.35, scale=64, **kwargs)
 
 **Parameters**:
 
-* **margin**: The cosine margin penalty (m in the above equation). The paper used values between 0.25 and 0.45.
 * **num_classes**: The number of classes in your training dataset.
 * **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set ```embedding_size``` to 512.
+* **margin**: The cosine margin penalty (m in the above equation). The paper used values between 0.25 and 0.45.
 * **scale**: This is ```s``` in the above equation. The paper uses 64.
 
 **Other info**: 
@@ -305,6 +333,13 @@ loss_optimizer.step()
 * **loss**: The loss per element in the batch. Reduction type is ```"element"```.
 
 
+
+**Reset queue**
+
+The queue can be cleared like this:
+```python
+loss_fn.reset_queue()
+```
 
 ## FastAPLoss
 [Deep Metric Learning to Rank](http://openaccess.thecvf.com/content_CVPR_2019/papers/Cakir_Deep_Metric_Learning_to_Rank_CVPR_2019_paper.pdf){target=_blank}
@@ -373,6 +408,17 @@ losses.GeneralizedLiftedStructureLoss(neg_margin=1, pos_margin=0, **kwargs)
 **Reducer input**:
 
 * **loss**: The loss per element in the batch. Reduction type is ```"element"```.
+
+## InstanceLoss
+[Dual-Path Convolutional Image-Text Embeddings with Instance Loss](https://arxiv.org/pdf/1711.05535.pdf)
+```python
+losses.InstanceLoss(gamma=64, **kwargs)
+```
+
+**Parameters**:
+
+* **gamma**: The cosine similarity matrix is scaled by this amount.
+
 
 ## IntraPairVarianceLoss
 [Deep Metric Learning with Tuplet Margin Loss](http://openaccess.thecvf.com/content_ICCV_2019/papers/Yu_Deep_Metric_Learning_With_Tuplet_Margin_Loss_ICCV_2019_paper.pdf){target=_blank}
@@ -897,6 +943,45 @@ loss_optimizer.step()
 **Reducer input**:
 
 * **loss**: The loss per element in the batch. Reduction type is ```"element"```.
+
+
+## SubCenterArcFaceLoss 
+[Sub-center ArcFace: Boosting Face Recognition by Large-scale Noisy Web Faces](https://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123560715.pdf){target=_blank}
+
+This loss extends [ArcFaceLoss](losses.md#arcfaceloss). It uses multiple sub centers per class, instead of just a single center, hence the name Sub-center ArcFace.
+
+```python
+losses.SubCenterArcFaceLoss(
+    num_classes, 
+    embedding_size, 
+    margin=28.6, 
+    scale=64, 
+    sub_centers=3, 
+    **kwargs
+)
+```
+
+**Parameters**:
+
+* **sub_centers**: The number of sub centers per class.
+
+See [ArcFaceLoss](losses.md#arcfaceloss) for a description of the other parameters.
+
+
+**Other info**: 
+
+* This loss **requires an optimizer**. See [ArcFaceLoss](losses.md#arcfaceloss) for details.
+* See [ArcFaceLoss](losses.md#arcfaceloss) for default distance, reducer, and reducer input.
+
+
+**Getting outliers and dominant centers**
+
+Outliers and dominant centers can be computed as described in the paper.
+```python
+outliers, dominant_centers = loss_func.get_outliers(
+    embeddings, labels, threshold=75, return_dominant_centers=True
+)
+```
 
 
 ## SupConLoss

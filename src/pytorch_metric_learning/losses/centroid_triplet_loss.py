@@ -1,6 +1,5 @@
 from collections import defaultdict
 
-import numpy as np
 import torch
 
 from ..reducers import AvgNonZeroReducer
@@ -21,7 +20,7 @@ class CentroidTripletLoss(BaseMetricLossFunction):
         swap=False,
         smooth_loss=False,
         triplets_per_anchor="all",
-        **kwargs
+        **kwargs,
     ):
         super().__init__(**kwargs)
         self.triplet_loss = TripletMarginLoss(
@@ -29,12 +28,13 @@ class CentroidTripletLoss(BaseMetricLossFunction):
             swap=swap,
             smooth_loss=smooth_loss,
             triplets_per_anchor=triplets_per_anchor,
-            **kwargs
+            **kwargs,
         )
 
     def compute_loss(
         self, embeddings, labels, indices_tuple=None, ref_emb=None, ref_labels=None
     ):
+        c_f.labels_required(labels)
         c_f.indices_tuple_not_supported(indices_tuple)
         c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
         """
@@ -43,23 +43,24 @@ class CentroidTripletLoss(BaseMetricLossFunction):
         """
         masks, class_masks, labels_list, query_indices = self.create_masks_train(labels)
 
-        P = len(labels_list)
-        M = max([len(instances) for instances in labels_list])
+        P = len(labels_list)  # number of classes
+        M = max(
+            [len(instances) for instances in labels_list]
+        )  # max number of samples per class
         DIM = embeddings.size(-1)
 
-        """
-        "...each sample from S𝑘 is used as a query 𝑞𝑘 and the rest 
-        𝑀 −1 samples are used to build a prototype centroid"
-        i.e. for each class k of M items, we make M pairs of (query, centroid),
-        making a total of P*M total pairs.
-        masks = (M*P x len(embeddings)) matrix
-        labels_list[i] = indicies of embeddings belonging to ith class
-        centroids_emd.shape == (M*P, DIM)
-        i.e.    centroids_emb[0] == centroid vector for 0th class, where the first embedding is the query vector
-                centroids_emb[1] == centroid vector for 0th class, where the second embedding is the query vector
-                centroids_emb[M+1] == centroid vector for 1th class, where the first embedding is the query vector
-        """
+        # "...each sample from S𝑘 is used as a query 𝑞𝑘 and the rest
+        # 𝑀 −1 samples are used to build a prototype centroid"
+        # i.e. for each class k of M items, we make M pairs of (query, centroid),
+        # making a total of P*M total pairs.
+        # masks = (M*P x len(embeddings)) matrix
+        # labels_list[i] = indicies of embeddings belonging to ith class
+        # centroids_emd.shape == (M*P, DIM)
+        # i.e.    centroids_emb[0] == centroid vector for 0th class, where the first embedding is the query vector
+        #         centroids_emb[1] == centroid vector for 0th class, where the second embedding is the query vector
+        #         centroids_emb[M+1] == centroid vector for 1th class, where the first embedding is the query vector
 
+        # masks, class_masks but 1.0 for True and 0.0 for False, for counting purposes.
         masks_float = masks.type(embeddings.type()).to(embeddings.device)
         class_masks_float = class_masks.type(embeddings.type()).to(embeddings.device)
         inst_counts = masks_float.sum(-1)
@@ -94,6 +95,16 @@ class CentroidTripletLoss(BaseMetricLossFunction):
         embeddings_collect = []
         tuple_indices_collect = []
         starting_idx = 0
+
+        """
+        valid_mask[i][j] is True if jth class has an ith sample.
+        Example: [0, 0, 1, 1, 1, 2, 2, 3]
+        valid_mask= [
+                        [ True,  True,  True, True],
+                        [ True,  True,  True, False],
+                        [False,  True, False, False]
+                    ]
+        """
         for inst_idx in range(M):
             one_mask = valid_mask[inst_idx]
             if torch.sum(one_mask) > 1:
@@ -118,6 +129,7 @@ class CentroidTripletLoss(BaseMetricLossFunction):
                 3. negative as so
                 """
                 # make only query vectors be anchor vectors
+
                 indices_tuple = [x[: len(x) // 3] + starting_idx for x in indices_tuple]
 
                 # make only pos_centroids be postive examples
@@ -148,6 +160,24 @@ class CentroidTripletLoss(BaseMetricLossFunction):
         return loss
 
     def create_masks_train(self, class_labels):
+        """Create masks for indexing embeddings and labels.
+
+        Args:
+            class_labels (`torch.Tensor`): Labels for embeddings. (e.g. [0, 0, 1, 1, 1, 2, 2, 3])
+
+        Returns:
+            labels_list (`list`): an organized index of class_labels, where labels_list[i] == list of indices
+                for class i corresponding to class_labels. Example (for labels in Args documentation): `[[0, 1], [2, 3, 4], [5, 6], [7]]`
+            query_indices (`list`): a "foldable", extended version of `labels_list`. Length of query_indices is equal to `len(labels_list) * max([len(i) for i in labels_list]`.
+                For imbalanced labels, it fills with 0: `[0, 1, 0, 2, 3, 4, 5, 6, 0, 7, 0, 0]`
+            masks (`torch.Tensor`): A masking matrix corresponding to `query_indices`, where `len(masks)==len(class_labels)` and `len(masks[0])==len(query_indices)`.
+                `masks[i][j]` is `True` if `query_labels[i]` and `class_labels[j]` are in the same class, `False` otherwise.
+                This is used later where `masks[i]` if a boolean mask over the input embeddings that retrieves those of the same
+                class as the ith embedding.
+            class_masks (`torch.Tensor`): A mask for indexing same-class embeddings. `class_masks[i]` is a boolean row whose values are `True` for input embeddings
+                that belong in class `i`.
+
+        """
         labels_dict = defaultdict(list)
         class_labels = class_labels.detach().cpu().numpy()
         for idx, pid in enumerate(class_labels):
@@ -156,7 +186,14 @@ class CentroidTripletLoss(BaseMetricLossFunction):
         unique_classes = list(labels_dict.keys())
         labels_list = list(labels_dict.values())
         lens_list = [len(item) for item in labels_list]
-        lens_list_cs = np.cumsum(lens_list)
+
+        if min(lens_list) <= 1:
+            singleton_labels = [k for k, v in labels_dict.items() if len(v) == 1]
+            raise ValueError(
+                "There must be at least 2 embeddings for every label, "
+                f"but the following labels have only 1 embedding: {singleton_labels}. "
+                "Refer to the documentation at https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#centroidtripletloss for more details."
+            )
 
         M = max(len(instances) for instances in labels_list)
         P = len(unique_classes)
@@ -171,9 +208,11 @@ class CentroidTripletLoss(BaseMetricLossFunction):
                 if instance_idx < len(class_insts):
                     query_indices.append(class_insts[instance_idx])
                     ones = class_insts[:instance_idx] + class_insts[instance_idx + 1 :]
+                    # ones = class_insts
                     masks[matrix_idx, ones] = 1
                 else:
                     query_indices.append(0)
+
         return masks, class_masks, labels_list, query_indices
 
     def get_default_reducer(self):

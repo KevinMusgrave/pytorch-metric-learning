@@ -326,7 +326,7 @@ class TestBatchEasyHardMiner(unittest.TestCase):
             self.assertTrue(torch.equal(a2, gt["correct_a"]))
             self.assertTrue(any(torch.equal(p, cn) for cn in gt["correct_p"]))
             self.assertTrue(any(torch.equal(n, cn) for cn in gt["correct_n"]))
-        except:
+        except Exception:
             self.assertTrue(torch.equal(a1, gt["correct_a1"]))
             self.assertTrue(torch.equal(a2, gt["correct_a2"]))
             self.assertTrue(any(torch.equal(p, cn) for cn in gt["correct_p"]))

@@ -1,14 +1,11 @@
 # Miners
-Mining functions come in two flavors:
+Mining functions take a batch of ```n``` embeddings and return ```k``` pairs/triplets to be used for calculating the loss:
 
-* **[Subset Batch Miners](miners.md#basesubsetbatchminer)** take a batch of ```N``` embeddings and return a subset ```n``` to be used by a tuple miner, or directly by a loss function. Without a subset batch miner, ```n == N```.
-* **[Tuple Miners](miners.md#basetupleminer)** take a batch of ```n``` embeddings and return ```k``` pairs/triplets to be used for calculating the loss:
-	* Pair miners output a tuple of size 4: (anchors, positives, anchors, negatives).
-	* Triplet miners output a tuple of size 3: (anchors, positives, negatives).
-	* Without a tuple miner, loss functions will by default use all possible pairs/triplets in the batch.
-	* Almost all current miners are tuple miners.
+- Pair miners output a tuple of size 4: (anchors, positives, anchors, negatives).
+- Triplet miners output a tuple of size 3: (anchors, positives, negatives).
+- Without a tuple miner, loss functions will by default use all possible pairs/triplets in the batch.
 
-You might be familiar with the terminology: "online" and "offline" miners. Tuple miners are online, while subset batch miners are a mix between online and offline. Completely offline miners should be implemented as a [PyTorch Sampler](samplers.md).
+You might be familiar with the terminology: "online" and "offline" miners. Tuple miners are online. Offline miners should be implemented as a [PyTorch Sampler](samplers.md).
 
 Tuple miners are used with loss functions as follows:
 
@@ -82,7 +79,7 @@ If you write your own miner, the ```mine``` function should work such that ancho
 See [custom miners](extend/miners.md) for details on how to write your own miner.
 
 ## BaseSubsetBatchMiner
-This extends [BaseMiner](miners.md#baseminer). It outputs indices corresponding to a subset of the input batch. The idea is to use these miners with torch.no_grad(), and with a large input batch size.
+This extends [BaseMiner](miners.md#baseminer). It takes a batch of ```N``` embeddings and return a subset ```n``` to be used by a tuple miner, or directly by a loss function. Without a subset batch miner, ```n == N```. You probably aren't going to use this type of miner.
 ```python
 miners.BaseSubsetBatchMiner(output_batch_size, **kwargs)
 ```
@@ -98,7 +95,7 @@ miners.BaseSubsetBatchMiner(output_batch_size, **kwargs)
 
 Returns positive and negative pairs according to the specified ```pos_strategy``` and ```neg_strategy```.
 
-To implement the loss function described in the paper, use this miner in combination with [```NTXentLoss(temperature=1)```](losses.md#ntxentloss).
+To implement the loss function described in the paper, use this miner in combination with [```NTXentLoss(temperature=0.1)```](losses.md#ntxentloss).
 
 ```python
 miners.BatchEasyHardMiner(

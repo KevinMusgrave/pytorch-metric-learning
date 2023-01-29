@@ -18,6 +18,7 @@ class NCALoss(BaseMetricLossFunction):
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
         if len(embeddings) <= 1:
             return self.zero_losses()
+        c_f.labels_required(labels)
         return self.nca_computation(
             embeddings, ref_emb, labels, ref_labels, indices_tuple
         )

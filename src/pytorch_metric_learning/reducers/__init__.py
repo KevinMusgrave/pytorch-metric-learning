@@ -6,4 +6,5 @@ from .do_nothing_reducer import DoNothingReducer
 from .mean_reducer import MeanReducer
 from .multiple_reducers import MultipleReducers
 from .per_anchor_reducer import PerAnchorReducer
+from .sum_reducer import SumReducer
 from .threshold_reducer import ThresholdReducer

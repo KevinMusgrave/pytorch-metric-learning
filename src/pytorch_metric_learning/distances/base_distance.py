@@ -16,6 +16,7 @@ class BaseDistance(ModuleWithRecords):
 
     def forward(self, query_emb, ref_emb=None):
         self.reset_stats()
+        self.check_shapes(query_emb, ref_emb)
         query_emb_normalized = self.maybe_normalize(query_emb)
         if ref_emb is None:
             ref_emb = query_emb
@@ -87,3 +88,9 @@ class BaseDistance(ModuleWithRecords):
         for k, v in stats_dict.items():
             self.add_to_recordable_attributes(name=k, is_stat=True)
             setattr(self, k, v)
+
+    def check_shapes(self, query_emb, ref_emb):
+        if query_emb.ndim != 2 or (ref_emb is not None and ref_emb.ndim != 2):
+            raise ValueError(
+                "embeddings must be a 2D tensor of shape (batch_size, embedding_size)"
+            )

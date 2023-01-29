@@ -1,0 +1,15 @@
+name: distances
+
+on:
+  pull_request:
+    branches: [ master, dev ]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - '.github/workflows/**'
+
+jobs:
+  call-base-test-workflow:
+    uses: ./.github/workflows/base_test_workflow.yml
+    with:
+      module-to-test: distances

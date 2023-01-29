@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-from ..distances import CosineSimilarity
+from ..distances import BatchedDistance, CosineSimilarity
 from . import common_functions as c_f
 
 try:
@@ -182,6 +182,10 @@ class FaissKNN:
         c_f.LOGGER.info("embedding dimensionality is %d" % d)
         if self.reset_before:
             self.index = self.index_init_fn(d)
+        if self.index is None:
+            raise ValueError(
+                "self.index is None. It needs to be initialized before being used."
+            )
         distances, indices = try_gpu(
             self.index,
             query,
@@ -262,7 +266,7 @@ def try_gpu(index, query, reference, k, is_cuda, gpus):
             gpu_index = convert_to_gpu_index(index, gpus)
     try:
         return add_to_index_and_search(gpu_index, query, reference, k)
-    except (AttributeError, RuntimeError) as e:
+    except (AttributeError, RuntimeError):
         if gpu_condition:
             c_f.LOGGER.warning(
                 f"Using CPU for k-nn search because k = {k} > {max_k_for_gpu}, which is the maximum allowable on GPU."
@@ -281,18 +285,52 @@ def run_pca(x, output_dimensionality):
     return c_f.to_device(torch.from_numpy(mat.apply_py(x)), device=device)
 
 
+def mask_reshape_knn_idx(x, matches_self_idx):
+    return x[~matches_self_idx].view(x.shape[0], -1)
+
+
 def return_results(D, I, embeddings_come_from_same_source):
     if embeddings_come_from_same_source:
-        return D[:, 1:], I[:, 1:]
+        self_idx = torch.arange(len(I), device=I.device)
+        matches_self_idx = I == self_idx.unsqueeze(1)
+        row_has_match = torch.any(matches_self_idx, dim=1)
+        # If every row has a match, then masking will work
+        if not torch.all(row_has_match):
+            # For rows that don't contain the self index
+            # Remove the Nth value by setting matches_self_idx[N] to True
+            matches_self_idx[~row_has_match, -1] = True
+        I = mask_reshape_knn_idx(I, matches_self_idx)
+        D = mask_reshape_knn_idx(D, matches_self_idx)
     return D, I
 
 
+def get_topk(distances, indices, k, get_largest):
+    def fn(mat, s, e):
+        D, I = torch.topk(mat, k, largest=get_largest, dim=1)
+        distances[s:e] = D
+        indices[s:e] = I
+
+    return fn
+
+
 class CustomKNN:
-    def __init__(self, distance):
-        self.distance = distance
+    def __init__(self, distance, batch_size=None):
+        if batch_size:
+            self.distance = BatchedDistance(distance, batch_size=batch_size)
+        else:
+            self.distance = distance
 
     def __call__(self, query, k, reference, embeddings_come_from_same_source=False):
-        mat = self.distance(query, reference)
-        largest = self.distance.is_inverted
-        distances, indices = torch.topk(mat, k, largest=largest, dim=1)
+        if embeddings_come_from_same_source:
+            k = k + 1
+        get_largest = self.distance.is_inverted
+        if isinstance(self.distance, BatchedDistance):
+            device = query.device
+            distances = torch.zeros(len(query), k, device=device)
+            indices = torch.zeros(len(query), k, device=device, dtype=torch.long)
+            self.distance.iter_fn = get_topk(distances, indices, k, get_largest)
+            self.distance(query, reference)
+        else:
+            mat = self.distance(query, reference)
+            distances, indices = torch.topk(mat, k, largest=get_largest, dim=1)
         return return_results(distances, indices, embeddings_come_from_same_source)

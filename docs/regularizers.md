@@ -122,7 +122,7 @@ regularizers.SparseCentersRegularizer(num_classes, centers_per_class, **kwargs)
 
 
 ```python
-regularizers.ZeroMeanRegularizer(num_classes, centers_per_class, **kwargs)
+regularizers.ZeroMeanRegularizer(**kwargs)
 ```
 
 **Equation**

@@ -66,6 +66,19 @@ def get_indices_tuple(labels, ref_labels, embeddings=None, ref_emb=None, miner=N
     return lmu.remove_self_comparisons(indices_tuple, curr_batch_idx, len(ref_labels))
 
 
+def get_corrected_enqueue_idx(enqueue_idx, emb):
+    if enqueue_idx is None:
+        return enqueue_idx
+    enqueue_idx = c_f.to_device(enqueue_idx, device=emb.device)
+    bs = len(emb)
+    e_len = len(enqueue_idx)
+    world_size = torch.distributed.get_world_size()
+    enqueue_idx = torch.cat([enqueue_idx, all_gather(enqueue_idx)], dim=0)
+    for i in range(e_len, e_len * world_size, e_len):
+        enqueue_idx[i:] += bs
+    return enqueue_idx
+
+
 def select_ref_or_regular(regular, ref):
     return regular if ref is None else ref
 
@@ -85,12 +98,18 @@ class DistributedLossWrapper(torch.nn.Module):
         self.efficient = efficient
 
     def forward(
-        self, emb, labels=None, indices_tuple=None, ref_emb=None, ref_labels=None
+        self,
+        emb,
+        labels=None,
+        indices_tuple=None,
+        ref_emb=None,
+        ref_labels=None,
+        enqueue_idx=None,
     ):
         world_size = torch.distributed.get_world_size()
         common_args = [emb, labels, indices_tuple, ref_emb, ref_labels, world_size]
         if isinstance(self.loss, CrossBatchMemory):
-            return self.forward_cross_batch(*common_args)
+            return self.forward_cross_batch(*common_args, enqueue_idx)
         return self.forward_regular_loss(*common_args)
 
     def forward_regular_loss(
@@ -118,7 +137,14 @@ class DistributedLossWrapper(torch.nn.Module):
         return loss * world_size
 
     def forward_cross_batch(
-        self, emb, labels, indices_tuple, ref_emb, ref_labels, world_size
+        self,
+        emb,
+        labels,
+        indices_tuple,
+        ref_emb,
+        ref_labels,
+        world_size,
+        enqueue_idx,
     ):
         if ref_emb is not None or ref_labels is not None:
             raise ValueError(
@@ -126,12 +152,13 @@ class DistributedLossWrapper(torch.nn.Module):
             )
 
         if world_size <= 1:
-            return self.loss(emb, labels, indices_tuple)
+            return self.loss(emb, labels, indices_tuple, enqueue_idx)
 
         all_emb, all_labels, _, _, _ = gather_emb_and_ref(
             emb, labels, ref_emb, ref_labels
         )
-        loss = self.loss(all_emb, all_labels, indices_tuple)
+        enqueue_idx = get_corrected_enqueue_idx(enqueue_idx, emb)
+        loss = self.loss(all_emb, all_labels, indices_tuple, enqueue_idx)
         return loss * world_size
 
 

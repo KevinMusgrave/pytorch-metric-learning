@@ -501,7 +501,6 @@ class TestCrossBatchMemory(unittest.TestCase):
                         indices_tuple, self.loss.curr_batch_idx, self.loss.memory_size
                     )
                     a1, p, a2, n = self.loss.create_indices_tuple(
-                        batch_size,
                         embeddings,
                         labels,
                         self.loss.embedding_memory,
@@ -519,6 +518,26 @@ class TestCrossBatchMemory(unittest.TestCase):
                     self.assertTrue(torch.all(p == torch.cat([pi, pii])))
                     self.assertTrue(torch.all(a2 == torch.cat([a2i, a2ii])))
                     self.assertTrue(torch.all(n == torch.cat([ni, nii])))
+
+    def test_reset_queue(self):
+        self.loss = CrossBatchMemory(
+            loss=ContrastiveLoss(),
+            embedding_size=self.embedding_size,
+            memory_size=self.memory_size,
+        )
+
+        init_emb = torch.zeros(self.memory_size, self.embedding_size)
+        init_label = torch.zeros(self.memory_size).long()
+        self.assertTrue(torch.equal(self.loss.embedding_memory, init_emb))
+        self.assertTrue(torch.equal(self.loss.label_memory, init_label))
+
+        self.loss(torch.randn(32, 128), torch.randint(0, 2, size=(32,)))
+        self.assertTrue(not torch.equal(self.loss.embedding_memory, init_emb))
+        self.assertTrue(not torch.equal(self.loss.label_memory, init_label))
+
+        self.loss.reset_queue()
+        self.assertTrue(torch.equal(self.loss.embedding_memory, init_emb))
+        self.assertTrue(torch.equal(self.loss.label_memory, init_label))
 
 
 if __name__ == "__main__":

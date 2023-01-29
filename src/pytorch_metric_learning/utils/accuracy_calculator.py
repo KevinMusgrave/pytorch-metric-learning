@@ -414,13 +414,18 @@ class AccuracyCalculator:
     def get_accuracy(
         self,
         query,
-        reference,
         query_labels,
-        reference_labels,
-        embeddings_come_from_same_source,
+        reference=None,
+        reference_labels=None,
+        embeddings_come_from_same_source=False,
         include=(),
         exclude=(),
     ):
+        if reference is None:
+            reference = query
+            reference_labels = query_labels
+            embeddings_come_from_same_source = True
+
         [query, reference, query_labels, reference_labels] = [
             c_f.numpy_to_torch(x).to(self.device).type(torch.float)
             for x in [query, reference, query_labels, reference_labels]

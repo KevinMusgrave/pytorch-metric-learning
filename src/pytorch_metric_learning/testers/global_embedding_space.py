@@ -20,8 +20,8 @@ class GlobalEmbeddingSpaceTester(BaseTester):
             curr_reference_labels = reference_labels[:, L]
             a = self.accuracy_calculator.get_accuracy(
                 query_embeddings,
-                reference_embeddings,
                 curr_query_labels,
+                reference_embeddings,
                 curr_reference_labels,
                 self.embeddings_come_from_same_source(
                     query_split_name, reference_split_names

@@ -46,11 +46,11 @@ AccuracyCalculator(exclude=("NMI", "AMI"),
 Call the ```get_accuracy``` method to obtain a dictionary of accuracies.
 ```python
 def get_accuracy(self, 
-	query, 		
-	reference, 
-	query_labels, 
-	reference_labels, 
-	embeddings_come_from_same_source, 
+	query,
+    query_labels,  		
+	reference=None,
+	reference_labels=None, 
+	embeddings_come_from_same_source=False, 
 	include=(),
 	exclude=()
 ):
@@ -64,8 +64,8 @@ def get_accuracy(self,
 ```
 
 * **query**: A 2D torch or numpy array of size ```(Nq, D)```, where Nq is the number of query samples. For each query sample, nearest neighbors are retrieved and accuracy is computed.
-* **reference**: A 2D torch or numpy array of size ```(Nr, D)```, where Nr is the number of reference samples. This is where nearest neighbors are retrieved from.
 * **query_labels**: A 1D torch or numpy array of size ```(Nq)```. Each element should be an integer representing the sample's label.
+* **reference**: A 2D torch or numpy array of size ```(Nr, D)```, where Nr is the number of reference samples. This is where nearest neighbors are retrieved from.
 * **reference_labels**: A 1D torch or numpy array of size ```(Nr)```. Each element should be an integer representing the sample's label. 
 * **embeddings_come_from_same_source**: Set to True if ```query``` is a subset of ```reference``` or if ```query is reference```. Set to False otherwise.
 * **include**: Optional. A list or tuple of strings, which are the names of metrics you want to calculate. If left empty, all metrics specified during initialization will be calculated.
@@ -176,8 +176,8 @@ Now when ```get_accuracy``` is called, the returned dictionary will contain ```p
 ```python
 calculator = YourCalculator()
 acc_dict = calculator.get_accuracy(query_embeddings,
-    reference_embeddings,
     query_labels,
+    reference_embeddings,
     reference_labels,
     embeddings_come_from_same_source=True
 )

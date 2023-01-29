@@ -95,4 +95,3 @@ class TestSelfSupervisedLossWrapper(unittest.TestCase):
         )
 
         return loss_fns
-

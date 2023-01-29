@@ -478,7 +478,7 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
                 query_labels = torch.arange(10, device=TEST_DEVICE)
                 reference_labels = torch.arange(10, device=TEST_DEVICE)
             acc = AC.get_accuracy(
-                query, reference, query_labels, reference_labels, False
+                query, query_labels, reference, reference_labels, False
             )
             self.assertTrue(isclose(acc["precision_at_1"], 1))
             self.assertTrue(isclose(acc["r_precision"], 1))
@@ -498,7 +498,7 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
                 reference_labels[: len(query)] = query_labels
                 reference_labels[len(query) :] = torch.ones(10)
             acc = AC.get_accuracy(
-                query, reference, query_labels, reference_labels, True
+                query, query_labels, reference, reference_labels, True
             )
             self.assertTrue(isclose(acc["precision_at_1"], 1))
             self.assertTrue(isclose(acc["r_precision"], 0.5))
@@ -553,7 +553,7 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
         reference[0] = -100
 
         acc = AC_global_average.get_accuracy(
-            query, reference, query_labels, reference_labels, False
+            query, query_labels, reference, reference_labels, False
         )
         self.assertTrue(isclose(acc["precision_at_1"], 0.9))
         self.assertTrue(isclose(acc["r_precision"], 0.9))
@@ -561,7 +561,7 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
         self.assertTrue(isclose(acc["mean_average_precision"], 0.9 + 0.01))
 
         acc = AC_per_class_average.get_accuracy(
-            query, reference, query_labels, reference_labels, False
+            query, query_labels, reference, reference_labels, False
         )
         self.assertTrue(isclose(acc["precision_at_1"], 0.5))
         self.assertTrue(isclose(acc["r_precision"], 0.5))
@@ -637,7 +637,7 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
         reference[0] = -100
 
         acc = AC_global_average.get_accuracy(
-            query, reference, query_labels, reference_labels, False
+            query, query_labels, reference, reference_labels, False
         )
         self.assertTrue(isclose(acc["precision_at_1"], 0.9))
         self.assertTrue(isclose(acc["r_precision"], 0.9))
@@ -645,7 +645,7 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
         self.assertTrue(isclose(acc["mean_average_precision"], 0.9 + 0.01))
 
         acc = AC_per_class_average.get_accuracy(
-            query, reference, query_labels, reference_labels, False
+            query, query_labels, reference, reference_labels, False
         )
         self.assertTrue(isclose(acc["precision_at_1"], 0.5))
         self.assertTrue(isclose(acc["r_precision"], 0.5))
@@ -685,14 +685,14 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
         }
 
         acc = AC_global_average.get_accuracy(
-            query, reference, query_labels, reference_labels, False
+            query, query_labels, reference, reference_labels, False
         )
 
         for k in correct:
             self.assertTrue(isclose(acc[k], correct[k]))
 
         acc = AC_per_class_average.get_accuracy(
-            query, reference, query_labels, reference_labels, False
+            query, query_labels, reference, reference_labels, False
         )
 
         for k in correct:
@@ -755,7 +755,7 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
             "mean_average_precision": ((0 + 1 / 2 + 2 / 3 + 3 / 4) / 3 + 1) / 2,
         }
         acc = AC_global_average.get_accuracy(
-            query, reference, query_labels, reference_labels, False
+            query, query_labels, reference, reference_labels, False
         )
 
         for k in correct:
@@ -776,7 +776,7 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
             "mean_average_precision": ((0 + 1 / 2 + 2 / 3) / 2 + (1 + 2 / 3) / 2) / 2,
         }
         acc = AC_global_average.get_accuracy(
-            query, reference, query_labels, reference_labels, True
+            query, query_labels, reference, reference_labels, True
         )
         for k in correct:
             self.assertTrue(isclose(acc[k], correct[k]))
@@ -796,7 +796,7 @@ class TestCalculateAccuraciesValidK(unittest.TestCase):
             labels = torch.randint(0, 10, size=(10000,))
             level = "WARNING" if k in [10, 100] else "INFO"
             with self.assertLogs(level=level):
-                AC.get_accuracy(embeddings, embeddings, labels, labels, True)
+                AC.get_accuracy(embeddings, labels)
 
 
 class TestCalculateAccuraciesFaissKNN(unittest.TestCase):
@@ -808,7 +808,7 @@ class TestCalculateAccuraciesFaissKNN(unittest.TestCase):
                 AC = accuracy_calculator.AccuracyCalculator(knn_func=knn_func)
                 embeddings = torch.randn(1000, 32)
                 labels = torch.randint(0, 10, size=(1000,))
-                AC.get_accuracy(embeddings, embeddings, labels, labels, True)
+                AC.get_accuracy(embeddings, labels)
 
     def test_index_type(self):
         import faiss
@@ -817,7 +817,7 @@ class TestCalculateAccuraciesFaissKNN(unittest.TestCase):
         AC = accuracy_calculator.AccuracyCalculator(knn_func=knn_func)
         embeddings = torch.randn(1000, 32)
         labels = torch.randint(0, 10, size=(1000,))
-        AC.get_accuracy(embeddings, embeddings, labels, labels, True)
+        AC.get_accuracy(embeddings, labels)
         self.assertTrue(isinstance(AC.knn_func.index, faiss.IndexFlatIP))
 
 
@@ -843,15 +843,15 @@ class TestCalculateAccuraciesCustomKNN(unittest.TestCase):
                         labels = torch.randint(0, 10, size=(dataset_size,))
                         acc1 = AC1.get_accuracy(
                             embeddings,
-                            embeddings,
                             labels,
+                            embeddings,
                             labels,
                             embeddings_come_from_same_source,
                         )
                         acc2 = AC2.get_accuracy(
                             embeddings,
-                            embeddings,
                             labels,
+                            embeddings,
                             labels,
                             embeddings_come_from_same_source,
                         )
@@ -869,7 +869,7 @@ class TestWithinAutocast(unittest.TestCase):
         embeddings = torch.randn(1000, 32)
         labels = torch.randint(0, 10, size=(1000,))
         with torch.autocast(device_type="cuda", dtype=torch.float16):
-            AC.get_accuracy(embeddings, embeddings, labels, labels, True)
+            AC.get_accuracy(embeddings, labels)
 
 
 class TestMutualInformation(unittest.TestCase):
@@ -896,7 +896,7 @@ class TestMutualInformation(unittest.TestCase):
                 AC = accuracy_calculator.AccuracyCalculator(
                     kmeans_func=kmeans_func, include=("AMI", "NMI")
                 )
-                acc = AC.get_accuracy(emb, emb, labels, labels, False)
+                acc = AC.get_accuracy(emb, labels, emb, labels, False)
 
                 # compute directly
                 kmeans = KMeans(n_clusters=2).fit_predict(emb)
@@ -915,7 +915,7 @@ class TestEmbeddingsComeFromSameSource(unittest.TestCase):
         emb = torch.tensor([[10], [10], [20], [20]])
         labels = torch.tensor([1, 0, 1, 0])
         AC = accuracy_calculator.AccuracyCalculator(include=("precision_at_1",))
-        accuracies = AC.get_accuracy(emb, emb, labels, labels, True)
+        accuracies = AC.get_accuracy(emb, labels)
         self.assertEqual(accuracies["precision_at_1"], 0)
 
     def test_many_tied_distances(self):
@@ -923,7 +923,7 @@ class TestEmbeddingsComeFromSameSource(unittest.TestCase):
         emb = torch.zeros(10000, 2)
         labels = torch.randint(0, 2, size=(10000,))
         AC = accuracy_calculator.AccuracyCalculator(include=("precision_at_1",), k=1)
-        accuracies = AC.get_accuracy(emb, emb, labels, labels, True)
+        accuracies = AC.get_accuracy(emb, labels)
         self.assertTrue(np.isclose(accuracies["precision_at_1"], 0.5, rtol=0.1))
 
     def test_query_within_reference(self):
@@ -934,13 +934,13 @@ class TestEmbeddingsComeFromSameSource(unittest.TestCase):
         AC = accuracy_calculator.AccuracyCalculator(include=("precision_at_1",))
 
         # should work with False
-        AC.get_accuracy(query, ref, query_labels, ref_labels, False)
+        AC.get_accuracy(query, query_labels, ref, ref_labels, False)
 
         # query != ref[:len(query)]
         with self.assertRaises(ValueError):
-            AC.get_accuracy(query, ref, query_labels, ref_labels, True)
+            AC.get_accuracy(query, query_labels, ref, ref_labels, True)
 
         # query == ref[:len(query)]
         ref = torch.tensor([0, 10, 20, 5, 15]).unsqueeze(1)
         ref_labels[:3] = query_labels
-        AC.get_accuracy(query, ref, query_labels, ref_labels, True)
+        AC.get_accuracy(query, query_labels, ref, ref_labels, True)

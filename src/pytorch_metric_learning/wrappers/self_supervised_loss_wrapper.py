@@ -83,4 +83,3 @@ class SelfSupervisedLossWrapper(BaseLossWrapper):
 
     def forward(self, embeddings, ref_emb, *args):
         return self.compute_loss(embeddings, ref_emb, *args)
-

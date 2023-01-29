@@ -3,7 +3,7 @@ import torch
 from .base_loss_wrapper import BaseLossWrapper
 
 
-class SelfSupervisedLossWrapper(BaseLossWrapper):
+class SelfSupervisedLoss(BaseLossWrapper):
     """
     Issue #411:
 
@@ -12,7 +12,7 @@ class SelfSupervisedLossWrapper(BaseLossWrapper):
     which embeddings correspond with which ref_emb.
     A wrapper that does this for the user would be nice.
 
-        loss_fn = SelfSupervisedLossWrapper(TripletMarginLoss())
+        loss_fn = SelfSupervisedLoss(TripletMarginLoss())
         loss = loss_fn(embeddings, ref_emb1, ref_emb2, ...)
 
     where ref_embk = kth augmentation of embeddings.
@@ -43,9 +43,9 @@ class SelfSupervisedLossWrapper(BaseLossWrapper):
     @classmethod
     def check_loss_support(cls, loss_name):
         if loss_name not in cls.supported_losses():
-            raise Exception(f"SelfSupervisedLossWrapper not supported for {loss_name}")
+            raise Exception(f"SelfSupervisedLoss not supported for {loss_name}")
 
-    def compute_loss(self, embeddings, ref_emb, *args):
+    def forward(self, embeddings, ref_emb, *args):
         """
         embeddings: representations of the original set of inputs
         ref_emb:    representations of an augmentation of the inputs.
@@ -80,6 +80,3 @@ class SelfSupervisedLossWrapper(BaseLossWrapper):
         return self.loss(
             embeddings=embeddings, labels=labels, ref_emb=ref_emb, ref_labels=labels
         )
-
-    def forward(self, embeddings, ref_emb, *args):
-        return self.compute_loss(embeddings, ref_emb, *args)

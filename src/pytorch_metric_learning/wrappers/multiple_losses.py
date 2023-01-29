@@ -3,7 +3,7 @@ import torch
 from ..utils import common_functions as c_f
 
 
-class MultipleLossesWrapper(torch.nn.Module):
+class MultipleLosses(torch.nn.Module):
     def __init__(self, losses, miners=None, weights=None):
         super().__init__()
         self.is_dict = isinstance(losses, dict)

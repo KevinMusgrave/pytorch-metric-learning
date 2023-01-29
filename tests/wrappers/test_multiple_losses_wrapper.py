@@ -4,7 +4,7 @@ import torch
 
 from pytorch_metric_learning.losses import ContrastiveLoss, TripletMarginLoss
 from pytorch_metric_learning.miners import MultiSimilarityMiner
-from pytorch_metric_learning.wrappers import MultipleLossesWrapper
+from pytorch_metric_learning.wrappers import MultipleLosses
 
 from .. import TEST_DEVICE, TEST_DTYPES
 from ..zzz_testing_utils.testing_utils import angle_to_coord
@@ -15,13 +15,13 @@ class TestMultipleLossesWrapper(unittest.TestCase):
         lossA = ContrastiveLoss()
         lossB = TripletMarginLoss(0.1)
         minerB = MultiSimilarityMiner()
-        loss_func1 = MultipleLossesWrapper(
+        loss_func1 = MultipleLosses(
             losses={"lossA": lossA, "lossB": lossB},
             weights={"lossA": 1, "lossB": 0.23},
             miners={"lossB": minerB},
         )
 
-        loss_func2 = MultipleLossesWrapper(
+        loss_func2 = MultipleLosses(
             losses=[lossA, lossB], weights=[1, 0.23], miners=[None, minerB]
         )
 
@@ -55,11 +55,11 @@ class TestMultipleLossesWrapper(unittest.TestCase):
         lossA = ContrastiveLoss()
         lossB = TripletMarginLoss(0.1)
         miner = MultiSimilarityMiner()
-        loss_func1 = MultipleLossesWrapper(
+        loss_func1 = MultipleLosses(
             losses={"lossA": lossA, "lossB": lossB}, weights={"lossA": 1, "lossB": 0.23}
         )
 
-        loss_func2 = MultipleLossesWrapper(losses=[lossA, lossB], weights=[1, 0.23])
+        loss_func2 = MultipleLosses(losses=[lossA, lossB], weights=[1, 0.23])
 
         for loss_func in [loss_func1, loss_func2]:
             for dtype in TEST_DTYPES:
@@ -88,7 +88,7 @@ class TestMultipleLossesWrapper(unittest.TestCase):
         lossB = TripletMarginLoss(0.1)
         self.assertRaises(
             AssertionError,
-            lambda: MultipleLossesWrapper(
+            lambda: MultipleLosses(
                 losses={"lossA": lossA, "lossB": lossB},
                 weights={"blah": 1, "lossB": 0.23},
             ),
@@ -97,7 +97,7 @@ class TestMultipleLossesWrapper(unittest.TestCase):
         minerA = MultiSimilarityMiner()
         self.assertRaises(
             AssertionError,
-            lambda: MultipleLossesWrapper(
+            lambda: MultipleLosses(
                 losses={"lossA": lossA, "lossB": lossB},
                 weights={"lossA": 1, "lossB": 0.23},
                 miners={"blah": minerA},
@@ -109,13 +109,13 @@ class TestMultipleLossesWrapper(unittest.TestCase):
         lossB = TripletMarginLoss(0.1)
         self.assertRaises(
             AssertionError,
-            lambda: MultipleLossesWrapper(losses=[lossA, lossB], weights=[1]),
+            lambda: MultipleLosses(losses=[lossA, lossB], weights=[1]),
         )
 
         minerA = MultiSimilarityMiner()
         self.assertRaises(
             AssertionError,
-            lambda: MultipleLossesWrapper(
+            lambda: MultipleLosses(
                 losses=[lossA, lossB],
                 weights=[1, 0.2],
                 miners=[minerA],

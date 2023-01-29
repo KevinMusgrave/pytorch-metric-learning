@@ -6,7 +6,7 @@ from ..utils.module_with_records import ModuleWithRecords
 from .base_loss_wrapper import BaseLossWrapper
 
 
-class CrossBatchMemoryWrapper(BaseLossWrapper, ModuleWithRecords):
+class CrossBatchMemory(BaseLossWrapper, ModuleWithRecords):
     def __init__(self, loss, embedding_size, memory_size=1024, miner=None, **kwargs):
         super().__init__(loss=loss, **kwargs)
         self.loss = loss
@@ -40,7 +40,7 @@ class CrossBatchMemoryWrapper(BaseLossWrapper, ModuleWithRecords):
     @classmethod
     def check_loss_support(cls, loss_name):
         if loss_name not in cls.supported_losses():
-            raise Exception(f"CrossBatchMemoryWrapper not supported for {loss_name}")
+            raise Exception(f"CrossBatchMemory not supported for {loss_name}")
 
     def forward(self, embeddings, labels, indices_tuple=None, enqueue_idx=None):
         if indices_tuple is not None and enqueue_idx is not None:

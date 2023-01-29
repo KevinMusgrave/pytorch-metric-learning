@@ -3,21 +3,21 @@ Loss wrappers can be used as follows:
 
 ```python
 from pytorch_metric_learning import losses
-from pytorch_metric_learning,wrappers import SelfSupervisedLossWrapper
+from pytorch_metric_learning.wrappers import SelfSupervisedLoss
 
 loss_fn = losses.SomeLoss()
-loss_fn = SelfSupervisedLossWrapper(loss_fn)
+loss_fn = SelfSupervisedLoss(loss_fn)
 
 loss = loss_fn(embeddings, labels)
 ```
 
-## SelfSupervisedLossWrapper
+## SelfSupervisedLoss
 
-A common use case is to have embeddings and ref_emb be augmented versions of each other. For most losses right now you have to create labels to indicate which embeddings correspond with which ref_emb. `SelfSupervisedLossWrapper` automates this.
+A common use case is to have embeddings and ref_emb be augmented versions of each other. For most losses right now you have to create labels to indicate which embeddings correspond with which ref_emb. `SelfSupervisedLoss` automates this.
 
 ```python
 loss_fn = losses.TripletMarginLoss()
-loss_fn = SelfSupervisedLossWrapper(loss_fn)
+loss_fn = SelfSupervisedLoss(loss_fn)
 loss = loss_fn(embeddings, labels)
 ```
 
@@ -37,7 +37,7 @@ loss = loss_fn(embeddings, labels)
 This wraps a loss function, and implements [Cross-Batch Memory for Embedding Learning](https://arxiv.org/pdf/1912.06798.pdf){target=_blank}. It stores embeddings from previous iterations in a queue, and uses them to form more pairs/triplets with the current iteration's embeddings.
 
 ```python
-wrappers.CrossBatchMemoryWrapper(loss, embedding_size, memory_size=1024, miner=None)
+wrappers.CrossBatchMemory(loss, embedding_size, memory_size=1024, miner=None)
 ```
 
 **Parameters**:
@@ -73,10 +73,10 @@ As shown above, CrossBatchMemory comes with a 4th argument in its ```forward``` 
 
 
 
-## MultipleLossesWrapper
+## MultipleLosses
 This is a simple wrapper for multiple losses. Pass in a list of already-initialized loss functions. Then, when you call forward on this object, it will return the sum of all wrapped losses.
 ```python
-wrappers.MultipleLossesWrapper(losses, miners=None, weights=None)
+wrappers.MultipleLosses(losses, miners=None, weights=None)
 ```
 **Parameters**:
 

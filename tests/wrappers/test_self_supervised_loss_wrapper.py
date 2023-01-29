@@ -3,7 +3,7 @@ import unittest
 import torch
 
 import pytorch_metric_learning.losses as losses
-from pytorch_metric_learning.wrappers import SelfSupervisedLossWrapper
+from pytorch_metric_learning.wrappers import SelfSupervisedLoss
 
 from .. import TEST_DEVICE, TEST_DTYPES
 
@@ -60,14 +60,14 @@ class TestSelfSupervisedLossWrapper(unittest.TestCase):
         loss_fns = dict()
         for loss_fn in loss_fns_list:
             loss_name = type(loss_fn).__name__
-            loss_fn = SelfSupervisedLossWrapper(loss_fn)
+            loss_fn = SelfSupervisedLoss(loss_fn)
             loss_value = loss_fn(embeddings=embeddings, ref_emb=ref_emb)
             loss_fns[loss_name] = loss_value
 
         return loss_fns
 
     def load_valid_loss_fns(self):
-        supported_losses = SelfSupervisedLossWrapper.supported_losses()
+        supported_losses = SelfSupervisedLoss.supported_losses()
 
         loss_fns = [
             losses.AngularLoss(),

@@ -16,10 +16,3 @@ class BaseLossWrapper(torch.nn.Module):
     @classmethod
     def check_loss_support(self, loss_name):
         raise NotImplementedError
-
-    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
-        """
-        Though the implementation may have varying input parameters,
-        a LossWrapper must implement this function
-        """
-        raise NotImplementedError

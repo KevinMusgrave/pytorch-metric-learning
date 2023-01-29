@@ -45,7 +45,7 @@ class SelfSupervisedLoss(BaseLossWrapper):
         if loss_name not in cls.supported_losses():
             raise Exception(f"SelfSupervisedLoss not supported for {loss_name}")
 
-    def forward(self, embeddings, ref_emb, *args):
+    def forward(self, embeddings, ref_emb):
         """
         embeddings: representations of the original set of inputs
         ref_emb:    representations of an augmentation of the inputs.

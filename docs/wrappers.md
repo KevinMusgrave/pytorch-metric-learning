@@ -49,12 +49,12 @@ wrappers.CrossBatchMemory(loss, embedding_size, memory_size=1024, miner=None)
 
 **Forward function**
 ```python
-loss_fn(embeddings, labels, indices_tuple=None, enqueue_idx=None)
+loss_fn(embeddings, labels, indices_tuple=None, enqueue_mask=None)
 ```
 
 As shown above, CrossBatchMemory comes with a 4th argument in its ```forward``` function:
 
-* **enqueue_idx**: The indices of ```embeddings``` that will be added to the memory queue. In other words, only ```embeddings[enqueue_idx]``` will be added to memory. This enables CrossBatchMemory to be used in self-supervision frameworks like [MoCo](https://arxiv.org/pdf/1911.05722.pdf). Check out the [MoCo on CIFAR100](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples#simple-examples) notebook to see how this works.
+* **enqueue_mask**: A boolean tensor where `enqueue_mask[i]` is True if `embeddings[i]` should be added to the memory queue. This enables CrossBatchMemory to be used in self-supervision frameworks like [MoCo](https://arxiv.org/pdf/1911.05722.pdf). Check out the [MoCo on CIFAR100](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples#simple-examples) notebook to see how this works.
 
 
 **Supported Loss Functions**:

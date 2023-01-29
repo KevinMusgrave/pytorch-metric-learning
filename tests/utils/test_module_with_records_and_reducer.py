@@ -18,9 +18,5 @@ class TestModuleWithRecordsAndReducer(unittest.TestCase):
         loss_fn(embeddings, labels)
 
         if WITH_COLLECT_STATS:
-            self.assertTrue(
-                loss_fn.reducer.reducers["pos_loss"].pos_pairs_past_filter > 0
-            )
-            self.assertTrue(
-                loss_fn.reducer.reducers["neg_loss"].neg_pairs_past_filter > 0
-            )
+            self.assertTrue(loss_fn.reducer.reducers["pos_loss"].num_past_filter > 0)
+            self.assertTrue(loss_fn.reducer.reducers["neg_loss"].num_past_filter > 0)

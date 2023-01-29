@@ -298,20 +298,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#basetupleminer" class="md-nav__link">
-    BaseTupleMiner
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#basesubsetbatchminer" class="md-nav__link">
-    BaseSubsetBatchMiner
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#batcheasyhardminer" class="md-nav__link">
     BatchEasyHardMiner
   </a>
@@ -342,13 +328,6 @@
         <li class="md-nav__item">
   <a href="#hdcminer" class="md-nav__link">
     HDCMiner
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#maximumlossminer" class="md-nav__link">
-    MaximumLossMiner
   </a>
   
 </li>
@@ -686,20 +665,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#basetupleminer" class="md-nav__link">
-    BaseTupleMiner
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#basesubsetbatchminer" class="md-nav__link">
-    BaseSubsetBatchMiner
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#batcheasyhardminer" class="md-nav__link">
     BatchEasyHardMiner
   </a>
@@ -730,13 +695,6 @@
         <li class="md-nav__item">
   <a href="#hdcminer" class="md-nav__link">
     HDCMiner
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#maximumlossminer" class="md-nav__link">
-    MaximumLossMiner
   </a>
   
 </li>
@@ -794,8 +752,8 @@
 <li>Triplet miners output a tuple of size 3: (anchors, positives, negatives).</li>
 <li>Without a tuple miner, loss functions will by default use all possible pairs/triplets in the batch.</li>
 </ul>
-<p>You might be familiar with the terminology: "online" and "offline" miners. Tuple miners are online. Offline miners should be implemented as a <a href="../samplers/">PyTorch Sampler</a>.</p>
-<p>Tuple miners are used with loss functions as follows:</p>
+<p>You might be familiar with the terminology: "online" and "offline" miners. These miners are online. Offline miners should be implemented as a <a href="../samplers/">PyTorch Sampler</a>.</p>
+<p>Miners are used with loss functions as follows:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">miners</span><span class="p">,</span> <span class="n">losses</span>
 <span class="n">miner_func</span> <span class="o">=</span> <span class="n">miners</span><span class="o">.</span><span class="n">SomeMiner</span><span class="p">()</span>
 <span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">SomeLoss</span><span class="p">()</span>
@@ -822,6 +780,12 @@
 <p>All miners extend this class and therefore inherit its <code>__init__</code> parameters.
 <div class="highlight"><pre><span></span><code><span class="n">miners</span><span class="o">.</span><span class="n">BaseMiner</span><span class="p">(</span><span class="n">collect_stats</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div></p>
+<p>Every miner outputs a tuple of indices:</p>
+<ul>
+<li>Pair miners output a tuple of size 4: (anchors, positives, anchors, negatives)</li>
+<li>Triplet miners output a tuple of size 3: (anchors, positives, negatives) </li>
+</ul>
+<p>See <a href="../extend/miners/">custom miners</a> for details on how to write your own miner.</p>
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>collect_stats</strong>: If True, will collect various statistics that may be useful to analyze during experiments. If False, these computations will be skipped. Want to make <code>True</code> the default? Set the global <a href="../common_functions/#collect_stats">COLLECT_STATS</a> flag.</li>
@@ -841,25 +805,6 @@ Note: by default, <code>embeddings == ref_emb</code> and <code>labels == ref_lab
 <span class="k">def</span> <span class="nf">output_assertion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output</span><span class="p">):</span>
     <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 </code></pre></div>
-<h2 id="basetupleminer">BaseTupleMiner<a class="headerlink" href="#basetupleminer" title="Permanent link">&para;</a></h2>
-<p>This extends <a href="./#baseminer">BaseMiner</a>, and most miners extend this class. </p>
-<p>It outputs a tuple of indices:</p>
-<ul>
-<li>Pair miners output a tuple of size 4: (anchors, positives, anchors, negatives)</li>
-<li>Triplet miners output a tuple of size 3: (anchors, positives, negatives) </li>
-</ul>
-<div class="highlight"><pre><span></span><code><span class="n">miners</span><span class="o">.</span><span class="n">BaseTupleMiner</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</code></pre></div>
-<p>If you write your own miner, the <code>mine</code> function should work such that anchor indices correspond to <code>embeddings</code> and <code>labels</code>, and all other indices correspond to <code>ref_emb</code> and <code>ref_labels</code>. By default, <code>embeddings == ref_emb</code> and <code>labels == ref_labels</code>, but separating the anchor source from the positive/negative source allows for interesting use cases. For example, see <a href="../losses/#crossbatchmemory">CrossBatchMemory</a>.</p>
-<p>See <a href="../extend/miners/">custom miners</a> for details on how to write your own miner.</p>
-<h2 id="basesubsetbatchminer">BaseSubsetBatchMiner<a class="headerlink" href="#basesubsetbatchminer" title="Permanent link">&para;</a></h2>
-<p>This extends <a href="./#baseminer">BaseMiner</a>. It takes a batch of <code>N</code> embeddings and return a subset <code>n</code> to be used by a tuple miner, or directly by a loss function. Without a subset batch miner, <code>n == N</code>. You probably aren't going to use this type of miner.
-<div class="highlight"><pre><span></span><code><span class="n">miners</span><span class="o">.</span><span class="n">BaseSubsetBatchMiner</span><span class="p">(</span><span class="n">output_batch_size</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</code></pre></div></p>
-<p><strong>Parameters</strong></p>
-<ul>
-<li><strong>output_batch_size</strong>: An integer that is the size of the subset that the miner will output.</li>
-</ul>
 <h2 id="batcheasyhardminer">BatchEasyHardMiner<a class="headerlink" href="#batcheasyhardminer" title="Permanent link">&para;</a></h2>
 <p><a href="http://openaccess.thecvf.com/content_WACV_2020/papers/Xuan_Improved_Embeddings_with_Easy_Positive_Triplet_Mining_WACV_2020_paper.pdf">Improved Embeddings with Easy Positive Triplet Mining</a></p>
 <p>Returns positive and negative pairs according to the specified <code>pos_strategy</code> and <code>neg_strategy</code>.</p>
@@ -967,16 +912,6 @@ For example, here's what a batch size of size 6 should look like:
 <span class="n">minerB</span><span class="o">.</span><span class="n">set_idx_externally</span><span class="p">(</span><span class="n">hard_pairs</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
 <span class="n">very_hard_pairs</span> <span class="o">=</span> <span class="n">minerB</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
 </code></pre></div></p>
-<h2 id="maximumlossminer">MaximumLossMiner<a class="headerlink" href="#maximumlossminer" title="Permanent link">&para;</a></h2>
-<p>This is a simple <a href="./#basesubsetbatchminer">subset batch miner</a>. It computes the loss for random subsets of the input batch, <code>num_trials</code> times. Then it returns the subset with the highest loss.</p>
-<div class="highlight"><pre><span></span><code><span class="n">miners</span><span class="o">.</span><span class="n">MaximumLossMiner</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="n">miner</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_trials</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</code></pre></div>
-<p><strong>Parameters</strong></p>
-<ul>
-<li><strong>loss</strong>: The loss function used to compute the loss.</li>
-<li><strong>miner</strong>: Optional tuple miner which extracts pairs/triplets for the loss function.</li>
-<li><strong>num_trials</strong>: The number of random subsets to try.</li>
-</ul>
 <h2 id="multisimilarityminer">MultiSimilarityMiner<a class="headerlink" href="#multisimilarityminer" title="Permanent link">&para;</a></h2>
 <p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf">Multi-Similarity Loss with General Pair Weighting for Deep Metric Learning</a></p>
 <div class="highlight"><pre><span></span><code><span class="n">miners</span><span class="o">.</span><span class="n">MultiSimilarityMiner</span><span class="p">(</span><span class="n">epsilon</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>

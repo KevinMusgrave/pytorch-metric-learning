@@ -379,13 +379,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#unsupervisedembeddingsusingaugmentations" class="md-nav__link">
-    UnsupervisedEmbeddingsUsingAugmentations
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#twostreammetricloss" class="md-nav__link">
     TwoStreamMetricLoss
   </a>
@@ -658,13 +651,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#unsupervisedembeddingsusingaugmentations" class="md-nav__link">
-    UnsupervisedEmbeddingsUsingAugmentations
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#twostreammetricloss" class="md-nav__link">
     TwoStreamMetricLoss
   </a>
@@ -702,8 +688,8 @@
                     <span class="n">optimizers</span><span class="p">,</span>
                     <span class="n">batch_size</span><span class="p">,</span>
                     <span class="n">loss_funcs</span><span class="p">,</span>
-                    <span class="n">mining_funcs</span><span class="p">,</span>
                     <span class="n">dataset</span><span class="p">,</span>
+                    <span class="n">mining_funcs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">iterations_per_epoch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">data_device</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                     <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -738,11 +724,11 @@
 <li>{"metric_loss": loss_func}.</li>
 </ul>
 </li>
+<li><strong>dataset</strong>: The dataset you want to train on. Note that training methods do not perform validation, so do not pass in your validation or test set.</li>
 <li><strong>mining_funcs</strong>: A dictionary mapping strings to mining functions. Pass in an empty dictionary, or one or more of the following keys: <ul>
 <li>{"subset_batch_miner": mining_func1, "tuple_miner": mining_func2}</li>
 </ul>
 </li>
-<li><strong>dataset</strong>: The dataset you want to train on. Note that training methods do not perform validation, so do not pass in your validation or test set.</li>
 <li><strong>data_device</strong>: The device that you want to put batches of data on. If not specified, the trainer will put the data on any available GPUs.</li>
 <li><strong>dtype</strong>: The type that the dataset output will be converted to, e.g. <code>torch.float16</code>. If set to <code>None</code>, then no type casting will be done.</li>
 <li><strong>iterations_per_epoch</strong>: Optional. <ul>
@@ -781,7 +767,7 @@ If not specified, then the original labels are used.</li>
 <li><strong>end_of_iteration_hook</strong>: This is an optional function that has one input argument (the trainer object), and performs some action (e.g. logging data) at the end of every iteration. Here are some things you might want to log:<ul>
 <li><code>trainer.losses</code>: this dictionary contains all loss values at the current iteration. </li>
 <li><code>trainer.loss_funcs</code> and <code>trainer.mining_funcs</code>: these dictionaries contain the loss and mining functions. <ul>
-<li>Some loss and mining functions have attributes called <code>_record_these</code> or <code>_record_these_stats</code>. These are lists of names of other attributes that might be useful to log. (The list of attributes might change depending on the value of <a href="../common_functions/#collect_stats">COLLECT_STATS</a>.) For example, the <code>_record_these_stats</code> list for <code>BaseTupleMiner</code> is <code>["num_pos_pairs", "num_neg_pairs", "num_triplets"]</code>, so at each iteration you could log the value of <code>trainer.mining_funcs["tuple_miner"].num_pos_pairs</code>. To accomplish this programmatically, you can use <a href="https://github.com/KevinMusgrave/record-keeper">record-keeper</a>. Or you can do it yourself: first check if the object has <code>_record_these</code> or <code>_record_these_stats</code>, and use the python function <code>getattr</code> to retrieve the specified attributes. </li>
+<li>Some loss and mining functions have attributes called <code>_record_these</code> or <code>_record_these_stats</code>. These are lists of names of other attributes that might be useful to log. (The list of attributes might change depending on the value of <a href="../common_functions/#collect_stats">COLLECT_STATS</a>.) For example, the <code>_record_these_stats</code> list for <code>BaseMiner</code> is <code>["num_pos_pairs", "num_neg_pairs", "num_triplets"]</code>, so at each iteration you could log the value of <code>trainer.mining_funcs["tuple_miner"].num_pos_pairs</code>. To accomplish this programmatically, you can use <a href="https://github.com/KevinMusgrave/record-keeper">record-keeper</a>. Or you can do it yourself: first check if the object has <code>_record_these</code> or <code>_record_these_stats</code>, and use the python function <code>getattr</code> to retrieve the specified attributes. </li>
 </ul>
 </li>
 <li>If you want ready-to-use hooks, take a look at the <a href="../logging_presets/">logging_presets module</a>.</li>
@@ -915,17 +901,6 @@ If not specified, then the original labels are used.</li>
 </li>
 </ul>
 </li>
-</ul>
-<h2 id="unsupervisedembeddingsusingaugmentations">UnsupervisedEmbeddingsUsingAugmentations<a class="headerlink" href="#unsupervisedembeddingsusingaugmentations" title="Permanent link">&para;</a></h2>
-<p>This is an implementation of a general approach that has been used in recent unsupervised learning papers, e.g. <a href="https://arxiv.org/pdf/1904.03436.pdf">Unsupervised Embedding Learning via Invariant and Spreading
-Instance Feature
-</a> and <a href="https://arxiv.org/abs/1911.07072">Unsupervised Deep Metric Learning via Auxiliary Rotation Loss</a>. The idea is that augmented versions of a datapoint should be close to each other in the embedding space.
-<div class="highlight"><pre><span></span><code><span class="n">trainers</span><span class="o">.</span><span class="n">UnsupervisedEmbeddingsUsingAugmentations</span><span class="p">(</span><span class="n">transforms</span><span class="p">,</span> <span class="n">data_and_label_setter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</code></pre></div></p>
-<p><strong>Parameters</strong>:</p>
-<ul>
-<li><strong>transforms</strong>: A list of transforms. For every sample in a batch, each transform will be applied to the sample. If there are N transforms and the batch size is B, then there will be a total of B*N augmented samples. </li>
-<li><strong>data_and_label_setter</strong>: A function that takes in a tuple of (augmented_data, pseudo_labels) and outputs whatever is expected by self.data_and_label_getter.</li>
 </ul>
 <h2 id="twostreammetricloss">TwoStreamMetricLoss<a class="headerlink" href="#twostreammetricloss" title="Permanent link">&para;</a></h2>
 <p>This trainer is the same as <a href="./#metriclossonly">MetricLossOnly</a> but operates on separate streams of anchors and positives/negatives.

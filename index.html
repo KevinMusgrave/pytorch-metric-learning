@@ -825,19 +825,16 @@ This customized triplet loss has the following properties:</p>
 <li>The embeddings will be L2 regularized.  </li>
 </ul>
 <h3 id="using-loss-functions-for-unsupervised-self-supervised-learning">Using loss functions for unsupervised / self-supervised learning<a class="headerlink" href="#using-loss-functions-for-unsupervised-self-supervised-learning" title="Permanent link">&para;</a></h3>
-<p>The TripletMarginLoss is an embedding-based or tuple-based loss. This means that internally, there is no real notion of "classes". Tuples (pairs or triplets) are formed at each iteration, based on the labels it receives. The labels don't have to represent classes. They simply need to indicate the positive and negative relationships between the embeddings. Thus, it is easy to use these loss functions for unsupervised or self-supervised learning. </p>
-<p>For example, the code below is a simplified version of the augmentation strategy commonly used in self-supervision. The dataset does not come with any labels. Instead, the labels are created in the training loop, solely to indicate which embeddings are positive pairs.</p>
-<div class="highlight"><pre><span></span><code><span class="c1"># your training for-loop</span>
+<p>A <code>SelfSupervisedLoss</code> wrapper is provided for self-supervised learning:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning.losses</span> <span class="kn">import</span> <span class="n">SelfSupervisedLoss</span>
+<span class="n">loss_func</span> <span class="o">=</span> <span class="n">SelfSupervisedLoss</span><span class="p">(</span><span class="n">TripletMarginLoss</span><span class="p">())</span>
+
+<span class="c1"># your training for-loop</span>
 <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dataloader</span><span class="p">):</span>
     <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
     <span class="n">embeddings</span> <span class="o">=</span> <span class="n">your_model</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
     <span class="n">augmented</span> <span class="o">=</span> <span class="n">your_model</span><span class="p">(</span><span class="n">your_augmentation</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
-    <span class="n">labels</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">embeddings</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
-
-    <span class="n">embeddings</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">augmented</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-    <span class="n">labels</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">labels</span><span class="p">,</span> <span class="n">labels</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-
-    <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">augmented</span><span class="p">)</span>
     <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
     <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
 </code></pre></div>

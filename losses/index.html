@@ -290,13 +290,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#centroidtripletloss" class="md-nav__link">
-    CentroidTripletLoss
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#circleloss" class="md-nav__link">
     CircleLoss
   </a>
@@ -381,15 +374,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#multiplelosses" class="md-nav__link">
-    MultipleLosses
+  <a href="#multisimilarityloss" class="md-nav__link">
+    MultiSimilarityLoss
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#multisimilarityloss" class="md-nav__link">
-    MultiSimilarityLoss
+  <a href="#multiplelosses" class="md-nav__link">
+    MultipleLosses
   </a>
   
 </li>
@@ -432,6 +425,13 @@
         <li class="md-nav__item">
   <a href="#proxyncaloss" class="md-nav__link">
     ProxyNCALoss
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#selfsupervisedloss" class="md-nav__link">
+    SelfSupervisedLoss
   </a>
   
 </li>
@@ -826,13 +826,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#centroidtripletloss" class="md-nav__link">
-    CentroidTripletLoss
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#circleloss" class="md-nav__link">
     CircleLoss
   </a>
@@ -917,15 +910,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#multiplelosses" class="md-nav__link">
-    MultipleLosses
+  <a href="#multisimilarityloss" class="md-nav__link">
+    MultiSimilarityLoss
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#multisimilarityloss" class="md-nav__link">
-    MultiSimilarityLoss
+  <a href="#multiplelosses" class="md-nav__link">
+    MultipleLosses
   </a>
   
 </li>
@@ -968,6 +961,13 @@
         <li class="md-nav__item">
   <a href="#proxyncaloss" class="md-nav__link">
     ProxyNCALoss
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#selfsupervisedloss" class="md-nav__link">
+    SelfSupervisedLoss
   </a>
   
 </li>
@@ -1201,29 +1201,6 @@
 <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">compute_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">indices_tuple</span><span class="p">,</span> <span class="n">ref_emb</span><span class="p">,</span> <span class="n">ref_labels</span><span class="p">):</span>
     <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 </code></pre></div></p>
-<h2 id="centroidtripletloss">CentroidTripletLoss<a class="headerlink" href="#centroidtripletloss" title="Permanent link">&para;</a></h2>
-<p><a href="https://arxiv.org/pdf/2104.13643.pdf" target="_blank">On the Unreasonable Effectiveness of Centroids in Image Retrieval</a></p>
-<p>This is like <a href="./#tripletmarginloss">TripletMarginLoss</a>, except the positives and negatives are class centroids.</p>
-<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">CentroidTripletLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
-                            <span class="n">swap</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                            <span class="n">smooth_loss</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                            <span class="n">triplets_per_anchor</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span>
-                            <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</code></pre></div>
-<p>Unlike many other losses, the instance of this class can only be called as the following:</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning</span> <span class="kn">import</span> <span class="n">losses</span>
-<span class="n">loss_func</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">CentroidTripletLoss</span><span class="p">()</span>
-<span class="n">loss</span> <span class="o">=</span> <span class="n">loss_func</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span> 
-</code></pre></div>
-<p>and does not allow for use of <code>ref_embs</code>, <code>ref_labels</code>. Furthermore, there must be at least 2 embeddings associated with each label. Refer to <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/issues/451">this issue</a> for details.</p>
-<p><strong>Parameters</strong>:</p>
-<p>See <a href="./#tripletmarginloss">TripletMarginLoss</a></p>
-<p><strong>Default distance</strong>: </p>
-<p>See <a href="./#tripletmarginloss">TripletMarginLoss</a></p>
-<p><strong>Default reducer</strong>: </p>
-<ul>
-<li><a href="../reducers/#avgnonzeroreducer">AvgNonZeroReducer</a></li>
-</ul>
 <h2 id="circleloss">CircleLoss<a class="headerlink" href="#circleloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/2002.10857.pdf" target="_blank">Circle Loss: A Unified Perspective of Pair Similarity Optimization</a></p>
 <div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">CircleLoss</span><span class="p">(</span><span class="n">m</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">gamma</span><span class="o">=</span><span class="mi">80</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -1337,12 +1314,31 @@
 <li><strong>miner</strong>: An optional <a href="../miners/">tuple miner</a>, which will be used to mine pairs/triplets from the memory queue.</li>
 </ul>
 <p><strong>Forward function</strong>
-<div class="highlight"><pre><span></span><code><span class="n">loss_fn</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">indices_tuple</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">enqueue_idx</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">loss_fn</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">indices_tuple</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">enqueue_mask</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 </code></pre></div></p>
 <p>As shown above, CrossBatchMemory comes with a 4th argument in its <code>forward</code> function:</p>
 <ul>
-<li><strong>enqueue_idx</strong>: The indices of <code>embeddings</code> that will be added to the memory queue. In other words, only <code>embeddings[enqueue_idx]</code> will be added to memory. This enables CrossBatchMemory to be used in self-supervision frameworks like <a href="https://arxiv.org/pdf/1911.05722.pdf">MoCo</a>. Check out the <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples#simple-examples">MoCo on CIFAR100</a> notebook to see how this works.</li>
+<li><strong>enqueue_mask</strong>: A boolean tensor where <code>enqueue_mask[i]</code> is True if <code>embeddings[i]</code> should be added to the memory queue. This enables CrossBatchMemory to be used in self-supervision frameworks like <a href="https://arxiv.org/pdf/1911.05722.pdf">MoCo</a>. Check out the <a href="https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples#simple-examples">MoCo on CIFAR100</a> notebook to see how this works.</li>
 </ul>
+<details class="note">
+<summary>Supported Loss Functions</summary>
+<ul>
+<li><a href="./#angularloss">AngularLoss</a></li>
+<li><a href="./#circleloss">CircleLoss</a></li>
+<li><a href="./#contrastiveloss">ContrastiveLoss</a></li>
+<li><a href="./#generalizedliftedstructureloss">GeneralizedLiftedStructureLoss</a></li>
+<li><a href="./#intrapairvarianceloss">IntraPairVarianceLoss</a></li>
+<li><a href="./#liftedstructureloss">LiftedStructureLoss</a></li>
+<li><a href="./#marginloss">MarginLoss</a></li>
+<li><a href="./#multisimilarityloss">MultiSimilarityLoss</a></li>
+<li><a href="./#ncaloss">NCALoss</a></li>
+<li><a href="./#ntxentloss">NTXentLoss</a></li>
+<li><a href="./#signaltonoiseratiocontrastiveloss">SignalToNoiseRatioContrastiveLoss</a></li>
+<li><a href="./#supconloss">SupConLoss</a></li>
+<li><a href="./#tripletmarginloss">TripletMarginLoss</a></li>
+<li><a href="./#tupletmarginloss">TupletMarginLoss</a></li>
+</ul>
+</details>
 <p><strong>Reset queue</strong></p>
 <p>The queue can be cleared like this:
 <div class="highlight"><pre><span></span><code><span class="n">loss_fn</span><span class="o">.</span><span class="n">reset_queue</span><span class="p">()</span>
@@ -1549,16 +1545,6 @@
 <li><strong>margin_loss</strong>: The loss per triplet in the batch. Reduction type is <code>"triplet"</code>.</li>
 <li><strong>beta_reg_loss</strong>: The regularization loss per element in <code>self.beta</code>. Reduction type is <code>"already_reduced"</code> if <code>self.num_classes = None</code>. Otherwise it is <code>"element"</code>.</li>
 </ul>
-<h2 id="multiplelosses">MultipleLosses<a class="headerlink" href="#multiplelosses" title="Permanent link">&para;</a></h2>
-<p>This is a simple wrapper for multiple losses. Pass in a list of already-initialized loss functions. Then, when you call forward on this object, it will return the sum of all wrapped losses.
-<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">MultipleLosses</span><span class="p">(</span><span class="n">losses</span><span class="p">,</span> <span class="n">miners</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-</code></pre></div>
-<strong>Parameters</strong>:</p>
-<ul>
-<li><strong>losses</strong>: A list or dictionary of initialized loss functions. On the forward call of MultipleLosses, each wrapped loss will be computed, and then the average will be returned.</li>
-<li><strong>miners</strong>: Optional. A list or dictionary of mining functions. This allows you to pair mining functions with loss functions. For example, if <code>losses = [loss_A, loss_B]</code>, and <code>miners = [None, miner_B]</code> then no mining will be done for <code>loss_A</code>, but the output of <code>miner_B</code> will be passed to <code>loss_B</code>. The same logic applies if <code>losses = {"loss_A": loss_A, "loss_B": loss_B}</code> and <code>miners = {"loss_B": miner_B}</code>.</li>
-<li><strong>weights</strong>: Optional. A list or dictionary of loss weights, which will be multiplied by the corresponding losses obtained by the loss functions. The default is to multiply each loss by 1. If <code>losses</code> is a list, then <code>weights</code> must be a list. If <code>losses</code> is a dictionary, <code>weights</code> must contain the same keys as <code>losses</code>. </li>
-</ul>
 <h2 id="multisimilarityloss">MultiSimilarityLoss<a class="headerlink" href="#multisimilarityloss" title="Permanent link">&para;</a></h2>
 <p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf" target="_blank">Multi-Similarity Loss with General Pair Weighting for Deep Metric Learning</a>
 <div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">MultiSimilarityLoss</span><span class="p">(</span><span class="n">alpha</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">beta</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">base</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -1582,6 +1568,16 @@
 <p><strong>Reducer input</strong>:</p>
 <ul>
 <li><strong>loss</strong>: The loss per element in the batch. Reduction type is <code>"element"</code>.</li>
+</ul>
+<h2 id="multiplelosses">MultipleLosses<a class="headerlink" href="#multiplelosses" title="Permanent link">&para;</a></h2>
+<p>This is a simple wrapper for multiple losses. Pass in a list of already-initialized loss functions. Then, when you call forward on this object, it will return the sum of all wrapped losses.
+<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">MultipleLosses</span><span class="p">(</span><span class="n">losses</span><span class="p">,</span> <span class="n">miners</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</code></pre></div>
+<strong>Parameters</strong>:</p>
+<ul>
+<li><strong>losses</strong>: A list or dictionary of initialized loss functions. On the forward call of MultipleLosses, each wrapped loss will be computed, and then the average will be returned.</li>
+<li><strong>miners</strong>: Optional. A list or dictionary of mining functions. This allows you to pair mining functions with loss functions. For example, if <code>losses = [loss_A, loss_B]</code>, and <code>miners = [None, miner_B]</code> then no mining will be done for <code>loss_A</code>, but the output of <code>miner_B</code> will be passed to <code>loss_B</code>. The same logic applies if <code>losses = {"loss_A": loss_A, "loss_B": loss_B}</code> and <code>miners = {"loss_B": miner_B}</code>.</li>
+<li><strong>weights</strong>: Optional. A list or dictionary of loss weights, which will be multiplied by the corresponding losses obtained by the loss functions. The default is to multiply each loss by 1. If <code>losses</code> is a list, then <code>weights</code> must be a list. If <code>losses</code> is a dictionary, <code>weights</code> must contain the same keys as <code>losses</code>. </li>
 </ul>
 <h2 id="ncaloss">NCALoss<a class="headerlink" href="#ncaloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://www.cs.toronto.edu/~hinton/absps/nca.pdf" target="_blank">Neighbourhood Components Analysis</a>
@@ -1755,6 +1751,27 @@
 <ul>
 <li><strong>loss</strong>: The loss per element in the batch, that results in a non zero exponent in the cross entropy expression. Reduction type is <code>"element"</code>.</li>
 </ul>
+<h2 id="selfsupervisedloss">SelfSupervisedLoss<a class="headerlink" href="#selfsupervisedloss" title="Permanent link">&para;</a></h2>
+<p>A common use case is to have <code>embeddings</code> and <code>ref_emb</code> be augmented versions of each other. For most losses, you have to create labels to indicate which <code>embeddings</code> correspond with which <code>ref_emb</code>. <code>SelfSupervisedLoss</code> automates this.</p>
+<div class="highlight"><pre><span></span><code><span class="n">loss_fn</span> <span class="o">=</span> <span class="n">losses</span><span class="o">.</span><span class="n">TripletMarginLoss</span><span class="p">()</span>
+<span class="n">loss_fn</span> <span class="o">=</span> <span class="n">SelfSupervisedLoss</span><span class="p">(</span><span class="n">loss_fn</span><span class="p">)</span>
+<span class="n">loss</span> <span class="o">=</span> <span class="n">loss_fn</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">ref_emb</span><span class="p">)</span>
+</code></pre></div>
+<details>
+<summary>Supported Loss Functions</summary>
+<ul>
+<li><a href="./#angularloss">AngularLoss</a></li>
+<li><a href="./#circleloss">CircleLoss</a></li>
+<li><a href="./#contrastiveloss">ContrastiveLoss</a></li>
+<li><a href="./#intrapairvarianceloss">IntraPairVarianceLoss</a></li>
+<li><a href="./#multisimilarityloss">MultiSimilarityLoss</a></li>
+<li><a href="./#ntxentloss">NTXentLoss</a></li>
+<li><a href="./#signaltonoiseratiocontrastiveloss">SignalToNoiseRatioContrastiveLoss</a></li>
+<li><a href="./#supconloss">SupConLoss</a></li>
+<li><a href="./#tripletmarginloss">TripletMarginLoss</a></li>
+<li><a href="./#tupletmarginloss">TupletMarginLoss</a></li>
+</ul>
+</details>
 <h2 id="signaltonoiseratiocontrastiveloss">SignalToNoiseRatioContrastiveLoss<a class="headerlink" href="#signaltonoiseratiocontrastiveloss" title="Permanent link">&para;</a></h2>
 <p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Yuan_Signal-To-Noise_Ratio_A_Robust_Distance_Metric_for_Deep_Metric_Learning_CVPR_2019_paper.pdf" target="_blank">Signal-to-Noise Ratio: A Robust Distance Metric for Deep Metric Learning</a>
 <div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">SignalToNoiseRatioContrastiveLoss</span><span class="p">(</span><span class="n">pos_margin</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">neg_margin</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -2008,7 +2025,7 @@
 <p><strong>Usage</strong>:</p>
 <p>Unlike other loss functions, <code>VICRegLoss</code> does not accept <code>labels</code> or <code>indices_tuple</code>:</p>
 <div class="highlight"><pre><span></span><code><span class="n">loss_fn</span> <span class="o">=</span> <span class="n">VICRegLoss</span><span class="p">()</span>
-<span class="n">loss</span> <span class="o">=</span> <span class="n">loss_fn</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">ref_emb</span><span class="p">)</span>
+<span class="n">loss</span> <span class="o">=</span> <span class="n">loss_fn</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">ref_emb</span><span class="o">=</span><span class="n">ref_emb</span><span class="p">)</span>
 </code></pre></div>
 <p><strong>Equations</strong>:</p>
 <p><img alt="vicreg_total" src="../imgs/vicreg_total.png" style="height:40px" /></p>

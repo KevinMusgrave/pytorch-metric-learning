@@ -637,15 +637,15 @@
 
 <h1 id="how-to-write-custom-mining-functions">How to write custom mining functions<a class="headerlink" href="#how-to-write-custom-mining-functions" title="Permanent link">&para;</a></h1>
 <ol>
-<li>Extend <code>BaseTupleMiner</code></li>
+<li>Extend <code>BaseMiner</code></li>
 <li>Implement the <code>mine</code> method</li>
 <li>Inside <code>mine</code>, return a tuple of tensors</li>
 </ol>
 <h2 id="an-example-pair-miner">An example pair miner<a class="headerlink" href="#an-example-pair-miner" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning.miners</span> <span class="kn">import</span> <span class="n">BaseTupleMiner</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning.miners</span> <span class="kn">import</span> <span class="n">BaseMiner</span>
 <span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils</span> <span class="kn">import</span> <span class="n">loss_and_miner_utils</span> <span class="k">as</span> <span class="n">lmu</span>
 
-<span class="k">class</span> <span class="nc">ExamplePairMiner</span><span class="p">(</span><span class="n">BaseTupleMiner</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">ExamplePairMiner</span><span class="p">(</span><span class="n">BaseMiner</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">margin</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">margin</span> <span class="o">=</span> <span class="n">margin</span>
@@ -680,10 +680,10 @@
 <span class="n">pairs</span> <span class="o">=</span> <span class="n">miner</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
 </code></pre></div>
 <h2 id="an-example-triplet-miner">An example triplet miner<a class="headerlink" href="#an-example-triplet-miner" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning.miners</span> <span class="kn">import</span> <span class="n">BaseTupleMiner</span>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning.miners</span> <span class="kn">import</span> <span class="n">BaseMiner</span>
 <span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils</span> <span class="kn">import</span> <span class="n">loss_and_miner_utils</span> <span class="k">as</span> <span class="n">lmu</span>
 
-<span class="k">class</span> <span class="nc">ExampleTripletMiner</span><span class="p">(</span><span class="n">BaseTupleMiner</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">ExampleTripletMiner</span><span class="p">(</span><span class="n">BaseMiner</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">margin</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">margin</span> <span class="o">=</span> <span class="n">margin</span>
@@ -699,7 +699,7 @@
 </code></pre></div>
 <p>This miner works similarly to <code>ExamplePairMiner</code>, but finds triplets instead of pairs.</p>
 <h2 id="what-is-ref_emb">What is <code>ref_emb</code>?<a class="headerlink" href="#what-is-ref_emb" title="Permanent link">&para;</a></h2>
-<p>The forward function of <code>BaseTupleMiner</code> has optional <code>ref_emb</code> and <code>ref_labels</code> arguments. The miner should return anchors from <code>embeddings</code> and positives and negatives from <code>ref_emb</code>. For example:</p>
+<p>The forward function of <code>BaseMiner</code> has optional <code>ref_emb</code> and <code>ref_labels</code> arguments. The miner should return anchors from <code>embeddings</code> and positives and negatives from <code>ref_emb</code>. For example:</p>
 <div class="highlight"><pre><span></span><code><span class="n">miner</span> <span class="o">=</span> <span class="n">ExamplePairMiner</span><span class="p">()</span>
 <span class="n">embeddings</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">512</span><span class="p">)</span>
 <span class="n">labels</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mi">128</span><span class="p">,))</span>

@@ -450,13 +450,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#warning-for-versions-0997" class="md-nav__link">
-    Warning for versions &lt;= 0.9.97
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -680,13 +673,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#warning-for-versions-0997" class="md-nav__link">
-    Warning for versions &lt;= 0.9.97
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -732,7 +718,7 @@
 </li>
 <li><strong>label_comparison_fn</strong>: A function that compares two torch arrays of labels and returns a boolean array. The default is <code>torch.eq</code>. If a custom function is used, then you must exclude clustering based metrics ("NMI" and "AMI"). The example below shows a custom function for two-dimensional labels. It returns <code>True</code> if the 0th column matches, and the 1st column does <strong>not</strong> match.</li>
 <li><strong>device</strong>: The device to move input tensors to. If <code>None</code>, will default to GPUs if available.</li>
-<li><strong>knn_func</strong>: A callable that takes in 4 arguments (<code>query, k, reference, embeddings_come_from_same_source</code>) and returns <code>distances, indices</code>. Default is <code>pytorch_metric_learning.utils.inference.FaissKNN</code>.</li>
+<li><strong>knn_func</strong>: A callable that takes in 4 arguments (<code>query, k, reference, ref_includes_query</code>) and returns <code>distances, indices</code>. Default is <code>pytorch_metric_learning.utils.inference.FaissKNN</code>.</li>
 <li><strong>kmeans_func</strong>: A callable that takes in 2 arguments (<code>x, nmb_clusters</code>) and returns a 1-d tensor of cluster assignments. Default is <code>pytorch_metric_learning.utils.inference.FaissKMeans</code>.
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning.distances</span> <span class="kn">import</span> <span class="n">SNRDistance</span>
 <span class="kn">from</span> <span class="nn">pytorch_metric_learning.utils.inference</span> <span class="kn">import</span> <span class="n">CustomKNN</span>
@@ -749,11 +735,11 @@
 <h3 id="getting-accuracy">Getting accuracy<a class="headerlink" href="#getting-accuracy" title="Permanent link">&para;</a></h3>
 <p>Call the <code>get_accuracy</code> method to obtain a dictionary of accuracies.
 <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">get_accuracy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> 
-    <span class="n">query</span><span class="p">,</span>      
-    <span class="n">reference</span><span class="p">,</span> 
-    <span class="n">query_labels</span><span class="p">,</span> 
-    <span class="n">reference_labels</span><span class="p">,</span> 
-    <span class="n">embeddings_come_from_same_source</span><span class="p">,</span> 
+    <span class="n">query</span><span class="p">,</span>
+    <span class="n">query_labels</span><span class="p">,</span>       
+    <span class="n">reference</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">reference_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+    <span class="n">ref_includes_query</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> 
     <span class="n">include</span><span class="o">=</span><span class="p">(),</span>
     <span class="n">exclude</span><span class="o">=</span><span class="p">()</span>
 <span class="p">):</span>
@@ -767,10 +753,10 @@
 </code></pre></div></p>
 <ul>
 <li><strong>query</strong>: A 2D torch or numpy array of size <code>(Nq, D)</code>, where Nq is the number of query samples. For each query sample, nearest neighbors are retrieved and accuracy is computed.</li>
-<li><strong>reference</strong>: A 2D torch or numpy array of size <code>(Nr, D)</code>, where Nr is the number of reference samples. This is where nearest neighbors are retrieved from.</li>
 <li><strong>query_labels</strong>: A 1D torch or numpy array of size <code>(Nq)</code>. Each element should be an integer representing the sample's label.</li>
+<li><strong>reference</strong>: A 2D torch or numpy array of size <code>(Nr, D)</code>, where Nr is the number of reference samples. This is where nearest neighbors are retrieved from.</li>
 <li><strong>reference_labels</strong>: A 1D torch or numpy array of size <code>(Nr)</code>. Each element should be an integer representing the sample's label. </li>
-<li><strong>embeddings_come_from_same_source</strong>: Set to True if <code>query</code> is a subset of <code>reference</code> or if <code>query is reference</code>. Set to False otherwise.</li>
+<li><strong>ref_includes_query</strong>: Set to True if <code>query</code> is a subset of <code>reference</code> or if <code>query is reference</code>. Set to False otherwise.</li>
 <li><strong>include</strong>: Optional. A list or tuple of strings, which are the names of metrics you want to calculate. If left empty, all metrics specified during initialization will be calculated.</li>
 <li><strong>exclude</strong>: Optional. A list or tuple of strings, which are the names of metrics you do not want to calculate.</li>
 </ul>
@@ -855,7 +841,7 @@
     <span class="s2">&quot;reference&quot;</span><span class="p">:</span> <span class="n">reference</span><span class="p">,</span>                  <span class="c1"># reference embeddings</span>
     <span class="s2">&quot;query_labels&quot;</span><span class="p">:</span> <span class="n">query_labels</span><span class="p">,</span>        
     <span class="s2">&quot;reference_labels&quot;</span><span class="p">:</span> <span class="n">reference_labels</span><span class="p">,</span>
-    <span class="s2">&quot;embeddings_come_from_same_source&quot;</span><span class="p">:</span> <span class="n">e</span><span class="p">}</span>  <span class="c1"># True if query is reference, or if query is a subset of reference.</span>
+    <span class="s2">&quot;ref_includes_query&quot;</span><span class="p">:</span> <span class="n">e</span><span class="p">}</span>  <span class="c1"># True if query is reference, or if query is a subset of reference.</span>
 </code></pre></div></p>
 <p>If your method requires a k-nearest neighbors search, then append your method's name to the <code>requires_knn</code> list, as shown in the above example. If any of your accuracy methods require k-nearest neighbors, they will also receive the following kwargs:</p>
 <div class="highlight"><pre><span></span><code>    <span class="p">{</span><span class="s2">&quot;label_counts&quot;</span><span class="p">:</span> <span class="n">label_counts</span><span class="p">,</span>           <span class="c1"># A dictionary mapping from reference labels to the number of times they occur</span>
@@ -870,10 +856,10 @@
 <p>Now when <code>get_accuracy</code> is called, the returned dictionary will contain <code>precision_at_2</code> and <code>fancy_mutual_info</code>:
 <div class="highlight"><pre><span></span><code><span class="n">calculator</span> <span class="o">=</span> <span class="n">YourCalculator</span><span class="p">()</span>
 <span class="n">acc_dict</span> <span class="o">=</span> <span class="n">calculator</span><span class="o">.</span><span class="n">get_accuracy</span><span class="p">(</span><span class="n">query_embeddings</span><span class="p">,</span>
-    <span class="n">reference_embeddings</span><span class="p">,</span>
     <span class="n">query_labels</span><span class="p">,</span>
+    <span class="n">reference_embeddings</span><span class="p">,</span>
     <span class="n">reference_labels</span><span class="p">,</span>
-    <span class="n">embeddings_come_from_same_source</span><span class="o">=</span><span class="kc">True</span>
+    <span class="n">ref_includes_query</span><span class="o">=</span><span class="kc">True</span>
 <span class="p">)</span>
 <span class="c1"># Now acc_dict contains the metrics &quot;precision_at_2&quot; and &quot;fancy_mutual_info&quot;</span>
 <span class="c1"># in addition to the original metrics from AccuracyCalculator</span>
@@ -909,13 +895,6 @@
     <span class="mf">0.05</span><span class="p">,</span>
 <span class="p">])</span>
 </code></pre></div></p>
-<h3 id="warning-for-versions-0997">Warning for versions &lt;= 0.9.97<a class="headerlink" href="#warning-for-versions-0997" title="Permanent link">&para;</a></h3>
-<p>The behavior of the <code>k</code> parameter described in the <a href="#parameters">Parameters</a> section is for versions &gt;= 0.9.98.</p>
-<p>For versions &lt;= 0.9.97, the behavior was:</p>
-<ul>
-<li>If <code>k = None</code>, then <code>k = min(1023, max(bincount(reference_labels)))</code></li>
-<li>Otherwise <code>k = k</code></li>
-</ul>
 
               
             </article>

@@ -1,14 +1,11 @@
-import inspect
 import unittest
 
-import numpy as np
 import torch
 
 import pytorch_metric_learning.losses as losses
 from pytorch_metric_learning.wrappers import SelfSupervisedLossWrapper
 
 from .. import TEST_DEVICE, TEST_DTYPES
-from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 
 class TestSelfSupervisedLossWrapper(unittest.TestCase):
@@ -70,7 +67,6 @@ class TestSelfSupervisedLossWrapper(unittest.TestCase):
         return loss_fns
 
     def load_valid_loss_fns(self):
-        reqparams = ["embeddings", "labels", "ref_emb", "ref_labels"]
         supported_losses = SelfSupervisedLossWrapper.supported_losses()
 
         loss_fns = [

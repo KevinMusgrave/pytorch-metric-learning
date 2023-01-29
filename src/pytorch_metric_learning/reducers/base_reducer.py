@@ -5,17 +5,19 @@ from ..utils.module_with_records import ModuleWithRecords
 
 
 class BaseReducer(ModuleWithRecords):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.add_to_recordable_attributes(name="losses_size", is_stat=True)
+
     def forward(self, loss_dict, embeddings, labels):
         self.reset_stats()
         assert len(loss_dict) == 1
         loss_name = list(loss_dict.keys())[0]
         loss_info = loss_dict[loss_name]
-        self.add_to_recordable_attributes(name=loss_name, is_stat=True)
         losses, loss_indices, reduction_type, kwargs = self.unpack_loss_info(loss_info)
         loss_val = self.reduce_the_loss(
             losses, loss_indices, reduction_type, kwargs, embeddings, labels
         )
-        setattr(self, loss_name, loss_val.item())
         return loss_val
 
     def unpack_loss_info(self, loss_info):
@@ -95,7 +97,6 @@ class BaseReducer(ModuleWithRecords):
 
     def set_losses_size_stat(self, losses):
         if self.collect_stats:
-            self.add_to_recordable_attributes(name="losses_size", is_stat=True)
             if not torch.is_tensor(losses) or losses.ndim == 0:
                 self.losses_size = 1
             else:

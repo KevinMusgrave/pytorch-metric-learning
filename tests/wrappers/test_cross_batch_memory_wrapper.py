@@ -588,7 +588,7 @@ class TestCrossBatchMemoryWrapper(unittest.TestCase):
         return loss_fns
 
     def test_reset_queue(self):
-        self.loss = CrossBatchMemory(
+        self.loss = CrossBatchMemoryWrapper(
             loss=ContrastiveLoss(),
             embedding_size=self.embedding_size,
             memory_size=self.memory_size,

@@ -19,7 +19,7 @@
 ## News
 
 **January 29**: v2.0.0
-- Added SelfSupervisedLoss, plus various API improvements.
+- Added SelfSupervisedLoss, plus various API improvements. See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v2.0.0).
 - Thanks to contributor [cwkeam](https://github.com/cwkeam).
 
 **January 16**: v1.7.0

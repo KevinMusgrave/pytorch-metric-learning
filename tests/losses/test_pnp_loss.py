@@ -90,15 +90,7 @@ class TestFastAPLoss(unittest.TestCase):
     def test_fast_ap_loss(self):
         b, alpha, anneal, variant = 2, 4, 0.01, "PNP-D_q"
         loss_func = PNPLoss(b, alpha, anneal, variant)
-        original_loss_func = OriginalImplementationPNP(
-                    la,
-                    gamma,
-                    reg_weight,
-                    margin,
-                    embedding_size,
-                    num_classes,
-                    centers_per_class,
-                ).to(TEST_DEVICE)
+        original_loss_func = OriginalImplementationPNP( b, alpha, anneal, variant).to(TEST_DEVICE)
 
 
         for dtype in TEST_DTYPES:

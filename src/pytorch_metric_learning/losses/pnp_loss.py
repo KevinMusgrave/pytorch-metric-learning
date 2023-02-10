@@ -36,7 +36,7 @@ class PNPLoss(BaseMetricLossFunction):
         sim_all = self.compute_aff(embeddings)
 
         
-        mask = I_neg.unsqueeze(dim=1).repeat(1, N, 1).cuda()
+        mask = I_neg.unsqueeze(dim=1).repeat(1, N, 1)
         
         sim_all_repeat = sim_all.unsqueeze(dim=1).repeat(1, N, 1)
         # compute the difference matrix
@@ -62,7 +62,7 @@ class PNPLoss(BaseMetricLossFunction):
         else:
             raise Exception("variantation <{}> not available!".format(self.variant))
         
-        loss = (sim_all_rk * I_pos.cuda()) / N_pos.reshape(-1, 1)
+        loss = (sim_all_rk * I_pos) / N_pos.reshape(-1, 1)
         loss = torch.sum(loss) / N
         if self.variant == "PNP-D_q":
             loss = 1 - loss

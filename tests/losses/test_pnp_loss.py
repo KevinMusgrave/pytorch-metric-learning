@@ -41,7 +41,7 @@ class OriginalImplementationPNP(nn.Module):
         # compute the difference matrix
         sim_diff = sim_all_repeat - sim_all_repeat.permute(0, 2, 1)
         # pass through the sigmoid and ignores the relevance score of the query to itself
-        sim_sg = self.sigmoid(sim_diff, temp=self.anneal) * self.mask.cuda()
+        sim_sg = self.sigmoid(sim_diff, temp=self.anneal) * self.mask
         # compute the rankings,all batch
         sim_all_rk = torch.sum(sim_sg, dim=-1) 
         if self.variant == 'PNP-D_s':
@@ -62,7 +62,7 @@ class OriginalImplementationPNP(nn.Module):
                 raise Exception('variantation <{}> not available!'.format(self.variant))
         
         
-        loss = (sim_all_rk * I_pos.cuda()) / N_pos.reshape(-1, 1)
+        loss = (sim_all_rk * I_pos) / N_pos.reshape(-1, 1)
         loss = torch.sum(loss) / N
         if  self.variant == 'PNP-D_q':
             return 1 - loss

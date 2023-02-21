@@ -365,7 +365,9 @@ class HookContainer:
         )
         if reference_sets_label == query_set_label:
             reference_sets_label = "self"
-        record_group_name = f"{base_record_group_name}_{query_set_label}_vs_{reference_sets_label}"
+        record_group_name = (
+            f"{base_record_group_name}_{query_set_label}_vs_{reference_sets_label}"
+        )
         for key, val in self.record_keeper.hash_map.items():
             if val == record_group_name:
                 record_group_name = key

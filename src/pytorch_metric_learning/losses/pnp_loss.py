@@ -7,13 +7,17 @@ from .base_metric_loss_function import BaseMetricLossFunction
 
 
 class PNPLoss(BaseMetricLossFunction):
-    def __init__(self, b, alpha, anneal, variant, **kwargs):
+    VARIANTS = ["PNP-D_s", "PNP-D_q", "PNP-I_u", "PNP-I_b", "PNP-O"]
+
+    def __init__(self, b=2, alpha=1, anneal=0.01, variant="PNP-O", **kwargs):
         super().__init__(**kwargs)
         c_f.assert_distance_type(self, CosineSimilarity)
         self.b = b
         self.alpha = alpha
         self.anneal = anneal
         self.variant = variant
+        if self.variant not in self.VARIANTS:
+            raise ValueError(f"variant={variant} but must be one of {self.VARIANTS}")
 
         """
         Adapted from https://github.com/interestingzhuo/PNPloss

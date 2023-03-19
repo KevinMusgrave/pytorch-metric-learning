@@ -84,20 +84,25 @@ class OriginalImplementationPNP(nn.Module):
 
 class TestPNPLoss(unittest.TestCase):
     def test_pnp_loss(self):
-        b, alpha, anneal, variant = 2, 4, 0.01, "PNP-D_q"
-        loss_func = PNPLoss(b, alpha, anneal, variant)
-        original_loss_func = OriginalImplementationPNP(b, alpha, anneal, variant).to(
-            TEST_DEVICE
-        )
+        torch.manual_seed(30293)
+        for variant in ["PNP-D_s", "PNP-D_q", "PNP-I_u", "PNP-I_b", "PNP-O"]:
+            b, alpha, anneal = 2, 4, 0.01
+            loss_func = PNPLoss(b, alpha, anneal, variant)
+            original_loss_func = OriginalImplementationPNP(
+                b, alpha, anneal, variant
+            ).to(TEST_DEVICE)
 
-        for dtype in TEST_DTYPES:
-            embeddings = torch.randn(
-                180, 32, dtype=dtype, device=TEST_DEVICE, requires_grad=True
-            )
-            labels = torch.randint(low=0, high=10, size=(180,)).to(TEST_DEVICE)
+            for dtype in TEST_DTYPES:
+                embeddings = torch.randn(
+                    180, 32, dtype=dtype, device=TEST_DEVICE, requires_grad=True
+                )
+                labels = torch.randint(low=0, high=10, size=(180,)).to(TEST_DEVICE)
 
-            loss = loss_func(embeddings, labels)
-            loss.backward()
+                loss = loss_func(embeddings, labels)
+                loss.backward()
 
-            correct_loss = original_loss_func(F.normalize(embeddings), labels)
-            self.assertTrue(torch.isclose(loss, correct_loss))
+                correct_loss = original_loss_func(F.normalize(embeddings), labels)
+                self.assertTrue(torch.isclose(loss, correct_loss))
+
+        with self.assertRaises(ValueError):
+            PNPLoss(b, alpha, anneal, "PNP")

@@ -85,11 +85,18 @@ class OriginalImplementationPNP(nn.Module):
 class TestPNPLoss(unittest.TestCase):
     def test_pnp_loss(self):
         torch.manual_seed(30293)
-        for variant in ["PNP-D_s", "PNP-D_q", "PNP-I_u", "PNP-I_b", "PNP-O"]:
+        for variant in PNPLoss.VARIANTS:
+            original_variant = {
+                "Ds": "PNP-D_s",
+                "Dq": "PNP-D_q",
+                "Iu": "PNP-I_u",
+                "Ib": "PNP-I_b",
+                "O": "PNP-O",
+            }[variant]
             b, alpha, anneal = 2, 4, 0.01
             loss_func = PNPLoss(b, alpha, anneal, variant)
             original_loss_func = OriginalImplementationPNP(
-                b, alpha, anneal, variant
+                b, alpha, anneal, original_variant
             ).to(TEST_DEVICE)
 
             for dtype in TEST_DTYPES:

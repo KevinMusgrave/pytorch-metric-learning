@@ -1,6 +1,6 @@
 import torch
 
-from ..distances import LpDistance
+from ..distances import CosineSimilarity
 from ..utils import common_functions as c_f
 from ..utils import loss_and_miner_utils as lmu
 from .base_metric_loss_function import BaseMetricLossFunction
@@ -9,6 +9,7 @@ from .base_metric_loss_function import BaseMetricLossFunction
 class PNPLoss(BaseMetricLossFunction):
     def __init__(self, b, alpha, anneal, variant, **kwargs):
         super().__init__(**kwargs)
+        c_f.assert_distance_type(self, CosineSimilarity)
         self.b = b
         self.alpha = alpha
         self.anneal = anneal
@@ -33,19 +34,18 @@ class PNPLoss(BaseMetricLossFunction):
         safe_N = N_pos > 0
         if torch.sum(safe_N) == 0:
             return self.zero_losses()
-        sim_all = self.compute_aff(embeddings)
+        sim_all = self.distance(embeddings)
 
-        
         mask = I_neg.unsqueeze(dim=1).repeat(1, N, 1)
-        
+
         sim_all_repeat = sim_all.unsqueeze(dim=1).repeat(1, N, 1)
         # compute the difference matrix
         sim_diff = sim_all_repeat - sim_all_repeat.permute(0, 2, 1)
         # pass through the sigmoid and ignores the relevance score of the query to itself
         sim_sg = self.sigmoid(sim_diff, temp=self.anneal) * mask
-        # compute the number of negatives before 
+        # compute the number of negatives before
         sim_all_rk = torch.sum(sim_sg, dim=-1)
-        
+
         if self.variant == "PNP-D_s":
             sim_all_rk = torch.log(1 + sim_all_rk)
         elif self.variant == "PNP-D_q":
@@ -60,8 +60,8 @@ class PNPLoss(BaseMetricLossFunction):
         elif self.variant == "PNP-O":
             pass
         else:
-            raise Exception("variantation <{}> not available!".format(self.variant))
-        
+            raise Exception(f"variant <{self.variant}> not available!")
+
         loss = (sim_all_rk * I_pos) / N_pos.reshape(-1, 1)
         loss = torch.sum(loss) / N
         if self.variant == "PNP-D_q":
@@ -85,7 +85,5 @@ class PNPLoss(BaseMetricLossFunction):
         y = 1.0 / (1.0 + torch.exp(exponent))
         return y
 
-    def compute_aff(self, x):
-        """computes the affinity matrix between an input vector and itself"""
-        x = torch.nn.functional.normalize(x, dim=-1)
-        return torch.mm(x, x.t())
+    def get_default_distance(self):
+        return CosineSimilarity()

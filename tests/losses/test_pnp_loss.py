@@ -35,19 +35,23 @@ class OriginalImplementationPNP(torch.nn.Module):
         for i in range(self.num_id):
             mask[i*(self.samples_per_class):(i+1)*(self.samples_per_class),i*(self.samples_per_class):(i+1)*(self.samples_per_class)] = 0
         
-        self.mask = mask.unsqueeze(dim=0).repeat(self.batch_size, 1, 1).cuda()
+        self.I_pos = 1 - mask
+        self.mask = mask.unsqueeze(dim=0).repeat(self.batch_size, 1, 1)
     def forward(self, batch):
-        #if isinstance(labels, torch.Tensor): labels = labels.cpu().numpy()
+
+        dtype, device = batch.dtype, batch.device
+        self.mask = self.mask.type(dtype).to(device)
         # compute the relevance scores via cosine similarity of the CNN-produced embedding vectors
+        
         sim_all = self.compute_aff(batch)
-        sim_all = sim_all 
+       
         sim_all_repeat = sim_all.unsqueeze(dim=1).repeat(1, self.batch_size, 1)
         # compute the difference matrix
         sim_diff = sim_all_repeat - sim_all_repeat.permute(0, 2, 1)
         # pass through the sigmoid and ignores the relevance score of the query to itself
         sim_sg = self.sigmoid(sim_diff, temp=self.anneal) * self.mask.cuda()
         # compute the rankings,all batch
-        sim_all_rk = torch.sum(sim_sg, dim=-1) 
+        sim_all_rk = torch.sum(sim_sg, dim=-1)
         if self.variant == 'PNP-D_s':
             sim_all_rk = torch.log(1+sim_all_rk)
         elif self.variant == 'PNP-D_q':
@@ -65,18 +69,15 @@ class OriginalImplementationPNP(torch.nn.Module):
         else:
             raise Exception('variantation <{}> not available!'.format(self.variant))
         
-        
         # sum the values of the Smooth-AP for all instances in the mini-batch
-        loss = torch.zeros(1).cuda()
+        loss = torch.zeros(1).type(dtype).cuda()
         group = int(self.batch_size / self.num_id)
         
         
 
         for ind in range(self.num_id):
-            
-            neg_divide = torch.sum(sim_all_rk[(ind * group):((ind + 1) * group), (ind * group):((ind + 1) * group)])
-            
-            loss = loss + ((neg_divide / group) / self.batch_size)
+            neg_divide = torch.sum(sim_all_rk[(ind * group):((ind + 1) * group), (ind * group):((ind + 1) * group)]/group)
+            loss = loss + (neg_divide / self.batch_size)
         if  self.variant == 'PNP-D_q':
             return 1 - loss
         else:
@@ -122,11 +123,9 @@ class TestPNPLoss(unittest.TestCase):
                     180, 32, dtype=dtype, device=TEST_DEVICE, requires_grad=True
                 )
                 labels = torch.tensor([[i]*(int(bs/classes)) for i in range(classes)]).reshape(-1).to(TEST_DEVICE)
-
                 loss = loss_func(embeddings, labels)
                 loss.backward()
-
-                correct_loss = original_loss_func(F.normalize(embeddings), labels)
+                correct_loss = original_loss_func(F.normalize(embeddings, dim=-1))
                 self.assertTrue(torch.isclose(loss, correct_loss))
 
         with self.assertRaises(ValueError):

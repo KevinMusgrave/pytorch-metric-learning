@@ -24,6 +24,7 @@ class PNPLoss(BaseMetricLossFunction):
         """
 
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+       
         c_f.labels_required(labels)
         c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
         dtype, device = embeddings.dtype, embeddings.device
@@ -33,14 +34,16 @@ class PNPLoss(BaseMetricLossFunction):
         I_pos = torch.zeros(N, N, dtype=dtype, device=device)
         I_neg = torch.zeros(N, N, dtype=dtype, device=device)
         I_pos[a1_idx, p_idx] = 1
+        I_pos[a1_idx, a1_idx] = 1
         I_neg[a2_idx, n_idx] = 1
         N_pos = torch.sum(I_pos, dim=1)
         safe_N = N_pos > 0
         if torch.sum(safe_N) == 0:
             return self.zero_losses()
         sim_all = self.distance(embeddings)
+        
 
-        mask = I_neg.unsqueeze(dim=1).repeat(1, N, 1)
+        mask = I_neg.unsqueeze(dim=0).repeat(N, 1, 1)
 
         sim_all_repeat = sim_all.unsqueeze(dim=1).repeat(1, N, 1)
         # compute the difference matrix
@@ -65,8 +68,9 @@ class PNPLoss(BaseMetricLossFunction):
             pass
         else:
             raise Exception(f"variant <{self.variant}> not available!")
-
-        loss = (sim_all_rk * I_pos) / N_pos.reshape(-1, 1)
+        
+        
+        loss = torch.sum(sim_all_rk * I_pos, dim = -1) / N_pos.reshape(-1)
         loss = torch.sum(loss) / N
         if self.variant == "Dq":
             loss = 1 - loss

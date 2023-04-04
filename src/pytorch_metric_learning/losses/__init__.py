@@ -20,6 +20,7 @@ from .n_pairs_loss import NPairsLoss
 from .nca_loss import NCALoss
 from .normalized_softmax_loss import NormalizedSoftmaxLoss
 from .ntxent_loss import NTXentLoss
+from .pnp_loss import PNPLoss
 from .proxy_anchor_loss import ProxyAnchorLoss
 from .proxy_losses import ProxyNCALoss
 from .self_supervised_loss import SelfSupervisedLoss

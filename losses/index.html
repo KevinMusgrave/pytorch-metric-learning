@@ -416,6 +416,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#pnploss" class="md-nav__link">
+    PNPLoss
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#proxyanchorloss" class="md-nav__link">
     ProxyAnchorLoss
   </a>
@@ -947,6 +954,13 @@
         <li class="md-nav__item">
   <a href="#ntxentloss" class="md-nav__link">
     NTXentLoss
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pnploss" class="md-nav__link">
+    PNPLoss
   </a>
   
 </li>
@@ -1683,6 +1697,10 @@
 <ul>
 <li><strong>loss</strong>: The loss per positive pair in the batch. Reduction type is <code>"pos_pair"</code>.</li>
 </ul>
+<h2 id="pnploss">PNPLoss<a class="headerlink" href="#pnploss" title="Permanent link">&para;</a></h2>
+<p><a href="https://arxiv.org/pdf/2102.04640.pdf" target="_blank">Rethinking the Optimization of Average Precision: Only Penalizing Negative Instances before Positive Ones is Enough</a>
+<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">PNPLoss</span><span class="p">(</span><span class="n">b</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">anneal</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s2">&quot;O&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div></p>
 <h2 id="proxyanchorloss">ProxyAnchorLoss<a class="headerlink" href="#proxyanchorloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/2003.13911.pdf" target="_blank">Proxy Anchor Loss for Deep Metric Learning</a>
 <div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">ProxyAnchorLoss</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">margin</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="mi">32</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>

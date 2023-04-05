@@ -18,13 +18,13 @@
 
 ## News
 
+**April 5**: v2.1.0
+- Added [PNPLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#pnploss)
+- Thanks to contributor [interestingzhuo](https://github.com/interestingzhuo).
+
 **January 29**: v2.0.0
 - Added SelfSupervisedLoss, plus various API improvements. See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v2.0.0).
 - Thanks to contributor [cwkeam](https://github.com/cwkeam).
-
-**January 16**: v1.7.0
-- Fixes an edge case in ArcFaceLoss. See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v1.7.0).
-- Thanks to contributor [ElisonSherton](https://github.com/ElisonSherton).
 
 
 ## Documentation

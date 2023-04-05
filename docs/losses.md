@@ -758,6 +758,14 @@ losses.NTXentLoss(temperature=0.07, **kwargs)
 
 * **loss**: The loss per positive pair in the batch. Reduction type is ```"pos_pair"```.
 
+
+## PNPLoss
+[Rethinking the Optimization of Average Precision: Only Penalizing Negative Instances before Positive Ones is Enough](https://arxiv.org/pdf/2102.04640.pdf){target=_blank}
+```python
+losses.PNPLoss(b=2, alpha=1, anneal=0.01, variant="O", **kwargs)
+```
+
+
 ## ProxyAnchorLoss
 [Proxy Anchor Loss for Deep Metric Learning](https://arxiv.org/pdf/2003.13911.pdf){target=_blank}
 ```python

@@ -79,7 +79,9 @@ class BaseDistance(ModuleWithRecords):
     ):
         if self.collect_stats:
             with torch.no_grad():
-                self.initial_avg_query_norm: torch.mean(self.get_norm(query_emb)).item()
+                self.initial_avg_query_norm = torch.mean(
+                    self.get_norm(query_emb)
+                ).item()
                 self.initial_avg_ref_norm = torch.mean(self.get_norm(ref_emb)).item()
                 self.final_avg_query_norm = torch.mean(
                     self.get_norm(query_emb_normalized)

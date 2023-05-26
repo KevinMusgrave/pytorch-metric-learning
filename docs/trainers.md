@@ -16,8 +16,8 @@ trainers.BaseTrainer(models,
 					optimizers,
 					batch_size,
 					loss_funcs,
-					mining_funcs,
 					dataset,
+					mining_funcs=None,
 					iterations_per_epoch=None,
 					data_device=None,
 					dtype=None,
@@ -47,9 +47,9 @@ trainers.BaseTrainer(models,
 * **batch_size**: The number of elements that are retrieved at each iteration.
 * **loss_funcs**: A dictionary mapping strings to loss functions. The required keys depend on the training method, but all methods are likely to require at least: 
 	* {"metric_loss": loss_func}.
+* **dataset**: The dataset you want to train on. Note that training methods do not perform validation, so do not pass in your validation or test set.
 * **mining_funcs**: A dictionary mapping strings to mining functions. Pass in an empty dictionary, or one or more of the following keys: 
 	* {"subset_batch_miner": mining_func1, "tuple_miner": mining_func2}
-* **dataset**: The dataset you want to train on. Note that training methods do not perform validation, so do not pass in your validation or test set.
 * **data_device**: The device that you want to put batches of data on. If not specified, the trainer will put the data on any available GPUs.
 * **dtype**: The type that the dataset output will be converted to, e.g. ```torch.float16```. If set to ```None```, then no type casting will be done.
 * **iterations_per_epoch**: Optional. 

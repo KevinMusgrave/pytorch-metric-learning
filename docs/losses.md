@@ -321,19 +321,21 @@ As shown above, CrossBatchMemory comes with a 4th argument in its ```forward``` 
 * **enqueue_mask**: A boolean tensor where `enqueue_mask[i]` is True if `embeddings[i]` should be added to the memory queue. This enables CrossBatchMemory to be used in self-supervision frameworks like [MoCo](https://arxiv.org/pdf/1911.05722.pdf). Check out the [MoCo on CIFAR100](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples#simple-examples) notebook to see how this works.
 
 
-**Supported Loss Functions**:
- - [AngularLoss](losses.md#AngularLoss)
- - [CircleLoss](losses.md#CircleLoss)
- - [ContrastiveLoss](losses.md#ContrastiveLoss)
- - [GeneralizedLiftedStructureLoss](losses.md#GeneralizedLiftedStructureLoss)
- - [IntraPairVarianceLoss](losses.md#IntraPairVarianceLoss)
- - [LiftedStructureLoss](losses.md#LiftedStructureLoss)
- - [MultiSimilarityLoss](losses.md#MultiSimilarityLoss)
- - [NTXentLoss](losses.md#NTXentLoss)
- - [SignalToNoiseRatioContrastiveLoss](losses.md#SignalToNoiseRatioContrastiveLoss)
- - [SupConLoss](losses.md#SupConLoss)
- - [TripletMarginLoss](losses.md#TripletMarginLoss)
- - [TupletMarginLoss](losses.md#TupletMarginLoss)
+??? note "Supported Loss Functions"
+    - [AngularLoss](losses.md#angularloss)
+    - [CircleLoss](losses.md#circleloss)
+    - [ContrastiveLoss](losses.md#contrastiveloss)
+    - [GeneralizedLiftedStructureLoss](losses.md#generalizedliftedstructureloss)
+    - [IntraPairVarianceLoss](losses.md#intrapairvarianceloss)
+    - [LiftedStructureLoss](losses.md#liftedstructureloss)
+    - [MarginLoss](losses.md#marginloss)
+    - [MultiSimilarityLoss](losses.md#multisimilarityloss)
+    - [NCALoss](losses.md#ncaloss)
+    - [NTXentLoss](losses.md#ntxentloss)
+    - [SignalToNoiseRatioContrastiveLoss](losses.md#signaltonoiseratiocontrastiveloss)
+    - [SupConLoss](losses.md#supconloss)
+    - [TripletMarginLoss](losses.md#tripletmarginloss)
+    - [TupletMarginLoss](losses.md#tupletmarginloss)
 
 
 **Reset queue**
@@ -847,25 +849,25 @@ loss_optimizer.step()
 
 ## SelfSupervisedLoss
 
-A common use case is to have embeddings and ref_emb be augmented versions of each other. For most losses right now you have to create labels to indicate which embeddings correspond with which ref_emb. `SelfSupervisedLoss` automates this.
+A common use case is to have `embeddings` and `ref_emb` be augmented versions of each other. For most losses, you have to create labels to indicate which `embeddings` correspond with which `ref_emb`. `SelfSupervisedLoss` automates this.
 
 ```python
 loss_fn = losses.TripletMarginLoss()
 loss_fn = SelfSupervisedLoss(loss_fn)
-loss = loss_fn(embeddings, labels)
+loss = loss_fn(embeddings, ref_emb)
 ```
 
-**Supported Loss Functions**:
- - [AngularLoss](losses.md#AngularLoss)
- - [CircleLoss](losses.md#CircleLoss)
- - [ContrastiveLoss](losses.md#ContrastiveLoss)
- - [IntraPairVarianceLoss](losses.md#IntraPairVarianceLoss)
- - [MultiSimilarityLoss](losses.md#MultiSimilarityLoss)
- - [NTXentLoss](losses.md#NTXentLoss)
- - [SignalToNoiseRatioContrastiveLoss](losses.md#SignalToNoiseRatioContrastiveLoss)
- - [SupConLoss](losses.md#SupConLoss)
- - [TripletMarginLoss](losses.md#TripletMarginLoss)
- - [TupletMarginLoss](losses.md#TupletMarginLoss)
+??? "Supported Loss Functions"
+    - [AngularLoss](losses.md#angularloss)
+    - [CircleLoss](losses.md#circleloss)
+    - [ContrastiveLoss](losses.md#contrastiveloss)
+    - [IntraPairVarianceLoss](losses.md#intrapairvarianceloss)
+    - [MultiSimilarityLoss](losses.md#multisimilarityloss)
+    - [NTXentLoss](losses.md#ntxentloss)
+    - [SignalToNoiseRatioContrastiveLoss](losses.md#signaltonoiseratiocontrastiveloss)
+    - [SupConLoss](losses.md#supconloss)
+    - [TripletMarginLoss](losses.md#tripletmarginloss)
+    - [TupletMarginLoss](losses.md#tupletmarginloss)
 
 
 

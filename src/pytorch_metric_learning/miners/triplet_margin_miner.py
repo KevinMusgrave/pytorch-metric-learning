@@ -37,6 +37,8 @@ class TripletMarginMiner(BaseMiner):
             ap_dist - an_dist if self.distance.is_inverted else an_dist - ap_dist
         )
 
+        self.set_stats(ap_dist, an_dist, triplet_margin)
+
         if self.type_of_triplets == "easy":
             threshold_condition = triplet_margin > self.margin
         else:

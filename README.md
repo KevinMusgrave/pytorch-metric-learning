@@ -255,6 +255,7 @@ Thanks to the contributors who made pull requests!
 | [martin0258](https://github.com/martin0258) | |
 | [michaeldeyzel](https://github.com/michaeldeyzel) | |
 | [HSinger04](https://github.com/HSinger04) | |
+| [rheum](https://github.com/rheum) | |
 
 
 

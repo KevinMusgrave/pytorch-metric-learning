@@ -103,3 +103,12 @@ class TestTripletMarginMiner(unittest.TestCase):
             self.assertTrue(len(a) == 0)
             self.assertTrue(len(p) == 0)
             self.assertTrue(len(n) == 0)
+
+    @unittest.skipUnless(WITH_COLLECT_STATS, "WITH_COLLECT_STATS is false")
+    def test_recordable_attributes(self):
+        miner = TripletMarginMiner()
+        emb, labels = torch.randn(32, 32), torch.randint(0, 3, size=(32,))
+        miner(emb, labels)
+        self.assertNotEqual(miner.avg_triplet_margin, 0)
+        self.assertNotEqual(miner.pos_pair_dist, 0)
+        self.assertNotEqual(miner.neg_pair_dist, 0)

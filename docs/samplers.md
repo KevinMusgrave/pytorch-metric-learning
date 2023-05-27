@@ -1,5 +1,6 @@
 # Samplers
-Samplers are just extensions of the torch.utils.data.Sampler class, i.e. they are passed to a PyTorch Dataloader. The purpose of samplers is to determine how batches should be formed. This is also where any offline pair or triplet miners should exist.
+Samplers are just extensions of the torch.utils.data.Sampler class, i.e. they are passed to a PyTorch Dataloader (specifically as _sampler_ argument, unless otherwise mentioned). 
+The purpose of samplers is to determine how batches should be formed. This is also where any offline pair or triplet miners should exist.
 
 
 ## MPerClassSampler

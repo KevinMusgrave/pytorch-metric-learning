@@ -12,6 +12,7 @@ from .instance_loss import InstanceLoss
 from .intra_pair_variance_loss import IntraPairVarianceLoss
 from .large_margin_softmax_loss import LargeMarginSoftmaxLoss
 from .lifted_structure_loss import GeneralizedLiftedStructureLoss, LiftedStructureLoss
+from .manifold_loss import ManifoldLoss
 from .margin_loss import MarginLoss
 from .mixins import EmbeddingRegularizerMixin, WeightRegularizerMixin
 from .multi_similarity_loss import MultiSimilarityLoss

@@ -461,10 +461,16 @@ def to_dtype(x, tensor=None, dtype=None):
 
 def to_device(x, tensor=None, device=None, dtype=None):
     dv = device if device is not None else tensor.device
-    if x.device != dv:
-        x = x.to(dv)
-    if dtype is not None:
-        x = to_dtype(x, dtype=dtype)
+    is_iterable = is_list_or_tuple(x)
+    if not is_iterable:
+        x = [x]
+    for xt in x:
+        if xt.device != dv:
+            xt = xt.to(dv)
+        if dtype is not None:
+            xt = to_dtype(xt, dtype=dtype)
+    if not is_iterable:
+        x = x[0]
     return x
 
 

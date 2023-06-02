@@ -13,6 +13,7 @@ class ManifoldProxyLoss(BaseMetricLossFunction):
 
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
         c_f.labels_not_supported(labels, ref_labels)
+        ref_emb, indices_tuple, self.p = c_f.to_device((ref_emb, indices_tuple, self.p), tensor=embeddings)
 
         K = ref_emb.shape[0]
         proxies_by_embeddings = ref_emb[indices_tuple, :]
@@ -76,7 +77,7 @@ class ManifoldLoss(BaseMetricLossFunction):
         if indices_tuple is not None:
             meta_classes = indices_tuple
         else:
-            meta_classes = torch.randint(0, self.K, (N-self.K,))
+            meta_classes = torch.randint(0, self.K, (N - self.K,))
             meta_classes = torch.cat((torch.arange(self.K), meta_classes))
             meta_classes = meta_classes[torch.randperm(N)]
 
@@ -86,7 +87,8 @@ class ManifoldLoss(BaseMetricLossFunction):
         self.proxies = c_f.to_device(self.proxies, tensor=embeddings)
         embs_and_proxies = torch.cat([embeddings, self.proxies], dim=0)
         S = self.distance(embs_and_proxies, embs_and_proxies)
-        D_inv_half = torch.pow(torch.abs(torch.sum(S, dim=1)), -1 / 2)  # In the paper it is not specified how to avoid averall negative scalar products
+        D_inv_half = torch.pow(torch.abs(torch.sum(S, dim=1)),
+                               -1 / 2)  # In the paper it is not specified how to avoid averall negative scalar products
         S_bar = D_inv_half * S.t()
         S_bar = S_bar.t() * D_inv_half
         S_bar.fill_diagonal_(0)
@@ -98,15 +100,16 @@ class ManifoldLoss(BaseMetricLossFunction):
             loss = torch.log(1 + torch.sum(loss, dim=1))
             loss = loss.mean()
         else:
-            proxies_repeted = F[-self.K:, :].unsqueeze(0).repeat(N,1,1)
+            proxies_repeted = F[-self.K:, :].unsqueeze(0).repeat(N, 1, 1)
             loss = torch.exp(ManifoldLoss.s(F[:N, :].unsqueeze(-1), proxies_repeted) -
                              ManifoldLoss.s(F[:N, :], F[N + meta_classes, :]).unsqueeze(-1) + self.margin)
             loss = torch.log(1 + torch.sum(loss, dim=1))
             loss = loss.mean()
 
-        self.proxies.requires_grad = False
+        old_proxies = self.proxies.detach()
+        old_embs = embeddings.detach()
         for _ in range(20):
-            proxies_loss = self.proxies_loss(embeddings, None, meta_classes, self.proxies, None)
+            proxies_loss = self.proxies_loss(old_embs, None, meta_classes, old_proxies, None)
             self.proxies_optimizer.zero_grad()
             proxies_loss.backward()
             self.proxies_optimizer.step()
@@ -122,7 +125,7 @@ class ManifoldLoss(BaseMetricLossFunction):
 
     @staticmethod
     def s(x, p):
-        return torch.sum(x*p, dim=1)
+        return torch.sum(x * p, dim=1)
 
     def get_default_distance(self):
         return DotProductSimilarity()

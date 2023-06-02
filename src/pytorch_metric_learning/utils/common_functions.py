@@ -464,14 +464,11 @@ def to_device(x, tensor=None, device=None, dtype=None):
     is_iterable = is_list_or_tuple(x)
     if not is_iterable:
         x = [x]
-    for xt in x:
-        if xt.device != dv:
-            xt = xt.to(dv)
-        if dtype is not None:
-            xt = to_dtype(xt, dtype=dtype)
-    if not is_iterable:
-        x = x[0]
-    return x
+    xd = [to_dtype(xt.to(dv), tensor=tensor, dtype=dtype) for xt in x]
+
+    if len(xd) == 1:
+        xd = xd[0]
+    return xd
 
 
 def set_ref_emb(embeddings, labels, ref_emb, ref_labels):

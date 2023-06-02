@@ -13,7 +13,7 @@ class ManifoldProxyLoss(BaseMetricLossFunction):
 
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
         c_f.labels_not_supported(labels, ref_labels)
-        ref_emb, indices_tuple, self.p = c_f.to_device((ref_emb, indices_tuple, self.p), tensor=embeddings)
+        ref_emb, indices_tuple, self.p = c_f.to_device((ref_emb, indices_tuple, self.p), tensor=embeddings, dtype=torch.float32)
 
         K = ref_emb.shape[0]
         proxies_by_embeddings = ref_emb[indices_tuple, :]
@@ -143,4 +143,5 @@ class ManifoldLoss(BaseMetricLossFunction):
 
     def get_default_proxy_loss(self, p):
         return ManifoldProxyLoss(p)
+
 

@@ -21,6 +21,7 @@ from .n_pairs_loss import NPairsLoss
 from .nca_loss import NCALoss
 from .normalized_softmax_loss import NormalizedSoftmaxLoss
 from .ntxent_loss import NTXentLoss
+from .p2s_grad_loss import P2SGradLoss
 from .pnp_loss import PNPLoss
 from .proxy_anchor_loss import ProxyAnchorLoss
 from .proxy_losses import ProxyNCALoss
@@ -33,3 +34,4 @@ from .supcon_loss import SupConLoss
 from .triplet_margin_loss import TripletMarginLoss
 from .tuplet_margin_loss import TupletMarginLoss
 from .vicreg_loss import VICRegLoss
+

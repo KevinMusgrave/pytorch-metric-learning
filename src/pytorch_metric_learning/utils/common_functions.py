@@ -3,6 +3,7 @@ import glob
 import logging
 import os
 import re
+from typing import List, Tuple
 
 import numpy as np
 import scipy.stats
@@ -459,12 +460,19 @@ def to_dtype(x, tensor=None, dtype=None):
     return x
 
 
-def to_device(x, tensor=None, device=None, dtype=None):
+def to_device(x: torch.Tensor | List[torch.Tensor] | Tuple[torch.Tensor], tensor=None, device=None,
+              dtype: torch.Tensor | List[torch.Tensor] | Tuple[torch.Tensor] = None):
     dv = device if device is not None else tensor.device
     is_iterable = is_list_or_tuple(x)
     if not is_iterable:
         x = [x]
-    xd = [to_dtype(xt.to(dv), tensor=tensor, dtype=dtype) for xt in x]
+    if is_list_or_tuple(dtype):
+        if len(dtype) == len(x):
+            xd = [to_dtype(x[i].to(dv), tensor=tensor, dtype=dtype[i]) for i in range(len(x))]
+        else:
+            raise RuntimeError(f"The size of dtype was {len(dtype)}. It is only available 1 or the same of x")
+    else:
+        xd = [to_dtype(xt.to(dv), tensor=tensor, dtype=dtype) for xt in x]
 
     if len(xd) == 1:
         xd = xd[0]

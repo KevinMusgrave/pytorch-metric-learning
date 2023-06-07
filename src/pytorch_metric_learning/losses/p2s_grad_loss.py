@@ -59,7 +59,7 @@ class P2SGradLoss(BaseMetricLossFunction):
 
         with torch.no_grad():
             index = torch.zeros_like(cos_theta)
-            index.scatter_(1, labels.data.view(-1, 1), 1)
+            index.scatter_(1, labels.view(-1, 1), 1)
 
         # MSE between \cos\theta and one-hot vectors
         loss = self.m_loss(cos_theta, index)

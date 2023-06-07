@@ -3,11 +3,12 @@ import glob
 import logging
 import os
 import re
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 import numpy as np
 import scipy.stats
 import torch
+from torch import nn
 
 LOGGER_NAME = "PML"
 LOGGER = logging.getLogger(LOGGER_NAME)
@@ -460,8 +461,8 @@ def to_dtype(x, tensor=None, dtype=None):
     return x
 
 
-def to_device(x: torch.Tensor | List[torch.Tensor] | Tuple[torch.Tensor], tensor=None, device=None,
-              dtype: torch.Tensor | List[torch.Tensor] | Tuple[torch.Tensor] = None):
+def to_device(x: Union[torch.Tensor, nn.Parameter], tensor=None, device=None,
+              dtype: Union[torch.Tensor, List[torch.Tensor], Tuple[torch.Tensor]] = None):
     dv = device if device is not None else tensor.device
     is_iterable = is_list_or_tuple(x)
     if not is_iterable:

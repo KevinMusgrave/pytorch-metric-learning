@@ -32,12 +32,11 @@ def pairwise_similarity(x, y=None):
 ######################################
 #######ORIGINAL IMPLEMENTATION########
 ######################################
-# DIRECTLY ASKED TO Nicolas Aziere
+# DIRECTLY ASKED TO Nicolas Aziere.
 # This code is copied from the official implementation
 # so that we can make sure our implementation returns the same result.
 # Some minor changes were made to avoid errors during testing.
-# Every modification is reported.
-# It's copied under the MIT license.
+# Every change in the original code is reported and explained.
 class OriginalImplementationManifoldLoss(Module):
     def __init__(self, proxies, alpha, lambdaC=1.0, distance=F.cosine_similarity):
         """

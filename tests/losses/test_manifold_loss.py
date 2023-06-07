@@ -48,7 +48,7 @@ class OriginalImplementationManifoldLoss(Module):
         super(OriginalImplementationManifoldLoss, self).__init__()
         self.alpha = alpha
         self.lambdaC = lambdaC
-        self.proxy = proxies.cuda() / proxies.norm(p=2)
+        self.proxy = proxies / proxies.norm(p=2)         # Removed .cuda() to avoid errors
         self.nb_proxy = proxies.size(0)
         self.d = distance
 
@@ -58,7 +58,7 @@ class OriginalImplementationManifoldLoss(Module):
         return
             A: B x B the approximated rank matrix
         """
-        x = x.cuda()
+        # Removed x = x.cuda() to avoid errors
 
         # Construct Affinity matrix
         # W = pairwise_distances(x)
@@ -66,14 +66,14 @@ class OriginalImplementationManifoldLoss(Module):
         # Gaussian kernel
         W = torch.exp(W / 0.5)  # Increased variance from 0.05 to 0.5 in order to account for dtype Half in our code
 
-        Y = torch.eye(len(W), dtype=W.dtype).cuda()  # Added dtype cast to avoid errors
+        Y = torch.eye(len(W), dtype=W.dtype, device=x.device)  # Added dtype and device cast to avoid errors
 
         ## Set diagonal to 0 ?????
         W = W - W * Y
         # print(W[0])
         D = torch.diag(torch.pow(torch.sum(W, dim=1), -0.5))
         D[D == float("Inf")] = 0.0
-        S = torch.mm(torch.mm(D, W), D).cuda()
+        S = torch.mm(torch.mm(D, W), D)      # Removed .cuda() to avoid errors
 
         # Solve random walk closed form
         dt = S.dtype
@@ -108,8 +108,8 @@ class OriginalImplementationManifoldLoss(Module):
         loss_context = torch.zeros(1, dtype=fvec.dtype, device=fvec.device)  # Modified to avoid errors
 
         for i in range(N):
-            loss_neg1_intrinsic = torch.zeros(1, dtype=fvec.dtype).cuda()
-            loss_neg1_context = torch.zeros(1, dtype=fvec.dtype).cuda()
+            loss_neg1_intrinsic = torch.zeros(1, dtype=fvec.dtype, device=fvec.device)          # Removed .cuda() to avoid errors                                   # NoQA
+            loss_neg1_context = torch.zeros(1, dtype=fvec.dtype, device=fvec.device)            # Removed .cuda() to avoid errors                                   # NoQA
             dist_pos = self.d(torch.unsqueeze(A[i], 0), torch.unsqueeze(A_p[fLvec[i]], 0))
 
             for j in range(self.nb_proxy):
@@ -154,7 +154,7 @@ class TestManifoldLoss(unittest.TestCase):
             labels = torch.LongTensor([0, 0, 1, 1, 2])
 
             n_proxies = 3
-            proxies = nn.Parameter(torch.randn(n_proxies, 2, device='cuda:0', dtype=dtype))
+            proxies = nn.Parameter(torch.randn(n_proxies, 2, device=TEST_DEVICE, dtype=dtype))
             alpha = 0.99
             original_loss_func = OriginalImplementationManifoldLoss(proxies, alpha=alpha, lambdaC=0)
             original_loss = original_loss_func(embeddings, labels)
@@ -183,7 +183,7 @@ class TestManifoldLoss(unittest.TestCase):
             labels = torch.LongTensor(torch.randint(0, 5, (5,)).tolist())
 
             n_proxies = 5
-            proxies = nn.Parameter(torch.randn(n_proxies, 2, device='cuda:0', dtype=dtype))
+            proxies = nn.Parameter(torch.randn(n_proxies, 2, device=TEST_DEVICE, dtype=dtype))
             alpha = 0.99
             original_loss_func = OriginalImplementationManifoldLoss(proxies, alpha=alpha)
             original_loss = original_loss_func(embeddings, labels)

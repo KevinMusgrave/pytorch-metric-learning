@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 import unittest
+
 import torch
 import torch.nn as nn
+
 from pytorch_metric_learning.losses import P2SGradLoss
 from pytorch_metric_learning.utils import common_functions as c_f
 
@@ -9,7 +11,7 @@ __author__ = "Xin Wang"
 __email__ = "wangxin@nii.ac.jp"
 __copyright__ = "Copyright 2021, Xin Wang"
 
-from .. import TEST_DTYPES, TEST_DEVICE
+from .. import TEST_DEVICE, TEST_DTYPES
 from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 
@@ -24,7 +26,7 @@ from ..zzz_testing_utils.testing_utils import angle_to_coord
 # The code has been adapted for tests.
 # It's copied under the BSD license.
 class TrustedImplementationP2SActivationLayer(nn.Module):
-    """ Output layer that produces cos\theta between activation vector x
+    """Output layer that produces cos\theta between activation vector x
     and class vector w_j
 
     in_dim:     dimension of input feature vectors
@@ -135,7 +137,9 @@ class TrustedImplementationP2SGradLoss(nn.Module):
         # index (batch_size, class_num)
         with torch.no_grad():
             index = torch.zeros_like(input_score)
-            index, target = c_f.to_device((index, target), tensor=input_score, dtype=torch.long)
+            index, target = c_f.to_device(
+                (index, target), tensor=input_score, dtype=torch.long
+            )
             # index[i][target[i][j]] = 1
             index.scatter_(1, target.data.view(-1, 1), 1)
 
@@ -147,7 +151,6 @@ class TrustedImplementationP2SGradLoss(nn.Module):
 
 
 class TestP2SGradLoss(unittest.TestCase):
-
     def test_p2s_grad_loss_with_paper_formula(self):
         num_classes = 20
         batch_size = 100
@@ -164,7 +167,9 @@ class TestP2SGradLoss(unittest.TestCase):
             labels = (torch.rand(batch_size) * num_classes).clamp(0, num_classes - 1)
             labels = labels.to(torch.long)
 
-            loss_fn = P2SGradLoss(descriptors_dim=descriptors_dim, num_classes=num_classes)
+            loss_fn = P2SGradLoss(
+                descriptors_dim=descriptors_dim, num_classes=num_classes
+            )
             optimizer = torch.optim.SGD([loss_fn.weight], lr=0.001)
             optimizer.zero_grad()
             copy_weights = loss_fn.weight.data.clone()
@@ -187,8 +192,11 @@ class TestP2SGradLoss(unittest.TestCase):
 
                 gradients = 2 * torch.mean(L_j * D_j, dim=0) / num_classes
                 gradients = gradients.to(dtype)
-                self.assertTrue(torch.all(torch.isclose(gradients,
-                                                        loss_fn.weight.grad[:, j], rtol=0.5e-1)))
+                self.assertTrue(
+                    torch.all(
+                        torch.isclose(gradients, loss_fn.weight.grad[:, j], rtol=0.5e-1)
+                    )
+                )
 
     def test_p2s_grad_loss_with_trusted_implementation(self):
 
@@ -208,7 +216,9 @@ class TestP2SGradLoss(unittest.TestCase):
             loss_func = P2SGradLoss(descriptors_dim, class_num)
             t_layer = TrustedImplementationP2SActivationLayer(input_dim, class_num)
             t_loss_func = TrustedImplementationP2SGradLoss()
-            loss_func.weight = t_layer.weight  # Only to ensure they start from equal initializations
+            loss_func.weight = (
+                t_layer.weight
+            )  # Only to ensure they start from equal initializations
 
             rtol = 1e-2 if dtype == torch.float16 else 1e-5
 

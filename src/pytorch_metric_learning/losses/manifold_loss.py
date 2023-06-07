@@ -2,9 +2,12 @@
 import numpy as np
 import torch
 from torch import nn
+
 from pytorch_metric_learning.distances import CosineSimilarity
+from pytorch_metric_learning.losses.base_metric_loss_function import (
+    BaseMetricLossFunction,
+)
 from pytorch_metric_learning.utils import common_functions as c_f
-from pytorch_metric_learning.losses.base_metric_loss_function import BaseMetricLossFunction
 
 
 class ManifoldLoss(BaseMetricLossFunction):
@@ -25,11 +28,21 @@ class ManifoldLoss(BaseMetricLossFunction):
     - margin: margin used in the calculation of the loss. Optional
     """
 
-    def __init__(self, l: int, K: int = 50, lambdaC: float = 1.0, alpha: float = 0.8, margin: float = 5e-4, **kwargs):
+    def __init__(
+        self,
+        l: int,
+        K: int = 50,
+        lambdaC: float = 1.0,
+        alpha: float = 0.8,
+        margin: float = 5e-4,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
         if lambdaC < 0:
-            raise ValueError(f"Uncorrect value for lambdaC argument. "
-                             f"Given lambdaC={lambdaC} but accepted only non-negative values")
+            raise ValueError(
+                f"Uncorrect value for lambdaC argument. "
+                f"Given lambdaC={lambdaC} but accepted only non-negative values"
+            )
 
         self.K = K
         self.l = l
@@ -37,7 +50,9 @@ class ManifoldLoss(BaseMetricLossFunction):
         self.lambdaC = lambdaC
         self.alpha = alpha
         self.margin = margin
-        self.add_to_recordable_attributes(list_of_names=["K", "l", "lambdaC", "alpha", "margin"], is_stat=True)
+        self.add_to_recordable_attributes(
+            list_of_names=["K", "l", "lambdaC", "alpha", "margin"], is_stat=True
+        )
 
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
         c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
@@ -70,7 +85,9 @@ class ManifoldLoss(BaseMetricLossFunction):
         S_bar = S_bar.mm(D_inv_half)
 
         dt = S_bar.dtype
-        L = torch.inverse(Y.float() - self.alpha * S_bar.float())  # Added dtype cast to avoid errors
+        L = torch.inverse(
+            Y.float() - self.alpha * S_bar.float()
+        )  # Added dtype cast to avoid errors
         L = L.to(dt)
 
         F = (1 - self.alpha) * L
@@ -81,17 +98,24 @@ class ManifoldLoss(BaseMetricLossFunction):
             F = F[:N, N:]
             loss_int = F - F[torch.arange(N), meta_classes].view(-1, 1) + self.margin
             loss_int[
-                torch.arange(N), meta_classes] = -np.inf  # This way avoid numerical cancellation happening   # NoQA
+                torch.arange(N), meta_classes
+            ] = -np.inf  # This way avoid numerical cancellation happening   # NoQA
             # instead with subtraction of margin term           # NoQA
-            loss_int[loss_int < 0] = -np.inf  # This way no loss for positive correlation with own proxy
+            loss_int[
+                loss_int < 0
+            ] = -np.inf  # This way no loss for positive correlation with own proxy
 
             loss_int = torch.exp(loss_int)
             loss_int = torch.log(1 + torch.sum(loss_int, dim=1))
             loss_int = loss_int.mean()
 
-        loss_ctx = torch.nn.functional.cosine_similarity(F_e, F_p.unsqueeze(1), dim=-1).t()
+        loss_ctx = torch.nn.functional.cosine_similarity(
+            F_e, F_p.unsqueeze(1), dim=-1
+        ).t()
         loss_ctx += -loss_ctx[torch.arange(N), meta_classes].view(-1, 1) + self.margin
-        loss_ctx[torch.arange(N), meta_classes] = -np.inf  # This way avoid numerical cancellation happening   # NoQA
+        loss_ctx[
+            torch.arange(N), meta_classes
+        ] = -np.inf  # This way avoid numerical cancellation happening   # NoQA
         # instead with subtraction of margin term           # NoQA
         loss_ctx[loss_ctx < 0] = -np.inf
 
@@ -114,7 +138,9 @@ class ManifoldLoss(BaseMetricLossFunction):
     #     return torch.sum(x / x.norm(p=2, dim=1, keepdim=True) * p / p.norm(p=2, dim=1, keepdim=True), dim=1)
 
     def update_p(self, old_embs, old_proxies, meta_classes):
-        proxies_loss = self.proxies_loss(old_embs, None, meta_classes, old_proxies, None)
+        proxies_loss = self.proxies_loss(
+            old_embs, None, meta_classes, old_proxies, None
+        )
         self.proxies_optimizer.zero_grad()
         proxies_loss.backward()
         self.proxies_optimizer.step()
@@ -135,6 +161,7 @@ class ManifoldLoss(BaseMetricLossFunction):
 
     # def get_default_proxy_loss(self):
     #     return ManifoldProxyLoss(self.p)
+
 
 # if __name__ == '__main__':
 #     loss_fn = ManifoldLoss(l=128, K=3)

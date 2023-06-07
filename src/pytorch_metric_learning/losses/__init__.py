@@ -34,4 +34,3 @@ from .supcon_loss import SupConLoss
 from .triplet_margin_loss import TripletMarginLoss
 from .tuplet_margin_loss import TupletMarginLoss
 from .vicreg_loss import VICRegLoss
-

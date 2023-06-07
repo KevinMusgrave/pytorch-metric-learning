@@ -3,6 +3,7 @@
 import torch
 import torch.nn as nn
 from torch.nn import Parameter
+
 from ..utils import common_functions as c_f
 from . import BaseMetricLossFunction
 
@@ -43,8 +44,9 @@ class P2SGradLoss(BaseMetricLossFunction):
 
         self.weight.data = self.weight.data.renorm(2, 1, 1e-5).mul(1e5)
         dtype = embeddings.dtype
-        self.weight.data, labels = c_f.to_device((self.weight.data, labels), tensor=embeddings,
-                                                 dtype=(dtype, torch.long))
+        self.weight.data, labels = c_f.to_device(
+            (self.weight.data, labels), tensor=embeddings, dtype=(dtype, torch.long)
+        )
 
         rtol = 1e-2 if dtype == torch.float16 else 1e-5
         w_modulus = self.weight.pow(2).sum(0).pow(0.5)

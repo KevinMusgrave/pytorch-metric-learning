@@ -12,7 +12,6 @@ from .utils import get_pair_embeddings_with_ref
 class TestMultiSimilarityLoss(unittest.TestCase):
     def test_multi_similarity_loss(self):
         for dtype in TEST_DTYPES:
-
             embedding_angles = [0, 20, 40, 60, 80]
             embeddings = torch.tensor(
                 [angle_to_coord(a) for a in embedding_angles],

@@ -31,7 +31,6 @@ class OriginalImplementationPNP(torch.nn.Module):
         self.mask = mask.unsqueeze(dim=0).repeat(self.batch_size, 1, 1)
 
     def forward(self, batch):
-
         dtype, device = batch.dtype, batch.device
         self.mask = self.mask.type(dtype).to(device)
         # compute the relevance scores via cosine similarity of the CNN-produced embedding vectors

@@ -137,9 +137,8 @@ class TrustedImplementationP2SGradLoss(nn.Module):
         # index (batch_size, class_num)
         with torch.no_grad():
             index = torch.zeros_like(input_score)
-            index, target = c_f.to_device(
-                (index, target), tensor=input_score, dtype=torch.long
-            )
+            index = c_f.to_device(index, tensor=input_score, dtype=torch.long)
+            target = c_f.to_device(target, tensor=input_score, dtype=torch.long)
             # index[i][target[i][j]] = 1
             index.scatter_(1, target.data.view(-1, 1), 1)
 
@@ -199,7 +198,6 @@ class TestP2SGradLoss(unittest.TestCase):
                 )
 
     def test_p2s_grad_loss_with_trusted_implementation(self):
-
         for dtype in TEST_DTYPES:
             embedding_angles = [0, 20, 40, 60, 80]
             embeddings = torch.tensor(

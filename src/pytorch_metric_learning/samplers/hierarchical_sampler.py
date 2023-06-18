@@ -74,12 +74,9 @@ class HierarchicalSampler(Sampler):
     def reshuffle(self):
         batches = []
         for combinations in self.super_pairs:
-
             for b in range(self.batches_per_super_tuple):
-
                 batch = []
                 for slb in combinations:
-
                     sub_batch = []
                     all_classes = list(self.super_image_lists[slb].keys())
                     c_f.NUMPY_RANDOM.shuffle(all_classes)

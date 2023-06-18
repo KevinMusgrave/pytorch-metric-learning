@@ -119,9 +119,7 @@ class OriginalImplementationManifoldLoss(Module):
             )
 
             for j in range(self.nb_proxy):
-
                 if fLvec[i] != j:
-
                     val1_context = (
                         self.d(torch.unsqueeze(A[i], 0), torch.unsqueeze(A_p[j], 0))
                         - dist_pos

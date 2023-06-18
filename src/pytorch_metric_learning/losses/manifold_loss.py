@@ -66,8 +66,7 @@ class ManifoldLoss(BaseMetricLossFunction):
             meta_classes = torch.cat((torch.arange(self.K), meta_classes))
             meta_classes = meta_classes[torch.randperm(N)]
 
-        loss_int = torch.zeros(1)
-        loss_int = c_f.to_device(loss_int, tensor=embeddings, dtype=embeddings.dtype)
+        loss_int = torch.zeros(1, device=embeddings.device, dtype=embeddings.dtype)
         embs_and_proxies = torch.cat([embeddings, self.proxies], dim=0)
 
         S = self.distance(embs_and_proxies, embs_and_proxies).clamp(0, np.inf)

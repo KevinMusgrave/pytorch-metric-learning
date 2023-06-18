@@ -3,12 +3,10 @@ import glob
 import logging
 import os
 import re
-from typing import List, Tuple, Union
 
 import numpy as np
 import scipy.stats
 import torch
-from torch import nn
 
 LOGGER_NAME = "PML"
 LOGGER = logging.getLogger(LOGGER_NAME)
@@ -461,34 +459,13 @@ def to_dtype(x, tensor=None, dtype=None):
     return x
 
 
-def to_device(
-    x: Union[torch.Tensor, nn.Parameter, List, Tuple],
-    tensor=None,
-    device=None,
-    dtype: Union[torch.dtype, List, Tuple] = None,
-):
+def to_device(x, tensor=None, device=None, dtype=None):
     dv = device if device is not None else tensor.device
-    is_iterable = is_list_or_tuple(x)
-    if not is_iterable:
-        x = [x]
-
-    xd = x
-    if is_list_or_tuple(dtype):
-        if len(dtype) == len(x):
-            xd = [
-                to_dtype(x[i].to(dv), tensor=tensor, dtype=dtype[i])
-                for i in range(len(x))
-            ]
-        else:
-            raise RuntimeError(
-                f"The size of dtype was {len(dtype)}. It is only available 1 or the same of x"
-            )
-    elif dtype is not None:
-        xd = [to_dtype(xt.to(dv), tensor=tensor, dtype=dtype) for xt in x]
-
-    if len(xd) == 1:
-        xd = xd[0]
-    return xd
+    if x.device != dv:
+        x = x.to(dv)
+    if dtype is not None:
+        x = to_dtype(x, dtype=dtype)
+    return x
 
 
 def set_ref_emb(embeddings, labels, ref_emb, ref_labels):

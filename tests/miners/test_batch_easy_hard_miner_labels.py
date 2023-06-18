@@ -24,7 +24,7 @@ class TestBatchEasyHardMinerLabels(unittest.TestCase):
                 DotProductSimilarity,
                 SNRDistance,
             ]:
-                for (pos_strategy, neg_strategy) in [
+                for pos_strategy, neg_strategy in [
                     ("easy", "easy"),
                     ("easy", "semihard"),
                     ("easy", "hard"),

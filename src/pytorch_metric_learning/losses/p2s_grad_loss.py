@@ -44,8 +44,8 @@ class P2SGradLoss(BaseMetricLossFunction):
 
         self.weight.data = self.weight.data.renorm(2, 1, 1e-5).mul(1e5)
         dtype = embeddings.dtype
-        self.weight.data, labels = c_f.to_device(
-            (self.weight.data, labels), tensor=embeddings, dtype=(dtype, torch.long)
+        self.weight.data = c_f.to_device(
+            self.weight.data, tensor=embeddings, dtype=dtype
         )
 
         rtol = 1e-2 if dtype == torch.float16 else 1e-5

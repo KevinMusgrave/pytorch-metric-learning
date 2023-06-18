@@ -31,7 +31,6 @@ class TestMetricLossOnly(unittest.TestCase):
             TrainWithClassifier,
             TwoStreamMetricLoss,
         ]:
-
             model_dict = {"trunk": model}
             optimizer_dict = {"trunk_optimizer": None}
             loss_fn_dict = {"metric_loss": loss_fn}

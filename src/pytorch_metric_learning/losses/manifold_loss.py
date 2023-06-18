@@ -37,7 +37,7 @@ class ManifoldLoss(BaseMetricLossFunction):
         super().__init__(**kwargs)
         if lambdaC < 0:
             raise ValueError(
-                f"Uncorrect value for lambdaC argument. "
+                f"Incorrect value for lambdaC argument. "
                 f"Given lambdaC={lambdaC} but accepted only non-negative values"
             )
 

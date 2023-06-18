@@ -7,8 +7,8 @@ import torch.nn.functional as F
 from torch.nn.modules.module import Module
 
 from pytorch_metric_learning.losses import ManifoldLoss
+
 from .. import TEST_DEVICE, TEST_DTYPES
-from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 
 def pairwise_similarity(x, y=None):
@@ -143,7 +143,7 @@ class OriginalImplementationManifoldLoss(Module):
         return loss_intrinsic + self.lambdaC * loss_context
 
 
-def loss_uncorrect_descriptors_dim():
+def loss_incorrect_descriptors_dim():
     embeddings = torch.randn(10, 10)
     loss_fn = ManifoldLoss(l=999)
     loss_fn(embeddings)
@@ -152,56 +152,59 @@ def loss_uncorrect_descriptors_dim():
 class TestManifoldLoss(unittest.TestCase):
     def test_intrinsic_and_context_losses(self):
         for dtype in TEST_DTYPES:
-            embedding_angles = [0, 20, 40, 60, 80]
-            embeddings = torch.tensor(
-                [angle_to_coord(a) for a in embedding_angles],
-                requires_grad=True,
-                dtype=dtype,
-            ).to(
-                TEST_DEVICE
-            )  # 2D embeddings
-            labels = torch.LongTensor([0, 0, 1, 1, 2])
-
+            batch_size, embedding_size = 32, 128
             n_proxies = 3
+
+            embeddings = torch.randn(
+                batch_size,
+                embedding_size,
+                device=TEST_DEVICE,
+                dtype=dtype,
+                requires_grad=True,
+            )
+            labels = torch.randint(0, n_proxies, size=(batch_size,), device=TEST_DEVICE)
             proxies = nn.Parameter(
-                torch.randn(n_proxies, 2, device=TEST_DEVICE, dtype=dtype)
+                torch.randn(n_proxies, embedding_size, device=TEST_DEVICE, dtype=dtype)
             )
             alpha = 0.99
+
             original_loss_func = OriginalImplementationManifoldLoss(
                 proxies, alpha=alpha, lambdaC=0
             )
             original_loss = original_loss_func(embeddings, labels)
 
-            self.assertRaises(ValueError, lambda: ManifoldLoss(l=2, lambdaC=-999))
-            self.assertRaises(AssertionError, loss_uncorrect_descriptors_dim)
+            self.assertRaises(
+                ValueError, lambda: ManifoldLoss(l=embedding_size, lambdaC=-999)
+            )
+            self.assertRaises(AssertionError, loss_incorrect_descriptors_dim)
 
             loss_func = ManifoldLoss(
-                l=2, K=n_proxies, alpha=alpha, lambdaC=0, margin=0.0
+                l=embedding_size, K=n_proxies, alpha=alpha, lambdaC=0, margin=0.0
             )
             loss_func.proxies.data = (
                 proxies.data
             )  # In order to have same initializations
             loss = loss_func(embeddings, indices_tuple=labels)
 
-            rtol = 0.5 if dtype == torch.float16 else 4e-1
-
+            rtol = 0.5 if dtype == torch.float16 else 1e-5
             self.assertTrue(torch.isclose(original_loss, loss, rtol=rtol))
 
     def test_with_original_implementation(self):
         for dtype in TEST_DTYPES:
-            embedding_angles = torch.arange(5).tolist()
-            embeddings = torch.tensor(
-                [angle_to_coord(a) for a in embedding_angles],
-                requires_grad=True,
-                dtype=dtype,
-            ).to(
-                TEST_DEVICE
-            )  # 2D embeddings
-            labels = torch.LongTensor(torch.randint(0, 5, (5,)).tolist())
-
+            batch_size, embedding_size = 32, 128
             n_proxies = 5
+
+            embeddings = torch.randn(
+                batch_size,
+                embedding_size,
+                device=TEST_DEVICE,
+                dtype=dtype,
+                requires_grad=True,
+            )
+            labels = torch.randint(0, n_proxies, size=(batch_size,), device=TEST_DEVICE)
+
             proxies = nn.Parameter(
-                torch.randn(n_proxies, 2, device=TEST_DEVICE, dtype=dtype)
+                torch.randn(n_proxies, embedding_size, device=TEST_DEVICE, dtype=dtype)
             )
             alpha = 0.99
             original_loss_func = OriginalImplementationManifoldLoss(
@@ -210,7 +213,7 @@ class TestManifoldLoss(unittest.TestCase):
             original_loss = original_loss_func(embeddings, labels)
 
             loss_func = ManifoldLoss(
-                l=2, K=n_proxies, alpha=alpha, margin=0.0
+                l=embedding_size, K=n_proxies, alpha=alpha, margin=0.0
             )  # Original implementation does
             # not consider margin                   # NoQA
 
@@ -219,7 +222,7 @@ class TestManifoldLoss(unittest.TestCase):
             )  # In order to have same initializations
             loss = loss_func(embeddings, indices_tuple=labels)
 
-            rtol = 0.5 if dtype == torch.float16 else 4e-1
+            rtol = 0.5 if dtype == torch.float16 else 1e-4
 
             self.assertTrue(torch.isclose(original_loss, loss, rtol=rtol))
 

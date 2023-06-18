@@ -1600,6 +1600,7 @@
 </code></pre></div></p>
 <p><strong>Important notes</strong></p>
 <p><code>labels</code>, <code>ref_emb</code>, and <code>ref_labels</code> are not supported for this loss function.</p>
+<p>In addition, <code>indices_tuple</code> is <strong>not</strong> for the output of miners. Instead, it is for a list of indices of embeddings to be used as cluster centers.</p>
 <p><strong>Default reducer</strong>: </p>
 <ul>
 <li>This loss returns an <strong>already reduced</strong> loss.</li>

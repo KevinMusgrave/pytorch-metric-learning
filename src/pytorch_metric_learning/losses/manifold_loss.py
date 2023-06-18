@@ -1,4 +1,3 @@
-# /usr/bin/env python3
 import numpy as np
 import torch
 from torch import nn
@@ -49,7 +48,7 @@ class ManifoldLoss(BaseMetricLossFunction):
         self.alpha = alpha
         self.margin = margin
         self.add_to_recordable_attributes(
-            list_of_names=["K", "l", "lambdaC", "alpha", "margin"], is_stat=True
+            list_of_names=["K", "l", "lambdaC", "alpha", "margin"], is_stat=False
         )
 
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):

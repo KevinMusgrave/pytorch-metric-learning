@@ -7,8 +7,8 @@ import torch.nn.functional as F
 from torch.nn.modules.module import Module
 
 from pytorch_metric_learning.losses import ManifoldLoss
-from tests import TEST_DEVICE, TEST_DTYPES
-from tests.zzz_testing_utils.testing_utils import angle_to_coord
+from .. import TEST_DEVICE, TEST_DTYPES
+from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 
 def pairwise_similarity(x, y=None):

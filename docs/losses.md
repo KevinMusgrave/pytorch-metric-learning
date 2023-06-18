@@ -588,6 +588,8 @@ loss = loss_fn(embeddings, indices_tuple=indices)
 
 `labels`, `ref_emb`, and `ref_labels` are not supported for this loss function.
 
+In addition, `indices_tuple` is **not** for the output of miners. Instead, it is for a list of indices of embeddings to be used as cluster centers.
+
 
 **Default reducer**: 
 

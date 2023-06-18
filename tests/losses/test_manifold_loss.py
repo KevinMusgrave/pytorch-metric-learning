@@ -26,7 +26,7 @@ def pairwise_similarity(x, y=None):
 ######################################
 #######ORIGINAL IMPLEMENTATION########
 ######################################
-# DIRECTLY ASKED TO Nicolas Aziere.
+# DIRECTLY ASKED Nicolas Aziere.
 # This code is copied from the official implementation
 # so that we can make sure our implementation returns the same result.
 # Some minor changes were made to avoid errors during testing.

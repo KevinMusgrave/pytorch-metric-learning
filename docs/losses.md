@@ -545,6 +545,55 @@ losses.LiftedStructureLoss(neg_margin=1, pos_margin=0, **kwargs):
 * **loss**: The loss per positive pair in the batch. Reduction type is ```"pos_pair"```.
 
 
+## ManifoldLoss
+
+[Ensemble Deep Manifold Similarity Learning using Hard Proxies](https://openaccess.thecvf.com/content_CVPR_2019/papers/Aziere_Ensemble_Deep_Manifold_Similarity_Learning_Using_Hard_Proxies_CVPR_2019_paper.pdf)
+
+```python
+losses.ManifoldLoss(
+        l: int,
+        K: int = 50,
+        lambdaC: float = 1.0,
+        alpha: float = 0.8,
+        margin: float = 5e-4,
+        **kwargs
+    )
+```
+
+**Parameters**
+
+- **l**: embedding size.
+
+- **K**: number of proxies.
+
+- **lambdaC**: regularization weight. Used in the formula `loss = intrinsic_loss + lambdaC*context_loss`.
+    If `lambdaC=0`, then it uses only the intrinsic loss. If `lambdaC=np.inf`, then it uses only the context loss.
+
+- **alpha**: parameter of the Random Walk. Must be in the range `(0,1)`. It specifies the amount of similarity between neighboring nodes.
+
+- **margin**: margin used in the calculation of the loss.
+
+
+Example usage:
+```python
+loss_fn = ManifoldLoss(128)
+
+# use random cluster centers
+loss = loss_fn(embeddings)
+# or specify indices of embeddings to use as cluster centers
+loss = loss_fn(embeddings, indices_tuple=indices)
+```
+
+**Important notes**
+
+`labels`, `ref_emb`, and `ref_labels` are not supported for this loss function.
+
+
+**Default reducer**: 
+
+ - This loss returns an **already reduced** loss.
+
+
 ## MarginLoss
 [Sampling Matters in Deep Embedding Learning](https://arxiv.org/pdf/1706.07567.pdf){target=_blank}
 ```python
@@ -761,6 +810,37 @@ losses.NTXentLoss(temperature=0.07, **kwargs)
 * **loss**: The loss per positive pair in the batch. Reduction type is ```"pos_pair"```.
 
 
+
+## P2SGradLoss
+[P2SGrad: Refined Gradients for Optimizing Deep Face Models](https://arxiv.org/abs/1905.02479)
+```python
+losses.P2SGradLoss(descriptors_dim, num_classes, **kwargs)
+```
+
+**Parameters**
+
+- **descriptors_dim**: The embedding size.
+
+- **num_classes**: The number of classes in your training dataset.
+
+
+Example usage:
+```python
+loss_fn = P2SGradLoss(128, 10)
+loss = loss_fn(embeddings, labels)
+```
+
+**Important notes**
+
+`indices_tuple`, `ref_emb`, and `ref_labels` are not supported for this loss function.
+
+
+**Default reducer**: 
+
+ - This loss returns an **already reduced** loss.
+
+
+
 ## PNPLoss
 [Rethinking the Optimization of Average Precision: Only Penalizing Negative Instances before Positive Ones is Enough](https://arxiv.org/pdf/2102.04640.pdf){target=_blank}
 ```python
@@ -849,13 +929,30 @@ loss_optimizer.step()
 
 ## SelfSupervisedLoss
 
-A common use case is to have `embeddings` and `ref_emb` be augmented versions of each other. For most losses, you have to create labels to indicate which `embeddings` correspond with which `ref_emb`. `SelfSupervisedLoss` automates this.
+A common use case is to have `embeddings` and `ref_emb` be augmented versions of each other. For most losses, you have to create labels to indicate which `embeddings` correspond with which `ref_emb`. 
+
+`SelfSupervisedLoss` is a wrapper that takes care of this by creating labels internally. It assumes that:
+
+- `ref_emb[i]` is an augmented version of `embeddings[i]`.
+- `ref_emb[i]` is the only augmented version of `embeddings[i]` in the batch.
 
 ```python
+losses.SelfSupervisedLoss(loss, symmetric=True, **kwargs)
+```
+
+**Parameters**:
+
+* **loss**: The loss function to be wrapped.
+* **symmetric**: If `True`, then the embeddings in both `embeddings` and `ref_emb` are used as anchors. If `False`, then only the embeddings in `embeddings` are used as anchors.
+
+Example usage:
+
+```
 loss_fn = losses.TripletMarginLoss()
 loss_fn = SelfSupervisedLoss(loss_fn)
 loss = loss_fn(embeddings, ref_emb)
 ```
+
 
 ??? "Supported Loss Functions"
     - [AngularLoss](losses.md#angularloss)

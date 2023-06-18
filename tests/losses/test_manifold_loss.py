@@ -185,8 +185,9 @@ class TestManifoldLoss(unittest.TestCase):
                 proxies.data
             )  # In order to have same initializations
             loss = loss_func(embeddings, indices_tuple=labels)
+            loss.backward()
 
-            rtol = 0.5 if dtype == torch.float16 else 1e-5
+            rtol = 1e-2 if dtype == torch.float16 else 1e-5
             self.assertTrue(torch.isclose(original_loss, loss, rtol=rtol))
 
     def test_with_original_implementation(self):
@@ -221,8 +222,9 @@ class TestManifoldLoss(unittest.TestCase):
                 proxies.data
             )  # In order to have same initializations
             loss = loss_func(embeddings, indices_tuple=labels)
+            loss.backward()
 
-            rtol = 0.5 if dtype == torch.float16 else 1e-4
+            rtol = 1e-2 if dtype == torch.float16 else 1e-5
 
             self.assertTrue(torch.isclose(original_loss, loss, rtol=rtol))
 

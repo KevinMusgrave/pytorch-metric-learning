@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import unittest
 
 import torch
@@ -7,12 +6,7 @@ import torch.nn as nn
 from pytorch_metric_learning.losses import P2SGradLoss
 from pytorch_metric_learning.utils import common_functions as c_f
 
-__author__ = "Xin Wang"
-__email__ = "wangxin@nii.ac.jp"
-__copyright__ = "Copyright 2021, Xin Wang"
-
 from .. import TEST_DEVICE, TEST_DTYPES
-from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 
 ######################################
@@ -25,6 +19,9 @@ from ..zzz_testing_utils.testing_utils import angle_to_coord
 # but this technique is equivalent to an MSE loss over cosine angles coming from the network.
 # The code has been adapted for tests.
 # It's copied under the BSD license.
+# Author: Xin Wang
+# Email: wangxin@nii.ac.jp
+# Copyright: Copyright 2021, Xin Wang
 class TrustedImplementationP2SActivationLayer(nn.Module):
     """Output layer that produces cos\theta between activation vector x
     and class vector w_j
@@ -32,8 +29,6 @@ class TrustedImplementationP2SActivationLayer(nn.Module):
     in_dim:     dimension of input feature vectors
     output_dim: dimension of output feature vectors
                 (i.e., number of classes)
-
-
 
     Usage example:
       batch_size = 64
@@ -109,6 +104,9 @@ class TrustedImplementationP2SActivationLayer(nn.Module):
 # but this technique is equivalent to an MSE loss over cosine angles coming from the network.
 # The code has been adapted for tests.
 # It's copied under the BSD license.
+# Author: Xin Wang
+# Email: wangxin@nii.ac.jp
+# Copyright: Copyright 2021, Xin Wang
 class TrustedImplementationP2SGradLoss(nn.Module):
     """P2SGradLoss() MSE loss between output and target one-hot vectors
 
@@ -153,18 +151,18 @@ class TestP2SGradLoss(unittest.TestCase):
     def test_p2s_grad_loss_with_paper_formula(self):
         num_classes = 20
         batch_size = 100
-        descriptors_dim = 2
+        descriptors_dim = 128
         for dtype in TEST_DTYPES:
-            embedding_angles = torch.arange(batch_size)
-            embeddings = torch.tensor(
-                [angle_to_coord(a) for a in embedding_angles],
-                requires_grad=True,
+            embeddings = torch.randn(
+                batch_size,
+                descriptors_dim,
+                device=TEST_DEVICE,
                 dtype=dtype,
-            ).to(
-                TEST_DEVICE
-            )  # 2D embeddings
-            labels = (torch.rand(batch_size) * num_classes).clamp(0, num_classes - 1)
-            labels = labels.to(torch.long)
+                requires_grad=True,
+            )
+            labels = torch.randint(
+                0, num_classes, size=(batch_size,), device=TEST_DEVICE
+            )
 
             loss_fn = P2SGradLoss(
                 descriptors_dim=descriptors_dim, num_classes=num_classes
@@ -198,21 +196,26 @@ class TestP2SGradLoss(unittest.TestCase):
                 )
 
     def test_p2s_grad_loss_with_trusted_implementation(self):
+        num_classes = 20
+        batch_size = 100
+        descriptors_dim = 128
+
         for dtype in TEST_DTYPES:
-            embedding_angles = [0, 20, 40, 60, 80]
-            embeddings = torch.tensor(
-                [angle_to_coord(a) for a in embedding_angles],
-                requires_grad=True,
+            embeddings = torch.randn(
+                batch_size,
+                descriptors_dim,
+                device=TEST_DEVICE,
                 dtype=dtype,
-            ).to(
-                TEST_DEVICE
-            )  # 2D embeddings
-            labels = torch.LongTensor([0, 0, 1, 1, 2])
-            class_num = len(labels.data.unique())
-            descriptors_dim = 2
-            input_dim = 2
-            loss_func = P2SGradLoss(descriptors_dim, class_num)
-            t_layer = TrustedImplementationP2SActivationLayer(input_dim, class_num)
+                requires_grad=True,
+            )
+            labels = torch.randint(
+                0, num_classes, size=(batch_size,), device=TEST_DEVICE
+            )
+
+            loss_func = P2SGradLoss(descriptors_dim, num_classes)
+            t_layer = TrustedImplementationP2SActivationLayer(
+                descriptors_dim, num_classes
+            )
             t_loss_func = TrustedImplementationP2SGradLoss()
             loss_func.weight = (
                 t_layer.weight

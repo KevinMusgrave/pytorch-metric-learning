@@ -36,7 +36,7 @@ class TestFixedSetOfTriplet(unittest.TestCase):
                         dataset, batch_size=batch_size, sampler=sampler, drop_last=True
                     )
                     for _ in range(2):
-                        for (embeddings, curr_labels) in dataloader:
+                        for embeddings, curr_labels in dataloader:
                             a, p, n = miner(batch_of_fake_embeddings, curr_labels)
                             self.assertTrue(len(a) == batch_size // 3)
                             self.assertTrue(torch.all(curr_labels[a] == curr_labels[p]))

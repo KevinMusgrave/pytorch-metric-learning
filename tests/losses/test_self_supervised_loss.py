@@ -10,58 +10,65 @@ from .. import TEST_DEVICE, TEST_DTYPES
 class TestSelfSupervisedLoss(unittest.TestCase):
     def test_ssl_wrapper_all(self):
         for dtype in TEST_DTYPES:
-            embeddings = torch.randn(
-                100,
-                256,
-                requires_grad=True,
-                dtype=dtype,
-            ).to(TEST_DEVICE)
-            embeddings = torch.nn.functional.normalize(embeddings)
+            for symmetric in [True, False]:
+                embeddings = torch.randn(
+                    100,
+                    256,
+                    requires_grad=True,
+                    dtype=dtype,
+                ).to(TEST_DEVICE)
+                embeddings = torch.nn.functional.normalize(embeddings)
 
-            ref_emb = torch.randn(
-                100,
-                256,
-                requires_grad=True,
-                dtype=dtype,
-            ).to(TEST_DEVICE)
-            ref_emb = torch.nn.functional.normalize(ref_emb)
+                ref_emb = torch.randn(
+                    100,
+                    256,
+                    requires_grad=True,
+                    dtype=dtype,
+                ).to(TEST_DEVICE)
+                ref_emb = torch.nn.functional.normalize(ref_emb)
 
-            labels = torch.arange(100).to(TEST_DEVICE)
+                labels = torch.arange(100).to(TEST_DEVICE)
 
-            real_losses = self.run_all_loss_fns(
-                embeddings, labels, ref_emb, labels.clone()
-            )
-            losses = self.run_all_loss_fns_wrapped(embeddings, ref_emb)
-
-            atol = 1e-3
-            for loss_name, loss_value in losses.items():
-                self.assertTrue(
-                    torch.isclose(real_losses[loss_name], loss_value, atol=atol)
+                real_losses = self.run_all_loss_fns(
+                    embeddings, labels, ref_emb, labels.clone(), symmetric
                 )
+                losses = self.run_all_loss_fns_wrapped(embeddings, ref_emb, symmetric)
 
-    def run_all_loss_fns(self, embeddings, labels, ref_emb, ref_labels):
+                atol = 1e-3
+                for loss_name, loss_value in losses.items():
+                    self.assertTrue(
+                        torch.isclose(real_losses[loss_name], loss_value, atol=atol)
+                    )
+
+    def run_all_loss_fns(self, embeddings, labels, ref_emb, ref_labels, symmetric):
+        if symmetric:
+            embeddings = torch.cat([embeddings, ref_emb], dim=0)
+            labels = torch.cat([labels, ref_labels], dim=0)
         loss_fns_list = self.load_valid_loss_fns()
 
         loss_fns = dict()
         for loss_fn in loss_fns_list:
             loss_name = type(loss_fn).__name__
-            loss_value = loss_fn(
-                embeddings=embeddings,
-                labels=labels,
-                ref_emb=ref_emb,
-                ref_labels=ref_labels,
-            )
+            if symmetric:
+                loss_value = loss_fn(embeddings, labels)
+            else:
+                loss_value = loss_fn(
+                    embeddings=embeddings,
+                    labels=labels,
+                    ref_emb=ref_emb,
+                    ref_labels=ref_labels,
+                )
             loss_fns[loss_name] = loss_value
 
         return loss_fns
 
-    def run_all_loss_fns_wrapped(self, embeddings, ref_emb):
+    def run_all_loss_fns_wrapped(self, embeddings, ref_emb, symmetric):
         loss_fns_list = self.load_valid_loss_fns()
 
         loss_fns = dict()
         for loss_fn in loss_fns_list:
             loss_name = type(loss_fn).__name__
-            loss_fn = losses.SelfSupervisedLoss(loss_fn)
+            loss_fn = losses.SelfSupervisedLoss(loss_fn, symmetric=symmetric)
             loss_value = loss_fn(embeddings=embeddings, ref_emb=ref_emb)
             loss_fns[loss_name] = loss_value
 

@@ -89,7 +89,6 @@ class TestProxyAnchorLoss(unittest.TestCase):
         margin = 0.5
 
         for use_autocast in [True, False]:
-
             if use_autocast:
                 cm = torch.cuda.amp.autocast()
             else:

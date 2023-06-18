@@ -18,9 +18,10 @@ class SelfSupervisedLoss(BaseLossWrapper):
     where ref_embk = kth augmentation of embeddings.
     """
 
-    def __init__(self, loss, **kwargs):
+    def __init__(self, loss, symmetric=True, **kwargs):
         super().__init__(loss=loss, **kwargs)
         self.loss = loss
+        self.symmetric = symmetric
 
     @staticmethod
     def supported_losses():
@@ -54,6 +55,10 @@ class SelfSupervisedLoss(BaseLossWrapper):
                     i.e. ref_emb2, ref_emb3, ...
         """
         labels = torch.arange(embeddings.shape[0])
+        if self.symmetric:
+            embeddings = torch.cat([embeddings, ref_emb], dim=0)
+            labels = torch.cat([labels, labels], dim=0)
+            return self.loss(embeddings, labels)
         return self.loss(
             embeddings=embeddings,
             labels=labels,

@@ -34,17 +34,29 @@ def all_gather_embeddings_and_labels(emb, labels):
     return ref_emb, ref_labels
 
 
+
 def gather(emb, labels):
     device = emb.device
     if labels is not None:
         labels = c_f.to_device(labels, device=device)
-    dist_emb, dist_labels = all_gather_embeddings_and_labels(emb, labels)
-    all_emb = torch.cat([emb, dist_emb], dim=0)
-    all_labels = (
-        torch.cat([labels, dist_labels], dim=0) if dist_labels is not None else None
-    )
-    return all_emb, all_labels, labels
+    # Gather the embeddings from every replica.
+    emb = c_f.to_device(emb, device=device)
+    emb_list = [torch.ones_like(emb) for _ in range(torch.distributed.get_world_size())]
+    torch.distributed.all_gather(emb_list, emb)
+    # Gathered tensors have no gradient, so we overwrite the gathered tensor for the current replica.with the embeddings produced on this replica, which do have gradients.
+    emb_list[torch.distributed.get_rank()] = emb
+    all_emb = torch.cat(emb_list, dim=0)
 
+    # Gather the labels from every replica.
+    if labels is not None:
+        labels_list = [torch.ones_like(labels) for _ in range(torch.distributed.get_world_size())]
+        torch.distributed.all_gather(labels_list, labels)
+        # Gathered tensors have no gradient, so we overwrite the gathered tensor for the current replica.with the embeddings produced on this replica, which do have gradients.
+        labels_list[torch.distributed.get_rank()] = labels
+        all_labels = torch.cat(labels_list, dim=0)
+    else:
+        all_labels = None
+    return all_emb, all_labels, labels
 
 def gather_emb_and_ref(emb, labels, ref_emb=None, ref_labels=None):
     all_emb, all_labels, labels = gather(emb, labels)
@@ -70,7 +82,15 @@ def gather_enqueue_mask(enqueue_mask, device):
     if enqueue_mask is None:
         return enqueue_mask
     enqueue_mask = c_f.to_device(enqueue_mask, device=device)
-    return torch.cat([enqueue_mask, all_gather(enqueue_mask)], dim=0)
+    # Gather the enqueue_mask from every replica.
+    enqueue_mask_list = [torch.ones_like(enqueue_mask) for _ in range(torch.distributed.get_world_size())]
+    torch.distributed.all_gather(enqueue_mask_list, enqueue_mask)
+
+    # Gathered tensors have no gradient, so we overwrite the gathered tensor for the current replica.with the embeddings produced on this replica, which do have gradients.
+    enqueue_mask_list[torch.distributed.get_rank()] = enqueue_mask
+
+    return torch.cat(enqueue_mask_list, dim=0)
+
 
 
 def select_ref_or_regular(regular, ref):
@@ -152,8 +172,13 @@ class DistributedLossWrapper(torch.nn.Module):
             emb, labels, ref_emb, ref_labels
         )
         enqueue_mask = gather_enqueue_mask(enqueue_mask, emb.device)
+
+        # print(f'all_gathered emb size: {all_emb.shape}')
+        # print(f'all_labels emb size: {all_labels.shape}')
+        # print(f'print enqueue_mask after all gather on {torch.distributed.get_rank()}: {enqueue_mask}')
+
         loss = self.loss(all_emb, all_labels, indices_tuple, enqueue_mask)
-        return loss * world_size
+        return loss * world_size # unit test has confirmed that this is right.
 
 
 class DistributedMinerWrapper(torch.nn.Module):

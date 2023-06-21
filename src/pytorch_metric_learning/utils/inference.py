@@ -159,11 +159,7 @@ class FaissKNN:
         self.index_init_fn = (
             faiss.IndexFlatL2 if index_init_fn is None else index_init_fn
         )
-        if gpus is not None:
-            if not isinstance(gpus, (list, tuple)):
-                raise TypeError("gpus must be a list")
-            if len(gpus) < 1:
-                raise ValueError("gpus must have length greater than 0")
+        c_f.check_multiple_gpus(gpus)
         self.gpus = gpus
 
     def __call__(
@@ -232,13 +228,14 @@ class FaissKMeans:
         kmeans = faiss.Kmeans(d, nmb_clusters, **self.kwargs)
         kmeans.train(x)
         _, idxs = kmeans.index.search(x, 1)
-        return torch.tensor([int(n[0]) for n in idxs], dtype=int, device=device)
+        return torch.tensor([int(n[0]) for n in idxs], dtype=torch.int, device=device)
 
 
 def add_to_index_and_search(index, query, reference, k):
+    indexOnOnlyOneGPU = (not isinstance(index, faiss.IndexShards)) and (isinstance(index, faiss.GpuIndex) or isinstance(index, faiss.GpuIndexShards))    # Issue #491
     if reference is not None:
         index.add(reference.float().cpu())
-    return index.search(query.float().cpu(), k)
+    return index.search(query.float() if indexOnOnlyOneGPU else query.float().cpu(), k)
 
 
 def convert_to_gpu_index(index, gpus):
@@ -260,8 +257,8 @@ def try_gpu(index, query, reference, k, is_cuda, gpus):
     gpu_index = None
     gpus_are_available = faiss.get_num_gpus() > 0
     gpu_condition = (is_cuda or (gpus is not None)) and gpus_are_available
+    max_k_for_gpu = 1024 if float(torch.version.cuda) < 9.5 else 2048
     if gpu_condition:
-        max_k_for_gpu = 1024 if float(torch.version.cuda) < 9.5 else 2048
         if k <= max_k_for_gpu:
             gpu_index = convert_to_gpu_index(index, gpus)
     try:

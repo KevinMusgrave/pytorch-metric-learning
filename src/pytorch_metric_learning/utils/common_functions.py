@@ -253,7 +253,7 @@ class LabelMapper:
 
 
 def add_to_recordable_attributes(
-    input_obj, name=None, list_of_names=None, is_stat=False
+        input_obj, name=None, list_of_names=None, is_stat=False
 ):
     if is_stat:
         attr_name_list_name = "_record_these_stats"
@@ -291,8 +291,8 @@ def modelpath_creator(folder, basename, identifier, extension=".pth"):
 
 def save_model(model, filepath):
     if any(
-        isinstance(model, x)
-        for x in [torch.nn.DataParallel, torch.nn.parallel.DistributedDataParallel]
+            isinstance(model, x)
+            for x in [torch.nn.DataParallel, torch.nn.parallel.DistributedDataParallel]
     ):
         torch.save(model.module.state_dict(), filepath)
     else:
@@ -317,13 +317,13 @@ def load_model(model_def, model_filename, device):
 
 
 def operate_on_dict_of_models(
-    input_dict,
-    suffix,
-    folder,
-    operation,
-    logging_string="",
-    log_if_successful=False,
-    assert_success=False,
+        input_dict,
+        suffix,
+        folder,
+        operation,
+        logging_string="",
+        log_if_successful=False,
+        assert_success=False,
 ):
     for k, v in input_dict.items():
         model_path = modelpath_creator(folder, k, suffix)
@@ -396,13 +396,13 @@ def check_shapes(embeddings, labels):
 
 
 def assert_distance_type(obj, distance_type=None, **kwargs):
+    obj_name = obj.__class__.__name__
     if distance_type is not None:
         if is_list_or_tuple(distance_type):
             distance_type_str = ", ".join(x.__name__ for x in distance_type)
             distance_type_str = "one of " + distance_type_str
         else:
             distance_type_str = distance_type.__name__
-        obj_name = obj.__class__.__name__
         assert isinstance(
             obj.distance, distance_type
         ), "{} requires the distance metric to be {}".format(
@@ -462,33 +462,40 @@ def to_dtype(x, tensor=None, dtype=None):
 
 
 def to_device(
-    x: Union[torch.Tensor, nn.Parameter, List, Tuple],
-    tensor=None,
-    device=None,
-    dtype: Union[torch.dtype, List, Tuple] = None,
+        x: Union[torch.Tensor, nn.Parameter, List, Tuple],
+        tensor=None,
+        device=None,
+        dtype: Union[torch.dtype, List, Tuple] = None,
 ):
     dv = device if device is not None else tensor.device
-    is_iterable = is_list_or_tuple(x)
-    if not is_iterable:
+    dt = dtype if dtype is not None else x.dtype    # Specify if by default cast to x.dtype or tensor.dtype
+    if not is_list_or_tuple(x):
         x = [x]
 
-    xd = x
-    if is_list_or_tuple(dtype):
-        if len(dtype) == len(x):
+    if is_list_or_tuple(dt):
+        if len(dt) == len(x):
             xd = [
-                to_dtype(x[i].to(dv), tensor=tensor, dtype=dtype[i])
+                to_dtype(x[i].to(dv), tensor=tensor, dtype=dt[i])
                 for i in range(len(x))
             ]
         else:
             raise RuntimeError(
-                f"The size of dtype was {len(dtype)}. It is only available 1 or the same of x"
+                f"The size of dtype was {len(dt)}. It is only available 1 or the same of x"
             )
-    elif dtype is not None:
-        xd = [to_dtype(xt.to(dv), tensor=tensor, dtype=dtype) for xt in x]
+    else:
+        xd = [to_dtype(xt.to(dv), tensor=tensor, dtype=dt) for xt in x]
 
     if len(xd) == 1:
         xd = xd[0]
     return xd
+
+
+def check_multiple_gpus(gpus):
+    if gpus is not None:
+        if not isinstance(gpus, (list, tuple)):
+            raise TypeError("gpus must be a list")
+        if len(gpus) < 1:
+            raise ValueError("gpus must have length greater than 0")
 
 
 def set_ref_emb(embeddings, labels, ref_emb, ref_labels):

@@ -14,7 +14,12 @@ from .utils import get_triplet_embeddings_with_ref
 class TestTripletMarginLoss(unittest.TestCase):
     def test_triplet_margin_loss(self):
         for dtype in TEST_DTYPES:
-            embeddings = torch.randn(5, 32, requires_grad=True, dtype=dtype,).to(
+            embeddings = torch.randn(
+                5,
+                32,
+                requires_grad=True,
+                dtype=dtype,
+            ).to(
                 TEST_DEVICE
             )  # 2D embeddings
             embeddings = torch.nn.functional.normalize(embeddings)

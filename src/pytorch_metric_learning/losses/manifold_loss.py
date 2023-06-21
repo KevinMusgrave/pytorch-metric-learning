@@ -1,4 +1,3 @@
-# /usr/bin/env python3
 import numpy as np
 import torch
 from torch import nn
@@ -38,7 +37,7 @@ class ManifoldLoss(BaseMetricLossFunction):
         super().__init__(**kwargs)
         if lambdaC < 0:
             raise ValueError(
-                f"Uncorrect value for lambdaC argument. "
+                f"Incorrect value for lambdaC argument. "
                 f"Given lambdaC={lambdaC} but accepted only non-negative values"
             )
 
@@ -49,7 +48,7 @@ class ManifoldLoss(BaseMetricLossFunction):
         self.alpha = alpha
         self.margin = margin
         self.add_to_recordable_attributes(
-            list_of_names=["K", "l", "lambdaC", "alpha", "margin"], is_stat=True
+            list_of_names=["K", "l", "lambdaC", "alpha", "margin"], is_stat=False
         )
 
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
@@ -66,8 +65,7 @@ class ManifoldLoss(BaseMetricLossFunction):
             meta_classes = torch.cat((torch.arange(self.K), meta_classes))
             meta_classes = meta_classes[torch.randperm(N)]
 
-        loss_int = torch.zeros(1)
-        loss_int = c_f.to_device(loss_int, tensor=embeddings, dtype=embeddings.dtype)
+        loss_int = torch.zeros(1, device=embeddings.device, dtype=embeddings.dtype)
         embs_and_proxies = torch.cat([embeddings, self.proxies], dim=0)
 
         S = self.distance(embs_and_proxies, embs_and_proxies).clamp(0, np.inf)

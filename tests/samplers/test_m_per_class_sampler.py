@@ -68,7 +68,7 @@ class TestMPerClassSampler(unittest.TestCase):
                             drop_last=False,
                         )
                         for _ in range(2):
-                            for (_, curr_labels) in dataloader:
+                            for _, curr_labels in dataloader:
                                 unique_labels, counts = torch.unique(
                                     curr_labels, return_counts=True
                                 )

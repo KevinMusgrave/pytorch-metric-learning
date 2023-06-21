@@ -24,7 +24,6 @@ logging.getLogger(c_f.LOGGER_NAME).setLevel(logging.INFO)
 
 class TestMetricLossOnly(unittest.TestCase):
     def test_metric_loss_only(self):
-
         cifar_resnet_folder = "temp_cifar_resnet_for_pytorch_metric_learning_test"
         dataset_folder = "temp_dataset_for_pytorch_metric_learning_test"
         model_folder = "temp_saved_models_for_pytorch_metric_learning_test"

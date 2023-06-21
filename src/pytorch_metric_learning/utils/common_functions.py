@@ -253,7 +253,7 @@ class LabelMapper:
 
 
 def add_to_recordable_attributes(
-        input_obj, name=None, list_of_names=None, is_stat=False
+    input_obj, name=None, list_of_names=None, is_stat=False
 ):
     if is_stat:
         attr_name_list_name = "_record_these_stats"
@@ -291,8 +291,8 @@ def modelpath_creator(folder, basename, identifier, extension=".pth"):
 
 def save_model(model, filepath):
     if any(
-            isinstance(model, x)
-            for x in [torch.nn.DataParallel, torch.nn.parallel.DistributedDataParallel]
+        isinstance(model, x)
+        for x in [torch.nn.DataParallel, torch.nn.parallel.DistributedDataParallel]
     ):
         torch.save(model.module.state_dict(), filepath)
     else:
@@ -317,13 +317,13 @@ def load_model(model_def, model_filename, device):
 
 
 def operate_on_dict_of_models(
-        input_dict,
-        suffix,
-        folder,
-        operation,
-        logging_string="",
-        log_if_successful=False,
-        assert_success=False,
+    input_dict,
+    suffix,
+    folder,
+    operation,
+    logging_string="",
+    log_if_successful=False,
+    assert_success=False,
 ):
     for k, v in input_dict.items():
         model_path = modelpath_creator(folder, k, suffix)

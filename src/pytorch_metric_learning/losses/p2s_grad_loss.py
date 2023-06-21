@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import torch
 import torch.nn as nn
 from torch.nn import Parameter
@@ -7,9 +5,10 @@ from torch.nn import Parameter
 from ..utils import common_functions as c_f
 from . import BaseMetricLossFunction
 
-__author__ = "Xin Wang"
-__email__ = "wangxin@nii.ac.jp"
-__copyright__ = "Copyright 2021, Xin Wang"
+# Adapted from https://github.com/nii-yamagishilab/project-NN-Pytorch-scripts/blob/master/core_modules/p2sgrad.py
+# Original Author: Xin Wang
+# Email: wangxin@nii.ac.jp
+# Copyright: Copyright 2021, Xin Wang
 
 
 class P2SGradLoss(BaseMetricLossFunction):
@@ -44,8 +43,8 @@ class P2SGradLoss(BaseMetricLossFunction):
 
         self.weight.data = self.weight.data.renorm(2, 1, 1e-5).mul(1e5)
         dtype = embeddings.dtype
-        self.weight.data, labels = c_f.to_device(
-            (self.weight.data, labels), tensor=embeddings, dtype=(dtype, torch.long)
+        self.weight.data = c_f.to_device(
+            self.weight.data, tensor=embeddings, dtype=dtype
         )
 
         rtol = 1e-2 if dtype == torch.float16 else 1e-5

@@ -1,14 +1,100 @@
 import numpy as np
 import torch
 
-from ..distances import BatchedDistance, CosineSimilarity
+from ..distances import BatchedDistance
 from . import common_functions as c_f
 
 try:
     import faiss
     import faiss.contrib.torch_utils
 except ModuleNotFoundError:
-    pass    
+    pass
+
+
+def mask_reshape_knn_idx(x, matches_self_idx):
+    return x[~matches_self_idx].view(x.shape[0], -1)
+
+
+def return_results(D, I, ref_includes_query):
+    if ref_includes_query:
+        self_idx = torch.arange(len(I), device=I.device)
+        matches_self_idx = I == self_idx.unsqueeze(1)
+        row_has_match = torch.any(matches_self_idx, dim=1)
+        # If every row has a match, then masking will work
+        if not torch.all(row_has_match):
+            # For rows that don't contain the self index
+            # Remove the Nth value by setting matches_self_idx[N] to True
+            matches_self_idx[~row_has_match, -1] = True
+        I = mask_reshape_knn_idx(I, matches_self_idx)
+        D = mask_reshape_knn_idx(D, matches_self_idx)
+    return D, I
+
+
+def get_topk(distances, indices, k, get_largest):
+    def fn(mat, s, e):
+        D, I = torch.topk(mat, k, largest=get_largest, dim=1)
+        distances[s:e] = D
+        indices[s:e] = I
+
+    return fn
+
+
+class CustomKNN:
+    def __init__(self, distance, batch_size=None, threshold=None):
+        if batch_size:
+            self.distance = BatchedDistance(distance, batch_size=batch_size)
+        else:
+            self.distance = distance
+        self.threshold = threshold
+
+    # for a batch of queries
+
+    @torch.no_grad()
+    def get_matching_pairs(
+        self, query_emb, ref_emb=None, threshold=None, return_tuples=False
+    ):
+        threshold = threshold if threshold is not None else self.threshold
+        ref_emb = ref_emb if ref_emb is not None else query_emb
+        return self._get_matching_pairs(query_emb, ref_emb, threshold, return_tuples)
+
+    def _get_matching_pairs(self, query_emb, ref_emb, threshold, return_tuples):
+        mat = self.distance(query_emb, ref_emb)
+        matches = mat >= threshold if self.distance.is_inverted else mat <= threshold
+        matches = matches
+        if return_tuples:
+            return list(
+                zip(*torch.where(matches))
+            )  # Why transforming to numpy? torch.where gives same result
+        return matches
+
+    # where x and y are already matched pairs
+    def is_match(self, x, y, threshold=None):
+        threshold = threshold if threshold is not None else self.threshold
+        with torch.no_grad():
+            dist = self.distance.pairwise_distance(x, y)
+            output = (
+                dist >= threshold if self.distance.is_inverted else dist <= threshold
+            )
+            if output.nelement() == 1:
+                return output.detach().item()
+            return output.cpu().numpy()
+
+    def __call__(
+        self, query, reference, k, ref_includes_query=False
+    ):  # modified to follow the same signature of faiss
+        if ref_includes_query:
+            k = k + 1
+        get_largest = self.distance.is_inverted
+        if isinstance(self.distance, BatchedDistance):
+            device = query.device
+            distances = torch.zeros(len(query), k, device=device)
+            indices = torch.zeros(len(query), k, device=device, dtype=torch.long)
+            self.distance.iter_fn = get_topk(distances, indices, k, get_largest)
+            self.distance(query, reference)
+        else:
+            mat = self.distance(query, reference)
+            distances, indices = torch.topk(mat, k, largest=get_largest, dim=1)
+        return return_results(distances, indices, ref_includes_query)
 
 
 class InferenceModel:
@@ -17,7 +103,7 @@ class InferenceModel:
         trunk,
         embedder=None,
         normalize_embeddings=True,
-        knn_func=None,
+        knn_func: CustomKNN = None,
         data_device=None,
         dtype=None,
     ):
@@ -25,8 +111,10 @@ class InferenceModel:
         self.embedder = torch.nn.Identity() if embedder is None else embedder
 
         if knn_func is not None:
-            knn_func.threshold=0.9
-        self.knn_func = FaissKNN(reset_before=False, reset_after=False, knn_func=knn_func)
+            knn_func.threshold = 0.9
+        self.knn_func = FaissKNN(
+            reset_before=False, reset_after=False, knn_func=knn_func
+        )
         self.normalize_embeddings = normalize_embeddings
         self.data_device = (
             c_f.use_cuda_if_available() if data_device is None else data_device
@@ -59,7 +147,9 @@ class InferenceModel:
 
     def get_nearest_neighbors(self, query, k):
         query_emb = self.get_embeddings(query)
-        return self.knn_func(query_emb, k=k)        # modified to follow the same signature of faiss
+        return self.knn_func(
+            query_emb, k=k
+        )  # modified to follow the same signature of faiss
 
     def get_embeddings(self, x):
         x = self.process_if_list(x)
@@ -103,7 +193,12 @@ class InferenceModel:
 
 class FaissKNN:
     def __init__(
-        self, reset_before=True, reset_after=True, index_init_fn=None, knn_func=None, gpus=None
+        self,
+        reset_before=True,
+        reset_after=True,
+        index_init_fn=None,
+        knn_func=None,
+        gpus=None,
     ):
         self.reset()
         self.reset_before = reset_before
@@ -119,7 +214,7 @@ class FaissKNN:
         self,
         query,
         reference=None,
-        k=1,    # modified to follow the same signature of faiss
+        k=1,  # modified to follow the same signature of faiss
         ref_includes_query=False,
     ):
         if ref_includes_query:
@@ -135,14 +230,18 @@ class FaissKNN:
             raise ValueError(
                 "self.index is None. It needs to be initialized before being used."
             )
-        distances, indices = try_gpu(
-            self.index,
-            query,
-            reference,
-            k,
-            is_cuda,
-            self.gpus,
-        ) if self.knn_func is None else self.knn_func(query, reference, k)
+        distances, indices = (
+            try_gpu(
+                self.index,
+                query,
+                reference,
+                k,
+                is_cuda,
+                self.gpus,
+            )
+            if self.knn_func is None
+            else self.knn_func(query, reference, k)
+        )
         distances = c_f.to_device(distances, device=device)
         indices = c_f.to_device(indices, device=device)
         if self.reset_after:
@@ -164,20 +263,26 @@ class FaissKNN:
 
     def reset(self):
         self.index = None
-    
+
     def get_matching_pairs(
         self, query_emb, ref_emb=None, threshold=None, return_tuples=False
     ):
         try:
-            return self.knn_func.get_matching_pairs(query_emb, ref_emb, threshold, return_tuples)
+            return self.knn_func.get_matching_pairs(
+                query_emb, ref_emb, threshold, return_tuples
+            )
         except RuntimeError:
-            raise RuntimeWarning("No suitable match finder provided. It must implement the get_matching_pairs method")
-        
+            raise RuntimeWarning(
+                "No suitable match finder provided. It must implement the get_matching_pairs method"
+            )
+
     def is_match(self, x, y, threshold=None):
         try:
             return self.knn_func.is_match(x, y, threshold)
         except RuntimeError:
-            raise RuntimeWarning("No suitable match finder provided. It must implement the is_match method")
+            raise RuntimeWarning(
+                "No suitable match finder provided. It must implement the is_match method"
+            )
 
 
 class FaissKMeans:
@@ -199,7 +304,9 @@ class FaissKMeans:
 
 
 def add_to_index_and_search(index, query, reference, k):
-    indexOnOnlyOneGPU = faiss.get_num_gpus() == 1 and isinstance(index, faiss.GpuIndex)     # Issue #491
+    indexOnOnlyOneGPU = faiss.get_num_gpus() == 1 and isinstance(
+        index, faiss.GpuIndex
+    )  # Issue #491
     device_query = query.float()
     device_ref = reference.float() if reference is not None else None
     if not indexOnOnlyOneGPU:
@@ -253,85 +360,3 @@ def run_pca(x, output_dimensionality):
     mat.train(x)
     assert mat.is_trained
     return c_f.to_device(torch.from_numpy(mat.apply_py(x)), device=device)
-
-
-def mask_reshape_knn_idx(x, matches_self_idx):
-    return x[~matches_self_idx].view(x.shape[0], -1)
-
-
-def return_results(D, I, ref_includes_query):
-    if ref_includes_query:
-        self_idx = torch.arange(len(I), device=I.device)
-        matches_self_idx = I == self_idx.unsqueeze(1)
-        row_has_match = torch.any(matches_self_idx, dim=1)
-        # If every row has a match, then masking will work
-        if not torch.all(row_has_match):
-            # For rows that don't contain the self index
-            # Remove the Nth value by setting matches_self_idx[N] to True
-            matches_self_idx[~row_has_match, -1] = True
-        I = mask_reshape_knn_idx(I, matches_self_idx)
-        D = mask_reshape_knn_idx(D, matches_self_idx)
-    return D, I
-
-
-def get_topk(distances, indices, k, get_largest):
-    def fn(mat, s, e):
-        D, I = torch.topk(mat, k, largest=get_largest, dim=1)
-        distances[s:e] = D
-        indices[s:e] = I
-
-    return fn
-
-
-class CustomKNN:
-    def __init__(self, distance, batch_size=None, threshold=None):
-        if batch_size:
-            self.distance = BatchedDistance(distance, batch_size=batch_size)
-        else:
-            self.distance = distance
-        self.threshold = threshold
-
-    
-    # for a batch of queries
-    @torch.no_grad()
-    def get_matching_pairs(
-        self, query_emb, ref_emb=None, threshold=None, return_tuples=False
-    ):
-        threshold = threshold if threshold is not None else self.threshold
-        ref_emb = ref_emb if ref_emb is not None else query_emb
-        return self._get_matching_pairs(query_emb, ref_emb, threshold, return_tuples)
-
-    def _get_matching_pairs(self, query_emb, ref_emb, threshold, return_tuples):
-        mat = self.distance(query_emb, ref_emb)
-        matches = mat >= threshold if self.distance.is_inverted else mat <= threshold
-        matches = matches
-        if return_tuples:
-            return list(zip(*torch.where(matches)))     # Why transforming to numpy? torch.where gives same result
-        return matches
-
-    # where x and y are already matched pairs
-    def is_match(self, x, y, threshold=None):
-        threshold = threshold if threshold is not None else self.threshold
-        with torch.no_grad():
-            dist = self.distance.pairwise_distance(x, y)
-            output = (
-                dist >= threshold if self.distance.is_inverted else dist <= threshold
-            )
-            if output.nelement() == 1:
-                return output.detach().item()
-            return output.cpu().numpy()
-
-    def __call__(self, query, reference, k, ref_includes_query=False):  # modified to follow the same signature of faiss
-        if ref_includes_query:
-            k = k + 1
-        get_largest = self.distance.is_inverted
-        if isinstance(self.distance, BatchedDistance):
-            device = query.device
-            distances = torch.zeros(len(query), k, device=device)
-            indices = torch.zeros(len(query), k, device=device, dtype=torch.long)
-            self.distance.iter_fn = get_topk(distances, indices, k, get_largest)
-            self.distance(query, reference)
-        else:
-            mat = self.distance(query, reference)
-            distances, indices = torch.topk(mat, k, largest=get_largest, dim=1)
-        return return_results(distances, indices, ref_includes_query)

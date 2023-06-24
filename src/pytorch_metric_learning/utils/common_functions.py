@@ -462,21 +462,22 @@ def to_dtype(x, tensor=None, dtype=None):
 
 
 def to_device(
-        x: Union[torch.Tensor, nn.Parameter, List, Tuple],
-        tensor=None,
-        device=None,
-        dtype: Union[torch.dtype, List, Tuple] = None,
+    x: Union[torch.Tensor, nn.Parameter, List, Tuple],
+    tensor=None,
+    device=None,
+    dtype: Union[torch.dtype, List, Tuple] = None,
 ):
     dv = device if device is not None else tensor.device
-    dt = dtype if dtype is not None else x.dtype    # Specify if by default cast to x.dtype or tensor.dtype
+    dt = (
+        dtype if dtype is not None else x.dtype
+    )  # Specify if by default cast to x.dtype or tensor.dtype
     if not is_list_or_tuple(x):
         x = [x]
 
     if is_list_or_tuple(dt):
         if len(dt) == len(x):
             xd = [
-                to_dtype(x[i].to(dv), tensor=tensor, dtype=dt[i])
-                for i in range(len(x))
+                to_dtype(x[i].to(dv), tensor=tensor, dtype=dt[i]) for i in range(len(x))
             ]
         else:
             raise RuntimeError(

@@ -470,7 +470,7 @@ class AccuracyCalculator:
             )
 
             knn_distances, knn_indices = self.knn_func(
-                query, num_k, reference, ref_includes_query
+                query, reference, num_k, ref_includes_query     # modified to follow the same signature of faiss
             )
 
             knn_labels = reference_labels[knn_indices]

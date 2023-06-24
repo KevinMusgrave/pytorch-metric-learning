@@ -6,6 +6,8 @@ dist/
 *.egg-info/
 site/
 venv/
+.vscode
+.devcontainer
 .ipynb_checkpoints
 examples/notebooks/dataset
 examples/notebooks/CIFAR10_Dataset

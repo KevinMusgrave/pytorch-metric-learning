@@ -83,14 +83,14 @@ class TestCalculateAccuraciesLargeK(unittest.TestCase):
         torch_encs = torch.from_numpy(encs)
         k = len(encs) - 1 if ecfss else len(encs)
         knn_func = inference.FaissKNN()
-        _, all_indices = knn_func(torch_encs, k, torch_encs, ecfss)
+        _, all_indices = knn_func(torch_encs, torch_encs, k, ecfss)     # modified to follow the same signature of faiss
         if max_k is None:
             max_k = k
             indices = all_indices
         else:
             if max_k == "max_bin_count":
                 max_k = int(max(np.bincount(labels))) - int(ecfss)
-            _, indices = knn_func(torch_encs, max_k, torch_encs, ecfss)
+            _, indices = knn_func(torch_encs, torch_encs, max_k, ecfss)     # modified to follow the same signature of faiss
 
         # let's use the most simple mAP implementation
         # of course this can be computed much faster using cumsum, etc.

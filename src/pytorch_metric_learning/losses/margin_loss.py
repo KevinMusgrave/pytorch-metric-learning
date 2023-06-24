@@ -36,8 +36,9 @@ class MarginLoss(BaseMetricLossFunction):
         if len(anchor_idx) == 0:
             return self.zero_losses()
 
+        # Gives error on my computer if self.beta is on cpu and labels are on cuda
+        self.beta.data = c_f.to_device(self.beta.data, device=embeddings.device, dtype=embeddings.dtype)
         beta = self.beta if len(self.beta) == 1 else self.beta[labels[anchor_idx]]
-        beta = c_f.to_device(beta, device=embeddings.device, dtype=embeddings.dtype)
 
         mat = self.distance(embeddings, ref_emb)
 

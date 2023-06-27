@@ -177,9 +177,67 @@ class DistributedLossWrapper(torch.nn.Module):
         # print(f'all_labels emb size: {all_labels.shape}')
         # print(f'print enqueue_mask after all gather on {torch.distributed.get_rank()}: {enqueue_mask}')
 
-        loss = self.loss(all_emb, all_labels, indices_tuple, enqueue_mask)
-        return loss * world_size # unit test has confirmed that this is right.
+        loss = self.forward_cross_batch_dist_helper(self.loss, all_emb, all_labels, indices_tuple, enqueue_mask)
+        return loss # unit test has confirmed that this is right.
 
+    def forward_cross_batch_dist_helper(self, loss_inst, embeddings, labels, indices_tuple=None, enqueue_mask=None):
+        # overriding loss.forward
+        
+        if indices_tuple is not None and enqueue_mask is not None:
+            raise ValueError("indices_tuple and enqueue_mask are mutually exclusive")
+        if enqueue_mask is not None:
+            assert len(enqueue_mask) == len(embeddings)
+        else:
+            assert len(embeddings) <= len(loss_inst.embedding_memory)
+        loss_inst.reset_stats()
+        device = embeddings.device
+        labels = c_f.to_device(labels, device=device)
+        loss_inst.embedding_memory = c_f.to_device(
+            loss_inst.embedding_memory, device=device, dtype=embeddings.dtype
+        )
+        loss_inst.label_memory = c_f.to_device(
+            loss_inst.label_memory, device=device, dtype=labels.dtype
+        )
+
+        if enqueue_mask is not None:
+            emb_for_queue = embeddings[enqueue_mask]
+            labels_for_queue = labels[enqueue_mask]
+            embeddings = embeddings[~enqueue_mask]
+            labels = labels[~enqueue_mask]
+            do_remove_self_comparisons = False
+        else:
+            emb_for_queue = embeddings
+            labels_for_queue = labels
+            do_remove_self_comparisons = True
+
+        # ==== DDP specific =====#
+        # get local device emb instead of using all gathered to be efficient
+        local_bs = len(embeddings)//torch.distributed.get_world_size()
+        local_b_start_idx = torch.distributed.get_rank() * local_bs
+        embeddings = embeddings[local_b_start_idx:(local_b_start_idx+local_bs), :]
+        labels = labels[local_b_start_idx:(local_b_start_idx + local_bs)]
+        # ==== end DDP specific ======#
+
+        queue_batch_size = len(emb_for_queue)
+        loss_inst.add_to_memory(emb_for_queue, labels_for_queue, queue_batch_size)
+
+        if not loss_inst.has_been_filled:
+            E_mem = loss_inst.embedding_memory[: loss_inst.queue_idx]
+            L_mem = loss_inst.label_memory[: loss_inst.queue_idx]
+        else:
+            E_mem = loss_inst.embedding_memory
+            L_mem = loss_inst.label_memory
+
+        indices_tuple = loss_inst.create_indices_tuple(
+            embeddings,
+            labels,
+            E_mem,
+            L_mem,
+            indices_tuple,
+            do_remove_self_comparisons,
+        )
+        loss = loss_inst.loss(embeddings, labels, indices_tuple, E_mem, L_mem)
+        return loss
 
 class DistributedMinerWrapper(torch.nn.Module):
     def __init__(self, miner, efficient=False):

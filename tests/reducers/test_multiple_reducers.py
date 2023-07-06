@@ -56,4 +56,5 @@ class TestMultipleReducers(unittest.TestCase):
                 correct_output = (torch.mean(lossesA[lossesA > 0])) + (
                     torch.sum(lossesB) / (32 + 15)
                 )
-                self.assertTrue(output == correct_output)
+                rtol = 1e-2 if dtype == torch.float16 else 1e-5
+                self.assertTrue(torch.isclose(output, correct_output, rtol=rtol))

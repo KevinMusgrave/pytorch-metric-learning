@@ -379,7 +379,7 @@ class HookContainer:
 
 
 class EmptyContainer:
-    def end_of_epoch_hook(self, *args):
+    def end_of_epoch_hook(self, *_, **__):       # Gives "TypeError: EmptyContainer.end_of_epoch_hook() got an unexpected keyword argument 'test_interval'"
         return None
 
     end_of_iteration_hook = None

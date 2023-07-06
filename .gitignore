@@ -7,6 +7,8 @@ dist/
 site/
 venv/
 .ipynb_checkpoints
+**/.vscode
+**/temp*_for_pytorch_metric_learning_test
 examples/notebooks/dataset
 examples/notebooks/CIFAR10_Dataset
 examples/notebooks/CIFAR100_Dataset

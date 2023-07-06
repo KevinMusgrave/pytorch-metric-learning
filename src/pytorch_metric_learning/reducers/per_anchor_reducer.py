@@ -30,19 +30,23 @@ class PerAnchorReducer(BaseReducer):
 
     def tuple_reduction_helper(self, losses, loss_indices, embeddings, labels):
         batch_size = embeddings.shape[0]
-        device, dtype = losses.device, losses.dtype
-        new_array = torch.zeros(batch_size, batch_size, device=device, dtype=dtype)
-        pos_inf = c_f.pos_inf(dtype)
-        new_array += pos_inf
-
         anchors, others = loss_indices
-        new_array[anchors, others] = losses
-        pos_inf_mask = new_array == pos_inf
-        num_inf = torch.sum(pos_inf_mask, dim=1)
 
-        new_array[pos_inf_mask] = 0
-        num_per_row = batch_size - num_inf
-        output = self.aggregation_func(new_array, num_per_row)
+        # Prepare tensors for results
+        anchors = c_f.to_device(anchors, tensor=losses)
+        others = c_f.to_device(others, tensor=losses)
+        output = c_f.to_device(torch.zeros(batch_size, batch_size), tensor=losses, dtype=losses.dtype)
+        num_per_row = c_f.to_device(torch.zeros(batch_size), tensor=losses, dtype=torch.long)     # Remember to fuse in an unique call to to_device when to_device will accept list inputs
+
+        # Insert loss values in corresponence of anchor-embedding
+        output[anchors, others] = losses
+
+        # Calculate the count of 'others' for each unique anchor
+        # Equivalent to:    'num_per_row[anchors[i]] += 1'     for every i
+        num_per_row = num_per_row.scatter_add_(0, anchors, torch.ones_like(anchors, device=anchors.device))
+
+        # Aggregate results
+        output = self.aggregation_func(output, num_per_row)
 
         loss_dict = {
             "loss": {
@@ -59,5 +63,5 @@ class PerAnchorReducer(BaseReducer):
     def neg_pair_reduction(self, *args, **kwargs):
         return self.tuple_reduction_helper(*args, **kwargs)
 
-    def triplet_reduction(self, *args, **kwargs):
+    def triplet_reduction(self, *_):        # Explicitly indicate hyperparameters are ignored
         raise NotImplementedError("Triplet reduction not supported")

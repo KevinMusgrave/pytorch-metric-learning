@@ -15,7 +15,7 @@ class BaseReducer(ModuleWithRecords):
         loss_name = list(loss_dict.keys())[0]
         loss_info = loss_dict[loss_name]
         losses, loss_indices, reduction_type, kwargs = self.unpack_loss_info(loss_info)
-        loss_val = self.reduce_the_loss(
+        loss_val = self.reduce_loss(        # Similar to compute_loss
             losses, loss_indices, reduction_type, kwargs, embeddings, labels
         )
         return loss_val
@@ -28,7 +28,7 @@ class BaseReducer(ModuleWithRecords):
             {},
         )
 
-    def reduce_the_loss(
+    def reduce_loss(        # Similar to compute_loss
         self, losses, loss_indices, reduction_type, kwargs, embeddings, labels
     ):
         self.set_losses_size_stat(losses)

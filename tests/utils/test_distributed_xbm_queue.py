@@ -1,9 +1,6 @@
-"""add root package path"""
-import sys
-import os
-this_dir = os.path.dirname(os.path.abspath(__file__))
-root_dir = os.path.dirname(this_dir)
-sys.path.append(root_dir)
+import unittest
+from .. import TEST_DEVICE, TEST_DTYPES
+
 
 import os
 import argparse
@@ -256,46 +253,46 @@ def concat_all_gather(tensor):
     output = torch.cat(tensors_gather, dim=0)
     return output
 
-def main():
-    # Create the argument parser
-    parser = argparse.ArgumentParser(description='Train a metric learning model for MRI protocol classification.')
+class TestDistributedXbmQueue(unittest.TestCase):
+    def main(self):
+        # Create the argument parser
+        parser = argparse.ArgumentParser(description='Train a metric learning model for MRI protocol classification.')
 
-    # Add arguments to the parser
-    parser.add_argument('--sample_size', type=int,
-                        default=32,
-                        help='batch_size')
-    parser.add_argument('--batch_size', type=int,
-                        default=32,
-                        help='global batch_size')
-    parser.add_argument('--seed', type=int,
-                        default=None,
-                        help='world_size')
-    parser.add_argument('--memory_size', type=int,
-                        default=32,
-                        help='memory_size')
-    parser.add_argument('--num_workers_per_process', type=int,
-                        default=8,
-                        help='num_workers')
-    parser.add_argument('--num_of_epoch', type=int,
-                        default=5,
-                        help='num_of_epoch')
+        # Add arguments to the parser
+        parser.add_argument('--sample_size', type=int,
+                            default=32,
+                            help='batch_size')
+        parser.add_argument('--batch_size', type=int,
+                            default=32,
+                            help='global batch_size')
+        parser.add_argument('--seed', type=int,
+                            default=None,
+                            help='world_size')
+        parser.add_argument('--memory_size', type=int,
+                            default=32,
+                            help='memory_size')
+        parser.add_argument('--num_workers_per_process', type=int,
+                            default=8,
+                            help='num_workers')
+        parser.add_argument('--num_of_epoch', type=int,
+                            default=5,
+                            help='num_of_epoch')
 
-    args = parser.parse_args()
-    #########################################################
-    # Get PyTorch environment variables for distributed training.
-    rank = int(os.environ["RANK"])
-    local_rank = int(os.environ["LOCAL_RANK"])
-    world_size = int(os.environ["WORLD_SIZE"])
+        args = parser.parse_args()
+        #########################################################
+        # Get PyTorch environment variables for distributed training.
+        rank = int(os.environ["RANK"])
+        local_rank = int(os.environ["LOCAL_RANK"])
+        world_size = int(os.environ["WORLD_SIZE"])
 
-    # here, why no use of mp.spawn?  ==> aml submit script is supposed to take care of the EVN VARs:
-    # MASTER_ADDR, MASTER_PORT, NODE_RANK, WORLD_SIZE
-    # RANK, LOCAL_RANK
+        # here, why no use of mp.spawn?  ==> aml submit script is supposed to take care of the EVN VARs:
+        # MASTER_ADDR, MASTER_PORT, NODE_RANK, WORLD_SIZE
+        # RANK, LOCAL_RANK
+        os.environ['NCCL_DEBUG'] = 'INFO'
+        print(f"args.batch_size is {args.batch_size}, world_size is {world_size}")
+        assert (args.batch_size % world_size) == 0
+        example(local_rank, rank, world_size, args)
 
-    print(f"args.batch_size is {args.batch_size}, world_size is {world_size}")
-    assert (args.batch_size % world_size) == 0
-    example(local_rank, rank, world_size, args)
 
 if __name__=="__main__":
-    # Environment variables
-    os.environ['NCCL_DEBUG'] = 'INFO'
-    main()
+    unittest.main()

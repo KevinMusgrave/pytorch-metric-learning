@@ -34,6 +34,16 @@ def all_gather_embeddings_and_labels(emb, labels):
     return ref_emb, ref_labels
 
 
+def gather_bak(emb, labels):
+    device = emb.device
+    if labels is not None:
+        labels = c_f.to_device(labels, device=device)
+    dist_emb, dist_labels = all_gather_embeddings_and_labels(emb, labels)
+    all_emb = torch.cat([emb, dist_emb], dim=0)
+    all_labels = (
+        torch.cat([labels, dist_labels], dim=0) if dist_labels is not None else None
+    )
+    return all_emb, all_labels, labels
 
 def gather(emb, labels):
     device = emb.device
@@ -70,13 +80,29 @@ def gather_emb_and_ref(emb, labels, ref_emb=None, ref_labels=None):
 
 def get_indices_tuple(labels, ref_labels, embeddings=None, ref_emb=None, miner=None):
     device = labels.device
-    curr_batch_idx = torch.arange(len(labels), device=device)
+
+
+    # curr_batch_idx should be the local batch corresponding idx of ref_batch(global batch)
+    # curr_batch_idx = torch.arange(len(labels), device=device) # this is wrong
+
+    local_bs = len(ref_labels) // torch.distributed.get_world_size()
+    local_b_start_idx = torch.distributed.get_rank() * local_bs
+    curr_batch_idx = torch.arange(local_b_start_idx, (local_b_start_idx + local_bs), device=device)
+
+
+
     if miner:
         indices_tuple = miner(embeddings, labels, ref_emb, ref_labels)
     else:
         indices_tuple = lmu.get_all_pairs_indices(labels, ref_labels)
     return lmu.remove_self_comparisons(indices_tuple, curr_batch_idx, len(ref_labels))
 
+
+def gather_enqueue_mask_bak(enqueue_mask, device):
+    if enqueue_mask is None:
+        return enqueue_mask
+    enqueue_mask = c_f.to_device(enqueue_mask, device=device)
+    return torch.cat([enqueue_mask, all_gather(enqueue_mask)], dim=0)
 
 def gather_enqueue_mask(enqueue_mask, device):
     if enqueue_mask is None:
@@ -143,12 +169,14 @@ class DistributedLossWrapper(torch.nn.Module):
             if indices_tuple is None:
                 indices_tuple = get_indices_tuple(labels, all_labels)
             loss = self.loss(emb, labels, indices_tuple, all_emb, all_labels)
+
+            return loss
         else:
             loss = self.loss(
                 all_emb, all_labels, indices_tuple, all_ref_emb, all_ref_labels
             )
 
-        return loss * world_size
+            return loss * world_size
 
     def forward_cross_batch(
         self,
@@ -177,12 +205,11 @@ class DistributedLossWrapper(torch.nn.Module):
         # print(f'all_labels emb size: {all_labels.shape}')
         # print(f'print enqueue_mask after all gather on {torch.distributed.get_rank()}: {enqueue_mask}')
 
+        # loss = self.loss(all_emb, all_labels, indices_tuple, enqueue_mask)
         loss = self.forward_cross_batch_dist_helper(self.loss, all_emb, all_labels, indices_tuple, enqueue_mask)
         return loss # unit test has confirmed that this is right.
 
     def forward_cross_batch_dist_helper(self, loss_inst, embeddings, labels, indices_tuple=None, enqueue_mask=None):
-        # overriding loss.forward
-        
         if indices_tuple is not None and enqueue_mask is not None:
             raise ValueError("indices_tuple and enqueue_mask are mutually exclusive")
         if enqueue_mask is not None:
@@ -255,9 +282,16 @@ class DistributedMinerWrapper(torch.nn.Module):
         all_emb, all_labels, all_ref_emb, all_ref_labels, labels = gather_emb_and_ref(
             emb, labels, ref_emb, ref_labels
         )
+
         if self.efficient:
             all_labels = select_ref_or_regular(all_labels, all_ref_labels)
             all_emb = select_ref_or_regular(all_emb, all_ref_emb)
+
+            # print('in DistributedMinerWrapper: ')
+            # print(f'all_gathered emb size: {all_emb.shape}')
+            # print(f'all_labels emb size: {all_labels.shape}, all labels: {all_labels}')
+            # print(f'labels emb size: {labels.shape}, labels: {labels}')
+
             return get_indices_tuple(labels, all_labels, emb, all_emb, self.miner)
         else:
             return self.miner(all_emb, all_labels, all_ref_emb, all_ref_labels)

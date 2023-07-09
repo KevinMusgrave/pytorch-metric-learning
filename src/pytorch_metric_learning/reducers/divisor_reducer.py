@@ -14,7 +14,7 @@ class DivisorReducer(BaseReducer):
         if loss_info["reduction_type"] != "already_reduced":
             self.divisor = loss_info["divisor"]
         return super().unpack_loss_info(loss_info)
-        
+
     def sum_and_divide(self, losses, embeddings):
         if self.divisor != 0:
             output = torch.sum(losses.float()) / self.divisor

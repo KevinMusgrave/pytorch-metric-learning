@@ -11,7 +11,7 @@ class VICRegLoss(BaseMetricLossFunction):
     ):
         if "distance" in kwargs:
             raise ValueError("VICRegLoss cannot use a distance function")
-        if "embedding_regularizer" in kwargs:
+        if "regularizer" in kwargs:
             raise ValueError("VICRegLoss cannot use a regularizer")
         super().__init__(**kwargs)
         """

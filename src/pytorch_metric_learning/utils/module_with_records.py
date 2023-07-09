@@ -4,7 +4,9 @@ from . import common_functions as c_f
 
 
 class ModuleWithRecords(torch.nn.Module):
-    def __init__(self, collect_stats=None):
+    def __init__(
+        self, collect_stats=None, **_
+    ):  # Hack needed to ignore other arguments passed from subclasses
         super().__init__()
         self.collect_stats = (
             c_f.COLLECT_STATS if collect_stats is None else collect_stats

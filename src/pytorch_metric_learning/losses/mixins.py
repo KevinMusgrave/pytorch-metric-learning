@@ -1,72 +1,67 @@
+from typing import Dict
+
 import torch
 
 from ..utils import common_functions as c_f
 
-
-class WeightMixin:
-    def __init__(self, weight_init_func=None, **kwargs):
-        super().__init__(**kwargs)
-        self.weight_init_func = weight_init_func
-        if self.weight_init_func is None:
-            self.weight_init_func = self.get_default_weight_init_func()
-
-    def get_default_weight_init_func(self):
-        return c_f.TorchInitWrapper(torch.nn.init.normal_)
+SUPPORTED_REGULARIZATION_TYPES = ["custom", "weight", "embedding"]
 
 
-class WeightRegularizerMixin(WeightMixin):
-    def __init__(self, weight_regularizer=None, weight_reg_weight=1, **kwargs):
-        self.weight_regularizer = (
-            weight_regularizer is not None
-        )  # hack needed to know whether reg will be in sub-loss names
-        super().__init__(**kwargs)
-        self.weight_regularizer = weight_regularizer
-        self.weight_reg_weight = weight_reg_weight
-        if self.weight_regularizer is not None:
+class RegularizerMixin:
+    """Base class for regularization losses.
+    regularizer: function-like object or `nn.Module` that transforms input data into single number or single-element `torch.Tensor`
+    """
+
+    def __init__(self, regularizer=None, reg_weight=1, type="custom", **kwargs):
+        self.check_type(type)
+        self.regularizer = regularizer if regularizer is not None else (lambda data: 0)
+        self.reg_weight = reg_weight
+        if regularizer is not None:
             self.add_to_recordable_attributes(
-                list_of_names=["weight_reg_weight"], is_stat=False
+                list_of_names=[f"{type}_reg_weight"], is_stat=False
             )
 
-    def weight_regularization_loss(self, weights):
-        if self.weight_regularizer is None:
-            loss = 0
-        else:
-            loss = self.weight_regularizer(weights) * self.weight_reg_weight
-        return {"losses": loss, "indices": None, "reduction_type": "already_reduced"}
+    def regularization_loss(self, data):
+        loss = self.regularizer(data) * self.reg_weight
+        return loss
+
+    def add_regularization_to_loss_dict(self, loss_dict: Dict[str, Dict], data):
+        loss_dict[self.reg_loss_type] = {
+            "losses": self.regularization_loss(data),
+            "indices": None,
+            "reduction_type": "already_reduced",
+        }
+
+    def check_type(self, type: str):
+        if type not in SUPPORTED_REGULARIZATION_TYPES:
+            raise ValueError(
+                f"Type provided not supported. Supported types are {', '.join(SUPPORTED_REGULARIZATION_TYPES)}, given type is {type}."
+            )
+        self.reg_loss_type = f"{type}_reg_loss"
+
+
+def get_default_weight_init_func():
+    return c_f.TorchInitWrapper(torch.nn.init.normal_)
+
+
+class WeightRegularizerMixin(RegularizerMixin):
+    def __init__(self, weight_init_func=None, **kwargs):
+        kwargs["type"] = "weight"
+        super().__init__(**kwargs)
+        self.weight_init_func = (
+            weight_init_func
+            if weight_init_func is not None
+            else get_default_weight_init_func()
+        )
 
     def add_weight_regularization_to_loss_dict(self, loss_dict, weights):
-        if self.weight_regularizer is not None:
-            loss_dict["weight_reg_loss"] = self.weight_regularization_loss(weights)
-
-    def regularization_loss_names(self):
-        return ["weight_reg_loss"]
+        self.add_regularization_to_loss_dict(loss_dict, weights)
 
 
-class EmbeddingRegularizerMixin:
-    def __init__(self, embedding_regularizer=None, embedding_reg_weight=1, **kwargs):
-        self.embedding_regularizer = (
-            embedding_regularizer is not None
-        )  # hack needed to know whether reg will be in sub-loss names
+class EmbeddingRegularizerMixin(RegularizerMixin):
+    def __init__(self, **kwargs):
+        kwargs["type"] = "embedding"
         super().__init__(**kwargs)
-        self.embedding_regularizer = embedding_regularizer
-        self.embedding_reg_weight = embedding_reg_weight
-        if self.embedding_regularizer is not None:
-            self.add_to_recordable_attributes(
-                list_of_names=["embedding_reg_weight"], is_stat=False
-            )
-
-    def embedding_regularization_loss(self, embeddings):
-        if self.embedding_regularizer is None:
-            loss = 0
-        else:
-            loss = self.embedding_regularizer(embeddings) * self.embedding_reg_weight
-        return {"losses": loss, "indices": None, "reduction_type": "already_reduced"}
 
     def add_embedding_regularization_to_loss_dict(self, loss_dict, embeddings):
-        if self.embedding_regularizer is not None:
-            loss_dict["embedding_reg_loss"] = self.embedding_regularization_loss(
-                embeddings
-            )
-
-    def regularization_loss_names(self):
-        return ["embedding_reg_loss"]
+        self.add_regularization_to_loss_dict(loss_dict, embeddings)

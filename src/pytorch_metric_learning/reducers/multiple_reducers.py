@@ -1,8 +1,10 @@
+from collections import defaultdict
+
 import torch
 
 from .base_reducer import BaseReducer
 from .mean_reducer import MeanReducer
-from collections import defaultdict
+
 
 class DefaultModuleDict(torch.nn.ModuleDict):
     def __init__(self, module_factory, modules):
@@ -14,8 +16,9 @@ class MultipleReducers(BaseReducer):
     def __init__(self, reducers, default_reducer: BaseReducer = None, **kwargs):
         super().__init__(**kwargs)
         reducer_type = MeanReducer if default_reducer is None else type(default_reducer)
-        self.reducers = DefaultModuleDict(module_factory=lambda : reducer_type(), 
-                                          modules=reducers)
+        self.reducers = DefaultModuleDict(
+            module_factory=lambda: reducer_type(), modules=reducers
+        )
 
     def forward(self, loss_dict, embeddings, labels):
         self.reset_stats()

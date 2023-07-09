@@ -10,7 +10,12 @@ from .. import TEST_DEVICE, TEST_DTYPES, WITH_COLLECT_STATS
 class TestSumReducer(unittest.TestCase):
     def test_sum_reducer_with_thresholds(self):
         torch.manual_seed(99115)
-        for low_threshold, high_threshold in [(None, None), (0.1, None), (None, 0.2), (0.1, 0.2)]:
+        for low_threshold, high_threshold in [
+            (None, None),
+            (0.1, None),
+            (None, 0.2),
+            (0.1, 0.2),
+        ]:
             reducer = SumReducer(low=low_threshold, high=high_threshold)
             batch_size = 100
             embedding_size = 64
@@ -51,9 +56,13 @@ class TestSumReducer(unittest.TestCase):
                         if len(L) > 0:
                             correct_output = torch.sum(L, dtype=dtype)
                         else:
-                            correct_output = torch.zeros(1, dtype=dtype, device=TEST_DEVICE)
+                            correct_output = torch.zeros(
+                                1, dtype=dtype, device=TEST_DEVICE
+                            )
                         rtol = 1e-2 if dtype == torch.float16 else 1e-5
-                        self.assertTrue(torch.isclose(output, correct_output, rtol=rtol))
+                        self.assertTrue(
+                            torch.isclose(output, correct_output, rtol=rtol)
+                        )
 
                         if WITH_COLLECT_STATS:
                             self.assertTrue(reducer.num_past_filter == len(L))

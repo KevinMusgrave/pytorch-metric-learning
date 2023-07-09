@@ -36,7 +36,11 @@ class MarginLoss(BaseMetricLossFunction):
         if len(anchor_idx) == 0:
             return self.zero_losses()
 
-        beta = self.beta if len(self.beta) == 1 else self.beta[labels[anchor_idx].to("cpu")]    # When labels are on gpu gives error
+        beta = (
+            self.beta
+            if len(self.beta) == 1
+            else self.beta[labels[anchor_idx].to("cpu")]
+        )  # When labels are on gpu gives error
         beta = c_f.to_device(beta, device=embeddings.device, dtype=embeddings.dtype)
 
         mat = self.distance(embeddings, ref_emb)

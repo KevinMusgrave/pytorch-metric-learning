@@ -12,7 +12,7 @@ from ..zzz_testing_utils.testing_utils import angle_to_coord
 class TestNPairsLoss(unittest.TestCase):
     def test_npairs_loss(self):
         loss_funcA = NPairsLoss()
-        loss_funcB = NPairsLoss(embedding_regularizer=LpRegularizer(power=2))
+        loss_funcB = NPairsLoss(regularizer=LpRegularizer(power=2))
         embedding_norm = 2.3
 
         for dtype in TEST_DTYPES:
@@ -76,7 +76,7 @@ class TestNPairsLoss(unittest.TestCase):
 
     def test_backward(self):
         loss_funcA = NPairsLoss()
-        loss_funcB = NPairsLoss(embedding_regularizer=LpRegularizer())
+        loss_funcB = NPairsLoss(regularizer=LpRegularizer())
 
         for dtype in TEST_DTYPES:
             for loss_func in [loss_funcA, loss_funcB]:

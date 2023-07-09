@@ -4,8 +4,10 @@ from .threshold_reducer import ThresholdReducer
 
 class ClassWeightedReducer(ThresholdReducer):
     """It weights the losses with user-specified weights and then takes the average.
-    
-    Subclass of ThresholdReducer, therefore it is possible to specify `low` and `high` hyperparameters."""
+
+    Subclass of ThresholdReducer, therefore it is possible to specify `low` and `high` hyperparameters.
+    """
+
     def __init__(self, weights, **kwargs):
         super().__init__(**kwargs)
         self.weights = weights

@@ -35,15 +35,21 @@ class PerAnchorReducer(BaseReducer):
         # Prepare tensors for results
         anchors = c_f.to_device(anchors, tensor=losses)
         others = c_f.to_device(others, tensor=losses)
-        output = c_f.to_device(torch.zeros(batch_size, batch_size), tensor=losses, dtype=losses.dtype)
-        num_per_row = c_f.to_device(torch.zeros(batch_size), tensor=losses, dtype=torch.long)     # Remember to fuse in an unique call to to_device when to_device will accept list inputs
+        output = c_f.to_device(
+            torch.zeros(batch_size, batch_size), tensor=losses, dtype=losses.dtype
+        )
+        num_per_row = c_f.to_device(
+            torch.zeros(batch_size), tensor=losses, dtype=torch.long
+        )  # Remember to fuse in an unique call to to_device when to_device will accept list inputs
 
         # Insert loss values in corresponence of anchor-embedding
         output[anchors, others] = losses
 
         # Calculate the count of 'others' for each unique anchor
         # Equivalent to:    'num_per_row[anchors[i]] += 1'     for every i
-        num_per_row = num_per_row.scatter_add_(0, anchors, torch.ones_like(anchors, device=anchors.device))
+        num_per_row = num_per_row.scatter_add_(
+            0, anchors, torch.ones_like(anchors, device=anchors.device)
+        )
 
         # Aggregate results
         output = self.aggregation_func(output, num_per_row)
@@ -63,5 +69,5 @@ class PerAnchorReducer(BaseReducer):
     def neg_pair_reduction(self, *args, **kwargs):
         return self.tuple_reduction_helper(*args, **kwargs)
 
-    def triplet_reduction(self, *_):        # Explicitly indicate hyperparameters are ignored
+    def triplet_reduction(self, *_):  # Explicitly indicate hyperparameters are ignored
         raise NotImplementedError("Triplet reduction not supported")

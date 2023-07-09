@@ -1,13 +1,18 @@
-import torch
 import numpy as np
+import torch
+
 from .base_reducer import BaseReducer
 
 
 class ThresholdReducer(BaseReducer):
     def __init__(self, low=-np.inf, high=np.inf, **kwargs):
         super().__init__(**kwargs)
-        self.low = low if low is not None else -np.inf       # Since there is no None default value it could be better to exclude testing for low=None in test_treshold_reducer
-        self.high = high if high is not None else np.inf     # Since there is no None default value it could be better to exclude testing for high=None in test_treshold_reducer
+        self.low = (
+            low if low is not None else -np.inf
+        )  # Since there is no None default value it could be better to exclude testing for low=None in test_treshold_reducer
+        self.high = (
+            high if high is not None else np.inf
+        )  # Since there is no None default value it could be better to exclude testing for high=None in test_treshold_reducer
         self.add_to_recordable_attributes(list_of_names=["low", "high"], is_stat=False)
         self.add_to_recordable_attributes(
             list_of_names=["num_past_filter", "num_above_low", "num_below_high"],
@@ -30,7 +35,7 @@ class ThresholdReducer(BaseReducer):
         low_condition = losses > self.low
         high_condition = losses < self.high
         losses = losses[low_condition & high_condition]
-        
+
         num_past_filter = len(losses)
         if num_past_filter >= 1:
             loss = torch.mean(losses)
@@ -43,7 +48,7 @@ class ThresholdReducer(BaseReducer):
     def set_stats(self, low_condition, high_condition, num_past_filter):
         if self.collect_stats:
             self.num_past_filter = num_past_filter
-            if np.isfinite(self.low):       # Why record this only if it was not None?
+            if np.isfinite(self.low):  # Why record this only if it was not None?
                 self.num_above_low = torch.sum(low_condition).item()
-            if np.isfinite(self.high):      # Why record this only if it was not None?
+            if np.isfinite(self.high):  # Why record this only if it was not None?
                 self.num_above_high = torch.sum(high_condition).item()

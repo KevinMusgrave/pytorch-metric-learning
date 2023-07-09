@@ -11,8 +11,15 @@ class TestClassWeightedReducer(unittest.TestCase):
     def test_class_weighted_reducer_with_threshold(self):
         torch.manual_seed(99115)
         class_weights = torch.tensor([1, 0.9, 1, 0.1, 0, 0, 0, 0, 0, 0])
-        for low_threshold, high_threshold in [(None, None), (0.1, None), (None, 0.2), (0.1, 0.2)]:
-            reducer = ClassWeightedReducer(class_weights, low=low_threshold, high=high_threshold)
+        for low_threshold, high_threshold in [
+            (None, None),
+            (0.1, None),
+            (None, 0.2),
+            (0.1, 0.2),
+        ]:
+            reducer = ClassWeightedReducer(
+                class_weights, low=low_threshold, high=high_threshold
+            )
             batch_size = 100
             embedding_size = 64
             for dtype in TEST_DTYPES:
@@ -59,13 +66,17 @@ class TestClassWeightedReducer(unittest.TestCase):
                                 class_label = labels[batch_idx]
                                 correct_output += (
                                     L[i]
-                                    * class_weights.type(dtype).to(TEST_DEVICE)[class_label]
+                                    * class_weights.type(dtype).to(TEST_DEVICE)[
+                                        class_label
+                                    ]
                                 )
                             correct_output /= len(L)
                         else:
                             correct_output = 0
                         rtol = 1e-2 if dtype == torch.float16 else 1e-5
-                        self.assertTrue(torch.isclose(output, correct_output, rtol=rtol))
+                        self.assertTrue(
+                            torch.isclose(output, correct_output, rtol=rtol)
+                        )
 
                         if WITH_COLLECT_STATS:
                             self.assertTrue(reducer.num_past_filter == len(L))

@@ -131,7 +131,7 @@ class TestHistogramLoss(unittest.TestCase):
             loss = loss_func(embeddings, labels)
 
             original_loss_func = OriginalImplementationHistogramLoss(
-                num_steps=num_steps
+                num_steps=num_steps, cuda=False
             )
             correct_loss = original_loss_func(embeddings, labels)
 

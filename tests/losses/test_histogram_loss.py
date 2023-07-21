@@ -6,7 +6,6 @@ from numpy.testing import assert_almost_equal
 from pytorch_metric_learning.losses import HistogramLoss
 
 from .. import TEST_DEVICE, TEST_DTYPES
-from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 
 ######################################
@@ -112,46 +111,49 @@ class OriginalImplementationHistogramLoss(torch.nn.Module):
 
 class TestHistogramLoss(unittest.TestCase):
     def test_histogram_loss(self):
+        batch_size = 32
+        embedding_size = 64
+        for dtype in TEST_DTYPES:
+            num_steps = 5 if dtype == torch.float16 else 21
+            num_bins = num_steps - 1
+            loss_func = HistogramLoss(n_bins=num_bins)
+            original_loss_func = OriginalImplementationHistogramLoss(
+                num_steps=num_steps, cuda=False
+            )
+
+            # test multiple times
+            for _ in range(2):
+                embeddings = torch.randn(
+                    batch_size,
+                    embedding_size,
+                    requires_grad=True,
+                    dtype=dtype,
+                ).to(TEST_DEVICE)
+                labels = torch.randint(0, 5, size=(batch_size,))
+
+                loss = loss_func(embeddings, labels)
+                correct_loss = original_loss_func(
+                    torch.nn.functional.normalize(embeddings), labels
+                )
+
+                rtol = 1e-2 if dtype == torch.float16 else 1e-5
+                self.assertTrue(torch.isclose(loss, correct_loss, rtol=rtol))
+
+                loss.backward()
+
+    def test_with_no_valid_triplets(self):
+        loss_func = HistogramLoss(n_bins=4)
         for dtype in TEST_DTYPES:
             embeddings = torch.randn(
                 5,
                 32,
                 requires_grad=True,
                 dtype=dtype,
-            ).to(
-                TEST_DEVICE
-            )  # 2D embeddings
-            embeddings = torch.nn.functional.normalize(embeddings)
-            labels = torch.LongTensor([0, 0, 1, 1, 2])
-
-            num_steps = 5 if dtype == torch.float16 else 21
-            num_bins = num_steps - 1
-            loss_func = HistogramLoss(n_bins=num_bins)
-
-            loss = loss_func(embeddings, labels)
-
-            original_loss_func = OriginalImplementationHistogramLoss(
-                num_steps=num_steps, cuda=False
-            )
-            correct_loss = original_loss_func(embeddings, labels)
-
-            rtol = 1e-2 if dtype == torch.float16 else 1e-5
-            self.assertTrue(torch.isclose(loss, correct_loss, rtol=rtol))
-
-    def test_with_no_valid_triplets(self):
-        loss_funcA = HistogramLoss(n_bins=4)
-        for dtype in TEST_DTYPES:
-            embedding_angles = [0, 20, 40, 60, 80]
-            embeddings = torch.tensor(
-                [angle_to_coord(a) for a in embedding_angles],
-                requires_grad=True,
-                dtype=dtype,
-            ).to(
-                TEST_DEVICE
-            )  # 2D embeddings
+            ).to(TEST_DEVICE)
             labels = torch.LongTensor([0, 1, 2, 3, 4])
-            lossA = loss_funcA(embeddings, labels)
-            self.assertEqual(lossA, 0)
+            loss = loss_func(embeddings, labels)
+            self.assertEqual(loss, 0)
+            loss.backward()
 
     def test_assertion_raises(self):
         with self.assertRaises(AssertionError):

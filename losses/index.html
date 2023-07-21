@@ -1757,10 +1757,30 @@
 <ul>
 <li><a href="https://arxiv.org/pdf/1807.03748.pdf" target="_blank">Representation Learning with Contrastive Predictive Coding</a></li>
 <li><a href="https://arxiv.org/pdf/1911.05722.pdf" target="_blank">Momentum Contrast for Unsupervised Visual Representation Learning</a></li>
-<li><a href="https://arxiv.org/pdf/2002.05709.pdf" target="_blank">A Simple Framework for Contrastive Learning of Visual Representations</a>
-<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">NTXentLoss</span><span class="p">(</span><span class="n">temperature</span><span class="o">=</span><span class="mf">0.07</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</code></pre></div></li>
+<li><a href="https://arxiv.org/pdf/2002.05709.pdf" target="_blank">A Simple Framework for Contrastive Learning of Visual Representations</a></li>
 </ul>
+<details>
+<summary>How exactly is the NTXentLoss computed?</summary>
+<p>In the equation below, a loss is computed for each positive pair (<code>k_+</code>) in a batch, normalized by all positive and negative pairs in the batch that have the same "anchor" embedding (<code>k_i in K</code>). </p>
+<ul>
+<li>What does "anchor" mean? Let's say we have 3 pairs specified by batch indices: (0, 1), (0, 2), (1, 0). The first two pairs start with 0, so they have the same anchor. The third pair has the same indices as the first pair, but the order is different, so it does not have the same anchor.</li>
+</ul>
+<p>Given <code>embeddings</code> with corresponding <code>labels</code>, positive pairs <code>(embeddings[i], embeddings[j])</code> are defined when <code>labels[i] == labels[j]</code>. Now let's look at an example loss calculation:</p>
+<p>Consider <code>labels = [0, 0, 1, 2]</code>. Two losses will be computed:</p>
+<ul>
+<li>
+<p>A positive pair of indices <code>[0, 1]</code>, with negative pairs of indices <code>[0, 2], [0, 3]</code>.</p>
+</li>
+<li>
+<p>A positive pair of indices <code>[1, 0]</code>, with negative pairs of indices <code>[1, 2], [1, 3]</code>.</p>
+</li>
+</ul>
+<p>Labels <code>1</code>, and <code>2</code> do not have positive pairs, and therefore the negative pair of indices <code>[2, 3]</code> will not be used.</p>
+<p>Note that an anchor can belong to multiple positive pairs if its label is present multiple times in <code>labels</code>.</p>
+<p>Are you trying to use <code>NTXentLoss</code> for self-supervised learning? Specifically, do you have two sets of embeddings which are derived from data that are augmented versions of each other? If so, you can skip the step of creating the <code>labels</code> array, by wrapping <code>NTXentLoss</code> with <a href="./#selfsupervisedloss"><code>SelfSupervisedLoss</code></a>.</p>
+</details>
+<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">NTXentLoss</span><span class="p">(</span><span class="n">temperature</span><span class="o">=</span><span class="mf">0.07</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div>
 <p><strong>Equation</strong>:</p>
 <p><img alt="ntxent_loss_equation" src="../imgs/ntxent_loss_equation.png" style="height:70px" /></p>
 <p><strong>Parameters</strong>:</p>

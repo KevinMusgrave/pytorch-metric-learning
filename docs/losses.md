@@ -790,7 +790,7 @@ This is also known as InfoNCE, and is a generalization of the [NPairsLoss](losse
 
 ??? "How exactly is the NTXentLoss computed?"
 
-    In the equation below, a loss is computed for each positive pair (`k_+`) in a batch, normalized by all positive and negative pairs in the batch that have the same "anchor" embedding (`k_i in K`). 
+    In the equation below, a loss is computed for each positive pair (`k_+`) in a batch, normalized by itself and all negative pairs in the batch that have the same "anchor" embedding (`k_i in K`). 
 
     - What does "anchor" mean? Let's say we have 3 pairs specified by batch indices: (0, 1), (0, 2), (1, 0). The first two pairs start with 0, so they have the same anchor. The third pair has the same indices as the first pair, but the order is different, so it does not have the same anchor.
 

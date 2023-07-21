@@ -2,7 +2,7 @@ name: reducers
 
 on:
   pull_request:
-    branches: [ master, dev ]
+    branches: [ master, dev, v3.0 ]
     paths:
       - 'src/**'
       - 'tests/**'

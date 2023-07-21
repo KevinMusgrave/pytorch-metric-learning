@@ -1761,7 +1761,7 @@
 </ul>
 <details>
 <summary>How exactly is the NTXentLoss computed?</summary>
-<p>In the equation below, a loss is computed for each positive pair (<code>k_+</code>) in a batch, normalized by all positive and negative pairs in the batch that have the same "anchor" embedding (<code>k_i in K</code>). </p>
+<p>In the equation below, a loss is computed for each positive pair (<code>k_+</code>) in a batch, normalized by itself and all negative pairs in the batch that have the same "anchor" embedding (<code>k_i in K</code>). </p>
 <ul>
 <li>What does "anchor" mean? Let's say we have 3 pairs specified by batch indices: (0, 1), (0, 2), (1, 0). The first two pairs start with 0, so they have the same anchor. The third pair has the same indices as the first pair, but the order is different, so it does not have the same anchor.</li>
 </ul>

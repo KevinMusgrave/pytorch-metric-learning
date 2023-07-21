@@ -11,12 +11,12 @@ from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 class TestSNRContrastiveLoss(unittest.TestCase):
     def test_snr_contrastive_loss(self):
-        pos_margin, neg_margin, embedding_reg_weight = 0, 0.1, 0.1
+        pos_margin, neg_margin, reg_weight = 0, 0.1, 0.1
         loss_func = SignalToNoiseRatioContrastiveLoss(
             pos_margin=pos_margin,
             neg_margin=neg_margin,
-            embedding_regularizer=ZeroMeanRegularizer(),
-            embedding_reg_weight=embedding_reg_weight,
+            regularizer=ZeroMeanRegularizer(),
+            reg_weight=reg_weight,
         )
 
         for dtype in TEST_DTYPES:
@@ -82,19 +82,17 @@ class TestSNRContrastiveLoss(unittest.TestCase):
 
             reg_loss = torch.mean(torch.abs(torch.sum(embeddings, dim=1)))
 
-            correct_total = (
-                correct_pos_loss + correct_neg_loss + embedding_reg_weight * reg_loss
-            )
+            correct_total = correct_pos_loss + correct_neg_loss + reg_weight * reg_loss
             rtol = 1e-2 if dtype == torch.float16 else 1e-5
             self.assertTrue(torch.isclose(loss, correct_total, rtol=rtol))
 
     def test_with_no_valid_pairs(self):
-        embedding_reg_weight = 0.1
+        reg_weight = 0.1
         loss_func = SignalToNoiseRatioContrastiveLoss(
             pos_margin=0,
             neg_margin=0.5,
-            embedding_regularizer=ZeroMeanRegularizer(),
-            embedding_reg_weight=embedding_reg_weight,
+            regularizer=ZeroMeanRegularizer(),
+            reg_weight=reg_weight,
         )
         for dtype in TEST_DTYPES:
             embedding_angles = [0]
@@ -106,10 +104,7 @@ class TestSNRContrastiveLoss(unittest.TestCase):
                 TEST_DEVICE
             )  # 2D embeddings
             labels = torch.LongTensor([0])
-            reg_loss = (
-                torch.mean(torch.abs(torch.sum(embeddings, dim=1)))
-                * embedding_reg_weight
-            )
+            reg_loss = torch.mean(torch.abs(torch.sum(embeddings, dim=1))) * reg_weight
             loss = loss_func(embeddings, labels)
             loss.backward()
             self.assertEqual(loss, reg_loss)

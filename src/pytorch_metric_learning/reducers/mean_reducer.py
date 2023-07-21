@@ -1,17 +1,14 @@
-import torch
+import numpy as np
 
-from .base_reducer import BaseReducer
+from .threshold_reducer import ThresholdReducer
 
 
-class MeanReducer(BaseReducer):
-    def element_reduction(self, losses, *_):
-        return torch.mean(losses)
+class MeanReducer(ThresholdReducer):
+    """Equivalent to ThresholdReducer with default parameters.
 
-    def pos_pair_reduction(self, losses, *args):
-        return self.element_reduction(losses, *args)
+    Any element is accepted"""
 
-    def neg_pair_reduction(self, losses, *args):
-        return self.element_reduction(losses, *args)
-
-    def triplet_reduction(self, losses, *args):
-        return self.element_reduction(losses, *args)
+    def __init__(self, **kwargs):
+        kwargs["low"] = -np.inf
+        kwargs["high"] = np.inf
+        super().__init__(**kwargs)

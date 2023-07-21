@@ -1,15 +1,23 @@
+from collections import defaultdict
+
 import torch
 
 from .base_reducer import BaseReducer
 from .mean_reducer import MeanReducer
 
 
+class DefaultModuleDict(torch.nn.ModuleDict):
+    def __init__(self, module_factory, modules):
+        torch.nn.ModuleDict.__init__(self, modules)
+        self._modules = defaultdict(module_factory, self._modules)
+
+
 class MultipleReducers(BaseReducer):
-    def __init__(self, reducers, default_reducer=None, **kwargs):
+    def __init__(self, reducers, default_reducer: BaseReducer = None, **kwargs):
         super().__init__(**kwargs)
-        self.reducers = torch.nn.ModuleDict(reducers)
-        self.default_reducer = (
-            MeanReducer() if default_reducer is None else default_reducer
+        reducer_type = MeanReducer if default_reducer is None else type(default_reducer)
+        self.reducers = DefaultModuleDict(
+            module_factory=lambda: reducer_type(), modules=reducers
         )
 
     def forward(self, loss_dict, embeddings, labels):
@@ -17,15 +25,12 @@ class MultipleReducers(BaseReducer):
         sub_losses = torch.zeros(
             len(loss_dict), dtype=embeddings.dtype, device=embeddings.device
         )
-        loss_count = 0
-        for loss_name, loss_info in loss_dict.items():
+
+        for loss_count, (loss_name, loss_info) in enumerate(loss_dict.items()):
             input_dict = {loss_name: loss_info}
-            if loss_name in self.reducers:
-                loss_val = self.reducers[loss_name](input_dict, embeddings, labels)
-            else:
-                loss_val = self.default_reducer(input_dict, embeddings, labels)
+            loss_val = self.reducers[loss_name](input_dict, embeddings, labels)
             sub_losses[loss_count] = loss_val
-            loss_count += 1
+
         return self.sub_loss_reduction(sub_losses, embeddings, labels)
 
     def sub_loss_reduction(self, sub_losses, embeddings=None, labels=None):

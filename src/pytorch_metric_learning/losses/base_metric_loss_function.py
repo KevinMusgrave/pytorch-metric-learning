@@ -1,13 +1,19 @@
 import inspect
+import re
 
 from ..utils import common_functions as c_f
 from ..utils.module_with_records_and_reducer import ModuleWithRecordsReducerAndDistance
+from . import mixins
 from .mixins import EmbeddingRegularizerMixin
 
 
-class BaseMetricLossFunction(
-    EmbeddingRegularizerMixin, ModuleWithRecordsReducerAndDistance
-):
+class BaseMetricLossFunction(ModuleWithRecordsReducerAndDistance):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.emb_loss_regularizer = EmbeddingRegularizerMixin(
+            **kwargs
+        )  # Avoid multiple inheritance errors. In this way if a loss function inherits from a RegularizerMixin subclass it does not affect the mro
+
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
         """
         This has to be implemented and is what actually computes the loss.
@@ -34,7 +40,9 @@ class BaseMetricLossFunction(
         loss_dict = self.compute_loss(
             embeddings, labels, indices_tuple, ref_emb, ref_labels
         )
-        self.add_embedding_regularization_to_loss_dict(loss_dict, embeddings)
+        self.emb_loss_regularizer.add_embedding_regularization_to_loss_dict(
+            loss_dict, embeddings
+        )
         return self.reducer(loss_dict, embeddings, labels)
 
     def zero_loss(self):
@@ -50,12 +58,10 @@ class BaseMetricLossFunction(
         return self._sub_loss_names() + self.all_regularization_loss_names()
 
     def all_regularization_loss_names(self):
-        reg_names = []
+        reg_loss_names = []
         for base_class in inspect.getmro(self.__class__):
-            base_class_name = base_class.__name__
-            mixin_keyword = "RegularizerMixin"
-            if base_class_name.endswith(mixin_keyword):
-                descriptor = base_class_name.replace(mixin_keyword, "").lower()
-                if getattr(self, "{}_regularizer".format(descriptor)):
-                    reg_names.extend(base_class.regularization_loss_names(self))
-        return reg_names
+            if base_class.__module__ == mixins.__name__:
+                m = re.search(r"(\w+)RegularizerMixin", base_class.__name__)
+                if m is not None:
+                    reg_loss_names.append(m.group(1).lower())
+        return reg_loss_names

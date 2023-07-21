@@ -111,7 +111,7 @@ losses.ArcFaceLoss(num_classes, embedding_size, margin=28.6, scale=64, **kwargs)
 
 **Other info**: 
 
-* This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts ```weight_regularizer```, ```weight_reg_weight```, and ```weight_init_func``` as optional arguments.
+* This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts ```regularizer```, ```reg_weight```, and ```weight_init_func``` as optional arguments.
 * This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
 ```python
 loss_func = losses.ArcFaceLoss(...).to(torch.device('cuda'))
@@ -141,8 +141,8 @@ All loss functions extend this class and therefore inherit its ```__init__``` pa
 losses.BaseMetricLossFunction(collect_stats = False, 
 							reducer = None, 
 							distance = None, 
-							embedding_regularizer = None,
-							embedding_reg_weight = 1)
+							regularizer = None,
+							reg_weight = 1)
 ```
 
 **Parameters**:
@@ -150,8 +150,8 @@ losses.BaseMetricLossFunction(collect_stats = False,
 * **collect_stats**: If True, will collect various statistics that may be useful to analyze during experiments. If False, these computations will be skipped. Want to make ```True``` the default? Set the global [COLLECT_STATS](common_functions.md#collect_stats) flag.
 * **reducer**: A [reducer](reducers.md) object. If None, then the default reducer will be used.
 * **distance**: A [distance](distances.md) object. If None, then the default distance will be used.
-* **embedding_regularizer**: A [regularizer](regularizers.md) object that will be applied to embeddings. If None, then no embedding regularization will be used.
-* **embedding_reg_weight**: If an embedding regularizer is used, then its loss will be multiplied by this amount before being added to the total loss.
+* **regularizer**: A [regularizer](regularizers.md) object that will be applied to embeddings. If None, then no embedding regularization will be used.
+* **reg_weight**: If an embedding regularizer is used, then its loss will be multiplied by this amount before being added to the total loss.
 
 **Default distance**: 
 
@@ -273,7 +273,7 @@ losses.CosFaceLoss(num_classes, embedding_size, margin=0.35, scale=64, **kwargs)
 
 **Other info**: 
 
-* This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts ```weight_regularizer```, ```weight_reg_weight```, and ```weight_init_func``` as optional arguments.
+* This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts ```regularizer```, ```reg_weight```, and ```weight_init_func``` as optional arguments.
 * This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
 ```python
 loss_func = losses.CosFaceLoss(...).to(torch.device('cuda'))
@@ -491,7 +491,7 @@ where
 
 **Other info**: 
 
-* This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts ```weight_regularizer```, ```weight_reg_weight```, and ```weight_init_func``` as optional arguments.
+* This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts ```regularizer```, ```reg_weight```, and ```weight_init_func``` as optional arguments.
 * This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
 ```python
 loss_func = losses.LargeMarginSoftmaxLoss(...).to(torch.device('cuda'))
@@ -737,7 +737,7 @@ losses.NormalizedSoftmaxLoss(num_classes, embedding_size, temperature=0.05, **kw
 
 **Other info**
 
-* This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts ```weight_regularizer```, ```weight_reg_weight```, and ```weight_init_func``` as optional arguments.
+* This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts ```regularizer```, ```reg_weight```, and ```weight_init_func``` as optional arguments.
 * This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
 ```python
 loss_func = losses.NormalizedSoftmaxLoss(...).to(torch.device('cuda'))
@@ -870,7 +870,7 @@ losses.ProxyAnchorLoss(num_classes, embedding_size, margin = 0.1, alpha = 32, **
 
 **Other info**
 
-* This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts ```weight_regularizer```, ```weight_reg_weight```, and ```weight_init_func``` as optional arguments.
+* This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts ```regularizer```, ```reg_weight```, and ```weight_init_func``` as optional arguments.
 * This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
 ```python
 loss_func = losses.ProxyAnchorLoss(...).to(torch.device('cuda'))
@@ -907,7 +907,7 @@ losses.ProxyNCALoss(num_classes, embedding_size, softmax_scale=1, **kwargs)
 
 **Other info**
 
-* This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts ```weight_regularizer```, ```weight_reg_weight```, and ```weight_init_func``` as optional arguments.
+* This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts ```regularizer```, ```reg_weight```, and ```weight_init_func``` as optional arguments.
 * This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
 ```python
 loss_func = losses.ProxyNCALoss(...).to(torch.device('cuda'))
@@ -1027,7 +1027,7 @@ where
 
 **Other info**
 
-* This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts ```weight_regularizer```, ```weight_reg_weight```, and ```weight_init_func``` as optional arguments.
+* This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts ```regularizer```, ```reg_weight```, and ```weight_init_func``` as optional arguments.
 * This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
 ```python
 loss_func = losses.SoftTripleLoss(...).to(torch.device('cuda'))
@@ -1068,7 +1068,7 @@ See [LargeMarginSoftmaxLoss](losses.md#largemarginsoftmaxloss)
 
 **Other info**
 
-* This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts ```weight_regularizer```, ```weight_reg_weight```, and ```weight_init_func``` as optional arguments.
+* This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts ```regularizer```, ```reg_weight```, and ```weight_init_func``` as optional arguments.
 * This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
 ```python
 loss_func = losses.SphereFaceLoss(...).to(torch.device('cuda'))
@@ -1230,14 +1230,14 @@ complete_loss = losses.MultipleLosses([main_loss, var_loss], weights=[1, 0.5])
 ## WeightRegularizerMixin
 Losses can extend this class in addition to BaseMetricLossFunction. You should extend this class if your loss function contains a learnable weight matrix.
 ```python
-losses.WeightRegularizerMixin(weight_init_func=None, weight_regularizer=None, weight_reg_weight=1, **kwargs)
+losses.WeightRegularizerMixin(weight_init_func=None, regularizer=None, reg_weight=1, **kwargs)
 ```
 
 **Parameters**:
 
 * **weight_init_func**: An [TorchInitWrapper](common_functions.md#torchinitwrapper) object, which will be used to initialize the weights of the loss function.
-* **weight_regularizer**: The [regularizer](regularizers.md) to apply to the loss's learned weights.
-* **weight_reg_weight**: The amount the regularization loss will be multiplied by.
+* **regularizer**: The [regularizer](regularizers.md) to apply to the loss's learned weights.
+* **reg_weight**: The amount the regularization loss will be multiplied by.
 
 Extended by:
 

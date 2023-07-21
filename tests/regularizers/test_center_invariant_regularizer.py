@@ -19,8 +19,8 @@ class TestCenterInvariantRegularizer(unittest.TestCase):
                 temperature=temperature,
                 num_classes=num_classes,
                 embedding_size=embedding_size,
-                weight_regularizer=CenterInvariantRegularizer(),
-                weight_reg_weight=reg_weight,
+                regularizer=CenterInvariantRegularizer(),
+                reg_weight=reg_weight,
             ).to(TEST_DEVICE)
 
             embeddings = torch.nn.functional.normalize(

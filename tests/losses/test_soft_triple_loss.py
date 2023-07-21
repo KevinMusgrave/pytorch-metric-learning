@@ -78,11 +78,11 @@ class TestSoftTripleLoss(unittest.TestCase):
             gamma = 1 if dtype == torch.float16 else 0.1
             for centers_per_class in range(1, 12):
                 if centers_per_class > 1:
-                    weight_regularizer = SparseCentersRegularizer(
+                    regularizer = SparseCentersRegularizer(
                         num_classes, centers_per_class
                     )
                 else:
-                    weight_regularizer = None
+                    regularizer = None
                 loss_func = SoftTripleLoss(
                     num_classes,
                     embedding_size,
@@ -90,8 +90,8 @@ class TestSoftTripleLoss(unittest.TestCase):
                     la=la,
                     gamma=gamma,
                     margin=margin,
-                    weight_regularizer=weight_regularizer,
-                    weight_reg_weight=reg_weight,
+                    regularizer=regularizer,
+                    reg_weight=reg_weight,
                 ).to(TEST_DEVICE)
                 original_loss_func = OriginalImplementationSoftTriple(
                     la,

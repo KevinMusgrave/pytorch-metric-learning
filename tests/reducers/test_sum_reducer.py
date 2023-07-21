@@ -2,24 +2,21 @@ import unittest
 
 import torch
 
-from pytorch_metric_learning.reducers import ClassWeightedReducer
+from pytorch_metric_learning.reducers import SumReducer
 
 from .. import TEST_DEVICE, TEST_DTYPES, WITH_COLLECT_STATS
 
 
-class TestClassWeightedReducer(unittest.TestCase):
-    def test_class_weighted_reducer_with_threshold(self):
+class TestSumReducer(unittest.TestCase):
+    def test_sum_reducer_with_thresholds(self):
         torch.manual_seed(99115)
-        class_weights = torch.tensor([1, 0.9, 1, 0.1, 0, 0, 0, 0, 0, 0])
         for low_threshold, high_threshold in [
             (None, None),
             (0.1, None),
             (None, 0.2),
             (0.1, 0.2),
         ]:
-            reducer = ClassWeightedReducer(
-                class_weights, low=low_threshold, high=high_threshold
-            )
+            reducer = SumReducer(low=low_threshold, high=high_threshold)
             batch_size = 100
             embedding_size = 64
             for dtype in TEST_DTYPES:
@@ -57,22 +54,11 @@ class TestClassWeightedReducer(unittest.TestCase):
                         if high_threshold is not None:
                             L = L[L < high_threshold]
                         if len(L) > 0:
-                            correct_output = 0
-                            for i in range(len(L)):
-                                if reduction_type == "element":
-                                    batch_idx = indices[i]
-                                else:
-                                    batch_idx = indices[0][i]
-                                class_label = labels[batch_idx]
-                                correct_output += (
-                                    L[i]
-                                    * class_weights.type(dtype).to(TEST_DEVICE)[
-                                        class_label
-                                    ]
-                                )
-                            correct_output /= len(L)
+                            correct_output = torch.sum(L, dtype=dtype)
                         else:
-                            correct_output = 0
+                            correct_output = torch.zeros(
+                                1, dtype=dtype, device=TEST_DEVICE
+                            )
                         rtol = 1e-2 if dtype == torch.float16 else 1e-5
                         self.assertTrue(
                             torch.isclose(output, correct_output, rtol=rtol)

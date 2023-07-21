@@ -3,10 +3,12 @@ import glob
 import logging
 import os
 import re
+from typing import List, Tuple, Union
 
 import numpy as np
 import scipy.stats
 import torch
+from torch import nn
 
 LOGGER_NAME = "PML"
 LOGGER = logging.getLogger(LOGGER_NAME)
@@ -394,13 +396,13 @@ def check_shapes(embeddings, labels):
 
 
 def assert_distance_type(obj, distance_type=None, **kwargs):
+    obj_name = obj.__class__.__name__
     if distance_type is not None:
         if is_list_or_tuple(distance_type):
             distance_type_str = ", ".join(x.__name__ for x in distance_type)
             distance_type_str = "one of " + distance_type_str
         else:
             distance_type_str = distance_type.__name__
-        obj_name = obj.__class__.__name__
         assert isinstance(
             obj.distance, distance_type
         ), "{} requires the distance metric to be {}".format(
@@ -459,13 +461,42 @@ def to_dtype(x, tensor=None, dtype=None):
     return x
 
 
-def to_device(x, tensor=None, device=None, dtype=None):
+def to_device(
+    x: Union[torch.Tensor, nn.Parameter, List, Tuple],
+    tensor=None,
+    device=None,
+    dtype: Union[torch.dtype, List, Tuple] = None,
+):
     dv = device if device is not None else tensor.device
-    if x.device != dv:
-        x = x.to(dv)
-    if dtype is not None:
-        x = to_dtype(x, dtype=dtype)
-    return x
+    dt = (
+        dtype if dtype is not None else x.dtype
+    )  # Specify if by default cast to x.dtype or tensor.dtype
+    if not is_list_or_tuple(x):
+        x = [x]
+
+    if is_list_or_tuple(dt):
+        if len(dt) == len(x):
+            xd = [
+                to_dtype(x[i].to(dv), tensor=tensor, dtype=dt[i]) for i in range(len(x))
+            ]
+        else:
+            raise RuntimeError(
+                f"The size of dtype was {len(dt)}. It is only available 1 or the same of x"
+            )
+    else:
+        xd = [to_dtype(xt.to(dv), tensor=tensor, dtype=dt) for xt in x]
+
+    if len(xd) == 1:
+        xd = xd[0]
+    return xd
+
+
+def check_multiple_gpus(gpus):
+    if gpus is not None:
+        if not isinstance(gpus, (list, tuple)):
+            raise TypeError("gpus must be a list")
+        if len(gpus) < 1:
+            raise ValueError("gpus must have length greater than 0")
 
 
 def set_ref_emb(embeddings, labels, ref_emb, ref_labels):

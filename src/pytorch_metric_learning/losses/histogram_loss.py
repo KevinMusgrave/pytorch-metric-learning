@@ -14,7 +14,7 @@ def filter_pairs(*tensors: torch.Tensor):
 
 
 class HistogramLoss(BaseMetricLossFunction):
-    def __init__(self, n_bins: int = None, delta: float = None, **kwargs):
+    def __init__(self, n_bins: int = 100, delta: float = None, **kwargs):
         super().__init__(**kwargs)
         assert (
             delta is None
@@ -31,7 +31,7 @@ class HistogramLoss(BaseMetricLossFunction):
             ), f"delta and n_bins must satisfy the equation delta = 2/n_bins.\nPassed values are delta={delta} and n_bins={n_bins}"
 
         self.delta = delta if delta is not None else 2 / n_bins
-        self.add_to_recordable_attributes(name="num_bins", is_stat=True)
+        self.add_to_recordable_attributes(name="delta", is_stat=True)
 
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
         c_f.labels_or_indices_tuple_required(labels, indices_tuple)

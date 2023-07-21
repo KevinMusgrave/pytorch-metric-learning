@@ -157,9 +157,6 @@ class TestHistogramLoss(unittest.TestCase):
 
     def test_assertion_raises(self):
         with self.assertRaises(AssertionError):
-            _ = HistogramLoss()
-
-        with self.assertRaises(AssertionError):
             _ = HistogramLoss(n_bins=1, delta=0.5)
 
         with self.assertRaises(AssertionError):

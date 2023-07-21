@@ -246,6 +246,7 @@ Thanks to the contributors who made pull requests!
 | [layumi](https://github.com/layumi) | [InstanceLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#instanceloss) |
 | [NoTody](https://github.com/NoTody) | Helped add `ref_emb` and `ref_labels` to the distributed wrappers. |
 | [ElisonSherton](https://github.com/ElisonSherton) | Fixed an edge case in ArcFaceLoss. |
+| [stompsjo](https://github.com/stompsjo) | Improved documentation for NTXentLoss |
 | [z1w](https://github.com/z1w) | |
 | [thinline72](https://github.com/thinline72) | |
 | [tpanum](https://github.com/tpanum) | |

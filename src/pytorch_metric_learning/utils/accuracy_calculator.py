@@ -440,7 +440,7 @@ class AccuracyCalculator:
         ):
             raise ValueError(
                 "When ref_includes_query is True, the first len(query) elements of reference must be equal to query.\n"
-                "Likewise, the first len(query_labels) elements of reference_lbels must be equal to query_labels.\n"
+                "Likewise, the first len(query_labels) elements of reference_labels must be equal to query_labels.\n"
             )
 
         self.curr_function_dict = self.get_function_dict(include, exclude)

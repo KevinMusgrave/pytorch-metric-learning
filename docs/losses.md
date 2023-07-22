@@ -432,8 +432,8 @@ losses.HistogramLoss(n_bins=100, delta=None)
 
 **Parameters**:
 
-* **n_bins**:
-* **delta**:
+* **n_bins**: The number of bins used to construct the histogram. Default equal to 100.
+* **delta**: The mesh of the uniform partition of the interval [-1, 1] used to construct the histogram. If not set the value of n_bins will be used.
 
 **Default distance**: 
 

@@ -6,6 +6,7 @@ from .circle_loss import CircleLoss
 from .contrastive_loss import ContrastiveLoss
 from .cosface_loss import CosFaceLoss
 from .cross_batch_memory import CrossBatchMemory
+from .dynamic_soft_margin_loss import DynamicSoftMarginLoss
 from .fast_ap_loss import FastAPLoss
 from .generic_pair_loss import GenericPairLoss
 from .instance_loss import InstanceLoss

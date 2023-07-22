@@ -16,19 +16,13 @@ def filter_pairs(*tensors: torch.Tensor):
 class HistogramLoss(BaseMetricLossFunction):
     def __init__(self, n_bins: int = 100, delta: float = None, **kwargs):
         super().__init__(**kwargs)
-        assert (
-            delta is None
-            and n_bins is not None
-            or delta is not None
-            and n_bins is None
-            or delta is not None
-            and n_bins is not None
-        ), "delta and n_bins cannot be both None"
-
         if delta is not None and n_bins is not None:
             assert (
                 delta == 2 / n_bins
             ), f"delta and n_bins must satisfy the equation delta = 2/n_bins.\nPassed values are delta={delta} and n_bins={n_bins}"
+
+        if delta is None and n_bins is None:
+            n_bins = 100
 
         self.delta = delta if delta is not None else 2 / n_bins
         self.add_to_recordable_attributes(name="delta", is_stat=True)

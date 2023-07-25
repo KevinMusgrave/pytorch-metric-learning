@@ -2,9 +2,9 @@ import unittest
 
 import torch
 from numpy.testing import assert_almost_equal
-from pytorch_metric_learning.utils import common_functions as c_f
 
 from pytorch_metric_learning.losses import HistogramLoss
+from pytorch_metric_learning.utils import common_functions as c_f
 
 from .. import TEST_DEVICE, TEST_DTYPES
 
@@ -31,8 +31,10 @@ class OriginalImplementationHistogramLoss(torch.nn.Module):
     def forward(self, features, classes):
         def histogram(inds, size):
             s_repeat_ = s_repeat.clone()
-            inds = c_f.to_device(inds, tensor=s_repeat_floor)       # Added to avoid errors
-            self.t = c_f.to_device(self.t, tensor=s_repeat_floor)       # Added to avoid errors
+            inds = c_f.to_device(inds, tensor=s_repeat_floor)  # Added to avoid errors
+            self.t = c_f.to_device(
+                self.t, tensor=s_repeat_floor
+            )  # Added to avoid errors
             indsa = (
                 (s_repeat_floor - (self.t - self.step) > -self.eps)
                 & (s_repeat_floor - (self.t - self.step) < self.eps)
@@ -41,7 +43,9 @@ class OriginalImplementationHistogramLoss(torch.nn.Module):
             assert (
                 indsa.nonzero().size()[0] == size
             ), "Another number of bins should be used"
-            zeros = torch.zeros((1, indsa.size()[1])).to(device=indsa.device, dtype=torch.uint8)
+            zeros = torch.zeros((1, indsa.size()[1])).to(
+                device=indsa.device, dtype=torch.uint8
+            )
             if self.cuda:
                 zeros = zeros.cuda()
             indsb = torch.cat((indsa, zeros))[1:, :].to(

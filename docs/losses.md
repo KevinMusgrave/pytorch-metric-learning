@@ -427,12 +427,12 @@ losses.InstanceLoss(gamma=64, **kwargs)
 ## HistogramLoss
 [Learning Deep Embeddings with Histogram Loss](https://arxiv.org/pdf/1611.00822.pdf)
 ```python
-losses.HistogramLoss(n_bins=100, delta=None)
+losses.HistogramLoss(n_bins=None, delta=None)
 ```
 
 **Parameters**:
 
-* **n_bins**: The number of bins used to construct the histogram. Default equal to 100.
+* **n_bins**: The number of bins used to construct the histogram. Default is 100 when both `n_bins` and `delta` are `None`.
 * **delta**: The mesh of the uniform partition of the interval [-1, 1] used to construct the histogram. If not set the value of n_bins will be used.
 
 **Default distance**: 

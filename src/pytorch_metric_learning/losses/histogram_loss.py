@@ -14,7 +14,7 @@ def filter_pairs(*tensors: torch.Tensor):
 
 
 class HistogramLoss(BaseMetricLossFunction):
-    def __init__(self, n_bins: int = 100, delta: float = None, **kwargs):
+    def __init__(self, n_bins: int = None, delta: float = None, **kwargs):
         super().__init__(**kwargs)
         if delta is not None and n_bins is not None:
             assert (

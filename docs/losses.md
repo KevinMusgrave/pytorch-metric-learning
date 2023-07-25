@@ -424,6 +424,26 @@ losses.InstanceLoss(gamma=64, **kwargs)
 * **gamma**: The cosine similarity matrix is scaled by this amount.
 
 
+## HistogramLoss
+[Learning Deep Embeddings with Histogram Loss](https://arxiv.org/pdf/1611.00822.pdf)
+```python
+losses.HistogramLoss(n_bins=None, delta=None)
+```
+
+**Parameters**:
+
+* **n_bins**: The number of bins used to construct the histogram. Default is 100 when both `n_bins` and `delta` are `None`.
+* **delta**: The mesh of the uniform partition of the interval [-1, 1] used to construct the histogram. If not set the value of n_bins will be used.
+
+**Default distance**: 
+
+ - [```CosineSimilarity()```](distances.md#cosinesimilarity)
+
+**Default reducer**: 
+
+ - This loss returns an **already reduced** loss.
+
+
 ## IntraPairVarianceLoss
 [Deep Metric Learning with Tuplet Margin Loss](http://openaccess.thecvf.com/content_ICCV_2019/papers/Yu_Deep_Metric_Learning_With_Tuplet_Margin_Loss_ICCV_2019_paper.pdf){target=_blank}
 ```python

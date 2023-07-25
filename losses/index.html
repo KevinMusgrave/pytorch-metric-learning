@@ -353,6 +353,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#histogramloss" class="md-nav__link">
+    HistogramLoss
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#intrapairvarianceloss" class="md-nav__link">
     IntraPairVarianceLoss
   </a>
@@ -912,6 +919,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#histogramloss" class="md-nav__link">
+    HistogramLoss
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#intrapairvarianceloss" class="md-nav__link">
     IntraPairVarianceLoss
   </a>
@@ -1460,6 +1474,23 @@
 <p><strong>Parameters</strong>:</p>
 <ul>
 <li><strong>gamma</strong>: The cosine similarity matrix is scaled by this amount.</li>
+</ul>
+<h2 id="histogramloss">HistogramLoss<a class="headerlink" href="#histogramloss" title="Permanent link">&para;</a></h2>
+<p><a href="https://arxiv.org/pdf/1611.00822.pdf">Learning Deep Embeddings with Histogram Loss</a>
+<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">HistogramLoss</span><span class="p">(</span><span class="n">n_bins</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">delta</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</code></pre></div></p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>n_bins</strong>: The number of bins used to construct the histogram. Default is 100 when both <code>n_bins</code> and <code>delta</code> are <code>None</code>.</li>
+<li><strong>delta</strong>: The mesh of the uniform partition of the interval [-1, 1] used to construct the histogram. If not set the value of n_bins will be used.</li>
+</ul>
+<p><strong>Default distance</strong>: </p>
+<ul>
+<li><a href="../distances/#cosinesimilarity"><code>CosineSimilarity()</code></a></li>
+</ul>
+<p><strong>Default reducer</strong>: </p>
+<ul>
+<li>This loss returns an <strong>already reduced</strong> loss.</li>
 </ul>
 <h2 id="intrapairvarianceloss">IntraPairVarianceLoss<a class="headerlink" href="#intrapairvarianceloss" title="Permanent link">&para;</a></h2>
 <p><a href="http://openaccess.thecvf.com/content_ICCV_2019/papers/Yu_Deep_Metric_Learning_With_Tuplet_Margin_Loss_ICCV_2019_paper.pdf" target="_blank">Deep Metric Learning with Tuplet Margin Loss</a>

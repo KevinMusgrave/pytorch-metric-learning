@@ -40,24 +40,25 @@ class DynamicSoftMarginLoss(BaseMetricLossFunction):
         momentum: weight assigned to the histogram computed from the current batch
     """
     def __init__(self, min_val=-2.0, num_bins=10, momentum=0.01, **kwargs):
-        kwargs["reducer"] = MeanReducer()
         super().__init__(**kwargs)
         c_f.assert_distance_type(self, LpDistance, normalize_embeddings=True, p=2)
         self.min_val = min_val
         self.num_bins = int(num_bins)
+        self.delta = 2*abs(min_val) / num_bins
         self.momentum = momentum
         self.hist_ = torch.zeros((num_bins,))
         self.add_to_recordable_attributes(list_of_names=["num_bins"], is_stat=False)
 
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
         self.hist_ = c_f.to_device(self.hist_, tensor=embeddings, dtype=embeddings.dtype)
-        if len(embeddings) == 0:
-            return self.zero_losses()
 
         if labels is None:
             loss = self.compute_loss_without_labels(embeddings, labels, indices_tuple, ref_emb, ref_labels)
         else:
             loss = self.compute_loss_with_labels(embeddings, labels, indices_tuple, ref_emb, ref_labels)
+
+        if len(loss) == 0:
+            return self.zero_losses()
 
         self.update_histogram(loss)
         loss = self.weigh_loss(loss)
@@ -71,7 +72,19 @@ class DynamicSoftMarginLoss(BaseMetricLossFunction):
             }
     
     def compute_loss_without_labels(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
-        pass
+        mat = self.distance(embeddings, ref_emb)
+        r, c = mat.size()
+
+        min_a, min_p = torch.zeros(max(r, c)), torch.zeros(max(r, c))   # Check for unequal number of anchors and positives
+        min_a = c_f.to_device(min_a, tensor=embeddings, dtype=embeddings.dtype)
+        min_p = c_f.to_device(min_p, tensor=embeddings, dtype=embeddings.dtype)
+        min_a[:c], _ = torch.min(mat, dim=0)
+        min_p[:r], _ = torch.min(mat, dim=1)
+
+        d_pos = torch.zeros(max(r, c))
+        d_pos = c_f.to_device(d_pos, tensor=embeddings, dtype=embeddings.dtype)
+        d_pos[:min(r, c)], d_neg = mat.diag(), torch.min(min_a, min_p)
+        return d_pos - d_neg
 
     def compute_loss_with_labels(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
         anchor_idx, positive_idx, negative_idx = lmu.convert_to_triplets(indices_tuple, labels, ref_labels, t_per_anchor="all")     # Use all instead of t_per_anchor=1 to be deterministic
@@ -80,12 +93,13 @@ class DynamicSoftMarginLoss(BaseMetricLossFunction):
         return d_pos - d_neg
 
     def update_histogram(self, data):
-        idx = torch.floor((data - self.min_val) / self.num_bins).to(dtype=torch.long)
-        probabilities = data / data.sum()
+        idx, alpha = torch.floor((data - self.min_val) / self.delta).to(dtype=torch.long), torch.frac((data - self.min_val) / self.delta)
         momentum = self.momentum if self.hist_.sum() != 0 else 1.0
-        self.hist_ = torch.scatter_add((1.0 - momentum) * self.hist_, 0, idx, probabilities)
+        self.hist_ = torch.scatter_add((1.0 - momentum) * self.hist_, 0, idx, momentum*(1 - alpha))
+        self.hist_ = torch.scatter_add(self.hist_, 0, idx+1, momentum*alpha)
+        self.hist_ /= self.hist_.sum()
 
     def weigh_loss(self, data):
         CDF = torch.cumsum(self.hist_, 0)
-        idx = torch.floor((data - self.min_val) / self.num_bins).to(dtype=torch.long)
+        idx = torch.floor((data - self.min_val) / self.delta).to(dtype=torch.long)
         return CDF[idx]*data

@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
+
 from pytorch_metric_learning.utils import common_functions as c_f
 from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
-
 
 
 ######################################
@@ -39,20 +39,24 @@ def find_hard_negatives(dmat, output_index=True, empirical_thresh=0.0):
     r, c = dmat.size()  # Correct bug
 
     if not output_index:
-        pos = torch.zeros(max(r, c))    # Correct bug
-        pos[:min(r, c)] = dmat.diag()   # Correct bug
+        pos = torch.zeros(max(r, c))  # Correct bug
+        pos[: min(r, c)] = dmat.diag()  # Correct bug
 
-    dmat = dmat + torch.eye(r, c).to(dmat.device) * 99999  # filter diagonal     # Correct bug
+    dmat = (
+        dmat + torch.eye(r, c).to(dmat.device) * 99999
+    )  # filter diagonal     # Correct bug
     dmat[dmat < empirical_thresh] = 99999  # filter outliers in brown dataset
 
     # Add following 3 lines to solve a bug
-    min_a, min_p = torch.zeros(max(r, c)), torch.zeros(max(r, c))   # Check for unequal number of anchors and positives
+    min_a, min_p = torch.zeros(max(r, c)), torch.zeros(
+        max(r, c)
+    )  # Check for unequal number of anchors and positives
     min_a[:c], _ = torch.min(dmat, dim=0)
     min_p[:r], _ = torch.min(dmat, dim=1)
 
     if not output_index:
         neg = torch.min(min_a, min_p)
-        return pos, neg.to(dtype=pos.dtype)     # Added cast to avoid errors
+        return pos, neg.to(dtype=pos.dtype)  # Added cast to avoid errors
 
     # Useless for our testing purposes
     # mask = min_a < min_p
@@ -106,7 +110,9 @@ class OriginalImplementationDynamicSoftMarginLoss(nn.Module):
             return find_hard_negatives(dmat, output_index=False, empirical_thresh=0.008)
         else:
             dmat = compute_distance_matrix_unit_l2(x, x)
-            anchor_idx, positive_idx, negative_idx = lmu.convert_to_triplets(None, labels, labels, t_per_anchor="all")
+            anchor_idx, positive_idx, negative_idx = lmu.convert_to_triplets(
+                None, labels, labels, t_per_anchor="all"
+            )
             return dmat[anchor_idx, positive_idx], dmat[anchor_idx, negative_idx]
 
     # We do not use binary descriptors
@@ -147,19 +153,25 @@ class OriginalImplementationDynamicSoftMarginLoss(nn.Module):
         """
         num_bins = self.histogram.size(0)
         x_detached = x.detach()
-        self.bin_width = (self._max_val - self._min_val) / num_bins     # Adjusted formula
-        lo = torch.floor((x_detached - self._min_val) / self.bin_width).long()        # Add cast to avoid errors
+        self.bin_width = (self._max_val - self._min_val) / num_bins  # Adjusted formula
+        lo = torch.floor(
+            (x_detached - self._min_val) / self.bin_width
+        ).long()  # Add cast to avoid errors
         hi = (lo + 1).clamp(min=0, max=num_bins - 1)
         hist = x.new_zeros(num_bins)
         alpha = (
             1.0
             - (x_detached - self._min_val - lo.float() * self.bin_width)
             / self.bin_width
-        ).to(dtype=hist.dtype)      # Added cast to avoid errors
+        ).to(
+            dtype=hist.dtype
+        )  # Added cast to avoid errors
         hist.index_add_(0, lo, alpha)
         hist.index_add_(0, hi, 1.0 - alpha)
         hist = hist / (hist.sum() + 1e-6)
-        self.histogram = c_f.to_device(self.histogram, tensor=hist, dtype=hist.dtype)     # Line added to avoid errors
+        self.histogram = c_f.to_device(
+            self.histogram, tensor=hist, dtype=hist.dtype
+        )  # Line added to avoid errors
         self.histogram = (1.0 - momentum) * self.histogram + momentum * hist
 
     def _compute_stats(self, pos_dist, neg_dist):
@@ -190,15 +202,14 @@ class OriginalImplementationDynamicSoftMarginLoss(nn.Module):
 
         loss = -(neg_dist * weight).mean() + (pos_dist * weight).mean()
         return loss.to(dtype=x.dtype)
-    
+
+
 import unittest
 
 from pytorch_metric_learning.losses import DynamicSoftMarginLoss
-from pytorch_metric_learning.reducers import MeanReducer
 
 from .. import TEST_DEVICE, TEST_DTYPES
 from ..zzz_testing_utils.testing_utils import angle_to_coord
-from .utils import get_triplet_embeddings_with_ref
 
 
 class TestDynamicSoftMarginLoss(unittest.TestCase):
@@ -215,15 +226,78 @@ class TestDynamicSoftMarginLoss(unittest.TestCase):
             embeddings = torch.nn.functional.normalize(embeddings)
             cnt = embeddings.size(0) // 2
 
-            self.helper(embeddings[:cnt, :], None, dtype, ref_emb=embeddings[cnt:, :], min_val=-3.0, num_bins=10)
-            self.helper(embeddings[:cnt, :], None, dtype, ref_emb=embeddings[cnt:, :], min_val=-3.0, num_bins=20)
-            self.helper(embeddings[:cnt, :], None, dtype, ref_emb=embeddings[cnt:, :], min_val=-3.0, num_bins=30)
-            self.helper(embeddings[:cnt, :], None, dtype, ref_emb=embeddings[cnt:, :], min_val=-2.0, num_bins=10)
-            self.helper(embeddings[:cnt, :], None, dtype, ref_emb=embeddings[cnt:, :], min_val=-2.0, num_bins=20)
-            self.helper(embeddings[:cnt, :], None, dtype, ref_emb=embeddings[cnt:, :], min_val=-2.0, num_bins=30)
-            self.helper(embeddings[:cnt, :], None, dtype, ref_emb=embeddings[cnt:, :], min_val=-1.0, num_bins=10)
-            self.helper(embeddings[:cnt, :], None, dtype, ref_emb=embeddings[cnt:, :], min_val=-1.0, num_bins=20)
-            self.helper(embeddings[:cnt, :], None, dtype, ref_emb=embeddings[cnt:, :], min_val=-1.0, num_bins=30)
+            self.helper(
+                embeddings[:cnt, :],
+                None,
+                dtype,
+                ref_emb=embeddings[cnt:, :],
+                min_val=-3.0,
+                num_bins=10,
+            )
+            self.helper(
+                embeddings[:cnt, :],
+                None,
+                dtype,
+                ref_emb=embeddings[cnt:, :],
+                min_val=-3.0,
+                num_bins=20,
+            )
+            self.helper(
+                embeddings[:cnt, :],
+                None,
+                dtype,
+                ref_emb=embeddings[cnt:, :],
+                min_val=-3.0,
+                num_bins=30,
+            )
+            self.helper(
+                embeddings[:cnt, :],
+                None,
+                dtype,
+                ref_emb=embeddings[cnt:, :],
+                min_val=-2.0,
+                num_bins=10,
+            )
+            self.helper(
+                embeddings[:cnt, :],
+                None,
+                dtype,
+                ref_emb=embeddings[cnt:, :],
+                min_val=-2.0,
+                num_bins=20,
+            )
+            self.helper(
+                embeddings[:cnt, :],
+                None,
+                dtype,
+                ref_emb=embeddings[cnt:, :],
+                min_val=-2.0,
+                num_bins=30,
+            )
+            self.helper(
+                embeddings[:cnt, :],
+                None,
+                dtype,
+                ref_emb=embeddings[cnt:, :],
+                min_val=-1.0,
+                num_bins=10,
+            )
+            self.helper(
+                embeddings[:cnt, :],
+                None,
+                dtype,
+                ref_emb=embeddings[cnt:, :],
+                min_val=-1.0,
+                num_bins=20,
+            )
+            self.helper(
+                embeddings[:cnt, :],
+                None,
+                dtype,
+                ref_emb=embeddings[cnt:, :],
+                min_val=-1.0,
+                num_bins=30,
+            )
 
     def test_dynamic_soft_margin_loss_with_labels(self):
         for dtype in TEST_DTYPES:
@@ -249,20 +323,27 @@ class TestDynamicSoftMarginLoss(unittest.TestCase):
             self.helper(embeddings, labels, dtype, min_val=-1.0, num_bins=30)
 
     def helper(
-        self, embeddings, labels, dtype, ref_emb=None, ref_labels=None, min_val=-2.0, num_bins=10
+        self,
+        embeddings,
+        labels,
+        dtype,
+        ref_emb=None,
+        ref_labels=None,
+        min_val=-2.0,
+        num_bins=10,
     ):
         loss_func = DynamicSoftMarginLoss(min_val=min_val, num_bins=num_bins)
-        original_loss_func = OriginalImplementationDynamicSoftMarginLoss(max_dist=-min_val, nbins=num_bins)
+        original_loss_func = OriginalImplementationDynamicSoftMarginLoss(
+            max_dist=-min_val, nbins=num_bins
+        )
 
-        loss =  loss_func(embeddings, labels, ref_emb=ref_emb, ref_labels=ref_labels)
+        loss = loss_func(embeddings, labels, ref_emb=ref_emb, ref_labels=ref_labels)
         if labels is None:
             embeddings = torch.cat((embeddings, ref_emb))
         correct_loss = original_loss_func(embeddings, labels)
 
         rtol = 1e-2 if dtype == torch.float16 else 1e-5
-        self.assertTrue(
-            torch.isclose(loss, correct_loss, rtol=rtol)
-        )
+        self.assertTrue(torch.isclose(loss, correct_loss, rtol=rtol))
 
     def test_with_no_valid_triplets(self):
         loss_func = DynamicSoftMarginLoss()

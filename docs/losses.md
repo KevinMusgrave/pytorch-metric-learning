@@ -424,6 +424,26 @@ losses.InstanceLoss(gamma=64, **kwargs)
 * **gamma**: The cosine similarity matrix is scaled by this amount.
 
 
+## HistogramLoss
+[Learning Deep Embeddings with Histogram Loss](https://arxiv.org/pdf/1611.00822.pdf)
+```python
+losses.HistogramLoss(n_bins=None, delta=None)
+```
+
+**Parameters**:
+
+* **n_bins**: The number of bins used to construct the histogram. Default is 100 when both `n_bins` and `delta` are `None`.
+* **delta**: The mesh of the uniform partition of the interval [-1, 1] used to construct the histogram. If not set the value of n_bins will be used.
+
+**Default distance**: 
+
+ - [```CosineSimilarity()```](distances.md#cosinesimilarity)
+
+**Default reducer**: 
+
+ - This loss returns an **already reduced** loss.
+
+
 ## IntraPairVarianceLoss
 [Deep Metric Learning with Tuplet Margin Loss](http://openaccess.thecvf.com/content_ICCV_2019/papers/Yu_Deep_Metric_Learning_With_Tuplet_Margin_Loss_ICCV_2019_paper.pdf){target=_blank}
 ```python
@@ -787,6 +807,27 @@ This is also known as InfoNCE, and is a generalization of the [NPairsLoss](losse
  - [Representation Learning with Contrastive Predictive Coding](https://arxiv.org/pdf/1807.03748.pdf){target=_blank}
  - [Momentum Contrast for Unsupervised Visual Representation Learning](https://arxiv.org/pdf/1911.05722.pdf){target=_blank}
  - [A Simple Framework for Contrastive Learning of Visual Representations](https://arxiv.org/pdf/2002.05709.pdf){target=_blank}
+
+??? "How exactly is the NTXentLoss computed?"
+
+    In the equation below, a loss is computed for each positive pair (`k_+`) in a batch, normalized by itself and all negative pairs in the batch that have the same "anchor" embedding (`k_i in K`). 
+
+    - What does "anchor" mean? Let's say we have 3 pairs specified by batch indices: (0, 1), (0, 2), (1, 0). The first two pairs start with 0, so they have the same anchor. The third pair has the same indices as the first pair, but the order is different, so it does not have the same anchor.
+
+    Given `embeddings` with corresponding `labels`, positive pairs `(embeddings[i], embeddings[j])` are defined when `labels[i] == labels[j]`. Now let's look at an example loss calculation:
+
+    Consider `labels = [0, 0, 1, 2]`. Two losses will be computed:
+
+    * A positive pair of indices `[0, 1]`, with negative pairs of indices `[0, 2], [0, 3]`.
+
+    * A positive pair of indices `[1, 0]`, with negative pairs of indices `[1, 2], [1, 3]`.
+
+    Labels `1`, and `2` do not have positive pairs, and therefore the negative pair of indices `[2, 3]` will not be used.
+
+    Note that an anchor can belong to multiple positive pairs if its label is present multiple times in `labels`.
+
+    Are you trying to use `NTXentLoss` for self-supervised learning? Specifically, do you have two sets of embeddings which are derived from data that are augmented versions of each other? If so, you can skip the step of creating the `labels` array, by wrapping `NTXentLoss` with [`SelfSupervisedLoss`](losses.md#selfsupervisedloss).
+
 ```python
 losses.NTXentLoss(temperature=0.07, **kwargs)
 ```

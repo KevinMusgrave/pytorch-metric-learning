@@ -9,6 +9,7 @@ from .cross_batch_memory import CrossBatchMemory
 from .dynamic_soft_margin_loss import DynamicSoftMarginLoss
 from .fast_ap_loss import FastAPLoss
 from .generic_pair_loss import GenericPairLoss
+from .histogram_loss import HistogramLoss
 from .instance_loss import InstanceLoss
 from .intra_pair_variance_loss import IntraPairVarianceLoss
 from .large_margin_softmax_loss import LargeMarginSoftmaxLoss

@@ -2,7 +2,6 @@ import torch
 
 from ..distances import LpDistance
 from ..utils import common_functions as c_f
-from ..utils import loss_and_miner_utils as lmu
 from .base_metric_loss_function import BaseMetricLossFunction
 
 
@@ -12,12 +11,13 @@ class RankedListLoss(BaseMetricLossFunction):
 
     Args:
         * margin (float): margin between positive and negative set
-        * imbalance (float): tradeoff between positive and negative sets. As the name suggests this takes into account 
+        * imbalance (float): tradeoff between positive and negative sets. As the name suggests this takes into account
                             the imbalance between positive and negative samples in the dataset
         * alpha (float): smallest distance between negative points
         * Tp & Tn (float): temperatures for, respectively, positive and negative pairs weighting
     """
-    def __init__(self, margin, Tn, imbalance=0.5, alpha = None, Tp = 0, **kwargs):
+
+    def __init__(self, margin, Tn, imbalance=0.5, alpha=None, Tp=0, **kwargs):
         super().__init__(**kwargs)
 
         self.margin = margin
@@ -32,8 +32,9 @@ class RankedListLoss(BaseMetricLossFunction):
 
         self.Tp = Tp
         self.Tn = Tn
-        self.add_to_recordable_attributes(list_of_names=["imbalance", "alpha", "margin", "Tp", "Tn"], is_stat=True)
-        
+        self.add_to_recordable_attributes(
+            list_of_names=["imbalance", "alpha", "margin", "Tp", "Tn"], is_stat=True
+        )
 
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
         c_f.labels_required(labels)
@@ -51,16 +52,23 @@ class RankedListLoss(BaseMetricLossFunction):
 
         N_star[(~y) * (mat < self.alpha)] = mat[(~y) * (mat < self.alpha)]
         y.fill_diagonal_(False)
-        P_star[y * (mat > (self.alpha - self.margin))] = mat[y * (mat > (self.alpha - self.margin))]
+        P_star[y * (mat > (self.alpha - self.margin))] = mat[
+            y * (mat > (self.alpha - self.margin))
+        ]
 
-        w_p[P_star > self.alpha - self.margin] = torch.exp(self.Tp * (P_star[P_star > self.alpha - self.margin] - (self.alpha - self.margin)))
+        w_p[P_star > self.alpha - self.margin] = torch.exp(
+            self.Tp
+            * (P_star[P_star > self.alpha - self.margin] - (self.alpha - self.margin))
+        )
         w_n[0 < N_star] = torch.exp(self.Tn * (self.alpha - N_star[0 < N_star]))
 
-        loss_P = torch.sum(w_p * (P_star - (self.alpha - self.margin)), dim=1) / torch.sum(w_p, dim=1)
+        loss_P = torch.sum(
+            w_p * (P_star - (self.alpha - self.margin)), dim=1
+        ) / torch.sum(w_p, dim=1)
         loss_N = torch.sum(w_n * (self.alpha - N_star), dim=1) / torch.sum(w_n, dim=1)
         loss_N[loss_N.isnan()] = 0
         loss_RLL = (1 - self.imbalance) * loss_P + self.imbalance * loss_N
-        
+
         return {
             "loss": {
                 "losses": loss_RLL,

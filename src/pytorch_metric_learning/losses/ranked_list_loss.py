@@ -7,14 +7,15 @@ from .base_metric_loss_function import BaseMetricLossFunction
 
 
 class RankedListLoss(BaseMetricLossFunction):
-    """Ranked List Loss described in https://arxiv.org/abs/1903.03238
+    r"""Ranked List Loss described in https://arxiv.org/abs/1903.03238
        Default parameters correspond to RLL-Simpler, preferred for exploratory analysis.
 
     Args:
-        margin (float): _
-        imbalance (float): _
-        alpha (float): _
-        Tp & Tn (float): temperatures for, respectively, positive and negative pairs weighting
+        * margin (float): margin between positive and negative set
+        * imbalance (float): tradeoff between positive and negative sets. As the name suggests this takes into account 
+                            the imbalance between positive and negative samples in the dataset
+        * alpha (float): smallest distance between negative points
+        * Tp & Tn (float): temperatures for, respectively, positive and negative pairs weighting
     """
     def __init__(self, margin, Tn, imbalance=0.5, alpha = None, Tp = 0, **kwargs):
         super().__init__(**kwargs)

@@ -68,7 +68,7 @@ class PNPLoss(BaseMetricLossFunction):
         else:
             raise Exception(f"variant <{self.variant}> not available!")
 
-        loss = torch.sum(sim_all_rk * I_pos, dim=-1) / N_pos.reshape(-1)
+        loss = torch.sum(sim_all_rk * I_pos, dim=-1)[safe_N] / N_pos[safe_N].reshape(-1)
         loss = torch.sum(loss) / N
         if self.variant == "Dq":
             loss = 1 - loss

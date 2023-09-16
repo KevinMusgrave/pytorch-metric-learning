@@ -45,7 +45,8 @@ dev_bash() {
   echo "Starting ${CONT_NAME}:${CONT_VERSION}"
   docker run ${GPU_FLAGS} \
     --mount type=bind,source="${LAYERJOT_HOME}",target=/layerjot \
-    --mount type=bind,source="/data",target=/data \
+    --mount type=bind,source="${LAYERJOT_MODELS}",target=/models \
+    --mount type=bind,source="${LJ_DATA}",target=/data \
     --shm-size 8G \
     --rm ${NETWORK} -it ${CONT_NAME}:${CONT_VERSION} bash	
 }

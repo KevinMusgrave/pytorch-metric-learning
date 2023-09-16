@@ -28,7 +28,7 @@ logging.info("VERSION %s" % pytorch_metric_learning.__version__)
 # SETTINGS
 
 effnet = list_models("efficientnet_b4")[0]
-num_classes = 827 # from pretraining
+num_classes = 1596 # from pretraining
 output_dim = 1792
 input_dim_resize = 650
 input_dim_crop = 600
@@ -37,7 +37,7 @@ embedding_dim = 128
 # input_dim_crop = 64
 
 # Set other training parameters
-batch_size = 24
+batch_size = 8  # This is far to small!! Need a bigger GPU
 num_epochs = 20
 margin = 0.1
 m_per_class = 2

@@ -35,5 +35,4 @@ from .supcon_loss import SupConLoss
 from .triplet_margin_loss import TripletMarginLoss
 from .tuplet_margin_loss import TupletMarginLoss
 from .vicreg_loss import VICRegLoss
-from .multilabel_supcon_loss import MultiSupConLoss
-from .xbm_multilabel import CrossBatchMemory4MultiLabel    
+from .multilabel_supcon_loss import MultiSupConLoss, CrossBatchMemory4MultiLabel

@@ -90,22 +90,8 @@ class TestMultiSupConLoss(unittest.TestCase):
                         self.test_xbm_multisupcon_val_gt[dtype][b], 
                         atol=1e-2 if dtype == torch.float16 else 1e-4))
                     
+                    
     def test_with_no_valid_pairs(self):
-        for dtype in TEST_DTYPES:
-            embedding_angles = [0]
-            embeddings = torch.tensor(
-                [angle_to_coord(a) for a in embedding_angles],
-                requires_grad=True,
-                dtype=dtype,
-            ).to(
-                TEST_DEVICE
-            )  # 2D embeddings
-            labels = torch.LongTensor([[0]])
-            loss = self.loss_func(embeddings, labels)
-            loss.backward()
-            self.assertEqual(loss, 0)
-
-    def test_(self):
         for dtype in TEST_DTYPES:
             embedding_angles = [0]
             embeddings = torch.tensor(

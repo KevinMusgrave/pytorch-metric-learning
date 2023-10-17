@@ -18,6 +18,7 @@ from .margin_loss import MarginLoss
 from .mixins import EmbeddingRegularizerMixin, WeightRegularizerMixin
 from .multi_similarity_loss import MultiSimilarityLoss
 from .multiple_losses import MultipleLosses
+from .multiple_negatives_ranking_loss import MultipleNegativesRankingLoss
 from .n_pairs_loss import NPairsLoss
 from .nca_loss import NCALoss
 from .normalized_softmax_loss import NormalizedSoftmaxLoss

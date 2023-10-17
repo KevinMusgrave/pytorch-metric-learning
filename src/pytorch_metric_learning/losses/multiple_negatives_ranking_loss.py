@@ -105,7 +105,7 @@ class MultipleNegativesRankingLoss(BaseMetricLossFunction):
 
     def get_positive_pairwise_sims(self, anchor_embedding, ref_embedding):
         const = 1.0 if self.distance.is_inverted else -1.0
-        return self.distance(anchor_embedding, ref_embedding) * const
+        return self.distance(anchor_embedding, ref_embedding) * const * self.scale
 
     def get_default_distance(self):
         return CosineSimilarity()

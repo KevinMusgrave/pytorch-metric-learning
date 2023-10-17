@@ -48,7 +48,7 @@ class MultipleNegativesRankingLoss(BaseMetricLossFunction):
                 self.calculate_anchor_positive_loss(embeddings, anc, pos_idx, neg_idx)
             )
 
-        loss = [torch.stack(v).mean() for v in anchor_losses.values()]
+        loss = torch.stack([(torch.stack(v).mean()) for v in anchor_losses.values()])
         return {
             "loss": {
                 "losses": loss,

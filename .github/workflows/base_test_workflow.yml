@@ -15,11 +15,11 @@ jobs:
       matrix:
         include:
           - python-version: 3.8
-            pytorch: 1.6
-            torchvision: 0.7
+            pytorch-version: 1.6
+            torchvision-version: 0.7
           - python-version: 3.9
-            pytorch: 2.1
-            torchvision: 0.16
+            pytorch-version: 2.1
+            torchvision-version: 0.16
 
     steps:
     - uses: actions/checkout@v2

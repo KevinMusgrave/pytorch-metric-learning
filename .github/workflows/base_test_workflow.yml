@@ -14,14 +14,14 @@ jobs:
     strategy:
       matrix:
         python-version: [3.9]
-        pytorch-version: [1.6, 2.1]
-        torchvision-version: [0.7, 0.16]
+        pytorch-version: [1.7.1, 2.1]
+        torchvision-version: [0.8, 0.16]
         with-collect-stats: [false]
         exclude:
-          - pytorch-version: 1.6
+          - pytorch-version: 1.7.1
             torchvision-version: 0.16
           - pytorch-version: 2.1
-            torchvision-version: 0.7
+            torchvision-version: 0.8
 
     steps:
     - uses: actions/checkout@v2

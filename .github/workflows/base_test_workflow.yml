@@ -33,6 +33,7 @@ jobs:
         pip install torch==${{ matrix.pytorch-version }} torchvision==${{ matrix.torchvision-version }} --force-reinstall
         pip install --upgrade protobuf==3.20.1
         pip install six
+        pip install packaging
     - name: Run unit tests
       run: |
         TEST_DTYPES=float32,float64 TEST_DEVICE=cpu WITH_COLLECT_STATS=${{ matrix.with-collect-stats }} python -m unittest discover -t . -s tests/${{ inputs.module-to-test }} 

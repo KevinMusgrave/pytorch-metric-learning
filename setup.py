@@ -11,12 +11,12 @@ with open("README.md", "r") as fh:
 extras_require_with_hooks = [
     "record-keeper >= 0.9.32",
     "faiss-gpu >= 1.6.3",
-    "tensorboard",
+    "tensorboard >= 2.14.1",
 ]
 extras_require_with_hooks_cpu = [
     "record-keeper >= 0.9.32",
     "faiss-cpu >= 1.6.3",
-    "tensorboard",
+    "tensorboard >= 2.14.1",
 ]
 extras_require_docs = ["mkdocs-material"]
 extras_require_dev = ["black", "isort", "nbqa", "flake8"]

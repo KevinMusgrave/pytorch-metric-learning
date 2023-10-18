@@ -110,6 +110,7 @@ class OriginalImplementationDynamicSoftMarginLoss(nn.Module):
             return find_hard_negatives(dmat, output_index=False, empirical_thresh=0.008)
         else:
             dmat = compute_distance_matrix_unit_l2(x, x)
+            dmat.fill_diagonal_(0)  # Put distance to itself to 0
             anchor_idx, positive_idx, negative_idx = lmu.convert_to_triplets(
                 None, labels, labels, t_per_anchor="all"
             )
@@ -200,8 +201,10 @@ class OriginalImplementationDynamicSoftMarginLoss(nn.Module):
         bin_idx = torch.floor((hist_var - self._min_val) / self.bin_width).long()
         weight = CDF[bin_idx]
 
-        loss = -(neg_dist * weight).mean() + (pos_dist * weight).mean()
-        return loss.to(dtype=x.dtype)
+        # Changed to an equivalent version for making same computation as in dynamic_soft_margin_loss.py
+        # loss = -(neg_dist * weight).mean() + (pos_dist * weight).mean()
+        loss = (hist_var*weight).mean()
+        return loss.to(device=x.device, dtype=x.dtype)  # Added cast to avoid errors
 
 
 import unittest

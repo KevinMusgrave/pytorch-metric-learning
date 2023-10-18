@@ -70,7 +70,6 @@ class RankedListLoss(BaseMetricLossFunction):
         )
         w_n[N_star > 0] = torch.exp(self.Tn * (self.alpha - N_star[N_star > 0]))
 
-        print("w_P: ", w_p)
         loss_P = torch.sum(
             w_p * (P_star - (self.alpha - self.margin)), dim=1
         ) / torch.sum(w_p + 1e-5, dim=1)

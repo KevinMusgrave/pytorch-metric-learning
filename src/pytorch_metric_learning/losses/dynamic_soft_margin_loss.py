@@ -81,6 +81,11 @@ class DynamicSoftMarginLoss(BaseMetricLossFunction):
     ):
         mat = self.distance(embeddings, ref_emb)
         r, c = mat.size()
+        
+        d_pos = torch.zeros(max(r, c))
+        d_pos = c_f.to_device(d_pos, tensor=embeddings, dtype=embeddings.dtype)
+        d_pos[: min(r, c)] = mat.diag()
+        mat.fill_diagonal_(np.inf)
 
         min_a, min_p = torch.zeros(max(r, c)), torch.zeros(
             max(r, c)
@@ -90,9 +95,7 @@ class DynamicSoftMarginLoss(BaseMetricLossFunction):
         min_a[:c], _ = torch.min(mat, dim=0)
         min_p[:r], _ = torch.min(mat, dim=1)
 
-        d_pos = torch.zeros(max(r, c))
-        d_pos = c_f.to_device(d_pos, tensor=embeddings, dtype=embeddings.dtype)
-        d_pos[: min(r, c)], d_neg = mat.diag(), torch.min(min_a, min_p)
+        d_neg = torch.min(min_a, min_p)
         return d_pos - d_neg
 
     def compute_loss_with_labels(

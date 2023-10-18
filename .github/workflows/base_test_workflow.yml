@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.8]
+        python-version: [3.9]
         pytorch-version: [1.6, 2.1]
         torchvision-version: [0.7, 0.16]
         with-collect-stats: [false]

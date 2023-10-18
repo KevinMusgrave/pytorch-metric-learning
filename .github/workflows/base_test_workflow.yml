@@ -14,8 +14,8 @@ jobs:
     strategy:
       matrix:
         python-version: [3.9]
-        pytorch-version: [1.7.1, 2.1]
-        torchvision-version: [0.8.2, 0.16]
+        pytorch-version: [1.7.1+cpu, 2.1]
+        torchvision-version: [0.8.2+cpu, 0.16]
         with-collect-stats: [false]
         exclude:
           - pytorch-version: 1.7.1

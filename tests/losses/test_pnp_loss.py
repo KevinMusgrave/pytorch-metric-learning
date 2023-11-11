@@ -130,3 +130,11 @@ class TestPNPLoss(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             PNPLoss(b, alpha, anneal, "PNP")
+
+    def test_negatives_that_have_no_positives(self):
+        loss_func = PNPLoss()
+        labels = torch.tensor([1, 1, 2], device=TEST_DEVICE)
+        for dtype in TEST_DTYPES:
+            embeddings = torch.randn(3, 32, dtype=dtype, device=TEST_DEVICE)
+            loss = loss_func(embeddings, labels)
+            self.assertTrue(not torch.isnan(loss))

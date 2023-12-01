@@ -889,6 +889,28 @@ loss = loss_fn(embeddings, labels)
 ```python
 losses.PNPLoss(b=2, alpha=1, anneal=0.01, variant="O", **kwargs)
 ```
+**Equation**:
+
+![PNP_loss_equation](imgs/PNP_loss_equation.png){: style="height:150px"}
+**Parameters**:
+
+* **b**: The boundary of PNP-Ib. The paper uses 2.
+* **alpha**: The power of PNP-Dq. The paper uses 8.
+* **annel**: The temperature of sigmoid function. The paper uses 0.01.
+* **variant**: The name of variants. It can be{"Ds", "Dq", "Iu", "Ib", "O"}. The paper uses Dq.
+
+**Default distance**:
+- [```CosineSimilarity()```](distances.md#cosinesimilarity)
+    - The only compatible distance is ```CosineSimilarity()```.
+
+**Default reducer**: 
+
+ - [MeanReducer](reducers.md#meanreducer)
+
+**Reducer input**:
+
+* **loss**: The loss per element that has at least 1 positive in the batch. Reduction type is ```"element"```.
+
 
 
 ## ProxyAnchorLoss

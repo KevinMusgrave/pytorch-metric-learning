@@ -13,7 +13,7 @@ This library contains 9 modules, each of which can be used independently within 
 ## How loss functions work
 
 ### Using losses and miners in your training loop
-Let’s initialize a plain [TripletMarginLoss](losses/#tripletmarginloss):
+Let’s initialize a plain [TripletMarginLoss](losses.md#tripletmarginloss):
 ```python
 from pytorch_metric_learning import losses
 loss_func = losses.TripletMarginLoss()
@@ -95,8 +95,8 @@ If you're interested in [MoCo](https://arxiv.org/pdf/1911.05722.pdf)-style self-
 
 ## Highlights of the rest of the library
 
-- For a convenient way to train your model, take a look at the [trainers](trainers).
-- Want to test your model's accuracy on a dataset? Try the [testers](testers/).
+- For a convenient way to train your model, take a look at the [trainers](trainers.md).
+- Want to test your model's accuracy on a dataset? Try the [testers](testers.md).
 - To compute the accuracy of an embedding space directly, use [AccuracyCalculator](accuracy_calculation.md).
 
 If you're short of time and want a complete train/test workflow, check out the [example Google Colab notebooks](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples).

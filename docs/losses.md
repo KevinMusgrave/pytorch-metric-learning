@@ -897,7 +897,7 @@ losses.PNPLoss(b=2, alpha=1, anneal=0.01, variant="O", **kwargs)
 
 * **b**: The boundary of PNP-Ib (see equation 9 above). The paper uses 2.
 * **alpha**: The power of PNP-Dq (see equation 13 above). The paper uses 8.
-* **anneal**: The temperature of the sigmoid function. (The sigmoid function is `R` in the equations above.) The paper uses 0.01.
+* **anneal**: The temperature of the sigmoid function. (The sigmoid function is used for `R` in the equations above.) The paper uses 0.01.
 * **variant**: The name of the variant. The options are {"Ds", "Dq", "Iu", "Ib", "O"}. The paper uses "Dq".
 
 **Default distance**:

@@ -891,17 +891,19 @@ losses.PNPLoss(b=2, alpha=1, anneal=0.01, variant="O", **kwargs)
 ```
 **Equation**:
 
-![PNP_loss_equation](imgs/PNP_loss_equation.png){: style="height:150px"}
+![PNP_loss_equation](imgs/PNP_loss_equation.png){: style="height:300px"}
+
 **Parameters**:
 
-* **b**: The boundary of PNP-Ib. The paper uses 2.
-* **alpha**: The power of PNP-Dq. The paper uses 8.
-* **annel**: The temperature of sigmoid function. The paper uses 0.01.
-* **variant**: The name of variants. It can be{"Ds", "Dq", "Iu", "Ib", "O"}. The paper uses Dq.
+* **b**: The boundary of PNP-Ib (see equation 9 above). The paper uses 2.
+* **alpha**: The power of PNP-Dq (see equation 13 above). The paper uses 8.
+* **anneal**: The temperature of the sigmoid function. (The sigmoid function is `R` in the equations above.) The paper uses 0.01.
+* **variant**: The name of the variant. The options are {"Ds", "Dq", "Iu", "Ib", "O"}. The paper uses "Dq".
 
 **Default distance**:
+
 - [```CosineSimilarity()```](distances.md#cosinesimilarity)
-    - The only compatible distance is ```CosineSimilarity()```.
+    - This is the only compatible distance.
 
 **Default reducer**: 
 

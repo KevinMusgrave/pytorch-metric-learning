@@ -93,7 +93,7 @@ There are also a few functions in ```self.distance``` that provide some of this 
 
 ## Using ```indices_tuple```
 
-This is an optional argument passed in from the outside. (See the [overview](../../#using-losses-and-miners-in-your-training-loop) for an example.) It currently has 3 possible forms: 
+This is an optional argument passed in from the outside. (See the [overview](../index.md#using-losses-and-miners-in-your-training-loop) for an example.) It currently has 3 possible forms: 
 
  - ```None```
  - A tuple of size 4, representing the indices of mined pairs (anchors, positives, anchors, negatives)

@@ -106,7 +106,7 @@ class OriginalImplementationHistogramLoss(torch.nn.Module):
         )
         histogram_pos_inds = torch.tril(
             torch.ones(histogram_pos_repeat.size()), -1
-        ).byte()
+        ).bool()
         if self.cuda:
             histogram_pos_inds = histogram_pos_inds.cuda()
         histogram_pos_repeat[histogram_pos_inds] = 0

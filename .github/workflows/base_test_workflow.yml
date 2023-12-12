@@ -13,15 +13,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.8]
-        pytorch-version: [1.6, 1.11]
-        torchvision-version: [0.7.0, 0.12.0]
-        with-collect-stats: [false]
-        exclude:
-          - pytorch-version: 1.6
-            torchvision-version: 0.12.0
-          - pytorch-version: 1.11
-            torchvision-version: 0.7.0
+        include:
+          - python-version: 3.8
+            pytorch-version: 1.6
+            torchvision-version: 0.7
+          - python-version: 3.9
+            pytorch-version: 2.1
+            torchvision-version: 0.16
 
     steps:
     - uses: actions/checkout@v2
@@ -34,6 +32,8 @@ jobs:
         pip install .[with-hooks-cpu]
         pip install torch==${{ matrix.pytorch-version }} torchvision==${{ matrix.torchvision-version }} --force-reinstall
         pip install --upgrade protobuf==3.20.1
+        pip install six
+        pip install packaging
     - name: Run unit tests
       run: |
         TEST_DTYPES=float32,float64 TEST_DEVICE=cpu WITH_COLLECT_STATS=${{ matrix.with-collect-stats }} python -m unittest discover -t . -s tests/${{ inputs.module-to-test }} 

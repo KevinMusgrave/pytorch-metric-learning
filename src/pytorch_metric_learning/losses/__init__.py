@@ -6,6 +6,7 @@ from .circle_loss import CircleLoss
 from .contrastive_loss import ContrastiveLoss
 from .cosface_loss import CosFaceLoss
 from .cross_batch_memory import CrossBatchMemory
+from .dynamic_soft_margin_loss import DynamicSoftMarginLoss
 from .fast_ap_loss import FastAPLoss
 from .generic_pair_loss import GenericPairLoss
 from .histogram_loss import HistogramLoss
@@ -26,6 +27,7 @@ from .p2s_grad_loss import P2SGradLoss
 from .pnp_loss import PNPLoss
 from .proxy_anchor_loss import ProxyAnchorLoss
 from .proxy_losses import ProxyNCALoss
+from .ranked_list_loss import RankedListLoss
 from .self_supervised_loss import SelfSupervisedLoss
 from .signal_to_noise_ratio_losses import SignalToNoiseRatioContrastiveLoss
 from .soft_triple_loss import SoftTripleLoss

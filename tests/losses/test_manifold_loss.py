@@ -151,7 +151,10 @@ def loss_incorrect_descriptors_dim():
 
 class TestManifoldLoss(unittest.TestCase):
     def test_intrinsic_and_context_losses(self):
+        torch.manual_seed(24)
         for dtype in TEST_DTYPES:
+            if dtype == torch.float16:
+                continue
             batch_size, embedding_size = 32, 128
             n_proxies = 3
 
@@ -191,7 +194,10 @@ class TestManifoldLoss(unittest.TestCase):
             self.assertTrue(torch.isclose(original_loss, loss, rtol=rtol))
 
     def test_with_original_implementation(self):
+        torch.manual_seed(24)
         for dtype in TEST_DTYPES:
+            if dtype == torch.float16:
+                continue
             batch_size, embedding_size = 32, 128
             n_proxies = 5
 

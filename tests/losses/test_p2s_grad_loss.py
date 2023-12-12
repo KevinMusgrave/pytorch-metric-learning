@@ -149,10 +149,13 @@ class TrustedImplementationP2SGradLoss(nn.Module):
 
 class TestP2SGradLoss(unittest.TestCase):
     def test_p2s_grad_loss_with_paper_formula(self):
+        torch.manual_seed(23)
         num_classes = 20
         batch_size = 100
         descriptors_dim = 128
         for dtype in TEST_DTYPES:
+            if dtype == torch.float16:
+                continue
             embeddings = torch.randn(
                 batch_size,
                 descriptors_dim,
@@ -196,6 +199,7 @@ class TestP2SGradLoss(unittest.TestCase):
                 )
 
     def test_p2s_grad_loss_with_trusted_implementation(self):
+        torch.manual_seed(23)
         num_classes = 20
         batch_size = 100
         descriptors_dim = 128

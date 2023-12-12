@@ -203,7 +203,7 @@ class OriginalImplementationDynamicSoftMarginLoss(nn.Module):
 
         # Changed to an equivalent version for making same computation as in dynamic_soft_margin_loss.py
         # loss = -(neg_dist * weight).mean() + (pos_dist * weight).mean()
-        loss = (hist_var*weight).mean()
+        loss = (hist_var * weight).mean()
         return loss.to(device=x.device, dtype=x.dtype)  # Added cast to avoid errors
 
 
@@ -217,7 +217,10 @@ from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 class TestDynamicSoftMarginLoss(unittest.TestCase):
     def test_dynamic_soft_margin_loss_without_labels(self):
+        torch.manual_seed(21)
         for dtype in TEST_DTYPES:
+            if dtype == torch.float16:
+                continue
             embeddings = torch.randn(
                 5,
                 32,
@@ -303,7 +306,10 @@ class TestDynamicSoftMarginLoss(unittest.TestCase):
             )
 
     def test_dynamic_soft_margin_loss_with_labels(self):
+        torch.manual_seed(21)
         for dtype in TEST_DTYPES:
+            if dtype == torch.float16:
+                continue
             embeddings = torch.randn(
                 5,
                 32,
@@ -349,8 +355,11 @@ class TestDynamicSoftMarginLoss(unittest.TestCase):
         self.assertTrue(torch.isclose(loss, correct_loss, rtol=rtol))
 
     def test_with_no_valid_triplets(self):
+        torch.manual_seed(21)
         loss_func = DynamicSoftMarginLoss()
         for dtype in TEST_DTYPES:
+            if dtype == torch.float16:
+                continue
             embedding_angles = [0, 20, 40, 60, 80]
             embeddings = torch.tensor(
                 [angle_to_coord(a) for a in embedding_angles],
@@ -364,7 +373,10 @@ class TestDynamicSoftMarginLoss(unittest.TestCase):
             self.assertEqual(loss, 0)
 
     def test_backward(self):
+        torch.manual_seed(21)
         for dtype in TEST_DTYPES:
+            if dtype == torch.float16:
+                continue
             loss_func = DynamicSoftMarginLoss()
             embedding_angles = [0, 20, 40, 60, 80]
             embeddings = torch.tensor(

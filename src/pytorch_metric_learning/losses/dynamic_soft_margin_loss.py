@@ -81,7 +81,7 @@ class DynamicSoftMarginLoss(BaseMetricLossFunction):
     ):
         mat = self.distance(embeddings, ref_emb)
         r, c = mat.size()
-        
+
         d_pos = torch.zeros(max(r, c))
         d_pos = c_f.to_device(d_pos, tensor=embeddings, dtype=embeddings.dtype)
         d_pos[: min(r, c)] = mat.diag()

@@ -9,6 +9,7 @@ from .. import TEST_DEVICE, TEST_DTYPES
 
 class TestRankedListLoss(unittest.TestCase):
     def test_ranked_list_loss_simpler(self):
+        torch.manual_seed(22)
         batch_size = 32
         embedding_size = 64
         for dtype in TEST_DTYPES:
@@ -84,6 +85,7 @@ class TestRankedListLoss(unittest.TestCase):
                     loss.backward()
 
     def test_ranked_list_loss(self):
+        torch.manual_seed(22)
         batch_size = 32
         embedding_size = 64
         for dtype in TEST_DTYPES:

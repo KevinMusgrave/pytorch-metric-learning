@@ -40,7 +40,7 @@ class RankedListLoss(BaseMetricLossFunction):
         self.Tp = Tp
         self.Tn = Tn
         self.add_to_recordable_attributes(
-            list_of_names=["imbalance", "alpha", "margin", "Tp", "Tn"], is_stat=True
+            list_of_names=["imbalance", "alpha", "margin", "Tp", "Tn"], is_stat=False
         )
 
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):

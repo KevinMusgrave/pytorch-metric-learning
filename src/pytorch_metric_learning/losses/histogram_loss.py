@@ -25,7 +25,7 @@ class HistogramLoss(BaseMetricLossFunction):
             n_bins = 100
 
         self.delta = delta if delta is not None else 2 / n_bins
-        self.add_to_recordable_attributes(name="delta", is_stat=True)
+        self.add_to_recordable_attributes(name="delta", is_stat=False)
 
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
         c_f.labels_or_indices_tuple_required(labels, indices_tuple)

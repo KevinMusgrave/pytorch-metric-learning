@@ -18,16 +18,15 @@
 
 ## News
 
+**December 15**: v2.4.0
+- Added [DynamicSoftMarginLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#dynamicsoftmarginloss).
+- Added [RankedListLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#rankedlistloss).
+- See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v2.4.0).
+- Thank you [domenicoMuscill0](https://github.com/domenicoMuscill0), [Puzer](https://github.com/Puzer), [interestingzhou](https://github.com/interestingzhou), and [GaetanLepage](https://github.com/GaetanLepage).
+
 **July 25**: v2.3.0
 - Added [HistogramLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#histogramloss)
 - Thank you [domenicoMuscill0](https://github.com/domenicoMuscill0).
-
-**June 18**: v2.2.0
-- Added [ManifoldLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#manifoldloss) and [P2SGradLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#p2sgradloss).
-- Added a `symmetric` flag to [SelfSupervisedLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#selfsupervisedloss).
-- See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v2.2.0).
-- Thank you [domenicoMuscill0](https://github.com/domenicoMuscill0).
-
 
 ## Documentation
 - [**View the documentation here**](https://kevinmusgrave.github.io/pytorch-metric-learning/)

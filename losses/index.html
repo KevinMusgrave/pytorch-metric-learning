@@ -370,6 +370,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#dynamicsoftmarginloss" class="md-nav__link">
+    <span class="md-ellipsis">
+      DynamicSoftMarginLoss
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#fastaploss" class="md-nav__link">
     <span class="md-ellipsis">
       FastAPLoss
@@ -544,6 +553,15 @@
   <a href="#proxyncaloss" class="md-nav__link">
     <span class="md-ellipsis">
       ProxyNCALoss
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rankedlistloss" class="md-nav__link">
+    <span class="md-ellipsis">
+      RankedListLoss
     </span>
   </a>
   
@@ -1112,6 +1130,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#dynamicsoftmarginloss" class="md-nav__link">
+    <span class="md-ellipsis">
+      DynamicSoftMarginLoss
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#fastaploss" class="md-nav__link">
     <span class="md-ellipsis">
       FastAPLoss
@@ -1286,6 +1313,15 @@
   <a href="#proxyncaloss" class="md-nav__link">
     <span class="md-ellipsis">
       ProxyNCALoss
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rankedlistloss" class="md-nav__link">
+    <span class="md-ellipsis">
+      RankedListLoss
     </span>
   </a>
   
@@ -1689,6 +1725,16 @@
 <p>The queue can be cleared like this:
 <div class="highlight"><pre><span></span><code><span class="n">loss_fn</span><span class="o">.</span><span class="n">reset_queue</span><span class="p">()</span>
 </code></pre></div></p>
+<h2 id="dynamicsoftmarginloss">DynamicSoftMarginLoss<a class="headerlink" href="#dynamicsoftmarginloss" title="Permanent link">&para;</a></h2>
+<p><a href="https://openaccess.thecvf.com/content_ICCV_2019/papers/Zhang_Learning_Local_Descriptors_With_a_CDF-Based_Dynamic_Soft_Margin_ICCV_2019_paper.pdf">Learning Local Descriptors With a CDF-Based Dynamic Soft Margin</a>
+<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">DynamicSoftMarginLoss</span><span class="p">(</span><span class="n">min_val</span><span class="o">=-</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">num_bins</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">momentum</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div></p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>min_val</strong>: minimum significative value for <code>d_pos - d_neg</code></li>
+<li><strong>num_bins</strong>: number of equally spaced bins for the partition of the interval <code>[min_val, ∞]</code></li>
+<li><strong>momentum</strong>: weight assigned to the histogram computed from the current batch</li>
+</ul>
 <h2 id="fastaploss">FastAPLoss<a class="headerlink" href="#fastaploss" title="Permanent link">&para;</a></h2>
 <p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Cakir_Deep_Metric_Learning_to_Rank_CVPR_2019_paper.pdf" target="_blank">Deep Metric Learning to Rank</a></p>
 <div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">FastAPLoss</span><span class="p">(</span><span class="n">num_bins</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -2137,31 +2183,7 @@
 <h2 id="pnploss">PNPLoss<a class="headerlink" href="#pnploss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/2102.04640.pdf" target="_blank">Rethinking the Optimization of Average Precision: Only Penalizing Negative Instances before Positive Ones is Enough</a>
 <div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">PNPLoss</span><span class="p">(</span><span class="n">b</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">anneal</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s2">&quot;O&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</code></pre></div>
-<strong>Equation</strong>:</p>
-<p><img alt="PNP_loss_equation" src="../imgs/PNP_loss_equation.png" style="height:300px" /></p>
-<p><strong>Parameters</strong>:</p>
-<ul>
-<li><strong>b</strong>: The boundary of PNP-Ib (see equation 9 above). The paper uses 2.</li>
-<li><strong>alpha</strong>: The power of PNP-Dq (see equation 13 above). The paper uses 8.</li>
-<li><strong>anneal</strong>: The temperature of the sigmoid function. (The sigmoid function is used for <code>R</code> in the equations above.) The paper uses 0.01.</li>
-<li><strong>variant</strong>: The name of the variant. The options are {"Ds", "Dq", "Iu", "Ib", "O"}. The paper uses "Dq".</li>
-</ul>
-<p><strong>Default distance</strong>:</p>
-<ul>
-<li><a href="../distances/#cosinesimilarity"><code>CosineSimilarity()</code></a><ul>
-<li>This is the only compatible distance.</li>
-</ul>
-</li>
-</ul>
-<p><strong>Default reducer</strong>: </p>
-<ul>
-<li><a href="../reducers/#meanreducer">MeanReducer</a></li>
-</ul>
-<p><strong>Reducer input</strong>:</p>
-<ul>
-<li><strong>loss</strong>: The loss per element that has at least 1 positive in the batch. Reduction type is <code>"element"</code>.</li>
-</ul>
+</code></pre></div></p>
 <h2 id="proxyanchorloss">ProxyAnchorLoss<a class="headerlink" href="#proxyanchorloss" title="Permanent link">&para;</a></h2>
 <p><a href="https://arxiv.org/pdf/2003.13911.pdf" target="_blank">Proxy Anchor Loss for Deep Metric Learning</a>
 <div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">ProxyAnchorLoss</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">embedding_size</span><span class="p">,</span> <span class="n">margin</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span> <span class="n">alpha</span> <span class="o">=</span> <span class="mi">32</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -2229,6 +2251,18 @@
 <p><strong>Reducer input</strong>:</p>
 <ul>
 <li><strong>loss</strong>: The loss per element in the batch, that results in a non zero exponent in the cross entropy expression. Reduction type is <code>"element"</code>.</li>
+</ul>
+<h2 id="rankedlistloss">RankedListLoss<a class="headerlink" href="#rankedlistloss" title="Permanent link">&para;</a></h2>
+<p><a href="https://arxiv.org/abs/1903.03238">Ranked List Loss for Deep Metric Learning</a>
+<div class="highlight"><pre><span></span><code><span class="n">losses</span><span class="o">.</span><span class="n">RankedListLoss</span><span class="p">(</span><span class="n">margin</span><span class="p">,</span> <span class="n">Tn</span><span class="p">,</span> <span class="n">imbalance</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">Tp</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div></p>
+<p><strong>Parameters</strong>:</p>
+<ul>
+<li><strong>margin</strong> (float): margin between positive and negative set</li>
+<li><strong>imbalance</strong> (float): tradeoff between positive and negative sets. As the name suggests this takes into account
+                    the imbalance between positive and negative samples in the dataset</li>
+<li><strong>alpha</strong> (float): smallest distance between negative points</li>
+<li><strong>Tp &amp; Tn</strong> (float): temperatures for, respectively, positive and negative pairs weighting.</li>
 </ul>
 <h2 id="selfsupervisedloss">SelfSupervisedLoss<a class="headerlink" href="#selfsupervisedloss" title="Permanent link">&para;</a></h2>
 <p>A common use case is to have <code>embeddings</code> and <code>ref_emb</code> be augmented versions of each other. For most losses, you have to create labels to indicate which <code>embeddings</code> correspond with which <code>ref_emb</code>. </p>

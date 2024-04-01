@@ -87,12 +87,22 @@ def neg_pairs_from_tuple(indices_tuple):
 def get_all_triplets_indices(labels, ref_labels=None):
     all_matches, all_diffs = get_matches_and_diffs(labels, ref_labels)
 
-    if (all_matches.shape[0] * all_matches.shape[1] * all_matches.shape[1]
-            < torch.iinfo(torch.int32).max):
+    if (
+        all_matches.shape[0] * all_matches.shape[1] * all_matches.shape[1]
+        < torch.iinfo(torch.int32).max
+    ):
         # torch.nonzero is not supported for tensors with more than INT_MAX elements
-        triplets = all_matches.unsqueeze(2) * all_diffs.unsqueeze(1)
-        return torch.where(triplets)
+        return get_all_triplets_indices_vectorized_method(all_matches, all_diffs)
 
+    return get_all_triplets_indices_loop_method(labels, all_matches, all_diffs)
+
+
+def get_all_triplets_indices_vectorized_method(all_matches, all_diffs):
+    triplets = all_matches.unsqueeze(2) * all_diffs.unsqueeze(1)
+    return torch.where(triplets)
+
+
+def get_all_triplets_indices_loop_method(labels, all_matches, all_diffs):
     all_matches, all_diffs = all_matches.bool(), all_diffs.bool()
 
     # Find anchors with at least a positive and a negative
@@ -101,9 +111,11 @@ def get_all_triplets_indices(labels, ref_labels=None):
 
     # No triplets found
     if len(indices) == 0:
-        return (torch.tensor([], device=labels.device, dtype=labels.dtype),
-                torch.tensor([], device=labels.device, dtype=labels.dtype),
-                torch.tensor([], device=labels.device, dtype=labels.dtype))
+        return (
+            torch.tensor([], device=labels.device, dtype=labels.dtype),
+            torch.tensor([], device=labels.device, dtype=labels.dtype),
+            torch.tensor([], device=labels.device, dtype=labels.dtype),
+        )
 
     # Compute all triplets
     anchors = []
@@ -116,7 +128,9 @@ def get_all_triplets_indices(labels, ref_labels=None):
         nm = len(matches)
         matches = matches.repeat_interleave(nd)
         diffs = diffs.repeat(nm)
-        anchors.append(torch.full((len(matches),), i, dtype=labels.dtype, device=labels.device))
+        anchors.append(
+            torch.full((len(matches),), i, dtype=labels.dtype, device=labels.device)
+        )
         positives.append(matches)
         negatives.append(diffs)
     return torch.cat(anchors), torch.cat(positives), torch.cat(negatives)

@@ -306,8 +306,10 @@ class BaseTester:
                 query_split_name,
                 reference_split_names,
             )
-        self.end_of_testing_hook(self) if self.end_of_testing_hook else c_f.LOGGER.info(
-            self.all_accuracies
+        (
+            self.end_of_testing_hook(self)
+            if self.end_of_testing_hook
+            else c_f.LOGGER.info(self.all_accuracies)
         )
         del self.embeddings_and_labels
         return self.all_accuracies

@@ -67,9 +67,11 @@ class TestCalculateAccuracies(unittest.TestCase):
                         "query_labels": query_labels,
                         "label_counts": label_counts,
                         "knn_labels": knn_labels,
-                        "not_lone_query_mask": torch.ones(6, dtype=torch.bool)
-                        if i == 0
-                        else torch.zeros(6, dtype=torch.bool),
+                        "not_lone_query_mask": (
+                            torch.ones(6, dtype=torch.bool)
+                            if i == 0
+                            else torch.zeros(6, dtype=torch.bool)
+                        ),
                     }
 
                     function_dict = AC.get_function_dict()

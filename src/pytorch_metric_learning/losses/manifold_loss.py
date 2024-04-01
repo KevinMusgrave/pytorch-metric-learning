@@ -90,13 +90,13 @@ class ManifoldLoss(BaseMetricLossFunction):
         if self.lambdaC != np.inf:
             F = F[:N, N:]
             loss_int = F - F[torch.arange(N), meta_classes].view(-1, 1) + self.margin
-            loss_int[
-                torch.arange(N), meta_classes
-            ] = -np.inf  # This way avoid numerical cancellation happening   # NoQA
+            loss_int[torch.arange(N), meta_classes] = (
+                -np.inf
+            )  # This way avoid numerical cancellation happening   # NoQA
             # instead with subtraction of margin term           # NoQA
-            loss_int[
-                loss_int < 0
-            ] = -np.inf  # This way no loss for positive correlation with own proxy
+            loss_int[loss_int < 0] = (
+                -np.inf
+            )  # This way no loss for positive correlation with own proxy
 
             loss_int = torch.exp(loss_int)
             loss_int = torch.log(1 + torch.sum(loss_int, dim=1))
@@ -106,9 +106,9 @@ class ManifoldLoss(BaseMetricLossFunction):
             F_e, F_p.unsqueeze(1), dim=-1
         ).t()
         loss_ctx += -loss_ctx[torch.arange(N), meta_classes].view(-1, 1) + self.margin
-        loss_ctx[
-            torch.arange(N), meta_classes
-        ] = -np.inf  # This way avoid numerical cancellation happening   # NoQA
+        loss_ctx[torch.arange(N), meta_classes] = (
+            -np.inf
+        )  # This way avoid numerical cancellation happening   # NoQA
         # instead with subtraction of margin term           # NoQA
         loss_ctx[loss_ctx < 0] = -np.inf
 

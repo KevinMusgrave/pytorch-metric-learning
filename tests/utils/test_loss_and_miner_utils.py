@@ -291,6 +291,29 @@ class TestLossAndMinerUtils(unittest.TestCase):
         self.assertTrue(torch.equal(a1, correct_a1))
         self.assertTrue(torch.equal(p, correct_p))
 
+    def test_get_all_triplets_indices(self):
+        torch.manual_seed(920)
+        for dtype in TEST_DTYPES:
+            for batch_size in [32, 256, 512]:
+                for ref_labels in [None, torch.randint(0, 5, size=(batch_size // 2,))]:
+                    labels = torch.randint(0, 5, size=(batch_size,))
+
+                    a, p, n = lmu.get_all_triplets_indices(labels, ref_labels)
+                    matches, diffs = lmu.get_matches_and_diffs(labels, ref_labels)
+
+                    a2, p2, n2 = lmu.get_all_triplets_indices_vectorized_method(
+                        matches, diffs
+                    )
+                    a3, p3, n3 = lmu.get_all_triplets_indices_loop_method(
+                        labels, matches, diffs
+                    )
+                    self.assertTrue(
+                        (a == a2).all() and (p == p2).all() and (n == n2).all()
+                    )
+                    self.assertTrue(
+                        (a == a3).all() and (p == p3).all() and (n == n3).all()
+                    )
+
 
 if __name__ == "__main__":
     unittest.main()

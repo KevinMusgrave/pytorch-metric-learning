@@ -93,7 +93,7 @@ class DistributedLossWrapper(torch.nn.Module):
 
     def forward(
         self,
-        emb,
+        embeddings,
         labels=None,
         indices_tuple=None,
         ref_emb=None,
@@ -101,7 +101,7 @@ class DistributedLossWrapper(torch.nn.Module):
         enqueue_mask=None,
     ):
         world_size = torch.distributed.get_world_size()
-        common_args = [emb, labels, indices_tuple, ref_emb, ref_labels, world_size]
+        common_args = [embeddings, labels, indices_tuple, ref_emb, ref_labels, world_size]
         if isinstance(self.loss, CrossBatchMemory):
             return self.forward_cross_batch(*common_args, enqueue_mask)
         return self.forward_regular_loss(*common_args)

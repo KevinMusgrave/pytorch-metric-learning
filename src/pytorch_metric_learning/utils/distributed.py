@@ -1,3 +1,5 @@
+import warnings
+
 import torch
 
 from ..losses import BaseMetricLossFunction, CrossBatchMemory
@@ -100,6 +102,12 @@ class DistributedLossWrapper(torch.nn.Module):
         ref_labels=None,
         enqueue_mask=None,
     ):
+        if not is_distributed():
+            warnings.warn(
+                "DistributedLossWrapper is being used in a non-distributed setting. Returning the loss as is."
+            )
+            return self.loss(embeddings, labels, indices_tuple, ref_emb, ref_labels)
+
         world_size = torch.distributed.get_world_size()
         common_args = [embeddings, labels, indices_tuple, ref_emb, ref_labels, world_size]
         if isinstance(self.loss, CrossBatchMemory):

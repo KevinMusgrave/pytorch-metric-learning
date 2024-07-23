@@ -18,15 +18,16 @@
 
 ## News
 
+**April 1**: v2.5.0
+- Improved `get_all_triplets_indices` so that large batch sizes don't trigger the `INT_MAX` error.
+- See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v2.5.0).
+- Thank you [mkmenta](https://github.com/mkmenta).
+
 **December 15**: v2.4.0
 - Added [DynamicSoftMarginLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#dynamicsoftmarginloss).
 - Added [RankedListLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#rankedlistloss).
 - See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v2.4.0).
 - Thank you [domenicoMuscill0](https://github.com/domenicoMuscill0), [Puzer](https://github.com/Puzer), [interestingzhuo](https://github.com/interestingzhuo), and [GaetanLepage](https://github.com/GaetanLepage).
-
-**July 25**: v2.3.0
-- Added [HistogramLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#histogramloss)
-- Thank you [domenicoMuscill0](https://github.com/domenicoMuscill0).
 
 ## Documentation
 - [**View the documentation here**](https://kevinmusgrave.github.io/pytorch-metric-learning/)
@@ -236,6 +237,7 @@ Thanks to the contributors who made pull requests!
 | [AlenUbuntu](https://github.com/AlenUbuntu) | [CircleLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#circleloss) |
 | [interestingzhuo](https://github.com/interestingzhuo) | [PNPLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#pnploss) |
 | [wconnell](https://github.com/wconnell) | [Learning a scRNAseq Metric Embedding](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/scRNAseq_MetricEmbedding.ipynb) |
+| [mkmenta](https://github.com/mkmenta) | Improved `get_all_triplets_indices` (fixed the `INT_MAX` error) |
 | [AlexSchuy](https://github.com/AlexSchuy) | optimized ```utils.loss_and_miner_utils.get_random_triplet_indices``` |
 | [JohnGiorgi](https://github.com/JohnGiorgi) | ```all_gather``` in [utils.distributed](https://kevinmusgrave.github.io/pytorch-metric-learning/distributed) |
 | [Hummer12007](https://github.com/Hummer12007) | ```utils.key_checker``` |

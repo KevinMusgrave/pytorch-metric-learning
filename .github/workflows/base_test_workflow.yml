@@ -30,8 +30,7 @@ jobs:
     - name: Install dependencies
       run: |
         pip install .[with-hooks-cpu]
-        pip install torch==${{ matrix.pytorch-version }} torchvision==${{ matrix.torchvision-version }} --force-reinstall
-        pip install numpy<2.0 --force-reinstall
+        pip install numpy<2.0 torch==${{ matrix.pytorch-version }} torchvision==${{ matrix.torchvision-version }} --force-reinstall
         pip install --upgrade protobuf==3.20.1
         pip install six
         pip install packaging

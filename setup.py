@@ -40,7 +40,7 @@ setuptools.setup(
     python_requires=">=3.0",
     install_requires=[
         "numpy < 2.0",
-        "scikit-learn",
+        "scikit-learn <= 1.4.1.post1",
         "tqdm",
         "torch >= 1.6.0",
     ],

@@ -18,16 +18,15 @@
 
 ## News
 
+**July 24**: v2.6.0
+- Changed the `emb` argument of `DistributedLossWrapper.forward` to `embeddings` to be consistent with the rest of the library.
+- Added a warning and early-return when `DistributedLossWrapper` is being used in a non-distributed setting.
+- Thank you [elisim](https://github.com/elisim).
+
 **April 1**: v2.5.0
 - Improved `get_all_triplets_indices` so that large batch sizes don't trigger the `INT_MAX` error.
 - See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v2.5.0).
 - Thank you [mkmenta](https://github.com/mkmenta).
-
-**December 15**: v2.4.0
-- Added [DynamicSoftMarginLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#dynamicsoftmarginloss).
-- Added [RankedListLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#rankedlistloss).
-- See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v2.4.0).
-- Thank you [domenicoMuscill0](https://github.com/domenicoMuscill0), [Puzer](https://github.com/Puzer), [interestingzhuo](https://github.com/interestingzhuo), and [GaetanLepage](https://github.com/GaetanLepage).
 
 ## Documentation
 - [**View the documentation here**](https://kevinmusgrave.github.io/pytorch-metric-learning/)
@@ -249,6 +248,7 @@ Thanks to the contributors who made pull requests!
 | [ElisonSherton](https://github.com/ElisonSherton) | Fixed an edge case in ArcFaceLoss. |
 | [stompsjo](https://github.com/stompsjo) | Improved documentation for NTXentLoss. |
 | [Puzer](https://github.com/Puzer) | Bug fix for PNPLoss. |
+| [elisim](https://github.com/elisim) | Developer improvements to DistributedLossWrapper. |
 | [GaetanLepage](https://github.com/GaetanLepage) | |
 | [z1w](https://github.com/z1w) | |
 | [thinline72](https://github.com/thinline72) | |
@@ -268,7 +268,7 @@ Thanks to the contributors who made pull requests!
 
 
 ### Facebook AI
-Thank you to [Ser-Nam Lim](https://research.fb.com/people/lim-ser-nam/) at [Facebook AI](https://ai.facebook.com/), and my research advisor, [Professor Serge Belongie](https://vision.cornell.edu/se3/people/serge-belongie/). This project began during my internship at Facebook AI where I received valuable feedback from Ser-Nam, and his team of computer vision and machine learning engineers and research scientists. In particular, thanks to [Ashish Shah](https://www.linkedin.com/in/ashish217/) and [Austin Reiter](https://www.linkedin.com/in/austin-reiter-3962aa7/) for reviewing my code during its early stages of development.
+Thank you to [Ser-Nam Lim](https://sites.google.com/site/sernam) at [Facebook AI](https://ai.facebook.com/), and my research advisor, [Professor Serge Belongie](https://www.belongielab.org/). This project began during my internship at Facebook AI where I received valuable feedback from Ser-Nam, and his team of computer vision and machine learning engineers and research scientists. In particular, thanks to [Ashish Shah](https://www.linkedin.com/in/ashish217/) and [Austin Reiter](https://www.linkedin.com/in/austin-reiter-3962aa7/) for reviewing my code during its early stages of development.
 
 ### Open-source repos
 This library contains code that has been adapted and modified from the following great open-source repos:

@@ -6,7 +6,7 @@ from .large_margin_softmax_loss import LargeMarginSoftmaxLoss
 
 class CosFaceLoss(LargeMarginSoftmaxLoss):
     """
-    Implementation of https://arxiv.org/pdf/1801.07698.pdf
+    Implementation of https://arxiv.org/abs/1801.09414
     """
 
     def __init__(self, *args, margin=0.35, scale=64, **kwargs):

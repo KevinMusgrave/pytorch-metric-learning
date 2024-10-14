@@ -26,7 +26,7 @@ AccuracyCalculator(include=(),
     * ```"max_bin_count"```. This means k will be set to ```max(bincount(reference_labels)) - self_count``` where ```self_count == 1``` if the query and reference embeddings come from the same source.
 * **label_comparison_fn**: A function that compares two torch arrays of labels and returns a boolean array. The default is ```torch.eq```. If a custom function is used, then you must exclude clustering based metrics ("NMI" and "AMI"). The example below shows a custom function for two-dimensional labels. It returns ```True``` if the 0th column matches, and the 1st column does **not** match.
 * **device**: The device to move input tensors to. If ```None```, will default to GPUs if available.
-* **knn_func**: A callable that takes in 4 arguments (```query, k, reference, embeddings_come_from_same_source```) and returns ```distances, indices```. Default is ```pytorch_metric_learning.utils.inference.FaissKNN```.
+* **knn_func**: A callable that takes in 4 arguments (```query, k, reference, ref_includes_query```) and returns ```distances, indices```. Default is ```pytorch_metric_learning.utils.inference.FaissKNN```.
 * **kmeans_func**: A callable that takes in 2 arguments (```x, nmb_clusters```) and returns a 1-d tensor of cluster assignments. Default is ```pytorch_metric_learning.utils.inference.FaissKMeans```.
 ```python
 from pytorch_metric_learning.distances import SNRDistance
@@ -46,11 +46,11 @@ AccuracyCalculator(exclude=("NMI", "AMI"),
 Call the ```get_accuracy``` method to obtain a dictionary of accuracies.
 ```python
 def get_accuracy(self, 
-	query, 		
-	reference, 
-	query_labels, 
-	reference_labels, 
-	embeddings_come_from_same_source, 
+	query,
+    query_labels,  		
+	reference=None,
+	reference_labels=None, 
+	ref_includes_query=False, 
 	include=(),
 	exclude=()
 ):
@@ -64,10 +64,10 @@ def get_accuracy(self,
 ```
 
 * **query**: A 2D torch or numpy array of size ```(Nq, D)```, where Nq is the number of query samples. For each query sample, nearest neighbors are retrieved and accuracy is computed.
-* **reference**: A 2D torch or numpy array of size ```(Nr, D)```, where Nr is the number of reference samples. This is where nearest neighbors are retrieved from.
 * **query_labels**: A 1D torch or numpy array of size ```(Nq)```. Each element should be an integer representing the sample's label.
+* **reference**: A 2D torch or numpy array of size ```(Nr, D)```, where Nr is the number of reference samples. This is where nearest neighbors are retrieved from.
 * **reference_labels**: A 1D torch or numpy array of size ```(Nr)```. Each element should be an integer representing the sample's label. 
-* **embeddings_come_from_same_source**: Set to True if ```query``` is a subset of ```reference``` or if ```query is reference```. Set to False otherwise.
+* **ref_includes_query**: Set to True if ```query``` is a subset of ```reference``` or if ```query is reference```. Set to False otherwise.
 * **include**: Optional. A list or tuple of strings, which are the names of metrics you want to calculate. If left empty, all metrics specified during initialization will be calculated.
 * **exclude**: Optional. A list or tuple of strings, which are the names of metrics you do not want to calculate.
 
@@ -153,7 +153,7 @@ kwargs = {"query": query,                    # query embeddings
     "reference": reference,                  # reference embeddings
     "query_labels": query_labels,        
     "reference_labels": reference_labels,
-    "embeddings_come_from_same_source": e}  # True if query is reference, or if query is a subset of reference.
+    "ref_includes_query": e}  # True if query is reference, or if query is a subset of reference.
 ```
 
 If your method requires a k-nearest neighbors search, then append your method's name to the ```requires_knn``` list, as shown in the above example. If any of your accuracy methods require k-nearest neighbors, they will also receive the following kwargs:
@@ -176,10 +176,10 @@ Now when ```get_accuracy``` is called, the returned dictionary will contain ```p
 ```python
 calculator = YourCalculator()
 acc_dict = calculator.get_accuracy(query_embeddings,
-    reference_embeddings,
     query_labels,
+    reference_embeddings,
     reference_labels,
-    embeddings_come_from_same_source=True
+    ref_includes_query=True
 )
 # Now acc_dict contains the metrics "precision_at_2" and "fancy_mutual_info"
 # in addition to the original metrics from AccuracyCalculator
@@ -224,12 +224,3 @@ labels = torch.tensor([
 ])
 ```
 
-
-### Warning for versions <= 0.9.97
-
-The behavior of the ```k``` parameter described in the [Parameters](#parameters) section is for versions >= 0.9.98.
-
-For versions <= 0.9.97, the behavior was:
-
-* If ```k = None```, then ```k = min(1023, max(bincount(reference_labels)))```
-* Otherwise ```k = k```

@@ -13,58 +13,63 @@ from .. import TEST_DEVICE
 
 class TestCalculateAccuraciesLargeK(unittest.TestCase):
     def test_accuracy_calculator_large_k(self):
+        np.random.seed(493)
         for ecfss in [False, True]:
-            for max_k in [None, "max_bin_count"]:
+            for max_k in [None, 98, "max_bin_count"]:
                 for num_embeddings in [1000, 2100]:
-                    # make random features
-                    encs = np.random.rand(num_embeddings, 5).astype(np.float32)
-                    # and random labels of 100 classes
-                    labels = np.zeros((num_embeddings // 100, 100), dtype=int)
-                    for i in range(10):
-                        labels[i] = np.arange(100)
-                    labels = labels.ravel()
+                    for num_classes in [2, 11, 103]:
+                        # make random features
+                        encs = np.random.rand(num_embeddings, 5).astype(np.float32)
+                        # and random labels of 100 classes
+                        labels = np.random.randint(
+                            0, num_classes, size=(num_embeddings,)
+                        )
 
-                    correct_p1, correct_map, correct_mapr = self.evaluate(
-                        encs, labels, max_k, ecfss
-                    )
+                        correct_p1, correct_map, correct_mapr = self.evaluate(
+                            encs, labels, max_k, ecfss
+                        )
 
-                    # use Musgrave's library
-                    if max_k is None:
-                        k = len(encs) - 1 if ecfss else len(encs)
-                        accs = [
-                            accuracy_calculator.AccuracyCalculator(device=TEST_DEVICE),
-                            accuracy_calculator.AccuracyCalculator(
-                                k=k, device=TEST_DEVICE
-                            ),
-                        ]
-                    elif max_k == "max_bin_count":
-                        accs = [
-                            accuracy_calculator.AccuracyCalculator(
-                                k="max_bin_count", device=TEST_DEVICE
+                        # use Musgrave's library
+                        if max_k is None:
+                            k = len(encs) - 1 if ecfss else len(encs)
+                            accs = [
+                                accuracy_calculator.AccuracyCalculator(
+                                    device=TEST_DEVICE
+                                ),
+                                accuracy_calculator.AccuracyCalculator(
+                                    k=k, device=TEST_DEVICE
+                                ),
+                            ]
+                        else:
+                            accs = [
+                                accuracy_calculator.AccuracyCalculator(
+                                    k=max_k, device=TEST_DEVICE
+                                )
+                            ]
+
+                        for acc in accs:
+                            d = acc.get_accuracy(
+                                encs,
+                                labels,
+                                encs,
+                                labels,
+                                ecfss,
+                                include=(
+                                    "mean_average_precision",
+                                    "mean_average_precision_at_r",
+                                    "precision_at_1",
+                                ),
                             )
-                        ]
 
-                    for acc in accs:
-                        d = acc.get_accuracy(
-                            encs,
-                            encs,
-                            labels,
-                            labels,
-                            ecfss,
-                            include=(
-                                "mean_average_precision",
-                                "mean_average_precision_at_r",
-                                "precision_at_1",
-                            ),
-                        )
-
-                        self.assertTrue(np.isclose(correct_p1, d["precision_at_1"]))
-                        self.assertTrue(
-                            np.isclose(correct_map, d["mean_average_precision"])
-                        )
-                        self.assertTrue(
-                            np.isclose(correct_mapr, d["mean_average_precision_at_r"])
-                        )
+                            self.assertAlmostEqual(
+                                correct_p1, d["precision_at_1"], places=5
+                            )
+                            self.assertAlmostEqual(
+                                correct_map, d["mean_average_precision"], places=5
+                            )
+                            self.assertAlmostEqual(
+                                correct_mapr, d["mean_average_precision_at_r"], places=5
+                            )
 
     def evaluate(self, encs, labels, max_k=None, ecfss=False):
         """
@@ -82,8 +87,9 @@ class TestCalculateAccuraciesLargeK(unittest.TestCase):
         if max_k is None:
             max_k = k
             indices = all_indices
-        elif max_k == "max_bin_count":
-            max_k = int(max(np.bincount(labels))) - int(ecfss)
+        else:
+            if max_k == "max_bin_count":
+                max_k = int(max(np.bincount(labels))) - int(ecfss)
             _, indices = knn_func(torch_encs, max_k, torch_encs, ecfss)
 
         # let's use the most simple mAP implementation
@@ -109,7 +115,7 @@ class TestCalculateAccuraciesLargeK(unittest.TestCase):
                     if k < all_rel:
                         prec_at_r.append(rel / float(k + 1))
 
-            avg_precision = np.mean(precisions) if len(precisions) > 0 else 0
+            avg_precision = np.sum(precisions) / all_rel if all_rel > 0 else 0
             mAP.append(avg_precision)
             # mAP@R
             avg_prec_at_r = np.sum(prec_at_r) / all_rel if all_rel > 0 else 0

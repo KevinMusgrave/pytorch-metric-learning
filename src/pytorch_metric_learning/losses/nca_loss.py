@@ -18,6 +18,7 @@ class NCALoss(BaseMetricLossFunction):
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
         if len(embeddings) <= 1:
             return self.zero_losses()
+        c_f.labels_required(labels)
         return self.nca_computation(
             embeddings, ref_emb, labels, ref_labels, indices_tuple
         )
@@ -26,7 +27,9 @@ class NCALoss(BaseMetricLossFunction):
         self, query, reference, query_labels, reference_labels, indices_tuple
     ):
         dtype = query.dtype
-        miner_weights = lmu.convert_to_weights(indices_tuple, query_labels, dtype=dtype)
+        miner_weights = lmu.convert_to_weights(
+            indices_tuple, query_labels, dtype=dtype, using_ref=query is not reference
+        )
         mat = self.distance(query, reference)
         if not self.distance.is_inverted:
             mat = -mat

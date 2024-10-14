@@ -24,7 +24,6 @@ logging.getLogger(c_f.LOGGER_NAME).setLevel(logging.INFO)
 
 class TestMetricLossOnly(unittest.TestCase):
     def test_metric_loss_only(self):
-
         cifar_resnet_folder = "temp_cifar_resnet_for_pytorch_metric_learning_test"
         dataset_folder = "temp_dataset_for_pytorch_metric_learning_test"
         model_folder = "temp_saved_models_for_pytorch_metric_learning_test"
@@ -96,7 +95,7 @@ class TestMetricLossOnly(unittest.TestCase):
                     map_location=TEST_DEVICE,
                 )
                 model.load_state_dict(checkpoint["state_dict"])
-                model.module.linear = c_f.Identity()
+                model.module.linear = torch.nn.Identity()
                 if TEST_DEVICE == torch.device("cpu"):
                     model = model.module
                 model = model.to(TEST_DEVICE).type(dtype)
@@ -153,7 +152,6 @@ class TestMetricLossOnly(unittest.TestCase):
                     optimizers=optimizer_dict,
                     batch_size=batch_size,
                     loss_funcs=loss_fn_dict,
-                    mining_funcs={},
                     dataset=train_dataset,
                     sampler=sampler,
                     data_device=TEST_DEVICE,

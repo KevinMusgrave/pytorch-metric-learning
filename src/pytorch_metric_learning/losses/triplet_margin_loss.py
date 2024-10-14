@@ -1,6 +1,7 @@
 import torch
 
 from ..reducers import AvgNonZeroReducer
+from ..utils import common_functions as c_f
 from ..utils import loss_and_miner_utils as lmu
 from .base_metric_loss_function import BaseMetricLossFunction
 
@@ -31,6 +32,7 @@ class TripletMarginLoss(BaseMetricLossFunction):
         self.add_to_recordable_attributes(list_of_names=["margin"], is_stat=False)
 
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+        c_f.labels_or_indices_tuple_required(labels, indices_tuple)
         indices_tuple = lmu.convert_to_triplets(
             indices_tuple, labels, ref_labels, t_per_anchor=self.triplets_per_anchor
         )

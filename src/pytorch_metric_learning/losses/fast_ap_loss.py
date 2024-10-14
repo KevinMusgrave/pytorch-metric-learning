@@ -19,6 +19,7 @@ class FastAPLoss(BaseMetricLossFunction):
     """
 
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+        c_f.labels_required(labels)
         c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
         dtype, device = embeddings.dtype, embeddings.device
         miner_weights = lmu.convert_to_weights(indices_tuple, labels, dtype=dtype)

@@ -53,10 +53,5 @@ class TestThresholdReducer(unittest.TestCase):
                             correct_output = 0
                         self.assertTrue(output == correct_output)
 
-                        stat_attr = getattr(
-                            reducer, f"{reduction_type}s_past_filter", None
-                        )
                         if WITH_COLLECT_STATS:
-                            self.assertTrue(stat_attr == len(L))
-                        else:
-                            self.assertTrue(stat_attr is None)
+                            self.assertTrue(reducer.num_past_filter == len(L))

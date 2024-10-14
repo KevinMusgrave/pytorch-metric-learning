@@ -3,10 +3,10 @@ import torch
 from ..distances import CosineSimilarity
 from ..utils import common_functions as c_f
 from ..utils import loss_and_miner_utils as lmu
-from .base_miner import BaseTupleMiner
+from .base_miner import BaseMiner
 
 
-class MultiSimilarityMiner(BaseTupleMiner):
+class MultiSimilarityMiner(BaseMiner):
     def __init__(self, epsilon=0.1, **kwargs):
         super().__init__(**kwargs)
         self.epsilon = epsilon

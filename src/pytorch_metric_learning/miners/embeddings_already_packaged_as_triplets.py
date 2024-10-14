@@ -1,9 +1,9 @@
 import torch
 
-from .base_miner import BaseTupleMiner
+from .base_miner import BaseMiner
 
 
-class EmbeddingsAlreadyPackagedAsTriplets(BaseTupleMiner):
+class EmbeddingsAlreadyPackagedAsTriplets(BaseMiner):
     # If the embeddings are grouped by triplet,
     # then use this miner to force the loss function to use the already-formed triplets
     def mine(self, embeddings, labels, ref_emb, ref_labels):

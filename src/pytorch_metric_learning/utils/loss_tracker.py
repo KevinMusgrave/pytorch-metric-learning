@@ -1,6 +1,3 @@
-#! /usr/bin/env python3
-
-
 class LossTracker:
     def __init__(self, loss_names):
         if "total_loss" not in loss_names:

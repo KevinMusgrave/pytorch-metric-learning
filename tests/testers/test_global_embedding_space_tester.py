@@ -26,7 +26,7 @@ class TestGlobalEmbeddingSpaceTester(unittest.TestCase):
         }
 
     def test_global_embedding_space_tester(self):
-        model = c_f.Identity()
+        model = torch.nn.Identity()
         AC = accuracy_calculator.AccuracyCalculator(include=("precision_at_1",))
 
         correct = [
@@ -53,7 +53,7 @@ class TestGlobalEmbeddingSpaceTester(unittest.TestCase):
 
     def test_pca(self):
         # just make sure pca runs without crashing
-        model = c_f.Identity()
+        model = torch.nn.Identity()
         AC = accuracy_calculator.AccuracyCalculator(include=("precision_at_1",))
         embeddings = torch.randn(1024, 512)
         labels = torch.randint(0, 10, size=(1024,))
@@ -70,7 +70,7 @@ class TestGlobalEmbeddingSpaceTester(unittest.TestCase):
             accuracy_calculator=AC,
             end_of_testing_hook=end_of_testing_hook,
         )
-        all_accuracies = tester.test(dataset_dict, 0, model)
+        tester.test(dataset_dict, 0, model)
         self.assertTrue(not hasattr(tester, "embeddings_and_labels"))
 
     @classmethod

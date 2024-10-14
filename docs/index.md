@@ -13,7 +13,7 @@ This library contains 9 modules, each of which can be used independently within 
 ## How loss functions work
 
 ### Using losses and miners in your training loop
-Let’s initialize a plain [TripletMarginLoss](losses/#tripletmarginloss):
+Let’s initialize a plain [TripletMarginLoss](losses.md#tripletmarginloss):
 ```python
 from pytorch_metric_learning import losses
 loss_func = losses.TripletMarginLoss()
@@ -74,22 +74,18 @@ This customized triplet loss has the following properties:
 
 ### Using loss functions for unsupervised / self-supervised learning
 
-The TripletMarginLoss is an embedding-based or tuple-based loss. This means that internally, there is no real notion of "classes". Tuples (pairs or triplets) are formed at each iteration, based on the labels it receives. The labels don't have to represent classes. They simply need to indicate the positive and negative relationships between the embeddings. Thus, it is easy to use these loss functions for unsupervised or self-supervised learning. 
-
-For example, the code below is a simplified version of the augmentation strategy commonly used in self-supervision. The dataset does not come with any labels. Instead, the labels are created in the training loop, solely to indicate which embeddings are positive pairs.
+A `SelfSupervisedLoss` wrapper is provided for self-supervised learning:
 
 ```python
+from pytorch_metric_learning.losses import SelfSupervisedLoss
+loss_func = SelfSupervisedLoss(TripletMarginLoss())
+
 # your training for-loop
 for i, data in enumerate(dataloader):
 	optimizer.zero_grad()
 	embeddings = your_model(data)
 	augmented = your_model(your_augmentation(data))
-	labels = torch.arange(embeddings.size(0))
-
-	embeddings = torch.cat([embeddings, augmented], dim=0)
-	labels = torch.cat([labels, labels], dim=0)
-
-	loss = loss_func(embeddings, labels)
+	loss = loss_func(embeddings, augmented)
 	loss.backward()
 	optimizer.step()
 ```
@@ -99,8 +95,8 @@ If you're interested in [MoCo](https://arxiv.org/pdf/1911.05722.pdf)-style self-
 
 ## Highlights of the rest of the library
 
-- For a convenient way to train your model, take a look at the [trainers](trainers).
-- Want to test your model's accuracy on a dataset? Try the [testers](testers/).
+- For a convenient way to train your model, take a look at the [trainers](trainers.md).
+- Want to test your model's accuracy on a dataset? Try the [testers](testers.md).
 - To compute the accuracy of an embedding space directly, use [AccuracyCalculator](accuracy_calculation.md).
 
 If you're short of time and want a complete train/test workflow, check out the [example Google Colab notebooks](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples).
@@ -140,7 +136,7 @@ pip install pytorch-metric-learning[with-hooks-cpu]
 
 ### Conda
 ```
-conda install pytorch-metric-learning -c metric-learning -c pytorch
+conda install -c conda-forge pytorch-metric-learning
 ```
 
 **To use the testing module, you'll need faiss, which can be installed via conda as well. See the [installation instructions for faiss](https://github.com/facebookresearch/faiss/blob/master/INSTALL.md).**

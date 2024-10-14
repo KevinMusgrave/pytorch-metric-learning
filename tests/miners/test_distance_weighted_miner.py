@@ -47,13 +47,13 @@ class TestDistanceWeightedMiner(unittest.TestCase):
                     self.assertTrue(len(a) == len(p) == len(n) == 0)
                     continue
                 if with_ref_labels:
-                    anchors, positives, negatives = (
+                    anchors, _, negatives = (
                         embeddings[a],
                         ref_embeddings[p],
                         ref_embeddings[n],
                     )
                 else:
-                    anchors, positives, negatives = (
+                    anchors, _, negatives = (
                         embeddings[a],
                         embeddings[p],
                         embeddings[n],

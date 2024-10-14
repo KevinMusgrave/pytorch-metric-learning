@@ -4,10 +4,10 @@ import torch
 from ..distances import LpDistance
 from ..utils import common_functions as c_f
 from ..utils import loss_and_miner_utils as lmu
-from .base_miner import BaseTupleMiner
+from .base_miner import BaseMiner
 
 
-class AngularMiner(BaseTupleMiner):
+class AngularMiner(BaseMiner):
     """
     Returns triplets that form an angle greater than some threshold (angle).
     The angle is computed as defined in the angular loss paper:

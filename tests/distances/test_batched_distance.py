@@ -31,7 +31,6 @@ class TestBatchedDistance(unittest.TestCase):
                         else:
                             distance(embeddings)
                             correct_mat = dist_fn(embeddings)
-                            normalized_emb = torch.nn.functional.normalize(embeddings)
                         mat = torch.cat(mat, dim=0)
                         self.assertTrue(torch.allclose(mat, correct_mat))
 

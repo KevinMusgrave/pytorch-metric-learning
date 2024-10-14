@@ -1,28 +1,32 @@
-<h1 align="center">
+<h1>
 <a href="https://github.com/KevinMusgrave/pytorch-metric-learning">
-<img alt="Logo" src="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/docs/imgs/Logo2.png">
+<img alt="PyTorch Metric Learning" src="https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/docs/imgs/Logo2.png">
 </a>
-</h2>
+</h1>
+
 <p align="center">
- <a href="https://badge.fury.io/py/pytorch-metric-learning">
-     <img alt="PyPi version" src="https://badge.fury.io/py/pytorch-metric-learning.svg">
+ <a href="https://pypi.org/project/pytorch-metric-learning">
+     <img alt="PyPi version" src="https://img.shields.io/pypi/v/pytorch-metric-learning?color=bright-green">
  </a>
+	
+	
  
- <a href="https://anaconda.org/metric-learning/pytorch-metric-learning">
-     <img alt="Anaconda version" src="https://img.shields.io/conda/v/metric-learning/pytorch-metric-learning?color=bright-green">
+ <a href="https://anaconda.org/conda-forge/pytorch-metric-learning">
+     <img alt="Anaconda version" src="https://img.shields.io/conda/v/conda-forge/pytorch-metric-learning?color=bright-green">
  </a>
 </p>
 
 ## News
 
-**March 30**: v1.3.0
-- Added a ```batch_size``` parameter to CustomKNN, and fixed a couple of bugs. See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v1.3.0).
-- Thanks to contributor [cwkeam](https://github.com/cwkeam).
+**July 24**: v2.6.0
+- Changed the `emb` argument of `DistributedLossWrapper.forward` to `embeddings` to be consistent with the rest of the library.
+- Added a warning and early-return when `DistributedLossWrapper` is being used in a non-distributed setting.
+- Thank you [elisim](https://github.com/elisim).
 
-**February 28**: v1.2.0
-- New loss function: SubCenterArcFaceLoss. See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v1.2.0).
-- Thanks to contributor [chingisooinar](https://github.com/chingisooinar).
-
+**April 1**: v2.5.0
+- Improved `get_all_triplets_indices` so that large batch sizes don't trigger the `INT_MAX` error.
+- See the [release notes](https://github.com/KevinMusgrave/pytorch-metric-learning/releases/tag/v2.5.0).
+- Thank you [mkmenta](https://github.com/mkmenta).
 
 ## Documentation
 - [**View the documentation here**](https://kevinmusgrave.github.io/pytorch-metric-learning/)
@@ -104,22 +108,18 @@ This customized triplet loss has the following properties:
 
 ### Using loss functions for unsupervised / self-supervised learning
 
-The TripletMarginLoss is an embedding-based or tuple-based loss. This means that internally, there is no real notion of "classes". Tuples (pairs or triplets) are formed at each iteration, based on the labels it receives. The labels don't have to represent classes. They simply need to indicate the positive and negative relationships between the embeddings. Thus, it is easy to use these loss functions for unsupervised or self-supervised learning. 
-
-For example, the code below is a simplified version of the augmentation strategy commonly used in self-supervision. The dataset does not come with any labels. Instead, the labels are created in the training loop, solely to indicate which embeddings are positive pairs.
+A `SelfSupervisedLoss` wrapper is provided for self-supervised learning:
 
 ```python
+from pytorch_metric_learning.losses import SelfSupervisedLoss
+loss_func = SelfSupervisedLoss(TripletMarginLoss())
+
 # your training for-loop
 for i, data in enumerate(dataloader):
 	optimizer.zero_grad()
 	embeddings = your_model(data)
 	augmented = your_model(your_augmentation(data))
-	labels = torch.arange(embeddings.size(0))
-
-	embeddings = torch.cat([embeddings, augmented], dim=0)
-	labels = torch.cat([labels, labels], dim=0)
-
-	loss = loss_func(embeddings, labels)
+	loss = loss_func(embeddings, augmented)
 	loss.backward()
 	optimizer.step()
 ```
@@ -150,8 +150,6 @@ Other dependencies: ```numpy, scikit-learn, tqdm, torchvision```
 ```
 pip install pytorch-metric-learning
 ```
-<details>
-  <summary>Other installation options</summary>
 
 **To get the latest dev version**:
 ```
@@ -180,7 +178,7 @@ pip install pytorch-metric-learning[with-hooks-cpu]
 	
 ### Conda
 ```
-conda install pytorch-metric-learning -c metric-learning -c pytorch
+conda install -c conda-forge pytorch-metric-learning
 ```
 
 **To use the testing module, you'll need faiss, which can be installed via conda as well. See the [installation instructions for faiss](https://github.com/facebookresearch/faiss/blob/master/INSTALL.md).**
@@ -228,20 +226,30 @@ Thanks to the contributors who made pull requests!
 
 | Contributor | Highlights |
 | -- | -- |
-|[cwkeam](https://github.com/cwkeam) | - [CentroidTripletLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#centroidtripletloss) <br/> - [VICRegLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#vicregloss) <br/> - Added mean reciprocal rank accuracy to [AccuracyCalculator](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/) |
+|[domenicoMuscill0](https://github.com/domenicoMuscill0)| - [ManifoldLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#manifoldloss) <br/> - [P2SGradLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#p2sgradloss) <br/> - [HistogramLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#histogramloss) <br/> - [DynamicSoftMarginLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#dynamicsoftmarginloss) <br/> - [RankedListLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#rankedlistloss) |
 |[mlopezantequera](https://github.com/mlopezantequera) | - Made the [testers](https://kevinmusgrave.github.io/pytorch-metric-learning/testers) work on any combination of query and reference sets <br/> - Made [AccuracyCalculator](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/) work with arbitrary label comparisons |
+|[cwkeam](https://github.com/cwkeam) | - [SelfSupervisedLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#selfsupervisedloss) <br/> - [VICRegLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#vicregloss) <br/> - Added mean reciprocal rank accuracy to [AccuracyCalculator](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/) <br/> - BaseLossWrapper|
 |[marijnl](https://github.com/marijnl)| - [BatchEasyHardMiner](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#batcheasyhardminer) <br/> - [TwoStreamMetricLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#twostreammetricloss) <br/> - [GlobalTwoStreamEmbeddingSpaceTester](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#globaltwostreamembeddingspacetester) <br/> - [Example using trainers.TwoStreamMetricLoss](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/TwoStreamMetricLoss.ipynb) |
 | [chingisooinar](https://github.com/chingisooinar) | [SubCenterArcFaceLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#subcenterarcfaceloss) |
 | [elias-ramzi](https://github.com/elias-ramzi) | [HierarchicalSampler](https://kevinmusgrave.github.io/pytorch-metric-learning/samplers/#hierarchicalsampler) |
 | [fjsj](https://github.com/fjsj) | [SupConLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#supconloss) |
 | [AlenUbuntu](https://github.com/AlenUbuntu) | [CircleLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#circleloss) |
+| [interestingzhuo](https://github.com/interestingzhuo) | [PNPLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#pnploss) |
 | [wconnell](https://github.com/wconnell) | [Learning a scRNAseq Metric Embedding](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/scRNAseq_MetricEmbedding.ipynb) |
+| [mkmenta](https://github.com/mkmenta) | Improved `get_all_triplets_indices` (fixed the `INT_MAX` error) |
 | [AlexSchuy](https://github.com/AlexSchuy) | optimized ```utils.loss_and_miner_utils.get_random_triplet_indices``` |
 | [JohnGiorgi](https://github.com/JohnGiorgi) | ```all_gather``` in [utils.distributed](https://kevinmusgrave.github.io/pytorch-metric-learning/distributed) |
 | [Hummer12007](https://github.com/Hummer12007) | ```utils.key_checker``` |
 | [vltanh](https://github.com/vltanh) | Made ```InferenceModel.train_indexer``` accept datasets |
 | [btseytlin](https://github.com/btseytlin) | ```get_nearest_neighbors``` in [InferenceModel](https://kevinmusgrave.github.io/pytorch-metric-learning/inference_models) |
 | [mlw214](https://github.com/mlw214) | Added ```return_per_class``` to [AccuracyCalculator](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/) |
+| [layumi](https://github.com/layumi) | [InstanceLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#instanceloss) |
+| [NoTody](https://github.com/NoTody) | Helped add `ref_emb` and `ref_labels` to the distributed wrappers. |
+| [ElisonSherton](https://github.com/ElisonSherton) | Fixed an edge case in ArcFaceLoss. |
+| [stompsjo](https://github.com/stompsjo) | Improved documentation for NTXentLoss. |
+| [Puzer](https://github.com/Puzer) | Bug fix for PNPLoss. |
+| [elisim](https://github.com/elisim) | Developer improvements to DistributedLossWrapper. |
+| [GaetanLepage](https://github.com/GaetanLepage) | |
 | [z1w](https://github.com/z1w) | |
 | [thinline72](https://github.com/thinline72) | |
 | [tpanum](https://github.com/tpanum) | |
@@ -251,10 +259,16 @@ Thanks to the contributors who made pull requests!
 | [gkouros](https://github.com/gkouros) | |
 | [yutanakamura-tky](https://github.com/yutanakamura-tky) | |
 | [KinglittleQ](https://github.com/KinglittleQ) | |
+| [martin0258](https://github.com/martin0258) | |
+| [michaeldeyzel](https://github.com/michaeldeyzel) | |
+| [HSinger04](https://github.com/HSinger04) | |
+| [rheum](https://github.com/rheum) | |
+| [bot66](https://github.com/bot66) | |
+
 
 
 ### Facebook AI
-Thank you to [Ser-Nam Lim](https://research.fb.com/people/lim-ser-nam/) at [Facebook AI](https://ai.facebook.com/), and my research advisor, [Professor Serge Belongie](https://vision.cornell.edu/se3/people/serge-belongie/). This project began during my internship at Facebook AI where I received valuable feedback from Ser-Nam, and his team of computer vision and machine learning engineers and research scientists. In particular, thanks to [Ashish Shah](https://www.linkedin.com/in/ashish217/) and [Austin Reiter](https://www.linkedin.com/in/austin-reiter-3962aa7/) for reviewing my code during its early stages of development.
+Thank you to [Ser-Nam Lim](https://sites.google.com/site/sernam) at [Facebook AI](https://ai.facebook.com/), and my research advisor, [Professor Serge Belongie](https://www.belongielab.org/). This project began during my internship at Facebook AI where I received valuable feedback from Ser-Nam, and his team of computer vision and machine learning engineers and research scientists. In particular, thanks to [Ashish Shah](https://www.linkedin.com/in/ashish217/) and [Austin Reiter](https://www.linkedin.com/in/austin-reiter-3962aa7/) for reviewing my code during its early stages of development.
 
 ### Open-source repos
 This library contains code that has been adapted and modified from the following great open-source repos:
@@ -267,6 +281,7 @@ This library contains code that has been adapted and modified from the following
 - https://github.com/ronekko/deep_metric_learning
 - https://github.com/tjddus9597/Proxy-Anchor-CVPR2020
 - http://kaizhao.net/regularface
+- https://github.com/nii-yamagishilab/project-NN-Pytorch-scripts
 
 ### Logo
 Thanks to [Jeff Musgrave](https://www.designgenius.ca/) for designing the logo.
@@ -274,12 +289,11 @@ Thanks to [Jeff Musgrave](https://www.designgenius.ca/) for designing the logo.
 ## Citing this library
 If you'd like to cite pytorch-metric-learning in your paper, you can use this bibtex:
 ```latex
-@misc{musgrave2020pytorch,
-    title={PyTorch Metric Learning},
-    author={Kevin Musgrave and Serge Belongie and Ser-Nam Lim},
-    year={2020},
-    eprint={2008.09164},
-    archivePrefix={arXiv},
-    primaryClass={cs.CV}
+@article{Musgrave2020PyTorchML,
+  title={PyTorch Metric Learning},
+  author={Kevin Musgrave and Serge J. Belongie and Ser-Nam Lim},
+  journal={ArXiv},
+  year={2020},
+  volume={abs/2008.09164}
 }
 ```

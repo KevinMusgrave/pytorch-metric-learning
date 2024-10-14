@@ -13,6 +13,7 @@ class NPairsLoss(BaseMetricLossFunction):
         self.cross_entropy = torch.nn.CrossEntropyLoss(reduction="none")
 
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+        c_f.labels_required(labels)
         c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
         anchor_idx, positive_idx = lmu.convert_to_pos_pairs_with_unique_labels(
             indices_tuple, labels

@@ -146,6 +146,24 @@ class TestLossAndMinerUtils(unittest.TestCase):
             )
             self.assertTrue(torch.all(weights == correct_weights))
 
+        # Case where convert_to_weights is used with ref_emb.
+        # In this case, indices_tuple will include indices
+        # that point to ref_emb, which may be larger than the query
+        batch_size = 32
+        labels = torch.randint(0, 10, size=(batch_size,)).to(TEST_DEVICE)
+        a = torch.randint(0, batch_size, size=(256,)).to(TEST_DEVICE)
+        p = torch.randint(0, batch_size * 2, size=(256,)).to(TEST_DEVICE)
+        n = torch.randint(0, batch_size * 2, size=(256,)).to(TEST_DEVICE)
+        for dtype in TEST_DTYPES:
+            weights = lmu.convert_to_weights(
+                (a, p, n), labels=labels, dtype=dtype, using_ref=True
+            )
+
+            _, counts = torch.unique(a, return_counts=True, sorted=True)
+            counts = counts.type(weights.dtype) / torch.max(counts)
+            # Will fail on cuda if there is an indexing error
+            self.assertTrue(torch.equal(weights, counts))
+
     def test_get_random_triplet_indices(self):
         for dtype in TEST_DTYPES:
             for _ in range(10):
@@ -272,6 +290,29 @@ class TestLossAndMinerUtils(unittest.TestCase):
         a1, p, a2, n = indices_tuple
         self.assertTrue(torch.equal(a1, correct_a1))
         self.assertTrue(torch.equal(p, correct_p))
+
+    def test_get_all_triplets_indices(self):
+        torch.manual_seed(920)
+        for dtype in TEST_DTYPES:
+            for batch_size in [32, 256, 512]:
+                for ref_labels in [None, torch.randint(0, 5, size=(batch_size // 2,))]:
+                    labels = torch.randint(0, 5, size=(batch_size,))
+
+                    a, p, n = lmu.get_all_triplets_indices(labels, ref_labels)
+                    matches, diffs = lmu.get_matches_and_diffs(labels, ref_labels)
+
+                    a2, p2, n2 = lmu.get_all_triplets_indices_vectorized_method(
+                        matches, diffs
+                    )
+                    a3, p3, n3 = lmu.get_all_triplets_indices_loop_method(
+                        labels, matches, diffs
+                    )
+                    self.assertTrue(
+                        (a == a2).all() and (p == p2).all() and (n == n2).all()
+                    )
+                    self.assertTrue(
+                        (a == a3).all() and (p == p3).all() and (n == n3).all()
+                    )
 
 
 if __name__ == "__main__":

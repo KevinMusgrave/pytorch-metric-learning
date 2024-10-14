@@ -1,16 +1,13 @@
 # Miners
-Mining functions come in two flavors:
+Mining functions take a batch of ```n``` embeddings and return ```k``` pairs/triplets to be used for calculating the loss:
 
-* **[Subset Batch Miners](miners.md#basesubsetbatchminer)** take a batch of ```N``` embeddings and return a subset ```n``` to be used by a tuple miner, or directly by a loss function. Without a subset batch miner, ```n == N```.
-* **[Tuple Miners](miners.md#basetupleminer)** take a batch of ```n``` embeddings and return ```k``` pairs/triplets to be used for calculating the loss:
-	* Pair miners output a tuple of size 4: (anchors, positives, anchors, negatives).
-	* Triplet miners output a tuple of size 3: (anchors, positives, negatives).
-	* Without a tuple miner, loss functions will by default use all possible pairs/triplets in the batch.
-	* Almost all current miners are tuple miners.
+- Pair miners output a tuple of size 4: (anchors, positives, anchors, negatives).
+- Triplet miners output a tuple of size 3: (anchors, positives, negatives).
+- Without a tuple miner, loss functions will by default use all possible pairs/triplets in the batch.
 
-You might be familiar with the terminology: "online" and "offline" miners. Tuple miners are online, while subset batch miners are a mix between online and offline. Completely offline miners should be implemented as a [PyTorch Sampler](samplers.md).
+You might be familiar with the terminology: "online" and "offline" miners. These miners are online. Offline miners should be implemented as a [PyTorch Sampler](samplers.md).
 
-Tuple miners are used with loss functions as follows:
+Miners are used with loss functions as follows:
 
 ```python
 from pytorch_metric_learning import miners, losses
@@ -42,6 +39,13 @@ All miners extend this class and therefore inherit its ```__init__``` parameters
 miners.BaseMiner(collect_stats=False, distance=None)
 ```
 
+Every miner outputs a tuple of indices:
+
+* Pair miners output a tuple of size 4: (anchors, positives, anchors, negatives)
+* Triplet miners output a tuple of size 3: (anchors, positives, negatives) 
+
+See [custom miners](extend/miners.md) for details on how to write your own miner.
+
 **Parameters**:
 
 * **collect_stats**: If True, will collect various statistics that may be useful to analyze during experiments. If False, these computations will be skipped. Want to make ```True``` the default? Set the global [COLLECT_STATS](common_functions.md#collect_stats) flag.
@@ -65,32 +69,6 @@ def output_assertion(self, output):
 	raise NotImplementedError
 ```
 
-## BaseTupleMiner
-This extends [BaseMiner](miners.md#baseminer), and most miners extend this class. 
-
-It outputs a tuple of indices:
-
-* Pair miners output a tuple of size 4: (anchors, positives, anchors, negatives)
-* Triplet miners output a tuple of size 3: (anchors, positives, negatives) 
-
-```python
-miners.BaseTupleMiner(**kwargs)
-```
-
-If you write your own miner, the ```mine``` function should work such that anchor indices correspond to ```embeddings``` and ```labels```, and all other indices correspond to ```ref_emb``` and ```ref_labels```. By default, ```embeddings == ref_emb``` and ```labels == ref_labels```, but separating the anchor source from the positive/negative source allows for interesting use cases. For example, see [CrossBatchMemory](losses.md#crossbatchmemory).
-
-See [custom miners](extend/miners.md) for details on how to write your own miner.
-
-## BaseSubsetBatchMiner
-This extends [BaseMiner](miners.md#baseminer). It outputs indices corresponding to a subset of the input batch. The idea is to use these miners with torch.no_grad(), and with a large input batch size.
-```python
-miners.BaseSubsetBatchMiner(output_batch_size, **kwargs)
-```
-
-**Parameters**
-
-* **output_batch_size**: An integer that is the size of the subset that the miner will output.
-
 
 ## BatchEasyHardMiner
 
@@ -98,7 +76,7 @@ miners.BaseSubsetBatchMiner(output_batch_size, **kwargs)
 
 Returns positive and negative pairs according to the specified ```pos_strategy``` and ```neg_strategy```.
 
-To implement the loss function described in the paper, use this miner in combination with [```NTXentLoss(temperature=1)```](losses.md#ntxentloss).
+To implement the loss function described in the paper, use this miner in combination with [```NTXentLoss(temperature=0.1)```](losses.md#ntxentloss).
 
 ```python
 miners.BatchEasyHardMiner(
@@ -220,20 +198,6 @@ hard_pairs = minerA(embeddings, labels)
 minerB.set_idx_externally(hard_pairs, labels)
 very_hard_pairs = minerB(embeddings, labels)
 ```
-
-
-## MaximumLossMiner
-This is a simple [subset batch miner](miners.md#basesubsetbatchminer). It computes the loss for random subsets of the input batch, ```num_trials``` times. Then it returns the subset with the highest loss.
-
-```python
-miners.MaximumLossMiner(loss, miner=None, num_trials=5, **kwargs)
-```
-
-**Parameters**
-
-* **loss**: The loss function used to compute the loss.
-* **miner**: Optional tuple miner which extracts pairs/triplets for the loss function.
-* **num_trials**: The number of random subsets to try.
 
 ## MultiSimilarityMiner
 

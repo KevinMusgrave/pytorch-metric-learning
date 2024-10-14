@@ -69,7 +69,7 @@ class TestCommonFunctions(unittest.TestCase):
 
     def test_check_shapes(self):
         embeddings = torch.randn(32, 512, 3)
-        labels = torch.randn(32)
+        labels = torch.randint(0, 10, size=(32,))
         loss_fn = TripletMarginLoss()
 
         # embeddings is 3-dimensional

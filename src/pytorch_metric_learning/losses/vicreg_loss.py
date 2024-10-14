@@ -24,17 +24,10 @@ class VICRegLoss(BaseMetricLossFunction):
         self.covariance_v = covariance_v
         self.eps = eps
 
-    def forward(self, embeddings, ref_emb):
-        """
-        x should have shape (N, embedding_size)
-        """
-        self.reset_stats()
-        loss_dict = self.compute_loss(embeddings, ref_emb)
-        return self.reducer(
-            loss_dict, embeddings, c_f.torch_arange_from_size(embeddings)
-        )
+    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+        c_f.indices_tuple_not_supported(indices_tuple)
+        c_f.labels_not_supported(labels, ref_labels)
 
-    def compute_loss(self, embeddings, ref_emb):
         invariance_loss = self.invariance_lambda * self.invariance_loss(
             embeddings, ref_emb
         )

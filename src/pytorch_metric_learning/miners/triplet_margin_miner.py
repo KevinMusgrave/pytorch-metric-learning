@@ -1,10 +1,10 @@
 import torch
 
 from ..utils import loss_and_miner_utils as lmu
-from .base_miner import BaseTupleMiner
+from .base_miner import BaseMiner
 
 
-class TripletMarginMiner(BaseTupleMiner):
+class TripletMarginMiner(BaseMiner):
     """
     Returns triplets that violate the margin
     Args:
@@ -36,6 +36,8 @@ class TripletMarginMiner(BaseTupleMiner):
         triplet_margin = (
             ap_dist - an_dist if self.distance.is_inverted else an_dist - ap_dist
         )
+
+        self.set_stats(ap_dist, an_dist, triplet_margin)
 
         if self.type_of_triplets == "easy":
             threshold_condition = triplet_margin > self.margin

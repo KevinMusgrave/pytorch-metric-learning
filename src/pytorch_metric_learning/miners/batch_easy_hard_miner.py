@@ -2,10 +2,10 @@ import torch
 
 from ..utils import common_functions as c_f
 from ..utils import loss_and_miner_utils as lmu
-from .base_miner import BaseTupleMiner
+from .base_miner import BaseMiner
 
 
-class BatchEasyHardMiner(BaseTupleMiner):
+class BatchEasyHardMiner(BaseMiner):
     HARD = "hard"
     SEMIHARD = "semihard"
     EASY = "easy"

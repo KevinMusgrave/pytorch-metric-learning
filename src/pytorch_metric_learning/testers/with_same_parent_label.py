@@ -50,12 +50,10 @@ class WithSameParentLabelTester(BaseTester):
                 curr_reference_embeddings = reference_embeddings[reference_match]
                 a = self.accuracy_calculator.get_accuracy(
                     curr_query_embeddings,
-                    curr_reference_embeddings,
                     curr_query_labels,
+                    curr_reference_embeddings,
                     curr_reference_labels,
-                    self.embeddings_come_from_same_source(
-                        query_split_name, reference_split_names
-                    ),
+                    self.ref_includes_query(query_split_name, reference_split_names),
                 )
                 for metric, v in a.items():
                     average_accuracies[metric].append(v)

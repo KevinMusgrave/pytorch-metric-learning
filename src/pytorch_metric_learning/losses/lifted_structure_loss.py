@@ -16,10 +16,10 @@ class LiftedStructureLoss(GenericPairLoss):
 
     def _compute_loss(self, pos_pairs, neg_pairs, indices_tuple):
         a1, p, a2, _ = indices_tuple
-        dtype = pos_pairs.dtype
 
         if len(a1) > 0 and len(a2) > 0:
             pos_pairs = pos_pairs.unsqueeze(1)
+            dtype = pos_pairs.dtype
             n_per_p = c_f.to_dtype(
                 (a2.unsqueeze(0) == a1.unsqueeze(1))
                 | (a2.unsqueeze(0) == p.unsqueeze(1)),

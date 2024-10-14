@@ -1,6 +1,3 @@
-#! /usr/bin/env python3
-
-
 from collections import defaultdict
 
 import torch
@@ -112,7 +109,7 @@ class BaseTester:
         return_as_numpy=False,
     ):
         if embedder_model is None:
-            embedder_model = c_f.Identity()
+            embedder_model = torch.nn.Identity()
         if eval:
             trunk_model.eval()
             embedder_model.eval()
@@ -238,8 +235,12 @@ class BaseTester:
             set(query_splits)
         ), "Unsupported: Evaluating a query split more than once"
         splits_to_compute_embeddings = set()
-        for query_split, reference_splits in splits_to_eval:
+        for i, (query_split, reference_splits) in enumerate(splits_to_eval):
             splits_to_compute_embeddings.update(reference_splits + [query_split])
+            if query_split in reference_splits:
+                # AccuracyCalculator requires that query be at the beginning of ref
+                reference_splits.remove(query_split)
+                splits_to_eval[i] = (query_split, [query_split] + reference_splits)
         return splits_to_eval, list(splits_to_compute_embeddings)
 
     def get_all_embeddings_for_all_splits(
@@ -263,7 +264,7 @@ class BaseTester:
     ):
         raise NotImplementedError
 
-    def embeddings_come_from_same_source(self, query_split_name, reference_split_names):
+    def ref_includes_query(self, query_split_name, reference_split_names):
         return query_split_name in reference_split_names
 
     def test(
@@ -277,7 +278,7 @@ class BaseTester:
     ):
         c_f.LOGGER.info("Evaluating epoch {}".format(epoch))
         if embedder_model is None:
-            embedder_model = c_f.Identity()
+            embedder_model = torch.nn.Identity()
         trunk_model.eval()
         embedder_model.eval()
         (
@@ -305,8 +306,10 @@ class BaseTester:
                 query_split_name,
                 reference_split_names,
             )
-        self.end_of_testing_hook(self) if self.end_of_testing_hook else c_f.LOGGER.info(
-            self.all_accuracies
+        (
+            self.end_of_testing_hook(self)
+            if self.end_of_testing_hook
+            else c_f.LOGGER.info(self.all_accuracies)
         )
         del self.embeddings_and_labels
         return self.all_accuracies

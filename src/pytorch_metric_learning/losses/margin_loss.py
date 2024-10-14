@@ -28,6 +28,7 @@ class MarginLoss(BaseMetricLossFunction):
         )
 
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+        c_f.labels_or_indices_tuple_required(labels, indices_tuple)
         indices_tuple = lmu.convert_to_triplets(
             indices_tuple, labels, ref_labels, self.triplets_per_anchor
         )

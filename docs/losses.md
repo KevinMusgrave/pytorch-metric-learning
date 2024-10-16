@@ -1249,6 +1249,35 @@ losses.SupConLoss(temperature=0.1, **kwargs)
 
 * **loss**: The loss per element in the batch. If an element has only negative pairs or no pairs, it's ignored thanks to `AvgNonZeroReducer`. Reduction type is ```"element"```.
 
+## ThresholdConsistentMarginLoss
+[Threshold-Consistent Margin Loss for Open-World Deep Metric Learning](https://arxiv.org/pdf/2307.04047){target=_blank}
+
+```python
+losses.ThresholdConsistentMarginLoss(
+    base_loss, 
+    lambda_plus=1.0, 
+    lambda_minus=1.0, 
+    margin_plus=0.9, 
+    margin_minus=0.5,
+    **kwargs
+)
+```
+**Equation**:
+![threshold_consistent_margin_loss](imgs/tcm_loss_equation.png)
+
+**Parameters**:
+
+* **base_loss**: The final loss is calculated as `base_loss + tcm_loss`. 
+* **lambda_plus**: The scaling coefficient for the anchor-positive part of the loss. This is $\lambda^+$ in the above equation. 
+* **lambda_minus**: The scaling coefficient for the anchor-negative part of the loss. This is $\lambda^-$ in the above equation. 
+* **margin_plus**: The minimum anchor-positive similarity to be included in the loss. This is $m^+$ in the above equation.
+* **margin_minus**: The maximum anchor-negative similarity to be included in the loss. This is $m^-$ in the above equation.
+
+
+**Default distance**: 
+
+ - [```CosineSimilarity()```](distances.md#cosinesimilarity)
+     - This is the only compatible distance.
 
 ## TripletMarginLoss
 

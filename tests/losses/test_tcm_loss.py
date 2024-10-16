@@ -3,10 +3,14 @@ import unittest
 import torch
 import torch.nn.functional as F
 
-from pytorch_metric_learning.losses import ThresholdConsistentMarginLoss, ContrastiveLoss
 from pytorch_metric_learning.distances import CosineSimilarity
+from pytorch_metric_learning.losses import (
+    ContrastiveLoss,
+    ThresholdConsistentMarginLoss,
+)
 
 from .. import TEST_DEVICE, TEST_DTYPES
+
 
 class TestThresholdConsistentMarginLoss(unittest.TestCase):
     def test_tcm_loss(self):
@@ -18,13 +22,18 @@ class TestThresholdConsistentMarginLoss(unittest.TestCase):
                     pos_margin=0.9,
                     neg_margin=0.4,
                 )
-            ) 
-            embs = torch.tensor([
-                [0.00, 1.00],
-                [0.43, 0.90],
-                [1.00, 0.00],
-                [0.50, 0.50],
-            ], device=TEST_DEVICE, dtype=dtype, requires_grad=True)
+            )
+            embs = torch.tensor(
+                [
+                    [0.00, 1.00],
+                    [0.43, 0.90],
+                    [1.00, 0.00],
+                    [0.50, 0.50],
+                ],
+                device=TEST_DEVICE,
+                dtype=dtype,
+                requires_grad=True,
+            )
             labels = torch.tensor([0, 0, 1, 1])
 
             # Contrastive loss = 0.4866
@@ -38,9 +47,13 @@ class TestThresholdConsistentMarginLoss(unittest.TestCase):
             #
             # Sum of these losses -> 0.4866 + 0.518 = 1.0046
             correct_loss = torch.tensor(1.0045).to(dtype)
-            
+
             with torch.no_grad():
                 res = loss_func.compute_loss(embs, labels, None, embs, labels)
                 rtol = 1e-2 if dtype == torch.float16 else 1e-5
                 atol = 1e-4
-                self.assertTrue(torch.isclose(res["loss"]["losses"], correct_loss, rtol=rtol, atol=atol))
+                self.assertTrue(
+                    torch.isclose(
+                        res["loss"]["losses"], correct_loss, rtol=rtol, atol=atol
+                    )
+                )

@@ -1087,6 +1087,37 @@ losses.SignalToNoiseRatioContrastiveLoss(pos_margin=0, neg_margin=1, **kwargs):
 * **pos_loss**: The loss per positive pair in the batch. Reduction type is ```"pos_pair"```.
 * **neg_loss**: The loss per negative pair in the batch. Reduction type is ```"neg_pair"```.
 
+## SmoothAPLoss
+[Smooth-AP: Smoothing the Path Towards Large-Scale Image Retrieval](https://arxiv.org/abs/2007.12163){target=_blank}
+
+```python
+losses.SmoothAPLoss(
+    margin=0.01,
+    **kwargs
+)
+```
+
+**Equations**:
+
+![smooth_ap_loss_equation1](imgs/smooth_ap_sigmoid_equation.png){: style="height:100px"}
+![smooth_ap_loss_equation2](imgs/smooth_ap_approx_equation.png){: style="height:100px"}
+![smooth_ap_loss_equation3](imgs/smooth_ap_loss_equation.png){: style="height:100px"}
+
+
+**Parameters**:
+
+* **temperature**: The desired temperature for scaling the sigmoid function. This is denoted by $\tau$ in the first and second equations.
+
+
+**Other info**: 
+
+* The loss requires the same number of number of elements for each class in the batch labels. An example of valid labels is: `[1, 1, 2, 2, 3, 3]`. An example of invalid labels is `[1, 1, 1, 2, 2, 3, 3]` because there are `3` elements with the value `1`. This can be achieved by using `samplers.MPerClassSampler` and setting the `batch_size` and `m` hyperparameters.
+
+**Default distance**: 
+
+ - [```CosineSimilarity()```](distances.md#cosinesimilarity)
+     - This is the only compatible distance.
+
 ## SoftTripleLoss   
 [SoftTriple Loss: Deep Metric Learning Without Triplet Sampling](http://openaccess.thecvf.com/content_ICCV_2019/papers/Qian_SoftTriple_Loss_Deep_Metric_Learning_Without_Triplet_Sampling_ICCV_2019_paper.pdf){target=_blank}
 ```python

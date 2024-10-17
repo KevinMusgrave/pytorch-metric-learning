@@ -1,20 +1,18 @@
 import torch
 import torch.nn.functional as F
 
+from ..distances import CosineSimilarity
 from ..utils import common_functions as c_f
 from ..utils import loss_and_miner_utils as lmu
 from .base_metric_loss_function import BaseMetricLossFunction
-from ..distances import CosineSimilarity
+
 
 class SmoothAPLoss(BaseMetricLossFunction):
     """
-        Implementation of the SmoothAP loss: https://arxiv.org/abs/2007.12163
+    Implementation of the SmoothAP loss: https://arxiv.org/abs/2007.12163
     """
-    def __init__(
-        self,
-        temperature=0.01,
-        **kwargs
-    ):
+
+    def __init__(self, temperature=0.01, **kwargs):
         super().__init__(**kwargs)
         c_f.assert_distance_type(self, CosineSimilarity)
         self.temperature = temperature
@@ -38,10 +36,11 @@ class SmoothAPLoss(BaseMetricLossFunction):
         nonzero_counts = counts[nonzero_indices]
         if nonzero_counts.unique().size(0) != 1:
             raise ValueError(
-                "All classes must have the same number of elements in the labels.\n" \
+                "All classes must have the same number of elements in the labels.\n"
                 "The given labels have the following number of elements: {}.\n"
-                "You can achieve this using the samplers.MPerClassSampler class and setting the batch_size and m." \
-                .format(nonzero_counts.cpu().tolist())
+                "You can achieve this using the samplers.MPerClassSampler class and setting the batch_size and m.".format(
+                    nonzero_counts.cpu().tolist()
+                )
             )
 
         batch_size = embeddings.size(0)
@@ -62,25 +61,31 @@ class SmoothAPLoss(BaseMetricLossFunction):
             num_classes_batch, batch_size // num_classes_batch, embeddings.size(-1)
         ).permute(0, 2, 1)
         pos_mask = 1.0 - torch.eye(batch_size // num_classes_batch)
-        pos_mask = pos_mask.unsqueeze(dim=0).unsqueeze(dim=0).repeat(
-            num_classes_batch, batch_size // num_classes_batch, 1, 1
+        pos_mask = (
+            pos_mask.unsqueeze(dim=0)
+            .unsqueeze(dim=0)
+            .repeat(num_classes_batch, batch_size // num_classes_batch, 1, 1)
         )
 
         sims_pos = F.cosine_similarity(xs[:, :, None, :], xs[:, :, :, None])
-        sims_pos_repeat = sims_pos.unsqueeze(dim=2).repeat(1, 1, batch_size // num_classes_batch, 1)
+        sims_pos_repeat = sims_pos.unsqueeze(dim=2).repeat(
+            1, 1, batch_size // num_classes_batch, 1
+        )
         sims_pos_diff = sims_pos_repeat - sims_pos_repeat.permute(0, 1, 3, 2)
 
-        sims_pos_sigm = F.sigmoid(sims_pos_diff / self.temperature) * pos_mask.to(sims_diff.device)
+        sims_pos_sigm = F.sigmoid(sims_pos_diff / self.temperature) * pos_mask.to(
+            sims_diff.device
+        )
         sims_pos_ranks = torch.sum(sims_pos_sigm, dim=-1) + 1
 
         ap = torch.zeros(1).to(embeddings.device)
         g = batch_size // num_classes_batch
         for i in range(num_classes_batch):
             pos_divide = torch.sum(
-                sims_pos_ranks[i] / sims_ranks[i * g:(i + 1) * g, i * g:(i + 1) * g]
+                sims_pos_ranks[i] / sims_ranks[i * g : (i + 1) * g, i * g : (i + 1) * g]
             )
             ap = ap + (pos_divide / g) / batch_size
-        
+
         loss = 1 - ap
         return {
             "loss": {

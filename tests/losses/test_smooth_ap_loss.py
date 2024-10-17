@@ -15,10 +15,11 @@ HYPERPARAMETERS = {
 }
 TEST_SEEDS = [42, 1234, 5642, 9999, 3459]
 
+
 # Original implementation of the SmoothAP loss taken from:
 # https://github.com/Andrew-Brown1/Smooth_AP/blob/master/src/Smooth_AP_loss.py
 def sigmoid(tensor, temp=1.0):
-    """ temperature controlled sigmoid
+    """temperature controlled sigmoid
 
     takes as input a torch tensor (tensor) and passes it through a sigmoid, controlled by temperature: temp
     """
@@ -89,7 +90,7 @@ class SmoothAP(torch.nn.Module):
         """
         super(SmoothAP, self).__init__()
 
-        assert(batch_size%num_id==0)
+        assert batch_size % num_id == 0
 
         self.anneal = anneal
         self.batch_size = batch_size
@@ -97,12 +98,11 @@ class SmoothAP(torch.nn.Module):
         self.feat_dims = feat_dims
 
     def forward(self, preds):
-        """Forward pass for all input predictions: preds - (batch_size x feat_dims) """
-
+        """Forward pass for all input predictions: preds - (batch_size x feat_dims)"""
 
         # ------ differentiable ranking of all retrieval set ------
         # compute the mask which ignores the relevance score of the query to itself
-        mask = 1.0 - torch.eye(self.batch_size) 
+        mask = 1.0 - torch.eye(self.batch_size)
         mask = mask.unsqueeze(dim=0).repeat(self.batch_size, 1, 1)
         # compute the relevance scores via cosine similarity of the CNN-produced embedding vectors
         sim_all = compute_aff(preds)
@@ -114,17 +114,21 @@ class SmoothAP(torch.nn.Module):
         # compute the rankings
         sim_all_rk = torch.sum(sim_sg, dim=-1) + 1
 
-
         # ------ differentiable ranking of only positive set in retrieval set ------
         # compute the mask which only gives non-zero weights to the positive set
         xs = preds.view(self.num_id, int(self.batch_size / self.num_id), self.feat_dims)
         pos_mask = 1.0 - torch.eye(int(self.batch_size / self.num_id))
-        pos_mask = pos_mask.unsqueeze(dim=0).unsqueeze(dim=0).repeat(self.num_id, int(self.batch_size / self.num_id), 1, 1)
-        
-    
+        pos_mask = (
+            pos_mask.unsqueeze(dim=0)
+            .unsqueeze(dim=0)
+            .repeat(self.num_id, int(self.batch_size / self.num_id), 1, 1)
+        )
+
         # compute the relevance scores
         sim_pos = torch.bmm(xs, xs.permute(0, 2, 1))
-        sim_pos_repeat = sim_pos.unsqueeze(dim=2).repeat(1, 1, int(self.batch_size / self.num_id), 1)
+        sim_pos_repeat = sim_pos.unsqueeze(dim=2).repeat(
+            1, 1, int(self.batch_size / self.num_id), 1
+        )
         # compute the difference matrix
         sim_pos_diff = sim_pos_repeat - sim_pos_repeat.permute(0, 1, 3, 2)
         # pass through the sigmoid
@@ -136,23 +140,40 @@ class SmoothAP(torch.nn.Module):
         ap = torch.zeros(1).to(TEST_DEVICE)
         group = int(self.batch_size / self.num_id)
         for ind in range(self.num_id):
-            pos_divide = torch.sum(sim_pos_rk[ind] / (sim_all_rk[(ind * group):((ind + 1) * group), (ind * group):((ind + 1) * group)]))
+            pos_divide = torch.sum(
+                sim_pos_rk[ind]
+                / (
+                    sim_all_rk[
+                        (ind * group) : ((ind + 1) * group),
+                        (ind * group) : ((ind + 1) * group),
+                    ]
+                )
+            )
             ap = ap + ((pos_divide / group) / self.batch_size)
 
-        return (1-ap)
-    
+        return 1 - ap
+
+
 class TestSmoothAPLoss(unittest.TestCase):
     def test_smooth_ap_loss(self):
         for dtype in TEST_DTYPES:
             for seed in TEST_SEEDS:
                 torch.manual_seed(seed)
                 loss = SmoothAP(
-                    HYPERPARAMETERS["temp"], 
-                    HYPERPARAMETERS["batch_size"], 
-                    HYPERPARAMETERS["num_id"], 
-                    HYPERPARAMETERS["feat_dims"]
+                    HYPERPARAMETERS["temp"],
+                    HYPERPARAMETERS["batch_size"],
+                    HYPERPARAMETERS["num_id"],
+                    HYPERPARAMETERS["feat_dims"],
                 )
-                rand_tensor = torch.randn(HYPERPARAMETERS["batch_size"], HYPERPARAMETERS["feat_dims"], requires_grad=True).to(TEST_DEVICE).to(dtype)
+                rand_tensor = (
+                    torch.randn(
+                        HYPERPARAMETERS["batch_size"],
+                        HYPERPARAMETERS["feat_dims"],
+                        requires_grad=True,
+                    )
+                    .to(TEST_DEVICE)
+                    .to(dtype)
+                )
                 # The original code uses a model that normalizes the output vector
                 input_ = F.normalize(rand_tensor, p=2.0, dim=-1)
                 output = loss(input_)
@@ -160,7 +181,9 @@ class TestSmoothAPLoss(unittest.TestCase):
                 loss2 = SmoothAPLoss(temperature=HYPERPARAMETERS["temp"])
                 # The original code assumes the label is in this format
                 labels = []
-                for i in range(HYPERPARAMETERS["batch_size"] // HYPERPARAMETERS["num_id"]):
+                for i in range(
+                    HYPERPARAMETERS["batch_size"] // HYPERPARAMETERS["num_id"]
+                ):
                     labels.extend([i for _ in range(HYPERPARAMETERS["num_id"])])
 
                 labels = torch.tensor(labels)

@@ -4,7 +4,7 @@ Datasets classes give you a way to automatically download a dataset and transfor
 
 ## BaseDataset
 
-All dataset classes extend this class and therefore inherit its `__init__` parameters.
+All dataset classes extend this class and therefore inherit its ```__init__``` parameters.
 
 ```python
 datasets.base_dataset.BaseDataset(
@@ -106,4 +106,4 @@ train_and_test_dataset = Cars196(root="data",
     target_transform=None, 
     download=False
 ) 
-
+```

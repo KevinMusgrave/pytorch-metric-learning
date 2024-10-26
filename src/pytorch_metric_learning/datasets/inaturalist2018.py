@@ -28,7 +28,7 @@ class INaturalist2018(BaseDataset):
             paths = self._load_split_txt(self.split)
             ids = [path2id[p] for p in paths]
             labels = [id2label[i] for i in ids]
-            
+
         elif self.split == "train+test":
             train_paths = self._load_split_txt("train")
             train_ids = [path2id[p] for p in train_paths]
@@ -76,6 +76,8 @@ class INaturalist2018(BaseDataset):
             zip_ref.extractall(self.root)
         os.remove(download_folder_path)
 
-
 # if __name__ == "__main__":
-#     train_dataset = INaturalist2018(root="data", split="train+test", download=False)
+#     train_test_dataset = INaturalist2018(root="data", split="train+test", download=False)
+#     train_dataset = INaturalist2018(root="data", split="train", download=False)
+#     test_dataset = INaturalist2018(root="data", split="test", download=False)
+#     print(len(train_test_dataset), len(train_dataset), len(test_dataset))

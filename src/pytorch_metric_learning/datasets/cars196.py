@@ -53,7 +53,7 @@ class Cars196(BaseDataset):
         os.remove(download_folder_path)
 
 # if __name__ == "__main__":
-#     train_dataset = Cars196(root="data_cars", split="train", download=False)
-#     test_dataset = Cars196(root="data_cars", split="test", download=False)
+#     train_dataset = Cars196(root="data_cars", split="train", download=True)
+#     test_dataset = Cars196(root="data_cars", split="test", download=True)
 #     train_test_dataset = Cars196(root="data_cars", split="train+test", download=False)
 #     print(len(train_dataset), len(test_dataset), len(train_test_dataset))

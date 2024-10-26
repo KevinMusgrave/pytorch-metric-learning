@@ -77,7 +77,7 @@ class INaturalist2018(BaseDataset):
         os.remove(download_folder_path)
 
 # if __name__ == "__main__":
-#     train_test_dataset = INaturalist2018(root="data", split="train+test", download=False)
-#     train_dataset = INaturalist2018(root="data", split="train", download=False)
-#     test_dataset = INaturalist2018(root="data", split="test", download=False)
+#     train_test_dataset = INaturalist2018(root="data", split="train+test", download=True)
+#     train_dataset = INaturalist2018(root="data", split="train", download=True)
+#     test_dataset = INaturalist2018(root="data", split="test", download=True)
 #     print(len(train_test_dataset), len(train_dataset), len(test_dataset))

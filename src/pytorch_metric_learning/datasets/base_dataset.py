@@ -14,8 +14,6 @@ class BaseDataset(ABC, Dataset):
                 self.download_and_remove()
             elif os.listdir(self.root) == []:
                 self.download_and_remove()
-            else:
-                raise ValueError("The given directory exists and is not empty.")
         else:
             # The given directory does not exist so the user should be aware of downloading it
             # Otherwise proceed as usual

@@ -36,9 +36,6 @@ class CUB(BaseDataset):
                         self.paths.append(img_path)
                         self.labels.append(class_idx)
 
-        # Normalize labels to start from 0
-        self.labels = [x - min(self.labels) for x in self.labels]
-
     def download_and_remove(self):
         os.makedirs(self.root, exist_ok=True)
         download_folder_path = os.path.join(self.root, CUB.DOWNLOAD_URL.split('/')[-1])

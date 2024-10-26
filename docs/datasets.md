@@ -142,3 +142,39 @@ train_and_test_dataset = INaturalist2018(root="data",
     download=False
 ) 
 ```
+
+## StanfordOnlineProducts
+
+```python
+datasets.sop.StanfordOnlineProducts(*args, **kwargs)
+```
+
+**Defined splits**: 
+
+- `train` - Consists of 59551 examples.
+- `test` - Consists of 60502 examples.
+- `train+test` - Consists of 120 053 examples.
+
+**Loading different dataset splits**
+```python
+# The download takes a while - the dataset is very large
+train_dataset = StanfordOnlineProducts(root="data", 
+    split="train", 
+    transform=None, 
+    target_transform=None, 
+    download=True
+)
+# No need to download the dataset after it is already downladed
+test_dataset = StanfordOnlineProducts(root="data", 
+    split="test", 
+    transform=None, 
+    target_transform=None, 
+    download=False
+)
+train_and_test_dataset = StanfordOnlineProducts(root="data", 
+    split="train+test", 
+    transform=None, 
+    target_transform=None, 
+    download=False
+) 
+```

@@ -1,12 +1,15 @@
+import os
+import shutil
 import unittest
+
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
+
 from pytorch_metric_learning.datasets.inaturalist2018 import INaturalist2018
-import shutil
-import os
+
 
 class TestINaturalist2018(unittest.TestCase):
-    
+
     INATURALIST2018_ROOT = "data"
     ALREADY_EXISTS = False
 
@@ -18,7 +21,9 @@ class TestINaturalist2018(unittest.TestCase):
 
     def test_INaturalist2018(self):
         train_test_data = INaturalist2018(
-            root=TestINaturalist2018.INATURALIST2018_ROOT, split="train+test", download=True
+            root=TestINaturalist2018.INATURALIST2018_ROOT,
+            split="train+test",
+            download=True,
         )
         train_data = INaturalist2018(
             root=TestINaturalist2018.INATURALIST2018_ROOT, split="train", download=True
@@ -33,13 +38,12 @@ class TestINaturalist2018(unittest.TestCase):
 
     def test_INaturalist2018_dataloader(self):
         test_data = INaturalist2018(
-            root=TestINaturalist2018.INATURALIST2018_ROOT, 
-            transform=transforms.Compose([
-                transforms.Resize(size=(224, 224)),
-                transforms.PILToTensor()
-            ]),
-            split="test", 
-            download=True
+            root=TestINaturalist2018.INATURALIST2018_ROOT,
+            transform=transforms.Compose(
+                [transforms.Resize(size=(224, 224)), transforms.PILToTensor()]
+            ),
+            split="test",
+            download=True,
         )
         loader = DataLoader(test_data, batch_size=8)
         inputs, labels = next(iter(loader))

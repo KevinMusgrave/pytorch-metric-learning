@@ -1,12 +1,15 @@
+import os
+import shutil
 import unittest
+
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
+
 from pytorch_metric_learning.datasets.sop import StanfordOnlineProducts
-import shutil
-import os
+
 
 class TestStanfordOnlineProducts(unittest.TestCase):
-    
+
     SOP_ROOT = "test_sop"
     ALREADY_EXISTS = False
 
@@ -18,11 +21,14 @@ class TestStanfordOnlineProducts(unittest.TestCase):
 
     def test_SOP(self):
         train_test_data = StanfordOnlineProducts(
-            root=TestStanfordOnlineProducts.SOP_ROOT, split="train+test", download=True)
+            root=TestStanfordOnlineProducts.SOP_ROOT, split="train+test", download=True
+        )
         train_data = StanfordOnlineProducts(
-            root=TestStanfordOnlineProducts.SOP_ROOT, split="train", download=True)
+            root=TestStanfordOnlineProducts.SOP_ROOT, split="train", download=True
+        )
         test_data = StanfordOnlineProducts(
-            root=TestStanfordOnlineProducts.SOP_ROOT, split="test", download=False)
+            root=TestStanfordOnlineProducts.SOP_ROOT, split="test", download=False
+        )
 
         self.assertTrue(len(train_test_data) == 120053)
         self.assertTrue(len(train_data) == 59551)
@@ -30,13 +36,12 @@ class TestStanfordOnlineProducts(unittest.TestCase):
 
     def test_SOP_dataloader(self):
         test_data = StanfordOnlineProducts(
-            root=TestStanfordOnlineProducts.SOP_ROOT, 
-            transform=transforms.Compose([
-                transforms.Resize(size=(224, 224)),
-                transforms.PILToTensor()
-            ]),
-            split="test", 
-            download=True
+            root=TestStanfordOnlineProducts.SOP_ROOT,
+            transform=transforms.Compose(
+                [transforms.Resize(size=(224, 224)), transforms.PILToTensor()]
+            ),
+            split="test",
+            download=True,
         )
         loader = DataLoader(test_data, batch_size=8)
         inputs, labels = next(iter(loader))

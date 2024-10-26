@@ -1,12 +1,15 @@
+import os
+import shutil
 import unittest
+
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
+
 from pytorch_metric_learning.datasets.cars196 import Cars196
-import shutil
-import os
+
 
 class TestCars196(unittest.TestCase):
-    
+
     CARS_196_ROOT = "test_cars196"
     ALREADY_EXISTS = False
 
@@ -17,9 +20,15 @@ class TestCars196(unittest.TestCase):
             cls.ALREADY_EXISTS = True
 
     def test_Cars196(self):
-        train_test_data = Cars196(root=TestCars196.CARS_196_ROOT, split="train+test", download=True)
-        train_data = Cars196(root=TestCars196.CARS_196_ROOT, split="train", download=True)
-        test_data = Cars196(root=TestCars196.CARS_196_ROOT, split="test", download=False)
+        train_test_data = Cars196(
+            root=TestCars196.CARS_196_ROOT, split="train+test", download=True
+        )
+        train_data = Cars196(
+            root=TestCars196.CARS_196_ROOT, split="train", download=True
+        )
+        test_data = Cars196(
+            root=TestCars196.CARS_196_ROOT, split="test", download=False
+        )
 
         self.assertTrue(len(train_test_data) == 16185)
         self.assertTrue(len(train_data) == 8054)
@@ -27,13 +36,12 @@ class TestCars196(unittest.TestCase):
 
     def test_CARS_196_dataloader(self):
         test_data = Cars196(
-            root=TestCars196.CARS_196_ROOT, 
-            transform=transforms.Compose([
-                transforms.Resize(size=(224, 224)),
-                transforms.PILToTensor()
-            ]),
-            split="test", 
-            download=True
+            root=TestCars196.CARS_196_ROOT,
+            transform=transforms.Compose(
+                [transforms.Resize(size=(224, 224)), transforms.PILToTensor()]
+            ),
+            split="test",
+            download=True,
         )
         loader = DataLoader(test_data, batch_size=8)
         inputs, labels = next(iter(loader))

@@ -1,12 +1,15 @@
+import os
+import shutil
 import unittest
+
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
+
 from pytorch_metric_learning.datasets.cub import CUB
-import shutil
-import os
+
 
 class TestCUB(unittest.TestCase):
-    
+
     CUB_ROOT = "test_cub"
     ALREADY_EXISTS = False
 
@@ -27,13 +30,12 @@ class TestCUB(unittest.TestCase):
 
     def test_CUB_dataloader(self):
         test_data = CUB(
-            root=TestCUB.CUB_ROOT, 
-            transform=transforms.Compose([
-                transforms.Resize(size=(224, 224)),
-                transforms.PILToTensor()
-            ]),
-            split="test", 
-            download=True
+            root=TestCUB.CUB_ROOT,
+            transform=transforms.Compose(
+                [transforms.Resize(size=(224, 224)), transforms.PILToTensor()]
+            ),
+            split="test",
+            download=True,
         )
         loader = DataLoader(test_data, batch_size=8)
         inputs, labels = next(iter(loader))

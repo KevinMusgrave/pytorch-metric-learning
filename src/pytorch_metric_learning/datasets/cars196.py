@@ -1,7 +1,9 @@
-from ..datasets.base_dataset import BaseDataset
-from ..utils.common_functions import _urlretrieve
 import os
 import zipfile
+
+from ..datasets.base_dataset import BaseDataset
+from ..utils.common_functions import _urlretrieve
+
 
 class Cars196(BaseDataset):
 
@@ -15,7 +17,7 @@ class Cars196(BaseDataset):
             classes = set(range(99, 197))
         else:
             classes = set(range(1, 197))
-        
+
         with open(os.path.join(self.root, "names.csv"), "r") as f:
             names = [x.strip() for x in f.readlines()]
 
@@ -28,13 +30,12 @@ class Cars196(BaseDataset):
         paths = paths_train + paths_test
         labels = labels_train + labels_test
 
-
         self.paths, self.labels = [], []
         for p, l in zip(paths, labels):
             if l in classes:
                 self.paths.append(p)
                 self.labels.append(l)
-        
+
     def _load_csv(self, path, names, split):
         all_paths, all_labels = [], []
         with open(path, "r") as f:
@@ -44,7 +45,12 @@ class Cars196(BaseDataset):
                 curr_label = path_annos[-1]
                 all_paths.append(
                     os.path.join(
-                        self.root, "car_data", "car_data", split, names[int(curr_label) - 1].replace("/","-"), curr_path
+                        self.root,
+                        "car_data",
+                        "car_data",
+                        split,
+                        names[int(curr_label) - 1].replace("/", "-"),
+                        curr_path,
                     )
                 )
                 all_labels.append(int(curr_label))
@@ -52,8 +58,10 @@ class Cars196(BaseDataset):
 
     def download_and_remove(self):
         os.makedirs(self.root, exist_ok=True)
-        download_folder_path = os.path.join(self.root, Cars196.DOWNLOAD_URL.split('/')[-1])
+        download_folder_path = os.path.join(
+            self.root, Cars196.DOWNLOAD_URL.split("/")[-1]
+        )
         _urlretrieve(url=Cars196.DOWNLOAD_URL, filename=download_folder_path)
-        with zipfile.ZipFile(download_folder_path, 'r') as zip_ref:
+        with zipfile.ZipFile(download_folder_path, "r") as zip_ref:
             zip_ref.extractall(self.root)
         os.remove(download_folder_path)

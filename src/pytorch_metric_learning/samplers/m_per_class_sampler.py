@@ -48,12 +48,14 @@ class MPerClassSampler(Sampler):
                 curr_label_set = self.labels
             else:
                 curr_label_set = self.labels[: self.batch_size // self.m_per_class]
+            print(curr_label_set)
             for label in curr_label_set:
                 t = self.labels_to_indices[label]
                 idx_list[i : i + self.m_per_class] = c_f.safe_random_choice(
                     t, size=self.m_per_class
                 )
                 i += self.m_per_class
+
         return iter(idx_list)
 
     def calculate_num_iters(self):

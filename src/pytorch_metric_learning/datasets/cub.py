@@ -1,12 +1,14 @@
 from ..datasets.base_dataset import BaseDataset
+from ..utils.common_functions import _urlretrieve
 import os
+import tarfile
 
 class CUB(BaseDataset):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    DOWNLOAD_URL = "https://data.caltech.edu/records/65de6-vp158/files/CUB_200_2011.tgz"
 
-        dir_name = self.get_download_url().split('/')[-1].replace(".tgz", "")
+    def generate_split(self):
+        dir_name = CUB.DOWNLOAD_URL.split('/')[-1].replace(".tgz", "")
 
         # Training split is first 100 classes, other 100 is test
         if self.split == "train":
@@ -34,21 +36,18 @@ class CUB(BaseDataset):
                         self.paths.append(img_path)
                         self.labels.append(class_idx)
 
-        assert len(self.paths) == len(self.labels) == 11788
-
         # Normalize labels to start from 0
         self.labels = [x - min(self.labels) for x in self.labels]
 
     def download_and_remove(self):
-        archive_name = self.get_download_url().split('/')[-1]
-        os.system(f"wget -P {self.root} {self.get_download_url()}")
-        os.system(f"cd {self.root} && tar -xzvf {archive_name}")
-        os.system(f"rm {os.path.join(self.root, archive_name)}")
+        os.makedirs(self.root, exist_ok=True)
+        download_folder_path = os.path.join(self.root, CUB.DOWNLOAD_URL.split('/')[-1])
+        _urlretrieve(url=CUB.DOWNLOAD_URL, filename=download_folder_path)
+        with tarfile.open(download_folder_path, "r:gz") as tar:
+            tar.extractall(self.root)
+        os.remove(download_folder_path)
 
-    @staticmethod
-    def get_available_splits():
-        return ["train", "test", "train+test"]
-
-    @staticmethod
-    def get_download_url():
-        return "https://data.caltech.edu/records/65de6-vp158/files/CUB_200_2011.tgz"
+    
+# if __name__ == "__main__":
+#     train_dataset = CUB(root="data_cub", split="test", download=True)
+#     print(len(train_dataset))

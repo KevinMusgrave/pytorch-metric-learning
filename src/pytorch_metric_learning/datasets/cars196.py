@@ -1,11 +1,13 @@
 from ..datasets.base_dataset import BaseDataset
+from ..utils.common_functions import _urlretrieve
 import os
+import zipfile
 
 class Cars196(BaseDataset):
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    DOWNLOAD_URL = "https://www.kaggle.com/api/v1/datasets/download/jutrera/stanford-car-dataset-by-classes-folder"
 
+    def generate_split(self):
         # Training set is first 99 classes, test is other classes
         if self.split == "train":
             classes = set(range(1, 99))
@@ -43,15 +45,14 @@ class Cars196(BaseDataset):
         return all_paths, all_labels
 
     def download_and_remove(self):
-        archive_name = self.get_download_url().split('/')[-1]
-        os.system(f"wget -P {self.root} {self.get_download_url()}")
-        os.system(f"cd {self.root} && unzip {archive_name}")
-        os.system(f"rm {os.path.join(self.root, archive_name)}")
+        os.makedirs(self.root, exist_ok=True)
+        download_folder_path = os.path.join(self.root, Cars196.DOWNLOAD_URL.split('/')[-1])
+        _urlretrieve(url=Cars196.DOWNLOAD_URL, filename=download_folder_path)
+        with zipfile.ZipFile(download_folder_path, 'r') as zip_ref:
+            zip_ref.extractall(self.root)
+        os.remove(download_folder_path)
 
-    @staticmethod
-    def get_available_splits():
-        return ["train", "test", "train+test"]
-
-    @staticmethod
-    def get_download_url():
-        return "https://www.kaggle.com/api/v1/datasets/download/jutrera/stanford-car-dataset-by-classes-folder"
+# if __name__ == "__main__":
+#     train_dataset = Cars196(root="data_cars", split="train+test", download=True)
+#     test_dataset = Cars196(root="data_cars", split="test", download=True)
+#     print(len(train_dataset), len(test_dataset))

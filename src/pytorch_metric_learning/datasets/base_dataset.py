@@ -8,9 +8,14 @@ class BaseDataset(ABC, Dataset):
     def __init__(self, root, split="train+test", transform=None, target_transform=None, download=False):
         self.root = root
 
-        if download and not os.path.isdir(self.root):
-            os.makedirs(self.root, exist_ok=False)
-            self.download_and_remove()
+        if download:
+            if not os.path.isdir(self.root):
+                os.makedirs(self.root, exist_ok=False)
+                self.download_and_remove()
+            elif os.listdir(self.root) == []:
+                self.download_and_remove()
+            else:
+                raise ValueError("The given directory exists and is not empty.")
         else:
             # The given directory does not exist so the user should be aware of downloading it
             # Otherwise proceed as usual
@@ -27,20 +32,18 @@ class BaseDataset(ABC, Dataset):
         
         self.split = split
 
-    @staticmethod
+        self.generate_split()
+
+    @abstractmethod
+    def generate_split():
+        raise NotImplementedError
+    
     @abstractmethod
     def download_and_remove():
-        pass
+        raise NotImplementedError
 
-    @staticmethod
-    @abstractmethod
-    def get_available_splits():
-        pass
-
-    @staticmethod
-    @abstractmethod
-    def get_download_url():
-        pass
+    def get_available_splits(self):
+        return ["train", "test", "train+test"]
 
     def __len__(self):
         return len(self.labels)

@@ -13,8 +13,11 @@ class INaturalist2018(BaseDataset):
     SPLITS_URL = "https://drive.google.com/uc?id=1sXfkBTFDrRU3__-NUs1qBP3sf_0uMB98"
 
     def generate_split(self):
-        train_json = json.load(open(os.path.join(self.root, "train2018.json")))
-        val_json = json.load(open(os.path.join(self.root, "val2018.json")))
+        with open(os.path.join(self.root, "train2018.json"), "r") as train_f:
+            train_json = json.load(train_f)
+
+        with open(os.path.join(self.root, "val2018.json"), "r") as val_f:
+            val_json = json.load(val_f)
 
         val_imgs, val_anns = val_json["images"], val_json["annotations"]
         train_imgs, train_anns = train_json["images"], train_json["annotations"]
@@ -41,7 +44,7 @@ class INaturalist2018(BaseDataset):
             paths = train_paths + test_paths
             labels = train_labels + test_labels
 
-        self.paths = paths
+        self.paths = [os.path.join(self.root, p) for p in paths]
         self.labels = labels
 
     def _load_split_txt(self, split):
@@ -75,9 +78,3 @@ class INaturalist2018(BaseDataset):
         with zipfile.ZipFile(download_folder_path, "r") as zip_ref:
             zip_ref.extractall(self.root)
         os.remove(download_folder_path)
-
-# if __name__ == "__main__":
-#     train_test_dataset = INaturalist2018(root="data", split="train+test", download=True)
-#     train_dataset = INaturalist2018(root="data", split="train", download=True)
-#     test_dataset = INaturalist2018(root="data", split="test", download=True)
-#     print(len(train_test_dataset), len(train_dataset), len(test_dataset))

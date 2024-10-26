@@ -19,8 +19,6 @@ class StanfordOnlineProducts(BaseDataset):
         self.paths = paths
         self.labels = labels
 
-        print(len(self.paths), len(self.labels))
-
     def _load_split_txt(self, split):
         paths, labels = [], []
         with open(os.path.join(self.root, "Stanford_Online_Products", f"Ebay_{split}.txt")) as f:

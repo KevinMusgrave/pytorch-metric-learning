@@ -33,7 +33,7 @@ class CUB(BaseDataset):
 
                     # If the image ids correspond it's a match
                     if img_idx1 == img_idx2:
-                        self.paths.append(img_path)
+                        self.paths.append(os.path.join(self.root, dir_name, "images", img_path))
                         self.labels.append(class_idx)
 
     def download_and_remove(self):
@@ -43,8 +43,3 @@ class CUB(BaseDataset):
         with tarfile.open(download_folder_path, "r:gz") as tar:
             tar.extractall(self.root)
         os.remove(download_folder_path)
-
-    
-# if __name__ == "__main__":
-#     train_dataset = CUB(root="data_cub", split="test", download=True)
-#     print(len(train_dataset))

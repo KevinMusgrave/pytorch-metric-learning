@@ -16,22 +16,26 @@ class Cars196(BaseDataset):
         else:
             classes = set(range(1, 197))
         
+        with open(os.path.join(self.root, "names.csv"), "r") as f:
+            names = [x.strip() for x in f.readlines()]
+
         paths_train, labels_train = self._load_csv(
-            os.path.join(self.root, "anno_train.csv"), split="train"
+            os.path.join(self.root, "anno_train.csv"), names, split="train"
         )
         paths_test, labels_test = self._load_csv(
-            os.path.join(self.root, "anno_test.csv"), split="test"
+            os.path.join(self.root, "anno_test.csv"), names, split="test"
         )
         paths = paths_train + paths_test
         labels = labels_train + labels_test
+
 
         self.paths, self.labels = [], []
         for p, l in zip(paths, labels):
             if l in classes:
                 self.paths.append(p)
                 self.labels.append(l)
-
-    def _load_csv(self, path, split):
+        
+    def _load_csv(self, path, names, split):
         all_paths, all_labels = [], []
         with open(path, "r") as f:
             for l in f:
@@ -39,7 +43,9 @@ class Cars196(BaseDataset):
                 curr_path = path_annos[0]
                 curr_label = path_annos[-1]
                 all_paths.append(
-                    os.path.join(self.root, "car_data", "car_data", split, curr_path)
+                    os.path.join(
+                        self.root, "car_data", "car_data", split, names[int(curr_label) - 1].replace("/","-"), curr_path
+                    )
                 )
                 all_labels.append(int(curr_label))
         return all_paths, all_labels
@@ -51,9 +57,3 @@ class Cars196(BaseDataset):
         with zipfile.ZipFile(download_folder_path, 'r') as zip_ref:
             zip_ref.extractall(self.root)
         os.remove(download_folder_path)
-
-# if __name__ == "__main__":
-#     train_dataset = Cars196(root="data_cars", split="train", download=True)
-#     test_dataset = Cars196(root="data_cars", split="test", download=True)
-#     train_test_dataset = Cars196(root="data_cars", split="train+test", download=False)
-#     print(len(train_dataset), len(test_dataset), len(train_test_dataset))

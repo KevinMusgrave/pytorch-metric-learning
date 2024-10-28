@@ -13,7 +13,6 @@ class ThresholdConsistentMarginLoss(BaseMetricLossFunction):
 
     def __init__(
         self,
-        base_loss,
         lambda_plus=1.0,
         lambda_minus=1.0,
         margin_plus=0.9,
@@ -22,7 +21,6 @@ class ThresholdConsistentMarginLoss(BaseMetricLossFunction):
     ):
         super().__init__(**kwargs)
         c_f.assert_distance_type(self, CosineSimilarity)
-        self.base_loss = base_loss
         self.lambda_plus = lambda_plus
         self.lambda_minus = lambda_minus
         self.margin_plus = margin_plus
@@ -55,13 +53,9 @@ class ThresholdConsistentMarginLoss(BaseMetricLossFunction):
 
         # add the components for final loss
         tcm_loss = self.lambda_plus * pos_tcm + self.lambda_minus * neg_tcm
-        base_loss = self.base_loss(
-            embeddings, labels, indices_tuple, ref_emb, ref_labels
-        )
-        total_loss = base_loss + tcm_loss
         return {
             "loss": {
-                "losses": total_loss,
+                "losses": tcm_loss,
                 "indices": None,
                 "reduction_type": "already_reduced",
             }

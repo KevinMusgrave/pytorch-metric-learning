@@ -1252,9 +1252,10 @@ losses.SupConLoss(temperature=0.1, **kwargs)
 ## ThresholdConsistentMarginLoss
 [Threshold-Consistent Margin Loss for Open-World Deep Metric Learning](https://arxiv.org/pdf/2307.04047){target=_blank}
 
+This loss acts as a form of regularization and is usually combined with another metric loss function.
+
 ```python
 losses.ThresholdConsistentMarginLoss(
-    base_loss, 
     lambda_plus=1.0, 
     lambda_minus=1.0, 
     margin_plus=0.9, 
@@ -1267,7 +1268,6 @@ losses.ThresholdConsistentMarginLoss(
 
 **Parameters**:
 
-* **base_loss**: The final loss is calculated as `base_loss + tcm_loss`. 
 * **lambda_plus**: The scaling coefficient for the anchor-positive part of the loss. This is $\lambda^+$ in the above equation. 
 * **lambda_minus**: The scaling coefficient for the anchor-negative part of the loss. This is $\lambda^-$ in the above equation. 
 * **margin_plus**: The minimum anchor-positive similarity to be included in the loss. This is $m^+$ in the above equation.

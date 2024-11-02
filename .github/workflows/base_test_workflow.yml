@@ -14,12 +14,12 @@ jobs:
     strategy:
       matrix:
         include:
-          - python-version: 3.8
-            pytorch-version: 1.6
-            torchvision-version: 0.7
-          - python-version: 3.9
-            pytorch-version: 2.5
-            torchvision-version: 0.20
+          - python-version: "3.8"
+            pytorch-version: "1.6"
+            torchvision-version: "0.7"
+          - python-version: "3.9"
+            pytorch-version: "2.5"
+            torchvision-version: "0.20"
 
     steps:
     - uses: actions/checkout@v2

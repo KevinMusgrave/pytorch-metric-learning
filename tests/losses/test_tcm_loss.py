@@ -5,8 +5,8 @@ import torch.nn.functional as F
 
 from pytorch_metric_learning.distances import CosineSimilarity
 from pytorch_metric_learning.losses import (
-    MultipleLosses,
     ContrastiveLoss,
+    MultipleLosses,
     ThresholdConsistentMarginLoss,
 )
 
@@ -24,7 +24,7 @@ class TestThresholdConsistentMarginLoss(unittest.TestCase):
                         pos_margin=0.9,
                         neg_margin=0.4,
                     ),
-                    ThresholdConsistentMarginLoss()
+                    ThresholdConsistentMarginLoss(),
                 ]
             )
             embs = torch.tensor(
@@ -56,8 +56,4 @@ class TestThresholdConsistentMarginLoss(unittest.TestCase):
                 res = loss_func.forward(embs, labels)
                 rtol = 1e-2 if dtype == torch.float16 else 1e-5
                 atol = 1e-4
-                self.assertTrue(
-                    torch.isclose(
-                        res, correct_loss, rtol=rtol, atol=atol
-                    )
-                )
+                self.assertTrue(torch.isclose(res, correct_loss, rtol=rtol, atol=atol))

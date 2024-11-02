@@ -18,8 +18,8 @@ jobs:
             pytorch-version: 1.6
             torchvision-version: 0.7
           - python-version: 3.9
-            pytorch-version: 2.3
-            torchvision-version: 0.18
+            pytorch-version: 2.5
+            torchvision-version: 0.20
 
     steps:
     - uses: actions/checkout@v2
@@ -30,7 +30,7 @@ jobs:
     - name: Install dependencies
       run: |
         pip install .[with-hooks-cpu]
-        pip install "numpy<2.0" torch==${{ matrix.pytorch-version }} torchvision==${{ matrix.torchvision-version }} --force-reinstall
+        pip install torch==${{ matrix.pytorch-version }} torchvision==${{ matrix.torchvision-version }} --force-reinstall
         pip install --upgrade protobuf==3.20.1
         pip install six
         pip install packaging

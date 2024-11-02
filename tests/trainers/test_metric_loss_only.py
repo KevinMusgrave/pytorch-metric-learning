@@ -66,8 +66,6 @@ class TestMetricLossOnly(unittest.TestCase):
             dataset_folder, train=True, download=True, transform=train_transform
         )
 
-        train_targets = np.array(train_dataset.targets)[subset_idx]
-
         train_dataset_for_eval = datasets.CIFAR100(
             dataset_folder, train=True, download=True, transform=eval_transform
         )
@@ -81,7 +79,6 @@ class TestMetricLossOnly(unittest.TestCase):
             train_dataset_for_eval, subset_idx
         )
         val_dataset = torch.utils.data.Subset(val_dataset, subset_idx)
-        
 
         for dtype in TEST_DTYPES:
             for splits_to_eval in [
@@ -117,7 +114,7 @@ class TestMetricLossOnly(unittest.TestCase):
                 optimizer_dict = {"trunk_optimizer": optimizer}
                 loss_fn_dict = {"metric_loss": loss_fn}
                 sampler = MPerClassSampler(
-                    train_targets,
+                    np.array(train_dataset.dataset.targets)[subset_idx],
                     m=4,
                     batch_size=32,
                     length_before_new_iter=len(train_dataset),

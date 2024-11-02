@@ -34,6 +34,7 @@ from .soft_triple_loss import SoftTripleLoss
 from .sphereface_loss import SphereFaceLoss
 from .subcenter_arcface_loss import SubCenterArcFaceLoss
 from .supcon_loss import SupConLoss
+from .tcm_loss import ThresholdConsistentMarginLoss
 from .triplet_margin_loss import TripletMarginLoss
 from .tuplet_margin_loss import TupletMarginLoss
 from .vicreg_loss import VICRegLoss

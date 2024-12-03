@@ -22,7 +22,7 @@ class SmoothAPLoss(BaseMetricLossFunction):
 
     # Implementation is based on the original repository:
     # https://github.com/Andrew-Brown1/Smooth_AP/blob/master/src/Smooth_AP_loss.py#L87
-    def compute_loss(self, embeddings, labels, iices_tuple, ref_emb, ref_labels):
+    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
         # The loss expects labels such that there is the same number of elements for each class
         # The number of classes is not important, nor their order, but the number of elements must be the same, eg.
         #
@@ -49,9 +49,8 @@ class SmoothAPLoss(BaseMetricLossFunction):
         mask = 1.0 - torch.eye(batch_size)
         mask = mask.unsqueeze(dim=0).repeat(batch_size, 1, 1)
 
-        sims = F.cosine_similarity(
-            embeddings[None, :, :], embeddings[:, None, :], dim=-1
-        )
+        sims = self.distance(embeddings)
+
         sims_repeat = sims.unsqueeze(dim=1).repeat(1, batch_size, 1)
         sims_diff = sims_repeat - sims_repeat.permute(0, 2, 1)
         sims_sigm = F.sigmoid(sims_diff / self.temperature) * mask.to(sims_diff.device)
@@ -59,7 +58,7 @@ class SmoothAPLoss(BaseMetricLossFunction):
 
         xs = embeddings.view(
             num_classes_batch, batch_size // num_classes_batch, embeddings.size(-1)
-        ).permute(0, 2, 1)
+        )
         pos_mask = 1.0 - torch.eye(batch_size // num_classes_batch)
         pos_mask = (
             pos_mask.unsqueeze(dim=0)
@@ -67,7 +66,10 @@ class SmoothAPLoss(BaseMetricLossFunction):
             .repeat(num_classes_batch, batch_size // num_classes_batch, 1, 1)
         )
 
-        sims_pos = F.cosine_similarity(xs[:, :, None, :], xs[:, :, :, None])
+        # Circumvent the shape check in forward method
+        xs_norm = self.distance.maybe_normalize(xs, dim=-1)
+        sims_pos = self.distance.compute_mat(xs_norm, xs_norm)
+
         sims_pos_repeat = sims_pos.unsqueeze(dim=2).repeat(
             1, 1, batch_size // num_classes_batch, 1
         )

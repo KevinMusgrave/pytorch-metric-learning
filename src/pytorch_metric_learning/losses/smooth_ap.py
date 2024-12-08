@@ -33,7 +33,7 @@ class SmoothAPLoss(BaseMetricLossFunction):
         #
         c_f.labels_required(labels)
         c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
-    
+
         counts = torch.bincount(labels)
         nonzero_indices = torch.nonzero(counts, as_tuple=True)[0]
         nonzero_counts = counts[nonzero_indices]
@@ -91,7 +91,8 @@ class SmoothAPLoss(BaseMetricLossFunction):
                 all_rank = sims_ranks[i * g + j, i * g : (i + 1) * g]
                 ap[i * g + j] = torch.sum(pos_rank / all_rank) / g
 
-        loss = 1 - ap
+        miner_weights = lmu.convert_to_weights(indices_tuple, labels, dtype=ap.dtype)
+        loss = (1 - ap) * miner_weights
 
         return {
             "ap_loss": {

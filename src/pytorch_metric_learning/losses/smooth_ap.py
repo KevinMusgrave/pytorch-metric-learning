@@ -80,19 +80,20 @@ class SmoothAPLoss(BaseMetricLossFunction):
         )
         sims_pos_ranks = torch.sum(sims_pos_sigm, dim=-1) + 1
 
-        ap = torch.zeros(1).to(embeddings.device)
         g = batch_size // num_classes_batch
+        ap = torch.zeros(batch_size).to(embeddings.device)
         for i in range(num_classes_batch):
-            pos_divide = torch.sum(
-                sims_pos_ranks[i] / sims_ranks[i * g : (i + 1) * g, i * g : (i + 1) * g]
-            )
-            ap = ap + (pos_divide / g) / batch_size
+            for j in range(g):
+                pos_rank = sims_pos_ranks[i, j]
+                all_rank = sims_ranks[i * g + j, i * g: (i + 1) * g]
+                ap[i * g + j] = torch.sum(pos_rank / all_rank) / g
 
         loss = 1 - ap
+
         return {
-            "loss": {
+            "ap_loss": {
                 "losses": loss,
-                "indices": None,
-                "reduction_type": "already_reduced",
+                "indices": c_f.torch_arange_from_size(loss),
+                "reduction_type": "element",
             }
         }

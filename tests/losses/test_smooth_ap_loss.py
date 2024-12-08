@@ -187,7 +187,7 @@ class TestSmoothAPLoss(unittest.TestCase):
                     labels.extend([i for _ in range(HYPERPARAMETERS["num_id"])])
 
                 labels = torch.tensor(labels)
-                output2 = loss2.compute_loss(
+                output2 = loss2.forward(
                     rand_tensor, labels, None, rand_tensor, labels
-                )["loss"]["losses"]
+                )
                 self.assertTrue(torch.isclose(output, output2))

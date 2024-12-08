@@ -14,7 +14,7 @@ class SmoothAPLoss(BaseMetricLossFunction):
 
     def __init__(self, temperature=0.01, **kwargs):
         super().__init__(**kwargs)
-        c_f.assert_distance_type(self, CosineSimilarity)
+        # c_f.assert_distance_type(self, CosineSimilarity)
         self.temperature = temperature
 
     def get_default_distance(self):
@@ -50,6 +50,8 @@ class SmoothAPLoss(BaseMetricLossFunction):
         mask = mask.unsqueeze(dim=0).repeat(batch_size, 1, 1)
 
         sims = self.distance(embeddings)
+        if not self.distance.is_inverted:
+            sims *= -1
 
         sims_repeat = sims.unsqueeze(dim=1).repeat(1, batch_size, 1)
         sims_diff = sims_repeat - sims_repeat.permute(0, 2, 1)
@@ -85,7 +87,7 @@ class SmoothAPLoss(BaseMetricLossFunction):
         for i in range(num_classes_batch):
             for j in range(g):
                 pos_rank = sims_pos_ranks[i, j]
-                all_rank = sims_ranks[i * g + j, i * g: (i + 1) * g]
+                all_rank = sims_ranks[i * g + j, i * g : (i + 1) * g]
                 ap[i * g + j] = torch.sum(pos_rank / all_rank) / g
 
         loss = 1 - ap

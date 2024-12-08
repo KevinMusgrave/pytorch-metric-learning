@@ -14,7 +14,7 @@ class SmoothAPLoss(BaseMetricLossFunction):
 
     def __init__(self, temperature=0.01, **kwargs):
         super().__init__(**kwargs)
-        # c_f.assert_distance_type(self, CosineSimilarity)
+        c_f.assert_distance_type(self, CosineSimilarity)
         self.temperature = temperature
 
     def get_default_distance(self):
@@ -31,6 +31,9 @@ class SmoothAPLoss(BaseMetricLossFunction):
         # The following label is NOT valid:
         # [ B,B,B  A,A,A,A,  C,C,C ]
         #
+        c_f.labels_required(labels)
+        c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
+    
         counts = torch.bincount(labels)
         nonzero_indices = torch.nonzero(counts, as_tuple=True)[0]
         nonzero_counts = counts[nonzero_indices]
@@ -50,8 +53,6 @@ class SmoothAPLoss(BaseMetricLossFunction):
         mask = mask.unsqueeze(dim=0).repeat(batch_size, 1, 1)
 
         sims = self.distance(embeddings)
-        if not self.distance.is_inverted:
-            sims *= -1
 
         sims_repeat = sims.unsqueeze(dim=1).repeat(1, batch_size, 1)
         sims_diff = sims_repeat - sims_repeat.permute(0, 2, 1)

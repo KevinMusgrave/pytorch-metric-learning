@@ -5,7 +5,8 @@ import unittest
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 
-from pytorch_metric_learning.datasets.cub import CUB
+from pytorch_metric_learning.datasets import CUB
+from .. import TEST_DATASETS
 
 
 class TestCUB(unittest.TestCase):
@@ -19,6 +20,7 @@ class TestCUB(unittest.TestCase):
         if os.path.exists(cls.CUB_ROOT):
             cls.ALREADY_EXISTS = True
 
+    @unittest.skipUnless(TEST_DATASETS, "TEST_DATASETS is false")
     def test_CUB(self):
         train_test_data = CUB(root=TestCUB.CUB_ROOT, split="train+test", download=True)
         train_data = CUB(root=TestCUB.CUB_ROOT, split="train", download=True)
@@ -28,6 +30,7 @@ class TestCUB(unittest.TestCase):
         self.assertTrue(len(train_data) == 5864)
         self.assertTrue(len(test_data) == 5924)
 
+    @unittest.skipUnless(TEST_DATASETS, "TEST_DATASETS is false")
     def test_CUB_dataloader(self):
         test_data = CUB(
             root=TestCUB.CUB_ROOT,
@@ -44,5 +47,5 @@ class TestCUB(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        if not cls.ALREADY_EXISTS:
+        if not cls.ALREADY_EXISTS and os.path.isdir(cls.CUB_ROOT):
             shutil.rmtree(cls.CUB_ROOT)

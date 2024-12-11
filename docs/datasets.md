@@ -40,7 +40,7 @@ datasets.base_dataset.BaseDataset(
 ## CUB-200-2011
 
 ```python
-datasets.cub.CUB(*args, **kwargs)
+datasets.CUB(*args, **kwargs)
 ```
 
 **Defined splits**: 
@@ -75,7 +75,7 @@ train_and_test_dataset = CUB(root="data",
 ## Cars196
 
 ```python
-datasets.cars196.Cars196(*args, **kwargs)
+datasets.Cars196(*args, **kwargs)
 ```
 
 **Defined splits**: 
@@ -110,7 +110,7 @@ train_and_test_dataset = Cars196(root="data",
 ## INaturalist2018
 
 ```python
-datasets.inaturalist2018.INaturalist2018(*args, **kwargs)
+datasets.INaturalist2018(*args, **kwargs)
 ```
 
 **Defined splits**: 
@@ -146,7 +146,7 @@ train_and_test_dataset = INaturalist2018(root="data",
 ## StanfordOnlineProducts
 
 ```python
-datasets.sop.StanfordOnlineProducts(*args, **kwargs)
+datasets.StanfordOnlineProducts(*args, **kwargs)
 ```
 
 **Defined splits**: 

@@ -5,7 +5,8 @@ import unittest
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 
-from pytorch_metric_learning.datasets.cars196 import Cars196
+from pytorch_metric_learning.datasets import Cars196
+from .. import TEST_DATASETS
 
 
 class TestCars196(unittest.TestCase):
@@ -19,6 +20,7 @@ class TestCars196(unittest.TestCase):
         if os.path.exists(cls.CARS_196_ROOT):
             cls.ALREADY_EXISTS = True
 
+    @unittest.skipUnless(TEST_DATASETS, "TEST_DATASETS is false")
     def test_Cars196(self):
         train_test_data = Cars196(
             root=TestCars196.CARS_196_ROOT, split="train+test", download=True
@@ -34,6 +36,7 @@ class TestCars196(unittest.TestCase):
         self.assertTrue(len(train_data) == 8054)
         self.assertTrue(len(test_data) == 8131)
 
+    @unittest.skipUnless(TEST_DATASETS, "TEST_DATASETS is false")
     def test_CARS_196_dataloader(self):
         test_data = Cars196(
             root=TestCars196.CARS_196_ROOT,

@@ -12,6 +12,7 @@ dtypes_from_environ = os.environ.get("TEST_DTYPES", "float16,float32,float64").s
 )
 device_from_environ = os.environ.get("TEST_DEVICE", "cuda")
 with_collect_stats = os.environ.get("WITH_COLLECT_STATS", "false")
+TEST_DATASETS = os.environ.get("TEST_DATASETS", "false")
 
 TEST_DTYPES = [getattr(torch, x) for x in dtypes_from_environ]
 TEST_DEVICE = torch.device(device_from_environ)

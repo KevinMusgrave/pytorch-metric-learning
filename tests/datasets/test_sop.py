@@ -5,7 +5,8 @@ import unittest
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 
-from pytorch_metric_learning.datasets.sop import StanfordOnlineProducts
+from pytorch_metric_learning.datasets import StanfordOnlineProducts
+from .. import TEST_DATASETS
 
 
 class TestStanfordOnlineProducts(unittest.TestCase):
@@ -19,6 +20,7 @@ class TestStanfordOnlineProducts(unittest.TestCase):
         if os.path.exists(cls.SOP_ROOT):
             cls.ALREADY_EXISTS = True
 
+    @unittest.skipUnless(TEST_DATASETS, "TEST_DATASETS is false")
     def test_SOP(self):
         train_test_data = StanfordOnlineProducts(
             root=TestStanfordOnlineProducts.SOP_ROOT, split="train+test", download=True
@@ -34,6 +36,7 @@ class TestStanfordOnlineProducts(unittest.TestCase):
         self.assertTrue(len(train_data) == 59551)
         self.assertTrue(len(test_data) == 60502)
 
+    @unittest.skipUnless(TEST_DATASETS, "TEST_DATASETS is false")
     def test_SOP_dataloader(self):
         test_data = StanfordOnlineProducts(
             root=TestStanfordOnlineProducts.SOP_ROOT,

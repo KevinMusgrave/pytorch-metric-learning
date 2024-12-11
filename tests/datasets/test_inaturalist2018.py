@@ -5,7 +5,8 @@ import unittest
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 
-from pytorch_metric_learning.datasets.inaturalist2018 import INaturalist2018
+from pytorch_metric_learning.datasets import INaturalist2018
+from .. import TEST_DATASETS
 
 
 class TestINaturalist2018(unittest.TestCase):
@@ -19,6 +20,7 @@ class TestINaturalist2018(unittest.TestCase):
         if os.path.exists(cls.INATURALIST2018_ROOT):
             cls.ALREADY_EXISTS = True
 
+    @unittest.skipUnless(TEST_DATASETS, "TEST_DATASETS is false")
     def test_INaturalist2018(self):
         train_test_data = INaturalist2018(
             root=TestINaturalist2018.INATURALIST2018_ROOT,
@@ -36,6 +38,7 @@ class TestINaturalist2018(unittest.TestCase):
         self.assertTrue(len(train_data) == 325846)
         self.assertTrue(len(test_data) == 136093)
 
+    @unittest.skipUnless(TEST_DATASETS, "TEST_DATASETS is false")
     def test_INaturalist2018_dataloader(self):
         test_data = INaturalist2018(
             root=TestINaturalist2018.INATURALIST2018_ROOT,

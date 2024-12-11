@@ -53,5 +53,5 @@ class TestCars196(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        if not cls.ALREADY_EXISTS:
+        if not cls.ALREADY_EXISTS and os.path.isdir(cls.CARS_196_ROOT):
             shutil.rmtree(cls.CARS_196_ROOT)

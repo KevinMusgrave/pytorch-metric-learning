@@ -51,7 +51,8 @@ class TestStanfordOnlineProducts(unittest.TestCase):
         self.assertTupleEqual(tuple(inputs.shape), (8, 3, 224, 224))
         self.assertTupleEqual(tuple(labels.shape), (8,))
 
+    @unittest.skipUnless(TEST_DATASETS, "TEST_DATASETS is false")
     @classmethod
     def tearDownClass(cls):
-        if not cls.ALREADY_EXISTS:
+        if not cls.ALREADY_EXISTS and os.path.isdir(cls.SOP_ROOT):
             shutil.rmtree(cls.SOP_ROOT)

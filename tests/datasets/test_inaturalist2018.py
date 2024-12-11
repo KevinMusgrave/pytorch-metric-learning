@@ -55,5 +55,5 @@ class TestINaturalist2018(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        if not cls.ALREADY_EXISTS:
+        if not cls.ALREADY_EXISTS and os.path.isdir(cls.INATURALIST2018_ROOT):
             shutil.rmtree(cls.INATURALIST2018_ROOT)

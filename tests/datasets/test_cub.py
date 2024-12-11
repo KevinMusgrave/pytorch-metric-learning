@@ -47,5 +47,5 @@ class TestCUB(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        if not cls.ALREADY_EXISTS:
+        if not cls.ALREADY_EXISTS and os.path.isdir(cls.CUB_ROOT):
             shutil.rmtree(cls.CUB_ROOT)

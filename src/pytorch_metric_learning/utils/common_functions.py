@@ -3,15 +3,29 @@ import glob
 import logging
 import os
 import re
+import urllib
 
 import numpy as np
 import scipy.stats
 import torch
+from tqdm import tqdm
 
 LOGGER_NAME = "PML"
 LOGGER = logging.getLogger(LOGGER_NAME)
 NUMPY_RANDOM = np.random
 COLLECT_STATS = False
+
+
+# taken from:
+# https://github.com/pytorch/vision/blob/main/torchvision/datasets/utils.py#L27
+def _urlretrieve(url, filename, chunk_size=1024 * 32):
+    with urllib.request.urlopen(urllib.request.Request(url)) as response:
+        with open(filename, "wb") as fh, tqdm(
+            total=response.length, unit="B", unit_scale=True
+        ) as pbar:
+            while chunk := response.read(chunk_size):
+                fh.write(chunk)
+                pbar.update(len(chunk))
 
 
 def set_logger_name(name):

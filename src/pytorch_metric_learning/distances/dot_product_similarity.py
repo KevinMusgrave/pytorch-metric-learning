@@ -9,7 +9,7 @@ class DotProductSimilarity(BaseDistance):
         assert self.is_inverted
 
     def compute_mat(self, query_emb, ref_emb):
-        return torch.matmul(query_emb, ref_emb.t())
+        return torch.matmul(query_emb, ref_emb.transpose(-1, -2))
 
     def pairwise_distance(self, query_emb, ref_emb):
         return torch.sum(query_emb * ref_emb, dim=1)

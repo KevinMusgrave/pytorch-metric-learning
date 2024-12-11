@@ -1,4 +1,14 @@
 ## Library contents
+
+### [Datasets](https://kevinmusgrave.github.io/pytorch-metric-learning/datasets)
+| Name | Reference Papers |
+|---|---|
+| [**CUB**](https://kevinmusgrave.github.io/pytorch-metric-learning/datasets/#cub-200-2011) | [The caltech-ucsd birds-200-2011 dataset](https://authors.library.caltech.edu/27452/1/CUB_200_2011.pdf)
+| [**Cars196**](https://kevinmusgrave.github.io/pytorch-metric-learning/datasets/#cars196) | 3D Object Representations for Fine-Grained Categorization
+| [**INaturalist2018**](https://kevinmusgrave.github.io/pytorch-metric-learning/datasets/#inaturalist2018) | [The iNaturalist Species Classification and Detection Dataset](https://openaccess.thecvf.com/content_cvpr_2018/papers/Van_Horn_The_INaturalist_Species_CVPR_2018_paper.pdf)
+| [**StanfordOnlineProducts**](https://kevinmusgrave.github.io/pytorch-metric-learning/datasets/#stanfordonlineproducts) | [Deep Metric Learning via Lifted Structured Feature Embedding](https://cvgl.stanford.edu/papers/song_cvpr16.pdf)
+
+
 ### [Distances](https://kevinmusgrave.github.io/pytorch-metric-learning/distances)
 | Name | Reference Papers |
 |---|---|

@@ -12,7 +12,7 @@ dtypes_from_environ = os.environ.get("TEST_DTYPES", "float16,float32,float64").s
 )
 device_from_environ = os.environ.get("TEST_DEVICE", "cuda")
 with_collect_stats = os.environ.get("WITH_COLLECT_STATS", "false")
-TEST_DATASETS = os.environ.get("TEST_DATASETS", "false")
+test_datasets = os.environ.get("TEST_DATASETS", "false")
 
 TEST_DTYPES = [getattr(torch, x) for x in dtypes_from_environ]
 TEST_DEVICE = torch.device(device_from_environ)
@@ -20,6 +20,7 @@ TEST_DEVICE = torch.device(device_from_environ)
 assert c_f.COLLECT_STATS is False
 
 WITH_COLLECT_STATS = True if with_collect_stats == "true" else False
+TEST_DATASETS = True if test_datasets == "true" else False
 c_f.COLLECT_STATS = WITH_COLLECT_STATS
 
 print(

@@ -1,6 +1,7 @@
 site_name: PyTorch Metric Learning
 nav:
     - Home: index.md
+    - Datasets: datasets.md
     - Distances: distances.md
     - Losses: losses.md
     - Miners: miners.md
@@ -16,6 +17,7 @@ nav:
       - Common Functions: common_functions.md
       - Distributed: distributed.md
     - How to extend this library:
+      - Custom datasets: extend/datasets.md
       - Custom losses: extend/losses.md
       - Custom miners: extend/miners.md
     - Frequently Asked Questions: faq.md

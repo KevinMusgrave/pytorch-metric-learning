@@ -7,6 +7,7 @@ from ..utils.common_functions import _urlretrieve
 
 class StanfordOnlineProducts(BaseDataset):
 
+    # Link from https://github.com/rksltnl/Deep-Metric-Learning-CVPR16?tab=readme-ov-file#stanford-online-products-dataset
     DOWNLOAD_URL = "https://drive.usercontent.google.com/download?id=1TclrpQOF_ullUP99wk_gjGN8pKvtErG8&export=download&authuser=0&confirm=t"
 
     def generate_split(self):

@@ -14,6 +14,8 @@ class INaturalist2018(BaseDataset):
     VAL_ANN_URL = (
         "https://ml-inat-competition-datasets.s3.amazonaws.com/2018/val2018.json.tar.gz"
     )
+
+    # Link from https://github.com/Andrew-Brown1/Smooth_AP?tab=readme-ov-file#data
     SPLITS_URL = "https://drive.google.com/uc?id=1sXfkBTFDrRU3__-NUs1qBP3sf_0uMB98"
 
     def generate_split(self):

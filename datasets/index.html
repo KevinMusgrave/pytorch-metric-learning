@@ -9,10 +9,10 @@
       
       
       
-        <link rel="prev" href="../datasets/">
+        <link rel="prev" href="..">
       
       
-        <link rel="next" href="../losses/">
+        <link rel="next" href="../distances/">
       
       
       <link rel="icon" href="../imgs/Favicon.png">
@@ -20,7 +20,7 @@
     
     
       
-        <title>Distances - PyTorch Metric Learning</title>
+        <title>Datasets - PyTorch Metric Learning</title>
       
     
     
@@ -70,7 +70,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#distances" class="md-skip">
+        <a href="#datasets" class="md-skip">
           Skip to content
         </a>
       
@@ -105,7 +105,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Distances
+              Datasets
             
           </span>
         </div>
@@ -238,26 +238,6 @@
       
   
   
-  
-  
-    <li class="md-nav__item">
-      <a href="../datasets/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Datasets
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
     
   
   
@@ -274,7 +254,7 @@
           
   
   <span class="md-ellipsis">
-    Distances
+    Datasets
   </span>
   
 
@@ -285,7 +265,7 @@
         
   
   <span class="md-ellipsis">
-    Distances
+    Datasets
   </span>
   
 
@@ -307,54 +287,45 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#basedistance" class="md-nav__link">
+  <a href="#basedataset" class="md-nav__link">
     <span class="md-ellipsis">
-      BaseDistance
+      BaseDataset
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#batcheddistance" class="md-nav__link">
+  <a href="#cub-200-2011" class="md-nav__link">
     <span class="md-ellipsis">
-      BatchedDistance
+      CUB-200-2011
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#cosinesimilarity" class="md-nav__link">
+  <a href="#cars196" class="md-nav__link">
     <span class="md-ellipsis">
-      CosineSimilarity
+      Cars196
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#dotproductsimilarity" class="md-nav__link">
+  <a href="#inaturalist2018" class="md-nav__link">
     <span class="md-ellipsis">
-      DotProductSimilarity
+      INaturalist2018
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#lpdistance" class="md-nav__link">
+  <a href="#stanfordonlineproducts" class="md-nav__link">
     <span class="md-ellipsis">
-      LpDistance
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#snrdistance" class="md-nav__link">
-    <span class="md-ellipsis">
-      SNRDistance
+      StanfordOnlineProducts
     </span>
   </a>
   
@@ -364,6 +335,26 @@
   
 </nav>
       
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../distances/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Distances
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -807,54 +798,45 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#basedistance" class="md-nav__link">
+  <a href="#basedataset" class="md-nav__link">
     <span class="md-ellipsis">
-      BaseDistance
+      BaseDataset
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#batcheddistance" class="md-nav__link">
+  <a href="#cub-200-2011" class="md-nav__link">
     <span class="md-ellipsis">
-      BatchedDistance
+      CUB-200-2011
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#cosinesimilarity" class="md-nav__link">
+  <a href="#cars196" class="md-nav__link">
     <span class="md-ellipsis">
-      CosineSimilarity
+      Cars196
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#dotproductsimilarity" class="md-nav__link">
+  <a href="#inaturalist2018" class="md-nav__link">
     <span class="md-ellipsis">
-      DotProductSimilarity
+      INaturalist2018
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#lpdistance" class="md-nav__link">
+  <a href="#stanfordonlineproducts" class="md-nav__link">
     <span class="md-ellipsis">
-      LpDistance
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#snrdistance" class="md-nav__link">
-    <span class="md-ellipsis">
-      SNRDistance
+      StanfordOnlineProducts
     </span>
   </a>
   
@@ -878,103 +860,158 @@
   
 
 
-<h1 id="distances">Distances<a class="headerlink" href="#distances" title="Permanent link">&para;</a></h1>
-<p>Distance classes compute pairwise distances/similarities between input embeddings.</p>
-<p>Consider the TripletMarginLoss in its default form:
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning.losses</span> <span class="kn">import</span> <span class="n">TripletMarginLoss</span>
-<span class="n">loss_func</span> <span class="o">=</span> <span class="n">TripletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
-</code></pre></div>
-This loss function attempts to minimize [d<sub>ap</sub> - d<sub>an</sub> + margin]<sub>+</sub>.</p>
-<p>Typically, d<sub>ap</sub> and d<sub>an</sub> represent Euclidean or L2 distances. But what if we want to use a squared L2 distance, or an unnormalized L1 distance, or a completely different distance measure like signal-to-noise ratio? With the distances module, you can try out these ideas easily:
-<div class="highlight"><pre><span></span><code><span class="c1">### TripletMarginLoss with squared L2 distance ###</span>
-<span class="kn">from</span> <span class="nn">pytorch_metric_learning.distances</span> <span class="kn">import</span> <span class="n">LpDistance</span>
-<span class="n">loss_func</span> <span class="o">=</span> <span class="n">TripletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="n">LpDistance</span><span class="p">(</span><span class="n">power</span><span class="o">=</span><span class="mi">2</span><span class="p">))</span>
-
-<span class="c1">### TripletMarginLoss with unnormalized L1 distance ###</span>
-<span class="n">loss_func</span> <span class="o">=</span> <span class="n">TripletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="n">LpDistance</span><span class="p">(</span><span class="n">normalize_embeddings</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
-
-<span class="c1">### TripletMarginLoss with signal-to-noise ratio###</span>
-<span class="kn">from</span> <span class="nn">pytorch_metric_learning.distances</span> <span class="kn">import</span> <span class="n">SNRDistance</span>
-<span class="n">loss_func</span> <span class="o">=</span> <span class="n">TripletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="n">SNRDistance</span><span class="p">())</span>
-</code></pre></div></p>
-<p>You can also use similarity measures rather than distances, and the loss function will make the necessary adjustments:
-<div class="highlight"><pre><span></span><code><span class="c1">### TripletMarginLoss with cosine similarity##</span>
-<span class="kn">from</span> <span class="nn">pytorch_metric_learning.distances</span> <span class="kn">import</span> <span class="n">CosineSimilarity</span>
-<span class="n">loss_func</span> <span class="o">=</span> <span class="n">TripletMarginLoss</span><span class="p">(</span><span class="n">margin</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="n">CosineSimilarity</span><span class="p">())</span>
-</code></pre></div>
-With a similarity measure, the TripletMarginLoss internally swaps the anchor-positive and anchor-negative terms: [s<sub>an</sub> - s<sub>ap</sub> + margin]<sub>+</sub>. In other words, it will try to make the anchor-negative similarities smaller than the anchor-positive similarities.</p>
-<p>All <strong>losses, miners, and regularizers</strong> accept a <code>distance</code> argument. So you can try out the <code>MultiSimilarityMiner</code> using <code>SNRDistance</code>, or the <code>NTXentLoss</code> using <code>LpDistance(p=1)</code> and so on. Note that some losses/miners/regularizers have restrictions on the type of distances they can accept. For example, some classification losses only allow <code>CosineSimilarity</code> or <code>DotProductSimilarity</code> as their distance measure between embeddings and weights. To view restrictions for specific loss functions, see the <a href="../losses/">losses page</a></p>
-<h2 id="basedistance">BaseDistance<a class="headerlink" href="#basedistance" title="Permanent link">&para;</a></h2>
-<p>All distances extend this class and therefore inherit its <code>__init__</code> parameters.</p>
-<div class="highlight"><pre><span></span><code><span class="n">distances</span><span class="o">.</span><span class="n">BaseDistance</span><span class="p">(</span><span class="n">collect_stats</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-                        <span class="n">normalize_embeddings</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> 
-                        <span class="n">p</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> 
-                        <span class="n">power</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> 
-                        <span class="n">is_inverted</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<h1 id="datasets">Datasets<a class="headerlink" href="#datasets" title="Permanent link">&para;</a></h1>
+<p>Datasets classes give you a way to automatically download a dataset and transform it into a PyTorch dataset.</p>
+<p>All implemented datasets have disjoint train-test splits, ideal for benchmarking on image retrieval and one-shot/few-shot classification tasks.</p>
+<h2 id="basedataset">BaseDataset<a class="headerlink" href="#basedataset" title="Permanent link">&para;</a></h2>
+<p>All dataset classes extend this class and therefore inherit its <code>__init__</code> parameters.</p>
+<div class="highlight"><pre><span></span><code><span class="n">datasets</span><span class="o">.</span><span class="n">base_dataset</span><span class="o">.</span><span class="n">BaseDataset</span><span class="p">(</span>
+    <span class="n">root</span><span class="p">,</span> 
+    <span class="n">split</span><span class="o">=</span><span class="s2">&quot;train+test&quot;</span><span class="p">,</span> 
+    <span class="n">transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+    <span class="n">target_transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+    <span class="n">download</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span>
 </code></pre></div>
 <p><strong>Parameters</strong>:</p>
 <ul>
-<li><strong>collect_stats</strong>: If True, will collect various statistics that may be useful to analyze during experiments. If False, these computations will be skipped. Want to make <code>True</code> the default? Set the global <a href="../common_functions/#collect_stats">COLLECT_STATS</a> flag.</li>
-<li><strong>normalize_embeddings</strong>: If True, embeddings will be normalized to have an Lp norm of 1, before the distance/similarity matrix is computed.</li>
-<li><strong>p</strong>: The distance norm.</li>
-<li><strong>power</strong>: If not 1, each element of the distance/similarity matrix will be raised to this power.</li>
-<li><strong>is_inverted</strong>: Should be set by child classes. If False, then small values represent embeddings that are close together. If True, then large values represent embeddings that are similar to each other.</li>
+<li><strong>root</strong>: The path where the dataset files are saved.</li>
+<li><strong>split</strong>: A string that determines which split of the dataset is loaded. </li>
+<li><strong>transform</strong>: A <code>torchvision.transforms</code> object which will be used on the input images. </li>
+<li><strong>target_transform</strong>: A <code>torchvision.transforms</code> object which will be used on the labels. </li>
+<li><strong>download</strong>: Whether to download the dataset or not. Setting this as False, but not having the dataset on the disk will raise a ValueError.</li>
 </ul>
 <p><strong>Required Implementations</strong>:
-<div class="highlight"><pre><span></span><code><span class="c1"># Must return a matrix where mat[j,k] represents </span>
-<span class="c1"># the distance/similarity between query_emb[j] and ref_emb[k]</span>
-<span class="k">def</span> <span class="nf">compute_mat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query_emb</span><span class="p">,</span> <span class="n">ref_emb</span><span class="p">):</span>
-    <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+<div class="highlight"><pre><span></span><code>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">download_and_remove</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
-<span class="c1"># Must return a tensor where output[j] represents </span>
-<span class="c1"># the distance/similarity between query_emb[j] and ref_emb[j]</span>
-<span class="k">def</span> <span class="nf">pairwise_distance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">query_emb</span><span class="p">,</span> <span class="n">ref_emb</span><span class="p">):</span>
-    <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">generate_split</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 </code></pre></div></p>
-<h2 id="batcheddistance">BatchedDistance<a class="headerlink" href="#batcheddistance" title="Permanent link">&para;</a></h2>
-<p>Computes distance matrices iteratively, passing each matrix into <code>iter_fn</code>.</p>
-<div class="highlight"><pre><span></span><code><span class="n">distances</span><span class="o">.</span><span class="n">BatchedDistance</span><span class="p">(</span><span class="n">distance</span><span class="p">,</span> <span class="n">iter_fn</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">)</span>
+<h2 id="cub-200-2011">CUB-200-2011<a class="headerlink" href="#cub-200-2011" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="n">datasets</span><span class="o">.</span><span class="n">cub</span><span class="o">.</span><span class="n">CUB</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
-<p><strong>Parameters</strong>:</p>
+<p><strong>Defined splits</strong>: </p>
 <ul>
-<li><strong>distance</strong>: The wrapped distance function.</li>
-<li><strong>iter_fn</strong>: This function will be called at every iteration. It receives <code>(mat, s, e)</code> as input, where <code>mat</code> is the current distance matrix, and <code>s, e</code> is the range of query embeddings used to construct <code>mat</code>.</li>
-<li><strong>batch_size</strong>: Each distance matrix will be size <code>(batch_size, len(ref_emb))</code>.</li>
+<li><code>train</code> - Consists of 5864 examples, taken from classes 1 to 100.</li>
+<li><code>test</code> - Consists of 5924 examples, taken from classes 101 to 200.</li>
+<li><code>train+test</code> - Consists 11788 of examples, taken from all classes.</li>
 </ul>
-<p><strong>Example usage</strong>:
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pytorch_metric_learning.distances</span> <span class="kn">import</span> <span class="n">BatchedDistance</span><span class="p">,</span> <span class="n">CosineSimilarity</span>
-
-<span class="k">def</span> <span class="nf">fn</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">e</span><span class="p">):</span>
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;At query indices </span><span class="si">{</span><span class="n">s</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-
-<span class="n">distance</span> <span class="o">=</span> <span class="n">BatchedDistance</span><span class="p">(</span><span class="n">CosineSimilarity</span><span class="p">(),</span> <span class="n">fn</span><span class="p">)</span>
-
-<span class="c1"># Works like a regular distance function, except nothing is returned.</span>
-<span class="c1"># So any persistent changes need to be done in the supplied iter_fn.</span>
-<span class="c1"># query vs query</span>
-<span class="n">distance</span><span class="p">(</span><span class="n">embeddings</span><span class="p">)</span>
-<span class="c1"># query vs ref</span>
-<span class="n">distance</span><span class="p">(</span><span class="n">embeddings</span><span class="p">,</span> <span class="n">ref_emb</span><span class="p">)</span>
+<p><strong>Loading different dataset splits</strong>
+<div class="highlight"><pre><span></span><code><span class="n">train_dataset</span> <span class="o">=</span> <span class="n">CUB</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> 
+    <span class="n">split</span><span class="o">=</span><span class="s2">&quot;train&quot;</span><span class="p">,</span> 
+    <span class="n">transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+    <span class="n">target_transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+    <span class="n">download</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+<span class="c1"># No need to download the dataset after it is already downladed</span>
+<span class="n">test_dataset</span> <span class="o">=</span> <span class="n">CUB</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> 
+    <span class="n">split</span><span class="o">=</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> 
+    <span class="n">transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+    <span class="n">target_transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+    <span class="n">download</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span>
+<span class="n">train_and_test_dataset</span> <span class="o">=</span> <span class="n">CUB</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> 
+    <span class="n">split</span><span class="o">=</span><span class="s2">&quot;train+test&quot;</span><span class="p">,</span> 
+    <span class="n">transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+    <span class="n">target_transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+    <span class="n">download</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span> 
 </code></pre></div></p>
-<h2 id="cosinesimilarity">CosineSimilarity<a class="headerlink" href="#cosinesimilarity" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><span class="n">distances</span><span class="o">.</span><span class="n">CosineSimilarity</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<h2 id="cars196">Cars196<a class="headerlink" href="#cars196" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="n">datasets</span><span class="o">.</span><span class="n">cars196</span><span class="o">.</span><span class="n">Cars196</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
-<p>The returned <code>mat[i,j]</code> is the cosine similarity between <code>query_emb[i]</code> and <code>ref_emb[j]</code>. This class is equivalent to <a href="./#dotproductsimilarity"><code>DotProductSimilarity(normalize_embeddings=True)</code></a>.</p>
-<h2 id="dotproductsimilarity">DotProductSimilarity<a class="headerlink" href="#dotproductsimilarity" title="Permanent link">&para;</a></h2>
-<p><div class="highlight"><pre><span></span><code><span class="n">distances</span><span class="o">.</span><span class="n">DotProductSimilarity</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<p><strong>Defined splits</strong>: </p>
+<ul>
+<li><code>train</code> - Consists of 8054 examples, taken from classes 1 to 99.</li>
+<li><code>test</code> - Consists of 8131 examples, taken from classes 99 to 197.</li>
+<li><code>train+test</code> - Consists of 16185 examples, taken from all classes.</li>
+</ul>
+<p><strong>Loading different dataset splits</strong>
+<div class="highlight"><pre><span></span><code><span class="n">train_dataset</span> <span class="o">=</span> <span class="n">Cars196</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> 
+    <span class="n">split</span><span class="o">=</span><span class="s2">&quot;train&quot;</span><span class="p">,</span> 
+    <span class="n">transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+    <span class="n">target_transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+    <span class="n">download</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+<span class="c1"># No need to download the dataset after it is already downladed</span>
+<span class="n">test_dataset</span> <span class="o">=</span> <span class="n">Cars196</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> 
+    <span class="n">split</span><span class="o">=</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> 
+    <span class="n">transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+    <span class="n">target_transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+    <span class="n">download</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span>
+<span class="n">train_and_test_dataset</span> <span class="o">=</span> <span class="n">Cars196</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> 
+    <span class="n">split</span><span class="o">=</span><span class="s2">&quot;train+test&quot;</span><span class="p">,</span> 
+    <span class="n">transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+    <span class="n">target_transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+    <span class="n">download</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span> 
+</code></pre></div></p>
+<h2 id="inaturalist2018">INaturalist2018<a class="headerlink" href="#inaturalist2018" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="n">datasets</span><span class="o">.</span><span class="n">inaturalist2018</span><span class="o">.</span><span class="n">INaturalist2018</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
-The returned <code>mat[i,j]</code> is equal to <code>torch.sum(query_emb[i] * ref_emb[j])</code></p>
-<h2 id="lpdistance">LpDistance<a class="headerlink" href="#lpdistance" title="Permanent link">&para;</a></h2>
-<p><div class="highlight"><pre><span></span><code><span class="n">distances</span><span class="o">.</span><span class="n">LpDistance</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+<p><strong>Defined splits</strong>: </p>
+<ul>
+<li><code>train</code> - Consists of 325 846 examples.</li>
+<li><code>test</code> - Consists of 136 093 examples.</li>
+<li><code>train+test</code> - Consists of 461 939 examples.</li>
+</ul>
+<p><strong>Loading different dataset splits</strong>
+<div class="highlight"><pre><span></span><code><span class="c1"># The download takes a while - the dataset is very large</span>
+<span class="n">train_dataset</span> <span class="o">=</span> <span class="n">INaturalist2018</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> 
+    <span class="n">split</span><span class="o">=</span><span class="s2">&quot;train&quot;</span><span class="p">,</span> 
+    <span class="n">transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+    <span class="n">target_transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+    <span class="n">download</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+<span class="c1"># No need to download the dataset after it is already downladed</span>
+<span class="n">test_dataset</span> <span class="o">=</span> <span class="n">INaturalist2018</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> 
+    <span class="n">split</span><span class="o">=</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> 
+    <span class="n">transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+    <span class="n">target_transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+    <span class="n">download</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span>
+<span class="n">train_and_test_dataset</span> <span class="o">=</span> <span class="n">INaturalist2018</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> 
+    <span class="n">split</span><span class="o">=</span><span class="s2">&quot;train+test&quot;</span><span class="p">,</span> 
+    <span class="n">transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+    <span class="n">target_transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+    <span class="n">download</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span> 
+</code></pre></div></p>
+<h2 id="stanfordonlineproducts">StanfordOnlineProducts<a class="headerlink" href="#stanfordonlineproducts" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="n">datasets</span><span class="o">.</span><span class="n">sop</span><span class="o">.</span><span class="n">StanfordOnlineProducts</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </code></pre></div>
-The returned <code>mat[i,j]</code> is the Lp distance between <code>query_emb[i]</code> and <code>ref_emb[j]</code>. With default parameters, this is the Euclidean distance.</p>
-<h2 id="snrdistance">SNRDistance<a class="headerlink" href="#snrdistance" title="Permanent link">&para;</a></h2>
-<p><a href="http://openaccess.thecvf.com/content_CVPR_2019/papers/Yuan_Signal-To-Noise_Ratio_A_Robust_Distance_Metric_for_Deep_Metric_Learning_CVPR_2019_paper.pdf" target="_blank">Signal-to-Noise Ratio: A Robust Distance Metric for Deep Metric Learning</a>
-<div class="highlight"><pre><span></span><code><span class="n">distances</span><span class="o">.</span><span class="n">SNRDistance</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</code></pre></div>
-The returned <code>mat[i,j]</code> is equal to:</p>
-<div class="highlight"><pre><span></span><code><span class="n">torch</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">query_emb</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">ref_emb</span><span class="p">[</span><span class="n">j</span><span class="p">])</span> <span class="o">/</span> <span class="n">torch</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">query_emb</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
-</code></pre></div>
+<p><strong>Defined splits</strong>: </p>
+<ul>
+<li><code>train</code> - Consists of 59551 examples.</li>
+<li><code>test</code> - Consists of 60502 examples.</li>
+<li><code>train+test</code> - Consists of 120 053 examples.</li>
+</ul>
+<p><strong>Loading different dataset splits</strong>
+<div class="highlight"><pre><span></span><code><span class="c1"># The download takes a while - the dataset is very large</span>
+<span class="n">train_dataset</span> <span class="o">=</span> <span class="n">StanfordOnlineProducts</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> 
+    <span class="n">split</span><span class="o">=</span><span class="s2">&quot;train&quot;</span><span class="p">,</span> 
+    <span class="n">transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+    <span class="n">target_transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+    <span class="n">download</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+<span class="c1"># No need to download the dataset after it is already downladed</span>
+<span class="n">test_dataset</span> <span class="o">=</span> <span class="n">StanfordOnlineProducts</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> 
+    <span class="n">split</span><span class="o">=</span><span class="s2">&quot;test&quot;</span><span class="p">,</span> 
+    <span class="n">transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+    <span class="n">target_transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+    <span class="n">download</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span>
+<span class="n">train_and_test_dataset</span> <span class="o">=</span> <span class="n">StanfordOnlineProducts</span><span class="p">(</span><span class="n">root</span><span class="o">=</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> 
+    <span class="n">split</span><span class="o">=</span><span class="s2">&quot;train+test&quot;</span><span class="p">,</span> 
+    <span class="n">transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+    <span class="n">target_transform</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+    <span class="n">download</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span> 
+</code></pre></div></p>
 
 
 

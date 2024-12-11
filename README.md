@@ -20,10 +20,10 @@
 
 **December 11**: v2.8.0
 - Added the [Datasets](https://kevinmusgrave.github.io/pytorch-metric-learning/datasets) module for easy downloading of common datasets:
-  - Cars196
-  - CUB200
-  - INaturalist 2018
-  - Stanford Online Products
+  - [CUB200](https://kevinmusgrave.github.io/pytorch-metric-learning/datasets/#cub-200-2011)
+  - [Cars196](https://kevinmusgrave.github.io/pytorch-metric-learning/datasets/#cars196)
+  - [INaturalist 2018](https://kevinmusgrave.github.io/pytorch-metric-learning/datasets/#inaturalist2018)
+  - [Stanford Online Products](https://kevinmusgrave.github.io/pytorch-metric-learning/datasets/#stanfordonlineproducts)
 - Thank you [ir2718](https://github.com/ir2718).
 
 **November 2**: v2.7.0

@@ -1,4 +1,14 @@
 ## Library contents
+
+### [Datasets](https://kevinmusgrave.github.io/pytorch-metric-learning/datasets)
+| Name | Reference Papers |
+|---|---|
+| [**CUB**](https://kevinmusgrave.github.io/pytorch-metric-learning/datasets/#cub-200-2011) | [The caltech-ucsd birds-200-2011 dataset](https://authors.library.caltech.edu/27452/1/CUB_200_2011.pdf)
+| [**Cars196**](https://kevinmusgrave.github.io/pytorch-metric-learning/datasets/#cars196) | 3D Object Representations for Fine-Grained Categorization
+| [**INaturalist2018**](https://kevinmusgrave.github.io/pytorch-metric-learning/datasets/#inaturalist2018) | [The iNaturalist Species Classification and Detection Dataset](https://openaccess.thecvf.com/content_cvpr_2018/papers/Van_Horn_The_INaturalist_Species_CVPR_2018_paper.pdf)
+| [**StanfordOnlineProducts**](https://kevinmusgrave.github.io/pytorch-metric-learning/datasets/#stanfordonlineproducts) | [Deep Metric Learning via Lifted Structured Feature Embedding](https://cvgl.stanford.edu/papers/song_cvpr16.pdf)
+
+
 ### [Distances](https://kevinmusgrave.github.io/pytorch-metric-learning/distances)
 | Name | Reference Papers |
 |---|---|
@@ -40,6 +50,7 @@
 | [**SphereFaceLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#spherefaceloss) | [SphereFace: Deep Hypersphere Embedding for Face Recognition](https://arxiv.org/pdf/1704.08063.pdf)
 | [**SubCenterArcFaceLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#subcenterarcfaceloss) | [Sub-center ArcFace: Boosting Face Recognition by Large-scale Noisy Web Faces](https://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123560715.pdf)
 | [**SupConLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#supconloss) | [Supervised Contrastive Learning](https://arxiv.org/abs/2004.11362)
+| [**ThresholdConsistentMarginLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#thresholdconsistentmarginloss) | [Threshold-Consistent Margin Loss for Open-World Deep Metric Learning](https://arxiv.org/pdf/2307.04047)
 | [**TripletMarginLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#tripletmarginloss) | [Distance Metric Learning for Large Margin Nearest Neighbor Classification](https://papers.nips.cc/paper/2795-distance-metric-learning-for-large-margin-nearest-neighbor-classification.pdf)
 | [**TupletMarginLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#tupletmarginloss) | [Deep Metric Learning with Tuplet Margin Loss](http://openaccess.thecvf.com/content_ICCV_2019/papers/Yu_Deep_Metric_Learning_With_Tuplet_Margin_Loss_ICCV_2019_paper.pdf)
 | [**VICRegLoss**](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#vicregloss) | [VICReg: Variance-Invariance-Covariance Regularization for Self-Supervised Learning](https://arxiv.org/pdf/2105.04906.pdf)

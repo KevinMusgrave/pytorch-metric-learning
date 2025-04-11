@@ -6,6 +6,7 @@ import torch
 import torch.nn.functional as F
 
 from pytorch_metric_learning.losses import ArcFaceLoss, SubCenterArcFaceLoss
+from pytorch_metric_learning.reducers import DoNothingReducer
 
 from .. import TEST_DEVICE, TEST_DTYPES
 
@@ -142,3 +143,19 @@ class TestSubCenterArcFaceLoss(unittest.TestCase):
                     )
                     == 0
                 )
+
+    def test_reducer_subcenter_arcface(self):
+
+        arcfaceloss = SubCenterArcFaceLoss(
+            num_classes=10,
+            sub_centers=3,
+            embedding_size=64,
+            reducer=DoNothingReducer(),
+        )
+        
+        emb = torch.randn(4, 64)
+        result = arcfaceloss(emb, torch.arange(4))
+
+        self.assertTrue(isinstance(result, dict))
+        self.assertTrue(result['loss']['losses'].shape[0] == 4)
+        

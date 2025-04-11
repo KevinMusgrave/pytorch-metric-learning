@@ -30,6 +30,7 @@ from .proxy_losses import ProxyNCALoss
 from .ranked_list_loss import RankedListLoss
 from .self_supervised_loss import SelfSupervisedLoss
 from .signal_to_noise_ratio_losses import SignalToNoiseRatioContrastiveLoss
+from .smooth_ap import SmoothAPLoss
 from .soft_triple_loss import SoftTripleLoss
 from .sphereface_loss import SphereFaceLoss
 from .subcenter_arcface_loss import SubCenterArcFaceLoss

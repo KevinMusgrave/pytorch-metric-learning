@@ -28,6 +28,7 @@ class GenericPairLoss(BaseMetricLossFunction):
         pos_mask, neg_mask = torch.zeros_like(mat), torch.zeros_like(mat)
         pos_mask[a1, p] = 1
         neg_mask[a2, n] = 1
+        self._assert_either_pos_or_neg(pos_mask, neg_mask)
         return self._compute_loss(mat, pos_mask, neg_mask)
 
     def pair_based_loss(self, mat, indices_tuple):
@@ -38,3 +39,9 @@ class GenericPairLoss(BaseMetricLossFunction):
         if len(a2) > 0:
             neg_pair = mat[a2, n]
         return self._compute_loss(pos_pair, neg_pair, indices_tuple)
+
+    @staticmethod
+    def _assert_either_pos_or_neg(pos_mask, neg_mask):
+        assert not torch.any(
+            (pos_mask != 0) & (neg_mask != 0)
+        ), "Each pair should be either be positive or negative"

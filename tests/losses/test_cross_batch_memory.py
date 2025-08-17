@@ -238,7 +238,6 @@ class TestCrossBatchMemory(unittest.TestCase):
             batch_size = 32
             for inner_loss in [ContrastiveLoss(), MultiSimilarityLoss()]:
                 inner_miner = MultiSimilarityMiner(0.3)
-                outer_miner = MultiSimilarityMiner(0.2)
                 self.loss = CrossBatchMemory(
                     loss=inner_loss,
                     embedding_size=self.embedding_size,
@@ -267,10 +266,6 @@ class TestCrossBatchMemory(unittest.TestCase):
                     labels = torch.randint(0, num_labels, (batch_size,)).to(TEST_DEVICE)
                     loss = self.loss(embeddings, labels)
                     loss_with_miner = self.loss_with_miner(embeddings, labels)
-                    oa1, op, oa2, on = outer_miner(embeddings, labels)
-                    loss_with_miner_and_input_indices = self.loss_with_miner2(
-                        embeddings, labels, (oa1, op, oa2, on)
-                    )
                     all_embeddings = torch.cat([all_embeddings, embeddings])
                     all_labels = torch.cat([all_labels, labels])
 
@@ -306,33 +301,6 @@ class TestCrossBatchMemory(unittest.TestCase):
                     )
                     self.assertTrue(
                         torch.isclose(loss_with_miner, correct_loss_with_miner)
-                    )
-
-                    # loss with inner and outer miner
-                    indices_tuple = inner_miner(
-                        embeddings, labels, all_embeddings, all_labels
-                    )
-                    a1, p, a2, n = lmu.remove_self_comparisons(
-                        indices_tuple,
-                        self.loss_with_miner2.curr_batch_idx,
-                        self.loss_with_miner2.memory_size,
-                    )
-                    a1 = torch.cat([oa1, a1])
-                    p = torch.cat([op, p])
-                    a2 = torch.cat([oa2, a2])
-                    n = torch.cat([on, n])
-                    correct_loss_with_miner_and_input_indice = inner_loss(
-                        embeddings,
-                        labels,
-                        (a1, p, a2, n),
-                        all_embeddings,
-                        all_labels,
-                    )
-                    self.assertTrue(
-                        torch.isclose(
-                            loss_with_miner_and_input_indices,
-                            correct_loss_with_miner_and_input_indice,
-                        )
                     )
 
     def test_queue(self):

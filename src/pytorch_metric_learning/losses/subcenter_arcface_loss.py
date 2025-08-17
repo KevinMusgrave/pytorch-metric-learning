@@ -1,4 +1,5 @@
 import math
+from copy import deepcopy
 
 import numpy as np
 import torch
@@ -13,9 +14,16 @@ class SubCenterArcFaceLoss(ArcFaceLoss):
     """
 
     def __init__(self, *args, margin=28.6, scale=64, sub_centers=3, **kwargs):
-        num_classes, embedding_size = kwargs["num_classes"], kwargs["embedding_size"]
+        num_classes = deepcopy(kwargs["num_classes"])
+        embedding_size = deepcopy(kwargs["embedding_size"])
+        del kwargs["num_classes"]
+        del kwargs["embedding_size"]
         super().__init__(
-            num_classes * sub_centers, embedding_size, margin=margin, scale=scale
+            num_classes=num_classes * sub_centers,
+            embedding_size=embedding_size,
+            margin=margin,
+            scale=scale,
+            **kwargs
         )
         self.sub_centers = sub_centers
         self.num_classes = num_classes

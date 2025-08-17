@@ -6,6 +6,7 @@ import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 
 from pytorch_metric_learning.datasets import StanfordOnlineProducts
+
 from .. import TEST_DATASETS
 
 

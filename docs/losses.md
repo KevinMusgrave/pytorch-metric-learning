@@ -1092,7 +1092,7 @@ losses.SignalToNoiseRatioContrastiveLoss(pos_margin=0, neg_margin=1, **kwargs):
 
 ```python
 losses.SmoothAPLoss(
-    margin=0.01,
+    temperature=0.01,
     **kwargs
 )
 ```
@@ -1111,7 +1111,7 @@ losses.SmoothAPLoss(
 
 **Other info**: 
 
-* The loss requires the same number of number of elements for each class in the batch labels. An example of valid labels is: `[1, 1, 2, 2, 3, 3]`. An example of invalid labels is `[1, 1, 1, 2, 2, 3, 3]` because there are `3` elements with the value `1`. This can be achieved by using `samplers.MPerClassSampler` and setting the `batch_size` and `m` hyperparameters.
+* The loss requires the same number of number of elements for each class in the batch labels. An example of valid labels is: `[1, 1, 2, 2, 3, 3]`. An example of invalid labels is `[1, 1, 1, 2, 2, 3, 3]` because there are `3` elements with the value `1`. This can be achieved by using [`samplers.MPerClassSampler`](samplers.md/#mperclasssampler) and setting the `batch_size` and `m` hyperparameters.
 
 **Default distance**: 
 

@@ -18,16 +18,17 @@
 
 ## News
 
+**August 17**: v2.9.0
+- Added [SmoothAPLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#smoothaploss).
+- Improved SubCenterArcFaceLoss and GenericPairLoss.
+- Thank you [ir2718](https://github.com/ir2718), [lucamarini22](https://github.com/lucamarini22), and [marcpaga](https://github.com/marcpaga).
+
 **December 11**: v2.8.0
 - Added the [Datasets](https://kevinmusgrave.github.io/pytorch-metric-learning/datasets) module for easy downloading of common datasets:
   - [CUB200](https://kevinmusgrave.github.io/pytorch-metric-learning/datasets/#cub-200-2011)
   - [Cars196](https://kevinmusgrave.github.io/pytorch-metric-learning/datasets/#cars196)
   - [INaturalist 2018](https://kevinmusgrave.github.io/pytorch-metric-learning/datasets/#inaturalist2018)
   - [Stanford Online Products](https://kevinmusgrave.github.io/pytorch-metric-learning/datasets/#stanfordonlineproducts)
-- Thank you [ir2718](https://github.com/ir2718).
-
-**November 2**: v2.7.0
-- Added [ThresholdConsistentMarginLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#thresholdconsistentmarginloss).
 - Thank you [ir2718](https://github.com/ir2718).
 
 ## Documentation
@@ -231,7 +232,7 @@ Thanks to the contributors who made pull requests!
 |[domenicoMuscill0](https://github.com/domenicoMuscill0)| - [ManifoldLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#manifoldloss) <br/> - [P2SGradLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#p2sgradloss) <br/> - [HistogramLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#histogramloss) <br/> - [DynamicSoftMarginLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#dynamicsoftmarginloss) <br/> - [RankedListLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#rankedlistloss) |
 |[mlopezantequera](https://github.com/mlopezantequera) | - Made the [testers](https://kevinmusgrave.github.io/pytorch-metric-learning/testers) work on any combination of query and reference sets <br/> - Made [AccuracyCalculator](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/) work with arbitrary label comparisons |
 |[cwkeam](https://github.com/cwkeam) | - [SelfSupervisedLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#selfsupervisedloss) <br/> - [VICRegLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#vicregloss) <br/> - Added mean reciprocal rank accuracy to [AccuracyCalculator](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/) <br/> - BaseLossWrapper|
-| [ir2718](https://github.com/ir2718) | - [ThresholdConsistentMarginLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#thresholdconsistentmarginloss)  <br/> - The [Datasets](https://kevinmusgrave.github.io/pytorch-metric-learning/datasets) module |
+| [ir2718](https://github.com/ir2718) | - [ThresholdConsistentMarginLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#thresholdconsistentmarginloss) <br/> - [SmoothAPLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#smoothaploss) <br/> - The [Datasets](https://kevinmusgrave.github.io/pytorch-metric-learning/datasets) module |
 |[marijnl](https://github.com/marijnl)| - [BatchEasyHardMiner](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#batcheasyhardminer) <br/> - [TwoStreamMetricLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/trainers/#twostreammetricloss) <br/> - [GlobalTwoStreamEmbeddingSpaceTester](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#globaltwostreamembeddingspacetester) <br/> - [Example using trainers.TwoStreamMetricLoss](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/TwoStreamMetricLoss.ipynb) |
 | [chingisooinar](https://github.com/chingisooinar) | [SubCenterArcFaceLoss](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/#subcenterarcfaceloss) |
 | [elias-ramzi](https://github.com/elias-ramzi) | [HierarchicalSampler](https://kevinmusgrave.github.io/pytorch-metric-learning/samplers/#hierarchicalsampler) |
@@ -252,6 +253,8 @@ Thanks to the contributors who made pull requests!
 | [stompsjo](https://github.com/stompsjo) | Improved documentation for NTXentLoss. |
 | [Puzer](https://github.com/Puzer) | Bug fix for PNPLoss. |
 | [elisim](https://github.com/elisim) | Developer improvements to DistributedLossWrapper. |
+| [lucamarini22](https://github.com/lucamarini22) | |
+| [marcpaga]((https://github.com/marcpaga) | |
 | [GaetanLepage](https://github.com/GaetanLepage) | |
 | [z1w](https://github.com/z1w) | |
 | [thinline72](https://github.com/thinline72) | |

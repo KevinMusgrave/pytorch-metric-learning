@@ -19,7 +19,11 @@ class SubCenterArcFaceLoss(ArcFaceLoss):
         del kwargs["num_classes"]
         del kwargs["embedding_size"]
         super().__init__(
-            num_classes=num_classes * sub_centers, embedding_size=embedding_size, margin=margin, scale=scale, **kwargs
+            num_classes=num_classes * sub_centers,
+            embedding_size=embedding_size,
+            margin=margin,
+            scale=scale,
+            **kwargs
         )
         self.sub_centers = sub_centers
         self.num_classes = num_classes

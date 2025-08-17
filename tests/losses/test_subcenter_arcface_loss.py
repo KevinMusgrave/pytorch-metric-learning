@@ -152,10 +152,9 @@ class TestSubCenterArcFaceLoss(unittest.TestCase):
             embedding_size=64,
             reducer=DoNothingReducer(),
         )
-        
+
         emb = torch.randn(4, 64)
         result = arcfaceloss(emb, torch.arange(4))
 
         self.assertTrue(isinstance(result, dict))
-        self.assertTrue(result['loss']['losses'].shape[0] == 4)
-        
+        self.assertTrue(result["loss"]["losses"].shape[0] == 4)

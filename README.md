@@ -254,7 +254,7 @@ Thanks to the contributors who made pull requests!
 | [Puzer](https://github.com/Puzer) | Bug fix for PNPLoss. |
 | [elisim](https://github.com/elisim) | Developer improvements to DistributedLossWrapper. |
 | [lucamarini22](https://github.com/lucamarini22) | |
-| [marcpaga]((https://github.com/marcpaga) | |
+| [marcpaga](https://github.com/marcpaga) | |
 | [GaetanLepage](https://github.com/GaetanLepage) | |
 | [z1w](https://github.com/z1w) | |
 | [thinline72](https://github.com/thinline72) | |

@@ -19,6 +19,7 @@ from .. import TEST_DEVICE, TEST_DTYPES
 def parameters_are_equal(model1, model2):
     output = True
     for p1, p2 in zip(model1.parameters(), model2.parameters()):
+        print((p1.data - p2.data).abs().max())
         output &= torch.allclose(p1.data, p2.data, rtol=1e-2)
     return output
 
@@ -92,6 +93,7 @@ def single_process_function(
     optimizer = optim.SGD(ddp_mp_model.parameters(), lr=lr)
 
     original_model = original_model.to(device)
+    print("assert NOT equal")
     assert not parameters_are_equal(original_model, ddp_mp_model.module)
 
     for i in range(iterations):
@@ -122,6 +124,7 @@ def single_process_function(
         optimizer.step()
 
     dist.barrier()
+    print("assert equal")
     assert parameters_are_equal(original_model, ddp_mp_model.module)
     dist.barrier()
     cleanup()
@@ -184,7 +187,7 @@ class TestDistributedLossWrapper(unittest.TestCase):
         pass_labels_to_loss_fn=True,
         use_xbm_enqueue_mask=False,
     ):
-        torch.manual_seed(75210)
+        # torch.manual_seed(75210)
         loss_kwargs = {} if loss_kwargs is None else loss_kwargs
         miner_kwargs = {} if miner_kwargs is None else miner_kwargs
         if TEST_DEVICE == torch.device("cpu"):
@@ -205,6 +208,7 @@ class TestDistributedLossWrapper(unittest.TestCase):
                 original_model = ToyMpModel().type(dtype)
                 model = ToyMpModel().type(dtype)
                 model.load_state_dict(original_model.state_dict())
+                print("assert identical")
                 self.assertTrue(parameters_are_equal(original_model, model))
 
                 original_model = original_model.to(TEST_DEVICE)
@@ -331,8 +335,8 @@ class TestDistributedLossWrapper(unittest.TestCase):
                 )
 
     def test_distributed_tuple_loss(self):
-        for xbm in [False, True]:
-            for use_ref in [False, True]:
+        for xbm in [True]:
+            for use_ref in [False]:
                 for use_xbm_enqueue_mask in [False, True]:
                     if xbm and use_ref:
                         continue

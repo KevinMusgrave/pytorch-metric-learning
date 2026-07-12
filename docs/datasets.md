@@ -10,10 +10,10 @@ All dataset classes extend this class and therefore inherit its ```__init__``` p
 
 ```python
 datasets.base_dataset.BaseDataset(
-    root, 
-    split="train+test", 
-    transform=None, 
-    target_transform=None, 
+    root,
+    split="train+test",
+    transform=None,
+    target_transform=None,
     download=False
 )
 ```
@@ -21,9 +21,9 @@ datasets.base_dataset.BaseDataset(
 **Parameters**:
 
 * **root**: The path where the dataset files are saved.
-* **split**: A string that determines which split of the dataset is loaded. 
-* **transform**: A `torchvision.transforms` object which will be used on the input images. 
-* **target_transform**: A `torchvision.transforms` object which will be used on the labels. 
+* **split**: A string that determines which split of the dataset is loaded.
+* **transform**: A `torchvision.transforms` object which will be used on the input images.
+* **target_transform**: A `torchvision.transforms` object which will be used on the labels.
 * **download**: Whether to download the dataset or not. Setting this as False, but not having the dataset on the disk will raise a ValueError.
 
 **Required Implementations**:
@@ -43,7 +43,7 @@ datasets.base_dataset.BaseDataset(
 datasets.CUB(*args, **kwargs)
 ```
 
-**Defined splits**: 
+**Defined splits**:
 
 - `train` - Consists of 5864 examples, taken from classes 1 to 100.
 - `test` - Consists of 5924 examples, taken from classes 101 to 200.
@@ -51,25 +51,25 @@ datasets.CUB(*args, **kwargs)
 
 **Loading different dataset splits**
 ```python
-train_dataset = CUB(root="data", 
-    split="train", 
-    transform=None, 
-    target_transform=None, 
+train_dataset = CUB(root="data",
+    split="train",
+    transform=None,
+    target_transform=None,
     download=True
 )
 # No need to download the dataset after it is already downladed
-test_dataset = CUB(root="data", 
-    split="test", 
-    transform=None, 
-    target_transform=None, 
+test_dataset = CUB(root="data",
+    split="test",
+    transform=None,
+    target_transform=None,
     download=False
 )
-train_and_test_dataset = CUB(root="data", 
-    split="train+test", 
-    transform=None, 
-    target_transform=None, 
+train_and_test_dataset = CUB(root="data",
+    split="train+test",
+    transform=None,
+    target_transform=None,
     download=False
-) 
+)
 ```
 
 ## Cars196
@@ -78,7 +78,7 @@ train_and_test_dataset = CUB(root="data",
 datasets.Cars196(*args, **kwargs)
 ```
 
-**Defined splits**: 
+**Defined splits**:
 
 - `train` - Consists of 8054 examples, taken from classes 1 to 99.
 - `test` - Consists of 8131 examples, taken from classes 99 to 197.
@@ -86,25 +86,25 @@ datasets.Cars196(*args, **kwargs)
 
 **Loading different dataset splits**
 ```python
-train_dataset = Cars196(root="data", 
-    split="train", 
-    transform=None, 
-    target_transform=None, 
+train_dataset = Cars196(root="data",
+    split="train",
+    transform=None,
+    target_transform=None,
     download=True
 )
 # No need to download the dataset after it is already downladed
-test_dataset = Cars196(root="data", 
-    split="test", 
-    transform=None, 
-    target_transform=None, 
+test_dataset = Cars196(root="data",
+    split="test",
+    transform=None,
+    target_transform=None,
     download=False
 )
-train_and_test_dataset = Cars196(root="data", 
-    split="train+test", 
-    transform=None, 
-    target_transform=None, 
+train_and_test_dataset = Cars196(root="data",
+    split="train+test",
+    transform=None,
+    target_transform=None,
     download=False
-) 
+)
 ```
 
 ## INaturalist2018
@@ -113,7 +113,7 @@ train_and_test_dataset = Cars196(root="data",
 datasets.INaturalist2018(*args, **kwargs)
 ```
 
-**Defined splits**: 
+**Defined splits**:
 
 - `train` - Consists of 325 846 examples.
 - `test` - Consists of 136 093 examples.
@@ -122,25 +122,25 @@ datasets.INaturalist2018(*args, **kwargs)
 **Loading different dataset splits**
 ```python
 # The download takes a while - the dataset is very large
-train_dataset = INaturalist2018(root="data", 
-    split="train", 
-    transform=None, 
-    target_transform=None, 
+train_dataset = INaturalist2018(root="data",
+    split="train",
+    transform=None,
+    target_transform=None,
     download=True
 )
 # No need to download the dataset after it is already downladed
-test_dataset = INaturalist2018(root="data", 
-    split="test", 
-    transform=None, 
-    target_transform=None, 
+test_dataset = INaturalist2018(root="data",
+    split="test",
+    transform=None,
+    target_transform=None,
     download=False
 )
-train_and_test_dataset = INaturalist2018(root="data", 
-    split="train+test", 
-    transform=None, 
-    target_transform=None, 
+train_and_test_dataset = INaturalist2018(root="data",
+    split="train+test",
+    transform=None,
+    target_transform=None,
     download=False
-) 
+)
 ```
 
 ## StanfordOnlineProducts
@@ -149,7 +149,7 @@ train_and_test_dataset = INaturalist2018(root="data",
 datasets.StanfordOnlineProducts(*args, **kwargs)
 ```
 
-**Defined splits**: 
+**Defined splits**:
 
 - `train` - Consists of 59551 examples.
 - `test` - Consists of 60502 examples.
@@ -158,23 +158,23 @@ datasets.StanfordOnlineProducts(*args, **kwargs)
 **Loading different dataset splits**
 ```python
 # The download takes a while - the dataset is very large
-train_dataset = StanfordOnlineProducts(root="data", 
-    split="train", 
-    transform=None, 
-    target_transform=None, 
+train_dataset = StanfordOnlineProducts(root="data",
+    split="train",
+    transform=None,
+    target_transform=None,
     download=True
 )
 # No need to download the dataset after it is already downladed
-test_dataset = StanfordOnlineProducts(root="data", 
-    split="test", 
-    transform=None, 
-    target_transform=None, 
+test_dataset = StanfordOnlineProducts(root="data",
+    split="test",
+    transform=None,
+    target_transform=None,
     download=False
 )
-train_and_test_dataset = StanfordOnlineProducts(root="data", 
-    split="train+test", 
-    transform=None, 
-    target_transform=None, 
+train_and_test_dataset = StanfordOnlineProducts(root="data",
+    split="train+test",
+    transform=None,
+    target_transform=None,
     download=False
-) 
+)
 ```

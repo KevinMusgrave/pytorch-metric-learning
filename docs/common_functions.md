@@ -41,7 +41,7 @@ c_f.NUMPY_RANDOM = np.random.RandomState(42)
 
 
 ## TorchInitWrapper
-A simpler wrapper to convert the torch weight initialization functions into class form, which can then be applied within loss functions. 
+A simpler wrapper to convert the torch weight initialization functions into class form, which can then be applied within loss functions.
 
 Example usage:
 ```python

@@ -36,7 +36,7 @@ def example_label_comparison_fn(x, y):
     return (x[:, 0] == y[:, 0]) & (x[:, 1] != y[:, 1])
 
 knn_func = CustomKNN(SNRDistance())
-AccuracyCalculator(exclude=("NMI", "AMI"), 
+AccuracyCalculator(exclude=("NMI", "AMI"),
                     label_comparison_fn=example_label_comparison_fn,
                     knn_func=knn_func)
 ```
@@ -45,12 +45,12 @@ AccuracyCalculator(exclude=("NMI", "AMI"),
 
 Call the ```get_accuracy``` method to obtain a dictionary of accuracies.
 ```python
-def get_accuracy(self, 
+def get_accuracy(self,
 	query,
-    query_labels,  		
+    query_labels,
 	reference=None,
-	reference_labels=None, 
-	ref_includes_query=False, 
+	reference_labels=None,
+	ref_includes_query=False,
 	include=(),
 	exclude=()
 ):
@@ -66,7 +66,7 @@ def get_accuracy(self,
 * **query**: A 2D torch or numpy array of size ```(Nq, D)```, where Nq is the number of query samples. For each query sample, nearest neighbors are retrieved and accuracy is computed.
 * **query_labels**: A 1D torch or numpy array of size ```(Nq)```. Each element should be an integer representing the sample's label.
 * **reference**: A 2D torch or numpy array of size ```(Nr, D)```, where Nr is the number of reference samples. This is where nearest neighbors are retrieved from.
-* **reference_labels**: A 1D torch or numpy array of size ```(Nr)```. Each element should be an integer representing the sample's label. 
+* **reference_labels**: A 1D torch or numpy array of size ```(Nr)```. Each element should be an integer representing the sample's label.
 * **ref_includes_query**: Set to True if ```query``` is a subset of ```reference``` or if ```query is reference```. Set to False otherwise.
 * **include**: Optional. A list or tuple of strings, which are the names of metrics you want to calculate. If left empty, all metrics specified during initialization will be calculated.
 * **exclude**: Optional. A list or tuple of strings, which are the names of metrics you do not want to calculate.
@@ -83,14 +83,14 @@ For example, if the input ```query_labels``` is ```[0,0,1,1]``` and ```reference
 ### CPU/GPU usage
 
 * If you installed ```faiss-cpu``` then the CPU will always be used.
-* If you installed ```faiss-gpu```, then the GPU will be used if ```k <= 1024``` for CUDA < 9.5, and ```k <= 2048``` for CUDA >= 9.5. If this condition is not met, then the CPU will be used. 
+* If you installed ```faiss-gpu```, then the GPU will be used if ```k <= 1024``` for CUDA < 9.5, and ```k <= 2048``` for CUDA >= 9.5. If this condition is not met, then the CPU will be used.
 
 If your dataset is large, you might find the k-nn search is very slow. This is because the default behavior is to set k to ```len(reference_embeddings)```. To avoid this, you can set k to a number, like ```k = 1000```, or try ```k = "max_bin_count"```.
 
 
 ### Explanations of the default accuracy metrics
 
-- **AMI**: 
+- **AMI**:
 
      - [scikit-learn article](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.adjusted_mutual_info_score.html)
      - [Wikipedia](https://en.wikipedia.org/wiki/Adjusted_mutual_information)
@@ -141,17 +141,17 @@ class YourCalculator(accuracy_calculator.AccuracyCalculator):
         return fancy_computations
 
     def requires_clustering(self):
-        return super().requires_clustering() + ["fancy_mutual_info"] 
+        return super().requires_clustering() + ["fancy_mutual_info"]
 
     def requires_knn(self):
-    	return super().requires_knn() + ["precision_at_2"] 
+    	return super().requires_knn() + ["precision_at_2"]
 ```
 
 Any method that starts with "calculate_" will be passed the following kwargs:
 ```python
 kwargs = {"query": query,                    # query embeddings
     "reference": reference,                  # reference embeddings
-    "query_labels": query_labels,        
+    "query_labels": query_labels,
     "reference_labels": reference_labels,
     "ref_includes_query": e}  # True if query is reference, or if query is a subset of reference.
 ```
@@ -163,7 +163,7 @@ If your method requires a k-nearest neighbors search, then append your method's 
     "knn_labels": knn_labels,                # A 2d array where each row is the labels of the nearest neighbors of each query. The neighbors are retrieved from the reference set
     "knn_distances": knn_distances           # The euclidean distance corresponding to each k-nearest neighbor in knn_labels
     "lone_query_labels": lone_query_labels   # The set of labels (in the form of a torch array) that have only 1 occurrence in reference_labels
-    "not_lone_query_mask": not_lone_query_mask} # A boolean mask, where True means that a query element has at least 1 possible neighbor in reference.           
+    "not_lone_query_mask": not_lone_query_mask} # A boolean mask, where True means that a query element has at least 1 possible neighbor in reference.
 ```
 
 If your method requires cluster labels, then append your method's name to the ```requires_clustering``` list, as shown in the above example. Then, if any of your methods need cluster labels, ```self.get_cluster_labels()``` will be called, and the kwargs will include:

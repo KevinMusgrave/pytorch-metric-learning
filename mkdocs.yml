@@ -10,7 +10,7 @@ nav:
     - Samplers: samplers.md
     - Trainers: trainers.md
     - Testers: testers.md
-    - Utils: 
+    - Utils:
       - Accuracy Calculation: accuracy_calculation.md
       - Inference Models: inference_models.md
       - Logging Presets: logging_presets.md
@@ -32,7 +32,7 @@ markdown_extensions:
   - admonition
   - pymdownx.details
   - pymdownx.highlight
-  - pymdownx.superfences 
+  - pymdownx.superfences
   - toc:
       permalink: true
   - attr_list

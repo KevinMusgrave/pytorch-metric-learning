@@ -8,9 +8,9 @@
  <a href="https://pypi.org/project/pytorch-metric-learning">
      <img alt="PyPi version" src="https://img.shields.io/pypi/v/pytorch-metric-learning?color=bright-green">
  </a>
-	
-	
- 
+
+
+
  <a href="https://anaconda.org/conda-forge/pytorch-metric-learning">
      <img alt="Anaconda version" src="https://img.shields.io/conda/v/conda-forge/pytorch-metric-learning?color=bright-green">
  </a>
@@ -34,7 +34,7 @@
 ## Documentation
 - [**View the documentation here**](https://kevinmusgrave.github.io/pytorch-metric-learning/)
 - [**View the installation instructions here**](https://github.com/KevinMusgrave/pytorch-metric-learning#installation)
-- [**View the available losses, miners etc. here**](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/CONTENTS.md) 
+- [**View the available losses, miners etc. here**](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/CONTENTS.md)
 
 
 ## Google Colab Examples
@@ -69,7 +69,7 @@ for i, (data, labels) in enumerate(dataloader):
 	optimizer.step()
 ```
 
-The TripletMarginLoss computes all possible triplets within the batch, based on the labels you pass into it. Anchor-positive pairs are formed by embeddings that share the same label, and anchor-negative pairs are formed by embeddings that have different labels. 
+The TripletMarginLoss computes all possible triplets within the batch, based on the labels you pass into it. Anchor-positive pairs are formed by embeddings that share the same label, and anchor-negative pairs are formed by embeddings that have different labels.
 
 Sometimes it can help to add a mining function:
 ```python
@@ -99,15 +99,15 @@ from pytorch_metric_learning.distances import CosineSimilarity
 from pytorch_metric_learning.reducers import ThresholdReducer
 from pytorch_metric_learning.regularizers import LpRegularizer
 from pytorch_metric_learning import losses
-loss_func = losses.TripletMarginLoss(distance = CosineSimilarity(), 
-				     reducer = ThresholdReducer(high=0.3), 
+loss_func = losses.TripletMarginLoss(distance = CosineSimilarity(),
+				     reducer = ThresholdReducer(high=0.3),
 			 	     embedding_regularizer = LpRegularizer())
 ```
 This customized triplet loss has the following properties:
 
  - The loss will be computed using cosine similarity instead of Euclidean distance.
  - All triplet losses that are higher than 0.3 will be discarded.
- - The embeddings will be L2 regularized.  
+ - The embeddings will be L2 regularized.
 
 ### Using loss functions for unsupervised / self-supervised learning
 
@@ -138,7 +138,7 @@ If you're interested in [MoCo](https://arxiv.org/pdf/1911.05722.pdf)-style self-
 
 If you're short of time and want a complete train/test workflow, check out the [example Google Colab notebooks](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples).
 
-To learn more about all of the above, [see the documentation](https://kevinmusgrave.github.io/pytorch-metric-learning). 
+To learn more about all of the above, [see the documentation](https://kevinmusgrave.github.io/pytorch-metric-learning).
 
 
 ## Installation
@@ -178,7 +178,7 @@ pip install pytorch-metric-learning[with-hooks]
 ```
 pip install pytorch-metric-learning[with-hooks-cpu]
 ```
-	
+
 ### Conda
 ```
 conda install -c conda-forge pytorch-metric-learning
@@ -187,7 +187,7 @@ conda install -c conda-forge pytorch-metric-learning
 **To use the testing module, you'll need faiss, which can be installed via conda as well. See the [installation instructions for faiss](https://github.com/facebookresearch/faiss/blob/master/INSTALL.md).**
 
 </details>
-	
+
 
 
 ## Benchmark results

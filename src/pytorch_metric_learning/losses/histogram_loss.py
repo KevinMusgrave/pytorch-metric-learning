@@ -61,6 +61,7 @@ class HistogramLoss(BaseMetricLossFunction):
             (distances.float() + 1) / self.delta
         )  # Indices of the bins containing the values of the distances
         r_star = c_f.to_device(r_star, tensor=distances, dtype=torch.long)
+        r_star = r_star.clamp(max=round(2 / self.delta) - 1)
 
         delta_ijr_a = (distances + 1 - r_star * self.delta) / self.delta
         delta_ijr_b = ((r_star + 1) * self.delta - 1 - distances) / self.delta

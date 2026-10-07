@@ -109,6 +109,7 @@ class DynamicSoftMarginLoss(BaseMetricLossFunction):
         return d_pos - d_neg
 
     def update_histogram(self, data):
+        data = data.detach()
         idx, alpha = torch.floor((data - self.min_val) / self.delta).to(
             dtype=torch.long
         ), torch.frac((data - self.min_val) / self.delta)

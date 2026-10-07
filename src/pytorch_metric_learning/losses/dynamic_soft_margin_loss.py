@@ -114,9 +114,11 @@ class DynamicSoftMarginLoss(BaseMetricLossFunction):
         ), torch.frac((data - self.min_val) / self.delta)
         momentum = self.momentum if self.hist_.sum() != 0 else 1.0
         self.hist_ = torch.scatter_add(
-            (1.0 - momentum) * self.hist_, 0, idx, momentum * (1 - alpha)
+            (1.0 - momentum) * self.hist_, 0, idx, momentum * (1 - alpha) / data.numel()
         )
-        self.hist_ = torch.scatter_add(self.hist_, 0, idx + 1, momentum * alpha)
+        self.hist_ = torch.scatter_add(
+            self.hist_, 0, idx + 1, momentum * alpha / data.numel()
+        )
         self.hist_ /= self.hist_.sum()
 
     def weigh_loss(self, data):

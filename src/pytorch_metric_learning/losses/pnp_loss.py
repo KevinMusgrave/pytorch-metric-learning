@@ -88,7 +88,7 @@ class PNPLoss(BaseMetricLossFunction):
         exponent = -tensor / temp
         # clamp the input tensor for stability
         exponent = torch.clamp(exponent, min=-50, max=50)
-        y = 1.0 / (1.0 + torch.exp(exponent))
+        y = torch.sigmoid(-exponent)
         return y
 
     def get_default_distance(self):

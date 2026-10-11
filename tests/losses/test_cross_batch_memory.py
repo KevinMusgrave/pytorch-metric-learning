@@ -22,6 +22,55 @@ from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 
 class TestCrossBatchMemory(unittest.TestCase):
+    def test_empty_enqueue_preserves_memory(self):
+        for dtype in TEST_DTYPES:
+            for initial_size in (0, 3, 8):
+                with self.subTest(dtype=dtype, initial_size=initial_size):
+                    loss = CrossBatchMemory(
+                        ContrastiveLoss(), embedding_size=3, memory_size=8
+                    ).to(device=TEST_DEVICE, dtype=dtype)
+                    reference = torch.randn(
+                        initial_size, 3, device=TEST_DEVICE, dtype=dtype
+                    )
+                    reference_labels = (
+                        torch.arange(initial_size, device=TEST_DEVICE) % 3
+                    )
+                    if initial_size:
+                        loss.add_to_memory(reference, reference_labels, initial_size)
+                    memory_before = loss.embedding_memory.clone()
+                    labels_before = loss.label_memory.clone()
+                    filled_before = loss.has_been_filled
+                    queue_idx_before = loss.queue_idx
+                    embeddings = torch.randn(
+                        4, 3, device=TEST_DEVICE, dtype=dtype, requires_grad=True
+                    )
+                    labels = torch.tensor([0, 0, 1, 1], device=TEST_DEVICE)
+                    expected = loss.loss(
+                        embeddings,
+                        labels,
+                        ref_emb=reference,
+                        ref_labels=reference_labels,
+                    )
+
+                    actual = loss(
+                        embeddings,
+                        labels,
+                        enqueue_mask=torch.zeros(
+                            4, device=TEST_DEVICE, dtype=torch.bool
+                        ),
+                    )
+
+                    self.assertEqual(loss.has_been_filled, filled_before)
+                    self.assertEqual(loss.queue_idx, queue_idx_before)
+                    self.assertTrue(torch.equal(loss.embedding_memory, memory_before))
+                    self.assertTrue(torch.equal(loss.label_memory, labels_before))
+                    self.assertTrue(torch.allclose(actual, expected))
+                    actual_grad = torch.autograd.grad(
+                        actual, embeddings, retain_graph=True
+                    )[0]
+                    expected_grad = torch.autograd.grad(expected, embeddings)[0]
+                    self.assertTrue(torch.allclose(actual_grad, expected_grad))
+
     @classmethod
     def setUpClass(self):
         self.embedding_size = 128

@@ -102,7 +102,11 @@ class CrossBatchMemory(BaseLossWrapper, ModuleWithRecords):
         self.label_memory[self.curr_batch_idx] = labels.detach()
         prev_queue_idx = self.queue_idx
         self.queue_idx = (self.queue_idx + batch_size) % self.memory_size
-        if (not self.has_been_filled) and (self.queue_idx <= prev_queue_idx):
+        if (
+            not self.has_been_filled
+            and batch_size > 0
+            and self.queue_idx <= prev_queue_idx
+        ):
             self.has_been_filled = True
 
     def create_indices_tuple(

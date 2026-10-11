@@ -5,9 +5,43 @@ from collections import Counter
 import torch
 
 from pytorch_metric_learning.samplers import HierarchicalSampler
+from pytorch_metric_learning.utils import common_functions as c_f
 
 
 class TestHierarchicalSampler(unittest.TestCase):
+    def test_training_dataloader(self):
+        classes = torch.arange(8).repeat_interleave(2)
+        labels = torch.stack((classes, classes // 2), dim=1)
+        data = torch.arange(len(labels)).unsqueeze(1)
+        dataset = torch.utils.data.TensorDataset(data, labels)
+
+        for samples_per_class in (2, "all"):
+            with self.subTest(samples_per_class=samples_per_class):
+                sampler = HierarchicalSampler(
+                    labels,
+                    batch_size=8,
+                    samples_per_class=samples_per_class,
+                    batches_per_super_tuple=2,
+                )
+                loader = c_f.get_train_dataloader(
+                    dataset,
+                    batch_size=4,
+                    sampler=sampler,
+                    num_workers=0,
+                    collate_fn=None,
+                )
+                self.assertEqual(len(loader), len(sampler))
+                for batch_data, batch_labels in loader:
+                    self.assertEqual(batch_data.shape, (8, 1))
+                    self.assertEqual(batch_labels.shape, (8, 2))
+                    self.assertTrue(torch.equal(batch_labels, labels[batch_data[:, 0]]))
+                    self.assertEqual(
+                        sorted(Counter(batch_labels[:, 0].tolist()).values()), [2] * 4
+                    )
+                    self.assertEqual(
+                        sorted(Counter(batch_labels[:, 1].tolist()).values()), [4] * 2
+                    )
+
     def test_hierarchical_sampler(self):
         dataset_size = 15023
         batches_per_super_tuple = 9

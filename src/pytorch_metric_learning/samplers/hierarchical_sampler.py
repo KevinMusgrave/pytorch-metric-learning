@@ -2,14 +2,14 @@ import itertools
 from collections import defaultdict
 
 import torch
-from torch.utils.data.sampler import Sampler
+from torch.utils.data.sampler import BatchSampler
 
 from ..utils import common_functions as c_f
 
 
 # Inspired by
 # https://github.com/kunhe/Deep-Metric-Learning-Baselines/blob/master/datasets.py
-class HierarchicalSampler(Sampler):
+class HierarchicalSampler(BatchSampler):
     def __init__(
         self,
         labels,

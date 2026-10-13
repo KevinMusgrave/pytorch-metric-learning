@@ -22,6 +22,50 @@ def isclose(x, y, many=False):
 
 
 class TestCalculateAccuracies(unittest.TestCase):
+    def test_mean_reciprocal_rank_selection(self):
+        metric = "mean_reciprocal_rank"
+        query = torch.tensor([[0.2], [0.8]], device=TEST_DEVICE)
+        query_labels = torch.tensor([1, 0], device=TEST_DEVICE)
+        reference = torch.tensor([[0.0], [0.1], [1.0]], device=TEST_DEVICE)
+        reference_labels = torch.tensor([0, 0, 1], device=TEST_DEVICE)
+        for selection in ["constructor", "include", "exclude"]:
+            for knn in [FaissKNN(), CustomKNN(LpDistance(normalize_embeddings=False))]:
+                with self.subTest(selection=selection, knn=type(knn).__name__):
+                    calculator = accuracy_calculator.AccuracyCalculator(
+                        include=(metric,) if selection == "constructor" else (),
+                        device=TEST_DEVICE,
+                        knn_func=knn,
+                    )
+                    kwargs = {}
+                    if selection == "include":
+                        kwargs["include"] = (metric,)
+                    elif selection == "exclude":
+                        kwargs["exclude"] = tuple(
+                            name
+                            for name in calculator.get_curr_metrics()
+                            if name != metric
+                        )
+                    result = calculator.get_accuracy(
+                        query, query_labels, reference, reference_labels, **kwargs
+                    )
+                    self.assertEqual(set(result), {metric})
+                    self.assertTrue(isclose(result[metric], (1.0 / 3 + 1.0 / 2) / 2))
+
+    def test_mean_reciprocal_rank_selection_same_source(self):
+        embeddings = torch.tensor([[0.0], [0.1], [1.0], [1.1]], device=TEST_DEVICE)
+        labels = torch.tensor([0, 1, 0, 1], device=TEST_DEVICE)
+        for knn in [FaissKNN(), CustomKNN(LpDistance(normalize_embeddings=False))]:
+            with self.subTest(knn=type(knn).__name__):
+                calculator = accuracy_calculator.AccuracyCalculator(
+                    include=("mean_reciprocal_rank",),
+                    device=TEST_DEVICE,
+                    knn_func=knn,
+                )
+                result = calculator.get_accuracy(embeddings, labels)
+                self.assertTrue(
+                    isclose(result["mean_reciprocal_rank"], (1.0 / 2 + 1.0 / 3) / 2)
+                )
+
     def test_accuracy_calculator(self):
         query_labels = torch.tensor([1, 1, 2, 3, 4, 0], device=TEST_DEVICE)
 

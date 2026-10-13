@@ -279,6 +279,7 @@ class AccuracyCalculator:
             "precision_at_1",
             "mean_average_precision",
             "mean_average_precision_at_r",
+            "mean_reciprocal_rank",
             "r_precision",
         ]
 

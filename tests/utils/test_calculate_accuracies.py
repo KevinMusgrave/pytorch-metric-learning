@@ -4,7 +4,6 @@ import unittest
 
 import numpy as np
 import torch
-
 from pytorch_metric_learning.distances import LpDistance
 from pytorch_metric_learning.utils import accuracy_calculator
 from pytorch_metric_learning.utils.common_functions import LOGGER
@@ -22,6 +21,58 @@ def isclose(x, y, many=False):
 
 
 class TestCalculateAccuracies(unittest.TestCase):
+    def test_integer_label_precision(self):
+        calculator = accuracy_calculator.AccuracyCalculator(
+            include=("precision_at_1",),
+            device=TEST_DEVICE,
+            knn_func=CustomKNN(LpDistance(normalize_embeddings=False)),
+        )
+        query = torch.tensor([[0.0, 0.0], [10.0, 0.0]], device=TEST_DEVICE)
+        reference = torch.tensor([[0.1, 0.0], [9.9, 0.0]], device=TEST_DEVICE)
+        for offset, use_numpy in itertools.product((0, 2**24), (False, True)):
+            labels = np.array([0, 1], dtype=np.int64) + offset
+            ref_labels = labels[::-1].copy()
+            if not use_numpy:
+                labels = torch.tensor(labels, device=TEST_DEVICE)
+                ref_labels = torch.tensor(ref_labels, device=TEST_DEVICE)
+            with self.subTest(offset=offset, use_numpy=use_numpy):
+                result = calculator.get_accuracy(query, labels, reference, ref_labels)
+                self.assertEqual(result["precision_at_1"], 0.0)
+
+    def test_reference_label_precision(self):
+        calculator = accuracy_calculator.AccuracyCalculator(
+            include=("precision_at_1",),
+            device=TEST_DEVICE,
+            knn_func=CustomKNN(LpDistance(normalize_embeddings=False)),
+        )
+        embeddings = torch.tensor([[0.0], [0.1], [10.0], [10.1]], device=TEST_DEVICE)
+        labels = (
+            torch.tensor([0, 0, 1, 1], dtype=torch.int64, device=TEST_DEVICE) + 2**24
+        )
+        reference_labels = labels.to(torch.int32)
+        result = calculator.get_accuracy(
+            embeddings, labels, embeddings, reference_labels, True
+        )
+        self.assertEqual(result["precision_at_1"], 1.0)
+        for query_dtype, reference_dtype in (
+            (torch.float32, torch.float64),
+            (torch.int64, torch.float32),
+        ):
+            small_labels = torch.tensor([0, 0, 1, 1], device=TEST_DEVICE)
+            result = calculator.get_accuracy(
+                embeddings,
+                small_labels.to(query_dtype),
+                embeddings,
+                small_labels.to(reference_dtype),
+                True,
+            )
+            self.assertEqual(result["precision_at_1"], 1.0)
+        reference_labels[0] += 1
+        with self.assertRaises(ValueError):
+            calculator.get_accuracy(
+                embeddings, labels, embeddings, reference_labels, True
+            )
+
     def test_accuracy_calculator(self):
         query_labels = torch.tensor([1, 1, 2, 3, 4, 0], device=TEST_DEVICE)
 

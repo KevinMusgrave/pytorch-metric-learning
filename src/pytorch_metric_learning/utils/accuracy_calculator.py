@@ -426,17 +426,31 @@ class AccuracyCalculator:
             reference_labels = query_labels
             ref_includes_query = True
 
-        [query, reference, query_labels, reference_labels] = [
+        [query, reference] = [
             c_f.numpy_to_torch(x).to(self.device).type(torch.float)
-            for x in [query, reference, query_labels, reference_labels]
+            for x in [query, reference]
+        ]
+        [query_labels, reference_labels] = [
+            c_f.numpy_to_torch(x).to(self.device)
+            for x in [query_labels, reference_labels]
         ]
 
         if len(query) != len(query_labels) or len(reference) != len(reference_labels):
             raise ValueError("embeddings and labels must have the same length")
 
+        labels_match = True
+        if ref_includes_query:
+            reference_prefix = reference_labels[: len(query_labels)]
+            if query_labels.is_floating_point() or reference_labels.is_floating_point():
+                dtype = torch.promote_types(query_labels.dtype, reference_labels.dtype)
+                labels_match = torch.allclose(
+                    query_labels.to(dtype), reference_prefix.to(dtype)
+                )
+            else:
+                labels_match = torch.equal(query_labels, reference_prefix)
+
         if ref_includes_query and not (
-            torch.allclose(query, reference[: len(query)])
-            and torch.allclose(query_labels, reference_labels[: len(query)])
+            torch.allclose(query, reference[: len(query)]) and labels_match
         ):
             raise ValueError(
                 "When ref_includes_query is True, the first len(query) elements of reference must be equal to query.\n"

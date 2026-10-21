@@ -472,9 +472,12 @@ class AccuracyCalculator:
         device = self.device
         if device is None:
             device = torch.as_tensor(query).device
-        [query, reference, query_labels, reference_labels] = [
+        [query, reference] = [
             torch.as_tensor(x).to(device).type(torch.float)
-            for x in [query, reference, query_labels, reference_labels]
+            for x in [query, reference]
+        ]
+        [query_labels, reference_labels] = [
+            torch.as_tensor(x).to(device) for x in [query_labels, reference_labels]
         ]
 
         if len(query) != len(query_labels) or len(reference) != len(reference_labels):
@@ -483,9 +486,19 @@ class AccuracyCalculator:
         if not (torch.isfinite(query).all() and torch.isfinite(reference).all()):
             raise ValueError("query and reference embeddings must be finite")
 
+        labels_match = True
+        if ref_includes_query:
+            reference_prefix = reference_labels[: len(query_labels)]
+            if query_labels.is_floating_point() or reference_labels.is_floating_point():
+                dtype = torch.promote_types(query_labels.dtype, reference_labels.dtype)
+                labels_match = torch.allclose(
+                    query_labels.to(dtype), reference_prefix.to(dtype)
+                )
+            else:
+                labels_match = torch.equal(query_labels, reference_prefix)
+
         if ref_includes_query and not (
-            torch.allclose(query, reference[: len(query)])
-            and torch.allclose(query_labels, reference_labels[: len(query)])
+            torch.allclose(query, reference[: len(query)]) and labels_match
         ):
             raise ValueError(
                 "When ref_includes_query is True, the first len(query) rows of "

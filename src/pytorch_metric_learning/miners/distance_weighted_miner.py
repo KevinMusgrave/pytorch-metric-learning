@@ -21,7 +21,6 @@ class DistanceWeightedMiner(BaseMiner):
         )
 
     def mine(self, embeddings, labels, ref_emb, ref_labels):
-        dtype = embeddings.dtype
         d = float(embeddings.size(1))
         mat = self.distance(embeddings, ref_emb)
 
@@ -35,21 +34,15 @@ class DistanceWeightedMiner(BaseMiner):
 
         inf_or_nan = torch.isinf(log_weights) | torch.isnan(log_weights)
 
-        # Sample only negative examples by setting weights of
-        # the same-class examples to 0.
-        mask = torch.ones_like(log_weights)
+        # Only eligible negatives can affect each anchor's distribution.
         same_class = labels.unsqueeze(1) == ref_labels.unsqueeze(0)
-        mask[same_class] = 0
-        log_weights = log_weights * mask
-        # Subtract max(log(distance)) for stability.
-        weights = torch.exp(log_weights - torch.max(log_weights[~inf_or_nan]))
-
-        weights = (
-            weights * mask * (c_f.to_dtype(mat < self.nonzero_loss_cutoff, dtype=dtype))
-        )
-        weights[inf_or_nan] = 0
-
-        weights = weights / torch.sum(weights, dim=1, keepdim=True)
+        eligible = ~same_class & ~inf_or_nan & (mat < self.nonzero_loss_cutoff)
+        log_weights = log_weights.masked_fill(~eligible, -torch.inf)
+        # Normalize each anchor independently to avoid cross-row underflow.
+        row_max = torch.max(log_weights, dim=1, keepdim=True).values
+        row_max = row_max.masked_fill(~torch.isfinite(row_max), 0)
+        weights = torch.exp(log_weights - row_max)
+        weights = weights / torch.sum(weights, dim=1, keepdim=True).clamp(min=1)
 
         return lmu.get_random_triplet_indices(
             labels, ref_labels=ref_labels, weights=weights

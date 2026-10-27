@@ -87,6 +87,18 @@ mismatch outside autocast raises `ValueError`. `SubCenterArcFaceLoss` accepts
 `num_classes` and `embedding_size` positionally, and
 `get_outliers(..., return_dominant_centers=False)` now returns only the outliers.
 
+## Sampler randomness
+
+`MPerClassSampler`, `HierarchicalSampler`, and `FixedSetOfTriplets` use
+PyTorch random number generators and accept a keyword-only `generator`.
+`common_functions.NUMPY_RANDOM`, `safe_random_choice`, `get_labels_to_indices`,
+`try_next_on_generator`, and `EmbeddingDataset` are removed; seed with
+`torch.manual_seed` or pass a `torch.Generator`. Sampling distributions are
+unchanged, but seeded sequences differ from earlier releases.
+`MPerClassSampler` no longer yields more indices than `len()` reports when one
+pass over the classes exceeds `length_before_new_iter`. `HierarchicalSampler`
+reports its length without generating batches during construction.
+
 ## Correctness and performance
 
 Distributed wrappers now define full-batch and local-anchor gradients explicitly,

@@ -4,12 +4,10 @@ from collections import defaultdict
 import torch
 from torch.utils.data.sampler import Sampler
 
-from ..utils import common_functions as c_f
+from .sampling import choose, shuffled
 
 
-# Inspired by
-# https://github.com/kunhe/Deep-Metric-Learning-Baselines/blob/master/datasets.py
-class HierarchicalSampler(Sampler):
+class HierarchicalSampler(Sampler[list[int]]):
     def __init__(
         self,
         labels,
@@ -19,24 +17,16 @@ class HierarchicalSampler(Sampler):
         super_classes_per_batch=2,
         inner_label=0,
         outer_label=1,
+        *,
+        generator: torch.Generator | None = None,
     ):
-        """
-        labels: 2D array, where rows correspond to elements, and columns correspond to the hierarchical labels
-        batch_size: because this is a BatchSampler the batch size must be specified
-        samples_per_class: number of instances to sample for a specific class. set to "all" if all element in a class
-        batches_per_super_tuples: number of batches to create for a pair of categories (or super labels)
-        inner_label: columns index corresponding to classes
-        outer_label: columns index corresponding to the level of hierarchy for the pairs
-        """
-        if torch.is_tensor(labels):
-            labels = labels.cpu().numpy()
-
+        labels = torch.as_tensor(labels)
         self.batch_size = batch_size
         self.batches_per_super_tuple = batches_per_super_tuple
         self.samples_per_class = samples_per_class
         self.super_classes_per_batch = super_classes_per_batch
+        self.generator = generator
 
-        # checks
         assert self.batch_size % super_classes_per_batch == 0, (
             f"batch_size should be a multiple of {super_classes_per_batch}"
         )
@@ -48,57 +38,47 @@ class HierarchicalSampler(Sampler):
                 "batch_size not a multiple of samples_per_class"
             )
 
-        all_super_labels = set(labels[:, outer_label])
-        self.super_image_lists = {slb: defaultdict(list) for slb in all_super_labels}
-        for idx, instance in enumerate(labels):
-            slb, lb = instance[outer_label], instance[inner_label]
-            self.super_image_lists[slb][lb].append(idx)
-
+        groups = defaultdict(lambda: defaultdict(list))
+        for idx, (super_label, label) in enumerate(
+            zip(labels[:, outer_label].tolist(), labels[:, inner_label].tolist())
+        ):
+            groups[super_label][label].append(idx)
+        self.super_image_lists = {
+            super_label: {label: torch.tensor(v) for label, v in classes.items()}
+            for super_label, classes in groups.items()
+        }
         self.super_pairs = list(
-            itertools.combinations(all_super_labels, super_classes_per_batch)
+            itertools.combinations(self.super_image_lists, super_classes_per_batch)
         )
-        self.reshuffle()
 
-    def __iter__(
-        self,
-    ):
-        self.reshuffle()
-        for batch in self.batches:
-            yield batch
+    def __iter__(self):
+        yield from self.batches()
 
-    def __len__(
-        self,
-    ):
-        return len(self.batches)
+    def __len__(self):
+        return len(self.super_pairs) * self.batches_per_super_tuple
 
-    def reshuffle(self):
+    def batches(self):
         batches = []
-        for combinations in self.super_pairs:
-            for b in range(self.batches_per_super_tuple):
+        for combination in self.super_pairs:
+            for _ in range(self.batches_per_super_tuple):
                 batch = []
-                for slb in combinations:
-                    sub_batch = []
-                    all_classes = list(self.super_image_lists[slb].keys())
-                    c_f.NUMPY_RANDOM.shuffle(all_classes)
-                    for cl in all_classes:
-                        if len(sub_batch) >= self.sub_batch_len:
-                            break
-                        instances = self.super_image_lists[slb][cl]
-                        samples_per_class = (
-                            self.samples_per_class
-                            if self.samples_per_class != "all"
-                            else len(instances)
-                        )
-                        if len(sub_batch) + samples_per_class > self.sub_batch_len:
-                            continue
-                        sub_batch.extend(
-                            c_f.safe_random_choice(instances, size=samples_per_class)
-                        )
+                for super_label in combination:
+                    batch.extend(self.sub_batch(self.super_image_lists[super_label]))
+                batches.append(shuffled(batch, self.generator))
+        return shuffled(batches, self.generator)
 
-                    batch.extend(sub_batch)
-
-                c_f.NUMPY_RANDOM.shuffle(batch)
-                batches.append(batch)
-
-        c_f.NUMPY_RANDOM.shuffle(batches)
-        self.batches = batches
+    def sub_batch(self, classes):
+        sub_batch = []
+        for label in shuffled(list(classes), self.generator):
+            if len(sub_batch) >= self.sub_batch_len:
+                break
+            instances = classes[label]
+            size = (
+                len(instances)
+                if self.samples_per_class == "all"
+                else self.samples_per_class
+            )
+            if len(sub_batch) + size > self.sub_batch_len:
+                continue
+            sub_batch.extend(choose(instances, size, self.generator).tolist())
+        return sub_batch

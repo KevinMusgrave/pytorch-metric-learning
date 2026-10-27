@@ -1,25 +1,24 @@
 import torch
 from torch.utils.data.sampler import Sampler
 
-from ..utils import common_functions as c_f
+from .sampling import as_label_list, choose, indices_by_label, shuffled
 
 
-# modified from
-# https://raw.githubusercontent.com/bnulihaixia/Deep_metric/master/utils/sampler.py
-class MPerClassSampler(Sampler):
-    """
-    At every iteration, this will return m samples per class. For example,
-    if dataloader's batchsize is 100, and m = 5, then 20 classes with 5 samples
-    each will be returned
-    """
-
-    def __init__(self, labels, m, batch_size=None, length_before_new_iter=100000):
-        if isinstance(labels, torch.Tensor):
-            labels = labels.numpy()
+class MPerClassSampler(Sampler[int]):
+    def __init__(
+        self,
+        labels,
+        m,
+        batch_size=None,
+        length_before_new_iter=100000,
+        *,
+        generator: torch.Generator | None = None,
+    ):
         self.m_per_class = int(m)
         self.batch_size = int(batch_size) if batch_size is not None else batch_size
-        self.labels_to_indices = c_f.get_labels_to_indices(labels)
-        self.labels = list(self.labels_to_indices.keys())
+        self.generator = generator
+        self.labels_to_indices = indices_by_label(as_label_list(labels))
+        self.labels = list(self.labels_to_indices)
         self.length_of_single_pass = self.m_per_class * len(self.labels)
         self.list_size = length_before_new_iter
         if self.batch_size is None:
@@ -41,20 +40,17 @@ class MPerClassSampler(Sampler):
     def __iter__(self):
         idx_list = [0] * self.list_size
         i = 0
-        num_iters = self.calculate_num_iters()
-        for _ in range(num_iters):
-            c_f.NUMPY_RANDOM.shuffle(self.labels)
-            if self.batch_size is None:
-                curr_label_set = self.labels
-            else:
-                curr_label_set = self.labels[: self.batch_size // self.m_per_class]
+        for _ in range(self.calculate_num_iters()):
+            curr_label_set = shuffled(self.labels, self.generator)
+            if self.batch_size is not None:
+                curr_label_set = curr_label_set[: self.batch_size // self.m_per_class]
             for label in curr_label_set:
-                t = self.labels_to_indices[label]
-                idx_list[i : i + self.m_per_class] = c_f.safe_random_choice(
-                    t, size=self.m_per_class
+                chosen = choose(
+                    self.labels_to_indices[label], self.m_per_class, self.generator
                 )
+                idx_list[i : i + self.m_per_class] = chosen.tolist()
                 i += self.m_per_class
-        return iter(idx_list)
+        return iter(idx_list[: self.list_size])
 
     def calculate_num_iters(self):
         divisor = (

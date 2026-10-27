@@ -284,7 +284,8 @@
       },
       {
         "paths": [
-          "tests/samplers/test_m_per_class_sampler.py"
+          "tests/samplers/test_m_per_class_sampler.py",
+          "tests/samplers/test_sampler_contracts.py"
         ],
         "module": "sampling",
         "focusedSuite": "sampling-focused"
@@ -403,7 +404,8 @@
           "tests/samplers/test_m_per_class_sampler.py",
           "tests/__init__.py",
           "tests/zzz_testing_utils/**",
-          "tests/losses/utils.py"
+          "tests/losses/utils.py",
+          "tests/samplers/test_sampler_contracts.py"
         ],
         "argv": [
           ".venv/bin/uv",
@@ -415,7 +417,8 @@
           "python",
           "-m",
           "unittest",
-          "tests.samplers.test_m_per_class_sampler"
+          "tests.samplers.test_m_per_class_sampler",
+          "tests.samplers.test_sampler_contracts"
         ],
         "timeoutSeconds": 120
       },

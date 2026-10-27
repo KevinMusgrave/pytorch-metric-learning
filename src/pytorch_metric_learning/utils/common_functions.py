@@ -1,12 +1,9 @@
-import collections
 import logging
 
-import numpy as np
 import torch
 
 LOGGER_NAME = "PML"
 LOGGER = logging.getLogger(LOGGER_NAME)
-NUMPY_RANDOM = np.random
 COLLECT_STATS = False
 
 
@@ -33,14 +30,6 @@ def is_list_or_tuple(x):
     return isinstance(x, (list, tuple))
 
 
-def try_next_on_generator(gen, iterable):
-    try:
-        return gen, next(gen)
-    except StopIteration:
-        gen = iter(iterable)
-        return gen, next(gen)
-
-
 def numpy_to_torch(v):
     try:
         return torch.from_numpy(v)
@@ -53,22 +42,6 @@ def to_numpy(v):
         return v.cpu().numpy()
     except AttributeError:
         return v
-
-
-def safe_random_choice(input_data, size):
-    replace = len(input_data) < size
-    return NUMPY_RANDOM.choice(input_data, size=size, replace=replace)
-
-
-def get_labels_to_indices(labels):
-    if torch.is_tensor(labels):
-        labels = labels.cpu().numpy()
-    labels_to_indices = collections.defaultdict(list)
-    for i, label in enumerate(labels):
-        labels_to_indices[label].append(i)
-    for k, v in labels_to_indices.items():
-        labels_to_indices[k] = np.array(v, dtype=int)
-    return labels_to_indices
 
 
 def add_to_recordable_attributes(

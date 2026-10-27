@@ -4,7 +4,14 @@ import torch
 
 from pytorch_metric_learning.miners import EmbeddingsAlreadyPackagedAsTriplets
 from pytorch_metric_learning.samplers import FixedSetOfTriplets
-from pytorch_metric_learning.utils import common_functions as c_f
+
+
+def next_or_restart(iterator, iterable):
+    try:
+        return iterator, next(iterator)
+    except StopIteration:
+        iterator = iter(iterable)
+        return iterator, next(iterator)
 
 
 class TestFixedSetOfTriplet(unittest.TestCase):
@@ -22,9 +29,7 @@ class TestFixedSetOfTriplet(unittest.TestCase):
                     for _ in range(1000):
                         x = []
                         for _ in range(batch_size):
-                            iterator, curr_batch = c_f.try_next_on_generator(
-                                iterator, sampler
-                            )
+                            iterator, curr_batch = next_or_restart(iterator, sampler)
                             x.append(curr_batch)
                         curr_labels = labels[x]
                         a, p, n = miner(batch_of_fake_embeddings, curr_labels)

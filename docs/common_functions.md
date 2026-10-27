@@ -39,16 +39,6 @@ from pytorch_metric_learning.utils import common_functions as c_f
 c_f.COLLECT_STATS = True
 ```
 
-## NUMPY_RANDOM
-
-Default value is `np.random`. This is used anytime a numpy random function is needed. You can set it to something else if you want
-
-```python
-import numpy as np
-from pytorch_metric_learning.utils import common_functions as c_f
-c_f.NUMPY_RANDOM = np.random.RandomState(42)
-```
-
 ## TorchInitWrapper
 
 A simpler wrapper to convert the torch weight initialization functions into class form, which can then be applied within loss functions.

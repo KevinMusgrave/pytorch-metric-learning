@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+CODE_POLISHY_MANAGED_WRAPPER=1
+: "${CODE_POLISHY_MANAGED_WRAPPER}"
+set -euo pipefail
+
+fail() { printf 'code-polishyw: %s\n' "$*" >&2; exit 1; }
+usage() { printf '%s\n' 'Usage: ./code-polishyw setup [--source PATH]' '       ./code-polishyw COMMAND [ARG...]'; }
+
+repo=$(unset CDPATH; cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)
+lock="${repo}/.code-polishy.lock.json"
+[[ -f "$lock" && ! -L "$lock" ]] || fail '.code-polishy.lock.json must be a regular non-symbolic-link file'
+size=$(wc -c < "$lock")
+((size > 0 && size <= 32768)) || fail '.code-polishy.lock.json exceeds the wrapper input limit'
+
+value() { sed -n 's/.*"'"$1"'"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$lock"; }
+number() { sed -n 's/.*"'"$1"'"[[:space:]]*:[[:space:]]*\([0-9][0-9]*\).*/\1/p' "$lock" | head -1; }
+for key in lockVersion codePolishyVersion releaseDigest; do
+  (($(grep -o "\"$key\"[[:space:]]*:" "$lock" | wc -l) == 1)) || fail ".code-polishy.lock.json must contain exactly one $key field"
+done
+lock_version=$(number lockVersion)
+version=$(value codePolishyVersion)
+digest=$(value releaseDigest)
+[[ "$lock_version" == 2 ]] || fail '.code-polishy.lock.json uses an unsupported lockVersion'
+[[ "$version" =~ ^[0-9A-Za-z][0-9A-Za-z._+-]*$ ]] || fail '.code-polishy.lock.json has an invalid codePolishyVersion'
+[[ "$digest" =~ ^[0-9a-f]{64}$ ]] || fail '.code-polishy.lock.json has an invalid releaseDigest'
+[[ -n "${HOME:-}" ]] || fail 'HOME is required to locate the shared Code Polishy installation'
+prefix="${HOME}/.local/share/code-polishy"
+release_root="${prefix}/releases/${version}-${digest}"
+launcher="${release_root}/bin/code-polishy-launcher"
+
+available() {
+  [[ -d "$release_root" && ! -L "$release_root" && -x "$launcher" && ! -L "$launcher" ]]
+}
+
+ready() {
+  available && "$launcher" --repo-root "$repo" version >/dev/null 2>&1
+}
+
+(($# > 0)) || { usage >&2; exit 2; }
+if [[ "$1" != setup ]]; then
+  available || fail 'the locked release is not installed; run ./code-polishyw setup'
+  exec "$launcher" --repo-root "$repo" "$@"
+fi
+shift
+source_root=''
+while (($#)); do
+  case "$1" in
+    --source) (($# > 1)) || fail '--source requires a local checkout'; source_root=$2; shift 2 ;;
+    --source=*) source_root=${1#--source=}; shift ;;
+    --help|-h) usage; exit 0 ;;
+    *) fail "unknown setup option: $1" ;;
+  esac
+done
+ready && { printf 'Code Polishy %s is already ready for this repository.\n' "$version"; exit 0; }
+
+if [[ -n "$source_root" ]]; then
+  source_root=$(unset CDPATH; cd -- "$source_root" 2>/dev/null && pwd -P) || fail '--source must name a local checkout'
+  [[ -f "$source_root/VERSION" && $(<"$source_root/VERSION") == "$version" ]] || fail 'the source checkout VERSION does not match the repository lock'
+  [[ -x "$source_root/tools/install-policy-tools.sh" && -x "$source_root/scripts/install.sh" ]] || fail 'the source checkout has no executable installers'
+  (cd "$source_root" && ./tools/install-policy-tools.sh && ./scripts/install.sh --prefix "$prefix" --require-repository "$repo")
+else
+  case "$(uname -s)-$(uname -m)" in
+    Darwin-arm64) host=darwin-arm64 ;;
+    Darwin-x86_64) host=darwin-x64 ;;
+    Linux-aarch64|Linux-arm64) host=linux-arm64 ;;
+    Linux-x86_64) host=linux-x64 ;;
+    *) fail 'there is no Code Polishy release for this host' ;;
+  esac
+  archive_matches=$(grep -F "\"host\": \"$host\"" "$lock" || true)
+  (($(printf '%s\n' "$archive_matches" | sed '/^$/d' | wc -l) == 1)) || fail 'the lock does not contain one archive for this host'
+  archive_block=$(awk -v target="\"host\": \"$host\"" '
+    index($0, target) { capture = 1 }
+    capture {
+      print
+      if ($0 ~ /}[,]?[[:space:]]*$/) exit
+    }
+  ' "$lock")
+  archive_url=$(printf '%s\n' "$archive_block" | sed -n 's/.*"url": "\([^"]*\)".*/\1/p')
+  archive_sha=$(printf '%s\n' "$archive_block" | sed -n 's/.*"sha256": "\([0-9a-f]*\)".*/\1/p')
+  archive_size=$(printf '%s\n' "$archive_block" | sed -n 's/.*"size": \([0-9][0-9]*\).*/\1/p')
+  url_pattern='^https://[^[:space:]"\\]+$'
+  [[ "$archive_url" =~ $url_pattern && "$archive_sha" =~ ^[0-9a-f]{64}$ && "$archive_size" =~ ^[1-9][0-9]{0,9}$ ]] || fail 'the lock contains invalid archive metadata'
+  ((archive_size <= 4294967296)) || fail 'the lock contains an oversized archive'
+  for command in curl unzip mktemp; do command -v "$command" >/dev/null 2>&1 || fail "$command is required for setup"; done
+  scratch=$(mktemp -d "${TMPDIR:-/tmp}/code-polishyw.XXXXXXXX")
+  trap 'rm -rf -- "$scratch"' EXIT
+  archive="$scratch/release.zip"
+  curl --fail --location --proto '=https' --tlsv1.2 --max-filesize "$archive_size" --output "$archive" -- "$archive_url" || fail 'release archive download failed'
+  (($(wc -c < "$archive") == archive_size)) || fail 'release archive size mismatch'
+  if command -v sha256sum >/dev/null 2>&1; then actual_sha=$(sha256sum "$archive" | awk '{print $1}'); else actual_sha=$(shasum -a 256 "$archive" | awk '{print $1}'); fi
+  [[ "$actual_sha" == "$archive_sha" ]] || fail 'release archive checksum mismatch'
+  mkdir -p "$scratch/release/bin"
+  bootstrap="$scratch/release/bin/code-polishy"
+  unzip -p "$archive" bin/code-polishy | head -c 268435457 > "$bootstrap" || fail 'release archive bootstrap extraction failed'
+  bootstrap_size=$(wc -c < "$bootstrap")
+  ((bootstrap_size > 0 && bootstrap_size <= 268435456)) || fail 'release archive has an invalid installer bootstrap'
+  chmod 700 "$bootstrap"
+  "$bootstrap" --policy-root "$scratch/release" install-bundle --source "$archive" --sha256 "$archive_sha" --prefix "$prefix"
+fi
+
+ready || fail 'installation completed without making the exact locked release available'
+printf 'Code Polishy %s is ready for this repository.\n' "$version"

@@ -1,0 +1,54 @@
+[build-system]
+requires = ["setuptools==84.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pytorch-metric-learning"
+version = "2.9.0"
+description = "Composable metric learning losses, miners, distances, and training utilities for PyTorch."
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Kevin Musgrave" }]
+dependencies = [
+    "numpy==2.5.3",
+    "scikit-learn==1.9.1",
+    "torch==2.14.0",
+    "tqdm==4.70.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/KevinMusgrave/pytorch-metric-learning"
+Documentation = "https://kevinmusgrave.github.io/pytorch-metric-learning/"
+Issues = "https://github.com/KevinMusgrave/pytorch-metric-learning/issues"
+
+[project.optional-dependencies]
+with-hooks = ["faiss-cpu==1.15.1", "record-keeper==0.9.32", "tensorboard==2.21.0"]
+datasets = ["pillow==13.0.0", "scipy==1.18.1", "torchvision==0.29.0"]
+docs = ["mkdocs-material==9.7.7"]
+
+[dependency-groups]
+dev = [
+    "build==1.6.1",
+    "faiss-cpu==1.15.1",
+    "packaging==26.3",
+    "pillow==13.0.0",
+    "record-keeper==0.9.32",
+    "scipy==1.18.1",
+    "setuptools==84.0.0",
+    "tensorboard==2.21.0",
+    "torchvision==0.29.0",
+    "uv==0.13.4",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.uv]
+required-version = "==0.13.4"
+exclude-newer = "2026-09-26T00:00:00Z"
+
+[tool.uv.exclude-newer-package]
+pillow = "2026-10-26T00:00:00Z"
+uv = "2026-10-26T00:00:00Z"

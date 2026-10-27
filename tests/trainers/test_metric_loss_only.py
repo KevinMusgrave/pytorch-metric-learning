@@ -1,248 +1,167 @@
-import logging
-import os
-import shutil
+import tempfile
 import unittest
+from pathlib import Path
 
-import numpy as np
 import torch
-from torchvision import datasets, transforms
 
 from pytorch_metric_learning.losses import NTXentLoss
 from pytorch_metric_learning.reducers import AvgNonZeroReducer
 from pytorch_metric_learning.samplers import MPerClassSampler
 from pytorch_metric_learning.testers import GlobalEmbeddingSpaceTester
 from pytorch_metric_learning.trainers import MetricLossOnly
-from pytorch_metric_learning.utils import accuracy_calculator
+from pytorch_metric_learning.utils import accuracy_calculator, logging_presets
 from pytorch_metric_learning.utils import common_functions as c_f
-from pytorch_metric_learning.utils import logging_presets
 
 from .. import TEST_DEVICE, TEST_DTYPES
 
-logging.basicConfig()
-logging.getLogger(c_f.LOGGER_NAME).setLevel(logging.INFO)
-
 
 class TestMetricLossOnly(unittest.TestCase):
-    def test_metric_loss_only(self):
-        cifar_resnet_folder = "temp_cifar_resnet_for_pytorch_metric_learning_test"
-        dataset_folder = "temp_dataset_for_pytorch_metric_learning_test"
-        model_folder = "temp_saved_models_for_pytorch_metric_learning_test"
-        logs_folder = "temp_logs_for_pytorch_metric_learning_test"
-        tensorboard_folder = "temp_tensorboard_for_pytorch_metric_learning_test"
-
-        os.system(
-            "git clone https://github.com/akamaster/pytorch_resnet_cifar10.git {}".format(
-                cifar_resnet_folder
+    def make_datasets(self):
+        generator = torch.Generator().manual_seed(23)
+        labels = torch.arange(8).repeat_interleave(8)
+        prototypes = torch.randn(8, 16, generator=generator)
+        return {
+            split: torch.utils.data.TensorDataset(
+                prototypes[labels] + 0.1 * torch.randn(64, 16, generator=generator),
+                labels,
             )
+            for split in ("train", "val")
+        }
+
+    def assert_logging(self, hooks, tester, split_suffix):
+        record_keeper = hooks.record_keeper
+        for record_name in (
+            "metric_loss_NTXentLoss",
+            "metric_loss_NTXentLoss__modules_distance_CosineSimilarity",
+            "metric_loss_NTXentLoss__modules_reducer_AvgNonZeroReducer",
+        ):
+            self.assertTrue(record_keeper.table_exists(record_name))
+            self.assertEqual(
+                len(record_keeper.query(f"SELECT * FROM {record_name}")), 6
+            )
+
+        best_epoch, best_accuracy = hooks.get_best_epoch_and_accuracy(tester, "val")
+        self.assertIn(best_epoch, (1, 2))
+        self.assertGreaterEqual(best_accuracy, 0)
+        self.assertLessEqual(best_accuracy, 1)
+        accuracies, metric_key = hooks.get_accuracies_of_best_epoch(tester, "val")
+        self.assertEqual(metric_key, "precision_at_1_level0")
+        self.assertEqual(
+            c_f.sqlite_obj_to_dict(accuracies)[metric_key][0], best_accuracy
+        )
+        best = hooks.get_accuracies_of_epoch(tester, "val", best_epoch)
+        self.assertEqual(c_f.sqlite_obj_to_dict(best)[metric_key][0], best_accuracy)
+        history = hooks.get_accuracy_history(tester, "val")
+        self.assertEqual(history["epoch"], [1, 2])
+        self.assertEqual(
+            history[metric_key][history["epoch"].index(best_epoch)], best_accuracy
+        )
+        self.assertEqual(
+            hooks.get_curr_primary_metric(tester, "val"), history[metric_key][-1]
+        )
+        losses = hooks.get_loss_history()["metric_loss"]
+        self.assertEqual(len(losses), 6)
+        self.assertTrue(all(torch.isfinite(torch.tensor(losses))))
+        base = "accuracies_normalized_GlobalEmbeddingSpaceTester_level_0"
+        self.assertEqual(hooks.base_record_group_name(tester), base)
+        self.assertEqual(
+            hooks.record_group_name(tester, "val"), f"{base}_VAL_vs_{split_suffix}"
         )
 
-        loss_fn = NTXentLoss(reducer=AvgNonZeroReducer())
-
-        normalize_transform = transforms.Normalize(
-            mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+    def train_and_check(self, root, dtype, splits_to_eval):
+        dataset_dict = self.make_datasets()
+        linear = torch.nn.Linear(16, 16)
+        batchnorm = torch.nn.BatchNorm1d(16)
+        model = torch.nn.Sequential(
+            linear,
+            batchnorm,
+            torch.nn.ReLU(),
+            torch.nn.Linear(16, 8),
+        ).to(device=TEST_DEVICE, dtype=dtype)
+        initial_weight = linear.weight.detach().clone()
+        assert batchnorm.running_mean is not None
+        initial_running_mean = batchnorm.running_mean.detach().clone()
+        record_keeper, _, tensorboard_writer = logging_presets.get_record_keeper(
+            str(root / "logs"), str(root / "tensorboard")
         )
-
-        train_transform = transforms.Compose(
-            [
-                transforms.RandomHorizontalFlip(),
-                transforms.RandomCrop(32, 4),
-                transforms.ToTensor(),
-                normalize_transform,
-            ]
-        )
-
-        eval_transform = transforms.Compose(
-            [transforms.ToTensor(), normalize_transform]
-        )
-
-        assert not os.path.isdir(dataset_folder)
-        assert not os.path.isdir(model_folder)
-        assert not os.path.isdir(logs_folder)
-        assert not os.path.isdir(tensorboard_folder)
-
-        subset_idx = np.arange(10000)
-
-        train_dataset = datasets.CIFAR100(
-            dataset_folder, train=True, download=True, transform=train_transform
-        )
-
-        train_dataset_for_eval = datasets.CIFAR100(
-            dataset_folder, train=True, download=True, transform=eval_transform
-        )
-
-        val_dataset = datasets.CIFAR100(
-            dataset_folder, train=False, download=True, transform=eval_transform
-        )
-
-        train_dataset = torch.utils.data.Subset(train_dataset, subset_idx)
-        train_dataset_for_eval = torch.utils.data.Subset(
-            train_dataset_for_eval, subset_idx
-        )
-        val_dataset = torch.utils.data.Subset(val_dataset, subset_idx)
-
-        for dtype in TEST_DTYPES:
-            for splits_to_eval in [
-                None,
-                [("train", ["train", "val"]), ("val", ["train", "val"])],
-            ]:
-                from temp_cifar_resnet_for_pytorch_metric_learning_test import resnet
-
-                model = torch.nn.DataParallel(resnet.resnet20())
-                checkpoint = torch.load(
-                    "{}/pretrained_models/resnet20-12fca82f.th".format(
-                        cifar_resnet_folder
-                    ),
-                    map_location=TEST_DEVICE,
-                )
-                model.load_state_dict(checkpoint["state_dict"])
-                model.module.linear = torch.nn.Identity()
-                if TEST_DEVICE == torch.device("cpu"):
-                    model = model.module
-                model = model.to(TEST_DEVICE).type(dtype)
-
-                optimizer = torch.optim.Adam(
-                    model.parameters(),
-                    lr=0.0002,
-                    weight_decay=0.0001,
-                    eps=1e-04,
-                )
-
-                batch_size = 32
-                iterations_per_epoch = 10
-                log_freq = 2
-                model_dict = {"trunk": model}
-                optimizer_dict = {"trunk_optimizer": optimizer}
-                loss_fn_dict = {"metric_loss": loss_fn}
-                sampler = MPerClassSampler(
-                    np.array(train_dataset.dataset.targets)[subset_idx],
+        assert tensorboard_writer is not None
+        try:
+            hooks = logging_presets.get_hook_container(
+                record_keeper, primary_metric="precision_at_1", log_freq=2
+            )
+            tester = GlobalEmbeddingSpaceTester(
+                end_of_testing_hook=hooks.end_of_testing_hook,
+                accuracy_calculator=accuracy_calculator.AccuracyCalculator(
+                    include=("precision_at_1", "AMI"), k=1
+                ),
+                data_device=TEST_DEVICE,
+                dtype=dtype,
+                dataloader_num_workers=0,
+            )
+            model_folder = str(root / "models")
+            trainer = MetricLossOnly(
+                models={"trunk": model},
+                optimizers={
+                    "trunk_optimizer": torch.optim.Adam(model.parameters(), lr=0.01)
+                },
+                batch_size=16,
+                loss_funcs={"metric_loss": NTXentLoss(reducer=AvgNonZeroReducer())},
+                dataset=dataset_dict["train"],
+                sampler=MPerClassSampler(
+                    dataset_dict["train"].tensors[1],
                     m=4,
-                    batch_size=32,
-                    length_before_new_iter=len(train_dataset),
-                )
-
-                record_keeper, _, _ = logging_presets.get_record_keeper(
-                    logs_folder, tensorboard_folder
-                )
-                hooks = logging_presets.get_hook_container(
-                    record_keeper, primary_metric="precision_at_1", log_freq=log_freq
-                )
-                dataset_dict = {"train": train_dataset_for_eval, "val": val_dataset}
-
-                tester = GlobalEmbeddingSpaceTester(
-                    end_of_testing_hook=hooks.end_of_testing_hook,
-                    accuracy_calculator=accuracy_calculator.AccuracyCalculator(
-                        include=("precision_at_1", "AMI"), k=1
-                    ),
-                    data_device=TEST_DEVICE,
-                    dtype=dtype,
-                    dataloader_num_workers=2,
-                )
-
-                end_of_epoch_hook = hooks.end_of_epoch_hook(
+                    batch_size=16,
+                    length_before_new_iter=64,
+                ),
+                data_device=TEST_DEVICE,
+                dtype=dtype,
+                dataloader_num_workers=0,
+                iterations_per_epoch=6,
+                freeze_trunk_batchnorm=True,
+                end_of_iteration_hook=hooks.end_of_iteration_hook,
+                end_of_epoch_hook=hooks.end_of_epoch_hook(
                     tester,
                     dataset_dict,
                     model_folder,
                     test_interval=1,
                     patience=1,
                     splits_to_eval=splits_to_eval,
-                )
+                ),
+            )
+            trainer.train(num_epochs=2)
+            self.assertFalse(torch.equal(initial_weight, linear.weight))
+            torch.testing.assert_close(initial_running_mean, batchnorm.running_mean)
+            self.assert_logging(
+                hooks, tester, "self" if splits_to_eval is None else "TRAIN_and_VAL"
+            )
+            checkpoint = torch.load(
+                root / "models" / "trunk_2.pth",
+                map_location=TEST_DEVICE,
+                weights_only=True,
+            )
+            for name, value in model.state_dict().items():
+                torch.testing.assert_close(checkpoint[name], value)
+            with torch.no_grad():
+                linear.weight.zero_()
+            self.assertEqual(
+                hooks.load_latest_saved_models(
+                    trainer, model_folder, device=TEST_DEVICE
+                ),
+                3,
+            )
+            for name, value in model.state_dict().items():
+                torch.testing.assert_close(checkpoint[name], value)
+        finally:
+            tensorboard_writer.close()
 
-                trainer = MetricLossOnly(
-                    models=model_dict,
-                    optimizers=optimizer_dict,
-                    batch_size=batch_size,
-                    loss_funcs=loss_fn_dict,
-                    dataset=train_dataset,
-                    sampler=sampler,
-                    data_device=TEST_DEVICE,
-                    dtype=dtype,
-                    dataloader_num_workers=2,
-                    iterations_per_epoch=iterations_per_epoch,
-                    freeze_trunk_batchnorm=True,
-                    end_of_iteration_hook=hooks.end_of_iteration_hook,
-                    end_of_epoch_hook=end_of_epoch_hook,
-                )
-
-                num_epochs = 2
-                trainer.train(num_epochs=num_epochs)
-
-                for record_name in [
-                    "metric_loss_NTXentLoss",
-                    "metric_loss_NTXentLoss__modules_distance_CosineSimilarity",
-                    "metric_loss_NTXentLoss__modules_reducer_AvgNonZeroReducer",
-                ]:
-                    self.assertTrue(record_keeper.table_exists(record_name))
-                    self.assertTrue(
-                        len(record_keeper.query(f"SELECT * FROM {record_name}"))
-                        == num_epochs * iterations_per_epoch / log_freq
-                    )
-
-                best_epoch, best_accuracy = hooks.get_best_epoch_and_accuracy(
-                    tester, "val"
-                )
-
-                accuracies, primary_metric_key = hooks.get_accuracies_of_best_epoch(
-                    tester, "val"
-                )
-                accuracies = c_f.sqlite_obj_to_dict(accuracies)
-                self.assertTrue(accuracies[primary_metric_key][0] == best_accuracy)
-                self.assertTrue(primary_metric_key == "precision_at_1_level0")
-
-                best_epoch_accuracies = hooks.get_accuracies_of_epoch(
-                    tester, "val", best_epoch
-                )
-                best_epoch_accuracies = c_f.sqlite_obj_to_dict(best_epoch_accuracies)
-                self.assertTrue(
-                    best_epoch_accuracies[primary_metric_key][0] == best_accuracy
-                )
-
-                accuracy_history = hooks.get_accuracy_history(tester, "val")
-                self.assertTrue(
-                    accuracy_history[primary_metric_key][
-                        accuracy_history["epoch"].index(best_epoch)
-                    ]
-                    == best_accuracy
-                )
-
-                loss_history = hooks.get_loss_history()
-                if splits_to_eval is None:
-                    self.assertTrue(
-                        len(loss_history["metric_loss"])
-                        == (iterations_per_epoch / log_freq) * num_epochs
-                    )
-
-                curr_primary_metric = hooks.get_curr_primary_metric(tester, "val")
-                self.assertTrue(
-                    curr_primary_metric == accuracy_history[primary_metric_key][-1]
-                )
-
-                base_record_group_name = hooks.base_record_group_name(tester)
-
-                self.assertTrue(
-                    base_record_group_name
-                    == "accuracies_normalized_GlobalEmbeddingSpaceTester_level_0"
-                )
-
-                record_group_name = hooks.record_group_name(tester, "val")
-
-                if splits_to_eval is None:
-                    self.assertTrue(
-                        record_group_name
-                        == "accuracies_normalized_GlobalEmbeddingSpaceTester_level_0_VAL_vs_self"
-                    )
-                else:
-                    self.assertTrue(
-                        record_group_name
-                        == "accuracies_normalized_GlobalEmbeddingSpaceTester_level_0_VAL_vs_TRAIN_and_VAL"
-                    )
-
-                shutil.rmtree(model_folder)
-                shutil.rmtree(logs_folder)
-                shutil.rmtree(tensorboard_folder)
-
-        shutil.rmtree(cifar_resnet_folder)
-        shutil.rmtree(dataset_folder)
-
-
-if __name__ == "__main__":
-    unittest.main()
+    def test_metric_loss_only(self):
+        for dtype in TEST_DTYPES:
+            for splits_to_eval in (
+                None,
+                [("train", ["train", "val"]), ("val", ["train", "val"])],
+            ):
+                with (
+                    self.subTest(dtype=dtype, splits=splits_to_eval),
+                    tempfile.TemporaryDirectory() as directory,
+                ):
+                    self.train_and_check(Path(directory), dtype, splits_to_eval)

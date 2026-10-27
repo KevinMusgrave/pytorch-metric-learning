@@ -1,6 +1,7 @@
-import os
+import tempfile
 import unittest
 import uuid
+from pathlib import Path
 
 import faiss
 import torch
@@ -17,21 +18,21 @@ class TextModel(torch.nn.Module):
         return torch.randn(len(list_of_text), 32)
 
 
-class TextDataset(torch.utils.data.Dataset):
+class TextDataset(torch.utils.data.Dataset[tuple[str, int]]):
     def __init__(self):
         self.data = [str(uuid.uuid4()) for _ in range(500)]
 
     def __len__(self):
         return len(self.data)
 
-    def __getitem__(self, idx):
-        return self.data[idx], 0
+    def __getitem__(self, index: int) -> tuple[str, int]:
+        return self.data[index], 0
 
 
 class TestInference(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        trunk = torchvision.models.resnet18(pretrained=True)
+        trunk = torchvision.models.resnet18(weights=None)
         trunk.fc = torch.nn.Identity()
         trunk = trunk.to(TEST_DEVICE)
 
@@ -63,21 +64,20 @@ class TestInference(unittest.TestCase):
             inference_model.get_nearest_neighbors(self.dataset[0][0].unsqueeze(0), k=10)
 
     def test_get_nearest_neighbors(self):
-        test_filename = "test_inference.index"
-        for indexer_input in [self.train_vectors, self.dataset]:
-            for load_from_file in [False, True]:
-                inference_model = InferenceModel(
-                    trunk=self.model, data_device=TEST_DEVICE
-                )
-                if load_from_file:
-                    inference_model.load_knn_func(test_filename)
-                else:
-                    inference_model.train_knn(indexer_input)
-                    inference_model.save_knn_func(test_filename)
+        with tempfile.TemporaryDirectory() as directory:
+            test_filename = str(Path(directory) / "inference.index")
+            for indexer_input in [self.train_vectors, self.dataset]:
+                for load_from_file in [False, True]:
+                    inference_model = InferenceModel(
+                        trunk=self.model, data_device=TEST_DEVICE
+                    )
+                    if load_from_file:
+                        inference_model.load_knn_func(test_filename)
+                    else:
+                        inference_model.train_knn(indexer_input)
+                        inference_model.save_knn_func(test_filename)
 
-                self.helper_assertions(inference_model)
-
-        os.remove(test_filename)
+                    self.helper_assertions(inference_model)
 
     def test_add_to_indexer(self):
         inference_model = InferenceModel(trunk=self.model, data_device=TEST_DEVICE)
@@ -91,13 +91,16 @@ class TestInference(unittest.TestCase):
         inference_model = InferenceModel(trunk=model, data_device=TEST_DEVICE)
         inference_model.train_knn(dataset)
         inference_model.add_to_knn([["test1", "test2"], ["test3", "test4"]])
-        inference_model.get_nearest_neighbors(["dog", "cat"], k=10)
+        distances, indices = inference_model.get_nearest_neighbors(["dog", "cat"], k=10)
+        self.assertEqual(distances.shape, (2, 10))
+        self.assertEqual(indices.shape, (2, 10))
+        self.assertTrue(torch.all(torch.isfinite(distances)))
+        self.assertTrue(torch.all((indices >= 0) & (indices < len(dataset) + 4)))
 
     def helper_assertions(self, inference_model):
         distances, indices = inference_model.get_nearest_neighbors(
             [self.train_vectors[0]], k=10
         )
-        # The closest image is the query itself
         self.assertTrue(indices[0][0] == 0)
         self.assertTrue(len(indices) == 1)
         self.assertTrue(len(distances) == 1)

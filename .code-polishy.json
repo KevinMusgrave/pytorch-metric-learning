@@ -1,0 +1,627 @@
+{
+  "version": 4,
+  "project": {
+    "kind": "library",
+    "capabilities": []
+  },
+  "scope": {},
+  "quality": {
+    "allowComments": false
+  },
+  "portability": {},
+  "modules": [
+    {
+      "name": "numerics",
+      "paths": [
+        "src/pytorch_metric_learning/__init__.py",
+        "src/pytorch_metric_learning/distances/**",
+        "src/pytorch_metric_learning/reducers/**",
+        "src/pytorch_metric_learning/regularizers/**",
+        "src/pytorch_metric_learning/losses/**",
+        "src/pytorch_metric_learning/miners/**",
+        "src/pytorch_metric_learning/utils/common_functions.py",
+        "src/pytorch_metric_learning/utils/loss_and_miner_utils.py",
+        "src/pytorch_metric_learning/utils/module_with_records.py",
+        "src/pytorch_metric_learning/utils/module_with_records_and_reducer.py",
+        "src/pytorch_metric_learning/utils/loss_tracker.py",
+        "src/pytorch_metric_learning/utils/key_checker.py",
+        "src/pytorch_metric_learning/utils/__init__.py"
+      ]
+    },
+    {
+      "name": "evaluation",
+      "paths": [
+        "src/pytorch_metric_learning/testers/**",
+        "src/pytorch_metric_learning/utils/accuracy_calculator.py",
+        "src/pytorch_metric_learning/utils/inference.py",
+        "src/pytorch_metric_learning/utils/logging_presets.py"
+      ],
+      "dependsOn": [
+        "numerics"
+      ]
+    },
+    {
+      "name": "training",
+      "paths": [
+        "src/pytorch_metric_learning/trainers/**",
+        "src/pytorch_metric_learning/samplers/**"
+      ],
+      "dependsOn": [
+        "numerics",
+        "evaluation"
+      ]
+    },
+    {
+      "name": "datasets",
+      "paths": [
+        "src/pytorch_metric_learning/datasets/**"
+      ],
+      "dependsOn": [
+        "numerics"
+      ]
+    },
+    {
+      "name": "distributed",
+      "paths": [
+        "src/pytorch_metric_learning/utils/distributed.py"
+      ],
+      "dependsOn": [
+        "numerics"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "name": "python-lock",
+      "provides": [
+        "lock-sync"
+      ],
+      "modules": [
+        "numerics",
+        "evaluation",
+        "training",
+        "datasets",
+        "distributed"
+      ],
+      "argv": [
+        ".venv/bin/uv",
+        "lock",
+        "--check",
+        "--offline"
+      ],
+      "runOn": [
+        "supply-chain"
+      ],
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "python-build",
+      "provides": [
+        "build"
+      ],
+      "modules": [
+        "numerics",
+        "evaluation",
+        "training",
+        "datasets",
+        "distributed"
+      ],
+      "argv": [
+        ".venv/bin/uv",
+        "run",
+        "--frozen",
+        "--no-sync",
+        "python",
+        "-m",
+        "build",
+        "--no-isolation"
+      ],
+      "runOn": [
+        "build"
+      ],
+      "timeoutSeconds": 120
+    }
+  ],
+  "tests": {
+    "ownership": [
+      {
+        "paths": [
+          "tests/distances/test_collected_stats.py",
+          "tests/reducers/test_mean_reducer.py",
+          "tests/miners/test_pair_margin_miner.py",
+          "tests/losses/test_contrastive_loss.py",
+          "tests/regularizers/test_center_invariant_regularizer.py"
+        ],
+        "module": "numerics",
+        "focusedSuite": "numerics-focused"
+      },
+      {
+        "paths": [
+          "tests/__init__.py",
+          "tests/distances/__init__.py",
+          "tests/distances/test_batched_distance.py",
+          "tests/distances/test_custom_check_shape.py",
+          "tests/losses/__init__.py",
+          "tests/losses/test_angular_loss.py",
+          "tests/losses/test_arcface_loss.py",
+          "tests/losses/test_circle_loss.py",
+          "tests/losses/test_cosface_loss.py",
+          "tests/losses/test_cross_batch_memory.py",
+          "tests/losses/test_dynamic_soft_margin_loss.py",
+          "tests/losses/test_fastap_loss.py",
+          "tests/losses/test_histogram_loss.py",
+          "tests/losses/test_instance_loss.py",
+          "tests/losses/test_intra_pair_variance_loss.py",
+          "tests/losses/test_large_margin_softmax_loss.py",
+          "tests/losses/test_lifted_structure_loss.py",
+          "tests/losses/test_losses_without_labels.py",
+          "tests/losses/test_manifold_loss.py",
+          "tests/losses/test_margin_loss.py",
+          "tests/losses/test_multi_similarity_loss.py",
+          "tests/losses/test_multiple_losses.py",
+          "tests/losses/test_nca_loss.py",
+          "tests/losses/test_normalized_softmax_loss.py",
+          "tests/losses/test_npairs_loss.py",
+          "tests/losses/test_ntxent_loss.py",
+          "tests/losses/test_p2s_grad_loss.py",
+          "tests/losses/test_pnp_loss.py",
+          "tests/losses/test_proxy_anchor_loss.py",
+          "tests/losses/test_proxy_nca_loss.py",
+          "tests/losses/test_ranked_list_loss.py",
+          "tests/losses/test_self_supervised_loss.py",
+          "tests/losses/test_signal_to_noise_ratio_losses.py",
+          "tests/losses/test_smooth_ap_loss.py",
+          "tests/losses/test_soft_triple_loss.py",
+          "tests/losses/test_subcenter_arcface_loss.py",
+          "tests/losses/test_tcm_loss.py",
+          "tests/losses/test_triplet_margin_loss.py",
+          "tests/losses/test_tuplet_margin_loss.py",
+          "tests/losses/test_vicreg_loss.py",
+          "tests/losses/utils.py",
+          "tests/miners/__init__.py",
+          "tests/miners/test_angular_miner.py",
+          "tests/miners/test_batch_easy_hard_miner.py",
+          "tests/miners/test_batch_easy_hard_miner_labels.py",
+          "tests/miners/test_batch_hard_miner.py",
+          "tests/miners/test_distance_weighted_miner.py",
+          "tests/miners/test_hdc_miner.py",
+          "tests/miners/test_multi_similarity_miner.py",
+          "tests/miners/test_triplet_margin_miner.py",
+          "tests/miners/test_uniform_histogram_miner.py",
+          "tests/reducers/__init__.py",
+          "tests/reducers/test_avg_non_zero_reducer.py",
+          "tests/reducers/test_class_weighted_reducer.py",
+          "tests/reducers/test_divisor_reducer.py",
+          "tests/reducers/test_do_nothing_reducer.py",
+          "tests/reducers/test_multiple_reducers.py",
+          "tests/reducers/test_per_anchor_reducer.py",
+          "tests/reducers/test_setting_reducers.py",
+          "tests/reducers/test_threshold_reducer.py",
+          "tests/regularizers/__init__.py",
+          "tests/regularizers/test_regular_face_regularizer.py",
+          "tests/utils/__init__.py",
+          "tests/utils/test_common_functions.py",
+          "tests/utils/test_loss_and_miner_utils.py",
+          "tests/utils/test_loss_tracker.py",
+          "tests/utils/test_module_with_records_and_reducer.py",
+          "tests/zzz_testing_utils/__init__.py",
+          "tests/zzz_testing_utils/testing_utils.py"
+        ],
+        "module": "numerics",
+        "focusedSuite": "numerics-focused",
+        "executionSuite": "cpu-full"
+      },
+      {
+        "paths": [
+          "tests/testers/test_global_embedding_space_tester.py"
+        ],
+        "module": "evaluation",
+        "focusedSuite": "evaluation-focused"
+      },
+      {
+        "paths": [
+          "tests/testers/__init__.py",
+          "tests/testers/test_global_two_stream_embedding_space_tester.py",
+          "tests/testers/test_with_same_parent_label_tester.py",
+          "tests/utils/test_calculate_accuracies.py",
+          "tests/utils/test_calculate_accuracies_large_k.py",
+          "tests/utils/test_inference.py"
+        ],
+        "module": "evaluation",
+        "focusedSuite": "evaluation-focused",
+        "executionSuite": "cpu-full"
+      },
+      {
+        "paths": [
+          "tests/trainers/test_key_checking.py",
+          "tests/samplers/test_m_per_class_sampler.py"
+        ],
+        "module": "training",
+        "focusedSuite": "training-focused"
+      },
+      {
+        "paths": [
+          "tests/samplers/__init__.py",
+          "tests/samplers/test_fixed_set_of_triplets.py",
+          "tests/samplers/test_hierarchical_sampler.py",
+          "tests/samplers/test_tuples_to_weights_sampler.py",
+          "tests/trainers/__init__.py",
+          "tests/trainers/test_metric_loss_only.py"
+        ],
+        "module": "training",
+        "focusedSuite": "training-focused",
+        "executionSuite": "cpu-full"
+      },
+      {
+        "paths": [
+          "tests/datasets/test_local_datasets.py"
+        ],
+        "module": "datasets",
+        "focusedSuite": "datasets-focused"
+      },
+      {
+        "paths": [
+          "tests/datasets/__init__.py",
+          "tests/datasets/test_cars196.py",
+          "tests/datasets/test_cub.py",
+          "tests/datasets/test_inaturalist2018.py",
+          "tests/datasets/test_sop.py"
+        ],
+        "module": "datasets",
+        "focusedSuite": "datasets-focused",
+        "executionSuite": "cpu-full"
+      },
+      {
+        "paths": [
+          "tests/utils/test_distributed_fallback.py"
+        ],
+        "module": "distributed",
+        "focusedSuite": "distributed-focused"
+      },
+      {
+        "paths": [
+          "tests/utils/test_distributed.py"
+        ],
+        "module": "distributed",
+        "focusedSuite": "distributed-focused",
+        "executionSuite": "cpu-full"
+      }
+    ],
+    "suites": [
+      {
+        "name": "numerics-focused",
+        "kind": "unit",
+        "scope": "module",
+        "modules": [
+          "numerics"
+        ],
+        "paths": [
+          "tests/distances/test_collected_stats.py",
+          "tests/reducers/test_mean_reducer.py",
+          "tests/miners/test_pair_margin_miner.py",
+          "tests/losses/test_contrastive_loss.py",
+          "tests/regularizers/test_center_invariant_regularizer.py",
+          "tests/__init__.py",
+          "tests/zzz_testing_utils/**",
+          "tests/losses/utils.py"
+        ],
+        "argv": [
+          ".venv/bin/uv",
+          "run",
+          "--frozen",
+          "--no-sync",
+          "--env-file",
+          "tests/cpu.env",
+          "python",
+          "-m",
+          "unittest",
+          "tests.distances.test_collected_stats",
+          "tests.reducers.test_mean_reducer",
+          "tests.miners.test_pair_margin_miner",
+          "tests.losses.test_contrastive_loss",
+          "tests.regularizers.test_center_invariant_regularizer"
+        ],
+        "timeoutSeconds": 120
+      },
+      {
+        "name": "evaluation-focused",
+        "kind": "unit",
+        "scope": "module",
+        "modules": [
+          "evaluation"
+        ],
+        "paths": [
+          "tests/testers/test_global_embedding_space_tester.py",
+          "tests/__init__.py",
+          "tests/zzz_testing_utils/**",
+          "tests/losses/utils.py"
+        ],
+        "argv": [
+          ".venv/bin/uv",
+          "run",
+          "--frozen",
+          "--no-sync",
+          "--env-file",
+          "tests/cpu.env",
+          "python",
+          "-m",
+          "unittest",
+          "tests.testers.test_global_embedding_space_tester"
+        ],
+        "timeoutSeconds": 120
+      },
+      {
+        "name": "training-focused",
+        "kind": "unit",
+        "scope": "module",
+        "modules": [
+          "training"
+        ],
+        "paths": [
+          "tests/trainers/test_key_checking.py",
+          "tests/samplers/test_m_per_class_sampler.py",
+          "tests/__init__.py",
+          "tests/zzz_testing_utils/**",
+          "tests/losses/utils.py"
+        ],
+        "argv": [
+          ".venv/bin/uv",
+          "run",
+          "--frozen",
+          "--no-sync",
+          "--env-file",
+          "tests/cpu.env",
+          "python",
+          "-m",
+          "unittest",
+          "tests.trainers.test_key_checking",
+          "tests.samplers.test_m_per_class_sampler"
+        ],
+        "timeoutSeconds": 120
+      },
+      {
+        "name": "datasets-focused",
+        "kind": "unit",
+        "scope": "module",
+        "modules": [
+          "datasets"
+        ],
+        "paths": [
+          "tests/datasets/test_local_datasets.py",
+          "tests/__init__.py",
+          "tests/zzz_testing_utils/**",
+          "tests/losses/utils.py"
+        ],
+        "argv": [
+          ".venv/bin/uv",
+          "run",
+          "--frozen",
+          "--no-sync",
+          "--env-file",
+          "tests/cpu.env",
+          "python",
+          "-m",
+          "unittest",
+          "tests.datasets.test_local_datasets"
+        ],
+        "timeoutSeconds": 120
+      },
+      {
+        "name": "distributed-focused",
+        "kind": "unit",
+        "scope": "module",
+        "modules": [
+          "distributed"
+        ],
+        "paths": [
+          "tests/utils/test_distributed_fallback.py",
+          "tests/__init__.py",
+          "tests/zzz_testing_utils/**",
+          "tests/losses/utils.py"
+        ],
+        "argv": [
+          ".venv/bin/uv",
+          "run",
+          "--frozen",
+          "--no-sync",
+          "--env-file",
+          "tests/cpu.env",
+          "python",
+          "-m",
+          "unittest",
+          "tests.utils.test_distributed_fallback"
+        ],
+        "timeoutSeconds": 120
+      },
+      {
+        "name": "cpu-full",
+        "kind": "integration",
+        "scope": "repository",
+        "cost": "standard",
+        "paths": [
+          "tests/**"
+        ],
+        "argv": [
+          ".venv/bin/uv",
+          "run",
+          "--frozen",
+          "--no-sync",
+          "--env-file",
+          "tests/cpu.env",
+          "python",
+          "-m",
+          "unittest",
+          "discover"
+        ],
+        "runOn": [
+          "recommended",
+          "full"
+        ],
+        "timeoutSeconds": 3600
+      }
+    ]
+  },
+  "verification": {
+    "trustedMergeTarget": "origin/master",
+    "finalGateOwner": "ci"
+  },
+  "supplyChain": {
+    "releaseAgeAssessments": [
+      {
+        "id": "pillow-image-decoder-fixes",
+        "ecosystem": "pypi",
+        "package": "pillow",
+        "version": "13.0.0",
+        "scope": "uv.lock",
+        "category": "security-fix",
+        "evidence": "https://github.com/python-pillow/Pillow/releases/tag/13.0.0",
+        "reason": "Dataset image decoding reaches vulnerable native codecs; no aged release fixes the decoder issues. See docs/security/dependency-assessments.md#pillow-1300.",
+        "owner": "Codex",
+        "reviewed": "2026-10-26",
+        "expires": "2026-11-15"
+      },
+      {
+        "id": "uv-compromised-root",
+        "ecosystem": "pypi",
+        "package": "uv",
+        "version": "0.13.4",
+        "scope": "uv.lock",
+        "category": "security-fix",
+        "evidence": "https://github.com/astral-sh/uv/security/advisories/GHSA-hq85-5cpj-mr62",
+        "reason": "Package acquisition must not trust the compromised emSign CA. See docs/security/dependency-assessments.md#certificate-trust.",
+        "owner": "Codex",
+        "reviewed": "2026-10-26",
+        "expires": "2026-11-19"
+      }
+    ],
+    "vulnerabilityAssessments": [
+      {
+        "id": "ghsa-9vhv-jxww-xfm5",
+        "ecosystem": "pypi",
+        "advisory": "GHSA-9vhv-jxww-xfm5",
+        "package": "filelock",
+        "affectedVersion": "4.0.3",
+        "scope": "uv.lock",
+        "severity": "low",
+        "status": "not-affected",
+        "basis": "unreachable",
+        "reason": "PyTorch uses FileLock, resolved to UnixFileLock on the Mac/Linux development hosts and WindowsFileLock on Windows. Neither this project nor its enabled PyTorch callers use ReadWriteLock or SoftFileLock. See docs/security/dependency-assessments.md#retained-aged-dependencies.",
+        "impact": "The advisory-specific vulnerable API is not reached by the supported build, test, or library execution paths. Reassess before enabling the affected feature.",
+        "evidence": "https://osv.dev/vulnerability/GHSA-9vhv-jxww-xfm5",
+        "owner": "Codex",
+        "reviewed": "2026-10-26",
+        "expires": "2026-11-25"
+      },
+      {
+        "id": "ghsa-v4x8-3wr5-3wq8",
+        "ecosystem": "pypi",
+        "advisory": "GHSA-v4x8-3wr5-3wq8",
+        "package": "filelock",
+        "affectedVersion": "4.0.3",
+        "scope": "uv.lock",
+        "severity": "high",
+        "status": "not-affected",
+        "basis": "unreachable",
+        "reason": "PyTorch uses FileLock, resolved to UnixFileLock on the Mac/Linux development hosts and WindowsFileLock on Windows. Neither this project nor its enabled PyTorch callers use ReadWriteLock or SoftFileLock. See docs/security/dependency-assessments.md#retained-aged-dependencies.",
+        "impact": "The advisory-specific vulnerable API is not reached by the supported build, test, or library execution paths. Reassess before enabling the affected feature.",
+        "evidence": "https://osv.dev/vulnerability/GHSA-v4x8-3wr5-3wq8",
+        "owner": "Codex",
+        "reviewed": "2026-10-26",
+        "expires": "2026-11-25"
+      },
+      {
+        "id": "ghsa-xmj3-9gf7-h52w",
+        "ecosystem": "pypi",
+        "advisory": "GHSA-xmj3-9gf7-h52w",
+        "package": "setuptools",
+        "affectedVersion": "84.0.0",
+        "scope": "uv.lock",
+        "severity": "low",
+        "status": "not-affected",
+        "basis": "unreachable",
+        "reason": "Builds use build_meta; uv installs wheels. No setup_requires or install_as_egg path consumes namespace_packages.txt. See docs/security/dependency-assessments.md#retained-aged-dependencies.",
+        "impact": "The advisory-specific vulnerable API is not reached by the supported build, test, or library execution paths. Reassess before enabling the affected feature.",
+        "evidence": "https://osv.dev/vulnerability/GHSA-xmj3-9gf7-h52w",
+        "owner": "Codex",
+        "reviewed": "2026-10-26",
+        "expires": "2026-11-25"
+      },
+      {
+        "id": "ghsa-567q-5qvw-pf92",
+        "ecosystem": "pypi",
+        "advisory": "GHSA-567q-5qvw-pf92",
+        "package": "filelock",
+        "affectedVersion": "4.0.3",
+        "scope": "uv.lock",
+        "severity": "low",
+        "status": "not-affected",
+        "basis": "unreachable",
+        "reason": "PyTorch uses FileLock, resolved to UnixFileLock on the Mac/Linux development hosts and WindowsFileLock on Windows. Neither this project nor its enabled PyTorch callers use ReadWriteLock or SoftFileLock. See docs/security/dependency-assessments.md#retained-aged-dependencies.",
+        "impact": "The advisory-specific vulnerable API is not reached by the supported build, test, or library execution paths. Reassess before enabling the affected feature.",
+        "evidence": "https://osv.dev/vulnerability/GHSA-567q-5qvw-pf92",
+        "owner": "Codex",
+        "reviewed": "2026-10-26",
+        "expires": "2026-11-25"
+      },
+      {
+        "id": "ghsa-g6x2-hccm-hh4m",
+        "ecosystem": "pypi",
+        "advisory": "GHSA-g6x2-hccm-hh4m",
+        "package": "werkzeug",
+        "affectedVersion": "3.1.8",
+        "scope": "uv.lock",
+        "severity": "moderate",
+        "status": "not-affected",
+        "basis": "unreachable",
+        "reason": "Logging writes local TensorBoard event files; the repository launches no TensorBoard HTTP server and calls neither safe_join nor send_from_directory. See docs/security/dependency-assessments.md#retained-aged-dependencies.",
+        "impact": "The advisory-specific vulnerable API is not reached by the supported build, test, or library execution paths. Reassess before enabling the affected feature.",
+        "evidence": "https://osv.dev/vulnerability/GHSA-g6x2-hccm-hh4m",
+        "owner": "Codex",
+        "reviewed": "2026-10-26",
+        "expires": "2026-11-25"
+      },
+      {
+        "id": "certifi-disabled-documentation-clients",
+        "ecosystem": "pypi",
+        "advisory": "GHSA-6q48-6c7w-9gw2",
+        "package": "certifi",
+        "affectedVersion": "2026.7.22",
+        "scope": "uv.lock",
+        "severity": "critical",
+        "status": "not-affected",
+        "basis": "unreachable",
+        "reason": "MkDocs Material uses Requests only in its info, privacy, and social plugins, none enabled in mkdocs.yml. Library downloads use urllib and acquisition uses patched uv. See docs/security/dependency-assessments.md#retained-aged-dependencies.",
+        "impact": "No enabled HTTPS client uses the affected certifi trust bundle. Review before enabling a Requests caller or these plugins; update once the fix ages in.",
+        "evidence": "https://github.com/certifi/python-certifi/security/advisories/GHSA-6q48-6c7w-9gw2",
+        "owner": "Codex",
+        "reviewed": "2026-10-26",
+        "expires": "2026-11-02"
+      }
+    ]
+  },
+  "exceptions": [],
+  "documentation": {
+    "design": [
+      {
+        "path": "docs/design/numerics.md",
+        "module": "numerics"
+      },
+      {
+        "path": "docs/design/evaluation.md",
+        "module": "evaluation"
+      },
+      {
+        "path": "docs/design/training.md",
+        "module": "training"
+      },
+      {
+        "path": "docs/design/datasets.md",
+        "module": "datasets"
+      },
+      {
+        "path": "docs/design/distributed.md",
+        "module": "distributed"
+      }
+    ]
+  }
+}

@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78
+        with:
+          version: 0.13.4
+          python-version-file: .python-version
+          enable-cache: true
+      - name: Resolve verification base
+        run: |
+          if [ -z "$BASE_SHA" ] || [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ]; then
+            BASE_SHA="$(git rev-list --max-parents=0 HEAD)"
+          fi
+          echo "BASE_SHA=$BASE_SHA" >> "$GITHUB_ENV"
+      - name: Install locked policy tools
+        run: ./code-polishyw setup
+      - name: Review dependencies
+        run: ./code-polishyw dependency-review --base "$BASE_SHA"
+      - name: Install locked development dependencies
+        run: uv sync --frozen --all-extras --no-build --no-install-project
+      - name: Verify the candidate
+        run: ./code-polishyw merge-gate --base="$BASE_SHA"

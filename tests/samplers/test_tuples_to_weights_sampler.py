@@ -1,9 +1,6 @@
-import os
-import shutil
 import unittest
 
 import torch
-from torchvision import datasets, models, transforms
 
 from pytorch_metric_learning.miners import MultiSimilarityMiner
 from pytorch_metric_learning.samplers import TuplesToWeightsSampler
@@ -13,39 +10,28 @@ from .. import TEST_DEVICE
 
 class TestTuplesToWeightsSampler(unittest.TestCase):
     def test_tuplestoweights_sampler(self):
-        model = models.resnet18(pretrained=True)
-        model.fc = torch.nn.Identity()
-        model = torch.nn.DataParallel(model)
-        model.to(TEST_DEVICE)
-
-        miner = MultiSimilarityMiner(epsilon=-0.2)
-
-        eval_transform = transforms.Compose(
-            [
-                transforms.Resize(128),
-                transforms.ToTensor(),
-                transforms.Normalize(
-                    mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
-                ),
-            ]
-        )
-
-        temporary_folder = "cifar100_temp_for_pytorch_metric_learning_test"
-
-        assert not os.path.isdir(temporary_folder)
-
-        dataset = datasets.CIFAR100(
-            temporary_folder, train=True, download=True, transform=eval_transform
-        )
-        subset_size = 1000
-        sampler = TuplesToWeightsSampler(model, miner, dataset, subset_size=subset_size)
-        iterable_as_list = list(iter(sampler))
-        self.assertTrue(len(iterable_as_list) == subset_size)
-        unique_idx = torch.unique(torch.tensor(iterable_as_list))
-        self.assertTrue(torch.all(sampler.weights[unique_idx] != 0))
-
-        shutil.rmtree(temporary_folder)
-
-
-if __name__ == "__main__":
-    unittest.main()
+        generator = torch.Generator().manual_seed(31)
+        embeddings = torch.randn(64, 8, generator=generator)
+        labels = torch.arange(8).repeat_interleave(8)
+        dataset = torch.utils.data.TensorDataset(embeddings, labels)
+        for subset_size in (None, 32):
+            with self.subTest(subset_size=subset_size):
+                sampler = TuplesToWeightsSampler(
+                    torch.nn.Identity().to(TEST_DEVICE),
+                    MultiSimilarityMiner(epsilon=0.1),
+                    dataset,
+                    subset_size=subset_size,
+                    data_device=TEST_DEVICE,
+                    dataloader_num_workers=0,
+                )
+                sampled = torch.tensor(list(sampler), device=TEST_DEVICE)
+                weights = sampler.weights
+                assert isinstance(weights, torch.Tensor)
+                self.assertEqual(len(sampled), subset_size or len(dataset))
+                self.assertTrue(torch.all((sampled >= 0) & (sampled < len(dataset))))
+                self.assertTrue(torch.all(weights[sampled] > 0))
+                self.assertTrue(torch.all(torch.isfinite(weights)))
+                if subset_size is not None:
+                    self.assertLessEqual(torch.count_nonzero(weights), subset_size)
+                else:
+                    self.assertEqual(weights.shape, (len(dataset),))

@@ -1,11 +1,10 @@
-import logging
 import os
 import unittest
 
 import torch
 import torch.distributed as dist
 import torch.multiprocessing as mp
-import torch.optim as optim
+from torch import optim
 from torch.nn.parallel import DistributedDataParallel as DDP
 
 from pytorch_metric_learning.losses import ContrastiveLoss, CrossBatchMemory
@@ -15,21 +14,18 @@ from pytorch_metric_learning.utils import distributed
 from .. import TEST_DEVICE, TEST_DTYPES
 
 
-# https://discuss.pytorch.org/t/check-if-models-have-same-weights/4351
 def parameters_are_equal(model1, model2):
     output = True
-    for p1, p2 in zip(model1.parameters(), model2.parameters()):
+    for p1, p2 in zip(model1.parameters(), model2.parameters(), strict=True):
         output &= torch.allclose(p1.data, p2.data, rtol=1e-2)
     return output
 
 
-### from https://pytorch.org/tutorials/intermediate/ddp_tutorial.html ###
 def setup(rank, world_size):
     os.environ["MASTER_ADDR"] = "localhost"
     os.environ["MASTER_PORT"] = "12358"
 
-    dist_type = "gloo" if TEST_DEVICE == torch.device("cpu") else "nccl"
-    # initialize the process group
+    dist_type = "gloo" if TEST_DEVICE.type == "cpu" else "nccl"
     dist.init_process_group(dist_type, rank=rank, world_size=world_size)
 
 
@@ -49,7 +45,6 @@ class ToyMpModel(torch.nn.Module):
         return self.net2(x)
 
 
-### from https://pytorch.org/tutorials/intermediate/ddp_tutorial.html ###
 def single_process_function(
     rank,
     world_size,
@@ -69,12 +64,12 @@ def single_process_function(
     enqueue_mask,
 ):
     setup(rank, world_size)
-    if TEST_DEVICE == torch.device("cpu"):
+    if TEST_DEVICE.type == "cpu":
         device = TEST_DEVICE
         device_ids = None
         output_device = None
     else:
-        device = torch.device("cuda:{}".format(rank))
+        device = torch.device(f"cuda:{rank}")
         device_ids = [rank]
         output_device = rank
 
@@ -156,7 +151,6 @@ def create_labels(batch_size, world_size, iterations):
 
 
 def create_enqueue_mask(batch_size, world_size):
-    # enqueue every other embedding
     local_enqueue_mask = [
         (torch.randint(0, 2, size=(batch_size,))).bool() for _ in range(world_size)
     ]
@@ -187,14 +181,12 @@ class TestDistributedLossWrapper(unittest.TestCase):
         torch.manual_seed(75210)
         loss_kwargs = {} if loss_kwargs is None else loss_kwargs
         miner_kwargs = {} if miner_kwargs is None else miner_kwargs
-        if TEST_DEVICE == torch.device("cpu"):
-            return
+        if TEST_DEVICE.type == "cpu":
+            self.skipTest("Distributed CUDA tests require a CUDA test profile")
         max_world_size = min(4, torch.cuda.device_count())
-        if max_world_size < 1:
-            logging.warning(
-                "In GPU mode but no GPUs available. Skipping distributed test"
-            )
-            return
+        self.assertGreaterEqual(
+            max_world_size, 2, "Distributed CUDA tests require at least two GPUs"
+        )
         for dtype in TEST_DTYPES:
             if dtype == torch.float16:
                 continue
@@ -349,7 +341,7 @@ class TestDistributedLossWrapper(unittest.TestCase):
         for xbm in [False, True]:
             for use_ref in [False, True]:
                 for pass_labels_to_loss_fn in [False, True]:
-                    if xbm and use_ref or xbm and not pass_labels_to_loss_fn:
+                    if xbm and (use_ref or not pass_labels_to_loss_fn):
                         continue
                     self.loss_and_miner_tester(
                         ContrastiveLoss,

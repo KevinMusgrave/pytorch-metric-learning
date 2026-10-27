@@ -6,6 +6,8 @@ dist/
 *.egg-info/
 site/
 venv/
+.venv/
+.ruff_cache/
 **/.vscode
 .ipynb_checkpoints
 examples/notebooks/dataset
@@ -16,3 +18,5 @@ examples/notebooks/example_saved_models
 examples/notebooks/example_tensorboard
 examples/notebooks/data
 examples/notebooks/pytorch_resnet_cifar10
+/.code-polishy-reports/
+/.code-polishy-artifacts/

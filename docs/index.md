@@ -1,19 +1,21 @@
 # PyTorch Metric Learning
 
 ## Google Colab Examples
+
 See the [examples folder](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/README.md) for notebooks you can download or run on Google Colab.
 
 ## Overview
+
 This library contains 9 modules, each of which can be used independently within your existing codebase, or combined together for a complete train/test workflow.
 
 ![high_level_module_overview](imgs/high_level_module_overview.png)
 
-
-
 ## How loss functions work
 
 ### Using losses and miners in your training loop
+
 Let’s initialize a plain [TripletMarginLoss](losses.md#tripletmarginloss):
+
 ```python
 from pytorch_metric_learning import losses
 loss_func = losses.TripletMarginLoss()
@@ -31,9 +33,10 @@ for i, (data, labels) in enumerate(dataloader):
 	optimizer.step()
 ```
 
-The TripletMarginLoss computes all possible triplets within the batch, based on the labels you pass into it. Anchor-positive pairs are formed by embeddings that share the same label, and anchor-negative pairs are formed by embeddings that have different labels. 
+The TripletMarginLoss computes all possible triplets within the batch, based on the labels you pass into it. Anchor-positive pairs are formed by embeddings that share the same label, and anchor-negative pairs are formed by embeddings that have different labels.
 
 Sometimes it can help to add a mining function:
+
 ```python
 from pytorch_metric_learning import miners, losses
 miner = miners.MultiSimilarityMiner()
@@ -48,29 +51,32 @@ for i, (data, labels) in enumerate(dataloader):
 	loss.backward()
 	optimizer.step()
 ```
+
 In the above code, the miner finds positive and negative pairs that it thinks are particularly difficult. Note that even though the TripletMarginLoss operates on triplets, it’s still possible to pass in pairs. This is because the library automatically converts pairs to triplets and triplets to pairs, when necessary.
 
 ### Customizing loss functions
+
 Loss functions can be customized using [distances](distances.md), [reducers](reducers.md), and [regularizers](regularizers.md). In the diagram below, a miner finds the indices of hard pairs within a batch. These are used to index into the distance matrix, computed by the distance object. For this diagram, the loss function is pair-based, so it computes a loss per pair. In addition, a regularizer has been supplied, so a regularization loss is computed for each embedding in the batch. The per-pair and per-element losses are passed to the reducer, which (in this diagram) only keeps losses with a high value. The averages are computed for the high-valued pair and element losses, and are then added together to obtain the final loss.
 
 ![high_level_loss_function_overview](imgs/high_level_loss_function_overview.png)
 
-
 Now here's an example of a customized TripletMarginLoss:
+
 ```python
 from pytorch_metric_learning.distances import CosineSimilarity
 from pytorch_metric_learning.reducers import ThresholdReducer
 from pytorch_metric_learning.regularizers import LpRegularizer
 from pytorch_metric_learning import losses
-loss_func = losses.TripletMarginLoss(distance = CosineSimilarity(), 
-									reducer = ThresholdReducer(high=0.3), 
+loss_func = losses.TripletMarginLoss(distance = CosineSimilarity(),
+									reducer = ThresholdReducer(high=0.3),
 									embedding_regularizer = LpRegularizer())
 ```
+
 This customized triplet loss has the following properties:
 
- - The loss will be computed using cosine similarity instead of Euclidean distance.
- - All triplet losses that are higher than 0.3 will be discarded.
- - The embeddings will be L2 regularized.  
+- The loss will be computed using cosine similarity instead of Euclidean distance.
+- All triplet losses that are higher than 0.3 will be discarded.
+- The embeddings will be L2 regularized.
 
 ### Using loss functions for unsupervised / self-supervised learning
 
@@ -92,7 +98,6 @@ for i, data in enumerate(dataloader):
 
 If you're interested in [MoCo](https://arxiv.org/pdf/1911.05722.pdf)-style self-supervision, take a look at the [MoCo on CIFAR10](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples#simple-examples) notebook. It uses CrossBatchMemory to implement the momentum encoder queue, which means you can use any tuple loss, and any tuple miner to extract hard samples from the queue.
 
-
 ## Highlights of the rest of the library
 
 - For a convenient way to train your model, take a look at the [trainers](trainers.md).
@@ -101,42 +106,23 @@ If you're interested in [MoCo](https://arxiv.org/pdf/1911.05722.pdf)-style self-
 
 If you're short of time and want a complete train/test workflow, check out the [example Google Colab notebooks](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples).
 
-
 ## Installation
 
-### Required PyTorch version
- - ```pytorch-metric-learning >= v0.9.90``` requires ```torch >= 1.6```
- - ```pytorch-metric-learning < v0.9.90``` doesn't have a version requirement, but was tested with ```torch >= 1.2```
+Install the published package with pip:
 
-### Pip
-```
-pip install pytorch-metric-learning
+```sh
+python -m pip install pytorch-metric-learning
 ```
 
-**To get the latest dev version**:
-```
-pip install pytorch-metric-learning --pre
-```
+The current development checkout targets Python 3.12.13 and PyTorch 2.14.0.
+Its exact dependencies and optional features are defined in `pyproject.toml` and
+`uv.lock`; published releases retain their own package metadata. Older PyTorch
+versions are not part of the development test baseline.
 
-**To install on Windows**:
-```
-pip install torch===1.6.0 torchvision===0.7.0 -f https://download.pytorch.org/whl/torch_stable.html
-pip install pytorch-metric-learning
-```
+For development setup, CPU tests, and CUDA verification, see
+[the development guide](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/DEVELOPMENT.md).
 
-**To install with evaluation and logging capabilities (This will install the unofficial pypi version of faiss-gpu)**:
-```
-pip install pytorch-metric-learning[with-hooks]
-```
-
-**To install with evaluation and logging capabilities (CPU) (This will install the unofficial pypi version of faiss-cpu)**:
-```
-pip install pytorch-metric-learning[with-hooks-cpu]
-```
-
-### Conda
-```
-conda install -c conda-forge pytorch-metric-learning
-```
-
-**To use the testing module, you'll need faiss, which can be installed via conda as well. See the [installation instructions for faiss](https://github.com/facebookresearch/faiss/blob/master/INSTALL.md).**
+The checkout's `with-hooks` extra includes CPU FAISS, record-keeper, and
+TensorBoard for evaluation and logging. CPU FAISS can evaluate embeddings from
+CUDA models. The `datasets` extra supplies the image and dataset dependencies;
+`docs` supplies the documentation builder.

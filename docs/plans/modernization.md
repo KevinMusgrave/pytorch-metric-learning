@@ -315,7 +315,11 @@ for those design documents or evidence that the listed work is complete.
   pair, triplet, miner, proxy, and distributed workloads, with raw samples and
   explicit hardware, data, dtype, timing, compilation, and memory semantics.
   Core smoke workloads and a two-process Gloo run pass. All six affected focused
-  suites pass; committed-revision baseline measurements and CUDA/NCCL evidence
-  remain outstanding. Commands are in [performance measurements](../performance.md).
+  suites pass. Clean-revision CPU baselines cover batches 128 and 512, two-rank
+  Gloo, and full-graph proxy compilation. The larger triplet forward takes
+  341.808 ms versus 6.076 ms at batch 128, identifying cubic candidate enumeration
+  as an optimization target. Compilation does not improve this small CPU proxy
+  workload. CUDA/NCCL evidence remains outstanding. Commands and raw results are
+  in [performance measurements](../performance.md).
 - Phases 3–5: not started. The current package still contains the subsystems
   selected for removal.

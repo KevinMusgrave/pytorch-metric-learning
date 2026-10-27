@@ -6,8 +6,9 @@ numerical and distributed modules; neither module imports the runner.
 
 Measure autograd-enabled forward and backward separately on fresh graphs. Clear
 gradients before each step, warm up before sampling, and synchronize CUDA at
-timing boundaries. Report the first step separately so compilation and startup
-costs do not disappear into steady-state timings. Compiled runs require a full
+timing boundaries. Report the first step separately so lazy graph compilation
+does not disappear into steady-state timings. Module construction, compiler
+registration, and process startup precede that interval. Compiled runs require a full
 graph and fail on unsupported operations rather than silently timing an eager
 fallback. No universal performance threshold is imposed.
 

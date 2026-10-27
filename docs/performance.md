@@ -34,7 +34,8 @@ uv run --frozen --no-sync python -m benchmarks.run \
 
 Compilation uses `torch.compile(..., fullgraph=True)`. An unsupported operation
 fails the command; there is no automatic eager fallback. The first step,
-including compilation and startup, is reported separately. The default five
+including lazy graph compilation, is reported separately. Module construction,
+compiler registration, and process startup precede that measurement. The default five
 additional warmup steps precede twenty measured steps. Use a fresh process when
 comparing startup behavior and record whether the compiler cache was warm.
 
@@ -76,3 +77,38 @@ inputs are already present at that baseline. This is not allocator-reserved
 memory or total device usage. CPU peak tensor memory is reported as null.
 The runner verifies finite losses/gradients or valid miner indices before
 sampling; mathematical correctness is established by the reference tests.
+
+## Initial CPU reference
+
+Measured on 2026-10-27 UTC at clean revision
+`f8186f88d475ca90905a45a7fca191ffcfb2be16`: Apple M1 Pro, macOS 26.7.1,
+Python 3.12.13, PyTorch 2.14.0, float32, one thread per rank, 128 dimensions,
+four examples per class, seed 17, ten warmup steps after the first call, and
+fifty measured steps. Values below are median milliseconds. This is a shared
+development laptop, not an isolated performance lab; use the raw sample spread
+and repeat on the target hardware before setting a performance budget.
+
+| Case                     | Batch 128 forward | Batch 128 backward | Batch 512 forward | Batch 512 backward |
+| ------------------------ | ----------------: | -----------------: | ----------------: | -----------------: |
+| Contrastive              |             0.353 |              0.293 |             3.846 |              2.667 |
+| All-triplet margin       |             6.076 |              0.682 |           341.808 |              8.841 |
+| Pair-margin miner        |             0.367 |                  — |             4.784 |                  — |
+| Normalized-softmax proxy |             0.092 |              0.134 |             0.252 |              0.343 |
+
+Raw results: [batch 128](benchmarks/cpu-m1-pro-b128.json) and
+[batch 512](benchmarks/cpu-m1-pro-b512.json). The large triplet forward cost is
+a concrete optimization target: the current enumeration constructs a cubic
+candidate mask even though this balanced label distribution produces only
+quadratically many valid triplets.
+
+The [two-rank Gloo measurement](benchmarks/gloo-m1-pro-b128.json) uses 64 rows
+per rank, 128 globally. The slower median rank took 1.491 ms forward and
+1.129 ms backward. This includes the encoder and communication, unlike the
+single-process contrastive row above.
+
+The [full-graph compiled proxy measurement](benchmarks/compiled-proxy-m1-pro-b128.json)
+succeeded at batch 128: 0.127 ms forward and 0.130 ms backward, versus 0.092 ms
+and 0.134 ms eager. Its first forward/backward took 9.467 seconds; compiler
+registration and import costs are additional and were not timed. Compiler-cache
+state was not isolated. This workload does not justify enabling compilation by
+default. CUDA performance and peak tensor memory remain unmeasured.

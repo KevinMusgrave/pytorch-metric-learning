@@ -54,7 +54,7 @@ Thank you to [Ser-Nam Lim](https://sites.google.com/site/sernam) at [Facebook AI
 
 ### Open-source repos
 
-This library contains code that has been adapted and modified from the following great open-source repos:
+This library contains code that has been adapted and modified from the following great open-source repos. [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) maps each one to the files it informed and reproduces its license notice:
 
 - https://github.com/bnu-wangxun/Deep_Metric
 - https://github.com/chaoyuaw/incubator-mxnet/blob/master/example/gluon/embedding_learning

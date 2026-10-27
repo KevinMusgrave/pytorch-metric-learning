@@ -9,7 +9,7 @@ description = "Composable metric learning losses, miners, distances, samplers, a
 readme = "README.md"
 requires-python = ">=3.12"
 license = "MIT"
-license-files = ["LICENSE"]
+license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md", "CREDITS.md"]
 authors = [{ name = "Kevin Musgrave" }]
 dependencies = [
     "numpy==2.5.3",

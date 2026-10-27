@@ -366,8 +366,24 @@ for those design documents or evidence that the listed work is complete.
   import. Retrieval metric discovery still uses `calculate_` name inspection,
   which dead-code analysis reports; replacing it is a class-design item. The
   locked repository-wide Ruff format check fails on 42 inherited files.
+- Phase 3 complete: the wheel installs in a clean environment with only its
+  declared dependencies and imports all 91 modules without optional backends.
+  Adapted-code provenance and upstream license texts ship in
+  `THIRD_PARTY_NOTICES.md` and `CREDITS.md`.
+- Phase 4: regularization is explicit (no mixins, MRO walk, or class-name
+  matching) and penalties are added after reduction; weight-bearing losses
+  declare their arguments. Parameter losses no longer cast or move parameters
+  in forward, which had broken optimizer state. Contrastive and proxy
+  benchmarks are unchanged within noise. Samplers use PyTorch generators with
+  explicit reproducibility and documented coverage semantics.
+- Phase 5, equations: all equation images are LaTeX rendered by pinned MathJax
+  3.2.2 with subresource integrity, verified against implementations and
+  papers. Verification fixed SmoothAP positive sets, TCM and LiftedStructure
+  reference handling, Tuplet NaNs, and Angular negative normalization, and
+  documented intentional deviations. A new SVG architecture diagram replaces
+  the obsolete raster diagrams. GitHub-native math rendering is unverified.
 - Phase 5: all Jupyter notebooks and the separate example gallery are removed.
   The README now provides a human-readable introduction and minimal training
   step, leading to a shared task/component index and agent-facing executable
-  recipes beside their contracts. Equation conversion, API documentation,
-  diagram redesign, and complete policy adoption remain outstanding.
+  recipes beside their contracts. API documentation agreement and complete
+  policy adoption remain outstanding.

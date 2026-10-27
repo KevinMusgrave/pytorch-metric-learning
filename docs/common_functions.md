@@ -30,15 +30,6 @@ c_f.set_logger_name("DOGS")
 c_f.LOGGER.info("Hello") # prints INFO:DOGS:Hello
 ```
 
-## COLLECT_STATS
-
-Default value is `False`. This is used by all distances, losses, miners, reducers, and regularizers. Set this to `True` if you want to turn on all statistics collection.
-
-```python
-from pytorch_metric_learning.utils import common_functions as c_f
-c_f.COLLECT_STATS = True
-```
-
 ## TorchInitWrapper
 
 A simpler wrapper to convert the torch weight initialization functions into class form, which can then be applied within loss functions.

@@ -30,12 +30,10 @@ This class is equivalent to using `ThresholdReducer(low=0)`. See [ThresholdReduc
 All reducers extend this class.
 
 ```python
-reducers.BaseReducer(collect_stats=None)
+reducers.BaseReducer()
 ```
 
 **Parameters**:
-
-- **collect_stats**: If True, compute optional diagnostic statistics, which can require device synchronization. If False, skip them. If None, use the global [COLLECT_STATS](common_functions.md#collect_stats) flag, which is False by default.
 
 ## ClassWeightedReducer
 

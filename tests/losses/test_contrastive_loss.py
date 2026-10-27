@@ -6,8 +6,16 @@ from pytorch_metric_learning.distances import CosineSimilarity, LpDistance
 from pytorch_metric_learning.losses import ContrastiveLoss
 from pytorch_metric_learning.reducers import MeanReducer
 
-from .. import TEST_DEVICE, TEST_DTYPES, WITH_COLLECT_STATS
+from .. import TEST_DEVICE, TEST_DTYPES
 from ..zzz_testing_utils import testing_utils
+
+
+def pair_losses(embeddings, pairs, loss_of_pair):
+    return torch.stack([loss_of_pair(embeddings[a], embeddings[b]) for a, b in pairs])
+
+
+def mean_of_non_zero(losses):
+    return losses.sum() / (losses > 0).sum().clamp(min=1)
 
 
 class TestContrastiveLoss(unittest.TestCase):
@@ -37,7 +45,7 @@ class TestContrastiveLoss(unittest.TestCase):
                 [testing_utils.angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
-            ).to(TEST_DEVICE)  # 2D embeddings
+            ).to(TEST_DEVICE)
             labels = torch.LongTensor([0, 0, 1, 1, 2])
 
             lossA = loss_funcA(embeddings, labels)
@@ -67,72 +75,34 @@ class TestContrastiveLoss(unittest.TestCase):
                 (4, 3),
             ]
 
-            correct_pos_losses = [0, 0, 0, 0]
-            correct_neg_losses = [0, 0, 0, 0]
-            num_non_zero_pos = [0, 0, 0, 0]
-            num_non_zero_neg = [0, 0, 0, 0]
-            for a, p in pos_pairs:
-                anchor, positive = embeddings[a], embeddings[p]
-                correct_lossA = torch.relu(torch.sum((anchor - positive) ** 2) - 0.25)
-                correct_lossB = torch.relu(1.5 - torch.matmul(anchor, positive))
-                correct_pos_losses[0] += correct_lossA
-                correct_pos_losses[1] += correct_lossB
-                correct_pos_losses[2] += correct_lossA
-                correct_pos_losses[3] += correct_lossB
-                if correct_lossA > 0:
-                    num_non_zero_pos[0] += 1
-                    num_non_zero_pos[2] += 1
-                if correct_lossB > 0:
-                    num_non_zero_pos[1] += 1
-                    num_non_zero_pos[3] += 1
-
-            for a, n in neg_pairs:
-                anchor, negative = embeddings[a], embeddings[n]
-                correct_lossA = torch.relu(1.5 - torch.sum((anchor - negative) ** 2))
-                correct_lossB = torch.relu(torch.matmul(anchor, negative) - 0.6)
-                correct_neg_losses[0] += correct_lossA
-                correct_neg_losses[1] += correct_lossB
-                correct_neg_losses[2] += correct_lossA
-                correct_neg_losses[3] += correct_lossB
-                if correct_lossA > 0:
-                    num_non_zero_neg[0] += 1
-                    num_non_zero_neg[2] += 1
-                if correct_lossB > 0:
-                    num_non_zero_neg[1] += 1
-                    num_non_zero_neg[3] += 1
-
-            for i in range(2):
-                if num_non_zero_pos[i] > 0:
-                    correct_pos_losses[i] /= num_non_zero_pos[i]
-                if num_non_zero_neg[i] > 0:
-                    correct_neg_losses[i] /= num_non_zero_neg[i]
-
-            for i in range(2, 4):
-                correct_pos_losses[i] /= len(pos_pairs)
-                correct_neg_losses[i] /= len(neg_pairs)
-
-            correct_losses = [0, 0, 0, 0]
-            for i in range(4):
-                correct_losses[i] = correct_pos_losses[i] + correct_neg_losses[i]
+            lp_pos = pair_losses(
+                embeddings,
+                pos_pairs,
+                lambda a, p: torch.relu(torch.sum((a - p) ** 2) - 0.25),
+            )
+            cos_pos = pair_losses(
+                embeddings, pos_pairs, lambda a, p: torch.relu(1.5 - torch.matmul(a, p))
+            )
+            lp_neg = pair_losses(
+                embeddings,
+                neg_pairs,
+                lambda a, n: torch.relu(1.5 - torch.sum((a - n) ** 2)),
+            )
+            cos_neg = pair_losses(
+                embeddings, neg_pairs, lambda a, n: torch.relu(torch.matmul(a, n) - 0.6)
+            )
+            correct_losses = [
+                mean_of_non_zero(lp_pos) + mean_of_non_zero(lp_neg),
+                mean_of_non_zero(cos_pos) + mean_of_non_zero(cos_neg),
+                lp_pos.mean() + lp_neg.mean(),
+                cos_pos.mean() + cos_neg.mean(),
+            ]
 
             rtol = 1e-2 if dtype == torch.float16 else 1e-5
             self.assertTrue(torch.isclose(lossA, correct_losses[0], rtol=rtol))
             self.assertTrue(torch.isclose(lossB, correct_losses[1], rtol=rtol))
             self.assertTrue(torch.isclose(lossC, correct_losses[2], rtol=rtol))
             self.assertTrue(torch.isclose(lossD, correct_losses[3], rtol=rtol))
-
-            for L in [loss_funcA, loss_funcB, loss_funcC, loss_funcD]:
-                testing_utils.is_not_none_if_condition(
-                    self,
-                    L.distance,
-                    [
-                        "initial_avg_query_norm",
-                        "initial_avg_ref_norm",
-                        "final_avg_query_norm",
-                        "final_avg_ref_norm",
-                    ],
-                    WITH_COLLECT_STATS,
-                )
 
     def test_with_no_valid_pairs(self):
         loss_funcA = ContrastiveLoss()
@@ -143,7 +113,7 @@ class TestContrastiveLoss(unittest.TestCase):
                 [testing_utils.angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
-            ).to(TEST_DEVICE)  # 2D embeddings
+            ).to(TEST_DEVICE)
             labels = torch.LongTensor([0])
             lossA = loss_funcA(embeddings, labels)
             lossB = loss_funcB(embeddings, labels)
@@ -160,7 +130,7 @@ class TestContrastiveLoss(unittest.TestCase):
                     [testing_utils.angle_to_coord(a) for a in embedding_angles],
                     requires_grad=True,
                     dtype=dtype,
-                ).to(TEST_DEVICE)  # 2D embeddings
+                ).to(TEST_DEVICE)
                 labels = torch.LongTensor([0])
                 loss = loss_func(embeddings, labels)
                 loss.backward()

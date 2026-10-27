@@ -6,7 +6,7 @@ from pytorch_metric_learning.distances import LpDistance
 from pytorch_metric_learning.miners import BatchEasyHardMiner
 from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
 
-from .. import TEST_DEVICE, TEST_DTYPES, WITH_COLLECT_STATS
+from .. import TEST_DEVICE, TEST_DTYPES
 
 
 class TestBatchEasyHardMiner(unittest.TestCase):
@@ -267,13 +267,6 @@ class TestBatchEasyHardMiner(unittest.TestCase):
                     embeddings, self.labels, embeddings, self.labels
                 )
                 self.helper(a1, p, a2, n, cfg["expected"])
-                if WITH_COLLECT_STATS:
-                    self.assertTrue(miner.easiest_triplet == cfg["easiest_triplet"])
-                    self.assertTrue(miner.hardest_triplet == cfg["hardest_triplet"])
-                    self.assertTrue(miner.easiest_pos_pair == cfg["easiest_pos_pair"])
-                    self.assertTrue(miner.hardest_pos_pair == cfg["hardest_pos_pair"])
-                    self.assertTrue(miner.easiest_neg_pair == cfg["easiest_neg_pair"])
-                    self.assertTrue(miner.hardest_neg_pair == cfg["hardest_neg_pair"])
 
     def test_strategy_assertion(self):
         self.assertRaises(ValueError, lambda: BatchEasyHardMiner(pos_strategy="blah"))

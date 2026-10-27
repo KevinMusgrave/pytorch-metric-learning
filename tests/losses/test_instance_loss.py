@@ -10,9 +10,6 @@ from pytorch_metric_learning.losses import InstanceLoss
 from .. import TEST_DEVICE, TEST_DTYPES
 
 
-# original loss copied from here
-# https://github.com/layumi/Person_reID_baseline_pytorch/blob/master/instance_loss.py
-# as a reference to test against
 def l2_norm(v):
     fnorm = torch.norm(v, p=2, dim=1, keepdim=True) + 1e-6
     v = v.div(fnorm.expand_as(v))
@@ -25,17 +22,13 @@ class OriginalInstanceLoss(nn.Module):
         self.gamma = gamma
 
     def forward(self, feature, label=None) -> Tensor:
-        # Dual-Path Convolutional Image-Text Embeddings with Instance Loss, ACM TOMM 2020
-        # https://zdzheng.xyz/files/TOMM20.pdf
-        # using cross-entropy loss for every sample if label is not available. else use given label.
         normed_feature = l2_norm(feature)
         sim1 = torch.mm(normed_feature * self.gamma, torch.t(normed_feature))
-        # sim2 = sim1.t()
         if label is None:
             sim_label = torch.arange(sim1.size(0)).cuda().detach()
         else:
             _, sim_label = torch.unique(label, return_inverse=True)
-        loss = F.cross_entropy(sim1, sim_label)  # + F.cross_entropy(sim2, sim_label)
+        loss = F.cross_entropy(sim1, sim_label)
         return loss
 
 

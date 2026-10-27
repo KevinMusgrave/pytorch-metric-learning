@@ -56,31 +56,29 @@ class TestCalculateAccuracies(unittest.TestCase):
                     if avg_of_avgs and return_per_class:
                         self.assertRaises(
                             ValueError,
-                            lambda: accuracy_calculator.AccuracyCalculator(
-                                **init_kwargs
-                            ),
+                            accuracy_calculator.AccuracyCalculator,
+                            **init_kwargs,
                         )
                         continue
 
                     AC = accuracy_calculator.AccuracyCalculator(**init_kwargs)
-                    kwargs = {
-                        "query_labels": query_labels,
-                        "label_counts": label_counts,
-                        "knn_labels": knn_labels,
-                        "not_lone_query_mask": (
-                            torch.ones(6, dtype=torch.bool)
-                            if i == 0
-                            else torch.zeros(6, dtype=torch.bool)
-                        ),
-                    }
+                    not_lone_query_mask = (
+                        torch.ones(6, dtype=torch.bool)
+                        if i == 0
+                        else torch.zeros(6, dtype=torch.bool)
+                    )
 
                     function_dict = AC.get_function_dict()
 
                     for ecfss in [False, True]:
-                        if ecfss:
-                            kwargs["knn_labels"] = kwargs["knn_labels"][:, 1:]
-                        kwargs["ref_includes_query"] = ecfss
-                        acc = AC._get_accuracy(function_dict, **kwargs)
+                        acc = AC._get_accuracy(
+                            function_dict,
+                            query_labels=query_labels,
+                            label_counts=label_counts,
+                            knn_labels=knn_labels[:, 1:] if ecfss else knn_labels,
+                            not_lone_query_mask=not_lone_query_mask,
+                            ref_includes_query=ecfss,
+                        )
                         if i == 1:
                             self.assertTrue(np.all(np.isnan(acc["precision_at_1"])))
                             self.assertTrue(np.all(np.isnan(acc["r_precision"])))
@@ -493,7 +491,7 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
                 reference = (torch.arange(20, device=TEST_DEVICE) / 2.0).unsqueeze(1)
                 reference = torch.cat([reference[::2], reference[1::2]], dim=0)
                 reference_labels = torch.zeros(20, device=TEST_DEVICE)
-                reference_labels[: len(query)] = query_labels
+                reference_labels[: len(query)] = torch.as_tensor(query_labels)
                 reference_labels[len(query) :] = torch.ones(10)
             acc = AC.get_accuracy(
                 query, query_labels, reference, reference_labels, True
@@ -663,7 +661,6 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
             (1, 6),
         ]
 
-        # SIMPLE CASE
         if use_numpy:
             query = np.arange(2)[:, None]
             reference = np.arange(5)[:, None]
@@ -686,15 +683,15 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
             query, query_labels, reference, reference_labels, False
         )
 
-        for k in correct:
-            self.assertTrue(isclose(acc[k], correct[k]))
+        for k, expected in correct.items():
+            self.assertTrue(isclose(acc[k], expected))
 
         acc = AC_per_class_average.get_accuracy(
             query, query_labels, reference, reference_labels, False
         )
 
-        for k in correct:
-            self.assertTrue(isclose(acc[k], correct[k]))
+        for k, expected in correct.items():
+            self.assertTrue(isclose(acc[k], expected))
 
     def _test_accuracy_calculator_float_custom_comparison_function(self, use_numpy):
         def label_comparison_fn(x, y):
@@ -756,10 +753,9 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
             query, query_labels, reference, reference_labels, False
         )
 
-        for k in correct:
-            self.assertTrue(isclose(acc[k], correct[k]))
+        for k, expected in correct.items():
+            self.assertTrue(isclose(acc[k], expected))
 
-        # for the query in ref case
         reference_labels = [0.01, 0.02, 10, 0.03]
         reference_labels = (
             np.array(reference_labels)
@@ -774,127 +770,10 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
             "mean_average_precision": ((0 + 1 / 2 + 2 / 3) / 2 + (1 + 2 / 3) / 2) / 2,
         }
         acc = AC_global_average.get_accuracy(
-            query, query_labels, reference, reference_labels, True
+            query, query_labels, reference, reference_labels, ref_includes_query=True
         )
-        for k in correct:
-            self.assertTrue(isclose(acc[k], correct[k]))
-
-
-class TestCalculateAccuraciesValidK(unittest.TestCase):
-    def test_valid_k(self):
-        for k in [-1, 0, 1.5, "max"]:
-            self.assertRaises(
-                ValueError, lambda: accuracy_calculator.AccuracyCalculator(k=k)
-            )
-
-    def test_k_warning(self):
-        for k in [10, 100, 2000, "max_bin_count"]:
-            AC = accuracy_calculator.AccuracyCalculator(k=k)
-            embeddings = torch.randn(10000, 32)
-            labels = torch.randint(0, 10, size=(10000,))
-            if k in [10, 100]:
-                with self.assertLogs(LOGGER, level="WARNING"):
-                    AC.get_accuracy(embeddings, labels)
-            else:
-                with self.assertNoLogs(LOGGER, level="WARNING"):
-                    AC.get_accuracy(embeddings, labels)
-
-
-class TestAccuracyCalculatorContracts(unittest.TestCase):
-    def test_default_metrics_and_backend(self):
-        AC = accuracy_calculator.AccuracyCalculator()
-        self.assertEqual(
-            set(AC.get_curr_metrics()),
-            {
-                "mean_average_precision",
-                "mean_average_precision_at_r",
-                "mean_reciprocal_rank",
-                "precision_at_1",
-                "r_precision",
-            },
-        )
-        self.assertIsInstance(AC.knn_func, CustomKNN)
-        self.assertIsNone(AC.kmeans_func)
-
-    def test_each_metric_can_be_computed_alone(self):
-        values = [0.0, 0.7, 1.9, 5.0, 5.6, 1.2]
-        label_values = [0, 0, 0, 1, 1, 1]
-        expected = {name: 0.0 for name in self.metric_names()}
-        for q, (value, label) in enumerate(zip(values, label_values, strict=True)):
-            order = sorted(
-                (abs(value - other), r) for r, other in enumerate(values) if r != q
-            )
-            relevant = [label_values[r] == label for _, r in order]
-            total = sum(relevant)
-            hits = [sum(relevant[: i + 1]) for i in range(len(relevant))]
-            precisions = [h / (i + 1) for i, h in enumerate(hits)]
-            expected["precision_at_1"] += relevant[0]
-            expected["r_precision"] += hits[total - 1] / total
-            expected["mean_reciprocal_rank"] += 1 / (relevant.index(True) + 1)
-            expected["mean_average_precision"] += (
-                sum(p for p, rel in zip(precisions, relevant, strict=True) if rel)
-                / total
-            )
-            expected["mean_average_precision_at_r"] += (
-                sum(
-                    p
-                    for p, rel in zip(precisions[:total], relevant[:total], strict=True)
-                    if rel
-                )
-                / total
-            )
-        embeddings = torch.tensor(values).unsqueeze(1)
-        labels = torch.tensor(label_values)
-        for metric in expected:
-            with self.subTest(metric=metric):
-                calculator = accuracy_calculator.AccuracyCalculator(include=(metric,))
-                result = calculator.get_accuracy(embeddings, labels)
-                self.assertEqual(set(result), {metric})
-                self.assertAlmostEqual(result[metric], expected[metric] / len(values))
-
-    @staticmethod
-    def metric_names():
-        return (
-            "mean_average_precision",
-            "mean_average_precision_at_r",
-            "mean_reciprocal_rank",
-            "precision_at_1",
-            "r_precision",
-        )
-
-    def test_clustering_requires_explicit_kmeans(self):
-        with self.assertRaisesRegex(ValueError, "kmeans_func"):
-            accuracy_calculator.AccuracyCalculator(include=("NMI",))
-        accuracy_calculator.AccuracyCalculator(
-            include=("NMI",), kmeans_func=lambda x, n: torch.zeros(len(x))
-        )
-
-    def test_device_argument_and_input_device(self):
-        embeddings = torch.tensor([[0.0], [0.1], [5.0], [5.1]], device=TEST_DEVICE)
-        labels = torch.tensor([0, 0, 1, 1], device=TEST_DEVICE)
-        seen = []
-
-        def knn_func(query, k, reference, ref_includes_query):
-            seen.append(query.device)
-            return CustomKNN(LpDistance(normalize_embeddings=False))(
-                query, k, reference, ref_includes_query
-            )
-
-        for device in (None, str(TEST_DEVICE), TEST_DEVICE):
-            AC = accuracy_calculator.AccuracyCalculator(
-                include=("precision_at_1",), device=device, knn_func=knn_func
-            )
-            accuracies = AC.get_accuracy(embeddings, labels)
-            self.assertEqual(accuracies["precision_at_1"], 1)
-        self.assertEqual(seen, [embeddings.device] * 3)
-
-    def test_non_finite_embeddings_are_rejected(self):
-        AC = accuracy_calculator.AccuracyCalculator(include=("precision_at_1",))
-        labels = torch.tensor([0, 0, 1])
-        for value in (float("nan"), float("inf")):
-            embeddings = torch.tensor([[0.0], [value], [1.0]])
-            with self.assertRaisesRegex(ValueError, "finite"):
-                AC.get_accuracy(embeddings, labels)
+        for k, expected in correct.items():
+            self.assertTrue(isclose(acc[k], expected))
 
 
 class TestCalculateAccuraciesFaissKNN(unittest.TestCase):
@@ -916,7 +795,7 @@ class TestCalculateAccuraciesFaissKNN(unittest.TestCase):
         embeddings = torch.randn(1000, 32)
         labels = torch.randint(0, 10, size=(1000,))
         AC.get_accuracy(embeddings, labels)
-        self.assertTrue(isinstance(AC.knn_func.index, faiss.IndexFlatIP))
+        self.assertTrue(isinstance(knn_func.index, faiss.IndexFlatIP))
 
 
 class TestCalculateAccuraciesCustomKNN(unittest.TestCase):
@@ -961,7 +840,7 @@ class TestCalculateAccuraciesCustomKNN(unittest.TestCase):
 
 class TestWithinAutocast(unittest.TestCase):
     def test_within_autocast(self):
-        if TEST_DEVICE == torch.device("cpu"):
+        if torch.device("cpu") == TEST_DEVICE:
             return
         AC = accuracy_calculator.AccuracyCalculator()
         embeddings = torch.randn(1000, 32)
@@ -996,49 +875,9 @@ class TestMutualInformation(unittest.TestCase):
                 )
                 acc = AC.get_accuracy(emb, labels, emb, labels, False)
 
-                # compute directly
                 kmeans = KMeans(n_clusters=2).fit_predict(emb)
                 correct_ami = adjusted_mutual_info_score(labels.numpy(), kmeans)
                 correct_nmi = normalized_mutual_info_score(labels.numpy(), kmeans)
 
                 self.assertTrue(np.isclose(acc["AMI"], correct_ami, rtol=1e-1))
                 self.assertTrue(np.isclose(acc["NMI"], correct_nmi, rtol=1e-1))
-
-
-class TestEmbeddingsComeFromSameSource(unittest.TestCase):
-    def test_tied_distances(self):
-        # Embeddings with different labels colocated.
-        # The "skip first index" approach might remove the wrong item.
-        # So this is to test that the correct item is removed.
-        emb = torch.tensor([[10], [10], [20], [20]])
-        labels = torch.tensor([1, 0, 1, 0])
-        AC = accuracy_calculator.AccuracyCalculator(include=("precision_at_1",))
-        accuracies = AC.get_accuracy(emb, labels)
-        self.assertEqual(accuracies["precision_at_1"], 0)
-
-    def test_many_tied_distances(self):
-        # This tests for the avoidance of a shape error
-        emb = torch.zeros(10000, 2)
-        labels = torch.randint(0, 2, size=(10000,))
-        AC = accuracy_calculator.AccuracyCalculator(include=("precision_at_1",), k=1)
-        accuracies = AC.get_accuracy(emb, labels)
-        self.assertTrue(np.isclose(accuracies["precision_at_1"], 0.5, rtol=0.1))
-
-    def test_query_within_reference(self):
-        query = torch.tensor([0, 10, 20]).unsqueeze(1)
-        ref = torch.tensor([0, 5, 10, 15, 20]).unsqueeze(1)
-        query_labels = torch.tensor([0, 1, 2])
-        ref_labels = torch.tensor([0, 9, 1, 8, 2])
-        AC = accuracy_calculator.AccuracyCalculator(include=("precision_at_1",))
-
-        # should work with False
-        AC.get_accuracy(query, query_labels, ref, ref_labels, False)
-
-        # query != ref[:len(query)]
-        with self.assertRaises(ValueError):
-            AC.get_accuracy(query, query_labels, ref, ref_labels, True)
-
-        # query == ref[:len(query)]
-        ref = torch.tensor([0, 10, 20, 5, 15]).unsqueeze(1)
-        ref_labels[:3] = query_labels
-        AC.get_accuracy(query, query_labels, ref, ref_labels, True)

@@ -17,7 +17,7 @@ class TestMultiSimilarityLoss(unittest.TestCase):
                 [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
-            ).to(TEST_DEVICE)  # 2D embeddings
+            ).to(TEST_DEVICE)
             labels = torch.LongTensor([0, 0, 1, 1, 2])
             pos_pairs = [(0, 1), (1, 0), (2, 3), (3, 2)]
             neg_pairs = [
@@ -72,10 +72,10 @@ class TestMultiSimilarityLoss(unittest.TestCase):
         loss = loss_func(embeddings, labels, ref_emb=ref_emb, ref_labels=ref_labels)
         loss.backward()
         embeddings = torch.nn.functional.normalize(embeddings)
-        correct_total = 0
+        correct_total = torch.zeros((), dtype=dtype, device=TEST_DEVICE)
         for i in range(len(embeddings)):
-            correct_pos_loss = 0
-            correct_neg_loss = 0
+            correct_pos_loss = torch.zeros((), dtype=dtype, device=TEST_DEVICE)
+            correct_neg_loss = torch.zeros((), dtype=dtype, device=TEST_DEVICE)
             for a, p in pos_pairs:
                 if a == i:
                     anchor = embeddings[a]
@@ -110,7 +110,7 @@ class TestMultiSimilarityLoss(unittest.TestCase):
                 [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
-            ).to(TEST_DEVICE)  # 2D embeddings
+            ).to(TEST_DEVICE)
             labels = torch.LongTensor([0])
             loss = loss_func(embeddings, labels)
             loss.backward()

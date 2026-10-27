@@ -1,5 +1,3 @@
-import torch
-
 from ..utils import loss_and_miner_utils as lmu
 from .base_miner import BaseMiner
 
@@ -9,7 +7,6 @@ class TripletMarginMiner(BaseMiner):
         super().__init__(**kwargs)
         self.margin = margin
         self.type_of_triplets = type_of_triplets
-        self.register_stats("avg_triplet_margin", "pos_pair_dist", "neg_pair_dist")
 
     def mine(self, embeddings, labels, ref_emb, ref_labels):
         anchor_idx, positive_idx, negative_idx = lmu.get_all_triplets_indices(
@@ -21,8 +18,6 @@ class TripletMarginMiner(BaseMiner):
         triplet_margin = (
             ap_dist - an_dist if self.distance.is_inverted else an_dist - ap_dist
         )
-
-        self.set_stats(ap_dist, an_dist, triplet_margin)
 
         if self.type_of_triplets == "easy":
             threshold_condition = triplet_margin > self.margin
@@ -38,10 +33,3 @@ class TripletMarginMiner(BaseMiner):
             positive_idx[threshold_condition],
             negative_idx[threshold_condition],
         )
-
-    def set_stats(self, ap_dist, an_dist, triplet_margin):
-        if self.collect_stats:
-            with torch.no_grad():
-                self.pos_pair_dist = torch.mean(ap_dist).item()
-                self.neg_pair_dist = torch.mean(an_dist).item()
-                self.avg_triplet_margin = torch.mean(triplet_margin).item()

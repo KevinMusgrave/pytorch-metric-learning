@@ -35,7 +35,7 @@ class TestMultipleLosses(unittest.TestCase):
                     [angle_to_coord(a) for a in embedding_angles],
                     requires_grad=True,
                     dtype=dtype,
-                ).to(TEST_DEVICE)  # 2D embeddings
+                ).to(TEST_DEVICE)
                 labels = torch.randint(low=0, high=10, size=(180,))
 
                 loss = loss_func(embeddings, labels)
@@ -47,10 +47,8 @@ class TestMultipleLosses(unittest.TestCase):
                     + lossB(embeddings, labels, indices_tupleB) * 0.23
                 )
                 self.assertTrue(torch.isclose(loss, correct_loss))
-                self.assertRaises(
-                    AssertionError,
-                    lambda: loss_func(embeddings, labels, indices_tupleB),
-                )
+                with self.assertRaises(AssertionError):
+                    loss_func(embeddings, labels, indices_tupleB)
 
     def test_input_indices_tuple(self):
         lossA = ContrastiveLoss()
@@ -69,7 +67,7 @@ class TestMultipleLosses(unittest.TestCase):
                     [angle_to_coord(a) for a in embedding_angles],
                     requires_grad=True,
                     dtype=dtype,
-                ).to(TEST_DEVICE)  # 2D embeddings
+                ).to(TEST_DEVICE)
                 labels = torch.randint(low=0, high=10, size=(180,))
                 indices_tuple = miner(embeddings, labels)
 

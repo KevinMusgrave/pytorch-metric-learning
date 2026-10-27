@@ -19,7 +19,7 @@ class TestNCALoss(unittest.TestCase):
                 [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
-            ).to(TEST_DEVICE)  # 2D embeddings
+            ).to(TEST_DEVICE)
             labels = torch.LongTensor([0, 0, 1, 1, 2])
 
             loss = loss_func(embeddings, labels)
@@ -46,7 +46,7 @@ class TestNCALoss(unittest.TestCase):
             ]
 
             embeddings = torch.nn.functional.normalize(embeddings)
-            correct_total = 0
+            correct_total = torch.zeros((), dtype=dtype, device=TEST_DEVICE)
             for a1, p in pos_pairs:
                 anchor1, positive = embeddings[a1], embeddings[p]
                 ap_dist = torch.sum((anchor1 - positive) ** 2)
@@ -72,7 +72,7 @@ class TestNCALoss(unittest.TestCase):
                     [angle_to_coord(a) for a in embedding_angles],
                     requires_grad=True,
                     dtype=dtype,
-                ).to(TEST_DEVICE)  # 2D embeddings
+                ).to(TEST_DEVICE)
                 labels = torch.LongTensor(labels)
                 loss = loss_func(embeddings, labels)
                 loss.backward()

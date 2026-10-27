@@ -34,7 +34,6 @@ class TestSubCenterArcFaceLoss(unittest.TestCase):
                 labels = torch.randint(low=0, high=num_classes, size=(batch_size,)).to(
                     TEST_DEVICE
                 )
-                # check if subcenters are included
                 self.assertTrue(loss_func.W.shape[1] == num_classes * sub_centers)
 
                 loss = loss_func(embeddings, labels)
@@ -42,9 +41,8 @@ class TestSubCenterArcFaceLoss(unittest.TestCase):
 
                 weights = F.normalize(loss_func.W, p=2, dim=0)
                 logits = torch.matmul(F.normalize(embeddings), weights)
-                # include only closest sub centers
                 logits = logits.view(-1, num_classes, sub_centers)
-                logits, _ = logits.max(axis=2)
+                logits, _ = logits.max(dim=2)
 
                 for i, c in enumerate(labels):
                     acos = torch.acos(torch.clamp(logits[i, c], -1, 1))
@@ -71,15 +69,13 @@ class TestSubCenterArcFaceLoss(unittest.TestCase):
                         torch.isclose(loss, regular_arcface_loss, rtol=rtol)
                     )
 
-                # test get_logits
                 logits_out = loss_func.get_logits(embeddings)
                 self.assertTrue(
                     logits_out.shape == torch.Size([batch_size, num_classes])
                 )
                 logits = torch.matmul(F.normalize(embeddings), weights)
-                # include only closest sub centers
                 logits = logits.view(-1, num_classes, sub_centers)
-                logits_target, _ = logits.max(axis=2)
+                logits_target, _ = logits.max(dim=2)
                 self.assertTrue(torch.allclose(logits_out, logits_target * scale))
 
     def test_inference_subcenter_arcface(self):
@@ -127,18 +123,15 @@ class TestSubCenterArcFaceLoss(unittest.TestCase):
                 )
                 outliers_labels = labels[outliers]
                 outliers_distances = distances[outliers, outliers_labels]
-                # check if outliers are below the threshold
                 self.assertTrue((outliers_distances < cos_threshold).all())
 
                 all_indices = torch.arange(len(labels), device=TEST_DEVICE)
                 normal_indices = torch.masked_select(
                     all_indices, distances[all_indices, labels] >= cos_threshold
                 )
-                # check if all indices present
                 self.assertTrue(
-                    (normal_indices.shape[0] + outliers.shape[0] == labels.shape[0])
+                    normal_indices.shape[0] + outliers.shape[0] == labels.shape[0]
                 )
-                # check if there's no intersection between indeces of 2 sets
                 self.assertTrue(
                     len(
                         np.intersect1d(

@@ -87,14 +87,26 @@ mismatch outside autocast raises `ValueError`. `SubCenterArcFaceLoss` accepts
 `num_classes` and `embedding_size` positionally, and
 `get_outliers(..., return_dominant_centers=False)` now returns only the outliers.
 
-## Statistics registration
+## Statistics removed
 
-Hyperparameter "recordable attribute" lists existed only for the removed
-record-keeper integration and are gone. `add_to_recordable_attributes` is
-replaced by `register_stats(*names)`, which registers opt-in statistics only
-when `collect_stats` is enabled. Attributes that registration previously
-created as placeholder zeros, such as `NormalizedSoftmaxLoss.num_classes`, no
-longer exist.
+The `collect_stats` argument, the global `common_functions.COLLECT_STATS` flag,
+and every recorded statistic attribute are removed, for example
+`miner.pos_pair_dist`, `reducer.num_past_filter`, `loss.avg_angle`, and
+`distance.final_avg_query_norm`. The consumer of these values, record-keeper,
+was removed earlier. Recording forced host synchronization and side effects in
+`forward`. Compute the same quantities from what the library returns:
+
+```python
+a1, p, a2, n = miner(embeddings, labels)
+distances = miner.distance(embeddings)
+pos_pair_dist = distances[a1, p].mean()
+neg_pair_dist = distances[a2, n].mean()
+```
+
+Use `torch.nn.Module.register_forward_hook` to observe a module's inputs and
+outputs without changing library code. The internal `ModuleWithRecords*` base
+classes are replaced by `ModuleWithReducer`, `ModuleWithDistance`, and
+`ModuleWithReducerAndDistance`.
 
 ## Extension hooks
 

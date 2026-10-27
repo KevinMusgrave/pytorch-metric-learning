@@ -19,7 +19,7 @@ class TestIntraPairVarianceLoss(unittest.TestCase):
                 [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
-            ).to(TEST_DEVICE)  # 2D embeddings
+            ).to(TEST_DEVICE)
             labels = torch.LongTensor([0, 0, 1, 1, 2])
 
             loss = loss_func(embeddings, labels)
@@ -45,9 +45,9 @@ class TestIntraPairVarianceLoss(unittest.TestCase):
                 (4, 3),
             ]
 
-            pos_total, neg_total = 0, 0
-            mean_pos = 0
-            mean_neg = 0
+            zero = torch.zeros((), dtype=dtype, device=TEST_DEVICE)
+            pos_total, neg_total = zero.clone(), zero.clone()
+            mean_pos, mean_neg = zero.clone(), zero.clone()
             embeddings = torch.nn.functional.normalize(embeddings)
             for a, p in pos_pairs:
                 mean_pos += torch.matmul(embeddings[a], embeddings[p])
@@ -59,20 +59,16 @@ class TestIntraPairVarianceLoss(unittest.TestCase):
             for a, p in pos_pairs:
                 pos_total += (
                     torch.relu(
-                        (
-                            (1 - pos_eps) * mean_pos
-                            - torch.matmul(embeddings[a], embeddings[p])
-                        )
+                        (1 - pos_eps) * mean_pos
+                        - torch.matmul(embeddings[a], embeddings[p])
                     )
                     ** 2
                 )
             for a, n in neg_pairs:
                 neg_total += (
                     torch.relu(
-                        (
-                            torch.matmul(embeddings[a], embeddings[n])
-                            - (1 + neg_eps) * mean_neg
-                        )
+                        torch.matmul(embeddings[a], embeddings[n])
+                        - (1 + neg_eps) * mean_neg
                     )
                     ** 2
                 )
@@ -91,7 +87,7 @@ class TestIntraPairVarianceLoss(unittest.TestCase):
                 [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
-            ).to(TEST_DEVICE)  # 2D embeddings
+            ).to(TEST_DEVICE)
             labels = torch.LongTensor([0])
             loss = loss_func(embeddings, labels)
             loss.backward()

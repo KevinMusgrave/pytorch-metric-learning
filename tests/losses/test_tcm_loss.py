@@ -11,7 +11,6 @@ from pytorch_metric_learning.losses import (
 )
 
 from .. import TEST_DEVICE, TEST_DTYPES
-from pytorch_metric_learning.losses import ThresholdConsistentMarginLoss
 
 
 class TestThresholdConsistentMarginLoss(unittest.TestCase):
@@ -41,17 +40,17 @@ class TestThresholdConsistentMarginLoss(unittest.TestCase):
             )
             labels = torch.tensor([0, 0, 1, 1])
 
-            # Contrastive loss = 0.4866
-            #
-            # TCM loss part:
-            # Only pair (2, 3) is taken into account for positive part
-            # Positive part = 1 * ( 0.9 - 0.7071 ) / ( 1 ) = 0.1929
-            #
-            # Only pairs (1, 2) and (1, 3) are taken into account for negative part
-            # Negative part = 1 * ( 0.7071 - 0.5 + 0.9429 - 0.5  ) / ( 2 ) = 0.325
-            #
-            # Sum of these losses -> 0.4866 + 0.518 = 1.0046
-            correct_loss = torch.tensor(1.0045).to(dtype)
+            contrastive_loss = 0.4866
+            margin_plus, margin_minus = 0.9, 0.5
+            positive_sim_2_3 = 0.7071
+            negative_sim_0_3, negative_sim_1_3 = 0.7071, 0.9429
+            tcm_positive_part = margin_plus - positive_sim_2_3
+            tcm_negative_part = (
+                (negative_sim_0_3 - margin_minus) + (negative_sim_1_3 - margin_minus)
+            ) / 2
+            correct_loss = torch.tensor(
+                contrastive_loss + tcm_positive_part + tcm_negative_part
+            ).to(dtype)
 
             with torch.no_grad():
                 res = loss_func.forward(embs, labels)

@@ -1,12 +1,11 @@
 from ..utils import common_functions as c_f
-from ..utils.module_with_records_and_reducer import ModuleWithRecordsReducerAndDistance
+from ..utils.module_with_reducer import ModuleWithReducerAndDistance
 
 
-class BaseRegularizer(ModuleWithRecordsReducerAndDistance):
+class BaseRegularizer(ModuleWithReducerAndDistance):
     def compute_loss(self, x):
         raise NotImplementedError
 
     def forward(self, x):
-        self.reset_stats()
         loss_dict = self.compute_loss(x)
         return self.reducer(loss_dict, x, c_f.torch_arange_from_size(x))

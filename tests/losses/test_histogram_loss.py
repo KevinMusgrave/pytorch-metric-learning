@@ -9,32 +9,22 @@ from pytorch_metric_learning.utils import common_functions as c_f
 from .. import TEST_DEVICE, TEST_DTYPES
 
 
-######################################
-#######ORIGINAL IMPLEMENTATION########
-######################################
-# DIRECTLY COPIED from https://github.com/valerystrizh/pytorch-histogram-loss/blob/master/losses.py.
-# This code is copied from the official PyTorch implementation
-# so that we can make sure our implementation returns the same result.
-# Some minor changes were made to avoid errors during testing.
-# Every change in the original code is reported and explained.
 class OriginalImplementationHistogramLoss(torch.nn.Module):
-    def __init__(self, num_steps, cuda=True):
-        super(OriginalImplementationHistogramLoss, self).__init__()
+    def __init__(self, num_steps, use_cuda=True):
+        super().__init__()
         self.step = 2 / (num_steps - 1)
         self.eps = 1 / num_steps
-        self.cuda = cuda
+        self.use_cuda = use_cuda
         self.t = torch.arange(-1, 1 + self.step, self.step).view(-1, 1)
         self.tsize = self.t.size()[0]
-        if self.cuda:
+        if self.use_cuda:
             self.t = self.t.cuda()
 
     def forward(self, features, classes):
         def histogram(inds, size):
             s_repeat_ = s_repeat.clone()
-            inds = c_f.to_device(inds, tensor=s_repeat_floor)  # Added to avoid errors
-            self.t = c_f.to_device(
-                self.t, tensor=s_repeat_floor
-            )  # Added to avoid errors
+            inds = c_f.to_device(inds, tensor=s_repeat_floor)
+            self.t = c_f.to_device(self.t, tensor=s_repeat_floor)
             indsa = (
                 (s_repeat_floor - (self.t - self.step) > -self.eps)
                 & (s_repeat_floor - (self.t - self.step) < self.eps)
@@ -46,18 +36,12 @@ class OriginalImplementationHistogramLoss(torch.nn.Module):
             zeros = torch.zeros((1, indsa.size()[1])).to(
                 device=indsa.device, dtype=torch.uint8
             )
-            if self.cuda:
+            if self.use_cuda:
                 zeros = zeros.cuda()
-            indsb = torch.cat((indsa, zeros))[1:, :].to(
-                dtype=torch.bool
-            )  # Added to avoid bug with masks of uint8
+            indsb = torch.cat((indsa, zeros))[1:, :].to(dtype=torch.bool)
             s_repeat_[~(indsb | indsa)] = 0
-            # indsa corresponds to the first condition of the second equation of the paper
-            self.t = self.t.to(
-                dtype=s_repeat_.dtype
-            )  # Added to avoid errors when using Half precision
+            self.t = self.t.to(dtype=s_repeat_.dtype)
             s_repeat_[indsa] = (s_repeat_ - self.t + self.step)[indsa] / self.step
-            # indsb corresponds to the second condition of the second equation of the paper
             s_repeat_[indsb] = (-s_repeat_ + self.t + self.step)[indsb] / self.step
 
             return s_repeat_.sum(1) / size
@@ -72,11 +56,9 @@ class OriginalImplementationHistogramLoss(torch.nn.Module):
             (dists > 1 + self.eps).sum().item() + (dists < -1 - self.eps).sum().item()
         ) == 0, "L2 normalization should be used"
         s_inds = torch.triu(torch.ones(classes_eq.size()), 1).byte()
-        if self.cuda:
+        if self.use_cuda:
             s_inds = s_inds.cuda()
-        classes_eq = classes_eq.to(
-            device=s_inds.device
-        )  # Added to avoid errors when using only cpu
+        classes_eq = classes_eq.to(device=s_inds.device)
         pos_inds = classes_eq[s_inds].repeat(self.tsize, 1)
         neg_inds = ~classes_eq[s_inds].repeat(self.tsize, 1)
         pos_size = classes_eq[s_inds].sum().item()
@@ -107,7 +89,7 @@ class OriginalImplementationHistogramLoss(torch.nn.Module):
         histogram_pos_inds = torch.tril(
             torch.ones(histogram_pos_repeat.size()), -1
         ).bool()
-        if self.cuda:
+        if self.use_cuda:
             histogram_pos_inds = histogram_pos_inds.cuda()
         histogram_pos_repeat[histogram_pos_inds] = 0
         histogram_pos_cdf = histogram_pos_repeat.sum(0)
@@ -125,10 +107,9 @@ class TestHistogramLoss(unittest.TestCase):
             num_bins = num_steps - 1
             loss_func = HistogramLoss(n_bins=num_bins)
             original_loss_func = OriginalImplementationHistogramLoss(
-                num_steps=num_steps, cuda=False
+                num_steps=num_steps, use_cuda=False
             )
 
-            # test multiple times
             for _ in range(2):
                 embeddings = torch.randn(
                     batch_size,

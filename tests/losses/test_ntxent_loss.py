@@ -20,7 +20,7 @@ class TestNTXentLoss(unittest.TestCase):
                 [angle_to_coord(a, normalized=True) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
-            ).to(TEST_DEVICE)  # 2D embeddings
+            ).to(TEST_DEVICE)
 
             labels = torch.LongTensor([0, 0, 0, 1, 1, 2])
             pos_pairs = [(0, 1), (0, 2), (1, 0), (1, 2), (2, 0), (2, 1), (3, 4), (4, 3)]
@@ -92,8 +92,8 @@ class TestNTXentLoss(unittest.TestCase):
 
         loss_len = 4 if ref_emb is not None else 5
         total_lossA, total_lossB, total_lossC, total_lossD, total_lossE = (
-            0,
-            0,
+            torch.zeros((), device=TEST_DEVICE, dtype=dtype),
+            torch.zeros((), device=TEST_DEVICE, dtype=dtype),
             torch.zeros(loss_len, device=TEST_DEVICE, dtype=dtype),
             torch.zeros(loss_len, device=TEST_DEVICE, dtype=dtype),
             torch.zeros(loss_len, device=TEST_DEVICE, dtype=dtype),
@@ -169,13 +169,13 @@ class TestNTXentLoss(unittest.TestCase):
             for loss_func in [loss_funcA, loss_funcB]:
                 for dtype in TEST_DTYPES:
                     for embedding_angles, labels in zip(
-                        all_embedding_angles, all_labels
+                        all_embedding_angles, all_labels, strict=True
                     ):
                         embeddings = torch.tensor(
                             [angle_to_coord(a) for a in embedding_angles],
                             requires_grad=True,
                             dtype=dtype,
-                        ).to(TEST_DEVICE)  # 2D embeddings
+                        ).to(TEST_DEVICE)
                         loss = loss_func(embeddings, labels)
                         loss.backward()
                         self.assertEqual(loss, 0)
@@ -192,7 +192,7 @@ class TestNTXentLoss(unittest.TestCase):
                         [angle_to_coord(a) for a in embedding_angles],
                         requires_grad=True,
                         dtype=dtype,
-                    ).to(TEST_DEVICE)  # 2D embeddings
+                    ).to(TEST_DEVICE)
                     labels = torch.LongTensor([0, 0, 1, 1, 2])
                     loss = loss_func(embeddings, labels)
                     loss.backward()

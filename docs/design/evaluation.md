@@ -11,7 +11,9 @@ fixtures as tests.
 
 Query and reference sets remain explicit. Self-matches are excluded only when
 the caller states that the query occupies the first rows of the reference set.
-Equal shapes or labels never imply that relationship. Label comparisons may be
+Equal shapes or labels never imply that relationship. The k-NN backends remove each
+query's own index rather than its first neighbor, because colocated
+embeddings with different labels can tie with the query and sort before it. Label comparisons may be
 customized and need not be scalar equality.
 
 The default k-NN backend is an exact PyTorch search on the input device:

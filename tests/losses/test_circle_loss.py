@@ -21,7 +21,7 @@ class TestCircleLoss(unittest.TestCase):
                 [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
-            ).to(TEST_DEVICE)  # 2D embeddings
+            ).to(TEST_DEVICE)
             labels = torch.LongTensor([0, 0, 1, 1, 2])
 
             loss = loss_func(embeddings, labels)
@@ -48,7 +48,7 @@ class TestCircleLoss(unittest.TestCase):
             ]
 
             normalized_embeddings = torch.nn.functional.normalize(embeddings)
-            correct_total = 0
+            correct_total = torch.zeros((), dtype=dtype, device=TEST_DEVICE)
             for i in range(len(normalized_embeddings)):
                 pos_logits = []
                 neg_logits = []
@@ -90,7 +90,8 @@ class TestCircleLoss(unittest.TestCase):
                         + torch.logsumexp(neg_logits, dim=0)
                     )
 
-            correct_total /= 4  # only 4 of the embeddings have both pos and neg pairs
+            num_anchors_with_pos_and_neg_pairs = 4
+            correct_total /= num_anchors_with_pos_and_neg_pairs
             self.assertTrue(torch.isclose(loss, correct_total))
 
     def test_with_no_valid_pairs(self):
@@ -102,7 +103,7 @@ class TestCircleLoss(unittest.TestCase):
                 [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
-            ).to(TEST_DEVICE)  # 2D embeddings
+            ).to(TEST_DEVICE)
             labels = torch.LongTensor([0])
             loss = loss_func(embeddings, labels)
             loss.backward()
@@ -117,7 +118,7 @@ class TestCircleLoss(unittest.TestCase):
                 [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
-            ).to(TEST_DEVICE)  # 2D embeddings
+            ).to(TEST_DEVICE)
             labels = torch.randint(low=0, high=10, size=(180,))
             loss = loss_func(embeddings, labels)
             loss.backward()

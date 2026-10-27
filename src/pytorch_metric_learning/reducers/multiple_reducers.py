@@ -13,7 +13,6 @@ class MultipleReducers(BaseReducer):
         )
 
     def forward(self, loss_dict, embeddings, labels):
-        self.reset_stats()
         sub_losses = torch.zeros(
             len(loss_dict), dtype=embeddings.dtype, device=embeddings.device
         )

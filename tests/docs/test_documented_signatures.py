@@ -32,14 +32,15 @@ def parse_parameters(class_name, arguments, namespace):
     for arg, default in zip(args.kwonlyargs, args.kw_defaults, strict=True):
         parameters[arg.arg] = (inspect.Parameter.KEYWORD_ONLY, default)
     return {
-        name: (
-            kind,
-            MISSING
-            if default is MISSING or default is None
-            else eval(compile(ast.Expression(default), "<doc>", "eval"), namespace),
-        )
+        name: (kind, evaluate_default(default, namespace))
         for name, (kind, default) in parameters.items()
     }
+
+
+def evaluate_default(default, namespace):
+    if not isinstance(default, ast.expr):
+        return MISSING
+    return eval(compile(ast.Expression(default), "<doc>", "eval"), namespace)
 
 
 def explicit_parameters(cls):

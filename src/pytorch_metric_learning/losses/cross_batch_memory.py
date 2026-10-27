@@ -4,7 +4,6 @@ import torch
 
 from ..utils import common_functions as c_f
 from ..utils import loss_and_miner_utils as lmu
-from ..utils.module_with_records import ModuleWithRecords
 from .base_loss_wrapper import BaseLossWrapper
 
 
@@ -13,7 +12,7 @@ class _MemoryState(TypedDict):
     has_been_filled: bool
 
 
-class CrossBatchMemory(BaseLossWrapper, ModuleWithRecords):
+class CrossBatchMemory(BaseLossWrapper):
     def __init__(self, loss, embedding_size, memory_size=1024, miner=None, **kwargs):
         super().__init__(loss=loss, **kwargs)
         self.loss = loss
@@ -50,7 +49,6 @@ class CrossBatchMemory(BaseLossWrapper, ModuleWithRecords):
             raise ValueError("indices_tuple and enqueue_mask are mutually exclusive")
         if enqueue_mask is not None:
             assert len(enqueue_mask) == len(embeddings)
-        self.reset_stats()
         device = embeddings.device
         labels = c_f.to_device(labels, device=device)
         self.embedding_memory = c_f.to_device(

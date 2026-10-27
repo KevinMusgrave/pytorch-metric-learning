@@ -30,7 +30,7 @@ class TestMarginLoss(unittest.TestCase):
 
             loss = loss_func(embeddings, labels, ref_emb=ref_emb, ref_labels=ref_labels)
 
-            correct_total_loss = 0
+            correct_total_loss = torch.zeros((), dtype=dtype, device=TEST_DEVICE)
             num_non_zero = 0
             for a, p, n in triplets:
                 anchor = embeddings[a]
@@ -111,7 +111,7 @@ class TestMarginLoss(unittest.TestCase):
                 [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
-            ).to(TEST_DEVICE)  # 2D embeddings
+            ).to(TEST_DEVICE)
             labels = torch.LongTensor([0, 1, 2, 3, 4])
             loss = loss_func(embeddings, labels)
             loss.backward()

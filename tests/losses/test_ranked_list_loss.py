@@ -13,7 +13,6 @@ class TestRankedListLoss(unittest.TestCase):
         batch_size = 32
         embedding_size = 64
         for dtype in TEST_DTYPES:
-            # test multiple times
             for _ in range(2):
                 embeddings = torch.randn(
                     batch_size,
@@ -28,7 +27,10 @@ class TestRankedListLoss(unittest.TestCase):
                 )
                 n = len(embeddings)
                 for Tp, lam, margin in zip(
-                    [0, 0.5, 3, -10], [0, 0.5, 0.7, 0.9], [0, 0.4, 0.8, 1.2]
+                    [0, 0.5, 3, -10],
+                    [0, 0.5, 0.7, 0.9],
+                    [0, 0.4, 0.8, 1.2],
+                    strict=True,
                 ):
                     alpha = 1 - margin / 2
                     Tn = Tp
@@ -89,7 +91,6 @@ class TestRankedListLoss(unittest.TestCase):
         batch_size = 32
         embedding_size = 64
         for dtype in TEST_DTYPES:
-            # test multiple times
             for _ in range(2):
                 embeddings = torch.randn(
                     batch_size,
@@ -109,6 +110,7 @@ class TestRankedListLoss(unittest.TestCase):
                     [0.3, 0.8, 1, 3],
                     [0, 0.5, 0.7, 0.9],
                     [0, 0.4, 0.8, 1.2],
+                    strict=True,
                 ):
                     loss_func = RankedListLoss(
                         margin=margin, Tn=Tn, imbalance=lam, alpha=alpha, Tp=Tp

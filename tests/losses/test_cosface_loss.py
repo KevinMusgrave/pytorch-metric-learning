@@ -24,7 +24,7 @@ class TestCosFaceLoss(unittest.TestCase):
                 [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
-            ).to(TEST_DEVICE)  # 2D embeddings
+            ).to(TEST_DEVICE)
             labels = torch.randint(low=0, high=10, size=(180,))
 
             loss = loss_func(embeddings, labels)
@@ -39,7 +39,6 @@ class TestCosFaceLoss(unittest.TestCase):
             rtol = 1e-2 if dtype == torch.float16 else 1e-5
             self.assertTrue(torch.isclose(loss, correct_loss, rtol=rtol))
 
-            # test get_logits
             logits_out = loss_func.get_logits(embeddings)
             self.assertTrue(
                 torch.allclose(

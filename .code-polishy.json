@@ -21,9 +21,8 @@
         "src/pytorch_metric_learning/miners/**",
         "src/pytorch_metric_learning/utils/common_functions.py",
         "src/pytorch_metric_learning/utils/loss_and_miner_utils.py",
-        "src/pytorch_metric_learning/utils/module_with_records.py",
-        "src/pytorch_metric_learning/utils/module_with_records_and_reducer.py",
-        "src/pytorch_metric_learning/utils/__init__.py"
+        "src/pytorch_metric_learning/utils/__init__.py",
+        "src/pytorch_metric_learning/utils/module_with_reducer.py"
       ]
     },
     {
@@ -179,7 +178,6 @@
     "ownership": [
       {
         "paths": [
-          "tests/distances/test_collected_stats.py",
           "tests/reducers/test_mean_reducer.py",
           "tests/miners/test_pair_margin_miner.py",
           "tests/losses/test_contrastive_loss.py",
@@ -260,7 +258,6 @@
           "tests/utils/__init__.py",
           "tests/utils/test_common_functions.py",
           "tests/utils/test_loss_and_miner_utils.py",
-          "tests/utils/test_module_with_records_and_reducer.py",
           "tests/zzz_testing_utils/__init__.py",
           "tests/zzz_testing_utils/testing_utils.py"
         ],
@@ -278,7 +275,8 @@
       {
         "paths": [
           "tests/utils/test_calculate_accuracies.py",
-          "tests/utils/test_calculate_accuracies_large_k.py"
+          "tests/utils/test_calculate_accuracies_large_k.py",
+          "tests/utils/test_accuracy_calculator_contracts.py"
         ],
         "module": "evaluation",
         "focusedSuite": "evaluation-focused",
@@ -333,7 +331,6 @@
           "numerics"
         ],
         "paths": [
-          "tests/distances/test_collected_stats.py",
           "tests/reducers/test_mean_reducer.py",
           "tests/miners/test_pair_margin_miner.py",
           "tests/losses/test_contrastive_loss.py",
@@ -357,7 +354,6 @@
           "python",
           "-m",
           "unittest",
-          "tests.distances.test_collected_stats",
           "tests.reducers.test_mean_reducer",
           "tests.miners.test_pair_margin_miner",
           "tests.losses.test_contrastive_loss",

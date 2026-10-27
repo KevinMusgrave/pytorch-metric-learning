@@ -9,6 +9,12 @@ from pytorch_metric_learning.losses import LargeMarginSoftmaxLoss, SphereFaceLos
 from .. import TEST_DEVICE, TEST_DTYPES
 from ..zzz_testing_utils.testing_utils import angle_to_coord
 
+UNNORMALIZED_EMBEDDING_SCALE = 10
+
+
+def index_of_angle_interval(angle, margin):
+    return (angle / (math.pi / margin)).floor()
+
 
 class TestLargeMarginSoftmaxLoss(unittest.TestCase):
     def test_large_margin_softmax_and_sphereface_loss(self):
@@ -23,12 +29,12 @@ class TestLargeMarginSoftmaxLoss(unittest.TestCase):
             ).to(TEST_DEVICE, dtype)
 
             embedding_angles = torch.arange(0, 180)
-            # multiply by 10 to make the embeddings unnormalized
             embeddings = torch.tensor(
-                np.array([angle_to_coord(a) for a in embedding_angles]) * 10,
+                np.array([angle_to_coord(a) for a in embedding_angles])
+                * UNNORMALIZED_EMBEDDING_SCALE,
                 requires_grad=True,
                 dtype=dtype,
-            ).to(TEST_DEVICE)  # 2D embeddings
+            ).to(TEST_DEVICE)
             labels = torch.randint(low=0, high=10, size=(180,)).to(TEST_DEVICE)
 
             lossA = loss_funcA(embeddings, labels)
@@ -73,12 +79,8 @@ class TestLargeMarginSoftmaxLoss(unittest.TestCase):
                 cos_with_marginB = torch.sum(cos_with_marginB)
                 angleA = torch.acos(torch.clamp(curr_cosineA, -1 + 1e-7, 1 - 1e-7))
                 angleB = torch.acos(torch.clamp(curr_cosineB, -1 + 1e-7, 1 - 1e-7))
-                kA = (
-                    angleA / (math.pi / margin)
-                ).floor()  # Equation 6: angles needs to be between [k*pi/m and (k+1)*pi/m]
-                kB = (
-                    angleB / (math.pi / margin)
-                ).floor()  # Equation 6: angles needs to be between [k*pi/m and (k+1)*pi/m]
+                kA = index_of_angle_interval(angleA, margin)
+                kB = index_of_angle_interval(angleB, margin)
                 cosinesA[i, j] = ((-1) ** kA) * cos_with_marginA - (2 * kA)
                 cosinesB[i, j] = ((-1) ** kB) * cos_with_marginB - (2 * kB)
 
@@ -92,7 +94,6 @@ class TestLargeMarginSoftmaxLoss(unittest.TestCase):
             self.assertTrue(torch.isclose(lossA, correct_lossA, rtol=rtol))
             self.assertTrue(torch.isclose(lossB, correct_lossB, rtol=rtol))
 
-            # test get_logits
             if dtype != torch.float16:
                 logits_outA = loss_funcA.get_logits(embeddings)
                 logits_outB = loss_funcB.get_logits(embeddings)
@@ -123,12 +124,12 @@ class TestLargeMarginSoftmaxLoss(unittest.TestCase):
             ).to(TEST_DEVICE, dtype)
             for loss_func in [loss_funcA, loss_funcB]:
                 embedding_angles = torch.arange(0, 180)
-                # multiply by 10 to make the embeddings unnormalized
                 embeddings = torch.tensor(
-                    np.array([angle_to_coord(a) for a in embedding_angles]) * 10,
+                    np.array([angle_to_coord(a) for a in embedding_angles])
+                    * UNNORMALIZED_EMBEDDING_SCALE,
                     requires_grad=True,
                     dtype=dtype,
-                ).to(TEST_DEVICE)  # 2D embeddings
+                ).to(TEST_DEVICE)
                 labels = torch.randint(low=0, high=10, size=(180,)).to(TEST_DEVICE)
 
                 loss = loss_func(embeddings, labels)

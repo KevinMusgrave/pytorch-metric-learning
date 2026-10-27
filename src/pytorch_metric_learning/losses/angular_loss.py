@@ -15,7 +15,6 @@ class AngularLoss(BaseMetricLossFunction):
             self, LpDistance, p=2, power=1, normalize_embeddings=True
         )
         self.alpha = torch.tensor(math.radians(alpha), dtype=torch.float64)
-        self.register_stats("average_angle")
 
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
         c_f.labels_required(labels)
@@ -52,17 +51,4 @@ class AngularLoss(BaseMetricLossFunction):
         anchors = self.distance.normalize(embeddings[a1])
         positives = self.distance.normalize(ref_emb[p])
         keep_mask = labels[a1].unsqueeze(1) != ref_labels.unsqueeze(0)
-        self.set_stats(anchors, positives, embeddings, ref_emb, keep_mask)
         return anchors, positives, keep_mask, a1, p
-
-    def set_stats(self, anchors, positives, embeddings, ref_emb, keep_mask):
-        if self.collect_stats:
-            with torch.no_grad():
-                centers = (anchors + positives) / 2
-                ap_dist = self.distance.pairwise_distance(anchors, positives)
-                nc_dist = self.distance.get_norm(
-                    centers - ref_emb.unsqueeze(1), dim=2
-                ).t()
-                angles = torch.atan(ap_dist.unsqueeze(1) / (2 * nc_dist))
-                average_angle = torch.sum(angles[keep_mask]) / torch.sum(keep_mask)
-                self.average_angle = math.degrees(average_angle.item())

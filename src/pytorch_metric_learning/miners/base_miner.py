@@ -1,31 +1,23 @@
 import torch
 
 from ..utils import common_functions as c_f
-from ..utils.module_with_records_and_reducer import ModuleWithRecordsAndDistance
+from ..utils.module_with_reducer import ModuleWithDistance
 
 
-class BaseMiner(ModuleWithRecordsAndDistance):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.register_stats("num_pos_pairs", "num_neg_pairs", "num_triplets")
-
+class BaseMiner(ModuleWithDistance):
     def mine(self, embeddings, labels, ref_emb, ref_labels):
         raise NotImplementedError
 
     def output_assertion(self, output):
         if len(output) == 3:
-            self.num_triplets = len(output[0])
-            assert self.num_triplets == len(output[1]) == len(output[2])
+            assert len(output[0]) == len(output[1]) == len(output[2])
         elif len(output) == 4:
-            self.num_pos_pairs = len(output[0])
-            self.num_neg_pairs = len(output[2])
-            assert self.num_pos_pairs == len(output[1])
-            assert self.num_neg_pairs == len(output[3])
+            assert len(output[0]) == len(output[1])
+            assert len(output[2]) == len(output[3])
         else:
             raise TypeError
 
     def forward(self, embeddings, labels, ref_emb=None, ref_labels=None):
-        self.reset_stats()
         with torch.no_grad():
             c_f.check_shapes(embeddings, labels)
             labels = c_f.to_device(labels, embeddings)

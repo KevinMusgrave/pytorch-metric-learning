@@ -1,16 +1,10 @@
 import torch
 
 from ..utils import common_functions as c_f
-from ..utils.module_with_records import ModuleWithRecords
 
 
-class BaseReducer(ModuleWithRecords):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.register_stats("losses_size")
-
+class BaseReducer(torch.nn.Module):
     def forward(self, loss_dict, embeddings, labels):
-        self.reset_stats()
         assert len(loss_dict) == 1
         loss_name = next(iter(loss_dict))
         loss_info = loss_dict[loss_name]
@@ -31,7 +25,6 @@ class BaseReducer(ModuleWithRecords):
     def reduce_the_loss(
         self, losses, loss_indices, reduction_type, kwargs, embeddings, labels
     ):
-        self.set_losses_size_stat(losses)
         if self.input_is_zero_loss(losses):
             return self.zero_loss(embeddings)
         self.assert_sizes(losses, loss_indices, reduction_type)
@@ -92,10 +85,3 @@ class BaseReducer(ModuleWithRecords):
         assert c_f.is_list_or_tuple(loss_indices)
         assert len(loss_indices) == 3
         assert all(len(x) == len(losses) for x in loss_indices)
-
-    def set_losses_size_stat(self, losses):
-        if self.collect_stats:
-            if not torch.is_tensor(losses) or losses.ndim == 0:
-                self.losses_size = 1
-            else:
-                self.losses_size = len(losses)

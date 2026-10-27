@@ -4,7 +4,6 @@ import torch
 
 LOGGER_NAME = "PML"
 LOGGER = logging.getLogger(LOGGER_NAME)
-COLLECT_STATS = False
 
 
 def set_logger_name(name):
@@ -42,20 +41,6 @@ def to_numpy(v):
         return v.cpu().numpy()
     except AttributeError:
         return v
-
-
-def register_stats(input_obj, names):
-    registered = input_obj.__dict__.setdefault("_record_these_stats", [])
-    for name in names:
-        if name not in registered:
-            registered.append(name)
-        if not hasattr(input_obj, name):
-            setattr(input_obj, name, 0)
-
-
-def reset_stats(input_obj):
-    for name in getattr(input_obj, "_record_these_stats", []):
-        setattr(input_obj, name, 0)
 
 
 def check_shapes(embeddings, labels):

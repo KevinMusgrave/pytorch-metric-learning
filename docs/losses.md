@@ -189,8 +189,7 @@ loss_optimizer.step()
 All loss functions extend this class and therefore inherit its `__init__` parameters.
 
 ```python
-losses.BaseMetricLossFunction(collect_stats=None,
-							reducer = None,
+losses.BaseMetricLossFunction(reducer = None,
 							distance = None,
 							embedding_regularizer = None,
 							embedding_reg_weight = 1)
@@ -198,7 +197,6 @@ losses.BaseMetricLossFunction(collect_stats=None,
 
 **Parameters**:
 
-- **collect_stats**: If True, compute optional diagnostic statistics, which can require device synchronization. If False, skip them. If None, use the global [COLLECT_STATS](common_functions.md#collect_stats) flag, which is False by default.
 - **reducer**: A [reducer](reducers.md) object. If None, then the default reducer will be used.
 - **distance**: A [distance](distances.md) object. If None, then the default distance will be used.
 - **embedding_regularizer**: A [regularizer](regularizers.md) object that will be applied to embeddings. If None, then no embedding regularization will be used.

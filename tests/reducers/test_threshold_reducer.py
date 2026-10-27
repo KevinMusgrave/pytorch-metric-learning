@@ -4,7 +4,7 @@ import torch
 
 from pytorch_metric_learning.reducers import ThresholdReducer
 
-from .. import TEST_DEVICE, TEST_DTYPES, WITH_COLLECT_STATS
+from .. import TEST_DEVICE, TEST_DTYPES
 
 
 class TestThresholdReducer(unittest.TestCase):
@@ -50,6 +50,3 @@ class TestThresholdReducer(unittest.TestCase):
                             L = L[high_threshold > L]
                         correct_output = torch.mean(L) if len(L) > 0 else 0
                         self.assertTrue(output == correct_output)
-
-                        if WITH_COLLECT_STATS:
-                            self.assertTrue(reducer.num_past_filter == len(L))

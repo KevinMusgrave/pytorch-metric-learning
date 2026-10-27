@@ -1,11 +1,12 @@
 import copy
 
+import torch
+
 from ..distances import LpDistance
 from ..reducers import DoNothingReducer, MeanReducer, MultipleReducers
-from .module_with_records import ModuleWithRecords
 
 
-class ModuleWithRecordsAndReducer(ModuleWithRecords):
+class ModuleWithReducer(torch.nn.Module):
     def __init__(self, reducer=None, **kwargs):
         super().__init__(**kwargs)
         self.set_reducer(reducer)
@@ -36,7 +37,7 @@ class ModuleWithRecordsAndReducer(ModuleWithRecords):
         return ["loss"]
 
 
-class ModuleWithRecordsAndDistance(ModuleWithRecords):
+class ModuleWithDistance(torch.nn.Module):
     def __init__(self, distance=None, **kwargs):
         super().__init__(**kwargs)
         self.distance = self.get_default_distance() if distance is None else distance
@@ -45,8 +46,6 @@ class ModuleWithRecordsAndDistance(ModuleWithRecords):
         return LpDistance(p=2)
 
 
-class ModuleWithRecordsReducerAndDistance(
-    ModuleWithRecordsAndReducer, ModuleWithRecordsAndDistance
-):
+class ModuleWithReducerAndDistance(ModuleWithReducer, ModuleWithDistance):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

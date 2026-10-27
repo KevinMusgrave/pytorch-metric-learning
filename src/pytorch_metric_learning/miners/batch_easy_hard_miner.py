@@ -43,15 +43,6 @@ class BatchEasyHardMiner(BaseMiner):
         self.allowed_pos_range = allowed_pos_range
         self.allowed_neg_range = allowed_neg_range
 
-        self.register_stats(
-            "easiest_triplet",
-            "hardest_triplet",
-            "easiest_pos_pair",
-            "hardest_pos_pair",
-            "easiest_neg_pair",
-            "hardest_neg_pair",
-        )
-
     def mine(self, embeddings, labels, ref_emb, ref_labels):
         mat = self.distance(embeddings, ref_emb)
         a1_idx, p_idx, a2_idx, n_idx = lmu.get_all_pairs_indices(labels, ref_labels)
@@ -83,23 +74,19 @@ class BatchEasyHardMiner(BaseMiner):
 
         if self.ALL not in [self.pos_strategy, self.neg_strategy]:
             a_keep_idx = torch.where(a1p_keep & a2n_keep)
-            self.set_stats(positive_dists[a_keep_idx], negative_dists[a_keep_idx])
             a = a[a_keep_idx]
             p = positive_indices[a_keep_idx]
             n = negative_indices[a_keep_idx]
             return a, p, a, n
         elif self.pos_strategy == self.ALL and self.neg_strategy != self.ALL:
-            self.set_stats(mat[a1_idx, p_idx], negative_dists[a2n_keep])
             a2 = a[a2n_keep]
             n = negative_indices[a2n_keep]
             return a1_idx, p_idx, a2, n
         elif self.pos_strategy != self.ALL and self.neg_strategy == self.ALL:
-            self.set_stats(positive_dists[a1p_keep], mat[a2_idx, n_idx])
             a1 = a[a1p_keep]
             p = positive_indices[a1p_keep]
             return a1, p, a2_idx, n_idx
         else:
-            self.set_stats(mat[a1_idx, p_idx], mat[a2_idx, n_idx])
             return a1_idx, p_idx, a2_idx, n_idx
 
     def get_positives(self, mat, a1_idx, p_idx, negative_dists=None):
@@ -163,37 +150,3 @@ class BatchEasyHardMiner(BaseMiner):
         mat[mask == inf] = inf
         dist_fn = torch.min if xtype == "min" else torch.max
         return dist_fn(mat, dim=1), non_inf_rows
-
-    def set_stats(self, positive_dists, negative_dists):
-        if self.collect_stats:
-            with torch.no_grad():
-                len_pd = len(positive_dists)
-                len_pn = len(negative_dists)
-                if (
-                    len_pd > 0
-                    and len_pn > 0
-                    and self.ALL not in [self.pos_strategy, self.neg_strategy]
-                ):
-                    easiest_triplet_func = self.get_func_for_stats(False)
-                    hardest_triplet_func = self.get_func_for_stats(True)
-                    self.easiest_triplet = easiest_triplet_func(
-                        positive_dists - negative_dists
-                    ).item()
-                    self.hardest_triplet = hardest_triplet_func(
-                        positive_dists - negative_dists
-                    ).item()
-                if len_pd > 0:
-                    easy_pos_func = self.get_func_for_stats(False)
-                    hard_pos_func = self.get_func_for_stats(True)
-                    self.easiest_pos_pair = easy_pos_func(positive_dists).item()
-                    self.hardest_pos_pair = hard_pos_func(positive_dists).item()
-                if len_pn > 0:
-                    easy_neg_func = self.get_func_for_stats(True)
-                    hard_neg_func = self.get_func_for_stats(False)
-                    self.easiest_neg_pair = easy_neg_func(negative_dists).item()
-                    self.hardest_neg_pair = hard_neg_func(negative_dists).item()
-
-    def get_func_for_stats(self, min_if_inverted):
-        if min_if_inverted:
-            return torch.min if self.distance.is_inverted else torch.max
-        return torch.max if self.distance.is_inverted else torch.min

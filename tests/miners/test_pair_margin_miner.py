@@ -5,7 +5,7 @@ import torch
 from pytorch_metric_learning.distances import CosineSimilarity, LpDistance
 from pytorch_metric_learning.miners import PairMarginMiner
 
-from .. import TEST_DEVICE, TEST_DTYPES, WITH_COLLECT_STATS
+from .. import TEST_DEVICE, TEST_DTYPES
 from ..zzz_testing_utils import testing_utils
 from ..zzz_testing_utils.testing_utils import angle_to_coord
 
@@ -70,12 +70,6 @@ class TestPairMarginMiner(unittest.TestCase):
                         a1, p1, a2, n2 = miner(embeddings, labels)
                         self.assertTrue(mined_pairs(a1, p1) == correct_pos)
                         self.assertTrue(mined_pairs(a2, n2) == correct_neg)
-                        testing_utils.is_not_none_if_condition(
-                            self,
-                            miner,
-                            ["pos_pair_dist", "neg_pair_dist"],
-                            WITH_COLLECT_STATS,
-                        )
 
     def test_empty_output(self):
         miner = PairMarginMiner(0, 1)

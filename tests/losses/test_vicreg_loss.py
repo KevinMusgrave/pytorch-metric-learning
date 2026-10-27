@@ -33,18 +33,15 @@ class TestVICRegLoss(unittest.TestCase):
                     loss = loss_func(emb, ref_emb=ref_emb)
                     loss.backward()
 
-                    # invariance_loss
                     invariance_loss = F.mse_loss(emb, ref_emb)
 
-                    # variance_loss
                     std_emb = torch.sqrt(emb.var(dim=0) + hyp[3])
                     std_ref_emb = torch.sqrt(ref_emb.var(dim=0) + hyp[3])
                     variance_loss = torch.mean(F.relu(1 - std_emb)) + torch.mean(
                         F.relu(1 - std_ref_emb)
                     )
-                    variance_loss = variance_loss / 2  # for averaging
+                    variance_loss = variance_loss / 2
 
-                    # covariance loss, a more manual version
                     N, D = emb.size()
                     emb = emb - emb.mean(dim=0)
                     ref_emb = ref_emb - ref_emb.mean(dim=0)

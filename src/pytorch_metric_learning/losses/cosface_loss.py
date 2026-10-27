@@ -1,5 +1,3 @@
-import torch
-
 from .large_margin_softmax_loss import LargeMarginSoftmaxLoss
 
 
@@ -31,9 +29,6 @@ class CosFaceLoss(LargeMarginSoftmaxLoss):
         pass
 
     def modify_cosine_of_target_classes(self, cosine_of_target_classes):
-        if self.collect_stats:
-            with torch.no_grad():
-                self.get_angles(cosine_of_target_classes)
         return cosine_of_target_classes - self.margin
 
     def scale_logits(self, logits, embeddings):

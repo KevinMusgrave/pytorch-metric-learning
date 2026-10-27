@@ -12,16 +12,16 @@ describes provenance; it is not a legal opinion.
 
 ## Adapted code in distributed files
 
-| Upstream source                                                                                                                                       | License      | PyTorch Metric Learning files       |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ----------------------------------- |
-| [kunhe/FastAP-metric-learning](https://github.com/kunhe/FastAP-metric-learning)                                                                       | MIT          | `losses/fast_ap_loss.py`            |
-| [idstcv/SoftTriple](https://github.com/idstcv/SoftTriple), `loss/SoftTriple.py`, copyright Alibaba Group                                              | Apache-2.0   | `losses/soft_triple_loss.py`        |
-| [Andrew-Brown1/Smooth_AP](https://github.com/Andrew-Brown1/Smooth_AP), `src/Smooth_AP_loss.py`                                                        | MIT          | `losses/smooth_ap.py`               |
-| [HobbitLong/SupContrast](https://github.com/HobbitLong/SupContrast)                                                                                   | BSD-2-Clause | `losses/supcon_loss.py`             |
-| [nii-yamagishilab/project-NN-Pytorch-scripts](https://github.com/nii-yamagishilab/project-NN-Pytorch-scripts), `core_modules/p2sgrad.py`, by Xin Wang | BSD-3-Clause | `losses/p2s_grad_loss.py`           |
-| [sung-yeon-kim/Proxy-Anchor-CVPR2020](https://github.com/sung-yeon-kim/Proxy-Anchor-CVPR2020), `code/losses.py`                                       | MIT          | `losses/proxy_anchor_loss.py`       |
-| [bnu-wangxun/Deep_Metric](https://github.com/bnu-wangxun/Deep_Metric), `utils/sampler.py`                                                             | Apache-2.0   | `samplers/m_per_class_sampler.py`   |
-| [chaoyuaw/incubator-mxnet](https://github.com/chaoyuaw/incubator-mxnet), `example/gluon/embedding_learning/model.py`                                  | Apache-2.0   | `miners/distance_weighted_miner.py` |
+| Upstream source                                                                                                                                                                     | License      | PyTorch Metric Learning files       |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ----------------------------------- |
+| [kunhe/FastAP-metric-learning](https://github.com/kunhe/FastAP-metric-learning)                                                                                                     | MIT          | `losses/fast_ap_loss.py`            |
+| [idstcv/SoftTriple](https://github.com/idstcv/SoftTriple), `loss/SoftTriple.py`, copyright Alibaba Group                                                                            | Apache-2.0   | `losses/soft_triple_loss.py`        |
+| [Andrew-Brown1/Smooth_AP](https://github.com/Andrew-Brown1/Smooth_AP), `src/Smooth_AP_loss.py`                                                                                      | MIT          | `losses/smooth_ap.py`               |
+| [HobbitLong/SupContrast](https://github.com/HobbitLong/SupContrast)                                                                                                                 | BSD-2-Clause | `losses/supcon_loss.py`             |
+| [nii-yamagishilab/project-NN-Pytorch-scripts](https://github.com/nii-yamagishilab/project-NN-Pytorch-scripts), `core_modules/p2sgrad.py`, by Xin Wang (file header: copyright 2021) | BSD-3-Clause | `losses/p2s_grad_loss.py`           |
+| [sung-yeon-kim/Proxy-Anchor-CVPR2020](https://github.com/sung-yeon-kim/Proxy-Anchor-CVPR2020), `code/losses.py`                                                                     | MIT          | `losses/proxy_anchor_loss.py`       |
+| [bnu-wangxun/Deep_Metric](https://github.com/bnu-wangxun/Deep_Metric), `utils/sampler.py`                                                                                           | Apache-2.0   | `samplers/m_per_class_sampler.py`   |
+| [chaoyuaw/incubator-mxnet](https://github.com/chaoyuaw/incubator-mxnet), `example/gluon/embedding_learning/model.py`                                                                | Apache-2.0   | `miners/distance_weighted_miner.py` |
 
 Paths are relative to `src/pytorch_metric_learning/`. Each listed file was
 modified by PyTorch Metric Learning contributors from its upstream source and
@@ -58,7 +58,12 @@ source, the Apache-2.0 SoftTriple source, and
 [layumi/Person_reID_baseline_pytorch](https://github.com/layumi/Person_reID_baseline_pytorch)
 (MIT, `instance_loss.py`). `tests/losses/test_histogram_loss.py` copies
 [valerystrizh/pytorch-histogram-loss](https://github.com/valerystrizh/pytorch-histogram-loss)
-`losses.py`, which has no license file. The large-k accuracy reference derives
+`losses.py`, which has no license file. The ManifoldLoss test reference was provided
+directly by Nicolas Aziere, an author of the paper, and adapted for testing: a
+larger initialization variance for half precision, explicit device and dtype
+handling, a float32 matrix inverse, and the margin term the original did not
+include. The HistogramLoss reference was adapted for device placement, boolean
+masks, and half precision. The large-k accuracy reference derives
 from a [gist by VChristlein](https://gist.github.com/VChristlein/fd55016f8d1b38e95011a025cbff9ccc)
 contributed in [issue 290](https://github.com/KevinMusgrave/pytorch-metric-learning/issues/290).
 

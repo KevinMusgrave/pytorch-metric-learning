@@ -1,5 +1,5 @@
 from ..utils import common_functions as c_f
-from ..utils.module_with_records_and_reducer import ModuleWithRecordsReducerAndDistance
+from ..utils.module_with_reducer import ModuleWithReducerAndDistance
 
 
 def regularization_term(regularizer, weight, x):
@@ -10,7 +10,7 @@ def regularization_term(regularizer, weight, x):
     }
 
 
-class BaseMetricLossFunction(ModuleWithRecordsReducerAndDistance):
+class BaseMetricLossFunction(ModuleWithReducerAndDistance):
     def __init__(self, embedding_regularizer=None, embedding_reg_weight=1, **kwargs):
         super().__init__(**kwargs)
         self.embedding_regularizer = embedding_regularizer
@@ -22,7 +22,6 @@ class BaseMetricLossFunction(ModuleWithRecordsReducerAndDistance):
     def forward(
         self, embeddings, labels=None, indices_tuple=None, ref_emb=None, ref_labels=None
     ):
-        self.reset_stats()
         c_f.check_shapes(embeddings, labels)
         if labels is not None:
             labels = c_f.to_device(labels, embeddings)

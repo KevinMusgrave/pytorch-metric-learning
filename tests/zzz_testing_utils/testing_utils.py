@@ -11,7 +11,6 @@ def is_not_none_if_condition(cls, x, y, condition):
 
 
 def angle_to_coord(angle, normalized=False):
-    # multiply to unnormalize
     x = np.cos(np.radians(angle))
     y = np.sin(np.radians(angle))
     if not normalized:

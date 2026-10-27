@@ -4,6 +4,9 @@ from .base_miner import BaseMiner
 
 
 class EmbeddingsAlreadyPackagedAsTriplets(BaseMiner):
+    def __init__(self):
+        super().__init__()
+
     def mine(self, embeddings, labels, ref_emb, ref_labels):
         batch_size = embeddings.size(0)
         a = torch.arange(0, batch_size, 3)

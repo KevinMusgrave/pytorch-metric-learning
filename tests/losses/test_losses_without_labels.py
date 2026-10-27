@@ -70,6 +70,6 @@ class TestLossesWithoutLabels(unittest.TestCase):
                     loss_fn(emb, ref_emb=emb)
 
             for loss_fn in incompatible_losses:
-                loss_fn(emb, labels)  # should work
+                loss_fn(emb, labels)
                 with self.assertRaises(ValueError):
                     loss_fn(emb, indices_tuple=p)

@@ -1,28 +1,23 @@
-######################################
-#######ORIGINAL IMPLEMENTATION########
-######################################
-# FROM https://github.com/idstcv/SoftTriple/blob/master/loss/SoftTriple.py
-# This code is copied directly from the official implementation
-# so that we can make sure our implementation returns the same result.
-# It's copied under the Apache license.
-# No changes have been made, except removal of .cuda() calls
-# Implementation of SoftTriple Loss
 import math
+import unittest
 
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
+from torch import nn
 from torch.nn import init
 from torch.nn.parameter import Parameter
 
+from pytorch_metric_learning.losses import SoftTripleLoss
+from pytorch_metric_learning.regularizers import SparseCentersRegularizer
 from pytorch_metric_learning.utils import common_functions as c_f
 
+from .. import TEST_DEVICE, TEST_DTYPES
 from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 
 class OriginalImplementationSoftTriple(nn.Module):
     def __init__(self, la, gamma, tau, margin, dim, cN, K):
-        super(OriginalImplementationSoftTriple, self).__init__()
+        super().__init__()
         self.la = la
         self.gamma = 1.0 / gamma
         self.tau = tau
@@ -31,11 +26,10 @@ class OriginalImplementationSoftTriple(nn.Module):
         self.K = K
         self.fc = Parameter(torch.Tensor(dim, cN * K))
         self.weight = torch.zeros(cN * K, cN * K, dtype=torch.bool)
-        for i in range(0, cN):
-            for j in range(0, K):
+        for i in range(cN):
+            for j in range(K):
                 self.weight[i * K + j, i * K + j + 1 : (i + 1) * K] = 1
         init.kaiming_uniform_(self.fc, a=math.sqrt(5))
-        return
 
     def forward(self, input, target):
         centers = F.normalize(self.fc, p=2, dim=0)
@@ -56,14 +50,6 @@ class OriginalImplementationSoftTriple(nn.Module):
             return lossClassify + self.tau * reg
         else:
             return lossClassify
-
-
-import unittest
-
-from pytorch_metric_learning.losses import SoftTripleLoss
-from pytorch_metric_learning.regularizers import SparseCentersRegularizer
-
-from .. import TEST_DEVICE, TEST_DTYPES
 
 
 class TestSoftTripleLoss(unittest.TestCase):
@@ -111,7 +97,7 @@ class TestSoftTripleLoss(unittest.TestCase):
                     [angle_to_coord(a) for a in embedding_angles],
                     requires_grad=True,
                     dtype=dtype,
-                ).to(TEST_DEVICE)  # 2D embeddings
+                ).to(TEST_DEVICE)
                 labels = torch.randint(low=0, high=10, size=(180,)).to(TEST_DEVICE)
 
                 loss = loss_func(embeddings, labels)

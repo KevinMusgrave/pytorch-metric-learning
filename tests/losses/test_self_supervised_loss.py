@@ -2,7 +2,7 @@ import unittest
 
 import torch
 
-import pytorch_metric_learning.losses as losses
+from pytorch_metric_learning import losses
 
 from .. import TEST_DEVICE, TEST_DTYPES
 
@@ -46,7 +46,7 @@ class TestSelfSupervisedLoss(unittest.TestCase):
             labels = torch.cat([labels, ref_labels], dim=0)
         loss_fns_list = self.load_valid_loss_fns()
 
-        loss_fns = dict()
+        loss_fns = {}
         for loss_fn in loss_fns_list:
             loss_name = type(loss_fn).__name__
             if symmetric:
@@ -65,7 +65,7 @@ class TestSelfSupervisedLoss(unittest.TestCase):
     def run_all_loss_fns_wrapped(self, embeddings, ref_emb, symmetric):
         loss_fns_list = self.load_valid_loss_fns()
 
-        loss_fns = dict()
+        loss_fns = {}
         for loss_fn in loss_fns_list:
             loss_name = type(loss_fn).__name__
             loss_fn = losses.SelfSupervisedLoss(loss_fn, symmetric=symmetric)

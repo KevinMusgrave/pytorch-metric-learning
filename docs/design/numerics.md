@@ -1,7 +1,7 @@
 # Numerical components
 
-Losses, miners, distances, reducers, and regularizers share tensor conventions,
-recordable statistics, and pair/triplet conversion. These mutually dependent
+Losses, miners, distances, reducers, and regularizers share tensor conventions
+and pair/triplet conversion. These mutually dependent
 building blocks form one policy boundary. They must not depend on training,
 dataset downloading, retrieval backends, or distributed process management.
 
@@ -102,7 +102,7 @@ in `docs/losses.md`, `docs/miners.md`, `docs/distances.md`, `docs/reducers.md`,
 and `docs/regularizers.md`. In particular, P2SGrad computes mean squared error
 between cosine scores and one-hot labels, which gives the paper's specified
 gradient. Reference implementations in the tests compare values and gradients;
-their existing upstream attributions remain alongside those implementations.
+their upstream provenance is recorded in `THIRD_PARTY_NOTICES.md`.
 
 The development baseline uses current PyTorch tensor operations. Compatibility
 with obsolete PyTorch releases is not a requirement.
@@ -111,3 +111,9 @@ Trainer-specific key checking, loss tracking, generic model checkpointing,
 parameter freezing, SQLite conversion, and batch-unpacking helpers have been
 removed with the orchestration layer. Retained numerical utilities do not own
 model lifecycles or depend on logging integrations.
+
+Modules do not record diagnostic statistics. Forward passes return tensors and
+leave no side-effect attributes, which avoids host synchronization and keeps
+modules compatible with graph capture. Diagnostics such as mined-pair counts or
+mean pair distances are computed by callers from miner outputs and distance
+matrices, or observed with PyTorch forward hooks.

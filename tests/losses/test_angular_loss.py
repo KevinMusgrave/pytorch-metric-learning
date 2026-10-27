@@ -1,15 +1,15 @@
+import math
 import unittest
 
 import numpy as np
 import torch
+import torch.nn.functional as F
 
 from pytorch_metric_learning.losses import AngularLoss
 
 from .. import TEST_DEVICE, TEST_DTYPES
 from ..zzz_testing_utils.testing_utils import angle_to_coord
 from .utils import get_triplet_embeddings_with_ref
-import math
-import torch.nn.functional as F
 
 
 class TestAngularLoss(unittest.TestCase):
@@ -59,7 +59,7 @@ class TestAngularLoss(unittest.TestCase):
         sq_tan_alpha = (
             torch.tan(torch.tensor(np.radians(40), dtype=dtype).to(TEST_DEVICE)) ** 2
         )
-        correct_losses = [0, 0, 0, 0]
+        correct_losses = torch.zeros(4, dtype=dtype, device=TEST_DEVICE)
         for a, p, n in triplets:
             anchor = embeddings[a]
             if ref_emb is not None:
@@ -70,10 +70,7 @@ class TestAngularLoss(unittest.TestCase):
                 anchor + positive, negative
             ) - 2 * (1 + sq_tan_alpha) * torch.matmul(anchor, positive)
             correct_losses[a] += torch.exp(exponent)
-        total_loss = 0
-        for c in correct_losses:
-            total_loss += torch.log(1 + c)
-        total_loss /= len(correct_losses)
+        total_loss = torch.log(1 + correct_losses).mean()
         self.assertTrue(torch.isclose(loss, total_loss, rtol=1e-2))
 
     def test_with_no_valid_triplets(self):
@@ -84,7 +81,7 @@ class TestAngularLoss(unittest.TestCase):
                 [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
-            ).to(TEST_DEVICE)  # 2D embeddings
+            ).to(TEST_DEVICE)
             labels = torch.LongTensor([0, 1, 2, 3, 4])
             loss = loss_func(embeddings, labels)
             loss.backward()

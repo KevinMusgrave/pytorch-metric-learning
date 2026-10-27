@@ -7,7 +7,6 @@ from .base_reducer import BaseReducer
 class DivisorReducer(BaseReducer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.register_stats("divisor")
 
     def unpack_loss_info(self, loss_info):
         losses, loss_indices, reduction_type, kwargs = super().unpack_loss_info(
@@ -15,7 +14,6 @@ class DivisorReducer(BaseReducer):
         )
         if reduction_type != "already_reduced":
             kwargs = {"divisor": loss_info["divisor"]}
-            self.divisor = kwargs["divisor"]
         return losses, loss_indices, reduction_type, kwargs
 
     def sum_and_divide(self, losses, embeddings, divisor):

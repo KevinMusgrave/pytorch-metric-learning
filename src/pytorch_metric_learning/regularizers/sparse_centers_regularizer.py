@@ -12,7 +12,6 @@ class SparseCentersRegularizer(BaseRegularizer):
         assert centers_per_class > 1
         c_f.assert_distance_type(self, CosineSimilarity)
         self.set_class_masks(num_classes, centers_per_class)
-        self.register_stats("same_class_center_sim", "diff_class_center_sim")
 
     def compute_loss(self, x):
         center_similarities = self.distance(x)
@@ -22,7 +21,6 @@ class SparseCentersRegularizer(BaseRegularizer):
         )
         divisor = 2 * torch.sum(self.same_class_mask)
         reg = torch.sqrt(2.0 + small_val - center_similarities_masked)
-        self.set_stats(center_similarities)
         return {
             "loss": {
                 "losses": reg,
@@ -34,9 +32,6 @@ class SparseCentersRegularizer(BaseRegularizer):
 
     def set_class_masks(self, num_classes, centers_per_class):
         total_num_centers = num_classes * centers_per_class
-        self.diff_class_mask = torch.ones(
-            total_num_centers, total_num_centers, dtype=torch.bool
-        )
         self.same_class_mask = torch.zeros(
             total_num_centers, total_num_centers, dtype=torch.bool
         )
@@ -45,17 +40,6 @@ class SparseCentersRegularizer(BaseRegularizer):
             curr_block = torch.ones(centers_per_class, centers_per_class)
             curr_block = torch.triu(curr_block, diagonal=1)
             self.same_class_mask[s:e, s:e] = curr_block
-            self.diff_class_mask[s:e, s:e] = 0
-
-    def set_stats(self, center_similarities):
-        if self.collect_stats:
-            with torch.no_grad():
-                self.same_class_center_sim = torch.mean(
-                    center_similarities[self.same_class_mask]
-                ).item()
-                self.diff_class_center_sim = torch.mean(
-                    center_similarities[self.diff_class_mask]
-                ).item()
 
     def get_default_distance(self):
         return CosineSimilarity()

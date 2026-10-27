@@ -39,7 +39,7 @@ miners.AngularMiner(angle=20, **kwargs)
 All miners extend this class and therefore inherit its `__init__` parameters.
 
 ```python
-miners.BaseMiner(collect_stats=None, distance=None)
+miners.BaseMiner(distance=None)
 ```
 
 Every miner outputs a tuple of indices:
@@ -51,7 +51,6 @@ See [custom miners](extend/miners.md) for details on how to write your own miner
 
 **Parameters**:
 
-- **collect_stats**: If True, compute optional diagnostic statistics, which can require device synchronization. If False, skip them. If None, use the global [COLLECT_STATS](common_functions.md#collect_stats) flag, which is False by default.
 - **distance**: A [distance](distances.md) object. If None, then the default distance will be used.
 
 **Default distance**:

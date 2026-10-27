@@ -14,7 +14,6 @@ class TupletMarginLoss(GenericPairLoss):
         c_f.assert_distance_type(self, CosineSimilarity)
         self.margin = math.radians(margin)
         self.scale = scale
-        self.register_stats("avg_pos_angle", "avg_neg_angle")
 
     def _compute_pair_loss(self, pos_pairs, neg_pairs, indices_tuple):
         a1, p, a2, _ = indices_tuple
@@ -22,7 +21,6 @@ class TupletMarginLoss(GenericPairLoss):
         if len(a1) > 0 and len(a2) > 0:
             bound = 1 - 4 * torch.finfo(pos_pairs.dtype).eps
             pos_angles = torch.acos(pos_pairs.clamp(-bound, bound))
-            self.set_stats(pos_angles, neg_pairs)
             pos_pairs = torch.cos(pos_angles - self.margin)
             pos_pairs = pos_pairs.unsqueeze(1)
             neg_pairs = neg_pairs.repeat(pos_pairs.size(0), 1)
@@ -40,10 +38,3 @@ class TupletMarginLoss(GenericPairLoss):
 
     def get_default_distance(self):
         return CosineSimilarity()
-
-    def set_stats(self, pos_angles, neg_pairs):
-        if self.collect_stats:
-            with torch.no_grad():
-                neg_angles = torch.acos(neg_pairs)
-                self.avg_pos_angle = math.degrees(torch.mean(pos_angles).item())
-                self.avg_neg_angle = math.degrees(torch.mean(neg_angles).item())

@@ -15,14 +15,6 @@ class AngularMiner(BaseMiner):
             self, LpDistance, p=2, power=1, normalize_embeddings=True
         )
         self.angle = math.radians(angle)
-        self.register_stats(
-            "average_angle",
-            "average_angle_above_threshold",
-            "average_angle_below_threshold",
-            "min_angle",
-            "max_angle",
-            "std_of_angle",
-        )
 
     def mine(self, embeddings, labels, ref_emb, ref_labels):
         anchor_idx, positive_idx, negative_idx = lmu.get_all_triplets_indices(
@@ -38,27 +30,8 @@ class AngularMiner(BaseMiner):
         nc_dist = self.distance.pairwise_distance(negatives, centers)
         angles = torch.atan(ap_dist / (2 * nc_dist))
         threshold_condition = angles > self.angle
-        self.set_stats(angles, threshold_condition)
         return (
             anchor_idx[threshold_condition],
             positive_idx[threshold_condition],
             negative_idx[threshold_condition],
         )
-
-    def set_stats(self, angles, threshold_condition):
-        if self.collect_stats:
-            with torch.no_grad():
-                if len(angles) > 0:
-                    self.average_angle = math.degrees(torch.mean(angles).item())
-                    self.min_angle = math.degrees(torch.min(angles).item())
-                    self.max_angle = math.degrees(torch.max(angles).item())
-                    self.std_of_angle = math.degrees(torch.std(angles).item())
-                if torch.sum(threshold_condition) > 0:
-                    self.average_angle_above_threshold = math.degrees(
-                        torch.mean(angles[threshold_condition]).item()
-                    )
-                negated_condition = ~threshold_condition
-                if torch.sum(negated_condition) > 0:
-                    self.average_angle_below_threshold = math.degrees(
-                        torch.mean(angles[~threshold_condition]).item()
-                    )

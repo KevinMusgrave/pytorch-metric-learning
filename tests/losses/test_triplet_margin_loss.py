@@ -19,7 +19,7 @@ class TestTripletMarginLoss(unittest.TestCase):
                 32,
                 requires_grad=True,
                 dtype=dtype,
-            ).to(TEST_DEVICE)  # 2D embeddings
+            ).to(TEST_DEVICE)
             embeddings = torch.nn.functional.normalize(embeddings)
             labels = torch.LongTensor([0, 0, 1, 1, 2])
 
@@ -68,9 +68,9 @@ class TestTripletMarginLoss(unittest.TestCase):
             for x in [loss_funcA, loss_funcB, loss_funcC, loss_funcD, loss_funcE]
         ]
 
-        correct_loss = 0
-        correct_loss_cosine = 0
-        correct_smooth_loss = 0
+        correct_loss = torch.zeros((), dtype=dtype, device=TEST_DEVICE)
+        correct_loss_cosine = torch.zeros((), dtype=dtype, device=TEST_DEVICE)
+        correct_smooth_loss = torch.zeros((), dtype=dtype, device=TEST_DEVICE)
         num_non_zero_triplets = 0
         num_non_zero_triplets_cosine = 0
         for a, p, n in triplets:
@@ -120,7 +120,7 @@ class TestTripletMarginLoss(unittest.TestCase):
                 [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
-            ).to(TEST_DEVICE)  # 2D embeddings
+            ).to(TEST_DEVICE)
             labels = torch.LongTensor([0, 1, 2, 3, 4])
             lossA = loss_funcA(embeddings, labels)
             lossB = loss_funcB(embeddings, labels)
@@ -139,7 +139,7 @@ class TestTripletMarginLoss(unittest.TestCase):
                     [angle_to_coord(a) for a in embedding_angles],
                     requires_grad=True,
                     dtype=dtype,
-                ).to(TEST_DEVICE)  # 2D embeddings
+                ).to(TEST_DEVICE)
                 labels = torch.LongTensor([0, 0, 1, 1, 2])
 
                 loss = loss_func(embeddings, labels)

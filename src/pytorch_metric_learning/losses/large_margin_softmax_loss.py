@@ -33,7 +33,6 @@ class LargeMarginSoftmaxLoss(BaseMetricLossFunction):
         self.margin = margin
         self.num_classes = num_classes
         self.scale = scale
-        self.register_stats("avg_angle")
         self.init_margin()
         self.W = torch.nn.Parameter(torch.empty(embedding_size, num_classes))
         (weight_init_func or torch.nn.init.normal_)(self.W)
@@ -63,9 +62,6 @@ class LargeMarginSoftmaxLoss(BaseMetricLossFunction):
 
     def get_angles(self, cosine_of_target_classes):
         angles = torch.acos(torch.clamp(cosine_of_target_classes, -1, 1))
-        if self.collect_stats:
-            with torch.no_grad():
-                self.avg_angle = math.degrees(torch.mean(angles).item())
         return angles
 
     def get_target_mask(self, embeddings, labels):

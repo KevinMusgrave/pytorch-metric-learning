@@ -11,7 +11,6 @@ class ThresholdReducer(BaseReducer):
         )
         self.low = low
         self.high = high
-        self.register_stats("num_past_filter", "num_above_low", "num_below_high")
 
     def element_reduction(self, losses, loss_indices, embeddings, labels):
         return self.element_reduction_helper(losses, embeddings)
@@ -26,26 +25,10 @@ class ThresholdReducer(BaseReducer):
         return self.element_reduction_helper(losses, embeddings)
 
     def element_reduction_helper(self, losses, embeddings):
-        low_condition, high_condition = None, None
         if self.low is not None:
-            low_condition = losses > self.low
-            losses = losses[low_condition]
+            losses = losses[losses > self.low]
         if self.high is not None:
-            high_condition = losses < self.high
-            losses = losses[high_condition]
-        num_past_filter = len(losses)
-        if num_past_filter >= 1:
-            loss = torch.mean(losses)
-        else:
-            loss = self.zero_loss(embeddings)
-        self.set_stats(low_condition, high_condition, num_past_filter)
-        return loss
-
-    def set_stats(self, low_condition, high_condition, num_past_filter):
-        if self.collect_stats:
-            self.num_past_filter = num_past_filter
-            with torch.no_grad():
-                if self.low is not None:
-                    self.num_above_low = torch.sum(low_condition).item()
-                if self.high is not None:
-                    self.num_above_high = torch.sum(high_condition).item()
+            losses = losses[losses < self.high]
+        if len(losses) >= 1:
+            return torch.mean(losses)
+        return self.zero_loss(embeddings)

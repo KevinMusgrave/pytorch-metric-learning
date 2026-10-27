@@ -9,7 +9,6 @@ from .base_metric_loss_function import BaseMetricLossFunction
 class NPairsLoss(BaseMetricLossFunction):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.register_stats("num_pairs")
         self.cross_entropy = torch.nn.CrossEntropyLoss(reduction="none")
 
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
@@ -18,11 +17,11 @@ class NPairsLoss(BaseMetricLossFunction):
         anchor_idx, positive_idx = lmu.convert_to_pos_pairs_with_unique_labels(
             indices_tuple, labels
         )
-        self.num_pairs = len(anchor_idx)
-        if self.num_pairs == 0:
+        num_pairs = len(anchor_idx)
+        if num_pairs == 0:
             return self.zero_losses()
         anchors, positives = embeddings[anchor_idx], embeddings[positive_idx]
-        targets = c_f.to_device(torch.arange(self.num_pairs), embeddings)
+        targets = c_f.to_device(torch.arange(num_pairs), embeddings)
         sim_mat = self.distance(anchors, positives)
         if not self.distance.is_inverted:
             sim_mat = -sim_mat

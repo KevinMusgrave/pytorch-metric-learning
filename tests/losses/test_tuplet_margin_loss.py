@@ -5,7 +5,7 @@ import torch
 
 from pytorch_metric_learning.losses import TupletMarginLoss
 
-from .. import TEST_DEVICE, TEST_DTYPES, WITH_COLLECT_STATS
+from .. import TEST_DEVICE, TEST_DTYPES
 from ..zzz_testing_utils import testing_utils
 
 
@@ -20,7 +20,7 @@ class TestTupletMarginLoss(unittest.TestCase):
                 [testing_utils.angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
-            ).to(TEST_DEVICE)  # 2D embeddings
+            ).to(TEST_DEVICE)
             labels = torch.LongTensor([0, 0, 1, 1, 2])
 
             loss = loss_func(embeddings, labels)
@@ -46,14 +46,12 @@ class TestTupletMarginLoss(unittest.TestCase):
                 (4, 3),
             ]
 
-            correct_total = 0
+            correct_total = torch.zeros((), dtype=dtype, device=TEST_DEVICE)
             embeddings = torch.nn.functional.normalize(embeddings)
             for a1, p in pos_pairs:
-                curr_loss = 0
+                curr_loss = torch.zeros((), dtype=dtype, device=TEST_DEVICE)
                 anchor1, positive = embeddings[a1], embeddings[p]
-                ap_angle = torch.acos(
-                    torch.matmul(anchor1, positive)
-                )  # embeddings are normalized, so dot product == cosine
+                ap_angle = torch.acos(torch.matmul(anchor1, positive))
                 ap_cos = torch.cos(ap_angle - np.radians(margin))
                 for a2, n in neg_pairs:
                     if a2 == a1:
@@ -68,10 +66,6 @@ class TestTupletMarginLoss(unittest.TestCase):
             rtol = 1e-2 if dtype == torch.float16 else 1e-5
             self.assertTrue(torch.isclose(loss, correct_total, rtol=rtol))
 
-            testing_utils.is_not_none_if_condition(
-                self, loss_func, ["avg_pos_angle", "avg_neg_angle"], WITH_COLLECT_STATS
-            )
-
     def test_with_no_valid_pairs(self):
         loss_func = TupletMarginLoss(0.1, 64)
         for dtype in TEST_DTYPES:
@@ -80,7 +74,7 @@ class TestTupletMarginLoss(unittest.TestCase):
                 [testing_utils.angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
-            ).to(TEST_DEVICE)  # 2D embeddings
+            ).to(TEST_DEVICE)
             labels = torch.LongTensor([0])
             loss = loss_func(embeddings, labels)
             loss.backward()
@@ -96,9 +90,9 @@ class TestTupletMarginDuplicates(unittest.TestCase):
                 embeddings = torch.cat([embeddings, embeddings[:1]]).requires_grad_()
                 labels = torch.tensor([0, 1, 2, 3, 0], device=TEST_DEVICE)
                 loss = TupletMarginLoss()(embeddings, labels)
-                loss.backward()
+                (grad,) = torch.autograd.grad(loss, embeddings)
                 self.assertTrue(torch.isfinite(loss))
-                self.assertTrue(torch.isfinite(embeddings.grad).all())
+                self.assertTrue(torch.isfinite(grad).all())
 
 
 if __name__ == "__main__":

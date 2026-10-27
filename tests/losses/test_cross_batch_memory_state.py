@@ -131,7 +131,9 @@ class TestCrossBatchMemoryState(unittest.TestCase):
                     second_labels,
                 )
                 expected_gradients = torch.autograd.grad(expected, (first, second))
-                memory = CrossBatchMemory(make_loss(), embedding_size=2, memory_size=8)
+                memory = CrossBatchMemory(
+                    make_loss(), embedding_size=2, memory_size=8
+                ).to(TEST_DEVICE, dtype)
                 actual = memory(first, labels) + memory(second, labels)
                 gradients = torch.autograd.grad(actual, (first, second))
                 self.assertGreater(actual.item(), 0)
@@ -161,8 +163,11 @@ class TestCrossBatchMemoryState(unittest.TestCase):
                     inputs, labels = make_inputs(dtype)
                     labels = labels.to(torch.float64) + 0.25
                     original = CrossBatchMemory(
-                        make_loss(), embedding_size=2, memory_size=6
-                    )
+                        make_loss(),
+                        embedding_size=2,
+                        memory_size=6,
+                        label_dtype=torch.float64,
+                    ).to(TEST_DEVICE, dtype)
                     for step in range(updates):
                         original(inputs.detach() + step * 0.1, labels)
                     with BytesIO() as checkpoint:
@@ -173,7 +178,7 @@ class TestCrossBatchMemoryState(unittest.TestCase):
                         )
                     restored = CrossBatchMemory(
                         make_loss(), embedding_size=2, memory_size=6
-                    )
+                    ).to(TEST_DEVICE, dtype)
                     restored.load_state_dict(state, assign=True)
                     self.assert_queue_unchanged(
                         restored,

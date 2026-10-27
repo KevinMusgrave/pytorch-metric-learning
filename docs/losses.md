@@ -374,7 +374,7 @@ loss_optimizer.step()
 This wraps a loss function, and implements [Cross-Batch Memory for Embedding Learning](https://arxiv.org/pdf/1912.06798.pdf){target=_blank}. It stores embeddings from previous iterations in a queue, and uses them to form more pairs/triplets with the current iteration's embeddings.
 
 ```python
-losses.CrossBatchMemory(loss, embedding_size, memory_size=1024, miner=None)
+losses.CrossBatchMemory(loss, embedding_size, memory_size=1024, miner=None, *, label_dtype=torch.long)
 ```
 
 **Parameters**:
@@ -383,6 +383,11 @@ losses.CrossBatchMemory(loss, embedding_size, memory_size=1024, miner=None)
 - **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set `embedding_size` to 512.
 - **memory_size**: The size of the memory queue.
 - **miner**: An optional [tuple miner](miners.md), which will be used to mine pairs/triplets from the memory queue.
+- **label_dtype**: The dtype of the label queue. Incoming labels are cast to it when the cast is safe under `torch.can_cast`; otherwise the call raises `ValueError`. Use a floating dtype for non-integer labels.
+
+The queue buffers belong to the module. Move it with `loss_fn.to(device, dtype)`
+so the embedding queue matches the embeddings; outside autocast a mismatch
+raises `ValueError`. Forward never moves or casts the queue.
 
 **Forward function**
 
@@ -411,8 +416,8 @@ buffers, queue cursor, and filled flag, and supports loading with
 `torch.load(..., weights_only=True)`. Construct the same loss and queue dimensions
 before loading. Use `load_state_dict(state, assign=True)` to retain the saved
 tensor dtypes, and construct optimizers after loading. Older checkpoints that
-contain only the buffers lack the queue
-metadata and are not accepted as complete resumable state.
+contain only the buffers lack the `queue_state` entry, which strict loading
+reports as a missing key.
 
 **Supported Loss Functions**
 

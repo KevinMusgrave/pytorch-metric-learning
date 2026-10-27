@@ -51,7 +51,9 @@ miners use that declaration when comparing margins. Reducers own averaging and
 filtering; losses retain the indices and reduction type needed by the reducer.
 An empty valid set must yield a differentiable zero without introducing NaNs.
 
-Cross-batch memory stores detached reference embeddings. Each forward uses a
+Cross-batch memory stores detached reference embeddings. Its queue buffers follow module
+placement like learnable parameters: forward checks, rather than changes, their
+device and dtype, and labels are cast only to the configured `label_dtype`. Each forward uses a
 snapshot of the occupied embeddings and labels so subsequent queue writes cannot
 invalidate tensors saved for backward. This supports accumulating several
 forward losses before backpropagating. Only the occupied portion is copied while

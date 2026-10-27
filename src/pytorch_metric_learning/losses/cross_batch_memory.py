@@ -41,12 +41,25 @@ def load_queue_state(
 
 
 class CrossBatchMemory(BaseLossWrapper):
-    def __init__(self, loss, embedding_size, memory_size=1024, miner=None, **kwargs):
+    embedding_memory: torch.Tensor
+    label_memory: torch.Tensor
+
+    def __init__(
+        self,
+        loss,
+        embedding_size,
+        memory_size=1024,
+        miner=None,
+        *,
+        label_dtype=torch.long,
+        **kwargs,
+    ):
         super().__init__(loss=loss, **kwargs)
         self.loss = loss
         self.miner = miner
         self.embedding_size = embedding_size
         self.memory_size = memory_size
+        self.label_dtype = label_dtype
         self.reset_queue()
         self.register_state_dict_post_hook(save_queue_state)
         self.register_load_state_dict_pre_hook(load_queue_state)
@@ -79,14 +92,13 @@ class CrossBatchMemory(BaseLossWrapper):
             raise ValueError("indices_tuple and enqueue_mask are mutually exclusive")
         if enqueue_mask is not None:
             assert len(enqueue_mask) == len(embeddings)
-        device = embeddings.device
-        labels = c_f.to_device(labels, device=device)
-        self.embedding_memory = c_f.to_device(
-            self.embedding_memory, device=device, dtype=embeddings.dtype
-        )
-        self.label_memory = c_f.to_device(
-            self.label_memory, device=device, dtype=labels.dtype
-        )
+        c_f.check_parameter_placement(self, self.embedding_memory, embeddings)
+        if not torch.can_cast(labels.dtype, self.label_memory.dtype):
+            raise ValueError(
+                f"CrossBatchMemory stores {self.label_memory.dtype} labels and cannot "
+                f"safely store {labels.dtype} labels; set label_dtype"
+            )
+        labels = labels.to(device=embeddings.device, dtype=self.label_memory.dtype)
 
         if enqueue_mask is not None:
             emb_for_queue = embeddings[enqueue_mask]
@@ -173,6 +185,8 @@ class CrossBatchMemory(BaseLossWrapper):
         self.register_buffer(
             "embedding_memory", torch.zeros(self.memory_size, self.embedding_size)
         )
-        self.register_buffer("label_memory", torch.zeros(self.memory_size).long())
+        self.register_buffer(
+            "label_memory", torch.zeros(self.memory_size, dtype=self.label_dtype)
+        )
         self.has_been_filled = False
         self.queue_idx = 0

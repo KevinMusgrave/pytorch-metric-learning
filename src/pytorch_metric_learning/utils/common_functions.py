@@ -73,10 +73,10 @@ def check_parameter_placement(module, parameter, embeddings):
     if same_device and (autocast or parameter.dtype == embeddings.dtype):
         return
     raise ValueError(
-        f"{type(module).__name__} parameters are {parameter.dtype} on "
+        f"{type(module).__name__} tensors are {parameter.dtype} on "
         f"{parameter.device}, but embeddings are {embeddings.dtype} on "
         f"{embeddings.device}. Move the loss with .to(device, dtype) before "
-        "calling it, and include its parameters in the optimizer."
+        "calling it."
     )
 
 

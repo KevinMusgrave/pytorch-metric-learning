@@ -38,7 +38,7 @@ class TestCrossBatchMemory(unittest.TestCase):
                 loss=ContrastiveLoss(),
                 embedding_size=self.embedding_size,
                 memory_size=self.memory_size,
-            )
+            ).to(TEST_DEVICE, dtype)
             loss.embedding_memory = loss.embedding_memory.to(TEST_DEVICE).type(dtype)
             loss.label_memory = loss.label_memory.to(TEST_DEVICE)
             embeddings = (
@@ -137,13 +137,13 @@ class TestCrossBatchMemory(unittest.TestCase):
                         loss=inner_loss,
                         embedding_size=self.embedding_size,
                         memory_size=memory_size,
-                    )
+                    ).to(TEST_DEVICE, dtype)
                     loss_with_miner = CrossBatchMemory(
                         loss=inner_loss,
                         embedding_size=self.embedding_size,
                         memory_size=memory_size,
                         miner=inner_miner,
-                    )
+                    ).to(TEST_DEVICE, dtype)
                     for _ in range(10):
                         if test_enqueue_mask:
                             enqueue_mask = torch.zeros(memory_size * 2).bool()
@@ -211,7 +211,7 @@ class TestCrossBatchMemory(unittest.TestCase):
                 embedding_size=2,
                 memory_size=memory_size,
                 miner=inner_miner,
-            )
+            ).to(TEST_DEVICE, dtype)
             for _ in range(20):
                 embedding_angles = torch.arange(0, 32)
                 embeddings = torch.tensor(
@@ -235,13 +235,13 @@ class TestCrossBatchMemory(unittest.TestCase):
                     loss=inner_loss,
                     embedding_size=self.embedding_size,
                     memory_size=self.memory_size,
-                )
+                ).to(TEST_DEVICE, dtype)
                 self.loss_with_miner = CrossBatchMemory(
                     loss=inner_loss,
                     miner=inner_miner,
                     embedding_size=self.embedding_size,
                     memory_size=self.memory_size,
-                )
+                ).to(TEST_DEVICE, dtype)
                 all_embeddings = torch.tensor([], dtype=dtype).to(TEST_DEVICE)
                 all_labels = torch.LongTensor([]).to(TEST_DEVICE)
                 for _ in range(num_iter):
@@ -297,7 +297,7 @@ class TestCrossBatchMemory(unittest.TestCase):
                     loss=ContrastiveLoss(),
                     embedding_size=self.embedding_size,
                     memory_size=self.memory_size,
-                )
+                ).to(TEST_DEVICE, dtype)
                 for i in range(30):
                     embeddings = (
                         torch.randn(batch_size, self.embedding_size)
@@ -384,7 +384,7 @@ class TestCrossBatchMemory(unittest.TestCase):
                 loss=ContrastiveLoss(),
                 embedding_size=self.embedding_size,
                 memory_size=self.memory_size,
-            )
+            ).to(TEST_DEVICE, dtype)
             for _ in range(30):
                 embeddings = (
                     torch.randn(batch_size, self.embedding_size)
@@ -437,7 +437,7 @@ class TestCrossBatchMemory(unittest.TestCase):
                 loss=ContrastiveLoss(),
                 embedding_size=self.embedding_size,
                 memory_size=self.memory_size,
-            )
+            ).to(TEST_DEVICE, dtype)
             for _ in range(30):
                 embeddings = (
                     torch.randn(batch_size, self.embedding_size)
@@ -486,7 +486,7 @@ class TestCrossBatchMemory(unittest.TestCase):
                     loss=inner_loss,
                     embedding_size=self.embedding_size,
                     memory_size=self.memory_size,
-                )
+                ).to(TEST_DEVICE, dtype)
 
                 all_embeddings = torch.tensor([], dtype=dtype).to(TEST_DEVICE)
                 all_labels = torch.LongTensor([]).to(TEST_DEVICE)
@@ -546,7 +546,7 @@ class TestCrossBatchMemory(unittest.TestCase):
             loss=ContrastiveLoss(),
             embedding_size=self.embedding_size,
             memory_size=self.memory_size,
-        )
+        ).to(TEST_DEVICE)
 
         init_emb = torch.zeros(self.memory_size, self.embedding_size)
         init_label = torch.zeros(self.memory_size).long()

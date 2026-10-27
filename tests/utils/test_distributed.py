@@ -186,9 +186,13 @@ def check_memory(rank: int, device: torch.device, dtype: torch.dtype) -> None:
     inputs, labels = make_inputs(device, dtype)
     selected = rank_slice((2, 3), rank)
     for mask in (None, torch.tensor([True, False, True, False, False], device=device)):
-        reference = CrossBatchMemory(make_pair_loss(), embedding_size=2, memory_size=7)
+        reference = CrossBatchMemory(
+            make_pair_loss(), embedding_size=2, memory_size=7
+        ).to(TEST_DEVICE, dtype)
         wrapped = DistributedLossWrapper(
-            CrossBatchMemory(make_pair_loss(), embedding_size=2, memory_size=7)
+            CrossBatchMemory(make_pair_loss(), embedding_size=2, memory_size=7).to(
+                TEST_DEVICE, dtype
+            )
         )
         for step in range(4):
             query = (inputs + step * 0.2).requires_grad_()
@@ -304,7 +308,7 @@ def check_inconsistent_arguments(rank: int, device: torch.device) -> None:
         wrapper(local, malformed_labels)
     mask = torch.ones(3 if rank else 2, device=device, dtype=torch.bool)
     memory = DistributedLossWrapper(
-        CrossBatchMemory(make_pair_loss(), embedding_size=2)
+        CrossBatchMemory(make_pair_loss(), embedding_size=2).to(TEST_DEVICE)
     )
     with unittest.TestCase().assertRaisesRegex(
         ValueError, "same wrapper mode and optional arguments"

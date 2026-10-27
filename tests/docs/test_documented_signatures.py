@@ -5,6 +5,8 @@ import re
 import unittest
 from pathlib import Path
 
+import torch
+
 DOCS = Path(__file__).resolve().parents[2] / "docs"
 MODULES = ("distances", "losses", "miners", "reducers", "regularizers", "samplers")
 BLOCK = re.compile(
@@ -74,7 +76,9 @@ class TestDocumentedSignatures(unittest.TestCase):
                 )
                 self.assertIn(class_name, module.__all__)
                 cls = getattr(module, class_name)
-                documented = parse_parameters(class_name, arguments, {class_name: cls})
+                documented = parse_parameters(
+                    class_name, arguments, {class_name: cls, "torch": torch}
+                )
                 own = explicit_parameters(cls)
                 accepted = accepted_parameters(cls)
                 self.assertLessEqual(set(own), set(documented))

@@ -16,7 +16,7 @@ class TestFixedSetOfTriplet(unittest.TestCase):
                 for num_triplets in [100, 999, 10000]:
                     fake_embeddings = torch.randn(10000, 2)
                     labels = torch.randint(low=0, high=num_labels, size=(10000,))
-                    dataset = c_f.EmbeddingDataset(fake_embeddings, labels)
+                    dataset = torch.utils.data.TensorDataset(fake_embeddings, labels)
                     sampler = FixedSetOfTriplets(labels, num_triplets)
                     iterator = iter(sampler)
                     for _ in range(1000):

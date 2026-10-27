@@ -29,7 +29,6 @@
     {
       "name": "evaluation",
       "paths": [
-        "src/pytorch_metric_learning/testers/**",
         "src/pytorch_metric_learning/utils/accuracy_calculator.py",
         "src/pytorch_metric_learning/utils/inference.py"
       ],
@@ -41,15 +40,6 @@
       "name": "sampling",
       "paths": [
         "src/pytorch_metric_learning/samplers/**"
-      ],
-      "dependsOn": [
-        "numerics"
-      ]
-    },
-    {
-      "name": "datasets",
-      "paths": [
-        "src/pytorch_metric_learning/datasets/**"
       ],
       "dependsOn": [
         "numerics"
@@ -80,7 +70,8 @@
         "docs/recipes/*.py"
       ],
       "dependsOn": [
-        "numerics"
+        "numerics",
+        "evaluation"
       ]
     }
   ],
@@ -94,7 +85,6 @@
         "numerics",
         "evaluation",
         "sampling",
-        "datasets",
         "distributed",
         "benchmarks",
         "recipes"
@@ -119,7 +109,6 @@
         "numerics",
         "evaluation",
         "sampling",
-        "datasets",
         "distributed"
       ],
       "argv": [
@@ -278,19 +267,15 @@
       },
       {
         "paths": [
-          "tests/testers/test_global_embedding_space_tester.py"
+          "tests/utils/test_retrieval_backends.py"
         ],
         "module": "evaluation",
         "focusedSuite": "evaluation-focused"
       },
       {
         "paths": [
-          "tests/testers/__init__.py",
-          "tests/testers/test_global_two_stream_embedding_space_tester.py",
-          "tests/testers/test_with_same_parent_label_tester.py",
           "tests/utils/test_calculate_accuracies.py",
-          "tests/utils/test_calculate_accuracies_large_k.py",
-          "tests/utils/test_inference.py"
+          "tests/utils/test_calculate_accuracies_large_k.py"
         ],
         "module": "evaluation",
         "focusedSuite": "evaluation-focused",
@@ -311,25 +296,6 @@
         ],
         "module": "sampling",
         "focusedSuite": "sampling-focused",
-        "executionSuite": "cpu-full"
-      },
-      {
-        "paths": [
-          "tests/datasets/test_local_datasets.py"
-        ],
-        "module": "datasets",
-        "focusedSuite": "datasets-focused"
-      },
-      {
-        "paths": [
-          "tests/datasets/__init__.py",
-          "tests/datasets/test_cars196.py",
-          "tests/datasets/test_cub.py",
-          "tests/datasets/test_inaturalist2018.py",
-          "tests/datasets/test_sop.py"
-        ],
-        "module": "datasets",
-        "focusedSuite": "datasets-focused",
         "executionSuite": "cpu-full"
       },
       {
@@ -404,7 +370,7 @@
           "evaluation"
         ],
         "paths": [
-          "tests/testers/test_global_embedding_space_tester.py",
+          "tests/utils/test_retrieval_backends.py",
           "tests/__init__.py",
           "tests/zzz_testing_utils/**",
           "tests/losses/utils.py"
@@ -419,7 +385,7 @@
           "python",
           "-m",
           "unittest",
-          "tests.testers.test_global_embedding_space_tester"
+          "tests.utils.test_retrieval_backends"
         ],
         "timeoutSeconds": 120
       },
@@ -447,33 +413,6 @@
           "-m",
           "unittest",
           "tests.samplers.test_m_per_class_sampler"
-        ],
-        "timeoutSeconds": 120
-      },
-      {
-        "name": "datasets-focused",
-        "kind": "unit",
-        "scope": "module",
-        "modules": [
-          "datasets"
-        ],
-        "paths": [
-          "tests/datasets/test_local_datasets.py",
-          "tests/__init__.py",
-          "tests/zzz_testing_utils/**",
-          "tests/losses/utils.py"
-        ],
-        "argv": [
-          ".venv/bin/uv",
-          "run",
-          "--frozen",
-          "--no-sync",
-          "--env-file",
-          "tests/cpu.env",
-          "python",
-          "-m",
-          "unittest",
-          "tests.datasets.test_local_datasets"
         ],
         "timeoutSeconds": 120
       },
@@ -584,7 +523,8 @@
           "python",
           "-m",
           "unittest",
-          "tests.recipes.test_training"
+          "tests.recipes.test_training",
+          "tests.recipes.test_evaluation"
         ],
         "timeoutSeconds": 120
       }
@@ -596,19 +536,6 @@
   },
   "supplyChain": {
     "releaseAgeAssessments": [
-      {
-        "id": "pillow-image-decoder-fixes",
-        "ecosystem": "pypi",
-        "package": "pillow",
-        "version": "13.0.0",
-        "scope": "uv.lock",
-        "category": "security-fix",
-        "evidence": "https://github.com/python-pillow/Pillow/releases/tag/13.0.0",
-        "reason": "Dataset image decoding reaches vulnerable native codecs; no aged release fixes the decoder issues. See docs/security/dependency-assessments.md#pillow-1300.",
-        "owner": "Codex",
-        "reviewed": "2026-10-26",
-        "expires": "2026-11-15"
-      },
       {
         "id": "uv-compromised-root",
         "ecosystem": "pypi",
@@ -702,7 +629,7 @@
         "severity": "critical",
         "status": "not-affected",
         "basis": "unreachable",
-        "reason": "MkDocs Material uses Requests only in its info, privacy, and social plugins, none enabled in mkdocs.yml. Library downloads use urllib and acquisition uses patched uv. See docs/security/dependency-assessments.md#retained-aged-dependencies.",
+        "reason": "MkDocs Material uses Requests only in its info, privacy, and social plugins, none enabled in mkdocs.yml. The library makes no network requests and acquisition uses patched uv. See docs/security/dependency-assessments.md#retained-aged-dependencies.",
         "impact": "No enabled HTTPS client uses the affected certifi trust bundle. Review before enabling a Requests caller or these plugins; update once the fix ages in.",
         "evidence": "https://github.com/certifi/python-certifi/security/advisories/GHSA-6q48-6c7w-9gw2",
         "owner": "Codex",
@@ -725,10 +652,6 @@
       {
         "path": "docs/design/sampling.md",
         "module": "sampling"
-      },
-      {
-        "path": "docs/design/datasets.md",
-        "module": "datasets"
       },
       {
         "path": "docs/design/distributed.md",

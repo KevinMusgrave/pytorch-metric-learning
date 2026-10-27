@@ -1,10 +1,27 @@
-import torch
-from sklearn.metrics import adjusted_mutual_info_score, normalized_mutual_info_score
+import importlib
 
+import torch
+
+from ..distances import LpDistance
 from . import common_functions as c_f
-from .inference import FaissKMeans, FaissKNN
+from .inference import CustomKNN
 
 EQUALITY = torch.eq
+DEFAULT_KNN_BATCH_SIZE = 256
+KMEANS_REQUIRED = (
+    "NMI and AMI require kmeans_func, for example FaissKMeans() from "
+    "the faiss extra or a function returning one cluster index per row"
+)
+
+
+def mutual_information_scores():
+    try:
+        return importlib.import_module("sklearn.metrics")
+    except ModuleNotFoundError as error:
+        raise ModuleNotFoundError(
+            "NMI and AMI require scikit-learn. Install the optional dependency "
+            "with `pip install pytorch-metric-learning[clustering]`."
+        ) from error
 
 
 def get_unique_labels(labels):
@@ -40,7 +57,7 @@ def get_relevance_mask(
         len(gt_labels), dtype=torch.long, device=gt_labels.device
     )
 
-    for label, count in zip(*label_counts):
+    for label, count in zip(*label_counts, strict=True):
         matching_rows = torch.where(
             c_f.torch_all_from_dim_to_end(gt_labels == label, 1)
         )[0]
@@ -121,7 +138,6 @@ def mean_reciprocal_rank(
     device = gt_labels.device
     is_same_label = label_comparison_fn(gt_labels, knn_labels)
 
-    # find & remove caeses where it has 0 correct results
     sum_per_row = is_same_label.sum(-1)
     zero_remove_mask = sum_per_row > 0
     indices = torch.arange(is_same_label.shape[1], 0, -1, device=device)
@@ -153,8 +169,6 @@ def get_label_match_counts(query_labels, reference_labels, label_comparison_fn):
         comparison = unique_query_labels[:, None] == reference_labels
         match_counts = torch.sum(c_f.torch_all_from_dim_to_end(comparison, 2), dim=1)
     else:
-        # Labels are compared with a custom function.
-        # They might be non-categorical or multidimensional labels.
         match_counts = torch.empty(
             len(unique_query_labels), dtype=torch.long, device=query_labels.device
         )
@@ -224,9 +238,15 @@ class AccuracyCalculator:
         function_names = [x for x in dir(self) if x.startswith(self.function_keyword)]
         metrics = [x.replace(self.function_keyword, "", 1) for x in function_names]
         self.original_function_dict = {
-            x: getattr(self, y) for x, y in zip(metrics, function_names)
+            x: getattr(self, y) for x, y in zip(metrics, function_names, strict=True)
         }
         self.check_primary_metrics(include, exclude)
+        if len(include) == 0:
+            include = [
+                x
+                for x in self.original_function_dict
+                if x not in self.requires_clustering()
+            ]
         self.original_function_dict = self.get_function_dict(include, exclude)
         self.curr_function_dict = self.get_function_dict()
 
@@ -235,13 +255,16 @@ class AccuracyCalculator:
         self.avg_of_avgs = avg_of_avgs
         self.return_per_class = return_per_class
 
-        self.device = c_f.use_cuda_if_available() if device is None else device
-        self.knn_func = FaissKNN() if knn_func is None else knn_func
-        self.kmeans_func = (
-            FaissKMeans(niter=20, gpu=self.device.type == "cuda")
-            if kmeans_func is None
-            else kmeans_func
+        self.device = None if device is None else torch.device(device)
+        self.knn_func = (
+            CustomKNN(
+                LpDistance(normalize_embeddings=False, power=2),
+                batch_size=DEFAULT_KNN_BATCH_SIZE,
+            )
+            if knn_func is None
+            else knn_func
         )
+        self.kmeans_func = kmeans_func
 
         if (not (isinstance(k, int) and k > 0)) and (k not in [None, "max_bin_count"]):
             raise ValueError(
@@ -258,6 +281,11 @@ class AccuracyCalculator:
         else:
             self.label_comparison_fn = EQUALITY
 
+        if self.kmeans_func is None and any(
+            x in self.requires_clustering() for x in self.get_curr_metrics()
+        ):
+            raise ValueError(KMEANS_REQUIRED)
+
     def get_function_dict(self, include=(), exclude=()):
         if len(include) == 0:
             include = list(self.original_function_dict.keys())
@@ -269,7 +297,7 @@ class AccuracyCalculator:
         }
 
     def get_curr_metrics(self):
-        return [k for k in self.curr_function_dict.keys()]
+        return list(self.curr_function_dict)
 
     def requires_clustering(self):
         return ["NMI", "AMI"]
@@ -279,10 +307,13 @@ class AccuracyCalculator:
             "precision_at_1",
             "mean_average_precision",
             "mean_average_precision_at_r",
+            "mean_reciprocal_rank",
             "r_precision",
         ]
 
     def get_cluster_labels(self, query, query_labels, **kwargs):
+        if self.kmeans_func is None:
+            raise ValueError(KMEANS_REQUIRED)
         num_clusters = len(torch.unique(query_labels.flatten()))
         return self.kmeans_func(query, num_clusters)
 
@@ -290,13 +321,17 @@ class AccuracyCalculator:
         [query_labels, cluster_labels] = [
             c_f.to_numpy(x) for x in [query_labels, cluster_labels]
         ]
-        return normalized_mutual_info_score(query_labels, cluster_labels)
+        return mutual_information_scores().normalized_mutual_info_score(
+            query_labels, cluster_labels
+        )
 
     def calculate_AMI(self, query_labels, cluster_labels, **kwargs):
         [query_labels, cluster_labels] = [
             c_f.to_numpy(x) for x in [query_labels, cluster_labels]
         ]
-        return adjusted_mutual_info_score(query_labels, cluster_labels)
+        return mutual_information_scores().adjusted_mutual_info_score(
+            query_labels, cluster_labels
+        )
 
     def calculate_precision_at_1(
         self, knn_labels, query_labels, not_lone_query_mask, label_counts, **kwargs
@@ -426,13 +461,19 @@ class AccuracyCalculator:
             reference_labels = query_labels
             ref_includes_query = True
 
+        device = self.device
+        if device is None:
+            device = c_f.numpy_to_torch(query).device
         [query, reference, query_labels, reference_labels] = [
-            c_f.numpy_to_torch(x).to(self.device).type(torch.float)
+            c_f.numpy_to_torch(x).to(device).type(torch.float)
             for x in [query, reference, query_labels, reference_labels]
         ]
 
         if len(query) != len(query_labels) or len(reference) != len(reference_labels):
             raise ValueError("embeddings and labels must have the same length")
+
+        if not (torch.isfinite(query).all() and torch.isfinite(reference).all()):
+            raise ValueError("query and reference embeddings must be finite")
 
         if ref_includes_query and not (
             torch.allclose(query, reference[: len(query)])
@@ -494,14 +535,10 @@ class AccuracyCalculator:
         primary_metrics = list(calc.original_function_dict.keys())
         for met in [include, exclude]:
             if not isinstance(met, (tuple, list)):
-                raise TypeError(
-                    "Arguments must be of type tuple, not {}.".format(type(met))
-                )
+                raise TypeError(f"Arguments must be of type tuple, not {type(met)}.")
             if not set(met).issubset(set(primary_metrics)):
                 raise ValueError(
-                    "Primary metrics must be one or more of: {}.".format(
-                        primary_metrics
-                    )
+                    f"Primary metrics must be one or more of: {primary_metrics}."
                 )
 
     def determine_k(self, bin_counts, num_reference_embeddings, ref_includes_query):
@@ -516,13 +553,15 @@ class AccuracyCalculator:
                 set({"r_precision", "mean_average_precision_at_r"})
             )
             if len(intersection) > 0:
-                warning_str = f"\nWarning: You are computing {intersection}, but the value for k ({self.k})"
-                warning_str += f" is less than the max bin count ({max_bin_count}) so the values for these metrics will be incorrect."
-                warning_str += " To fix this, set k='max_bin_count'."
-                warning_str += f"\nIf you're looking for MAP@{self.k} instead of MAP@R, then you should use 'mean_average_precision'"
-                warning_str += " rather than mean_average_precision_at_r"
-                c_f.LOGGER.warning(warning_str)
+                c_f.LOGGER.warning(
+                    "You are computing %s, but k (%s) is less than the max bin "
+                    "count (%s), so these metrics will be incorrect. Set "
+                    "k='max_bin_count'. For MAP@%s instead of MAP@R, use "
+                    "'mean_average_precision' rather than "
+                    "'mean_average_precision_at_r'.",
+                    intersection,
+                    self.k,
+                    max_bin_count,
+                    self.k,
+                )
         return self.k
-
-    def description(self):
-        return "avg_of_avgs" if self.avg_of_avgs else ""

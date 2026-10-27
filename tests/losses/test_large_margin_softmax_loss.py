@@ -2,7 +2,6 @@ import math
 import unittest
 
 import numpy as np
-import scipy
 import torch
 
 from pytorch_metric_learning.losses import LargeMarginSoftmaxLoss, SphereFaceLoss
@@ -29,9 +28,7 @@ class TestLargeMarginSoftmaxLoss(unittest.TestCase):
                 np.array([angle_to_coord(a) for a in embedding_angles]) * 10,
                 requires_grad=True,
                 dtype=dtype,
-            ).to(
-                TEST_DEVICE
-            )  # 2D embeddings
+            ).to(TEST_DEVICE)  # 2D embeddings
             labels = torch.randint(low=0, high=10, size=(180,)).to(TEST_DEVICE)
 
             lossA = loss_funcA(embeddings, labels)
@@ -48,9 +45,7 @@ class TestLargeMarginSoftmaxLoss(unittest.TestCase):
             ) * torch.norm(embeddings, p=2, dim=1).unsqueeze(1)
             cosinesA = torch.matmul(embeddings, weightsA) / (product_of_magnitudesA)
             cosinesB = torch.matmul(embeddings, weightsB) / (product_of_magnitudesB)
-            coefficients = [
-                scipy.special.binom(margin, 2 * n) for n in range((margin // 2) + 1)
-            ]
+            coefficients = [math.comb(margin, 2 * n) for n in range((margin // 2) + 1)]
 
             for i, j in enumerate(labels):
                 curr_cosineA = cosinesA[i, j]
@@ -133,9 +128,7 @@ class TestLargeMarginSoftmaxLoss(unittest.TestCase):
                     np.array([angle_to_coord(a) for a in embedding_angles]) * 10,
                     requires_grad=True,
                     dtype=dtype,
-                ).to(
-                    TEST_DEVICE
-                )  # 2D embeddings
+                ).to(TEST_DEVICE)  # 2D embeddings
                 labels = torch.randint(low=0, high=10, size=(180,)).to(TEST_DEVICE)
 
                 loss = loss_func(embeddings, labels)

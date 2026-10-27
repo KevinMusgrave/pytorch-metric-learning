@@ -1,7 +1,6 @@
 import math
 
 import numpy as np
-import scipy.special
 import torch
 
 from ..distances import CosineSimilarity
@@ -35,9 +34,9 @@ class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         self.margin = int(self.margin)
         self.max_n = self.margin // 2
         ## For the trigonometric multiple-angle formula ##
-        self.n_range = torch.tensor([n for n in range(0, self.max_n + 1)])
+        self.n_range = torch.arange(self.max_n + 1)
         self.margin_choose_n = torch.tensor(
-            [scipy.special.binom(self.margin, 2 * n) for n in self.n_range]
+            [float(math.comb(self.margin, 2 * n)) for n in range(self.max_n + 1)]
         )
         self.cos_powers = torch.tensor([self.margin - (2 * n) for n in self.n_range])
         self.alternating = torch.tensor([(-1) ** n for n in self.n_range])

@@ -3,36 +3,6 @@
 Assessor: Codex. Reviewed: 2026-10-26. Scope: the exact versions in `uv.lock`.
 These assessments do not authorize publication or establish CUDA acceptance.
 
-## Pillow 13.0.0
-
-`BaseDataset.__getitem__` calls `PIL.Image.open` on paths derived from dataset
-metadata and then invokes a supplied transform. Dataset directories and image
-contents can come from outside the repository. The initial 12.3.0 resolution
-therefore exposed native decoders, rather than merely containing an unused
-Pillow dependency. In particular,
-[GHSA-78g4-xqwv-q3g8](https://github.com/python-pillow/Pillow/security/advisories/GHSA-78g4-xqwv-q3g8)
-reaches a bundled OpenJPEG heap write through ordinary open/load calls, even
-when a file has a JPEG or PNG extension. Other affected decoding paths include
-GIF, PNG, TIFF, and JPEG processing. Public reproductions exist; this review
-does not claim exploitation of this repository.
-
-The official [13.0.0 release](https://github.com/python-pillow/Pillow/releases/tag/13.0.0)
-is the first release fixing the observed advisory set. Its wheels were published
-on 2026-10-16. An older Pillow avoids some newly introduced defects but remains
-affected by others whose ranges begin at version zero. Restricting filename
-extensions does not restrict codecs, and a JPEG/PNG format restriction does not
-address every affected transform or decoder. Disabling image loading would
-remove the dataset adapter's purpose. No aged release provides the required
-fixes across these paths.
-
-Admit 13.0.0 through 2026-11-15, when it reaches 30 days. Waiting would retain
-publicly described native memory-corruption paths for approximately 20 days.
-The admitted release has additional nonsecurity changes, including removals and
-bundled native-library updates; its age and binary provenance remain residual
-supply-chain risks. Use official PyPI wheels with the lock's hashes, disable
-source builds during dependency installation, and verify the dataset/image
-behavior with local fixtures. No source fork or locally rebuilt Pillow is used.
-
 ## Certificate trust
 
 [uv GHSA-hq85-5cpj-mr62](https://github.com/astral-sh/uv/security/advisories/GHSA-hq85-5cpj-mr62)
@@ -65,12 +35,12 @@ The following advisories remain visible under exact `not-affected` assessments
 expiring 2026-11-25, except certifi's critical-severity assessment, which must be
 reviewed again by 2026-11-02. Reassess before adding the affected APIs or deployment modes.
 
-| Dependency        | Advisory                                 | Enabled path and absent prerequisite                                                                                                                                                                                                                                                                                                |
-| ----------------- | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| filelock 4.0.3    | GHSA-v4x8-3wr5-3wq8, GHSA-9vhv-jxww-xfm5 | PyTorch's `torch.utils._filelock.FileLock` wraps `filelock.FileLock`. On supported Mac/Linux hosts it selects `UnixFileLock`; Windows selects `WindowsFileLock`. The SQLite-backed `ReadWriteLock` APIs are not used.                                                                                                               |
-| filelock 4.0.3    | GHSA-567q-5qvw-pf92                      | The affected Windows `SoftFileLock` path is not selected by those callers. No repository source calls it directly.                                                                                                                                                                                                                  |
-| setuptools 84.0.0 | GHSA-xmj3-9gf7-h52w                      | The build uses `setuptools.build_meta`; uv installs dependency wheels. There is no `setup_requires`, egg installation, or call to `Wheel.install_as_egg`, which consumes the malicious namespace metadata.                                                                                                                          |
-| certifi 2026.7.22 | GHSA-6q48-6c7w-9gw2                      | Requests enters the graph through MkDocs Material. Inspection of its 9.7.7 wheel finds Requests calls only in the info, privacy, and social plugins; none is enabled in `mkdocs.yml`. Library downloads use urllib, and package acquisition uses the separately patched uv. No enabled caller uses certifi's affected trust bundle. |
+| Dependency        | Advisory                                 | Enabled path and absent prerequisite                                                                                                                                                                                                                                                                                                         |
+| ----------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| filelock 4.0.3    | GHSA-v4x8-3wr5-3wq8, GHSA-9vhv-jxww-xfm5 | PyTorch's `torch.utils._filelock.FileLock` wraps `filelock.FileLock`. On supported Mac/Linux hosts it selects `UnixFileLock`; Windows selects `WindowsFileLock`. The SQLite-backed `ReadWriteLock` APIs are not used.                                                                                                                        |
+| filelock 4.0.3    | GHSA-567q-5qvw-pf92                      | The affected Windows `SoftFileLock` path is not selected by those callers. No repository source calls it directly.                                                                                                                                                                                                                           |
+| setuptools 84.0.0 | GHSA-xmj3-9gf7-h52w                      | The build uses `setuptools.build_meta`; uv installs dependency wheels. There is no `setup_requires`, egg installation, or call to `Wheel.install_as_egg`, which consumes the malicious namespace metadata.                                                                                                                                   |
+| certifi 2026.7.22 | GHSA-6q48-6c7w-9gw2                      | Requests enters the graph through MkDocs Material. Inspection of its 9.7.7 wheel finds Requests calls only in the info, privacy, and social plugins; none is enabled in `mkdocs.yml`. The library makes no network requests, and package acquisition uses the separately patched uv. No enabled caller uses certifi's affected trust bundle. |
 
 The source evidence includes PyTorch
 [FileLock](https://github.com/pytorch/pytorch/blob/v2.14.0/torch/utils/_filelock.py),
@@ -106,3 +76,13 @@ Removing the trainer/logging integration removed record-keeper, TensorBoard,
 absl-py, grpcio, protobuf, tensorboard-data-server, and Werkzeug from `uv.lock`.
 The exact Werkzeug advisory assessment was removed with the dependency. This
 reduces the installed surface rather than adding an advisory exemption.
+
+## Removed dataset and evaluation dependencies
+
+Removing the dataset adapters, testers, and model inference wrapper removed
+Pillow, torchvision, and tqdm from `uv.lock`. The Pillow 13.0.0 release-age
+admission existed only because dataset image decoding reached its native
+codecs; it was removed with the dependency. SciPy is no longer a direct
+dependency: the large-margin softmax coefficients use exact integer binomials.
+scikit-learn, and through it SciPy, remains only in the optional `clustering`
+extra and the development group for NMI/AMI tests.

@@ -1,24 +1,23 @@
 site_name: PyTorch Metric Learning
 nav:
     - Home: index.md
-    - Datasets: datasets.md
     - Distances: distances.md
     - Losses: losses.md
     - Miners: miners.md
     - Reducers: reducers.md
     - Regularizers: regularizers.md
     - Samplers: samplers.md
-    - Testers: testers.md
-    - Utils: 
+    - Utils:
       - Accuracy Calculation: accuracy_calculation.md
-      - Inference Models: inference_models.md
+      - Retrieval Backends: retrieval.md
       - Common Functions: common_functions.md
       - Distributed: distributed.md
     - How to extend this library:
-      - Custom datasets: extend/datasets.md
       - Custom losses: extend/losses.md
       - Custom miners: extend/miners.md
-    - Training recipes: recipes/training.md
+    - Recipes:
+      - Training: recipes/training.md
+      - Retrieval evaluation: recipes/evaluation.md
     - Next major release: release-notes-3.md
     - Performance: performance.md
     - Frequently Asked Questions: faq.md
@@ -33,7 +32,7 @@ markdown_extensions:
   - admonition
   - pymdownx.details
   - pymdownx.highlight
-  - pymdownx.superfences 
+  - pymdownx.superfences
   - toc:
       permalink: true
   - attr_list

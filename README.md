@@ -16,6 +16,10 @@ uv pip install pytorch-metric-learning
 python -m pip install pytorch-metric-learning
 ```
 
+The core package needs only PyTorch and NumPy. Optional extras add the Faiss
+retrieval backend, `pytorch-metric-learning[faiss]`, and scikit-learn for the
+NMI/AMI clustering metrics, `pytorch-metric-learning[clustering]`.
+
 This branch is preparing the next major release. Its development baseline is
 Python 3.12.13 and PyTorch 2.14.0; published versions have their own requirements.
 See the [release notes](docs/release-notes-3.md) for breaking changes and

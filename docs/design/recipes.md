@@ -38,6 +38,13 @@ contract of uniform weights over the selected subset. PyTorch's sampler owns
 replacement and RNG state. Memory warmup trains against the current batch only,
 then starts filling the detached queue at the caller-selected step.
 
+The evaluation recipe extracts embeddings in caller code and composes
+explicit query/reference sets for `AccuracyCalculator`. Split composition places
+a query first when it belongs to the reference; two-stream evaluation never
+removes self-matches; parent-conditioned metrics are unweighted means over
+parent groups, then over levels. Its tests reuse the removed testers' fixtures
+and expected values. Published dataset splits are documentation, not code.
+
 Reference tests verify objective values and gradients, candidate-set nesting,
 gradient ownership, parameter updates, subset mapping, and queue progression.
 Runnable commands and paper citations belong in `docs/recipes/training.md`.

@@ -351,8 +351,21 @@ for those design documents or evidence that the listed work is complete.
   and their private helpers are removed after extracting the numerical
   composition into agent-facing recipes. Six recipe tests verify optimization,
   cascaded candidate filtering, analytical adversarial values/gradients,
-  alternating parameter ownership, subset weights, and memory warmup. Testers,
-  model inference orchestration, and dataset adapters still await removal.
+  alternating parameter ownership, subset weights, and memory warmup.
+- Phase 3, evaluation: testers, `InferenceModel`, PCA wrapping, and dataset
+  adapters are removed. An evaluation recipe preserves split composition,
+  two-stream, and parent-conditioned metrics; its tests reproduce every removed
+  tester fixture value. `AccuracyCalculator` defaults to exact PyTorch search on
+  the input device; Faiss and scikit-learn are optional, lazily imported extras,
+  and clustering metrics require explicit `kmeans_func`. A reproduced
+  pre-existing failure computing `mean_reciprocal_rank` alone is fixed. Core
+  dependencies are NumPy and PyTorch; Pillow, torchvision, tqdm, and the Pillow
+  age admission are removed. On macOS, Faiss and PyTorch wheels need
+  `KMP_DUPLICATE_LIB_OK=TRUE` and single-threaded OpenMP to coexist; the CPU
+  profile now sets this explicitly instead of inheriting it from a scikit-learn
+  import. Retrieval metric discovery still uses `calculate_` name inspection,
+  which dead-code analysis reports; replacing it is a class-design item. The
+  locked repository-wide Ruff format check fails on 42 inherited files.
 - Phase 5: all Jupyter notebooks and the separate example gallery are removed.
   The README now provides a human-readable introduction and minimal training
   step, leading to a shared task/component index and agent-facing executable

@@ -21,8 +21,9 @@ For this development branch, read [the next major release notes](release-notes-3
 | Reuse detached embeddings                   | `losses.CrossBatchMemory`                                   | [Memory contract](losses.md#crossbatchmemory), [warmup](recipes/training.md#memory-warmup-contract)                                 |
 | Balance batches by label                    | `samplers.MPerClassSampler`, `samplers.HierarchicalSampler` | [Samplers](samplers.md)                                                                                                             |
 | Sample from mined tuple frequency           | `utils.loss_and_miner_utils.convert_to_weights`             | [Weighted sampling](recipes/training.md#mining-weighted-sampling-contract)                                                          |
-| Evaluate retrieval                          | `utils.accuracy_calculator.AccuracyCalculator`              | [Metrics and query/reference rules](accuracy_calculation.md)                                                                        |
-| Find nearest neighbors or threshold matches | `utils.inference.CustomKNN`, `utils.inference.MatchFinder`  | [Retrieval primitives](inference_models.md)                                                                                         |
+| Evaluate retrieval                          | `utils.accuracy_calculator.AccuracyCalculator`              | [Metrics and query/reference rules](accuracy_calculation.md), [evaluation recipe](recipes/evaluation.md)                            |
+| Evaluate hierarchical or two-stream labels  | `AccuracyCalculator` with explicit subsets                  | [Parent-conditioned and two-stream evaluation](recipes/evaluation.md#parent-conditioned-hierarchical-retrieval)                     |
+| Find nearest neighbors or threshold matches | `utils.inference.CustomKNN`, `utils.inference.MatchFinder`  | [Retrieval backends](retrieval.md)                                                                                                  |
 | Train across devices                        | `utils.distributed.DistributedLossWrapper`                  | [Distributed values and gradients](distributed.md)                                                                                  |
 | Generate hard negatives                     | Ordinary PyTorch modules and triplet loss                   | [Adversarial objectives](recipes/training.md#adversarial-objectives-and-gradient-ownership)                                         |
 
@@ -34,13 +35,14 @@ For this development branch, read [the next major release notes](release-notes-3
 - [Reducers](reducers.md): filtering and aggregation of per-tuple penalties.
 - [Regularizers](regularizers.md): embedding and learnable-weight penalties.
 - [Samplers](samplers.md): label structure and PyTorch data-loader integration.
-- [Retrieval metrics](accuracy_calculation.md) and [retrieval primitives](inference_models.md).
+- [Retrieval metrics](accuracy_calculation.md) and [retrieval backends](retrieval.md).
 - [Distributed execution](distributed.md) and [measured performance](performance.md).
 - [Custom losses](extend/losses.md) and [custom miners](extend/miners.md).
 
 ## Execute a recipe
 
-The small [training recipes](recipes/training.md) sit beside their contracts.
+The small [training](recipes/training.md) and [evaluation](recipes/evaluation.md)
+recipes sit beside their contracts.
 Each lists its inputs, expected results, supported composition, and exact
 verification command. They use synthetic tensors and no downloads. There is no
 separate tutorial gallery or notebook environment to set up.

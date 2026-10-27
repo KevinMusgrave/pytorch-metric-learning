@@ -35,7 +35,9 @@ class TestMPerClassSampler(unittest.TestCase):
                     for length_before_new_iter in [100, 999, 10000]:
                         fake_embeddings = torch.randn(10000, 2)
                         labels = torch.randint(low=0, high=num_labels, size=(10000,))
-                        dataset = c_f.EmbeddingDataset(fake_embeddings, labels)
+                        dataset = torch.utils.data.TensorDataset(
+                            fake_embeddings, labels
+                        )
                         args = [labels, m, batch_size, length_before_new_iter]
                         if (
                             (length_before_new_iter < batch_size)

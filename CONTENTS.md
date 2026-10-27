@@ -1,14 +1,5 @@
 ## Library contents
 
-### [Datasets](https://kevinmusgrave.github.io/pytorch-metric-learning/datasets)
-
-| Name                                                                                                                   | Reference Papers                                                                                                                                                            |
-| ---------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [**CUB**](https://kevinmusgrave.github.io/pytorch-metric-learning/datasets/#cub-200-2011)                              | [The caltech-ucsd birds-200-2011 dataset](https://authors.library.caltech.edu/27452/1/CUB_200_2011.pdf)                                                                     |
-| [**Cars196**](https://kevinmusgrave.github.io/pytorch-metric-learning/datasets/#cars196)                               | 3D Object Representations for Fine-Grained Categorization                                                                                                                   |
-| [**INaturalist2018**](https://kevinmusgrave.github.io/pytorch-metric-learning/datasets/#inaturalist2018)               | [The iNaturalist Species Classification and Detection Dataset](https://openaccess.thecvf.com/content_cvpr_2018/papers/Van_Horn_The_INaturalist_Species_CVPR_2018_paper.pdf) |
-| [**StanfordOnlineProducts**](https://kevinmusgrave.github.io/pytorch-metric-learning/datasets/#stanfordonlineproducts) | [Deep Metric Learning via Lifted Structured Feature Embedding](https://cvgl.stanford.edu/papers/song_cvpr16.pdf)                                                            |
-
 ### [Distances](https://kevinmusgrave.github.io/pytorch-metric-learning/distances)
 
 | Name                                                                                                                | Reference Papers                                                                                                                                                                                                                   |
@@ -103,20 +94,12 @@
 | [**HierarchicalSampler**](https://kevinmusgrave.github.io/pytorch-metric-learning/samplers/#hierarchicalsampler) | [Deep Metric Learning to Rank](http://openaccess.thecvf.com/content_CVPR_2019/papers/Cakir_Deep_Metric_Learning_to_Rank_CVPR_2019_paper.pdf) |
 | [**FixedSetOfTriplets**](https://kevinmusgrave.github.io/pytorch-metric-learning/samplers/#fixedsetoftriplets)   |
 
-### [Testers](https://kevinmusgrave.github.io/pytorch-metric-learning/testers)
-
-| Name                                                                                                                                            | Reference Papers |
-| ----------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
-| [**GlobalEmbeddingSpaceTester**](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#globalembeddingspacetester)                   |
-| [**WithSameParentLabelTester**](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#withsameparentlabeltester)                     |
-| [**GlobalTwoStreamEmbeddingSpaceTester**](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#globaltwostreamembeddingspacetester) |
-
 ### Utils
 
 | Name                                                                                                                        | Reference Papers |
 | --------------------------------------------------------------------------------------------------------------------------- | ---------------- |
 | [**AccuracyCalculator**](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation)                      |
-| [**InferenceModel**](https://kevinmusgrave.github.io/pytorch-metric-learning/inference_models)                              |
+| [**CustomKNN, MatchFinder, FaissKNN, FaissKMeans**](https://kevinmusgrave.github.io/pytorch-metric-learning/retrieval)      |
 | [**TorchInitWrapper**](https://kevinmusgrave.github.io/pytorch-metric-learning/common_functions/#torchinitwrapper)          |
 | [**DistributedLossWrapper**](https://kevinmusgrave.github.io/pytorch-metric-learning/distributed/#distributedlosswrapper)   |
 | [**DistributedMinerWrapper**](https://kevinmusgrave.github.io/pytorch-metric-learning/distributed/#distributedminerwrapper) |
@@ -137,4 +120,3 @@
 | [**BaseMiner**](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/#baseminer)                           |
 | [**BaseReducer**](https://kevinmusgrave.github.io/pytorch-metric-learning/reducers/#basereducer)                     |
 | [**BaseRegularizer**](https://kevinmusgrave.github.io/pytorch-metric-learning/regularizers/#baseregularizer)         |
-| [**BaseTester**](https://kevinmusgrave.github.io/pytorch-metric-learning/testers/#basetester)                        |

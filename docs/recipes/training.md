@@ -6,7 +6,8 @@ CPU, and perform no downloads. The Python files beside this page are the
 canonical executable source; they are not installed as library APIs.
 
 For installation and the public component index, start at [the documentation
-index](../index.md). The application owns model modes, device/dtype placement,
+index](../index.md). Retrieval evaluation has its own
+[evaluation recipe](evaluation.md). The application owns model modes, device/dtype placement,
 optimizers, data loading, logging, and checkpoints.
 
 ## Choose a recipe

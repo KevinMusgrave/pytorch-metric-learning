@@ -31,8 +31,8 @@ verification results and remaining work.
 
 ## CPU tests
 
-The CPU profile uses float32 and float64, skips external dataset downloads,
-and limits numerical-library threads. Run a specific test during development:
+The CPU profile uses float32 and float64 and limits numerical-library
+threads. Run a specific test during development:
 
 ```sh
 .venv/bin/uv run --frozen --no-sync --env-file tests/cpu.env python -m unittest tests.losses.test_contrastive_loss
@@ -50,10 +50,11 @@ The complete CPU suite is:
 ./code-polishyw test --suite cpu-full
 ```
 
-Agent-facing recipe and sampler integration tests use synthetic tensors. Dataset adapters
-have local image/metadata fixtures. Tests that download the original public
-datasets remain opt-in through `TEST_DATASETS=true`; they are not required for
-the ordinary CPU suite.
+Agent-facing recipe and sampler integration tests use synthetic tensors and
+perform no downloads. The CPU profile also sets `KMP_DUPLICATE_LIB_OK=TRUE`:
+on macOS, the Faiss and PyTorch wheels bundle separate OpenMP runtimes, which
+coexist only with that setting and single-threaded OpenMP. See
+[retrieval backends](docs/retrieval.md#macos-openmp-runtimes).
 
 ## CUDA and distributed verification
 
@@ -63,8 +64,8 @@ locked PyTorch CUDA build. Verify the actual runtime first:
 
 ```sh
 .venv/bin/uv run --frozen --no-sync python -c 'import torch; print(torch.__version__, torch.version.cuda, torch.cuda.device_count()); assert torch.cuda.device_count() >= 2'
-TEST_DEVICE=cuda TEST_DTYPES=float16,float32,float64 TEST_DATASETS=false OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 .venv/bin/uv run --frozen --no-sync python -m unittest tests.utils.test_distributed
-TEST_DEVICE=cuda TEST_DTYPES=float16,float32,float64 TEST_DATASETS=false OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 .venv/bin/uv run --frozen --no-sync python -m unittest discover
+TEST_DEVICE=cuda TEST_DTYPES=float16,float32,float64 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 .venv/bin/uv run --frozen --no-sync python -m unittest tests.utils.test_distributed
+TEST_DEVICE=cuda TEST_DTYPES=float16,float32,float64 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 .venv/bin/uv run --frozen --no-sync python -m unittest discover
 ```
 
 The distributed tests spawn their own ranks; do not launch them with `torchrun`.

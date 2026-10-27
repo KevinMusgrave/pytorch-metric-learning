@@ -326,7 +326,7 @@ loss_fn(embeddings, labels, indices_tuple=None, enqueue_mask=None)
 
 As shown above, CrossBatchMemory comes with a 4th argument in its `forward` function:
 
-- **enqueue_mask**: A boolean tensor where `enqueue_mask[i]` is True if `embeddings[i]` should be added to the memory queue. This enables CrossBatchMemory to be used in self-supervision frameworks like [MoCo](https://arxiv.org/pdf/1911.05722.pdf). Check out the [MoCo on CIFAR100](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples#simple-examples) notebook to see how this works.
+- **enqueue_mask**: A boolean tensor where `enqueue_mask[i]` is True if `embeddings[i]` should be added to the memory queue. This enables CrossBatchMemory to be used in self-supervision frameworks like [MoCo](https://arxiv.org/pdf/1911.05722.pdf). See the [memory recipe](recipes/training.md#memory-warmup-contract) for caller-controlled queue filling.
 
 With an enqueue mask, selected rows become detached references and unselected
 rows are anchors. Without a mask, all rows are enqueued and used as anchors,

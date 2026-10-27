@@ -36,6 +36,12 @@ change to the objective.
 
 ## Recipes to extract before deletion
 
+These are small agent-facing executable recipes colocated with the canonical
+contracts, not a standalone examples gallery or a tutorial collection. Each
+states its inputs, supported composition, expected results, and verification
+command. Remove every Jupyter notebook; keep only recipes that preserve useful
+metric-specific behavior or make the public API verifiable.
+
 - **Basic and classifier-assisted training:** a normal PyTorch loop with a loss,
   optional miner, optional classifier term, and optimizer steps. A proxy example
   must optimize the loss's own parameters as well as the embedding model.

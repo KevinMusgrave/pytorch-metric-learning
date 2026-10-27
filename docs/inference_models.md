@@ -1,8 +1,9 @@
 # Inference Models
 
-utils.inference contains classes that make it convenient to find matching pairs within a batch, or from a set of pairs. Take a look at [this notebook](https://colab.research.google.com/github/KevinMusgrave/pytorch-metric-learning/blob/master/examples/notebooks/Inference.ipynb) to see example usage.
+utils.inference contains classes that make it convenient to find matching pairs within a batch, or from a set of pairs.
 
 ## InferenceModel
+
 ```python
 from pytorch_metric_learning.utils.inference import InferenceModel
 InferenceModel(trunk,
@@ -13,17 +14,19 @@ InferenceModel(trunk,
 				data_device=None,
 				dtype=None)
 ```
+
 **Parameters**:
 
-* **trunk**: Your trained model for computing embeddings.
-* **embedder**: Optional. This is if your model is split into two components (trunk and embedder). If None, then the embedder will simply return the trunk's output.
-* **match_finder**: A [MatchFinder](inference_models.md#matchfinder) object. If ```None```, it will be set to ```MatchFinder(distance=CosineSimilarity(), threshold=0.9)```.
-* **normalize_embeddings**: If True, embeddings will be normalized to have Euclidean norm of 1.
-* **knn_func**: The function used for computing k-nearest-neighbors. If ```None```, it will be set to ```FaissKNN()```.
-* **data_device**: The device that you want to put batches of data on. If not specified, GPUs will be used if available.
-* **dtype**: The datatype to cast data to. If None, no casting will be done.
+- **trunk**: Your trained model for computing embeddings.
+- **embedder**: Optional. This is if your model is split into two components (trunk and embedder). If None, then the embedder will simply return the trunk's output.
+- **match_finder**: A [MatchFinder](inference_models.md#matchfinder) object. If `None`, it will be set to `MatchFinder(distance=CosineSimilarity(), threshold=0.9)`.
+- **normalize_embeddings**: If True, embeddings will be normalized to have Euclidean norm of 1.
+- **knn_func**: The function used for computing k-nearest-neighbors. If `None`, it will be set to `FaissKNN()`.
+- **data_device**: The device that you want to put batches of data on. If not specified, GPUs will be used if available.
+- **dtype**: The datatype to cast data to. If None, no casting will be done.
 
 **Methods**:
+
 ```python
 # initialize with a model
 im = InferenceModel(model)
@@ -48,8 +51,8 @@ im.save_knn_func("filename.index")
 im.load_knn_func("filename.index")
 ```
 
-
 ## MatchFinder
+
 ```python
 from pytorch_metric_learning.utils.inference import MatchFinder
 MatchFinder(distance=None, threshold=None)
@@ -57,9 +60,8 @@ MatchFinder(distance=None, threshold=None)
 
 **Parameters**:
 
-* **distance**: A [distance](distances.md) object.
-* **threshold**: Optional. Pairs will be a match if they fall under this threshold for non-inverted distances, or over this value for inverted distances. If not provided, then a threshold must be provided during function calls.
-
+- **distance**: A [distance](distances.md) object.
+- **threshold**: Optional. Pairs will be a match if they fall under this threshold for non-inverted distances, or over this value for inverted distances. If not provided, then a threshold must be provided during function calls.
 
 ## FaissKNN
 
@@ -68,24 +70,25 @@ Uses the faiss library to compute k-nearest-neighbors
 ```python
 from pytorch_metric_learning.utils.inference import FaissKNN
 FaissKNN(reset_before=True,
-			reset_after=True, 
-			index_init_fn=None, 
+			reset_after=True,
+			index_init_fn=None,
 			gpus=None)
 ```
 
 **Parameters**:
 
-* **reset_before**: Reset the faiss index before knn is computed.
-* **reset_after**: Reset the faiss index after knn is computed (good for clearing memory).
-* **index_init_fn**: A callable that takes in the embedding dimensionality and returns a faiss index. The default is ```faiss.IndexFlatL2```.
-* **gpus**: A list of gpu indices to move the faiss index onto. The default is to use all available gpus, if the input tensors are also on gpus.
+- **reset_before**: Reset the faiss index before knn is computed.
+- **reset_after**: Reset the faiss index after knn is computed (good for clearing memory).
+- **index_init_fn**: A callable that takes in the embedding dimensionality and returns a faiss index. The default is `faiss.IndexFlatL2`.
+- **gpus**: A list of gpu indices to move the faiss index onto. The default is to use all available gpus, if the input tensors are also on gpus.
 
 Example:
+
 ```python
 # use faiss.IndexFlatIP on 3 gpus
 knn_func = FaissKNN(index_init_fn=faiss.IndexFlatIP, gpus=[0,1,2])
 
-# query = query embeddings 
+# query = query embeddings
 # k = the k in k-nearest-neighbors
 # reference = the embeddings to search
 # last argument is whether or not query and reference share datapoints
@@ -103,9 +106,10 @@ FaissKMeans(**kwargs)
 
 **Parameters**:
 
-* **kwargs**: Keyword arguments that will be passed to the ```faiss.Kmeans``` constructor.
+- **kwargs**: Keyword arguments that will be passed to the `faiss.Kmeans` constructor.
 
 Example:
+
 ```python
 kmeans_func = FaissKMeans(niter=100, verbose=True, gpu=True)
 
@@ -124,10 +128,11 @@ CustomKNN(distance, batch_size=None)
 
 **Parameters**:
 
-* **distance**: A [distance function](distances.md)
-* **batch_size**: If specified, k-nn will be computed incrementally. For example, if there are 50000 reference embeddings and the batch size is 32, then CustomKNN will iterate through all embeddings, using distance matrices of size (32, 50000). The final result is equal to the  ```batch_size=None``` setting, but saves memory because the full (50000, 50000) matrix does not need to be computed all at once.
+- **distance**: A [distance function](distances.md)
+- **batch_size**: If specified, k-nn will be computed incrementally. For example, if there are 50000 reference embeddings and the batch size is 32, then CustomKNN will iterate through all embeddings, using distance matrices of size (32, 50000). The final result is equal to the `batch_size=None` setting, but saves memory because the full (50000, 50000) matrix does not need to be computed all at once.
 
 Example:
+
 ```python
 from pytorch_metric_learning.distances import SNRDistance
 from pytorch_metric_learning.utils.inference import CustomKNN

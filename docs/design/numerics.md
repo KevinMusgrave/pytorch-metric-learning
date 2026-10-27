@@ -76,3 +76,8 @@ their existing upstream attributions remain alongside those implementations.
 
 The development baseline uses current PyTorch tensor operations. Compatibility
 with obsolete PyTorch releases is not a requirement.
+
+Trainer-specific key checking, loss tracking, generic model checkpointing,
+parameter freezing, SQLite conversion, and batch-unpacking helpers have been
+removed with the orchestration layer. Retained numerical utilities do not own
+model lifecycles or depend on logging integrations.

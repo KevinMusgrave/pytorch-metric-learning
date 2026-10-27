@@ -1,8 +1,5 @@
 import collections
-import glob
 import logging
-import os
-import re
 import urllib
 
 import numpy as np
@@ -20,9 +17,10 @@ COLLECT_STATS = False
 # https://github.com/pytorch/vision/blob/main/torchvision/datasets/utils.py#L27
 def _urlretrieve(url, filename, chunk_size=1024 * 32):
     with urllib.request.urlopen(urllib.request.Request(url)) as response:
-        with open(filename, "wb") as fh, tqdm(
-            total=response.length, unit="B", unit_scale=True
-        ) as pbar:
+        with (
+            open(filename, "wb") as fh,
+            tqdm(total=response.length, unit="B", unit_scale=True) as pbar,
+        ):
             while chunk := response.read(chunk_size):
                 fh.write(chunk)
                 pbar.update(len(chunk))
@@ -108,37 +106,6 @@ def process_label(labels, hierarchy_level, label_map):
     return labels
 
 
-def set_requires_grad(model, requires_grad):
-    for param in model.parameters():
-        param.requires_grad = requires_grad
-
-
-def shift_indices_tuple(indices_tuple, batch_size):
-    """
-    Shifts indices of positives and negatives of pairs or triplets by batch_size
-
-    if len(indices_tuple) != 3 or len(indices_tuple) != 4, it will return indices_tuple
-    Args:
-        indices_tuple is a tuple with torch.Tensor
-        batch_size is an int
-    Returns:
-        A tuple with shifted indices
-    """
-
-    if len(indices_tuple) == 3:
-        indices_tuple = (indices_tuple[0],) + tuple(
-            [x + batch_size if len(x) > 0 else x for x in indices_tuple[1:]]
-        )
-    elif len(indices_tuple) == 4:
-        indices_tuple = tuple(
-            [
-                x + batch_size if len(x) > 0 and i % 2 == 1 else x
-                for i, x in enumerate(indices_tuple)
-            ]
-        )
-    return indices_tuple
-
-
 def safe_random_choice(input_data, size):
     """
     Randomly samples without replacement from a sequence. It is "safe" because
@@ -152,45 +119,6 @@ def safe_random_choice(input_data, size):
     """
     replace = len(input_data) < size
     return NUMPY_RANDOM.choice(input_data, size=size, replace=replace)
-
-
-def unslice_by_n(input_tensors):
-    n = len(input_tensors)
-    rows, cols = input_tensors[0].size()
-    output = torch.zeros((rows * n, cols), device=input_tensors[0].device)
-    for i in range(n):
-        output[i::n] = input_tensors[i]
-    return output
-
-
-def set_layers_to_eval(layer_name):
-    def set_to_eval(m):
-        classname = m.__class__.__name__
-        if classname.find(layer_name) != -1:
-            m.eval()
-
-    return set_to_eval
-
-
-def get_train_dataloader(dataset, batch_size, sampler, num_workers, collate_fn):
-    if isinstance(sampler, torch.utils.data.BatchSampler):
-        return torch.utils.data.DataLoader(
-            dataset,
-            batch_sampler=sampler,
-            num_workers=num_workers,
-            collate_fn=collate_fn,
-            pin_memory=False,
-        )
-    return torch.utils.data.DataLoader(
-        dataset,
-        batch_size=int(batch_size),
-        sampler=sampler,
-        drop_last=True,
-        num_workers=num_workers,
-        collate_fn=collate_fn,
-        shuffle=sampler is None,
-        pin_memory=False,
-    )
 
 
 def get_eval_dataloader(dataset, batch_size, num_workers, collate_fn):
@@ -290,112 +218,6 @@ def reset_stats(input_obj):
             setattr(input_obj, r, 0)
 
 
-def list_of_recordable_attributes_list_names():
-    return ["_record_these", "_record_these_stats"]
-
-
-def modelpath_creator(folder, basename, identifier, extension=".pth"):
-    if identifier is None:
-        return os.path.join(folder, basename + extension)
-    else:
-        return os.path.join(folder, "%s_%s%s" % (basename, str(identifier), extension))
-
-
-def save_model(model, filepath):
-    if any(
-        isinstance(model, x)
-        for x in [torch.nn.DataParallel, torch.nn.parallel.DistributedDataParallel]
-    ):
-        torch.save(model.module.state_dict(), filepath)
-    else:
-        torch.save(model.state_dict(), filepath)
-
-
-def load_model(model_def, model_filename, device):
-    try:
-        model_def.load_state_dict(torch.load(model_filename, map_location=device))
-    except KeyError:
-        # original saved file with DataParallel
-        state_dict = torch.load(model_filename)
-        # create new OrderedDict that does not contain `module.`
-        from collections import OrderedDict
-
-        new_state_dict = OrderedDict()
-        for k, v in state_dict.items():
-            name = k[7:]  # remove `module.`
-            new_state_dict[name] = v
-        # load params
-        model_def.load_state_dict(new_state_dict)
-
-
-def operate_on_dict_of_models(
-    input_dict,
-    suffix,
-    folder,
-    operation,
-    logging_string="",
-    log_if_successful=False,
-    assert_success=False,
-):
-    for k, v in input_dict.items():
-        model_path = modelpath_creator(folder, k, suffix)
-        try:
-            operation(v, model_path)
-            if log_if_successful:
-                LOGGER.info("%s %s" % (logging_string, model_path))
-        except IOError:
-            LOGGER.warning("Could not %s %s" % (logging_string, model_path))
-            if assert_success:
-                raise IOError
-
-
-def save_dict_of_models(input_dict, suffix, folder, **kwargs):
-    def operation(v, model_path):
-        save_model(v, model_path)
-
-    operate_on_dict_of_models(input_dict, suffix, folder, operation, "SAVE", **kwargs)
-
-
-def load_dict_of_models(input_dict, suffix, folder, device, **kwargs):
-    def operation(v, model_path):
-        load_model(v, model_path, device)
-
-    operate_on_dict_of_models(input_dict, suffix, folder, operation, "LOAD", **kwargs)
-
-
-def delete_dict_of_models(input_dict, suffix, folder, **kwargs):
-    def operation(v, model_path):
-        if os.path.exists(model_path):
-            os.remove(model_path)
-
-    operate_on_dict_of_models(input_dict, suffix, folder, operation, "DELETE", **kwargs)
-
-
-def regex_wrapper(x):
-    if isinstance(x, list):
-        return [re.compile(z) for z in x]
-    return re.compile(x)
-
-
-def regex_replace(search, replace, contents):
-    return re.sub(search, replace, contents)
-
-
-def latest_version(folder, string_to_glob="trunk_*.pth", best=False):
-    items = glob.glob(os.path.join(folder, string_to_glob))
-    if items == []:
-        return (0, None)
-    model_regex = (
-        regex_wrapper(r"best[0-9]+\.pth$") if best else regex_wrapper(r"[0-9]+\.pth$")
-    )
-    epoch_regex = regex_wrapper(r"[0-9]+\.pth$")
-    items = [x for x in items if model_regex.search(x)]
-    version = [int(epoch_regex.findall(x)[-1].split(".")[0]) for x in items]
-    resume_epoch = max(version)
-    suffix = "best%d" % resume_epoch if best else resume_epoch
-    return resume_epoch, suffix
-
-
 def return_input(x):
     return x
 
@@ -415,10 +237,10 @@ def assert_distance_type(obj, distance_type=None, **kwargs):
         else:
             distance_type_str = distance_type.__name__
         obj_name = obj.__class__.__name__
-        assert isinstance(
-            obj.distance, distance_type
-        ), "{} requires the distance metric to be {}".format(
-            obj_name, distance_type_str
+        assert isinstance(obj.distance, distance_type), (
+            "{} requires the distance metric to be {}".format(
+                obj_name, distance_type_str
+            )
         )
     for k, v in kwargs.items():
         assert getattr(obj.distance, k) == v, "{} requires distance.{} to be {}".format(
@@ -449,10 +271,6 @@ class EmbeddingDataset(torch.utils.data.Dataset):
 
     def __getitem__(self, idx):
         return self.embeddings[idx], self.labels[idx]
-
-
-def sqlite_obj_to_dict(sqlite_obj):
-    return {k: [row[k] for row in sqlite_obj] for k in sqlite_obj[0].keys()}
 
 
 def torch_all_from_dim_to_end(x, dim):
@@ -521,14 +339,6 @@ def labels_or_indices_tuple_required(labels, indices_tuple):
 
 def concatenate_indices_tuples(it1, it2):
     return tuple([torch.cat([x, to_device(y, x)], dim=0) for x, y in zip(it1, it2)])
-
-
-def exclude(it, targets):
-    return [x for x in it if x not in targets]
-
-
-def append_map(it, suf):
-    return [x + suf for x in it]
 
 
 def use_cuda_if_available():

@@ -10,7 +10,6 @@ uses `faiss-cpu`, including when embeddings originate on CUDA. CUDA tensor tests
 and two-device collective tests therefore do not require an obsolete `faiss-gpu`
 wheel. Backend-specific GPU acceleration is distinct from PyTorch CUDA support.
 
-Logging hooks write local records and TensorBoard event files. They do not start
-an HTTP server. Training consumes these hooks; evaluation must not import the
-trainer implementations. Metric definitions and query/reference examples live
-in `docs/accuracy_calculation.md` and `docs/testers.md`.
+Metric definitions and query/reference examples live in
+`docs/accuracy_calculation.md` and `docs/testers.md`. Evaluation does not own
+training, logging, checkpoints, or optimizer scheduling.

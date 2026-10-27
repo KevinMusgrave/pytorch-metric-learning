@@ -1,0 +1,306 @@
+{
+  "metadata": {
+    "timestamp_utc": "2026-10-27T05:51:54.831298+00:00",
+    "revision": "24cef70da287973ed41e09ed26616e2b03b083d9",
+    "working_tree_dirty": false,
+    "os": "macOS-26.7.1-arm64-arm-64bit",
+    "cpu": "Apple M1 Pro",
+    "logical_cpus": 8,
+    "python": "3.12.13",
+    "pytorch": "2.14.0",
+    "cuda_runtime": null,
+    "device": "cpu",
+    "gpu": null,
+    "dtype": "float32",
+    "mode": "eager",
+    "fullgraph": false,
+    "threads_per_rank": 1,
+    "world_size": 1,
+    "backend": null,
+    "local_batch_size": 512,
+    "global_batch_size": 512,
+    "dimensions": 128,
+    "samples_per_class": 4,
+    "data": "standard normal embeddings; contiguous balanced class labels",
+    "seed": 17,
+    "warmup_steps_after_first": 10,
+    "measured_steps": 50,
+    "matmul_precision": "highest"
+  },
+  "results_by_rank": [
+    [
+      {
+        "case": "triplet",
+        "rank": 0,
+        "first_step_ms": 76.46066695451736,
+        "validation": {
+          "loss": 0.19868718087673187
+        },
+        "forward_ms": {
+          "median": 15.357728989329189,
+          "min": 14.50124999973923,
+          "max": 20.133000100031495,
+          "median_absolute_deviation": 0.5098955007269979
+        },
+        "backward_ms": {
+          "median": 9.051937493495643,
+          "min": 8.551624952815473,
+          "max": 11.496416991576552,
+          "median_absolute_deviation": 0.24722953094169497
+        },
+        "samples": [
+          {
+            "forward_ms": 15.98887494765222,
+            "backward_ms": 8.940417086705565,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 16.24687504954636,
+            "backward_ms": 8.885874995030463,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 16.277833026833832,
+            "backward_ms": 9.473417070694268,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 15.545625006780028,
+            "backward_ms": 9.049708023667336,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 15.110666048713028,
+            "backward_ms": 8.84712499100715,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 15.177833032794297,
+            "backward_ms": 9.184999973513186,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 18.346791970543563,
+            "backward_ms": 9.548624977469444,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 17.024707980453968,
+            "backward_ms": 10.091415955685079,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 16.404416994191706,
+            "backward_ms": 9.828958078287542,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 17.05291704274714,
+            "backward_ms": 9.969417005777359,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 17.715749912895262,
+            "backward_ms": 9.327750070951879,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 14.84779198653996,
+            "backward_ms": 9.020125027745962,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 16.539165982976556,
+            "backward_ms": 9.083249955438077,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 15.055915922857821,
+            "backward_ms": 8.56954196933657,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 14.671667013317347,
+            "backward_ms": 8.805666002444923,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 14.754208968952298,
+            "backward_ms": 9.109666920267045,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 14.61449998896569,
+            "backward_ms": 8.595624938607216,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 14.50124999973923,
+            "backward_ms": 8.765458012931049,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 14.693875098600984,
+            "backward_ms": 8.551624952815473,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 14.70066700130701,
+            "backward_ms": 8.82279104553163,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 14.751499984413385,
+            "backward_ms": 8.763750083744526,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 15.057874959893525,
+            "backward_ms": 9.019042016007006,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 14.864541008137167,
+            "backward_ms": 8.586375042796135,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 14.546499936841428,
+            "backward_ms": 8.692500065080822,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 16.525874962098897,
+            "backward_ms": 9.395750006660819,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 15.420250012539327,
+            "backward_ms": 9.722875081934035,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 14.849583036266267,
+            "backward_ms": 8.662624983116984,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 14.851500047370791,
+            "backward_ms": 8.681416977196932,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 14.772333903238177,
+            "backward_ms": 8.669709088280797,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 14.512000023387372,
+            "backward_ms": 8.597458014264703,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 14.847874990664423,
+            "backward_ms": 9.620624943636358,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 15.583999920636415,
+            "backward_ms": 9.410458034835756,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 15.482999966479838,
+            "backward_ms": 9.261292056180537,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 15.600458951666951,
+            "backward_ms": 8.962000021710992,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 15.139666968025267,
+            "backward_ms": 9.072375018149614,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 15.0014579994604,
+            "backward_ms": 9.05416696332395,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 15.069250017404556,
+            "backward_ms": 9.189333999529481,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 15.278958017006516,
+            "backward_ms": 9.16129199322313,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 16.075874911621213,
+            "backward_ms": 9.193958016112447,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 15.513291931711137,
+            "backward_ms": 9.160457993857563,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 15.082833007909358,
+            "backward_ms": 8.96629097405821,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 15.5917500378564,
+            "backward_ms": 9.986790944822133,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 15.719457995146513,
+            "backward_ms": 9.83200001064688,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 15.295207966119051,
+            "backward_ms": 8.924582973122597,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 16.031292034313083,
+            "backward_ms": 11.496416991576552,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 20.133000100031495,
+            "backward_ms": 8.903292007744312,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 15.936666051857173,
+            "backward_ms": 9.280666941776872,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 15.457000001333654,
+            "backward_ms": 9.300125064328313,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 15.454040956683457,
+            "backward_ms": 9.048708016052842,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 15.672000008635223,
+            "backward_ms": 8.944166940636933,
+            "peak_allocated_delta_bytes": null
+          }
+        ]
+      }
+    ]
+  ]
+}

@@ -96,8 +96,8 @@ and repeat on the target hardware before setting a performance budget.
 | Normalized-softmax proxy |             0.092 |              0.134 |             0.252 |              0.343 |
 
 Raw results: [batch 128](benchmarks/cpu-m1-pro-b128.json) and
-[batch 512](benchmarks/cpu-m1-pro-b512.json). The large triplet forward cost is
-a concrete optimization target: the current enumeration constructs a cubic
+[batch 512](benchmarks/cpu-m1-pro-b512.json). The large triplet forward cost was
+a concrete optimization target: the baseline enumeration constructed a cubic
 candidate mask even though this balanced label distribution produces only
 quadratically many valid triplets.
 
@@ -112,3 +112,23 @@ and 0.134 ms eager. Its first forward/backward took 9.467 seconds; compiler
 registration and import costs are additional and were not timed. Compiler-cache
 state was not isolated. This workload does not justify enabling compilation by
 default. CUDA performance and peak tensor memory remain unmeasured.
+
+## Valid-triplet expansion
+
+The clean-revision follow-up at `24cef70da287973ed41e09ed26616e2b03b083d9`
+uses the same hardware, float32 inputs, seed, shapes, one CPU thread, ten warmup
+steps, and fifty measured steps. Only actual positive pairs are expanded by
+their anchors' negative counts; ordered indices, values, and gradients remain
+covered by the independent numerical references.
+
+| Batch | Baseline forward | Expanded forward | Baseline backward | Expanded backward |
+| ----- | ---------------: | ---------------: | ----------------: | ----------------: |
+| 128   |         6.076 ms |         1.032 ms |          0.682 ms |          0.658 ms |
+| 512   |       341.808 ms |        15.358 ms |          8.841 ms |          9.052 ms |
+
+The batch-512 forward is about 22.3 times faster on this workload; backward is
+roughly unchanged. This removes the unconditional cubic candidate allocation,
+but materialized valid triplets still consume memory proportional to their
+count. CPU peak tensor memory remains unmeasured, and these timings do not
+establish a CUDA result. Raw results: [batch 128](benchmarks/triplet-expanded-m1-pro-b128.json)
+and [batch 512](benchmarks/triplet-expanded-m1-pro-b512.json).

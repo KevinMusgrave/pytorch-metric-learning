@@ -50,7 +50,7 @@ The complete CPU suite is:
 ./code-polishyw test --suite cpu-full
 ```
 
-Training and sampler integration tests use synthetic tensors. Dataset adapters
+Agent-facing recipe and sampler integration tests use synthetic tensors. Dataset adapters
 have local image/metadata fixtures. Tests that download the original public
 datasets remain opt-in through `TEST_DATASETS=true`; they are not required for
 the ordinary CPU suite.

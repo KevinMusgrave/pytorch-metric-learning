@@ -24,7 +24,7 @@ Documentation = "https://kevinmusgrave.github.io/pytorch-metric-learning/"
 Issues = "https://github.com/KevinMusgrave/pytorch-metric-learning/issues"
 
 [project.optional-dependencies]
-with-hooks = ["faiss-cpu==1.15.1", "record-keeper==0.9.32", "tensorboard==2.21.0"]
+faiss = ["faiss-cpu==1.15.1"]
 datasets = ["pillow==13.0.0", "scipy==1.18.1", "torchvision==0.29.0"]
 docs = ["mkdocs-material==9.7.7"]
 
@@ -34,10 +34,8 @@ dev = [
     "faiss-cpu==1.15.1",
     "packaging==26.3",
     "pillow==13.0.0",
-    "record-keeper==0.9.32",
     "scipy==1.18.1",
     "setuptools==84.0.0",
-    "tensorboard==2.21.0",
     "torchvision==0.29.0",
     "uv==0.13.4",
 ]

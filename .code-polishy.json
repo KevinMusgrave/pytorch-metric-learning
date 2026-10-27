@@ -23,8 +23,6 @@
         "src/pytorch_metric_learning/utils/loss_and_miner_utils.py",
         "src/pytorch_metric_learning/utils/module_with_records.py",
         "src/pytorch_metric_learning/utils/module_with_records_and_reducer.py",
-        "src/pytorch_metric_learning/utils/loss_tracker.py",
-        "src/pytorch_metric_learning/utils/key_checker.py",
         "src/pytorch_metric_learning/utils/__init__.py"
       ]
     },
@@ -33,22 +31,19 @@
       "paths": [
         "src/pytorch_metric_learning/testers/**",
         "src/pytorch_metric_learning/utils/accuracy_calculator.py",
-        "src/pytorch_metric_learning/utils/inference.py",
-        "src/pytorch_metric_learning/utils/logging_presets.py"
+        "src/pytorch_metric_learning/utils/inference.py"
       ],
       "dependsOn": [
         "numerics"
       ]
     },
     {
-      "name": "training",
+      "name": "sampling",
       "paths": [
-        "src/pytorch_metric_learning/trainers/**",
         "src/pytorch_metric_learning/samplers/**"
       ],
       "dependsOn": [
-        "numerics",
-        "evaluation"
+        "numerics"
       ]
     },
     {
@@ -78,6 +73,15 @@
         "numerics",
         "distributed"
       ]
+    },
+    {
+      "name": "recipes",
+      "paths": [
+        "docs/recipes/*.py"
+      ],
+      "dependsOn": [
+        "numerics"
+      ]
     }
   ],
   "checks": [
@@ -89,10 +93,11 @@
       "modules": [
         "numerics",
         "evaluation",
-        "training",
+        "sampling",
         "datasets",
         "distributed",
-        "benchmarks"
+        "benchmarks",
+        "recipes"
       ],
       "argv": [
         ".venv/bin/uv",
@@ -113,7 +118,7 @@
       "modules": [
         "numerics",
         "evaluation",
-        "training",
+        "sampling",
         "datasets",
         "distributed"
       ],
@@ -150,6 +155,30 @@
         "compileall",
         "-q",
         "benchmarks"
+      ],
+      "runOn": [
+        "build"
+      ],
+      "timeoutSeconds": 60
+    },
+    {
+      "name": "recipe-bytecode",
+      "provides": [
+        "build"
+      ],
+      "modules": [
+        "recipes"
+      ],
+      "argv": [
+        ".venv/bin/uv",
+        "run",
+        "--frozen",
+        "--no-sync",
+        "python",
+        "-m",
+        "compileall",
+        "-q",
+        "docs/recipes"
       ],
       "runOn": [
         "build"
@@ -239,7 +268,6 @@
           "tests/utils/__init__.py",
           "tests/utils/test_common_functions.py",
           "tests/utils/test_loss_and_miner_utils.py",
-          "tests/utils/test_loss_tracker.py",
           "tests/utils/test_module_with_records_and_reducer.py",
           "tests/zzz_testing_utils/__init__.py",
           "tests/zzz_testing_utils/testing_utils.py"
@@ -270,23 +298,19 @@
       },
       {
         "paths": [
-          "tests/trainers/test_key_checking.py",
           "tests/samplers/test_m_per_class_sampler.py"
         ],
-        "module": "training",
-        "focusedSuite": "training-focused"
+        "module": "sampling",
+        "focusedSuite": "sampling-focused"
       },
       {
         "paths": [
           "tests/samplers/__init__.py",
           "tests/samplers/test_fixed_set_of_triplets.py",
-          "tests/samplers/test_hierarchical_sampler.py",
-          "tests/samplers/test_tuples_to_weights_sampler.py",
-          "tests/trainers/__init__.py",
-          "tests/trainers/test_metric_loss_only.py"
+          "tests/samplers/test_hierarchical_sampler.py"
         ],
-        "module": "training",
-        "focusedSuite": "training-focused",
+        "module": "sampling",
+        "focusedSuite": "sampling-focused",
         "executionSuite": "cpu-full"
       },
       {
@@ -321,6 +345,13 @@
         ],
         "module": "distributed",
         "focusedSuite": "distributed-focused"
+      },
+      {
+        "paths": [
+          "tests/recipes/**"
+        ],
+        "module": "recipes",
+        "focusedSuite": "recipes-focused"
       }
     ],
     "suites": [
@@ -393,14 +424,13 @@
         "timeoutSeconds": 120
       },
       {
-        "name": "training-focused",
+        "name": "sampling-focused",
         "kind": "unit",
         "scope": "module",
         "modules": [
-          "training"
+          "sampling"
         ],
         "paths": [
-          "tests/trainers/test_key_checking.py",
           "tests/samplers/test_m_per_class_sampler.py",
           "tests/__init__.py",
           "tests/zzz_testing_utils/**",
@@ -416,7 +446,6 @@
           "python",
           "-m",
           "unittest",
-          "tests.trainers.test_key_checking",
           "tests.samplers.test_m_per_class_sampler"
         ],
         "timeoutSeconds": 120
@@ -533,6 +562,31 @@
           ".code-polishy-artifacts/benchmarks/smoke.json"
         ],
         "timeoutSeconds": 120
+      },
+      {
+        "name": "recipes-focused",
+        "kind": "unit",
+        "scope": "module",
+        "modules": [
+          "recipes"
+        ],
+        "paths": [
+          "tests/recipes/**",
+          "tests/__init__.py"
+        ],
+        "argv": [
+          ".venv/bin/uv",
+          "run",
+          "--frozen",
+          "--no-sync",
+          "--env-file",
+          "tests/cpu.env",
+          "python",
+          "-m",
+          "unittest",
+          "tests.recipes.test_training"
+        ],
+        "timeoutSeconds": 120
       }
     ]
   },
@@ -639,23 +693,6 @@
         "expires": "2026-11-25"
       },
       {
-        "id": "ghsa-g6x2-hccm-hh4m",
-        "ecosystem": "pypi",
-        "advisory": "GHSA-g6x2-hccm-hh4m",
-        "package": "werkzeug",
-        "affectedVersion": "3.1.8",
-        "scope": "uv.lock",
-        "severity": "moderate",
-        "status": "not-affected",
-        "basis": "unreachable",
-        "reason": "Logging writes local TensorBoard event files; the repository launches no TensorBoard HTTP server and calls neither safe_join nor send_from_directory. See docs/security/dependency-assessments.md#retained-aged-dependencies.",
-        "impact": "The advisory-specific vulnerable API is not reached by the supported build, test, or library execution paths. Reassess before enabling the affected feature.",
-        "evidence": "https://osv.dev/vulnerability/GHSA-g6x2-hccm-hh4m",
-        "owner": "Codex",
-        "reviewed": "2026-10-26",
-        "expires": "2026-11-25"
-      },
-      {
         "id": "certifi-disabled-documentation-clients",
         "ecosystem": "pypi",
         "advisory": "GHSA-6q48-6c7w-9gw2",
@@ -686,8 +723,8 @@
         "module": "evaluation"
       },
       {
-        "path": "docs/design/training.md",
-        "module": "training"
+        "path": "docs/design/sampling.md",
+        "module": "sampling"
       },
       {
         "path": "docs/design/datasets.md",
@@ -700,6 +737,10 @@
       {
         "path": "docs/design/benchmarks.md",
         "module": "benchmarks"
+      },
+      {
+        "path": "docs/design/recipes.md",
+        "module": "recipes"
       }
     ]
   }

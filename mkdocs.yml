@@ -8,18 +8,19 @@ nav:
     - Reducers: reducers.md
     - Regularizers: regularizers.md
     - Samplers: samplers.md
-    - Trainers: trainers.md
     - Testers: testers.md
     - Utils: 
       - Accuracy Calculation: accuracy_calculation.md
       - Inference Models: inference_models.md
-      - Logging Presets: logging_presets.md
       - Common Functions: common_functions.md
       - Distributed: distributed.md
     - How to extend this library:
       - Custom datasets: extend/datasets.md
       - Custom losses: extend/losses.md
       - Custom miners: extend/miners.md
+    - Training recipes: recipes/training.md
+    - Next major release: release-notes-3.md
+    - Performance: performance.md
     - Frequently Asked Questions: faq.md
 theme:
   name: 'material'

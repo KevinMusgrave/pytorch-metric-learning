@@ -59,7 +59,7 @@ splits_to_eval = [('dataset_a', ['dataset_a', 'train'])]
 
 ## BaseTester
 
-All trainers extend this class and therefore inherit its `__init__` arguments.
+All testers extend this class and therefore inherit its `__init__` arguments.
 
 ```python
 testers.BaseTester(normalize_embeddings=True,
@@ -92,7 +92,7 @@ testers.BaseTester(normalize_embeddings=True,
 - **label_hierarchy_level**: If each sample in your dataset has multiple labels, then this integer argument can be used to select which "level" to use. This assumes that your labels are "2-dimensional" with shape (num_samples, num_hierarchy_levels). Leave this at the default value, 0, if your data does not have multiple labels per sample.
 - **end_of_testing_hook**: This is an optional function that has one input argument (the tester object) and performs some action (e.g. logging data) at the end of testing.
   - You'll probably want to access the accuracy metrics, which are stored in `tester.all_accuracies`. This is a nested dictionary with the following format: `tester.all_accuracies[split_name][metric_name] = metric_value`
-  - If you want ready-to-use hooks, take a look at the [logging_presets module](logging_presets.md).
+  - Applications provide their own evaluation hook.
 - **dataset_labels**: The labels for your dataset. Can be 1-dimensional (1 label per datapoint) or 2-dimensional, where each row represents a datapoint, and the columns are the multiple labels that the datapoint has. Labels can be integers or strings. **This option needs to be specified only if `set_min_label_to_zero` is True.**
 - **set_min_label_to_zero**: If True, labels will be mapped such that they represent their rank in the label set. For example, if your dataset has labels 5, 10, 12, 13, then at each iteration, these would become 0, 1, 2, 3. You should also set this to True if you want to use string labels. In that case, 'dog', 'cat', 'monkey' would get mapped to 1, 0, 2. If True, you must pass in `dataset_labels` (see above). The default is False.
 - **accuracy_calculator**: Optional. An object that extends [AccuracyCalculator](accuracy_calculation.md). This will be used to compute the accuracy of your model. By default, AccuracyCalculator is used.
@@ -139,7 +139,7 @@ embeddings, labels = tester.get_all_embeddings(
 
 ## GlobalEmbeddingSpaceTester
 
-Computes nearest neighbors by looking at all points in the embedding space (rather than a subset). This is probably the tester you are looking for. To see it in action, check one of the [example notebooks](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples)
+Computes nearest neighbors by looking at all points in the embedding space (rather than a subset). This is probably the tester you are looking for.
 
 ```python
 testers.GlobalEmbeddingSpaceTester(*args, **kwargs)
@@ -155,7 +155,7 @@ testers.WithSameParentLabelTester(*args, **kwargs)
 
 ## GlobalTwoStreamEmbeddingSpaceTester
 
-This is the corresponding tester for [TwoStreamMetricLoss](trainers.md#twostreammetricloss). The supplied **dataset** must return `(anchor, positive, label)`.
+This evaluates separate anchor and reference streams. The supplied **dataset** must return `(anchor, positive, label)`.
 
 ```python
 testers.GlobalTwoStreamEmbeddingSpaceTester(*args, **kwargs)

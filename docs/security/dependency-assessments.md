@@ -70,7 +70,6 @@ reviewed again by 2026-11-02. Reassess before adding the affected APIs or deploy
 | filelock 4.0.3    | GHSA-v4x8-3wr5-3wq8, GHSA-9vhv-jxww-xfm5 | PyTorch's `torch.utils._filelock.FileLock` wraps `filelock.FileLock`. On supported Mac/Linux hosts it selects `UnixFileLock`; Windows selects `WindowsFileLock`. The SQLite-backed `ReadWriteLock` APIs are not used.                                                                                                               |
 | filelock 4.0.3    | GHSA-567q-5qvw-pf92                      | The affected Windows `SoftFileLock` path is not selected by those callers. No repository source calls it directly.                                                                                                                                                                                                                  |
 | setuptools 84.0.0 | GHSA-xmj3-9gf7-h52w                      | The build uses `setuptools.build_meta`; uv installs dependency wheels. There is no `setup_requires`, egg installation, or call to `Wheel.install_as_egg`, which consumes the malicious namespace metadata.                                                                                                                          |
-| werkzeug 3.1.8    | GHSA-g6x2-hccm-hh4m                      | Logging constructs local TensorBoard event writers. This repository starts no TensorBoard web server and calls neither `safe_join` nor `send_from_directory`; attacker-chosen Windows device paths never enter the vulnerable API.                                                                                                  |
 | certifi 2026.7.22 | GHSA-6q48-6c7w-9gw2                      | Requests enters the graph through MkDocs Material. Inspection of its 9.7.7 wheel finds Requests calls only in the info, privacy, and social plugins; none is enabled in `mkdocs.yml`. Library downloads use urllib, and package acquisition uses the separately patched uv. No enabled caller uses certifi's affected trust bundle. |
 
 The source evidence includes PyTorch
@@ -78,8 +77,6 @@ The source evidence includes PyTorch
 [Inductor callers](https://github.com/pytorch/pytorch/blob/v2.14.0/torch/_inductor/codecache.py),
 filelock's [platform selection](https://github.com/tox-dev/filelock/blob/4.0.3/src/filelock/__init__.py),
 and setuptools' [legacy wheel installer](https://github.com/pypa/setuptools/blob/v84.0.0/setuptools/wheel.py).
-Launching a separate TensorBoard server is outside this assessment and requires
-review of that server's enabled routes and platform.
 
 For certifi, the official 2026.10.19 wheel fixes the trust problem and reaches
 30 days on 2026-11-19. Its verified comparison with 2026.7.22 changes only
@@ -102,3 +99,10 @@ online supply-chain check passed on 2026-10-27 UTC with the existing lock and
 assessments. No exception is needed for this release. The dependency is
 Linux-only and is not installed in the Mac CPU environment; metadata acceptance
 does not establish CUDA runtime verification.
+
+## Removed logging dependencies
+
+Removing the trainer/logging integration removed record-keeper, TensorBoard,
+absl-py, grpcio, protobuf, tensorboard-data-server, and Werkzeug from `uv.lock`.
+The exact Werkzeug advisory assessment was removed with the dependency. This
+reduces the installed surface rather than adding an advisory exemption.

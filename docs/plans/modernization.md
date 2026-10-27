@@ -114,7 +114,7 @@ survive that change.
 ## Phase 1: establish principles and component decisions
 
 - Add the project principles to `AGENTS.md` without weakening the locked policy.
-- Inventory public components, their dependencies, examples, and tests. Decide
+- Inventory public components, their dependencies, recipes, and tests. Decide
   which testers, inference helpers, and dataset adapters justify retention.
 - Identify metric-specific algorithms embedded in trainers that deserve a
   small executable recipe or an independent component.
@@ -206,15 +206,27 @@ memory behavior are measured. Extend only the design that meets those criteria.
 
 - Make the README a concise introduction, installation entry point, and tested
   minimal example. Use a canonical home for detailed guidance to avoid drift
-  between the README and documentation index.
+  between the README and documentation index. Keep it understandable to humans:
+  plain-language purpose, installation, a minimal working example, and links by
+  task. Human and agent readers use the same canonical documentation; the README
+  is not a machine-only manifest or a contributor instruction sheet.
+- Treat the repository URL as the primary discovery entry point. An agent given
+  only `https://github.com/KevinMusgrave/pytorch-metric-learning` must be able to
+  follow the README to a task/component index, select the right public API,
+  retrieve its defaults and tensor contracts, install it, and verify a minimal
+  integration. Keep library-use guidance distinct from contributor workflows;
+  using the package must not require reading the internal class hierarchy or
+  repository maintenance instructions. Verify this path against the final tree.
 - Document installation from PyPI using `uv` or `pip`, and maintain wheel/sdist
   packaging. Community-maintained downstream distributions are independent of
   the repository's supported installation guidance.
 - Document public contracts, customization, paper references, improved defaults,
   paper-faithful settings, and measured performance guidance.
 - Organize canonical Markdown into small, searchable topics with stable headings
-  and a component/task index. Put complete runnable examples beside the relevant
-  contracts. Make installed/public signatures and types agree with those docs;
+  and a component/task index. Put small, complete agent-facing executable recipes
+  beside the relevant contracts, with explicit inputs, expected results, and
+  verification commands. Do not maintain a separate human-facing example gallery
+  or tutorial collection. Make installed/public signatures and types agree with those docs;
   an agent should not need to inspect the internal hierarchy to use an API.
 - Keep the documentation website as a generated rendering of the same Markdown,
   with readable static content and links to sources. Establish content and
@@ -234,8 +246,10 @@ memory behavior are measured. Extend only the design that meets those criteria.
   ordinary PyTorch code. Check the README and website renderings at narrow and
   wide widths; update or remove the separate loss-flow diagram if it conflicts
   with the final design.
-- Keep a small set of executable examples using ordinary PyTorch training loops.
-  Remove obsolete tutorials, broken downloads, redundant pages, and unused
+- Keep only agent-facing executable recipes using ordinary PyTorch training loops
+  where they demonstrate retained contracts or algorithm-specific composition.
+  Remove all Jupyter notebooks and the standalone examples gallery. Remove
+  obsolete tutorials, broken downloads, redundant pages, and unused
   assets after checking their references. Preserve useful mathematical material
   and required attribution.
 - Fix findings as retained modules change, then complete the remaining Code
@@ -244,12 +258,15 @@ memory behavior are measured. Extend only the design that meets those criteria.
   because a local caller is absent.
 - Address tool false positives at their cause and keep genuine findings visible.
   Do not hide debt with broad exclusions or weaken the selected baseline.
-- Build the documentation and distributions, execute maintained examples, and
+- Build the documentation and distributions, execute maintained agent-facing recipes, and
   complete the required CPU, CUDA, and two-GPU verification before release.
   At the actual merge/release checkpoint, run the final gate through its
   configured CI owner.
 
-Completion: documentation matches the final API, maintained examples execute,
+Completion: documentation matches the final API, maintained agent-facing recipes execute,
+no Jupyter notebooks or separate examples gallery remain,
+the repository-URL discovery path reaches installation, task selection, exact
+contracts, and runnable verification without internal implementation knowledge,
 equations render from LaTeX without equation images, the redesigned architecture
 diagram is accurate and visually verified, required verification passes,
 remaining policy findings are resolved, and the major-release notes explain
@@ -326,8 +343,18 @@ for those design documents or evidence that the listed work is complete.
   and gradients without an unconditional cubic candidate mask. Independent
   references cover exhaustive small label sets, empty and unequal references,
   label dtypes, noncontiguous inputs, and embedding/reference gradients. The
-  full CPU suite passes 208 tests with 11 skips. A preliminary batch-512 run
-  reduces forward time from 341.808 ms to 15.033 ms; clean-revision confirmation
-  follows the implementation checkpoint.
-- Phases 3–5: not started. The current package still contains the subsystems
-  selected for removal.
+  full CPU suite passes 208 tests with 11 skips. Clean-revision measurements
+  confirm batch-512 forward time falls from 341.808 ms to 15.358 ms and batch-128
+  from 6.076 ms to 1.032 ms, with backward roughly unchanged. Raw measurements
+  and limitations are recorded in the performance document.
+- Phase 3: training orchestration, logging hooks, model-aware weighted sampling,
+  and their private helpers are removed after extracting the numerical
+  composition into agent-facing recipes. Six recipe tests verify optimization,
+  cascaded candidate filtering, analytical adversarial values/gradients,
+  alternating parameter ownership, subset weights, and memory warmup. Testers,
+  model inference orchestration, and dataset adapters still await removal.
+- Phase 5: all Jupyter notebooks and the separate example gallery are removed.
+  The README now provides a human-readable introduction and minimal training
+  step, leading to a shared task/component index and agent-facing executable
+  recipes beside their contracts. Equation conversion, API documentation,
+  diagram redesign, and complete policy adoption remain outstanding.

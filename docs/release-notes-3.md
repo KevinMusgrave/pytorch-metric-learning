@@ -130,6 +130,7 @@ cursor and filled flag under a `queue_state` key instead of `_extra_state`.
 `CrossBatchMemory` no longer moves or casts its queue to match each batch; place
 it with `.to(device, dtype)`. The label queue dtype is the new keyword-only
 `label_dtype`, `torch.long` by default.
+`DynamicSoftMarginLoss` likewise checks rather than moves its histogram buffer.
 
 `ManifoldLoss(l, K, lambdaC)` is now `ManifoldLoss(embedding_size, num_proxies,
 lambda_c)`, matching the other losses' parameter names.

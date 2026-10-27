@@ -451,6 +451,10 @@ loss_fn.reset_queue()
 losses.DynamicSoftMarginLoss(min_val=-2.0, num_bins=10, momentum=0.01, **kwargs)
 ```
 
+The running histogram is a buffer of the loss module. Move the loss with
+`loss_func.to(device, dtype)`; outside autocast, a placement mismatch raises
+`ValueError`.
+
 **Parameters**:
 
 - **min_val**: finite negative lower bound of the histogram. Its upper bound is

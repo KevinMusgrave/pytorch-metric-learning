@@ -80,7 +80,9 @@ class TestDynamicSoftMarginLoss(unittest.TestCase):
     def test_values_and_gradients_across_training_steps(self) -> None:
         for dtype in TEST_DTYPES:
             with self.subTest(dtype=dtype):
-                loss = DynamicSoftMarginLoss(num_bins=5, momentum=0.25)
+                loss = DynamicSoftMarginLoss(num_bins=5, momentum=0.25).to(
+                    TEST_DEVICE, dtype
+                )
                 previous = None
                 for count in (4, 6, 4):
                     embedding = inputs(dtype, count)
@@ -99,7 +101,9 @@ class TestDynamicSoftMarginLoss(unittest.TestCase):
         for dtype in TEST_DTYPES:
             for query_count, reference_count in ((3, 3), (2, 3), (3, 2)):
                 with self.subTest(dtype=dtype, sizes=(query_count, reference_count)):
-                    loss = DynamicSoftMarginLoss(num_bins=5, momentum=0.25)
+                    loss = DynamicSoftMarginLoss(num_bins=5, momentum=0.25).to(
+                        TEST_DEVICE, dtype
+                    )
                     previous = None
                     actual_losses, expected_losses, variables = [], [], []
                     for shift in (0.05, 0.2):
@@ -159,7 +163,7 @@ class TestDynamicSoftMarginLoss(unittest.TestCase):
         indices = tuple(
             torch.tensor(i, device=TEST_DEVICE) for i in ([0, 1], [1, 2], [0, 0])
         )
-        actual = DynamicSoftMarginLoss(num_bins=5)(
+        actual = DynamicSoftMarginLoss(num_bins=5).to(TEST_DEVICE, torch.float64)(
             query, indices_tuple=indices, ref_emb=reference
         )
         expected_gradients = torch.autograd.grad(expected, (query, reference))
@@ -181,7 +185,7 @@ class TestDynamicSoftMarginLoss(unittest.TestCase):
                 expected, _ = histogram_reference(
                     labeled_differences(embeddings, labels)
                 )
-                actual = DynamicSoftMarginLoss(num_bins=5)(
+                actual = DynamicSoftMarginLoss(num_bins=5).to(TEST_DEVICE, dtype)(
                     embeddings, torch.tensor(labels, device=TEST_DEVICE)
                 )
                 expected_gradient = torch.autograd.grad(expected, embeddings)[0]
@@ -190,7 +194,7 @@ class TestDynamicSoftMarginLoss(unittest.TestCase):
                 torch.testing.assert_close(gradient, expected_gradient)
 
     def test_empty_valid_sets_preserve_histogram(self) -> None:
-        loss = DynamicSoftMarginLoss(num_bins=5)
+        loss = DynamicSoftMarginLoss(num_bins=5).to(TEST_DEVICE)
         loss(inputs(torch.float32), torch.tensor([0, 0, 1, 1], device=TEST_DEVICE))
         previous = loss.hist_.detach().clone()
         for query_count, reference_count in ((0, 2), (2, 0), (1, 1)):
@@ -212,9 +216,13 @@ class TestDynamicSoftMarginLoss(unittest.TestCase):
 
     def test_checkpoint_preserves_next_loss_and_gradient(self) -> None:
         labels = torch.tensor([0, 0, 1, 1], device=TEST_DEVICE)
-        original = DynamicSoftMarginLoss(num_bins=5, momentum=0.25)
+        original = DynamicSoftMarginLoss(num_bins=5, momentum=0.25).to(
+            TEST_DEVICE, torch.float64
+        )
         original(inputs(torch.float64), labels).backward()
-        restored = DynamicSoftMarginLoss(num_bins=5, momentum=0.25)
+        restored = DynamicSoftMarginLoss(num_bins=5, momentum=0.25).to(
+            TEST_DEVICE, torch.float64
+        )
         restored.load_state_dict(original.state_dict(), assign=True)
         original_input, restored_input = inputs(torch.float64), inputs(torch.float64)
         expected, actual = (
@@ -237,4 +245,4 @@ class TestDynamicSoftMarginLoss(unittest.TestCase):
             {"momentum": 1.1},
         ):
             with self.subTest(kwargs=kwargs), self.assertRaises(ValueError):
-                DynamicSoftMarginLoss(**kwargs)
+                DynamicSoftMarginLoss(**kwargs).to(TEST_DEVICE)

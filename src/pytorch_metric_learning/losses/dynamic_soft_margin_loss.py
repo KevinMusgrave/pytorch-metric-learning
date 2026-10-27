@@ -9,6 +9,8 @@ from .base_metric_loss_function import BaseMetricLossFunction
 
 
 class DynamicSoftMarginLoss(BaseMetricLossFunction):
+    hist_: torch.Tensor
+
     def __init__(self, min_val=-2.0, num_bins=10, momentum=0.01, **kwargs):
         super().__init__(**kwargs)
         c_f.assert_distance_type(
@@ -27,7 +29,7 @@ class DynamicSoftMarginLoss(BaseMetricLossFunction):
         self.register_buffer("hist_", torch.zeros(num_bins))
 
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
-        self.hist_ = self.hist_.to(embeddings)
+        c_f.check_parameter_placement(self, self.hist_, embeddings)
         if labels is None and indices_tuple is None:
             differences = self.compute_loss_without_labels(embeddings, ref_emb)
         else:

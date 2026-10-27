@@ -1,5 +1,3 @@
-# PyTorch Metric Learning
-
 ![PyTorch Metric Learning](docs/imgs/Logo2.png)
 
 Train embedding models with composable PyTorch losses, hard-example miners,
@@ -8,14 +6,10 @@ retrieval, clustering, recognition, or learning from pairs and triplets.
 
 ## Install
 
-Install the published package from PyPI with either uv or pip:
+Install the published package from PyPI:
 
 ```sh
 uv pip install pytorch-metric-learning
-```
-
-```sh
-python -m pip install pytorch-metric-learning
 ```
 
 The core package needs only PyTorch and NumPy. Optional extras add the Faiss

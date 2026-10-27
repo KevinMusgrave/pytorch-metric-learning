@@ -16,9 +16,6 @@ class DistanceWeightedMiner(BaseMiner):
         )
         self.cutoff = float(cutoff)
         self.nonzero_loss_cutoff = float(nonzero_loss_cutoff)
-        self.add_to_recordable_attributes(
-            list_of_names=["cutoff", "nonzero_loss_cutoff"], is_stat=False
-        )
 
     def mine(self, embeddings, labels, ref_emb, ref_labels):
         dtype = embeddings.dtype

@@ -25,7 +25,6 @@ class DynamicSoftMarginLoss(BaseMetricLossFunction):
         self.delta = 2 * abs(min_val) / (num_bins - 1)
         self.momentum = momentum
         self.register_buffer("hist_", torch.zeros(num_bins))
-        self.add_to_recordable_attributes(list_of_names=["num_bins"], is_stat=False)
 
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
         self.hist_ = self.hist_.to(embeddings)

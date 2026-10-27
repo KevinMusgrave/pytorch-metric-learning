@@ -10,9 +10,6 @@ class NCALoss(BaseMetricLossFunction):
     def __init__(self, softmax_scale=1, **kwargs):
         super().__init__(**kwargs)
         self.softmax_scale = softmax_scale
-        self.add_to_recordable_attributes(
-            list_of_names=["softmax_scale"], is_stat=False
-        )
 
     # https://www.cs.toronto.edu/~hinton/absps/nca.pdf
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):

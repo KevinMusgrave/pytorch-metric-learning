@@ -7,10 +7,7 @@ from ..utils.module_with_records_and_reducer import ModuleWithRecordsAndDistance
 class BaseMiner(ModuleWithRecordsAndDistance):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.add_to_recordable_attributes(
-            list_of_names=["num_pos_pairs", "num_neg_pairs", "num_triplets"],
-            is_stat=True,
-        )
+        self.register_stats("num_pos_pairs", "num_neg_pairs", "num_triplets")
 
     def mine(self, embeddings, labels, ref_emb, ref_labels):
         raise NotImplementedError

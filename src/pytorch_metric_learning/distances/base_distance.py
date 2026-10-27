@@ -12,15 +12,11 @@ class BaseDistance(ModuleWithRecords):
         self.p = p
         self.power = power
         self.is_inverted = is_inverted
-        self.add_to_recordable_attributes(list_of_names=["p", "power"], is_stat=False)
-        self.add_to_recordable_attributes(
-            list_of_names=[
-                "initial_avg_query_norm",
-                "initial_avg_ref_norm",
-                "final_avg_query_norm",
-                "final_avg_ref_norm",
-            ],
-            is_stat=True,
+        self.register_stats(
+            "initial_avg_query_norm",
+            "initial_avg_ref_norm",
+            "final_avg_query_norm",
+            "final_avg_ref_norm",
         )
 
     def forward(self, query_emb, ref_emb=None):

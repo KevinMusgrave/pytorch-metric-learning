@@ -44,16 +44,13 @@ class BatchEasyHardMiner(BaseMiner):
         self.allowed_pos_range = allowed_pos_range
         self.allowed_neg_range = allowed_neg_range
 
-        self.add_to_recordable_attributes(
-            list_of_names=[
-                "easiest_triplet",
-                "hardest_triplet",
-                "easiest_pos_pair",
-                "hardest_pos_pair",
-                "easiest_neg_pair",
-                "hardest_neg_pair",
-            ],
-            is_stat=True,
+        self.register_stats(
+            "easiest_triplet",
+            "hardest_triplet",
+            "easiest_pos_pair",
+            "hardest_pos_pair",
+            "easiest_neg_pair",
+            "hardest_neg_pair",
         )
 
     def mine(self, embeddings, labels, ref_emb, ref_labels):

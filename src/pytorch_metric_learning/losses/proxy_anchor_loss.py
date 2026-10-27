@@ -32,9 +32,6 @@ class ProxyAnchorLoss(BaseMetricLossFunction):
         self.num_classes = num_classes
         self.margin = margin
         self.alpha = alpha
-        self.add_to_recordable_attributes(
-            list_of_names=["num_classes", "alpha", "margin"], is_stat=False
-        )
 
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
         c_f.labels_required(labels)

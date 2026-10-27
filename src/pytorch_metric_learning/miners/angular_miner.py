@@ -21,17 +21,13 @@ class AngularMiner(BaseMiner):
             self, LpDistance, p=2, power=1, normalize_embeddings=True
         )
         self.angle = math.radians(angle)
-        self.add_to_recordable_attributes(list_of_names=["angle"], is_stat=False)
-        self.add_to_recordable_attributes(
-            list_of_names=[
-                "average_angle",
-                "average_angle_above_threshold",
-                "average_angle_below_threshold",
-                "min_angle",
-                "max_angle",
-                "std_of_angle",
-            ],
-            is_stat=True,
+        self.register_stats(
+            "average_angle",
+            "average_angle_above_threshold",
+            "average_angle_below_threshold",
+            "min_angle",
+            "max_angle",
+            "std_of_angle",
         )
 
     def mine(self, embeddings, labels, ref_emb, ref_labels):

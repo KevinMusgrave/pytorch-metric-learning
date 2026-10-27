@@ -87,6 +87,15 @@ mismatch outside autocast raises `ValueError`. `SubCenterArcFaceLoss` accepts
 `num_classes` and `embedding_size` positionally, and
 `get_outliers(..., return_dominant_centers=False)` now returns only the outliers.
 
+## Statistics registration
+
+Hyperparameter "recordable attribute" lists existed only for the removed
+record-keeper integration and are gone. `add_to_recordable_attributes` is
+replaced by `register_stats(*names)`, which registers opt-in statistics only
+when `collect_stats` is enabled. Attributes that registration previously
+created as placeholder zeros, such as `NormalizedSoftmaxLoss.num_classes`, no
+longer exist.
+
 ## Sampler randomness
 
 `MPerClassSampler`, `HierarchicalSampler`, and `FixedSetOfTriplets` use

@@ -44,27 +44,18 @@ def to_numpy(v):
         return v
 
 
-def add_to_recordable_attributes(
-    input_obj, name=None, list_of_names=None, is_stat=False
-):
-    attr_name_list_name = "_record_these_stats" if is_stat else "_record_these"
-    if not hasattr(input_obj, attr_name_list_name):
-        setattr(input_obj, attr_name_list_name, [])
-    attr_name_list = getattr(input_obj, attr_name_list_name)
-    if name is not None:
-        if name not in attr_name_list:
-            attr_name_list.append(name)
+def register_stats(input_obj, names):
+    registered = input_obj.__dict__.setdefault("_record_these_stats", [])
+    for name in names:
+        if name not in registered:
+            registered.append(name)
         if not hasattr(input_obj, name):
             setattr(input_obj, name, 0)
-    if list_of_names is not None and is_list_or_tuple(list_of_names):
-        for n in list_of_names:
-            add_to_recordable_attributes(input_obj, name=n, is_stat=is_stat)
 
 
 def reset_stats(input_obj):
-    for attr_list in ["_record_these_stats"]:
-        for r in getattr(input_obj, attr_list, []):
-            setattr(input_obj, r, 0)
+    for name in getattr(input_obj, "_record_these_stats", []):
+        setattr(input_obj, name, 0)
 
 
 def check_shapes(embeddings, labels):

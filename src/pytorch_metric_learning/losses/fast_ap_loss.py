@@ -12,7 +12,6 @@ class FastAPLoss(BaseMetricLossFunction):
         c_f.assert_distance_type(self, LpDistance, normalize_embeddings=True, p=2)
         self.num_bins = int(num_bins)
         self.num_edges = self.num_bins + 1
-        self.add_to_recordable_attributes(list_of_names=["num_bins"], is_stat=False)
 
     """
     Adapted from https://github.com/kunhe/FastAP-metric-learning

@@ -18,10 +18,6 @@ class InstanceLoss(BaseMetricLossFunction):
         super().__init__(**kwargs)
         c_f.assert_distance_type(self, CosineSimilarity)
         self.gamma = gamma
-        self.add_to_recordable_attributes(
-            list_of_names=["gamma"],
-            is_stat=False,
-        )
 
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
         c_f.labels_required(labels)

@@ -10,9 +10,6 @@ class UniformHistogramMiner(BaseMiner):
         self.num_bins = num_bins
         self.pos_per_bin = pos_per_bin
         self.neg_per_bin = neg_per_bin
-        self.add_to_recordable_attributes(
-            list_of_names=["pos_per_bin", "neg_per_bin"], is_stat=False
-        )
 
     def mine(self, embeddings, labels, ref_emb, ref_labels):
         mat = self.distance(embeddings, ref_emb)

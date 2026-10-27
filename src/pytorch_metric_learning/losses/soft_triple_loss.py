@@ -41,17 +41,6 @@ class SoftTripleLoss(BaseMetricLossFunction):
             torch.empty(embedding_size, num_classes * centers_per_class)
         )
         (weight_init_func or default_center_init)(self.fc)
-        self.add_to_recordable_attributes(
-            list_of_names=[
-                "la",
-                "gamma",
-                "margin",
-                "centers_per_class",
-                "num_classes",
-                "embedding_size",
-            ],
-            is_stat=False,
-        )
 
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
         c_f.labels_required(labels)

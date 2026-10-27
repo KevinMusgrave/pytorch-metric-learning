@@ -29,7 +29,6 @@ class TripletMarginLoss(BaseMetricLossFunction):
         self.swap = swap
         self.smooth_loss = smooth_loss
         self.triplets_per_anchor = triplets_per_anchor
-        self.add_to_recordable_attributes(list_of_names=["margin"], is_stat=False)
 
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
         c_f.labels_or_indices_tuple_required(labels, indices_tuple)

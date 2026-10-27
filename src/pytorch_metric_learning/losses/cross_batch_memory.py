@@ -21,9 +21,6 @@ class CrossBatchMemory(BaseLossWrapper, ModuleWithRecords):
         self.embedding_size = embedding_size
         self.memory_size = memory_size
         self.reset_queue()
-        self.add_to_recordable_attributes(
-            list_of_names=["embedding_size", "memory_size", "queue_idx"], is_stat=False
-        )
 
     @staticmethod
     def supported_losses():

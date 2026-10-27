@@ -48,9 +48,6 @@ class ManifoldLoss(BaseMetricLossFunction):
         self.lambdaC = lambdaC
         self.alpha = alpha
         self.margin = margin
-        self.add_to_recordable_attributes(
-            list_of_names=["K", "l", "lambdaC", "alpha", "margin"], is_stat=False
-        )
 
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
         c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)

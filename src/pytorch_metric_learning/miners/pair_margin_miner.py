@@ -14,12 +14,7 @@ class PairMarginMiner(BaseMiner):
         super().__init__(**kwargs)
         self.pos_margin = pos_margin
         self.neg_margin = neg_margin
-        self.add_to_recordable_attributes(
-            list_of_names=["pos_margin", "neg_margin"], is_stat=False
-        )
-        self.add_to_recordable_attributes(
-            list_of_names=["pos_pair_dist", "neg_pair_dist"], is_stat=True
-        )
+        self.register_stats("pos_pair_dist", "neg_pair_dist")
 
     def mine(self, embeddings, labels, ref_emb, ref_labels):
         mat = self.distance(embeddings, ref_emb)

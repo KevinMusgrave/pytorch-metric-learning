@@ -25,10 +25,6 @@ class NormalizedSoftmaxLoss(BaseMetricLossFunction):
         self.W = torch.nn.Parameter(torch.empty(embedding_size, num_classes))
         (weight_init_func or torch.nn.init.normal_)(self.W)
         self.cross_entropy = torch.nn.CrossEntropyLoss(reduction="none")
-        self.add_to_recordable_attributes(
-            list_of_names=["embedding_size", "num_classes", "temperature"],
-            is_stat=False,
-        )
 
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
         c_f.labels_required(labels)

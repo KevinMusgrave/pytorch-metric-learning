@@ -9,7 +9,7 @@ from .base_metric_loss_function import BaseMetricLossFunction
 class NPairsLoss(BaseMetricLossFunction):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.add_to_recordable_attributes(name="num_pairs", is_stat=True)
+        self.register_stats("num_pairs")
         self.cross_entropy = torch.nn.CrossEntropyLoss(reduction="none")
 
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):

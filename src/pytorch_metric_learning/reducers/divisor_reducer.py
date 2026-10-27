@@ -7,7 +7,7 @@ from .base_reducer import BaseReducer
 class DivisorReducer(BaseReducer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.add_to_recordable_attributes(name="divisor", is_stat=True)
+        self.register_stats("divisor")
 
     def unpack_loss_info(self, loss_info):
         losses, loss_indices, reduction_type, kwargs = super().unpack_loss_info(

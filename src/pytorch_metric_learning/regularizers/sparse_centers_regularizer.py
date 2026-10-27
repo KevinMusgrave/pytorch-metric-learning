@@ -12,13 +12,7 @@ class SparseCentersRegularizer(BaseRegularizer):
         assert centers_per_class > 1
         c_f.assert_distance_type(self, CosineSimilarity)
         self.set_class_masks(num_classes, centers_per_class)
-        self.add_to_recordable_attributes(
-            list_of_names=["num_classes", "centers_per_class"], is_stat=False
-        )
-        self.add_to_recordable_attributes(
-            list_of_names=["same_class_center_sim", "diff_class_center_sim"],
-            is_stat=True,
-        )
+        self.register_stats("same_class_center_sim", "diff_class_center_sim")
 
     def compute_loss(self, weights):
         center_similarities = self.distance(weights)

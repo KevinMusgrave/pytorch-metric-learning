@@ -20,11 +20,7 @@ class TripletMarginMiner(BaseMiner):
         super().__init__(**kwargs)
         self.margin = margin
         self.type_of_triplets = type_of_triplets
-        self.add_to_recordable_attributes(list_of_names=["margin"], is_stat=False)
-        self.add_to_recordable_attributes(
-            list_of_names=["avg_triplet_margin", "pos_pair_dist", "neg_pair_dist"],
-            is_stat=True,
-        )
+        self.register_stats("avg_triplet_margin", "pos_pair_dist", "neg_pair_dist")
 
     def mine(self, embeddings, labels, ref_emb, ref_labels):
         anchor_idx, positive_idx, negative_idx = lmu.get_all_triplets_indices(

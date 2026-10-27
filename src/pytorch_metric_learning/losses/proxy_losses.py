@@ -24,7 +24,6 @@ class ProxyNCALoss(NCALoss):
         self.register_buffer(
             "proxy_labels", torch.arange(num_classes), persistent=False
         )
-        self.add_to_recordable_attributes(list_of_names=["num_classes"], is_stat=False)
 
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
         c_f.labels_required(labels)

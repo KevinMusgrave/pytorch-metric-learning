@@ -11,11 +11,7 @@ class ThresholdReducer(BaseReducer):
         )
         self.low = low
         self.high = high
-        self.add_to_recordable_attributes(list_of_names=["low", "high"], is_stat=False)
-        self.add_to_recordable_attributes(
-            list_of_names=["num_past_filter", "num_above_low", "num_below_high"],
-            is_stat=True,
-        )
+        self.register_stats("num_past_filter", "num_above_low", "num_below_high")
 
     def element_reduction(self, losses, loss_indices, embeddings, labels):
         return self.element_reduction_helper(losses, embeddings)

@@ -14,12 +14,7 @@ class TupletMarginLoss(GenericPairLoss):
         c_f.assert_distance_type(self, CosineSimilarity)
         self.margin = math.radians(margin)
         self.scale = scale
-        self.add_to_recordable_attributes(
-            list_of_names=["margin", "scale"], is_stat=False
-        )
-        self.add_to_recordable_attributes(
-            list_of_names=["avg_pos_angle", "avg_neg_angle"], is_stat=True
-        )
+        self.register_stats("avg_pos_angle", "avg_neg_angle")
 
     def _compute_loss(self, pos_pairs, neg_pairs, indices_tuple):
         a1, p, a2, _ = indices_tuple

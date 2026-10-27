@@ -9,7 +9,6 @@ class LpRegularizer(BaseRegularizer):
         super().__init__(**kwargs)
         self.p = p
         self.power = power
-        self.add_to_recordable_attributes(list_of_names=["p", "power"], is_stat=False)
 
     def compute_loss(self, embeddings):
         reg = torch.norm(embeddings, p=self.p, dim=1)

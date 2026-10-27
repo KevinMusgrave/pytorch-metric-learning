@@ -7,7 +7,7 @@ from ..utils.module_with_records import ModuleWithRecords
 class BaseReducer(ModuleWithRecords):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.add_to_recordable_attributes(name="losses_size", is_stat=True)
+        self.register_stats("losses_size")
 
     def forward(self, loss_dict, embeddings, labels):
         self.reset_stats()

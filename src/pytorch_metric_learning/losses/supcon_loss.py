@@ -10,7 +10,6 @@ class SupConLoss(GenericPairLoss):
     def __init__(self, temperature=0.1, **kwargs):
         super().__init__(mat_based_loss=True, **kwargs)
         self.temperature = temperature
-        self.add_to_recordable_attributes(list_of_names=["temperature"], is_stat=False)
 
     def _compute_loss(self, mat, pos_mask, neg_mask):
         if pos_mask.bool().any() and neg_mask.bool().any():

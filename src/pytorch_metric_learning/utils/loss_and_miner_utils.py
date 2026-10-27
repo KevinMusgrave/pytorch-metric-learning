@@ -6,7 +6,6 @@ import torch
 from . import common_functions as c_f
 
 
-# input must be 2D
 def logsumexp(x, keep_mask=None, add_one=True, dim=1):
     if keep_mask is not None:
         x = x.masked_fill(~keep_mask, c_f.neg_inf(x.dtype))
@@ -28,24 +27,21 @@ def meshgrid_from_sizes(x, y, dim=0):
     return torch.meshgrid(a, b, indexing="ij")
 
 
-def get_matches_and_diffs(labels, ref_labels=None):
+def get_matches_and_diffs(
+    labels: torch.Tensor, ref_labels: torch.Tensor | None = None
+) -> tuple[torch.Tensor, torch.Tensor]:
     if ref_labels is None:
         ref_labels = labels
     labels1 = labels.unsqueeze(1)
     labels2 = ref_labels.unsqueeze(0)
-    matches = (labels1 == labels2).byte()
-    diffs = matches ^ 1
+    matches = labels1 == labels2
+    diffs = ~matches
     if ref_labels is labels:
-        matches.fill_diagonal_(0)
+        matches.fill_diagonal_(False)
     return matches, diffs
 
 
 def get_all_pairs_indices(labels, ref_labels=None):
-    """
-    Given a tensor of labels, this will return 4 tensors.
-    The first 2 tensors are the indices which form all positive pairs
-    The second 2 tensors are the indices which form all negative pairs
-    """
     matches, diffs = get_matches_and_diffs(labels, ref_labels)
     a1_idx, p_idx = torch.where(matches)
     a2_idx, n_idx = torch.where(diffs)
@@ -53,14 +49,6 @@ def get_all_pairs_indices(labels, ref_labels=None):
 
 
 def convert_to_pairs(indices_tuple, labels, ref_labels=None):
-    """
-    This returns anchor-positive and anchor-negative indices,
-    regardless of what the input indices_tuple is
-    Args:
-        indices_tuple: tuple of tensors. Each tensor is 1d and specifies indices
-                        within a batch
-        labels: a tensor which has the label for each element in a batch
-    """
     if indices_tuple is None:
         return get_all_pairs_indices(labels, ref_labels)
     elif len(indices_tuple) == 4:
@@ -84,59 +72,28 @@ def neg_pairs_from_tuple(indices_tuple):
     return indices_tuple[2:]
 
 
-def get_all_triplets_indices(labels, ref_labels=None):
+def get_all_triplets_indices(
+    labels: torch.Tensor, ref_labels: torch.Tensor | None = None
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     all_matches, all_diffs = get_matches_and_diffs(labels, ref_labels)
-
-    if (
-        all_matches.shape[0] * all_matches.shape[1] * all_matches.shape[1]
-        < torch.iinfo(torch.int32).max
-    ):
-        # torch.nonzero is not supported for tensors with more than INT_MAX elements
-        return get_all_triplets_indices_vectorized_method(all_matches, all_diffs)
-
-    return get_all_triplets_indices_loop_method(labels, all_matches, all_diffs)
-
-
-def get_all_triplets_indices_vectorized_method(all_matches, all_diffs):
-    triplets = all_matches.unsqueeze(2) * all_diffs.unsqueeze(1)
-    return torch.where(triplets)
-
-
-def get_all_triplets_indices_loop_method(labels, all_matches, all_diffs):
-    all_matches, all_diffs = all_matches.bool(), all_diffs.bool()
-
-    # Find anchors with at least a positive and a negative
-    indices = torch.arange(0, len(labels), device=labels.device)
-    indices = indices[all_matches.any(dim=1) & all_diffs.any(dim=1)]
-
-    # No triplets found
-    if len(indices) == 0:
-        return (
-            torch.tensor([], device=labels.device, dtype=labels.dtype),
-            torch.tensor([], device=labels.device, dtype=labels.dtype),
-            torch.tensor([], device=labels.device, dtype=labels.dtype),
-        )
-
-    # Compute all triplets
-    anchors = []
-    positives = []
-    negatives = []
-    for i in indices:
-        matches = all_matches[i].nonzero(as_tuple=False).squeeze(1)
-        diffs = all_diffs[i].nonzero(as_tuple=False).squeeze(1)
-        nd = len(diffs)
-        nm = len(matches)
-        matches = matches.repeat_interleave(nd)
-        diffs = diffs.repeat(nm)
-        anchors.append(
-            torch.full((len(matches),), i, dtype=labels.dtype, device=labels.device)
-        )
-        positives.append(matches)
-        negatives.append(diffs)
-    return torch.cat(anchors), torch.cat(positives), torch.cat(negatives)
+    anchors, positives = torch.where(all_matches)
+    negatives = torch.where(all_diffs)[1]
+    negative_counts = all_diffs.sum(dim=1)
+    triplets_per_pair = negative_counts[anchors]
+    pair_indices = torch.repeat_interleave(
+        torch.arange(len(anchors), device=labels.device), triplets_per_pair
+    )
+    anchor_indices = anchors[pair_indices]
+    pair_starts = triplets_per_pair.cumsum(0) - triplets_per_pair
+    negative_starts = negative_counts.cumsum(0) - negative_counts
+    negative_indices = (
+        negative_starts[anchor_indices]
+        + torch.arange(len(pair_indices), device=labels.device)
+        - pair_starts[pair_indices]
+    )
+    return anchor_indices, positives[pair_indices], negatives[negative_indices]
 
 
-# sample triplets, with a weighted distribution if weights is specified.
 def get_random_triplet_indices(
     labels, ref_labels=None, t_per_anchor=None, weights=None
 ):
@@ -145,12 +102,8 @@ def get_random_triplet_indices(
     ref_labels = labels if ref_labels is None else ref_labels
     unique_labels = torch.unique(labels)
     for label in unique_labels:
-        # Get indices of positive samples for this label.
         p_inds = torch.where(ref_labels == label)[0]
-        if ref_labels is labels:
-            a_inds = p_inds
-        else:
-            a_inds = torch.where(labels == label)[0]
+        a_inds = p_inds if ref_labels is labels else torch.where(labels == label)[0]
         n_inds = torch.where(ref_labels != label)[0]
         n_a = len(a_inds)
         n_p = len(p_inds)
@@ -161,17 +114,16 @@ def get_random_triplet_indices(
         k = n_p if t_per_anchor is None else t_per_anchor
         num_triplets = n_a * k
         p_inds_ = p_inds.expand((n_a, n_p))
-        # Remove anchors from list of possible positive samples.
+
         if ref_labels is labels:
             p_inds_ = p_inds_[~torch.eye(n_a).bool()].view((n_a, n_a - 1))
-        # Get indices of indices of k random positive samples for each anchor.
+
         p_ = torch.randint(0, p_inds_.shape[1], (num_triplets,))
-        # Get indices of indices of corresponding anchors.
+
         a_ = torch.arange(n_a).view(-1, 1).repeat(1, k).view(num_triplets)
         p = p_inds_[a_, p_]
         a = a_inds[a_]
 
-        # Get indices of negative samples for this label.
         if weights is not None:
             w = weights[:, n_inds][a]
             non_zero_rows = torch.where(torch.sum(w, dim=1) > 0)[0]
@@ -180,14 +132,11 @@ def get_random_triplet_indices(
             w = w[non_zero_rows]
             a = a[non_zero_rows]
             p = p[non_zero_rows]
-            # Sample the negative indices according to the weights.
+
             if w.dtype == torch.float16:
-                # special case needed due to pytorch cuda bug
-                # https://github.com/pytorch/pytorch/issues/19900
                 w = w.type(torch.float32)
             n_ = torch.multinomial(w, 1, replacement=True).flatten()
         else:
-            # Sample the negative indices uniformly.
             n_ = torch.randint(0, len(n_inds), (num_triplets,))
         n = n_inds[n_]
         a_idx.append(a)
@@ -223,10 +172,6 @@ def matched_size_indices(curr_p_idx, curr_n_idx):
 
 
 def convert_to_triplets(indices_tuple, labels, ref_labels=None, t_per_anchor=100):
-    """
-    This returns anchor-positive-negative triplets
-    regardless of what the input indices_tuple is
-    """
     if indices_tuple is None:
         if t_per_anchor == "all":
             return get_all_triplets_indices(labels, ref_labels)
@@ -243,16 +188,11 @@ def convert_to_triplets(indices_tuple, labels, ref_labels=None, t_per_anchor=100
 
 
 def convert_to_weights(indices_tuple, labels, dtype, using_ref=False):
-    """
-    Returns a weight for each batch element, based on
-    how many times they appear in indices_tuple.
-    """
     weights = torch.zeros(labels.shape[0], device=labels.device)
     weights = c_f.to_dtype(weights, dtype=dtype)
     if (indices_tuple is None) or (all(len(x) == 0 for x in indices_tuple)):
         return weights + 1
     if using_ref:
-        # if using ref, then only the anchors refer to the query set
         indices = get_anchors(indices_tuple)
     else:
         indices = torch.cat(indices_tuple, dim=0)
@@ -290,10 +230,6 @@ def remove_self_comparisons(
         return a1, p, a2, n
 
 
-# a: anchors
-# p: positives
-# s: curr batch start idx in queue
-# e: curr batch end idx in queue
 def not_self_comparisons(a, p, s, e, curr_batch_idx, ref_size, ref_is_subset=False):
     if ref_is_subset:
         a, p = p, a

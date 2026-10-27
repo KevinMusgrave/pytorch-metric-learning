@@ -146,9 +146,6 @@ class TestLossAndMinerUtils(unittest.TestCase):
             )
             self.assertTrue(torch.all(weights == correct_weights))
 
-        # Case where convert_to_weights is used with ref_emb.
-        # In this case, indices_tuple will include indices
-        # that point to ref_emb, which may be larger than the query
         batch_size = 32
         labels = torch.randint(0, 10, size=(batch_size,)).to(TEST_DEVICE)
         a = torch.randint(0, batch_size, size=(256,)).to(TEST_DEVICE)
@@ -161,7 +158,7 @@ class TestLossAndMinerUtils(unittest.TestCase):
 
             _, counts = torch.unique(a, return_counts=True, sorted=True)
             counts = counts.type(weights.dtype) / torch.max(counts)
-            # Will fail on cuda if there is an indexing error
+
             self.assertTrue(torch.equal(weights, counts))
 
     def test_get_random_triplet_indices(self):
@@ -195,7 +192,6 @@ class TestLossAndMinerUtils(unittest.TestCase):
                 self.assertTrue(torch.all(l_a == l_p))
                 self.assertTrue(torch.all(l_p != l_n))
 
-                # Test one-hot weights.
                 labels = torch.randint(0, 3, (10,)).to(TEST_DEVICE).type(dtype)
                 w = torch.zeros((len(labels), len(labels))).to(TEST_DEVICE).type(dtype)
                 for i, label in enumerate(labels):
@@ -207,7 +203,6 @@ class TestLossAndMinerUtils(unittest.TestCase):
                 )
                 self.assertTrue(torch.all(w[a, n] == 1.0))
 
-                # Test one-hot weights.
                 labels = torch.randint(0, 3, (100,)).to(TEST_DEVICE).type(dtype)
                 ref_labels = torch.randint(0, 3, (50,)).to(TEST_DEVICE).type(dtype)
                 w = (
@@ -224,7 +219,6 @@ class TestLossAndMinerUtils(unittest.TestCase):
                 )
                 self.assertTrue(torch.all(w[a, n] == 1.0))
 
-                # test no possible triplets
                 labels = torch.arange(100).to(TEST_DEVICE).type(dtype)
                 a, p, n = lmu.get_random_triplet_indices(labels)
                 self.assertTrue(len(a) == len(p) == len(n) == 0)
@@ -270,7 +264,7 @@ class TestLossAndMinerUtils(unittest.TestCase):
             indices_tuple = lmu.remove_self_comparisons(
                 indices_tuple, curr_batch_idx, ref_size
             )
-            a1, p, a2, n = indices_tuple
+            a1, p, _, _ = indices_tuple
             self.assertTrue(torch.equal(a1, correct_a1))
             self.assertTrue(torch.equal(p, correct_p))
 
@@ -287,32 +281,9 @@ class TestLossAndMinerUtils(unittest.TestCase):
         indices_tuple = lmu.remove_self_comparisons(
             indices_tuple, curr_batch_idx, ref_size, ref_is_subset=True
         )
-        a1, p, a2, n = indices_tuple
+        a1, p, _, _ = indices_tuple
         self.assertTrue(torch.equal(a1, correct_a1))
         self.assertTrue(torch.equal(p, correct_p))
-
-    def test_get_all_triplets_indices(self):
-        torch.manual_seed(920)
-        for dtype in TEST_DTYPES:
-            for batch_size in [32, 256, 512]:
-                for ref_labels in [None, torch.randint(0, 5, size=(batch_size // 2,))]:
-                    labels = torch.randint(0, 5, size=(batch_size,))
-
-                    a, p, n = lmu.get_all_triplets_indices(labels, ref_labels)
-                    matches, diffs = lmu.get_matches_and_diffs(labels, ref_labels)
-
-                    a2, p2, n2 = lmu.get_all_triplets_indices_vectorized_method(
-                        matches, diffs
-                    )
-                    a3, p3, n3 = lmu.get_all_triplets_indices_loop_method(
-                        labels, matches, diffs
-                    )
-                    self.assertTrue(
-                        (a == a2).all() and (p == p2).all() and (n == n2).all()
-                    )
-                    self.assertTrue(
-                        (a == a3).all() and (p == p3).all() and (n == n3).all()
-                    )
 
 
 if __name__ == "__main__":

@@ -12,6 +12,21 @@ tuple contains `(anchor, positive, negative)`. Reference embeddings may have a
 different batch size. Excluding self-comparisons depends on whether the query
 and reference sets are the same set, not merely on equal shapes.
 
+All-triplet enumeration expands each actual positive pair by its anchor's
+negative count and indexes the flattened negative rows through prefix offsets.
+Temporary storage scales with the query/reference pair matrices and emitted
+triplets, rather than an unconditional `(queries, references, references)` mask.
+The output remains ordered by anchor, positive, then negative, uses int64 indices
+on the labels' device, and preserves the distinction between the same label
+tensor and an independent reference set. Empty valid sets produce empty index
+tensors. Large valid triplet sets still require memory proportional to their
+output; enumeration does not make materializing every triplet free.
+
+Tuple-frequency weights divide each example's occurrence count by the maximum
+count. With separate references, only anchor indices address query weights.
+Weighted random triplet sampling uses float32 probabilities for float16 inputs;
+the original precision choice followed [PyTorch's multinomial CUDA issue](https://github.com/pytorch/pytorch/issues/19900).
+
 Distances declare whether larger values mean greater similarity. Losses and
 miners use that declaration when comparing margins. Reducers own averaging and
 filtering; losses retain the indices and reduction type needed by the reducer.

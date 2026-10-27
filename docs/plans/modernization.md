@@ -321,5 +321,13 @@ for those design documents or evidence that the listed work is complete.
   as an optimization target. Compilation does not improve this small CPU proxy
   workload. CUDA/NCCL evidence remains outstanding. Commands and raw results are
   in [performance measurements](../performance.md).
+- Triplet enumeration now expands actual positive pairs by their negative
+  counts, preserving ordered indices, self/reference semantics, loss values,
+  and gradients without an unconditional cubic candidate mask. Independent
+  references cover exhaustive small label sets, empty and unequal references,
+  label dtypes, noncontiguous inputs, and embedding/reference gradients. The
+  full CPU suite passes 208 tests with 11 skips. A preliminary batch-512 run
+  reduces forward time from 341.808 ms to 15.033 ms; clean-revision confirmation
+  follows the implementation checkpoint.
 - Phases 3–5: not started. The current package still contains the subsystems
   selected for removal.

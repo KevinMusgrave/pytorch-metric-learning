@@ -1,6 +1,6 @@
 # Retrieval backends
 
-`utils.inference` provides nearest-neighbor search, threshold matching, and
+`utils.retrieval` provides nearest-neighbor search, threshold matching, and
 k-means clustering for [`AccuracyCalculator`](accuracy_calculation.md) and
 application code. These operate on embedding tensors the caller has already
 computed; see the [evaluation recipe](recipes/evaluation.md#extract-embeddings)
@@ -13,7 +13,7 @@ for an ordinary PyTorch extraction loop.
 | `FaissKNN`    | `faiss` extra | None; pass it as `knn_func`                    |
 | `FaissKMeans` | `faiss` extra | None; pass it as `kmeans_func` for NMI and AMI |
 
-Importing `utils.inference` or `utils.accuracy_calculator` does not import Faiss
+Importing `utils.retrieval` or `utils.accuracy_calculator` does not import Faiss
 or scikit-learn. Constructing a Faiss backend without the extra raises
 `ModuleNotFoundError` naming `pytorch-metric-learning[faiss]`.
 
@@ -31,7 +31,7 @@ first `len(query)` rows of `reference`.
 
 ```python
 from pytorch_metric_learning.distances import LpDistance
-from pytorch_metric_learning.utils.inference import CustomKNN
+from pytorch_metric_learning.utils.retrieval import CustomKNN
 
 CustomKNN(distance, batch_size=None)
 ```
@@ -66,7 +66,7 @@ assert distances.tolist() == [[1.0], [0.25]]
 ## MatchFinder
 
 ```python
-from pytorch_metric_learning.utils.inference import MatchFinder
+from pytorch_metric_learning.utils.retrieval import MatchFinder
 
 MatchFinder(distance, threshold=None)
 ```
@@ -94,7 +94,7 @@ matches = finder.get_matching_pairs(query + 1e-3, reference)
 ## FaissKNN
 
 ```python
-from pytorch_metric_learning.utils.inference import FaissKNN
+from pytorch_metric_learning.utils.retrieval import FaissKNN
 
 FaissKNN(reset_before=True, reset_after=True, index_init_fn=None, gpus=None)
 ```
@@ -127,7 +127,7 @@ restored.load("reference.index")
 ## FaissKMeans
 
 ```python
-from pytorch_metric_learning.utils.inference import FaissKMeans
+from pytorch_metric_learning.utils.retrieval import FaissKMeans
 
 FaissKMeans(**kwargs)
 ```

@@ -29,7 +29,7 @@
       "name": "evaluation",
       "paths": [
         "src/pytorch_metric_learning/utils/accuracy_calculator.py",
-        "src/pytorch_metric_learning/utils/inference.py"
+        "src/pytorch_metric_learning/utils/retrieval.py"
       ],
       "dependsOn": [
         "numerics"

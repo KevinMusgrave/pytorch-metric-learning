@@ -15,9 +15,9 @@ optimized parameters explicit. A proxy optimizer includes the loss parameters.
 Separate reference tensors remain attached to autograd. Scalar conversion in
 example history is an explicit diagnostic, not part of the library hot path.
 
-Cascaded mining filters each embedding slice using the previous stage's pairs.
-Reset the HDC miner's external candidates after each call so subsequent batches
-do not inherit stale indices. Stage losses are summed with equal weights in the
+Cascaded mining filters each embedding slice using the previous stage's pairs,
+passed to `HDCMiner` as explicit `candidates`; the miner keeps no state that
+could leak into later batches. Stage losses are summed with equal weights in the
 example; applications can choose weights and classifier heads explicitly.
 
 The adversarial example preserves the historical generator's reverse-triplet,

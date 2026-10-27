@@ -34,6 +34,8 @@ evaluation. Common-function helpers used only by these components, including
 label mapping, download, evaluation data-loader, and standardization helpers,
 are removed.
 
+The retrieval backends moved from `utils.inference` to `utils.retrieval`.
+
 `AccuracyCalculator` changes:
 
 - The default `knn_func` is an exact PyTorch squared-Euclidean search,
@@ -115,8 +117,9 @@ neg_mask)` when constructed with `mat_based_loss=True`, or
 `_compute_pair_loss(pos_pairs, neg_pairs, indices_tuple)` otherwise, instead of
 one `_compute_loss` whose signature depended on the flag. Regularizer
 `compute_loss` takes one argument, `x`, which is embeddings or weights.
-`HDCMiner` no longer mutates externally set candidates; repeated calls with the
-same candidates return the same pairs. `PNPLoss` and `SelfSupervisedLoss`
+`HDCMiner.set_idx_externally` and `reset_idx` are replaced by a `candidates`
+argument: `miner(embeddings, labels, candidates=pairs)`. The miner keeps no
+candidate state between calls. `PNPLoss` and `SelfSupervisedLoss`
 raise `ValueError` for unsupported variants and losses.
 
 ## Smaller utility surface

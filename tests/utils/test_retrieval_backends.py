@@ -8,7 +8,7 @@ from unittest import mock
 import torch
 
 from pytorch_metric_learning.distances import CosineSimilarity, LpDistance
-from pytorch_metric_learning.utils import accuracy_calculator, inference
+from pytorch_metric_learning.utils import accuracy_calculator, retrieval
 
 from .. import TEST_DEVICE, TEST_DTYPES
 
@@ -25,7 +25,7 @@ class TestRetrievalBackends(unittest.TestCase):
             expected_distances, expected_indices = expected.topk(4, largest=False)
             for batch_size in (None, 2, 32):
                 with self.subTest(dtype=dtype, batch_size=batch_size):
-                    knn = inference.CustomKNN(
+                    knn = retrieval.CustomKNN(
                         LpDistance(normalize_embeddings=False, power=2), batch_size
                     )
                     distances, indices = knn(query, 4, reference)
@@ -38,7 +38,7 @@ class TestRetrievalBackends(unittest.TestCase):
 
     def test_custom_knn_removes_exact_self_match(self):
         embeddings = torch.tensor([[0.0], [0.0], [3.0]], device=TEST_DEVICE)
-        knn = inference.CustomKNN(LpDistance(normalize_embeddings=False))
+        knn = retrieval.CustomKNN(LpDistance(normalize_embeddings=False))
         _, indices = knn(embeddings, 2, embeddings, ref_includes_query=True)
         self.assertEqual(indices.shape, (3, 2))
         for row, neighbors in enumerate(indices.tolist()):
@@ -49,7 +49,7 @@ class TestRetrievalBackends(unittest.TestCase):
         reference = torch.tensor(
             [[1.0, 0.1], [-1.0, 0.0], [0.1, 1.0]], device=TEST_DEVICE
         )
-        finder = inference.MatchFinder(CosineSimilarity(), threshold=0.9)
+        finder = retrieval.MatchFinder(CosineSimilarity(), threshold=0.9)
         matches = finder.get_matching_pairs(query, reference)
         self.assertEqual(matches.device, query.device)
         self.assertTrue(
@@ -62,12 +62,12 @@ class TestRetrievalBackends(unittest.TestCase):
             finder.get_matching_pairs(query, reference, return_tuples=True).tolist(),
             [[0, 0], [1, 2]],
         )
-        distance_finder = inference.MatchFinder(LpDistance(), threshold=0.5)
+        distance_finder = retrieval.MatchFinder(LpDistance(), threshold=0.5)
         self.assertEqual(
             distance_finder.is_match(query, reference[[0, 1]]).tolist(), [True, False]
         )
         with self.assertRaisesRegex(ValueError, "threshold"):
-            inference.MatchFinder(LpDistance()).get_matching_pairs(query)
+            retrieval.MatchFinder(LpDistance()).get_matching_pairs(query)
 
     def test_missing_optional_backends_are_explicit(self):
         import_module = importlib.import_module
@@ -79,7 +79,7 @@ class TestRetrievalBackends(unittest.TestCase):
 
         with mock.patch("importlib.import_module", side_effect=missing):
             with self.assertRaisesRegex(ModuleNotFoundError, r"\[faiss\]"):
-                inference.FaissKNN()
+                retrieval.FaissKNN()
             calculator = accuracy_calculator.AccuracyCalculator(
                 include=("NMI",), kmeans_func=lambda x, n: torch.zeros(len(x))
             )
@@ -93,7 +93,7 @@ class TestRetrievalBackends(unittest.TestCase):
         torch.manual_seed(13)
         reference = torch.randn(20, 4)
         query = reference[:3] + 1e-3
-        knn = inference.FaissKNN(reset_before=False, reset_after=False)
+        knn = retrieval.FaissKNN(reset_before=False, reset_after=False)
         with self.assertRaisesRegex(ValueError, "initialized"):
             knn(query, 2)
         knn.train(reference[:10])
@@ -103,7 +103,7 @@ class TestRetrievalBackends(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             filename = str(Path(directory) / "reference.index")
             knn.save(filename)
-            restored = inference.FaissKNN(reset_before=False, reset_after=False)
+            restored = retrieval.FaissKNN(reset_before=False, reset_after=False)
             restored.load(filename)
             restored_distances, restored_indices = restored(query, 2)
         distances, indices = knn(query, 2)

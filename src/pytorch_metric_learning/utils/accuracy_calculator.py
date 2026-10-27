@@ -4,7 +4,7 @@ import torch
 
 from ..distances import LpDistance
 from . import common_functions as c_f
-from .inference import CustomKNN
+from .retrieval import CustomKNN
 
 EQUALITY = torch.eq
 DEFAULT_KNN_BATCH_SIZE = 256

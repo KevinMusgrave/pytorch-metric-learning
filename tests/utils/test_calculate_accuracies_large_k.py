@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 import torch
 
-from pytorch_metric_learning.utils import accuracy_calculator, inference
+from pytorch_metric_learning.utils import accuracy_calculator, retrieval
 
 from .. import TEST_DEVICE
 
@@ -68,7 +68,7 @@ class TestCalculateAccuraciesLargeK(unittest.TestCase):
     def reference_retrieval_metrics(self, encs, labels, max_k=None, ecfss=False):
         torch_encs = torch.from_numpy(encs)
         k = len(encs) - 1 if ecfss else len(encs)
-        knn_func = inference.FaissKNN()
+        knn_func = retrieval.FaissKNN()
         _, all_indices = knn_func(torch_encs, k, torch_encs, ecfss)
         if max_k is None:
             max_k = k

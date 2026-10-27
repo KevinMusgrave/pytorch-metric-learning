@@ -6,7 +6,7 @@ import torch
 from pytorch_metric_learning.distances import LpDistance
 from pytorch_metric_learning.utils import accuracy_calculator
 from pytorch_metric_learning.utils.common_functions import LOGGER
-from pytorch_metric_learning.utils.inference import CustomKNN
+from pytorch_metric_learning.utils.retrieval import CustomKNN
 
 from .. import TEST_DEVICE
 

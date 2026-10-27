@@ -106,3 +106,25 @@ class TestHDCMiner(unittest.TestCase):
                 a1, p, _, _ = miner(embeddings, labels)
                 self.assertTrue(len(a1) == 0)
                 self.assertTrue(len(p) == 0)
+
+
+class TestHDCMinerCandidates(unittest.TestCase):
+    def test_candidates_restrict_selection_without_state(self):
+        torch.manual_seed(2)
+        embeddings = torch.randn(8, 3, device=TEST_DEVICE)
+        labels = torch.arange(4, device=TEST_DEVICE).repeat_interleave(2)
+        miner = HDCMiner(filter_percentage=0.5)
+        everything = miner(embeddings, labels)
+        candidates = tuple(x[:4] for x in everything)
+        restricted = miner(embeddings, labels, candidates=candidates)
+        for pairs, (anchors, others) in (
+            ((candidates[0], candidates[1]), restricted[:2]),
+            ((candidates[2], candidates[3]), restricted[2:]),
+        ):
+            allowed = set(zip(pairs[0].tolist(), pairs[1].tolist(), strict=True))
+            chosen = set(zip(anchors.tolist(), others.tolist(), strict=True))
+            self.assertLessEqual(chosen, allowed)
+            self.assertEqual(len(chosen), 2)
+        again = miner(embeddings, labels)
+        for first, second in zip(everything, again, strict=True):
+            self.assertTrue(torch.equal(first, second))

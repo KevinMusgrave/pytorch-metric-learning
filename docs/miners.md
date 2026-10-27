@@ -185,15 +185,15 @@ miners.HDCMiner(filter_percentage=0.5, **kwargs)
 
 **Candidate pairs**:
 
-- `set_idx_externally(indices_tuple, labels)` restricts later calls to the given
-  pairs or triplets, converted to pairs. Passing `None` selects all pairs for
-  `labels`.
-- `reset_idx()` returns to the default: all pairs of each call's labels.
+```python
+miner(embeddings, labels, ref_emb=None, ref_labels=None, candidates=None)
+```
 
-Each call keeps the hardest `filter_percentage` of the positive and of the
-negative candidates, rounding up, and leaves the external candidates
-unchanged, so repeated calls with the same candidates return the same pairs.
-Call `reset_idx()` before mining a batch the candidates do not describe.
+With `candidates=None`, the miner considers every positive and negative pair.
+Pass the output of another miner, pairs or triplets, to restrict the selection
+to those candidates; triplets are converted to pairs. Each call keeps the
+hardest `filter_percentage` of the positive and of the negative candidates,
+rounding up. The miner keeps no candidate state between calls.
 
 **Example of passing another miner output to HDCMiner**:
 
@@ -202,8 +202,7 @@ minerA = miners.MultiSimilarityMiner(epsilon=0.1)
 minerB = miners.HDCMiner(filter_percentage=0.25)
 
 hard_pairs = minerA(embeddings, labels)
-minerB.set_idx_externally(hard_pairs, labels)
-very_hard_pairs = minerB(embeddings, labels)
+very_hard_pairs = minerB(embeddings, labels, candidates=hard_pairs)
 ```
 
 ## MultiSimilarityMiner

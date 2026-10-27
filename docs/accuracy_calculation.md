@@ -32,7 +32,7 @@ AccuracyCalculator(include=(),
 
 ```python
 from pytorch_metric_learning.distances import SNRDistance
-from pytorch_metric_learning.utils.inference import CustomKNN
+from pytorch_metric_learning.utils.retrieval import CustomKNN
 
 def example_label_comparison_fn(x, y):
     return (x[:, 0] == y[:, 0]) & (x[:, 1] != y[:, 1])

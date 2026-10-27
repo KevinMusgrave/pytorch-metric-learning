@@ -17,11 +17,15 @@ class BaseMiner(ModuleWithDistance):
         else:
             raise TypeError
 
+    def prepare_inputs(self, embeddings, labels, ref_emb, ref_labels):
+        c_f.check_shapes(embeddings, labels)
+        labels = c_f.to_device(labels, embeddings)
+        ref_emb, ref_labels = c_f.set_ref_emb(embeddings, labels, ref_emb, ref_labels)
+        return labels, ref_emb, ref_labels
+
     def forward(self, embeddings, labels, ref_emb=None, ref_labels=None):
         with torch.no_grad():
-            c_f.check_shapes(embeddings, labels)
-            labels = c_f.to_device(labels, embeddings)
-            ref_emb, ref_labels = c_f.set_ref_emb(
+            labels, ref_emb, ref_labels = self.prepare_inputs(
                 embeddings, labels, ref_emb, ref_labels
             )
             mining_output = self.mine(embeddings, labels, ref_emb, ref_labels)

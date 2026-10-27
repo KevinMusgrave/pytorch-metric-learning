@@ -383,9 +383,37 @@ losses.DynamicSoftMarginLoss(min_val=-2.0, num_bins=10, momentum=0.01, **kwargs)
 
 **Parameters**:
 
-- **min_val**: minimum significative value for `d_pos - d_neg`
-- **num_bins**: number of equally spaced bins for the partition of the interval `[min_val, ∞]`
-- **momentum**: weight assigned to the histogram computed from the current batch
+- **min_val**: finite negative lower bound of the histogram. Its upper bound is
+  `-min_val`. The default range `[-2, 2]` covers differences of Euclidean
+  distances between normalized embeddings.
+- **num_bins**: number of equally spaced bin centers including both endpoints;
+  at least 2. The library default is 10; the authors' implementation uses 512.
+- **momentum**: weight of the current batch's normalized histogram, between 0
+  and 1. The first nonempty batch initializes the histogram regardless of this
+  setting. Empty valid sets do not update it.
+
+With labels or supplied triplets, this loss weights `d_positive - d_negative`
+for each selected triplet. With neither, row `i` in `embeddings` is matched to
+row `i` in `ref_emb`; all off-diagonal candidates are negatives. Each matched
+pair uses the closest negative from either stream. If stream sizes differ,
+extra rows provide negatives but do not create additional positive pairs.
+This path does not apply the Brown-dataset outlier threshold used by the
+authors' descriptor-training code.
+
+Each difference contributes linearly to its two adjacent histogram centers.
+The cumulative probability at the lower center weights the original difference.
+Values outside the histogram range use the nearest endpoint. Histogram updates
+and weights are detached; gradients flow through the distances. The compatible
+distance is normalized, unsquared Euclidean distance.
+
+The running histogram is saved in `state_dict`. It supports ordinary successive
+training steps and multiple forwards before backward. Starting a new module
+starts a new histogram. The corrected endpoint spacing and per-batch momentum
+change numerical results from version 2.9.0.
+
+The original PML implementation was contributed by **Domenico Muscillo**.
+See the [authors' reference code](https://github.com/lg-zhang/dynamic-soft-margin-pytorch)
+for the descriptor-training setup.
 
 ## FastAPLoss
 

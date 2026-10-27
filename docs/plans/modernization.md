@@ -303,5 +303,13 @@ for those design documents or evidence that the listed work is complete.
   suites (26 tests, one statistics-related skip). Its checkpoint gate still
   reported 1,645 findings in the wider repository; the changed distributed files
   passed their source checks. No merge/release acceptance is claimed.
+- Dynamic soft margin: reproduced backward failures in the paired path and on
+  successive training steps, plus an out-of-bounds histogram update at maximum
+  distance. Detached, checkpointed histogram state, endpoint-safe interpolation,
+  normalized batch momentum, and non-mutating matched-pair mining now have
+  independent value and gradient references. Unequal streams use only actual
+  matched pairs; supplied triplets retain reference gradients without labels.
+  Eight reference tests pass on CPU in float16, float32, and float64, and all
+  five affected focused suites pass (40 tests, one statistics-related skip).
 - Phases 3–5: not started. The current package still contains the subsystems
   selected for removal.

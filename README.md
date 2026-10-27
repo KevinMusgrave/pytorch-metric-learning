@@ -1,5 +1,7 @@
 # PyTorch Metric Learning
 
+![PyTorch Metric Learning](docs/imgs/Logo2.png)
+
 Train embedding models with composable PyTorch losses, hard-example miners,
 distances, reducers, and regularizers. Use them in your own training loop for
 retrieval, clustering, recognition, or learning from pairs and triplets.
@@ -53,6 +55,14 @@ This loss L2-normalizes embeddings by default. It averages active positive and
 negative pair penalties separately, then adds them. See the
 [contrastive-loss contract](docs/losses.md#contrastiveloss) for distances,
 margins, and reduction options.
+
+## How it fits together
+
+[![Your PyTorch code computes embeddings and calls the library's miner and loss to get a scalar loss, then calls backward and steps its optimizer. For evaluation, your code extracts embeddings and AccuracyCalculator retrieves nearest neighbors to compute metrics.](docs/imgs/architecture.svg)](docs/imgs/architecture.svg)
+
+Your code keeps the training loop. The library turns embeddings and labels
+into a differentiable loss, and turns query and reference embeddings into
+retrieval metrics.
 
 ## Find the right component
 

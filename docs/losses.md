@@ -104,7 +104,16 @@ losses.AngularLoss(alpha=40, **kwargs)
 
 **Equation**:
 
-![angular_loss_equation](imgs/angular_loss_equation.png){: style="height:200px"}
+$$
+\begin{aligned}
+l_{ang}(\mathcal{B}) &= \frac{1}{N} \sum_{\mathbf{x}_a \in \mathcal{B}} \left\lbrace \log \left[ 1 + \sum_{\substack{\mathbf{x}_n \in \mathcal{B} \\ y_n \neq y_a, y_p}} \exp\left(f_{a,p,n}\right) \right] \right\rbrace \\
+f_{a,p,n} &= 4 \tan^2 \alpha \, (\mathbf{x}_a + \mathbf{x}_p)^T \mathbf{x}_n - 2 \left(1 + \tan^2 \alpha\right) \mathbf{x}_a^T \mathbf{x}_p
+\end{aligned}
+$$
+
+Here $N$ is the batch size. Terms that depend only on $\lVert \mathbf{x} \rVert$ are dropped from $f_{a,p,n}$, as in the N-pair loss.
+
+**Implementation notes**: The default distance normalizes anchors and positives, but $f_{a,p,n}$ uses unnormalized negative embeddings. The paper derives the loss for unit-length features. The loss is averaged over all ordered positive pairs rather than one positive per anchor; pairs without negatives contribute 0.
 
 **Parameters**:
 
@@ -122,7 +131,7 @@ losses.AngularLoss(alpha=40, **kwargs)
 
 **Reducer input**:
 
-- **loss**: The loss for every `a1`, where `(a1,p)` represents every positive pair in the batch. Reduction type is `"element"`.
+- **loss**: The loss for every `a1`, where `(a1,p)` represents every positive pair in the batch. Reduction type is `"pos_pair"`.
 
 ## ArcFaceLoss
 
@@ -134,7 +143,13 @@ losses.ArcFaceLoss(num_classes, embedding_size, margin=28.6, scale=64, **kwargs)
 
 **Equation**:
 
-![arcface_loss_equation](imgs/arcface_loss_equation.png){: style="height:80px"}
+$$
+L = -\frac{1}{N} \sum_{i=1}^{N} \log \frac{e^{s \cos\left(\theta_{y_i} + m\right)}}{e^{s \cos\left(\theta_{y_i} + m\right)} + \sum_{j=1, j \neq y_i}^{n} e^{s \cos \theta_j}}
+$$
+
+Here $N$ is the batch size, $n$ is `num_classes`, and $\theta_j$ is the angle between an embedding and the weight vector of class $j$.
+
+**Implementation notes**: When $\theta_{y_i} > \pi - m$, the target logit is $\cos\theta_{y_i} - m \sin m$, which keeps it decreasing in $\theta$. The default margin of 28.6 degrees is 0.4992 radians; pass `margin=28.648` for the paper's 0.5. With an `indices_tuple`, each element's loss is weighted by its relative mining frequency.
 
 **Parameters**:
 
@@ -216,19 +231,29 @@ losses.CircleLoss(m=0.4, gamma=80, **kwargs)
 
 **Equations**:
 
-![circle_loss_equation1](imgs/circle_loss_equation1.png){: style="height:60px"}
+$$
+\mathcal{L}_{circle} = \log \left[ 1 + \sum_{j=1}^{L} \exp\left(\gamma \alpha_n^j \left(s_n^j - \Delta_n\right)\right) \sum_{i=1}^{K} \exp\left(-\gamma \alpha_p^i \left(s_p^i - \Delta_p\right)\right) \right]
+$$
+
+For each anchor, $s_p^i$ and $s_n^j$ are its cosine similarities to its $K$ positives and $L$ negatives.
 
 where
 
-![circle_loss_equation2](imgs/circle_loss_equation2.png){: style="height:70px"}
+$$
+\begin{aligned}
+\alpha_p^i &= \left[O_p - s_p^i\right]_+ \\
+\alpha_n^j &= \left[s_n^j - O_n\right]_+
+\end{aligned}
+$$
 
-![circle_loss_equation3](imgs/circle_loss_equation3.png){: style="height:25px"}
+$$
+\begin{aligned}
+O_p &= 1 + m, & O_n &= -m, \\
+\Delta_p &= 1 - m, & \Delta_n &= m
+\end{aligned}
+$$
 
-![circle_loss_equation4](imgs/circle_loss_equation4.png){: style="height:25px"}
-
-![circle_loss_equation5](imgs/circle_loss_equation5.png){: style="height:25px"}
-
-![circle_loss_equation6](imgs/circle_loss_equation6.png){: style="height:25px"}
+**Implementation notes**: $\alpha_p$ and $\alpha_n$ are treated as constants for gradients. Anchors without a positive or a negative contribute 0; the default reducer averages the anchors whose loss is positive.
 
 **Parameters**:
 
@@ -259,11 +284,21 @@ losses.ContrastiveLoss(pos_margin=0, neg_margin=1, **kwargs):
 
 If using a distance metric like [LpDistance](distances.md#lpdistance), the loss is:
 
-![contrastive_loss_equation](imgs/contrastive_loss_equation.png){: style="height:37px"}
+$$
+L_{contrastive} = \left[d_p - m_{pos}\right]_+ + \left[m_{neg} - d_n\right]_+
+$$
+
+Here $d_p$ and $d_n$ are positive-pair and negative-pair distances, $m_{pos}$ and $m_{neg}$ are `pos_margin` and `neg_margin`, and $[x]_+ = \max(0, x)$.
 
 If using a similarity metric like [CosineSimilarity](distances.md#cosinesimilarity), the loss is:
 
-![contrastive_loss_similarity_equation](imgs/contrastive_loss_similarity_equation.png){: style="height:35px"}
+$$
+L_{contrastive} = \left[m_{pos} - s_p\right]_+ + \left[s_n - m_{neg}\right]_+
+$$
+
+Here $s_p$ and $s_n$ are positive-pair and negative-pair similarities.
+
+**Implementation notes**: The hinges are not squared. The default reducer averages the positive-pair losses greater than zero and, separately, the negative-pair losses greater than zero, then adds the two averages.
 
 **Parameters**:
 
@@ -295,7 +330,11 @@ losses.CosFaceLoss(num_classes, embedding_size, margin=0.35, scale=64, **kwargs)
 
 **Equation**:
 
-![cosface_loss_equation](imgs/cosface_loss_equation.png){: style="height:80px"}
+$$
+L_{lmc} = \frac{1}{N} \sum_{i} -\log \frac{e^{s \left(\cos\left(\theta_{y_i,i}\right) - m\right)}}{e^{s \left(\cos\left(\theta_{y_i,i}\right) - m\right)} + \sum_{j \neq y_i} e^{s \cos\left(\theta_{j,i}\right)}}
+$$
+
+Here $N$ is the batch size and $\theta_{j,i}$ is the angle between embedding $i$ and the weight vector of class $j$.
 
 **Parameters**:
 
@@ -496,7 +535,16 @@ losses.GeneralizedLiftedStructureLoss(neg_margin=1, pos_margin=0, **kwargs)
 
 **Equation**:
 
-![generalized_lifted_structure_loss_equation](imgs/generalized_lifted_structure_loss_equation.png){: style="height:250px"}
+$$
+\begin{aligned}
+\mathcal{L}_{\mathrm{LG}} = \sum_{i=1}^{P} \sum_{a=1}^{K} \Bigg[ & \log \sum_{\substack{p=1 \\ p \neq a}}^{K} e^{D\left(f(x_a^i),\, f(x_p^i)\right)} \\
+& + \log \sum_{\substack{j=1 \\ j \neq i}}^{P} \sum_{n=1}^{K} e^{m - D\left(f(x_a^i),\, f(x_n^j)\right)} \Bigg]_+
+\end{aligned}
+$$
+
+Here the batch has $P$ classes with $K$ samples each, $x_a^i$ is sample $a$ of class $i$, $f$ is the embedding network, and $D$ is the distance. The outer sums run over all anchors, the first inner sum over their positives, and the second over their negatives.
+
+**Implementation notes**: The loss is computed per anchor and averaged over the batch rather than summed.
 
 **Parameters**:
 
@@ -558,9 +606,17 @@ losses.IntraPairVarianceLoss(pos_eps=0.01, neg_eps=0.01, **kwargs)
 
 **Equations**:
 
-![intra_pair_variance_loss_equation1](imgs/intra_pair_variance_loss_equation1.png){: style="height:39px"}
+$$
+\mathcal{L}_{pos} = \mathbb{E}\left[(1 - \epsilon)\mu_{ap} - \cos\theta_{ap}\right]_+^2
+$$
 
-![intra_pair_variance_loss_equation2](imgs/intra_pair_variance_loss_equation2.png){: style="height:34px"}
+$$
+\mathcal{L}_{neg} = \mathbb{E}\left[\cos\theta_{an} - (1 + \epsilon)\mu_{an}\right]_+^2
+$$
+
+Here $\theta_{ap}$ and $\theta_{an}$ are anchor-positive and anchor-negative angles, $\mu_{ap}$ and $\mu_{an}$ are the batch means of $\cos\theta_{ap}$ and $\cos\theta_{an}$, and $[\cdot]_+ = \max(0, \cdot)$.
+
+**Implementation notes**: Gradients flow through the batch means $\mu_{ap}$ and $\mu_{an}$. With a distance where smaller means closer, the inequalities are reversed.
 
 **Parameters**:
 
@@ -577,7 +633,7 @@ complete_loss = losses.MultipleLosses([main_loss, var_loss], weights=[1, 0.5])
 
 **Default distance**:
 
-- [`LpDistance(normalize_embeddings=True, p=2, power=1)`](distances.md#lpdistance)
+- [`CosineSimilarity()`](distances.md#cosinesimilarity)
 
 **Default reducer**:
 
@@ -602,11 +658,23 @@ losses.LargeMarginSoftmaxLoss(num_classes,
 
 **Equations**:
 
-![large_margin_softmax_loss_equation1](imgs/large_margin_softmax_loss_equation1.png){: style="height:80px"}
+$$
+L_i = -\log\left(\frac{e^{\lVert \mathbf{W}_{y_i} \rVert \lVert \mathbf{x}_i \rVert \psi(\theta_{y_i})}}{e^{\lVert \mathbf{W}_{y_i} \rVert \lVert \mathbf{x}_i \rVert \psi(\theta_{y_i})} + \sum_{j \neq y_i} e^{\lVert \mathbf{W}_j \rVert \lVert \mathbf{x}_i \rVert \cos(\theta_j)}}\right)
+$$
 
 where
 
-![large_margin_softmax_loss_equation2](imgs/large_margin_softmax_loss_equation2.png){: style="height:90px"}
+$$
+\psi(\theta) = (-1)^k \cos(m\theta) - 2k, \quad \theta \in \left[\frac{k\pi}{m}, \frac{(k+1)\pi}{m}\right], \quad k \in \lbrace 0, 1, \ldots, m - 1 \rbrace
+$$
+
+$$
+\cos(m\theta) = \sum_{n=0}^{\lfloor m/2 \rfloor} (-1)^n \binom{m}{2n} \cos^{m-2n}(\theta) \left(1 - \cos^2(\theta)\right)^n
+$$
+
+Here $\theta_j$ is the angle between $\mathbf{W}_j$ and $\mathbf{x}_i$. The implementation computes $\cos(m\theta)$ from $\cos\theta$ with this expansion, equations 6 and 7 of the paper, and treats $k$ as a constant for gradients.
+
+**Implementation notes**: The paper's annealing of the target logit with a decreasing $\lambda$ is not implemented; schedule a combination with ordinary softmax in application code if needed.
 
 **Parameters**:
 
@@ -651,7 +719,14 @@ losses.LiftedStructureLoss(neg_margin=1, pos_margin=0, **kwargs):
 
 **Equation**:
 
-![lifted_structure_loss_equation](imgs/lifted_structure_loss_equation.png){: style="height:150px"}
+$$
+\begin{aligned}
+\tilde{J}_{i,j} &= \log\left(\sum_{(i,k) \in \mathcal{N}} \exp\lbrace \alpha - D_{i,k} \rbrace + \sum_{(j,l) \in \mathcal{N}} \exp\lbrace \alpha - D_{j,l} \rbrace\right) + D_{i,j} \\
+\tilde{J} &= \frac{1}{2\lvert\mathcal{P}\rvert} \sum_{(i,j) \in \mathcal{P}} \max\left(0, \tilde{J}_{i,j}\right)^2
+\end{aligned}
+$$
+
+Here $\mathcal{P}$ and $\mathcal{N}$ are the positive and negative pairs in the batch, and $D_{i,j}$ is the distance between embeddings $i$ and $j$.
 
 **Parameters**:
 
@@ -735,11 +810,19 @@ losses.MarginLoss(margin=0.2,
 
 **Equations**:
 
-![margin_loss_equation2](imgs/margin_loss_equation2.png){: style="height:60px"}
+$$
+\operatorname{minimize} \sum_{(i,j)} \ell^{\mathrm{margin}}(i,j) + \nu\left(\beta^{(0)} + \beta^{(\mathrm{class})}_{c(i)} + \beta^{(\mathrm{img})}_i\right)
+$$
 
 where
 
-![margin_loss_equation1](imgs/margin_loss_equation1.png){: style="height:40px"}
+$$
+\ell^{\mathrm{margin}}(i,j) = \left(\alpha + y_{ij}(D_{ij} - \beta)\right)_+
+$$
+
+Here $y_{ij}$ is $1$ for positive pairs and $-1$ for negative pairs, $D_{ij}$ is the distance between embeddings $i$ and $j$, and $c(i)$ is the class of sample $i$.
+
+**Implementation notes**: The loss is computed over triplets, all of them by default, so each pair term repeats once per triplet that contains it. Positive and negative terms are divided by the number of nonzero terms. $\beta$ is either a single value or one value per class indexed by the anchor's class; the per-image $\beta^{(\mathrm{img})}$ is not supported.
 
 **Parameters**:
 
@@ -773,7 +856,16 @@ losses.MultiSimilarityLoss(alpha=2, beta=50, base=0.5, **kwargs)
 
 **Equation**:
 
-![multi_similarity_loss_equation](imgs/multi_similarity_loss_equation.png){: style="height:150px"}
+$$
+\begin{aligned}
+\mathcal{L}_{MS} = \frac{1}{m} \sum_{i=1}^{m} \Bigg\lbrace & \frac{1}{\alpha} \log\left[1 + \sum_{k \in \mathcal{P}_i} e^{-\alpha(S_{ik} - \lambda)}\right] \\
+& + \frac{1}{\beta} \log\left[1 + \sum_{k \in \mathcal{N}_i} e^{\beta(S_{ik} - \lambda)}\right] \Bigg\rbrace
+\end{aligned}
+$$
+
+Here $m$ is the batch size, $S_{ik}$ is the similarity between embeddings $i$ and $k$, and $\mathcal{P}_i$ and $\mathcal{N}_i$ are the positive and negative pairs of anchor $i$.
+
+**Implementation notes**: $\mathcal{P}_i$ and $\mathcal{N}_i$ are all positive and negative pairs of anchor $i$ unless a miner supplies them; the paper mines them with [MultiSimilarityMiner](miners.md#multisimilarityminer). The default `base=0.5` differs from the paper's $\lambda = 1$; pass `base=1` for the paper's setting.
 
 **Parameters**:
 
@@ -817,15 +909,25 @@ losses.NCALoss(softmax_scale=1, **kwargs)
 
 **Equations**:
 
-![nca_loss_equation1](imgs/nca_loss_equation1.png){: style="height:50px"}
+$$
+g(A) = \sum_i \log\left(\sum_{j \in C_i} p_{ij}\right) = \sum_i \log(p_i)
+$$
 
 where
 
-![nca_loss_equation2](imgs/nca_loss_equation2.png){: style="height:60px"}
+$$
+p_i = \sum_{j \in C_i} p_{ij}
+$$
 
-![nca_loss_equation3](imgs/nca_loss_equation3.png){: style="height:60px"}
+$$
+p_{ij} = \frac{\exp\left(-\lVert A x_i - A x_j \rVert^2\right)}{\sum_{k \neq i} \exp\left(-\lVert A x_i - A x_k \rVert^2\right)}
+$$
+
+Here $A x_i$ is the embedding of element $i$, $C_i$ is the set of elements with the same label as $i$, and $p_{ii} = 0$.
 
 In this implementation, we use `-g(A)` as the loss.
+
+**Implementation notes**: The loss is averaged over elements with $p_i > 0$; elements with no same-label reference are skipped. The default distance L2-normalizes embeddings, unlike the paper's linear map.
 
 **Parameters**:
 
@@ -853,7 +955,11 @@ losses.NormalizedSoftmaxLoss(num_classes, embedding_size, temperature=0.05, **kw
 
 **Equation**:
 
-![normalized_softmax_loss_equation](imgs/normalized_softmax_loss_equation.png){: style="height:80px"}
+$$
+L_{\mathrm{norm}} = -\log\left(\frac{\exp\left(x^{T} p_{y} / \sigma\right)}{\sum_{z \in Z} \exp\left(x^{T} p_{z} / \sigma\right)}\right)
+$$
+
+Here $x$ is the L2-normalized embedding with label $y$, $p_z$ is the L2-normalized weight vector of class $z$, and $Z$ is the set of all classes.
 
 **Parameters**:
 
@@ -941,7 +1047,11 @@ losses.NTXentLoss(temperature=0.07, **kwargs)
 
 **Equation**:
 
-![ntxent_loss_equation](imgs/ntxent_loss_equation.png){: style="height:70px"}
+$$
+\mathcal{L}_q = -\log \frac{\exp\left(q \cdot k_+ / \tau\right)}{\sum_{i=0}^{K} \exp\left(q \cdot k_i / \tau\right)}
+$$
+
+Here $q$ is the anchor, $k_+$ its positive, $k_0, \ldots, k_K$ are $k_+$ plus the $K$ negatives sharing that anchor, and $q \cdot k$ is the similarity, cosine by default.
 
 **Parameters**:
 
@@ -998,7 +1108,19 @@ losses.PNPLoss(b=2, alpha=1, anneal=0.01, variant="O", **kwargs)
 
 **Equation**:
 
-![PNP_loss_equation](imgs/PNP_loss_equation.png){: style="height:300px"}
+$$
+\begin{aligned}
+L_O &= \frac{1}{|S_P|} \sum_{i \in S_P} R(i, S_N) && (5) \\
+L_{I_u} &= \frac{1}{|S_P|} \sum_{i \in S_P} \left(1 + R(i, S_N)\right) \log\left(1 + R(i, S_N)\right) && (7) \\
+L_{I_b} &= \frac{1}{|S_P|} \sum_{i \in S_P} \frac{1}{b^2} \left(b R(i, S_N) - \log\left(1 + b R(i, S_N)\right)\right) && (9) \\
+L_{D_s} &= \frac{1}{|S_P|} \sum_{i \in S_P} \log\left(1 + R(i, S_N)\right) && (12) \\
+L_{D_q} &= 1 - \frac{1}{|S_P|} \sum_{i \in S_P} \frac{1}{\left(1 + R(i, S_N)\right)^{\alpha}} \quad (\alpha \geq 1) && (13)
+\end{aligned}
+$$
+
+Here $R(i, S_N) = \sum_{j \in S_N} \sigma\left((s_j - s_i)/\tau\right)$, where $s_i$ is the cosine similarity between the query and element $i$, $\sigma$ is the sigmoid, and $\tau$ is `anneal`.
+
+**Implementation notes**: The query is counted in its own $S_P$, as in the authors' implementation.
 
 **Parameters**:
 
@@ -1018,7 +1140,7 @@ losses.PNPLoss(b=2, alpha=1, anneal=0.01, variant="O", **kwargs)
 
 **Reducer input**:
 
-- **loss**: The loss per element that has at least 1 positive in the batch. Reduction type is `"element"`.
+- **loss**: The loss averaged over elements that have at least 1 other positive in the batch. Reduction type is `"already_reduced"`, so the reducer does not change it.
 
 ## ProxyAnchorLoss
 
@@ -1030,7 +1152,14 @@ losses.ProxyAnchorLoss(num_classes, embedding_size, margin = 0.1, alpha = 32, **
 
 **Equation**:
 
-![proxy_anchor_loss_equation](imgs/proxy_anchor_loss_equation.png){: style="height:150px"}
+$$
+\begin{aligned}
+\ell(X) &= \frac{1}{|P^+|} \sum_{p \in P^+} \log\left(1 + \sum_{x \in X_p^+} e^{-\alpha\left(s(x, p) - \delta\right)}\right) \\
+&\quad + \frac{1}{|P|} \sum_{p \in P} \log\left(1 + \sum_{x \in X_p^-} e^{\alpha\left(s(x, p) + \delta\right)}\right)
+\end{aligned}
+$$
+
+Here $P$ is the set of all proxies, $P^+$ the proxies whose class is in the batch, $X_p^+$ and $X_p^-$ the batch embeddings with and without proxy $p$'s class, and $s(x, p)$ the cosine similarity.
 
 **Parameters**:
 
@@ -1197,9 +1326,21 @@ losses.SmoothAPLoss(
 
 **Equations**:
 
-![smooth_ap_loss_equation1](imgs/smooth_ap_sigmoid_equation.png){: style="height:100px"}
-![smooth_ap_loss_equation2](imgs/smooth_ap_approx_equation.png){: style="height:100px"}
-![smooth_ap_loss_equation3](imgs/smooth_ap_loss_equation.png){: style="height:100px"}
+$$
+\mathcal{G}(x; \tau) = \frac{1}{1 + e^{-x / \tau}}
+$$
+
+$$
+AP_q \approx \frac{1}{|\mathcal{S}_P|} \sum_{i \in \mathcal{S}_P} \frac{1 + \sum_{j \in \mathcal{S}_P, j \neq i} \mathcal{G}(D_{ij}; \tau)}{1 + \sum_{j \in \mathcal{S}_P, j \neq i} \mathcal{G}(D_{ij}; \tau) + \sum_{j \in \mathcal{S}_N} \mathcal{G}(D_{ij}; \tau)}
+$$
+
+$$
+\mathcal{L}_{AP} = \frac{1}{m} \sum_{k=1}^{m} \left(1 - AP_k\right)
+$$
+
+Here $D_{ij} = s_j - s_i$, where $s_i$ is the cosine similarity between query $q$ and element $i$; $\mathcal{S}_P$ and $\mathcal{S}_N$ are the positive and negative sets of $q$; and $m$ is the batch size.
+
+**Implementation notes**: The query is counted in its own $\mathcal{S}_P$, as in the authors' implementation.
 
 **Parameters**:
 
@@ -1230,11 +1371,19 @@ losses.SoftTripleLoss(num_classes,
 
 **Equations**:
 
-![soft_triple_loss_equation1](imgs/soft_triple_loss_equation1.png){: style="height:100px"}
+$$
+\ell_{\operatorname{SoftTriple}}(\mathbf{x}_i) = -\log \frac{\exp\left(\lambda\left(\mathcal{S}'_{i,y_i}-\delta\right)\right)}{\exp\left(\lambda\left(\mathcal{S}'_{i,y_i}-\delta\right)\right)+\sum_{j \neq y_i}\exp\left(\lambda \mathcal{S}'_{i,j}\right)}
+$$
 
 where
 
-![soft_triple_loss_equation2](imgs/soft_triple_loss_equation2.png){: style="height:80px"}
+$$
+\mathcal{S}'_{i,c} = \sum_{k} \frac{\exp\left(\frac{1}{\gamma}\mathbf{x}_i^\top \mathbf{w}_c^k\right)}{\sum_{k'}\exp\left(\frac{1}{\gamma}\mathbf{x}_i^\top \mathbf{w}_c^{k'}\right)} \mathbf{x}_i^\top \mathbf{w}_c^k
+$$
+
+Here $\mathbf{w}_c^k$ is the $k$-th of the `centers_per_class` centers of class $c$; `CosineSimilarity` L2-normalizes both $\mathbf{x}_i$ and $\mathbf{w}_c^k$.
+
+**Implementation notes**: The paper adds a center regularizer with weight $\tau = 0.2$. Reproduce it with `weight_regularizer=regularizers.SparseCentersRegularizer(num_classes, centers_per_class)` and `weight_reg_weight=0.2`; it is not enabled by default.
 
 **Parameters**:
 
@@ -1243,7 +1392,7 @@ where
 - **centers_per_class**: The number of weight vectors per class. (The regular cross entropy loss has 1 center per class.) The paper uses 10.
 - **la**: This is lambda in the above equation.
 - **gamma**: This is gamma in the above equation. The paper uses 0.1.
-- **margin**: The is delta in the above equations. The paper uses 0.01.
+- **margin**: This is delta in the above equations. The paper uses 0.01.
 
 **Other info**
 
@@ -1360,7 +1509,13 @@ losses.SupConLoss(temperature=0.1, **kwargs)
 
 **Equation**:
 
-![supcon_loss_equation](imgs/supcon_loss_equation.png){: style="height:90px"}
+$$
+\mathcal{L}^{sup}_{out} = \sum_{i \in I} \frac{-1}{\left|P(i)\right|} \sum_{p \in P(i)} \log \frac{\exp\left(\mathbf{z}_i \cdot \mathbf{z}_p / \tau\right)}{\sum_{a \in A(i)} \exp\left(\mathbf{z}_i \cdot \mathbf{z}_a / \tau\right)}
+$$
+
+Here $I$ indexes the batch, $A(i)$ is every index except $i$, and $P(i) \subseteq A(i)$ holds the indices that share $i$'s label.
+
+**Implementation notes**: The default reducer averages over anchors with a positive loss instead of summing. A batch without both a positive and a negative pair yields 0.
 
 **Parameters**:
 
@@ -1395,7 +1550,12 @@ losses.ThresholdConsistentMarginLoss(
 ```
 
 **Equation**:
-![threshold_consistent_margin_loss](imgs/tcm_loss_equation.png)
+
+$$
+L_{\operatorname{TCM}} = \lambda^+ \cdot \frac{\sum_{s \in S^+} \left(m^+ - s\right) \cdot \mathbf{1}_{s \le m^+}}{\sum_{s \in S^+} \mathbf{1}_{s \le m^+}} + \lambda^- \cdot \frac{\sum_{s \in S^-} \left(s - m^-\right) \cdot \mathbf{1}_{s \ge m^-}}{\sum_{s \in S^-} \mathbf{1}_{s \ge m^-}}
+$$
+
+Here $S^+$ and $S^-$ are the cosine similarities of the batch's positive and negative pairs. A term whose denominator is zero contributes 0.
 
 **Parameters**:
 
@@ -1421,7 +1581,11 @@ losses.TripletMarginLoss(margin=0.05,
 
 **Equation**:
 
-![triplet_margin_loss_equation](imgs/triplet_margin_loss_equation.png){: style="height:35px"}
+$$
+L_{triplet} = \left[d_{ap} - d_{an} + m\right]_+
+$$
+
+Here $d_{ap}$ and $d_{an}$ are the anchor-positive and anchor-negative distances, and $[x]_+ = \max(0, x)$. With a similarity such as `CosineSimilarity`, the loss is $\left[s_{an} - s_{ap} + m\right]_+$.
 
 **Parameters**:
 
@@ -1452,7 +1616,13 @@ losses.TupletMarginLoss(margin=5.73, scale=64, **kwargs)
 
 **Equation**:
 
-![tuplet_margin_loss_equation](imgs/tuplet_margin_loss_equation.png){: style="height:80px"}
+$$
+\mathcal{L}_{tuplet} = \log\left(1 + \sum_{i=1}^{k-1} e^{s\left(\cos\theta_{an_i} - \cos\left(\theta_{ap} - \beta\right)\right)}\right)
+$$
+
+Here $\theta_{ap}$ and $\theta_{an_i}$ are the angles from the anchor to its positive and to its $i$-th negative. The implementation sums over all $k - 1$ negatives of the anchor in the batch.
+
+**Implementation notes**: Each positive pair contributes one loss term, averaged by the default reducer.
 
 **Parameters**:
 
@@ -1539,17 +1709,35 @@ loss = loss_fn(embeddings, ref_emb=ref_emb)
 
 **Equations**:
 
-![vicreg_total](imgs/vicreg_total.png){: style="height:40px"}
+$$
+\ell(Z, Z') = \lambda s(Z, Z') + \mu\left[v(Z) + v(Z')\right] + \nu\left[c(Z) + c(Z')\right]
+$$
+
+Here $\lambda$, $\mu$, and $\nu$ are `invariance_lambda`, `variance_mu`, and `covariance_v`; $n$ is the batch size and $d$ the embedding size.
 
 where
 
-![vicreg_total](imgs/vicreg_invariance.png){: style="height:70px"}
+$$
+s(Z, Z') = \frac{1}{n} \sum_{i} \left\lVert z_i - z'_i \right\rVert_2^2
+$$
 
-![vicreg_total](imgs/vicreg_variance.png){: style="height:90px"}
+$$
+v(Z) = \frac{1}{d} \sum_{j=1}^{d} \max\left(0, \gamma - S\left(z^j, \epsilon\right)\right)
+$$
 
-![vicreg_total](imgs/vicreg_variance_detail.png){: style="height:40px"}
+Here $z^j$ is the $j$-th embedding dimension across the batch, $\gamma = 1$, and $\epsilon$ is `eps`.
 
-![vicreg_total](imgs/vicreg_covariance.png){: style="height:70px"}
+$$
+S(x, \epsilon) = \sqrt{\operatorname{Var}(x) + \epsilon}
+$$
+
+$$
+c(Z) = \frac{1}{d} \sum_{i \neq j} \left[C(Z)\right]_{i,j}^2
+$$
+
+Here $C(Z)$ is the covariance matrix of $Z$, normalized by $n - 1$.
+
+**Implementation notes**: The invariance term is a mean squared error over both rows and dimensions, $\frac{1}{nd}\sum_i \lVert z_i - z'_i \rVert_2^2$, as in the paper's pseudocode and the authors' implementation. The variance term is $\frac{\mu}{2}\left[v(Z) + v(Z')\right]$, also following the authors' implementation; $\gamma$ is fixed at 1.
 
 **Parameters**:
 

@@ -8,6 +8,8 @@ For a complete first training step and PyPI installation with uv or pip, start
 at the [repository README](https://github.com/KevinMusgrave/pytorch-metric-learning#readme).
 For this development branch, read [the next major release notes](release-notes-3.md).
 
+[![Your PyTorch code computes embeddings and calls the library's miner and loss to get a scalar loss, then calls backward and steps its optimizer. For evaluation, your code extracts embeddings and AccuracyCalculator retrieves nearest neighbors to compute metrics.](imgs/architecture.svg)](imgs/architecture.svg)
+
 ## Choose by task
 
 | Task                                        | Public entry point                                          | Contract and runnable composition                                                                                                   |

@@ -128,7 +128,11 @@ regularizers.ZeroMeanRegularizer(**kwargs)
 
 In this equation, `N` is the batch size, `M` is the size of each embedding.
 
-![zero_mean_regularizer_equation](imgs/zero_mean_regularizer_equation.png){: style="height:70px"}
+$$
+L_r = \frac{1}{N} \sum_{i=1}^{N} \left| \sum_{m=1}^{M} h_{im} \right|
+$$
+
+Here $h_{im}$ is the $m$-th component of the $i$-th embedding. The loss that applies the regularizer multiplies $L_r$ by its `embedding_reg_weight` or `weight_reg_weight`, which is $\lambda$ in the paper.
 
 **Default distance**:
 

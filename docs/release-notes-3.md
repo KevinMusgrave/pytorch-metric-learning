@@ -2,7 +2,7 @@
 
 This document describes changes implemented on the modernization branch. The
 release is not yet accepted for publication; CUDA/NCCL and policy acceptance
-remain outstanding in [the modernization plan](plans/modernization.md).
+remain outstanding in [the modernization plan](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/docs/plans/modernization.md).
 
 ## Removed training orchestration
 

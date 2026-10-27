@@ -37,9 +37,7 @@ class TestContrastiveLoss(unittest.TestCase):
                 [testing_utils.angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
-            ).to(
-                TEST_DEVICE
-            )  # 2D embeddings
+            ).to(TEST_DEVICE)  # 2D embeddings
             labels = torch.LongTensor([0, 0, 1, 1, 2])
 
             lossA = loss_funcA(embeddings, labels)
@@ -145,9 +143,7 @@ class TestContrastiveLoss(unittest.TestCase):
                 [testing_utils.angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
-            ).to(
-                TEST_DEVICE
-            )  # 2D embeddings
+            ).to(TEST_DEVICE)  # 2D embeddings
             labels = torch.LongTensor([0])
             lossA = loss_funcA(embeddings, labels)
             lossB = loss_funcB(embeddings, labels)
@@ -164,9 +160,7 @@ class TestContrastiveLoss(unittest.TestCase):
                     [testing_utils.angle_to_coord(a) for a in embedding_angles],
                     requires_grad=True,
                     dtype=dtype,
-                ).to(
-                    TEST_DEVICE
-                )  # 2D embeddings
+                ).to(TEST_DEVICE)  # 2D embeddings
                 labels = torch.LongTensor([0])
                 loss = loss_func(embeddings, labels)
                 loss.backward()

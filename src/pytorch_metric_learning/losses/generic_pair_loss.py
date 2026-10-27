@@ -42,6 +42,6 @@ class GenericPairLoss(BaseMetricLossFunction):
 
     @staticmethod
     def _assert_either_pos_or_neg(pos_mask, neg_mask):
-        assert not torch.any(
-            (pos_mask != 0) & (neg_mask != 0)
-        ), "Each pair should be either be positive or negative"
+        assert not torch.any((pos_mask != 0) & (neg_mask != 0)), (
+            "Each pair should be either be positive or negative"
+        )

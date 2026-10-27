@@ -15,7 +15,7 @@ class MarginLoss(BaseMetricLossFunction):
         triplets_per_anchor="all",
         learn_beta=False,
         num_classes=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(**kwargs)
         self.margin = margin

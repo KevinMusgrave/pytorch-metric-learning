@@ -17,9 +17,7 @@ class TestDistanceWeightedMiner(unittest.TestCase):
                 [angle_to_coord(a, normalized=True) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
-            ).to(
-                TEST_DEVICE
-            )  # 2D embeddings
+            ).to(TEST_DEVICE)  # 2D embeddings
             ref_embeddings = embeddings.clone() if with_ref_labels else None
             labels = torch.randint(low=0, high=2, size=(256,))
             ref_labels = (

@@ -22,7 +22,7 @@ class SoftTripleLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         la=20,
         gamma=0.1,
         margin=0.01,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(**kwargs)
         assert self.distance.is_inverted

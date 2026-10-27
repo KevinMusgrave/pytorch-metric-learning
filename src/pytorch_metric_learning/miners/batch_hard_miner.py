@@ -6,7 +6,7 @@ class BatchHardMiner(BatchEasyHardMiner):
         super().__init__(
             pos_strategy=BatchEasyHardMiner.HARD,
             neg_strategy=BatchEasyHardMiner.HARD,
-            **kwargs
+            **kwargs,
         )
 
     def mine(self, *args, **kwargs):

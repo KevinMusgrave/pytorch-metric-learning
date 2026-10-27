@@ -17,9 +17,9 @@ class HistogramLoss(BaseMetricLossFunction):
     def __init__(self, n_bins: int = None, delta: float = None, **kwargs):
         super().__init__(**kwargs)
         if delta is not None and n_bins is not None:
-            assert (
-                delta == 2 / n_bins
-            ), f"delta and n_bins must satisfy the equation delta = 2/n_bins.\nPassed values are delta={delta} and n_bins={n_bins}"
+            assert delta == 2 / n_bins, (
+                f"delta and n_bins must satisfy the equation delta = 2/n_bins.\nPassed values are delta={delta} and n_bins={n_bins}"
+            )
 
         if delta is None and n_bins is None:
             n_bins = 100

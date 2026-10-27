@@ -114,9 +114,7 @@ class TestProxyAnchorLoss(unittest.TestCase):
                     [angle_to_coord(a) for a in embedding_angles],
                     requires_grad=True,
                     dtype=torch.float32,
-                ).to(
-                    TEST_DEVICE
-                )  # 2D embeddings
+                ).to(TEST_DEVICE)  # 2D embeddings
 
                 if not use_autocast:
                     embeddings = embeddings.type(dtype)

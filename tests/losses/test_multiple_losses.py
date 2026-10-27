@@ -35,9 +35,7 @@ class TestMultipleLosses(unittest.TestCase):
                     [angle_to_coord(a) for a in embedding_angles],
                     requires_grad=True,
                     dtype=dtype,
-                ).to(
-                    TEST_DEVICE
-                )  # 2D embeddings
+                ).to(TEST_DEVICE)  # 2D embeddings
                 labels = torch.randint(low=0, high=10, size=(180,))
 
                 loss = loss_func(embeddings, labels)
@@ -71,9 +69,7 @@ class TestMultipleLosses(unittest.TestCase):
                     [angle_to_coord(a) for a in embedding_angles],
                     requires_grad=True,
                     dtype=dtype,
-                ).to(
-                    TEST_DEVICE
-                )  # 2D embeddings
+                ).to(TEST_DEVICE)  # 2D embeddings
                 labels = torch.randint(low=0, high=10, size=(180,))
                 indices_tuple = miner(embeddings, labels)
 

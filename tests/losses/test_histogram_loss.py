@@ -40,9 +40,9 @@ class OriginalImplementationHistogramLoss(torch.nn.Module):
                 & (s_repeat_floor - (self.t - self.step) < self.eps)
                 & inds
             )
-            assert (
-                indsa.nonzero().size()[0] == size
-            ), "Another number of bins should be used"
+            assert indsa.nonzero().size()[0] == size, (
+                "Another number of bins should be used"
+            )
             zeros = torch.zeros((1, indsa.size()[1])).to(
                 device=indsa.device, dtype=torch.uint8
             )

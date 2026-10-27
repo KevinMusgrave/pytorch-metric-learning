@@ -22,7 +22,7 @@ class TripletMarginLoss(BaseMetricLossFunction):
         swap=False,
         smooth_loss=False,
         triplets_per_anchor="all",
-        **kwargs
+        **kwargs,
     ):
         super().__init__(**kwargs)
         self.margin = margin

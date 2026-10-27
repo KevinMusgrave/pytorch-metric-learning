@@ -82,9 +82,7 @@ class TestAngularLoss(unittest.TestCase):
                 [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
-            ).to(
-                TEST_DEVICE
-            )  # 2D embeddings
+            ).to(TEST_DEVICE)  # 2D embeddings
             labels = torch.LongTensor([0, 1, 2, 3, 4])
             loss = loss_func(embeddings, labels)
             loss.backward()

@@ -16,7 +16,7 @@ class ArcFaceLoss(LargeMarginSoftmaxLoss):
             embedding_size=embedding_size,
             margin=margin,
             scale=scale,
-            **kwargs
+            **kwargs,
         )
 
     def init_margin(self):

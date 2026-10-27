@@ -6,9 +6,9 @@ from .base_reducer import BaseReducer
 class ThresholdReducer(BaseReducer):
     def __init__(self, low=None, high=None, **kwargs):
         super().__init__(**kwargs)
-        assert (low is not None) or (
-            high is not None
-        ), "At least one of low or high must be specified"
+        assert (low is not None) or (high is not None), (
+            "At least one of low or high must be specified"
+        )
         self.low = low
         self.high = high
         self.add_to_recordable_attributes(list_of_names=["low", "high"], is_stat=False)

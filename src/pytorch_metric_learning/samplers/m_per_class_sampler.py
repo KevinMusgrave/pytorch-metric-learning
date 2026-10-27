@@ -27,12 +27,12 @@ class MPerClassSampler(Sampler):
                 self.list_size -= (self.list_size) % (self.length_of_single_pass)
         else:
             assert self.list_size >= self.batch_size
-            assert (
-                self.length_of_single_pass >= self.batch_size
-            ), "m * (number of unique labels) must be >= batch_size"
-            assert (
-                self.batch_size % self.m_per_class
-            ) == 0, "m_per_class must divide batch_size without any remainder"
+            assert self.length_of_single_pass >= self.batch_size, (
+                "m * (number of unique labels) must be >= batch_size"
+            )
+            assert (self.batch_size % self.m_per_class) == 0, (
+                "m_per_class must divide batch_size without any remainder"
+            )
             self.list_size -= self.list_size % self.batch_size
 
     def __len__(self):

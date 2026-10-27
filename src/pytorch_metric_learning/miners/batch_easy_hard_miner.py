@@ -18,7 +18,7 @@ class BatchEasyHardMiner(BaseMiner):
         neg_strategy=SEMIHARD,
         allowed_pos_range=None,
         allowed_neg_range=None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(**kwargs)
 

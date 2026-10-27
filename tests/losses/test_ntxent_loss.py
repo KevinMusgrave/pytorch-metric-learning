@@ -20,9 +20,7 @@ class TestNTXentLoss(unittest.TestCase):
                 [angle_to_coord(a, normalized=True) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
-            ).to(
-                TEST_DEVICE
-            )  # 2D embeddings
+            ).to(TEST_DEVICE)  # 2D embeddings
 
             labels = torch.LongTensor([0, 0, 0, 1, 1, 2])
             pos_pairs = [(0, 1), (0, 2), (1, 0), (1, 2), (2, 0), (2, 1), (3, 4), (4, 3)]
@@ -177,9 +175,7 @@ class TestNTXentLoss(unittest.TestCase):
                             [angle_to_coord(a) for a in embedding_angles],
                             requires_grad=True,
                             dtype=dtype,
-                        ).to(
-                            TEST_DEVICE
-                        )  # 2D embeddings
+                        ).to(TEST_DEVICE)  # 2D embeddings
                         loss = loss_func(embeddings, labels)
                         loss.backward()
                         self.assertEqual(loss, 0)
@@ -196,9 +192,7 @@ class TestNTXentLoss(unittest.TestCase):
                         [angle_to_coord(a) for a in embedding_angles],
                         requires_grad=True,
                         dtype=dtype,
-                    ).to(
-                        TEST_DEVICE
-                    )  # 2D embeddings
+                    ).to(TEST_DEVICE)  # 2D embeddings
                     labels = torch.LongTensor([0, 0, 1, 1, 2])
                     loss = loss_func(embeddings, labels)
                     loss.backward()

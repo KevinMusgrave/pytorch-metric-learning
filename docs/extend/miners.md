@@ -1,10 +1,11 @@
 # How to write custom mining functions
 
-1. Extend ```BaseMiner```
-2. Implement the ```mine``` method
-3. Inside ```mine```, return a tuple of tensors
+1. Extend `BaseMiner`
+2. Implement the `mine` method
+3. Inside `mine`, return a tuple of tensors
 
 ## An example pair miner
+
 ```python
 from pytorch_metric_learning.miners import BaseMiner
 from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
@@ -33,9 +34,9 @@ class ExamplePairMiner(BaseMiner):
 
 ```
 
-The ```ExamplePairMiner``` does the following:
+The `ExamplePairMiner` does the following:
 
-- Computes the distance matrix between ```embeddings``` and ```ref_emb```.
+- Computes the distance matrix between `embeddings` and `ref_emb`.
 - Finds the indices of all positive and negative pairs
 - Returns the indices of pairs that violate the margin
 
@@ -49,6 +50,7 @@ pairs = miner(embeddings, labels)
 ```
 
 ## An example triplet miner
+
 ```python
 from pytorch_metric_learning.miners import BaseMiner
 from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
@@ -68,11 +70,11 @@ class ExampleTripletMiner(BaseMiner):
         return a[triplet_mask], p[triplet_mask], n[triplet_mask]
 ```
 
-This miner works similarly to ```ExamplePairMiner```, but finds triplets instead of pairs.
+This miner works similarly to `ExamplePairMiner`, but finds triplets instead of pairs.
 
+## What is `ref_emb`?
 
-## What is ```ref_emb```?
-The forward function of ```BaseMiner``` has optional ```ref_emb``` and ```ref_labels``` arguments. The miner should return anchors from ```embeddings``` and positives and negatives from ```ref_emb```. For example:
+The forward function of `BaseMiner` has optional `ref_emb` and `ref_labels` arguments. The miner should return anchors from `embeddings` and positives and negatives from `ref_emb`. For example:
 
 ```python
 miner = ExamplePairMiner()
@@ -85,4 +87,4 @@ a1, p, a2, n = miner(embeddings, labels, ref_emb, ref_labels)
 # p and n contain indices of "ref_emb"
 ```
 
-Typically though, ```ref_emb``` and ```ref_labels``` are left to their default value of ```None```, in which case they are set to ```embeddings``` and ```labels``` before being passed to the ```mine``` function.
+Typically though, `ref_emb` and `ref_labels` are left to their default value of `None`, in which case they are set to `embeddings` and `labels` before being passed to the `mine` function.

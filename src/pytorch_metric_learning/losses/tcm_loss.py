@@ -17,7 +17,7 @@ class ThresholdConsistentMarginLoss(BaseMetricLossFunction):
         lambda_minus=1.0,
         margin_plus=0.9,
         margin_minus=0.5,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(**kwargs)
         c_f.assert_distance_type(self, CosineSimilarity)

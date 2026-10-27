@@ -23,7 +23,7 @@ class SubCenterArcFaceLoss(ArcFaceLoss):
             embedding_size=embedding_size,
             margin=margin,
             scale=scale,
-            **kwargs
+            **kwargs,
         )
         self.sub_centers = sub_centers
         self.num_classes = num_classes

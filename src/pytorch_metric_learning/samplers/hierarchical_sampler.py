@@ -37,16 +37,16 @@ class HierarchicalSampler(Sampler):
         self.super_classes_per_batch = super_classes_per_batch
 
         # checks
-        assert (
-            self.batch_size % super_classes_per_batch == 0
-        ), f"batch_size should be a multiple of {super_classes_per_batch}"
+        assert self.batch_size % super_classes_per_batch == 0, (
+            f"batch_size should be a multiple of {super_classes_per_batch}"
+        )
         self.sub_batch_len = self.batch_size // super_classes_per_batch
 
         if self.samples_per_class != "all":
             assert self.samples_per_class > 0
-            assert (
-                self.sub_batch_len % self.samples_per_class == 0
-            ), "batch_size not a multiple of samples_per_class"
+            assert self.sub_batch_len % self.samples_per_class == 0, (
+                "batch_size not a multiple of samples_per_class"
+            )
 
         all_super_labels = set(labels[:, outer_label])
         self.super_image_lists = {slb: defaultdict(list) for slb in all_super_labels}

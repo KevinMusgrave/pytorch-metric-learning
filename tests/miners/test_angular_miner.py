@@ -17,9 +17,7 @@ class TestAngularMiner(unittest.TestCase):
                 [testing_utils.angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
-            ).to(
-                TEST_DEVICE
-            )  # 2D embeddings
+            ).to(TEST_DEVICE)  # 2D embeddings
             labels = torch.randint(low=0, high=2, size=(16,))
             triplets = []
             for i in range(len(embeddings)):

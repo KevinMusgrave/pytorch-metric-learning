@@ -1,7 +1,7 @@
 # PyTorch Metric Learning modernization plan
 
-Status: planned. The development environment and Code Polishy setup are
-established; the modernization phases below remain to be implemented.
+Status: in progress. Phase 1 principles and component decisions are recorded;
+implementation and verification of phases 2–5 remain outstanding.
 
 ## Purpose
 
@@ -54,6 +54,10 @@ guidance intact.
    contracts, and executable examples. Document normalization, reduction,
    gradients, shapes, devices, and dtypes. Prefer explicit composition over
    hidden conventions, global state, or class-name inspection.
+8. **Cite and give credit.** Cite papers, credit upstream repositories and
+   contributors, and preserve required copyright and license notices in
+   distributed artifacts. Keep the provenance of adapted algorithms and code
+   discoverable through refactors.
 
 Source comments and docstrings remain disallowed by the selected repository
 policy. Preserve mathematical explanations in documentation and retain required
@@ -61,15 +65,15 @@ upstream attribution and license notices in appropriate distributable files.
 
 ## Intended scope
 
-| Area                                                  | Direction                                              | What must be preserved or established                                                  |
-| ----------------------------------------------------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------- |
-| Losses, miners, distances, reductions, regularization | Retain the useful concepts and simplify implementation | Correct mathematical contracts and practical composition                               |
-| Metric-learning samplers                              | Retain where they provide domain-specific value        | Label/batch semantics and reproducible behavior when seeded                            |
-| Retrieval metrics                                     | Retain the mathematical functionality                  | Query/reference semantics, self-match exclusion, ties, and empty cases                 |
-| Distributed support                                   | Audit and improve                                      | Explicit supported combinations and verified gradient semantics                        |
-| General training framework                            | Remove from the library                                | Extract valuable algorithm-specific recipes before deleting orchestration              |
-| record-keeper integration and logging orchestration   | Remove                                                 | Keep useful optional statistics without requiring a logging framework                  |
-| Testers, inference wrappers, dataset downloaders      | Decide individually in phase 1                         | Keep distinctive functionality; move ordinary orchestration into examples or remove it |
+| Area                                                  | Direction                                              | What must be preserved or established                                               |
+| ----------------------------------------------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| Losses, miners, distances, reductions, regularization | Retain the useful concepts and simplify implementation | Correct mathematical contracts and practical composition                            |
+| Metric-learning samplers                              | Retain where they provide domain-specific value        | Label/batch semantics and reproducible behavior when seeded                         |
+| Retrieval metrics                                     | Retain the mathematical functionality                  | Query/reference semantics, self-match exclusion, ties, and empty cases              |
+| Distributed support                                   | Audit and improve                                      | Explicit supported combinations and verified gradient semantics                     |
+| General training framework                            | Remove from the library                                | Extract valuable algorithm-specific recipes before deleting orchestration           |
+| record-keeper integration and logging orchestration   | Remove                                                 | Keep useful optional statistics without requiring a logging framework               |
+| Testers, inference wrappers, dataset downloaders      | Remove orchestration; retain retrieval primitives      | Preserve hierarchical/two-stream evaluation recipes and optional retrieval backends |
 
 Retiring the record-keeper integration does not itself archive the separate
 record-keeper repository. Do not introduce compatibility shims or maintain old
@@ -117,6 +121,10 @@ survive that change.
 
 Completion: the project principles are checked in and every major subsystem has
 a concrete retain, simplify, move, or remove decision with a short rationale.
+
+Phase 1 decisions and the issue/PR priorities are recorded in
+[component decisions](component-decisions.md). These decisions describe the
+target surface; they do not imply that removals or fixes have shipped.
 
 ## Phase 2: establish correctness and performance references
 
@@ -229,6 +237,22 @@ affected tests. Supplemental suites run only when explicitly selected under
 repository policy. Existing findings do not justify polishing components
 scheduled for removal.
 
+Defer existing contributor PRs, including #763 and #764, until this modernization
+branch is merged into `master`. Then update and verify each original PR against
+the modernized baseline and merge it separately, preserving its authorship and
+review history. Track the reported defects during modernization; do not absorb
+those patches into this branch. The detailed priorities are in
+[component decisions](component-decisions.md).
+
 Track implementation progress against this plan and keep current architectural
 rationale in `docs/design/`. This plan is a work sequence, not a replacement
 for those design documents or evidence that the listed work is complete.
+
+## Progress
+
+- Phase 1: principles added, including attribution; component inventory,
+  dependency direction, recipe requirements, and open-work priorities recorded.
+- Phase 2: not complete. Known fallback regressions and reported numerical
+  defects are the first implementation targets. CUDA/NCCL evidence is absent.
+- Phases 3–5: not started. The current package still contains the subsystems
+  selected for removal.

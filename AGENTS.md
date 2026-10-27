@@ -81,3 +81,36 @@
   changes unless the caller requests an uncommitted handoff. Public cutovers
   must be coherent at merge or release. Push, publish, and pull-request operations
   require explicit caller authorization.
+
+## Project principles
+
+1. **Establish correctness.** Use mathematical references, values, gradients,
+   numerical stability, edge cases, and distributed semantics.
+2. **Use PyTorch directly.** Prefer its tensor operations, autograd, modules,
+   and distributed primitives
+   directly. Additional abstractions, dependencies, or kernels must solve a
+   demonstrated need. Support explicit device and dtype handling.
+3. **Measure performance.** Compare forward and backward time and peak memory
+   on representative workloads.
+   Avoid unnecessary synchronization, transfers, and large intermediates while
+   preserving the documented mathematics.
+4. **Make customization straightforward.** Provide meaningful configuration,
+   sensible defaults, and explicit composition
+   of distances, mining, reduction, and regularization. Keep supported combinations
+   clear and testable.
+5. **Respect papers and improve defaults.** Keep paper-faithful settings
+   reproducible. Make justified improvements
+   configurable and enable them by default; document deviations and how to
+   recover the paper's behavior. Test both settings and substantiate claims of
+   improved training quality.
+6. **Keep the library focused.** Retain distinctive metric-learning functionality.
+   Let applications own ordinary
+   training orchestration and logging; every public feature and dependency must
+   justify its maintenance cost.
+7. **Make behavior discoverable.** Use clear signatures, types, tensor contracts,
+   and executable examples. Prefer explicit composition over global state,
+   class-name inspection, and incidental inheritance.
+8. **Cite and give credit.** Cite papers, credit upstream repositories and
+   contributors, and preserve
+   required copyright and license notices in distributed artifacts. Keep the
+   provenance of adapted algorithms and code discoverable through refactors.

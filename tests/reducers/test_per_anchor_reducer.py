@@ -47,8 +47,7 @@ class TestPerAnchorReducer(unittest.TestCase):
                     }
                     if reduction_type == "triplet":
                         self.assertRaises(
-                            NotImplementedError,
-                            lambda: reducer(loss_dict, embeddings, labels),
+                            NotImplementedError, reducer, loss_dict, embeddings, labels
                         )
                         continue
 

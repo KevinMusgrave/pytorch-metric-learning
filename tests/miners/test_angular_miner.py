@@ -9,51 +9,58 @@ from .. import TEST_DEVICE, TEST_DTYPES, WITH_COLLECT_STATS
 from ..zzz_testing_utils import testing_utils
 
 
+def planar_embeddings(num_points, dtype):
+    return torch.tensor(
+        [testing_utils.angle_to_coord(a) for a in torch.arange(0, num_points)],
+        requires_grad=True,
+        dtype=dtype,
+    ).to(TEST_DEVICE)
+
+
+def anchor_positive_negative_triplets(labels):
+    num_points = len(labels)
+    for i in range(num_points):
+        for j in range(num_points):
+            if j == i or labels[j] != labels[i]:
+                continue
+            for k in range(num_points):
+                if k not in (i, j) and labels[k] != labels[j]:
+                    yield i, j, k
+
+
+def triplet_angles(embeddings, labels):
+    angles = []
+    for i, j, k in anchor_positive_negative_triplets(labels):
+        anchor, positive, negative = embeddings[i], embeddings[j], embeddings[k]
+        center = (anchor + positive) / 2
+        ap_dist = torch.nn.functional.pairwise_distance(
+            anchor.unsqueeze(0), positive.unsqueeze(0), 2
+        )
+        nc_dist = torch.nn.functional.pairwise_distance(
+            center.unsqueeze(0), negative.unsqueeze(0), 2
+        )
+        angles.append((i, j, k, torch.atan(ap_dist / (2 * nc_dist))))
+    return angles
+
+
 class TestAngularMiner(unittest.TestCase):
     def test_angular_miner(self):
         for dtype in TEST_DTYPES:
-            embedding_angles = torch.arange(0, 16)
-            embeddings = torch.tensor(
-                [testing_utils.angle_to_coord(a) for a in embedding_angles],
-                requires_grad=True,
-                dtype=dtype,
-            ).to(TEST_DEVICE)  # 2D embeddings
+            embeddings = planar_embeddings(16, dtype)
             labels = torch.randint(low=0, high=2, size=(16,))
-            triplets = []
-            for i in range(len(embeddings)):
-                anchor, anchor_label = embeddings[i], labels[i]
-                for j in range(len(embeddings)):
-                    if j == i:
-                        continue
-                    positive, positive_label = embeddings[j], labels[j]
-                    center = (anchor + positive) / 2
-                    if positive_label == anchor_label:
-                        ap_dist = torch.nn.functional.pairwise_distance(
-                            anchor.unsqueeze(0), positive.unsqueeze(0), 2
-                        )
-                        for k in range(len(embeddings)):
-                            if k == j or k == i:
-                                continue
-                            negative, negative_label = embeddings[k], labels[k]
-                            if negative_label != positive_label:
-                                nc_dist = torch.nn.functional.pairwise_distance(
-                                    center.unsqueeze(0), negative.unsqueeze(0), 2
-                                )
-                                angle = torch.atan(ap_dist / (2 * nc_dist))
-                                triplets.append((i, j, k, angle))
+            angles = triplet_angles(embeddings, labels)
 
             for angle_in_degrees in range(0, 70, 10):
                 miner = AngularMiner(angle_in_degrees)
                 angle_in_radians = np.radians(angle_in_degrees)
-                correct = []
-                for i, j, k, angle in triplets:
-                    if angle > angle_in_radians:
-                        correct.append((i, j, k))
-                correct_triplets = set(correct)
+                correct_triplets = {
+                    (i, j, k) for i, j, k, angle in angles if angle > angle_in_radians
+                }
                 a1, p1, n1 = miner(embeddings, labels)
-                mined_triplets = set(
-                    [(a.item(), p.item(), n.item()) for a, p, n in zip(a1, p1, n1)]
-                )
+                mined_triplets = {
+                    (a.item(), p.item(), n.item())
+                    for a, p, n in zip(a1, p1, n1, strict=True)
+                }
                 self.assertTrue(mined_triplets == correct_triplets)
                 testing_utils.is_not_none_if_condition(
                     self,

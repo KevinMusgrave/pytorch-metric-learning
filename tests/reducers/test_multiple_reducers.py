@@ -27,7 +27,8 @@ class TestMultipleReducers(unittest.TestCase):
                 torch.randint(0, batch_size, (batch_size,)),
                 torch.randint(0, batch_size, (batch_size,)),
             )
-            triplet_indices = pair_indices + (
+            triplet_indices = (
+                *pair_indices,
                 torch.randint(0, batch_size, (batch_size,)),
             )
             lossesA = torch.randn(batch_size).type(dtype).to(TEST_DEVICE)

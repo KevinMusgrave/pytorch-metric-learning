@@ -21,7 +21,8 @@ class TestDivisorReducer(unittest.TestCase):
                 torch.randint(0, batch_size, (batch_size,)),
                 torch.randint(0, batch_size, (batch_size,)),
             )
-            triplet_indices = pair_indices + (
+            triplet_indices = (
+                *pair_indices,
                 torch.randint(0, batch_size, (batch_size,)),
             )
             losses = torch.randn(batch_size).type(dtype).to(TEST_DEVICE)
@@ -34,10 +35,7 @@ class TestDivisorReducer(unittest.TestCase):
                 (None, "already_reduced"),
             ]:
                 for partA, partB in [(0, 0), (32, 15)]:
-                    if reduction_type == "already_reduced":
-                        L = losses[0]
-                    else:
-                        L = losses
+                    L = losses[0] if reduction_type == "already_reduced" else losses
                     loss_dict = {
                         "loss": {
                             "losses": L,

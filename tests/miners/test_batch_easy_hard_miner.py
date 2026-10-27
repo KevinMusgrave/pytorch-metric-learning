@@ -19,11 +19,8 @@ class TestBatchEasyHardMiner(unittest.TestCase):
         self.distance = LpDistance(normalize_embeddings=False)
         self.gt = {
             "batch_semihard_hard": {
-                "miner": BatchEasyHardMiner(
-                    distance=self.distance,
-                    pos_strategy=BatchEasyHardMiner.SEMIHARD,
-                    neg_strategy=BatchEasyHardMiner.HARD,
-                ),
+                "pos_strategy": BatchEasyHardMiner.SEMIHARD,
+                "neg_strategy": BatchEasyHardMiner.HARD,
                 "easiest_triplet": -1,
                 "hardest_triplet": -1,
                 "easiest_pos_pair": 1,
@@ -43,11 +40,8 @@ class TestBatchEasyHardMiner(unittest.TestCase):
                 },
             },
             "batch_hard_semihard": {
-                "miner": BatchEasyHardMiner(
-                    distance=self.distance,
-                    pos_strategy=BatchEasyHardMiner.HARD,
-                    neg_strategy=BatchEasyHardMiner.SEMIHARD,
-                ),
+                "pos_strategy": BatchEasyHardMiner.HARD,
+                "neg_strategy": BatchEasyHardMiner.SEMIHARD,
                 "easiest_triplet": -1,
                 "hardest_triplet": -1,
                 "easiest_pos_pair": 3,
@@ -63,11 +57,8 @@ class TestBatchEasyHardMiner(unittest.TestCase):
                 },
             },
             "batch_easy_semihard": {
-                "miner": BatchEasyHardMiner(
-                    distance=self.distance,
-                    pos_strategy=BatchEasyHardMiner.EASY,
-                    neg_strategy=BatchEasyHardMiner.SEMIHARD,
-                ),
+                "pos_strategy": BatchEasyHardMiner.EASY,
+                "neg_strategy": BatchEasyHardMiner.SEMIHARD,
                 "easiest_triplet": -2,
                 "hardest_triplet": -1,
                 "easiest_pos_pair": 1,
@@ -91,11 +82,8 @@ class TestBatchEasyHardMiner(unittest.TestCase):
                 },
             },
             "batch_hard_hard": {
-                "miner": BatchEasyHardMiner(
-                    distance=self.distance,
-                    pos_strategy=BatchEasyHardMiner.HARD,
-                    neg_strategy=BatchEasyHardMiner.HARD,
-                ),
+                "pos_strategy": BatchEasyHardMiner.HARD,
+                "neg_strategy": BatchEasyHardMiner.HARD,
                 "easiest_triplet": 2,
                 "hardest_triplet": 5,
                 "easiest_pos_pair": 3,
@@ -116,11 +104,8 @@ class TestBatchEasyHardMiner(unittest.TestCase):
                 },
             },
             "batch_easy_hard": {
-                "miner": BatchEasyHardMiner(
-                    distance=self.distance,
-                    pos_strategy=BatchEasyHardMiner.EASY,
-                    neg_strategy=BatchEasyHardMiner.HARD,
-                ),
+                "pos_strategy": BatchEasyHardMiner.EASY,
+                "neg_strategy": BatchEasyHardMiner.HARD,
                 "easiest_triplet": -2,
                 "hardest_triplet": 2,
                 "easiest_pos_pair": 1,
@@ -142,11 +127,8 @@ class TestBatchEasyHardMiner(unittest.TestCase):
                 },
             },
             "batch_hard_easy": {
-                "miner": BatchEasyHardMiner(
-                    distance=self.distance,
-                    pos_strategy=BatchEasyHardMiner.HARD,
-                    neg_strategy=BatchEasyHardMiner.EASY,
-                ),
+                "pos_strategy": BatchEasyHardMiner.HARD,
+                "neg_strategy": BatchEasyHardMiner.EASY,
                 "easiest_triplet": -4,
                 "hardest_triplet": 3,
                 "easiest_pos_pair": 3,
@@ -166,11 +148,8 @@ class TestBatchEasyHardMiner(unittest.TestCase):
                 },
             },
             "batch_easy_easy": {
-                "miner": BatchEasyHardMiner(
-                    distance=self.distance,
-                    pos_strategy=BatchEasyHardMiner.EASY,
-                    neg_strategy=BatchEasyHardMiner.EASY,
-                ),
+                "pos_strategy": BatchEasyHardMiner.EASY,
+                "neg_strategy": BatchEasyHardMiner.EASY,
                 "easiest_triplet": -7,
                 "hardest_triplet": -1,
                 "easiest_pos_pair": 1,
@@ -191,13 +170,10 @@ class TestBatchEasyHardMiner(unittest.TestCase):
                 },
             },
             "batch_easy_easy_with_min_val": {
-                "miner": BatchEasyHardMiner(
-                    distance=self.distance,
-                    pos_strategy=BatchEasyHardMiner.EASY,
-                    neg_strategy=BatchEasyHardMiner.EASY,
-                    allowed_neg_range=[1, 7],
-                    allowed_pos_range=[1, 7],
-                ),
+                "pos_strategy": BatchEasyHardMiner.EASY,
+                "neg_strategy": BatchEasyHardMiner.EASY,
+                "allowed_neg_range": [1, 7],
+                "allowed_pos_range": [1, 7],
                 "easiest_triplet": -6,
                 "hardest_triplet": -1,
                 "easiest_pos_pair": 1,
@@ -218,11 +194,8 @@ class TestBatchEasyHardMiner(unittest.TestCase):
                 },
             },
             "batch_easy_all": {
-                "miner": BatchEasyHardMiner(
-                    distance=self.distance,
-                    pos_strategy=BatchEasyHardMiner.EASY,
-                    neg_strategy=BatchEasyHardMiner.ALL,
-                ),
+                "pos_strategy": BatchEasyHardMiner.EASY,
+                "neg_strategy": BatchEasyHardMiner.ALL,
                 "easiest_triplet": 0,
                 "hardest_triplet": 0,
                 "easiest_pos_pair": 1,
@@ -242,11 +215,8 @@ class TestBatchEasyHardMiner(unittest.TestCase):
                 },
             },
             "batch_all_easy": {
-                "miner": BatchEasyHardMiner(
-                    distance=self.distance,
-                    pos_strategy=BatchEasyHardMiner.ALL,
-                    neg_strategy=BatchEasyHardMiner.EASY,
-                ),
+                "pos_strategy": BatchEasyHardMiner.ALL,
+                "neg_strategy": BatchEasyHardMiner.EASY,
                 "easiest_triplet": 0,
                 "hardest_triplet": 0,
                 "easiest_pos_pair": 1,
@@ -265,11 +235,8 @@ class TestBatchEasyHardMiner(unittest.TestCase):
                 },
             },
             "batch_all_all": {
-                "miner": BatchEasyHardMiner(
-                    distance=self.distance,
-                    pos_strategy=BatchEasyHardMiner.ALL,
-                    neg_strategy=BatchEasyHardMiner.ALL,
-                ),
+                "pos_strategy": BatchEasyHardMiner.ALL,
+                "neg_strategy": BatchEasyHardMiner.ALL,
                 "easiest_triplet": 0,
                 "hardest_triplet": 0,
                 "easiest_pos_pair": 1,
@@ -288,9 +255,14 @@ class TestBatchEasyHardMiner(unittest.TestCase):
     def test_dist_mining(self):
         for dtype in TEST_DTYPES:
             embeddings = torch.arange(9).type(dtype).unsqueeze(1).to(TEST_DEVICE)
-            for miner in self.gt.keys():
-                cfg = self.gt[miner]
-                miner = cfg["miner"]
+            for cfg in self.gt.values():
+                miner = BatchEasyHardMiner(
+                    distance=self.distance,
+                    pos_strategy=cfg["pos_strategy"],
+                    neg_strategy=cfg["neg_strategy"],
+                    allowed_pos_range=cfg.get("allowed_pos_range"),
+                    allowed_neg_range=cfg.get("allowed_neg_range"),
+                )
                 a1, p, a2, n = miner.mine(
                     embeddings, self.labels, embeddings, self.labels
                 )
@@ -321,16 +293,14 @@ class TestBatchEasyHardMiner(unittest.TestCase):
         )
 
     def helper(self, a1, p, a2, n, gt):
-        try:
+        if "correct_a" in gt:
             self.assertTrue(torch.equal(a1, gt["correct_a"]))
             self.assertTrue(torch.equal(a2, gt["correct_a"]))
-            self.assertTrue(any(torch.equal(p, cn) for cn in gt["correct_p"]))
-            self.assertTrue(any(torch.equal(n, cn) for cn in gt["correct_n"]))
-        except Exception:
+        else:
             self.assertTrue(torch.equal(a1, gt["correct_a1"]))
             self.assertTrue(torch.equal(a2, gt["correct_a2"]))
-            self.assertTrue(any(torch.equal(p, cn) for cn in gt["correct_p"]))
-            self.assertTrue(any(torch.equal(n, cn) for cn in gt["correct_n"]))
+        self.assertTrue(any(torch.equal(p, cn) for cn in gt["correct_p"]))
+        self.assertTrue(any(torch.equal(n, cn) for cn in gt["correct_n"]))
 
     @classmethod
     def tearDown(self):

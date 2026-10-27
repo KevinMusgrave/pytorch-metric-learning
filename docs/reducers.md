@@ -30,12 +30,12 @@ This class is equivalent to using `ThresholdReducer(low=0)`. See [ThresholdReduc
 All reducers extend this class.
 
 ```python
-reducers.BaseReducer(collect_stats=False)
+reducers.BaseReducer(collect_stats=None)
 ```
 
 **Parameters**:
 
-- **collect_stats**: If True, will collect various statistics that may be useful to analyze during experiments. If False, these computations will be skipped. Want to make `True` the default? Set the global [COLLECT_STATS](common_functions.md#collect_stats) flag.
+- **collect_stats**: If True, compute optional diagnostic statistics, which can require device synchronization. If False, skip them. If None, use the global [COLLECT_STATS](common_functions.md#collect_stats) flag, which is False by default.
 
 ## ClassWeightedReducer
 
@@ -153,7 +153,7 @@ reducers.SumReducer(**kwargs)
 This computes the average loss, using only the losses that fall within a specified range.
 
 ```python
-reducers.ThresholdReducer(low=None, high=None **kwargs)
+reducers.ThresholdReducer(low=None, high=None, **kwargs)
 ```
 
 At least one of `low` or `high` must be specified.

@@ -41,7 +41,7 @@ class TestHierarchicalSampler(unittest.TestCase):
                     * math.comb(num_superlabels, super_classes_per_batch)
                 )
                 all_batch_super_labels = []
-                for j, batch in enumerate(sampler):
+                for batch in sampler:
                     batch_labels = Counter([labels[x, 0] for x in batch])
                     batch_super_labels = Counter([labels[x, 1] for x in batch])
                     all_batch_super_labels.append(
@@ -49,15 +49,15 @@ class TestHierarchicalSampler(unittest.TestCase):
                     )
                     if samples_per_class != "all":
                         self.assertTrue(len(batch) == batch_size)
-                        self.assertTrue(
-                            all(v == samples_per_class for v in batch_labels.values())
-                        )  # Each labels has the samples_per_class number of instances
-                        self.assertTrue(
-                            all(
-                                v == batch_size // super_classes_per_batch
-                                for v in batch_super_labels.values()
-                            )
-                        )  # Each super labels has the same number of instances
+                        each_label_has_samples_per_class = all(
+                            v == samples_per_class for v in batch_labels.values()
+                        )
+                        self.assertTrue(each_label_has_samples_per_class)
+                        super_labels_are_balanced = all(
+                            v == batch_size // super_classes_per_batch
+                            for v in batch_super_labels.values()
+                        )
+                        self.assertTrue(super_labels_are_balanced)
 
                     self.assertTrue(len(batch_super_labels) == super_classes_per_batch)
 

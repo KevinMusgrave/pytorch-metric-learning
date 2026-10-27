@@ -45,13 +45,20 @@ class TestSamplerContracts(unittest.TestCase):
 
     def test_length_matches_yielded_items(self):
         labels = torch.arange(100).repeat(3)
-        for kwargs in (
-            {"length_before_new_iter": 100},
-            {"length_before_new_iter": 1999},
-            {"batch_size": 20, "length_before_new_iter": 100},
+        for batch_size, length_before_new_iter in (
+            (None, 100),
+            (None, 1999),
+            (20, 100),
         ):
-            with self.subTest(**kwargs):
-                sampler = MPerClassSampler(labels, 5, **kwargs)
+            with self.subTest(
+                batch_size=batch_size, length_before_new_iter=length_before_new_iter
+            ):
+                sampler = MPerClassSampler(
+                    labels,
+                    5,
+                    batch_size=batch_size,
+                    length_before_new_iter=length_before_new_iter,
+                )
                 indices = list(sampler)
                 self.assertEqual(len(indices), len(sampler))
                 self.assertTrue(all(0 <= i < len(labels) for i in indices))

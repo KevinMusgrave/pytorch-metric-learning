@@ -40,49 +40,47 @@ class TestMPerClassSampler(unittest.TestCase):
             for m in [1, 5, 10, 17, 50]:
                 for num_labels in [2, 10, 55]:
                     for length_before_new_iter in [100, 999, 10000]:
-                        fake_embeddings = torch.randn(10000, 2)
-                        labels = torch.randint(low=0, high=num_labels, size=(10000,))
-                        dataset = torch.utils.data.TensorDataset(
-                            fake_embeddings, labels
+                        self.check_sampler_with_batch_size(
+                            batch_size, m, num_labels, length_before_new_iter
                         )
-                        args = [labels, m, batch_size, length_before_new_iter]
-                        if (
-                            (length_before_new_iter < batch_size)
-                            or (m * num_labels < batch_size)
-                            or (batch_size % m != 0)
-                        ):
-                            self.assertRaises(AssertionError, MPerClassSampler, *args)
-                            continue
-                        else:
-                            sampler = MPerClassSampler(*args)
-                        iterator = iter(sampler)
-                        for _ in range(1000):
-                            x = []
-                            for _ in range(batch_size):
-                                iterator, curr_batch = next_or_restart(
-                                    iterator, sampler
-                                )
-                                x.append(curr_batch)
-                            curr_labels = labels[x]
-                            unique_labels, counts = torch.unique(
-                                curr_labels, return_counts=True
-                            )
-                            self.assertTrue(len(unique_labels) == batch_size // m)
-                            self.assertTrue(torch.all(counts == m))
 
-                        dataloader = torch.utils.data.DataLoader(
-                            dataset,
-                            batch_size=batch_size,
-                            sampler=sampler,
-                            drop_last=False,
-                        )
-                        for _ in range(2):
-                            for _, curr_labels in dataloader:
-                                unique_labels, counts = torch.unique(
-                                    curr_labels, return_counts=True
-                                )
-                                self.assertTrue(len(unique_labels) == batch_size // m)
-                                self.assertTrue(torch.all(counts == m))
+    def check_sampler_with_batch_size(
+        self, batch_size, m, num_labels, length_before_new_iter
+    ):
+        fake_embeddings = torch.randn(10000, 2)
+        labels = torch.randint(low=0, high=num_labels, size=(10000,))
+        dataset = torch.utils.data.TensorDataset(fake_embeddings, labels)
+        args = [labels, m, batch_size, length_before_new_iter]
+        if (
+            (length_before_new_iter < batch_size)
+            or (m * num_labels < batch_size)
+            or (batch_size % m != 0)
+        ):
+            self.assertRaises(AssertionError, MPerClassSampler, *args)
+            return
+        sampler = MPerClassSampler(*args)
+        iterator = iter(sampler)
+        for _ in range(1000):
+            x = []
+            for _ in range(batch_size):
+                iterator, curr_batch = next_or_restart(iterator, sampler)
+                x.append(curr_batch)
+            self.assert_m_per_class(labels[x], batch_size, m)
+
+        dataloader = torch.utils.data.DataLoader(
+            dataset,
+            batch_size=batch_size,
+            sampler=sampler,
+            drop_last=False,
+        )
+        for _ in range(2):
+            for _, curr_labels in dataloader:
+                self.assert_m_per_class(curr_labels, batch_size, m)
+
+    def assert_m_per_class(self, curr_labels, batch_size, m):
+        unique_labels, counts = torch.unique(curr_labels, return_counts=True)
+        self.assertTrue(len(unique_labels) == batch_size // m)
+        self.assertTrue(torch.all(counts == m))
 
 
 if __name__ == "__main__":

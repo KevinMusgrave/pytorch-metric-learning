@@ -13,7 +13,7 @@ loss = losses.ArcFaceLoss(margin=30, num_classes=100, embedding_size=128, weight
 ## BaseRegularizer
 
 ```python
-regularizers.BaseWeightRegularizer(collect_stats = False,
+regularizers.BaseRegularizer(collect_stats=None,
 								reducer = None,
 								distance = None)
 ```
@@ -22,7 +22,7 @@ An object that extends this class can be passed as the `embedding_regularizer` i
 
 **Parameters**
 
-- **collect_stats**: If True, will collect various statistics that may be useful to analyze during experiments. If False, these computations will be skipped. Want to make `True` the default? Set the global [COLLECT_STATS](common_functions.md#collect_stats) flag.
+- **collect_stats**: If True, compute optional diagnostic statistics, which can require device synchronization. If False, skip them. If None, use the global [COLLECT_STATS](common_functions.md#collect_stats) flag, which is False by default.
 - **reducer**: A [reducer](reducers.md) object. If None, then the default reducer will be used.
 - **distance**: A [distance](distances.md) object. If None, then the default distance will be used.
 

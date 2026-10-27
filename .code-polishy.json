@@ -187,7 +187,9 @@
           "tests/losses/test_cross_batch_memory_state.py",
           "tests/losses/test_dynamic_soft_margin_loss.py",
           "tests/utils/test_triplet_enumeration.py",
-          "tests/losses/test_loss_composition.py"
+          "tests/losses/test_loss_composition.py",
+          "tests/docs/__init__.py",
+          "tests/docs/test_documented_signatures.py"
         ],
         "module": "numerics",
         "focusedSuite": "numerics-focused"
@@ -342,7 +344,8 @@
           "tests/losses/test_cross_batch_memory_state.py",
           "tests/losses/test_dynamic_soft_margin_loss.py",
           "tests/utils/test_triplet_enumeration.py",
-          "tests/losses/test_loss_composition.py"
+          "tests/losses/test_loss_composition.py",
+          "tests/docs/**"
         ],
         "argv": [
           ".venv/bin/uv",
@@ -362,7 +365,8 @@
           "tests.losses.test_cross_batch_memory_state",
           "tests.losses.test_dynamic_soft_margin_loss",
           "tests.utils.test_triplet_enumeration",
-          "tests.losses.test_loss_composition"
+          "tests.losses.test_loss_composition",
+          "tests.docs.test_documented_signatures"
         ],
         "timeoutSeconds": 120
       },

@@ -24,7 +24,8 @@ class TestClassWeightedReducer(unittest.TestCase):
                 torch.randint(0, batch_size, (batch_size,)),
                 torch.randint(0, batch_size, (batch_size,)),
             )
-            triplet_indices = pair_indices + (
+            triplet_indices = (
+                *pair_indices,
                 torch.randint(0, batch_size, (batch_size,)),
             )
             losses = torch.randn(batch_size).type(dtype).to(TEST_DEVICE)
@@ -43,7 +44,7 @@ class TestClassWeightedReducer(unittest.TestCase):
                     }
                 }
                 output = reducer(loss_dict, embeddings, labels)
-                correct_output = 0
+                correct_output = torch.zeros((), dtype=dtype, device=TEST_DEVICE)
                 for i in range(len(losses)):
                     if reduction_type == "element":
                         batch_idx = indices[i]

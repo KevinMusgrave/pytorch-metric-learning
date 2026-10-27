@@ -17,9 +17,12 @@ class TestBatchedDistance(unittest.TestCase):
         torch.manual_seed(1432)
         embedding_size = 128
         for dataset_size in [15, 149, 1501, 3199, 3200]:
-            # test on cpu because gpu is unreliable
-            embeddings = torch.randn(dataset_size, embedding_size, dtype=torch.float64)
-            ref = torch.randn(dataset_size, embedding_size, dtype=torch.float64)
+            embeddings = torch.randn(
+                dataset_size, embedding_size, dtype=torch.float64, device="cpu"
+            )
+            ref = torch.randn(
+                dataset_size, embedding_size, dtype=torch.float64, device="cpu"
+            )
             for batch_size in [32, 33, 99, 121, 128]:
                 for dist_fn in [CosineSimilarity()]:
                     for use_ref in [False, True]:
@@ -37,12 +40,14 @@ class TestBatchedDistance(unittest.TestCase):
     def test_attr(self):
         dist_fn = CosineSimilarity()
         distance = BatchedDistance(dist_fn, None)
-        # via getattr
-        for attr in ["is_inverted", "normalize_embeddings", "p", "power"]:
-            self.assertTrue(getattr(distance, attr) == getattr(dist_fn, attr))
+        with self.subTest(access="getattr"):
+            for attr in ["is_inverted", "normalize_embeddings", "p", "power"]:
+                self.assertTrue(getattr(distance, attr) == getattr(dist_fn, attr))
 
-        # using dot
-        self.assertTrue(dist_fn.is_inverted == distance.is_inverted)
-        self.assertTrue(dist_fn.normalize_embeddings == distance.normalize_embeddings)
-        self.assertTrue(dist_fn.p == distance.p)
-        self.assertTrue(dist_fn.power == distance.power)
+        with self.subTest(access="attribute"):
+            self.assertTrue(dist_fn.is_inverted == distance.is_inverted)
+            self.assertTrue(
+                dist_fn.normalize_embeddings == distance.normalize_embeddings
+            )
+            self.assertTrue(dist_fn.p == distance.p)
+            self.assertTrue(dist_fn.power == distance.power)

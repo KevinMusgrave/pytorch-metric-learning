@@ -138,7 +138,8 @@ Here $N$ is the batch size. Terms that depend only on $\lVert \mathbf{x} \rVert$
 [ArcFace: Additive Angular Margin Loss for Deep Face Recognition](https://arxiv.org/pdf/1801.07698.pdf){target=_blank}
 
 ```python
-losses.ArcFaceLoss(num_classes, embedding_size, margin=28.6, scale=64, **kwargs)
+losses.ArcFaceLoss(num_classes, embedding_size, margin=28.6, scale=64,
+    *, weight_regularizer=None, weight_reg_weight=1, weight_init_func=None, **kwargs)
 ```
 
 **Equation**:
@@ -188,7 +189,7 @@ loss_optimizer.step()
 All loss functions extend this class and therefore inherit its `__init__` parameters.
 
 ```python
-losses.BaseMetricLossFunction(collect_stats = False,
+losses.BaseMetricLossFunction(collect_stats=None,
 							reducer = None,
 							distance = None,
 							embedding_regularizer = None,
@@ -197,7 +198,7 @@ losses.BaseMetricLossFunction(collect_stats = False,
 
 **Parameters**:
 
-- **collect_stats**: If True, will collect various statistics that may be useful to analyze during experiments. If False, these computations will be skipped. Want to make `True` the default? Set the global [COLLECT_STATS](common_functions.md#collect_stats) flag.
+- **collect_stats**: If True, compute optional diagnostic statistics, which can require device synchronization. If False, skip them. If None, use the global [COLLECT_STATS](common_functions.md#collect_stats) flag, which is False by default.
 - **reducer**: A [reducer](reducers.md) object. If None, then the default reducer will be used.
 - **distance**: A [distance](distances.md) object. If None, then the default distance will be used.
 - **embedding_regularizer**: A [regularizer](regularizers.md) object that will be applied to embeddings. If None, then no embedding regularization will be used.
@@ -325,7 +326,8 @@ Note that the default values for `pos_margin` and `neg_margin` are suitable if y
 [CosFace: Large Margin Cosine Loss for Deep Face Recognition](https://arxiv.org/pdf/1801.09414.pdf){target=_blank}
 
 ```python
-losses.CosFaceLoss(num_classes, embedding_size, margin=0.35, scale=64, **kwargs)
+losses.CosFaceLoss(num_classes, embedding_size, margin=0.35, scale=64,
+    *, weight_regularizer=None, weight_reg_weight=1, weight_init_func=None, **kwargs)
 ```
 
 **Equation**:
@@ -653,11 +655,8 @@ complete_loss = losses.MultipleLosses([main_loss, var_loss], weights=[1, 0.5])
 [Large-Margin Softmax Loss for Convolutional Neural Networks](https://arxiv.org/pdf/1612.02295.pdf){target=_blank}
 
 ```python
-losses.LargeMarginSoftmaxLoss(num_classes,
-                            embedding_size,
-                            margin=4,
-                            scale=1,
-                            **kwargs)
+losses.LargeMarginSoftmaxLoss(num_classes, embedding_size, margin=4, scale=1,
+    *, weight_regularizer=None, weight_reg_weight=1, weight_init_func=None, **kwargs)
 ```
 
 **Equations**:
@@ -956,7 +955,8 @@ In this implementation, we use `-g(A)` as the loss.
 [Classification is a Strong Baseline for Deep Metric Learning](https://arxiv.org/pdf/1811.12649.pdf){target=_blank}
 
 ```python
-losses.NormalizedSoftmaxLoss(num_classes, embedding_size, temperature=0.05, **kwargs)
+losses.NormalizedSoftmaxLoss(num_classes, embedding_size, temperature=0.05,
+    *, weight_regularizer=None, weight_reg_weight=1, weight_init_func=None, **kwargs)
 ```
 
 **Equation**:
@@ -1153,7 +1153,8 @@ Here $R(i, S_N) = \sum_{j \in S_N} \sigma\left((s_j - s_i)/\tau\right)$, where $
 [Proxy Anchor Loss for Deep Metric Learning](https://arxiv.org/pdf/2003.13911.pdf){target=_blank}
 
 ```python
-losses.ProxyAnchorLoss(num_classes, embedding_size, margin = 0.1, alpha = 32, **kwargs)
+losses.ProxyAnchorLoss(num_classes, embedding_size, margin = 0.1, alpha = 32,
+    *, weight_regularizer=None, weight_reg_weight=1, weight_init_func=None, **kwargs)
 ```
 
 **Equation**:
@@ -1204,7 +1205,8 @@ loss_optimizer.step()
 [No Fuss Distance Metric Learning using Proxies](https://arxiv.org/pdf/1703.07464.pdf){target=_blank}
 
 ```python
-losses.ProxyNCALoss(num_classes, embedding_size, softmax_scale=1, **kwargs)
+losses.ProxyNCALoss(num_classes, embedding_size, softmax_scale=1,
+    *, weight_regularizer=None, weight_reg_weight=1, weight_init_func=None, **kwargs)
 ```
 
 **Parameters**:
@@ -1370,13 +1372,8 @@ Here $D_{ij} = s_j - s_i$, where $s_i$ is the cosine similarity between query $q
 [SoftTriple Loss: Deep Metric Learning Without Triplet Sampling](http://openaccess.thecvf.com/content_ICCV_2019/papers/Qian_SoftTriple_Loss_Deep_Metric_Learning_Without_Triplet_Sampling_ICCV_2019_paper.pdf){target=_blank}
 
 ```python
-losses.SoftTripleLoss(num_classes,
-                    embedding_size,
-                    centers_per_class=10,
-                    la=20,
-                    gamma=0.1,
-                    margin=0.01,
-					**kwargs)
+losses.SoftTripleLoss(num_classes, embedding_size, centers_per_class=10, la=20, gamma=0.1, margin=0.01,
+    *, weight_regularizer=None, weight_reg_weight=1, weight_init_func=None, **kwargs)
 ```
 
 **Equations**:
@@ -1434,11 +1431,8 @@ loss_optimizer.step()
 [SphereFace: Deep Hypersphere Embedding for Face Recognition](https://arxiv.org/pdf/1704.08063.pdf){target=_blank}
 
 ```python
-losses.SphereFaceLoss(num_classes,
-                    embedding_size,
-                    margin=4,
-                    scale=1,
-                    **kwargs)
+losses.SphereFaceLoss(num_classes, embedding_size, margin=4, scale=1,
+    *, weight_regularizer=None, weight_reg_weight=1, weight_init_func=None, **kwargs)
 ```
 
 **Parameters**:
@@ -1478,14 +1472,8 @@ loss_optimizer.step()
 This loss extends [ArcFaceLoss](losses.md#arcfaceloss). It uses multiple sub centers per class, instead of just a single center, hence the name Sub-center ArcFace.
 
 ```python
-losses.SubCenterArcFaceLoss(
-    num_classes,
-    embedding_size,
-    margin=28.6,
-    scale=64,
-    sub_centers=3,
-    **kwargs
-)
+losses.SubCenterArcFaceLoss(num_classes, embedding_size, margin=28.6, scale=64, sub_centers=3,
+    *, weight_regularizer=None, weight_reg_weight=1, weight_init_func=None, **kwargs)
 ```
 
 **Parameters**:

@@ -132,3 +132,23 @@ but materialized valid triplets still consume memory proportional to their
 count. CPU peak tensor memory remains unmeasured, and these timings do not
 establish a CUDA result. Raw results: [batch 128](benchmarks/triplet-expanded-m1-pro-b128.json)
 and [batch 512](benchmarks/triplet-expanded-m1-pro-b512.json).
+
+## Explicit loss composition
+
+The explicit regularization and parameter-placement change at
+`190a39a06e2ab5cb6d1623a341cda8cede4da560` was compared with its parent,
+`31f7e1e`, on the same hardware and settings as above: float32, one thread, 128
+dimensions, four examples per class, seed 17, ten warmup steps, and fifty
+measured steps. Validation losses are identical between revisions. Values are
+median milliseconds.
+
+| Case                     | Batch | Before forward | After forward | Before backward | After backward |
+| ------------------------ | ----- | -------------: | ------------: | --------------: | -------------: |
+| Contrastive              | 128   |          0.361 |         0.359 |           0.304 |          0.297 |
+| Contrastive              | 512   |          3.802 |         3.678 |           2.672 |          2.576 |
+| Normalized-softmax proxy | 128   |          0.092 |         0.088 |           0.131 |          0.131 |
+| Normalized-softmax proxy | 512   |          0.252 |         0.242 |           0.340 |          0.332 |
+
+The differences are within run-to-run variation on this laptop; the change
+neither adds nor removes measurable cost on these workloads. Raw results are
+`docs/benchmarks/composition-{before,after}-{contrastive,proxy}-b{128,512}.json`.

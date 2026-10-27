@@ -1,7 +1,8 @@
 # PyTorch Metric Learning modernization plan
 
-Status: in progress. Phase 1 principles and component decisions are recorded;
-implementation and verification of phases 2–5 remain outstanding.
+Status: in progress. Phases 1 and 3 are complete; phases 2, 4, and 5 are
+implemented and verified on CPU. CUDA and two-GPU NCCL acceptance remain
+outstanding, as does verification of GitHub-native math rendering.
 
 ## Purpose
 
@@ -387,3 +388,15 @@ for those design documents or evidence that the listed work is complete.
   step, leading to a shared task/component index and agent-facing executable
   recipes beside their contracts. API documentation agreement and complete
   policy adoption remain outstanding.
+- Phase 4, explicit state: the stateless-API pass removed remaining implicit
+  behavior. Recorded statistics (`COLLECT_STATS`) are removed. `HDCMiner` takes
+  explicit `candidates` instead of `set_idx_externally`/`reset_idx`. Retrieval
+  backends live in `utils.retrieval`. `CrossBatchMemory` and
+  `DynamicSoftMarginLoss` check, rather than move or cast, their buffers; the
+  label queue dtype is an explicit `label_dtype`. Cross-batch memory checkpoints
+  use explicitly registered state-dict hooks.
+- Phase 5, discovery and policy: documented constructor signatures are tested
+  against the classes. The README example executes, and all 257 relative links
+  in the README and published docs resolve, 180 of them with anchors.
+  `code-polishy check --all` reports zero findings, down from about 840. The
+  full CPU suite passes with 220 tests. CUDA and NCCL evidence needs a GPU host.

@@ -311,5 +311,11 @@ for those design documents or evidence that the listed work is complete.
   matched pairs; supplied triplets retain reference gradients without labels.
   Eight reference tests pass on CPU in float16, float32, and float64, and all
   five affected focused suites pass (40 tests, one statistics-related skip).
+- Performance tooling: a separate benchmark module now measures representative
+  pair, triplet, miner, proxy, and distributed workloads, with raw samples and
+  explicit hardware, data, dtype, timing, compilation, and memory semantics.
+  Core smoke workloads and a two-process Gloo run pass. All six affected focused
+  suites pass; committed-revision baseline measurements and CUDA/NCCL evidence
+  remain outstanding. Commands are in [performance measurements](../performance.md).
 - Phases 3–5: not started. The current package still contains the subsystems
   selected for removal.

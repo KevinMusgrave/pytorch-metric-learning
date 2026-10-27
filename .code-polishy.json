@@ -68,6 +68,16 @@
       "dependsOn": [
         "numerics"
       ]
+    },
+    {
+      "name": "benchmarks",
+      "paths": [
+        "benchmarks/**"
+      ],
+      "dependsOn": [
+        "numerics",
+        "distributed"
+      ]
     }
   ],
   "checks": [
@@ -81,7 +91,8 @@
         "evaluation",
         "training",
         "datasets",
-        "distributed"
+        "distributed",
+        "benchmarks"
       ],
       "argv": [
         ".venv/bin/uv",
@@ -120,6 +131,30 @@
         "build"
       ],
       "timeoutSeconds": 120
+    },
+    {
+      "name": "benchmark-bytecode",
+      "provides": [
+        "build"
+      ],
+      "modules": [
+        "benchmarks"
+      ],
+      "argv": [
+        ".venv/bin/uv",
+        "run",
+        "--frozen",
+        "--no-sync",
+        "python",
+        "-m",
+        "compileall",
+        "-q",
+        "benchmarks"
+      ],
+      "runOn": [
+        "build"
+      ],
+      "timeoutSeconds": 60
     }
   ],
   "tests": {
@@ -464,6 +499,37 @@
           "full"
         ],
         "timeoutSeconds": 3600
+      },
+      {
+        "name": "benchmarks-focused",
+        "kind": "unit",
+        "scope": "module",
+        "modules": [
+          "benchmarks"
+        ],
+        "paths": [
+          "benchmarks/**"
+        ],
+        "argv": [
+          ".venv/bin/uv",
+          "run",
+          "--frozen",
+          "--no-sync",
+          "python",
+          "-m",
+          "benchmarks.run",
+          "--batch-size",
+          "8",
+          "--dimensions",
+          "4",
+          "--warmup",
+          "1",
+          "--repeats",
+          "2",
+          "--output",
+          ".code-polishy-artifacts/benchmarks/smoke.json"
+        ],
+        "timeoutSeconds": 120
       }
     ]
   },
@@ -627,6 +693,10 @@
       {
         "path": "docs/design/distributed.md",
         "module": "distributed"
+      },
+      {
+        "path": "docs/design/benchmarks.md",
+        "module": "benchmarks"
       }
     ]
   }

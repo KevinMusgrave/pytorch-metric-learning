@@ -8,6 +8,48 @@ from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
 
 
 class TestDistanceWeightedMinerStability(unittest.TestCase):
+    def test_large_reference_distribution(self):
+        num_negatives = 65536
+        sample_triplets = lmu.get_random_triplet_indices
+        for dtype in (torch.float16, torch.float32, torch.float64):
+            with self.subTest(dtype=dtype):
+                embeddings = torch.zeros(1, 64, dtype=dtype)
+                embeddings[0, 0] = 1
+                ref_embeddings = torch.zeros(num_negatives + 1, 64, dtype=dtype)
+                ref_embeddings[0, 0] = 1
+                # Equal unit vectors at distance 1.39, below the default cutoff.
+                ref_embeddings[1:, 0] = 1 - 1.39**2 / 2
+                ref_embeddings[1:, 1] = (1 - ref_embeddings[1, 0] ** 2) ** 0.5
+                labels = torch.tensor([0])
+                ref_labels = torch.ones(num_negatives + 1, dtype=torch.long)
+                ref_labels[0] = 0
+                observed = []
+
+                def sample(*args, **kwargs):
+                    observed.append(kwargs["weights"].clone())
+                    return sample_triplets(*args, **kwargs)
+
+                with patch.object(lmu, "get_random_triplet_indices", sample):
+                    anchors, positives, negatives = DistanceWeightedMiner()(
+                        embeddings, labels, ref_embeddings, ref_labels
+                    )
+                with self.subTest(check="probabilities"):
+                    self.assertEqual(observed[0][0, 0].item(), 0)
+                    # Equal eligible distances give a uniform distribution.
+                    torch.testing.assert_close(
+                        observed[0][0, 1:].double(),
+                        torch.full(
+                            (num_negatives,), 1 / num_negatives, dtype=torch.float64
+                        ),
+                        atol=0,
+                        rtol=1e-6,
+                    )
+                with self.subTest(check="triplets"):
+                    self.assertEqual(anchors.tolist(), [0])
+                    self.assertEqual(positives.tolist(), [0])
+                    self.assertEqual(len(negatives), 1)
+                    self.assertTrue(0 < negatives[0].item() <= num_negatives)
+
     @staticmethod
     def embeddings(dimension, dtype):
         embeddings = torch.zeros(6, dimension, dtype=dtype)

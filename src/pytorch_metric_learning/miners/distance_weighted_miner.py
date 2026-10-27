@@ -42,6 +42,9 @@ class DistanceWeightedMiner(BaseMiner):
         row_max = torch.max(log_weights, dim=1, keepdim=True).values
         row_max = row_max.masked_fill(~torch.isfinite(row_max), 0)
         weights = torch.exp(log_weights - row_max)
+        # Avoid overflowing the sum of large float16 reference sets.
+        if weights.dtype == torch.float16:
+            weights = weights.float()
         weights = weights / torch.sum(weights, dim=1, keepdim=True).clamp(min=1)
 
         return lmu.get_random_triplet_indices(

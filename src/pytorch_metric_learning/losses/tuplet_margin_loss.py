@@ -1,4 +1,5 @@
-import numpy as np
+import math
+
 import torch
 
 from ..distances import CosineSimilarity
@@ -11,7 +12,7 @@ class TupletMarginLoss(GenericPairLoss):
     def __init__(self, margin=5.73, scale=64, **kwargs):
         super().__init__(mat_based_loss=False, **kwargs)
         c_f.assert_distance_type(self, CosineSimilarity)
-        self.margin = np.radians(margin)
+        self.margin = math.radians(margin)
         self.scale = scale
         self.add_to_recordable_attributes(
             list_of_names=["margin", "scale"], is_stat=False
@@ -49,5 +50,5 @@ class TupletMarginLoss(GenericPairLoss):
         if self.collect_stats:
             with torch.no_grad():
                 neg_angles = torch.acos(neg_pairs)
-                self.avg_pos_angle = np.degrees(torch.mean(pos_angles).item())
-                self.avg_neg_angle = np.degrees(torch.mean(neg_angles).item())
+                self.avg_pos_angle = math.degrees(torch.mean(pos_angles).item())
+                self.avg_neg_angle = math.degrees(torch.mean(neg_angles).item())

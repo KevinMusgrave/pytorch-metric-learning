@@ -1,6 +1,5 @@
 import math
 
-import numpy as np
 import torch
 
 from ..utils import common_functions as c_f
@@ -46,7 +45,7 @@ class SubCenterArcFaceLoss(ArcFaceLoss):
         c_f.check_shapes(embeddings, labels)
         c_f.check_parameter_placement(self, self.W, embeddings)
         dtype, device = embeddings.dtype, embeddings.device
-        cos_threshold = math.cos(np.radians(threshold))
+        cos_threshold = math.cos(math.radians(threshold))
         outliers = []
         dominant_centers = torch.Tensor(self.W.shape[0], self.num_classes).to(
             dtype=dtype, device=device

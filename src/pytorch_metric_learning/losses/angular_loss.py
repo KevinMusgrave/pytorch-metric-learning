@@ -1,4 +1,5 @@
-import numpy as np
+import math
+
 import torch
 
 from ..distances import LpDistance
@@ -19,7 +20,7 @@ class AngularLoss(BaseMetricLossFunction):
         c_f.assert_distance_type(
             self, LpDistance, p=2, power=1, normalize_embeddings=True
         )
-        self.alpha = torch.tensor(np.radians(alpha))
+        self.alpha = torch.tensor(math.radians(alpha), dtype=torch.float64)
         self.add_to_recordable_attributes(list_of_names=["alpha"], is_stat=False)
         self.add_to_recordable_attributes(list_of_names=["average_angle"], is_stat=True)
 
@@ -70,4 +71,4 @@ class AngularLoss(BaseMetricLossFunction):
                 ).t()
                 angles = torch.atan(ap_dist.unsqueeze(1) / (2 * nc_dist))
                 average_angle = torch.sum(angles[keep_mask]) / torch.sum(keep_mask)
-                self.average_angle = np.degrees(average_angle.item())
+                self.average_angle = math.degrees(average_angle.item())

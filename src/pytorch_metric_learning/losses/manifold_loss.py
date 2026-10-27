@@ -1,4 +1,5 @@
-import numpy as np
+import math
+
 import torch
 from torch import nn
 
@@ -69,7 +70,7 @@ class ManifoldLoss(BaseMetricLossFunction):
         loss_int = torch.zeros(1, device=embeddings.device, dtype=embeddings.dtype)
         embs_and_proxies = torch.cat([embeddings, self.proxies], dim=0)
 
-        S = self.distance(embs_and_proxies, embs_and_proxies).clamp(0, np.inf)
+        S = self.distance(embs_and_proxies, embs_and_proxies).clamp(0, math.inf)
         S = torch.exp(S / 0.5)
         Y = torch.eye(N + self.K, device=S.device, dtype=S.dtype)
         S = S - S * Y
@@ -88,16 +89,16 @@ class ManifoldLoss(BaseMetricLossFunction):
 
         F_p = F[N:, :].clone()
         F_e = F[:N, :].clone()
-        if self.lambdaC != np.inf:
+        if self.lambdaC != math.inf:
             F = F[:N, N:]
             loss_int = F - F[torch.arange(N), meta_classes].view(-1, 1) + self.margin
             loss_int[
                 torch.arange(N), meta_classes
-            ] = -np.inf  # This way avoid numerical cancellation happening   # NoQA
+            ] = -math.inf  # This way avoid numerical cancellation happening   # NoQA
             # instead with subtraction of margin term           # NoQA
             loss_int[
                 loss_int < 0
-            ] = -np.inf  # This way no loss for positive correlation with own proxy
+            ] = -math.inf  # This way no loss for positive correlation with own proxy
 
             loss_int = torch.exp(loss_int)
             loss_int = torch.log(1 + torch.sum(loss_int, dim=1))
@@ -109,9 +110,9 @@ class ManifoldLoss(BaseMetricLossFunction):
         loss_ctx += -loss_ctx[torch.arange(N), meta_classes].view(-1, 1) + self.margin
         loss_ctx[
             torch.arange(N), meta_classes
-        ] = -np.inf  # This way avoid numerical cancellation happening   # NoQA
+        ] = -math.inf  # This way avoid numerical cancellation happening   # NoQA
         # instead with subtraction of margin term           # NoQA
-        loss_ctx[loss_ctx < 0] = -np.inf
+        loss_ctx[loss_ctx < 0] = -math.inf
 
         # This way no loss for positive correlation with own proxy
         loss_ctx = torch.exp(loss_ctx)

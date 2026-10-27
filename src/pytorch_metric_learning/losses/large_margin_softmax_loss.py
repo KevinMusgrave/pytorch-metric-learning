@@ -1,6 +1,5 @@
 import math
 
-import numpy as np
 import torch
 
 from ..distances import CosineSimilarity
@@ -64,7 +63,7 @@ class LargeMarginSoftmaxLoss(BaseMetricLossFunction):
         angles = torch.acos(torch.clamp(cosine_of_target_classes, -1, 1))
         if self.collect_stats:
             with torch.no_grad():
-                self.avg_angle = np.degrees(torch.mean(angles).item())
+                self.avg_angle = math.degrees(torch.mean(angles).item())
         return angles
 
     def get_target_mask(self, embeddings, labels):

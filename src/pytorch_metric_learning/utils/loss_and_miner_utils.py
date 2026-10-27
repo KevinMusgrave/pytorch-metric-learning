@@ -1,6 +1,5 @@
 import math
 
-import numpy as np
 import torch
 
 from . import common_functions as c_f
@@ -60,8 +59,12 @@ def convert_to_pairs(indices_tuple, labels, ref_labels=None):
 
 def convert_to_pos_pairs_with_unique_labels(indices_tuple, labels):
     a, p, _, _ = convert_to_pairs(indices_tuple, labels)
-    _, unique_idx = np.unique(labels[a].cpu().numpy(), return_index=True)
-    return a[unique_idx], p[unique_idx]
+    anchor_labels = labels[a]
+    unique_labels, inverse = torch.unique(anchor_labels, return_inverse=True)
+    first = torch.full_like(unique_labels, len(a), dtype=torch.long).scatter_reduce(
+        0, inverse, torch.arange(len(a), device=a.device), reduce="amin"
+    )
+    return a[first], p[first]
 
 
 def pos_pairs_from_tuple(indices_tuple):

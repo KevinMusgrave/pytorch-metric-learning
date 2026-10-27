@@ -286,5 +286,23 @@ class TestLossAndMinerUtils(unittest.TestCase):
         self.assertTrue(torch.equal(p, correct_p))
 
 
+class TestUniqueLabelPositivePairs(unittest.TestCase):
+    def test_first_pair_for_each_anchor_label_in_label_order(self):
+        torch.manual_seed(0)
+        for _ in range(20):
+            labels = torch.randint(0, 6, (30,), device=TEST_DEVICE)
+            a, p, _, _ = lmu.get_all_pairs_indices(labels)
+            expected = {}
+            for anchor, positive in zip(a.tolist(), p.tolist(), strict=True):
+                expected.setdefault(labels[anchor].item(), (anchor, positive))
+            ordered = [expected[label] for label in sorted(expected)]
+            actual_a, actual_p = lmu.convert_to_pos_pairs_with_unique_labels(
+                None, labels
+            )
+            self.assertEqual(
+                list(zip(actual_a.tolist(), actual_p.tolist(), strict=True)), ordered
+            )
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -1,4 +1,5 @@
-import numpy as np
+import math
+
 import torch
 
 from ..distances import LpDistance
@@ -19,7 +20,7 @@ class AngularMiner(BaseMiner):
         c_f.assert_distance_type(
             self, LpDistance, p=2, power=1, normalize_embeddings=True
         )
-        self.angle = np.radians(angle)
+        self.angle = math.radians(angle)
         self.add_to_recordable_attributes(list_of_names=["angle"], is_stat=False)
         self.add_to_recordable_attributes(
             list_of_names=[
@@ -58,16 +59,16 @@ class AngularMiner(BaseMiner):
         if self.collect_stats:
             with torch.no_grad():
                 if len(angles) > 0:
-                    self.average_angle = np.degrees(torch.mean(angles).item())
-                    self.min_angle = np.degrees(torch.min(angles).item())
-                    self.max_angle = np.degrees(torch.max(angles).item())
-                    self.std_of_angle = np.degrees(torch.std(angles).item())
+                    self.average_angle = math.degrees(torch.mean(angles).item())
+                    self.min_angle = math.degrees(torch.min(angles).item())
+                    self.max_angle = math.degrees(torch.max(angles).item())
+                    self.std_of_angle = math.degrees(torch.std(angles).item())
                 if torch.sum(threshold_condition) > 0:
-                    self.average_angle_above_threshold = np.degrees(
+                    self.average_angle_above_threshold = math.degrees(
                         torch.mean(angles[threshold_condition]).item()
                     )
                 negated_condition = ~threshold_condition
                 if torch.sum(negated_condition) > 0:
-                    self.average_angle_below_threshold = np.degrees(
+                    self.average_angle_below_threshold = math.degrees(
                         torch.mean(angles[~threshold_condition]).item()
                     )

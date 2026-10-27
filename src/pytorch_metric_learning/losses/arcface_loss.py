@@ -1,4 +1,5 @@
-import numpy as np
+import math
+
 import torch
 
 from .large_margin_softmax_loss import LargeMarginSoftmaxLoss
@@ -29,7 +30,7 @@ class ArcFaceLoss(LargeMarginSoftmaxLoss):
         )
 
     def init_margin(self):
-        self.margin = np.radians(self.margin)
+        self.margin = math.radians(self.margin)
 
     def modify_cosine_of_target_classes(self, cosine_of_target_classes):
         angles = self.get_angles(cosine_of_target_classes)
@@ -38,9 +39,9 @@ class ArcFaceLoss(LargeMarginSoftmaxLoss):
         cos_theta = torch.cos(angles)
 
         unscaled_logits = torch.where(
-            angles <= np.deg2rad(180) - self.margin,
+            angles <= math.pi - self.margin,
             cos_theta_plus_margin,
-            cos_theta - self.margin * np.sin(self.margin),
+            cos_theta - self.margin * math.sin(self.margin),
         )
 
         return unscaled_logits

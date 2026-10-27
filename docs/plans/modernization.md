@@ -207,6 +207,9 @@ memory behavior are measured. Extend only the design that meets those criteria.
 - Make the README a concise introduction, installation entry point, and tested
   minimal example. Use a canonical home for detailed guidance to avoid drift
   between the README and documentation index.
+- Document installation from PyPI using `uv` or `pip`, and maintain wheel/sdist
+  packaging. Community-maintained downstream distributions are independent of
+  the repository's supported installation guidance.
 - Document public contracts, customization, paper references, improved defaults,
   paper-faithful settings, and measured performance guidance.
 - Organize canonical Markdown into small, searchable topics with stable headings

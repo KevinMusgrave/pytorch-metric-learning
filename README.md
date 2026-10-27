@@ -9,9 +9,6 @@
      <img alt="PyPi version" src="https://img.shields.io/pypi/v/pytorch-metric-learning?color=bright-green">
  </a>
 
- <a href="https://anaconda.org/conda-forge/pytorch-metric-learning">
-     <img alt="Anaconda version" src="https://img.shields.io/conda/v/conda-forge/pytorch-metric-learning?color=bright-green">
- </a>
 </p>
 
 ## News

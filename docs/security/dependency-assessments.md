@@ -86,3 +86,27 @@ codecs; it was removed with the dependency. SciPy is no longer a direct
 dependency: the large-margin softmax coefficients use exact integer binomials.
 scikit-learn, and through it SciPy, remains only in the optional `clustering`
 extra and the development group for NMI/AMI tests.
+
+## Documentation math renderer
+
+The documentation site loads MathJax 3.2.2 (Apache-2.0), published to npm on
+2022-06-08, from
+`https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js`. The npm
+tarball matches its registry integrity
+`sha512-Bt+SSVU8eBG27zChVewOicYs7Xsdt40qm4+UpHyX7k0/O9NliPc+x77k1/FEsPsjKPZGJvtRZM1vO+geW0OhGw==`,
+and the CDN file is byte-identical to that tarball's `es5/tex-mml-chtml.js`.
+`overrides/main.html` pins the script with SHA-384 subresource integrity, so a
+changed CDN file is refused by the browser.
+
+MathJax 4 was not selected: it loads font data as additional scripts that the
+page cannot pin with integrity hashes. Version 3 uses its default
+configuration, which typesets the `arithmatex` output of `pymdownx.arithmatex`.
+Its TeX `autoload` extension would fetch further scripts from the same
+version-pinned CDN path, without integrity hashes, only for macros outside the
+bundled packages. The rendered-page check records which network requests the
+documented equations make.
+
+MathJax runs in readers' browsers over documentation authored in this
+repository; no build or test step executes it. The uv lock and Code Polishy
+supply-chain checks do not cover this browser asset, so update it by repeating
+this verification.

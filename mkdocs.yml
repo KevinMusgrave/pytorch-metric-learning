@@ -1,4 +1,9 @@
 site_name: PyTorch Metric Learning
+exclude_docs: |
+  design/
+  plans/
+  security/
+  development-baseline.md
 nav:
     - Home: index.md
     - Distances: distances.md
@@ -23,6 +28,7 @@ nav:
     - Frequently Asked Questions: faq.md
 theme:
   name: 'material'
+  custom_dir: overrides
   palette:
     primary: 'red'
     accent: 'red'
@@ -36,5 +42,7 @@ markdown_extensions:
   - toc:
       permalink: true
   - attr_list
+  - pymdownx.arithmatex:
+      generic: true
 repo_name: 'KevinMusgrave/pytorch-metric-learning'
 repo_url: 'https://github.com/KevinMusgrave/pytorch-metric-learning'

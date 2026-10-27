@@ -1,5 +1,4 @@
 import math
-from copy import deepcopy
 
 import numpy as np
 import torch
@@ -9,20 +8,27 @@ from .arcface_loss import ArcFaceLoss
 
 
 class SubCenterArcFaceLoss(ArcFaceLoss):
-    """
-    Implementation of https://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123560715.pdf
-    """
-
-    def __init__(self, *args, margin=28.6, scale=64, sub_centers=3, **kwargs):
-        num_classes = deepcopy(kwargs["num_classes"])
-        embedding_size = deepcopy(kwargs["embedding_size"])
-        del kwargs["num_classes"]
-        del kwargs["embedding_size"]
+    def __init__(
+        self,
+        num_classes,
+        embedding_size,
+        margin=28.6,
+        scale=64,
+        sub_centers=3,
+        *,
+        weight_regularizer=None,
+        weight_reg_weight=1,
+        weight_init_func=None,
+        **kwargs,
+    ):
         super().__init__(
-            num_classes=num_classes * sub_centers,
-            embedding_size=embedding_size,
+            num_classes * sub_centers,
+            embedding_size,
             margin=margin,
             scale=scale,
+            weight_regularizer=weight_regularizer,
+            weight_reg_weight=weight_reg_weight,
+            weight_init_func=weight_init_func,
             **kwargs,
         )
         self.sub_centers = sub_centers
@@ -38,8 +44,8 @@ class SubCenterArcFaceLoss(ArcFaceLoss):
         self, embeddings, labels, threshold=75, return_dominant_centers=True
     ):
         c_f.check_shapes(embeddings, labels)
+        c_f.check_parameter_placement(self, self.W, embeddings)
         dtype, device = embeddings.dtype, embeddings.device
-        self.cast_types(dtype, device)
         cos_threshold = math.cos(np.radians(threshold))
         outliers = []
         dominant_centers = torch.Tensor(self.W.shape[0], self.num_classes).to(
@@ -63,9 +69,10 @@ class SubCenterArcFaceLoss(ArcFaceLoss):
                 dominant_centers[:, label] = sub_centers[:, dominant_idx]
 
                 dominant_dist = distances[:, dominant_idx]
-                # "distances" are actually cosine similarities
                 drop_dists = dominant_dist < cos_threshold
                 drop_idxs = target_indices[drop_dists]
                 outliers.extend(drop_idxs.detach().tolist())
         outliers = torch.tensor(outliers, device=device).flatten()
-        return outliers if not return_dominant_centers else outliers, dominant_centers
+        if return_dominant_centers:
+            return outliers, dominant_centers
+        return outliers

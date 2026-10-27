@@ -4,19 +4,31 @@ from ..distances import CosineSimilarity
 from ..reducers import DivisorReducer
 from ..utils import common_functions as c_f
 from ..utils import loss_and_miner_utils as lmu
-from .base_metric_loss_function import BaseMetricLossFunction
-from .mixins import WeightRegularizerMixin
+from .base_metric_loss_function import BaseMetricLossFunction, regularization_term
 
 
-# adapted from
-# https://github.com/tjddus9597/Proxy-Anchor-CVPR2020/blob/master/code/losses.py
-# https://github.com/geonm/proxy-anchor-loss/blob/master/pytorch-proxy-anchor.py
-# suggested in this issue: https://github.com/KevinMusgrave/pytorch-metric-learning/issues/32
-class ProxyAnchorLoss(WeightRegularizerMixin, BaseMetricLossFunction):
-    def __init__(self, num_classes, embedding_size, margin=0.1, alpha=32, **kwargs):
+def default_proxy_init(proxies):
+    torch.nn.init.kaiming_normal_(proxies, mode="fan_out")
+
+
+class ProxyAnchorLoss(BaseMetricLossFunction):
+    def __init__(
+        self,
+        num_classes,
+        embedding_size,
+        margin=0.1,
+        alpha=32,
+        *,
+        weight_regularizer=None,
+        weight_reg_weight=1,
+        weight_init_func=None,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
-        self.proxies = torch.nn.Parameter(torch.Tensor(num_classes, embedding_size))
-        self.weight_init_func(self.proxies)
+        self.weight_regularizer = weight_regularizer
+        self.weight_reg_weight = weight_reg_weight
+        self.proxies = torch.nn.Parameter(torch.empty(num_classes, embedding_size))
+        (weight_init_func or default_proxy_init)(self.proxies)
         self.num_classes = num_classes
         self.margin = margin
         self.alpha = alpha
@@ -24,14 +36,11 @@ class ProxyAnchorLoss(WeightRegularizerMixin, BaseMetricLossFunction):
             list_of_names=["num_classes", "alpha", "margin"], is_stat=False
         )
 
-    def cast_types(self, dtype, device):
-        self.proxies.data = c_f.to_device(self.proxies.data, device=device, dtype=dtype)
-
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
         c_f.labels_required(labels)
         c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
-        dtype, device = embeddings.dtype, embeddings.device
-        self.cast_types(dtype, device)
+        c_f.check_parameter_placement(self, self.proxies, embeddings)
+        dtype = embeddings.dtype
         miner_weights = lmu.convert_to_weights(
             indices_tuple, labels, dtype=dtype
         ).unsqueeze(1)
@@ -62,7 +71,7 @@ class ProxyAnchorLoss(WeightRegularizerMixin, BaseMetricLossFunction):
 
         loss_indices = c_f.torch_arange_from_size(self.proxies)
 
-        loss_dict = {
+        return {
             "pos_loss": {
                 "losses": pos_term.squeeze(0),
                 "indices": loss_indices,
@@ -77,9 +86,13 @@ class ProxyAnchorLoss(WeightRegularizerMixin, BaseMetricLossFunction):
             },
         }
 
-        self.add_weight_regularization_to_loss_dict(loss_dict, self.proxies)
-
-        return loss_dict
+    def regularization_terms(self, embeddings):
+        terms = super().regularization_terms(embeddings)
+        if self.weight_regularizer is not None:
+            terms["weight_reg_loss"] = regularization_term(
+                self.weight_regularizer, self.weight_reg_weight, self.proxies
+            )
+        return terms
 
     def get_default_reducer(self):
         return DivisorReducer()
@@ -87,10 +100,7 @@ class ProxyAnchorLoss(WeightRegularizerMixin, BaseMetricLossFunction):
     def get_default_distance(self):
         return CosineSimilarity()
 
-    def get_default_weight_init_func(self):
-        return c_f.TorchInitWrapper(torch.nn.init.kaiming_normal_, mode="fan_out")
-
-    def _sub_loss_names(self):
+    def sub_loss_names(self):
         return ["pos_loss", "neg_loss"]
 
     def get_logits(self, embeddings):

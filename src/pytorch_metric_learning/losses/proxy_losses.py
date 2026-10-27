@@ -1,35 +1,46 @@
 import torch
 
 from ..utils import common_functions as c_f
-from .mixins import WeightRegularizerMixin
+from .base_metric_loss_function import regularization_term
 from .nca_loss import NCALoss
 
 
-class ProxyNCALoss(WeightRegularizerMixin, NCALoss):
-    def __init__(self, num_classes, embedding_size, **kwargs):
+class ProxyNCALoss(NCALoss):
+    def __init__(
+        self,
+        num_classes,
+        embedding_size,
+        *,
+        weight_regularizer=None,
+        weight_reg_weight=1,
+        weight_init_func=None,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
-        self.proxies = torch.nn.Parameter(torch.Tensor(num_classes, embedding_size))
-        self.weight_init_func(self.proxies)
-        self.proxy_labels = torch.arange(num_classes)
+        self.weight_regularizer = weight_regularizer
+        self.weight_reg_weight = weight_reg_weight
+        self.proxies = torch.nn.Parameter(torch.empty(num_classes, embedding_size))
+        (weight_init_func or torch.nn.init.normal_)(self.proxies)
+        self.register_buffer(
+            "proxy_labels", torch.arange(num_classes), persistent=False
+        )
         self.add_to_recordable_attributes(list_of_names=["num_classes"], is_stat=False)
-
-    def cast_types(self, dtype, device):
-        self.proxies.data = c_f.to_device(self.proxies.data, device=device, dtype=dtype)
 
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
         c_f.labels_required(labels)
         c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
-        dtype, device = embeddings.dtype, embeddings.device
-        self.cast_types(dtype, device)
-        loss_dict = self.nca_computation(
-            embeddings,
-            self.proxies,
-            labels,
-            c_f.to_device(self.proxy_labels, labels),
-            indices_tuple,
+        c_f.check_parameter_placement(self, self.proxies, embeddings)
+        return self.nca_computation(
+            embeddings, self.proxies, labels, self.proxy_labels, indices_tuple
         )
-        self.add_weight_regularization_to_loss_dict(loss_dict, self.proxies)
-        return loss_dict
+
+    def regularization_terms(self, embeddings):
+        terms = super().regularization_terms(embeddings)
+        if self.weight_regularizer is not None:
+            terms["weight_reg_loss"] = regularization_term(
+                self.weight_regularizer, self.weight_reg_weight, self.proxies
+            )
+        return terms
 
     def get_logits(self, embeddings):
         return self.distance(embeddings, self.proxies)

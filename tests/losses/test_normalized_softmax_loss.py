@@ -18,7 +18,7 @@ class TestNormalizedSoftmaxLoss(unittest.TestCase):
                 num_classes=10,
                 embedding_size=2,
                 distance=DotProductSimilarity(normalize_embeddings=False),
-            )
+            ).to(TEST_DEVICE, dtype)
             embedding_angles = torch.arange(0, 180)
             embeddings = torch.tensor(
                 [angle_to_coord(a) for a in embedding_angles],

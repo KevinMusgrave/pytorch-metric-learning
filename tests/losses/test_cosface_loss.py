@@ -17,7 +17,7 @@ class TestCosFaceLoss(unittest.TestCase):
         for dtype in TEST_DTYPES:
             loss_func = CosFaceLoss(
                 margin=margin, scale=scale, num_classes=10, embedding_size=2
-            )
+            ).to(TEST_DEVICE, dtype)
 
             embedding_angles = torch.arange(0, 180)
             embeddings = torch.tensor(

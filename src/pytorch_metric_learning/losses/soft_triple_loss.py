@@ -6,14 +6,14 @@ import torch.nn.functional as F
 from ..distances import CosineSimilarity
 from ..utils import common_functions as c_f
 from ..utils import loss_and_miner_utils as lmu
-from .base_metric_loss_function import BaseMetricLossFunction
-from .mixins import WeightRegularizerMixin
+from .base_metric_loss_function import BaseMetricLossFunction, regularization_term
 
 
-###### modified from https://github.com/idstcv/SoftTriple/blob/master/loss/SoftTriple.py ######
-###### Original code is Copyright@Alibaba Group ######
-###### ICCV'19: "SoftTriple Loss: Deep Metric Learning Without Triplet Sampling" ######
-class SoftTripleLoss(WeightRegularizerMixin, BaseMetricLossFunction):
+def default_center_init(centers):
+    torch.nn.init.kaiming_uniform_(centers, a=math.sqrt(5))
+
+
+class SoftTripleLoss(BaseMetricLossFunction):
     def __init__(
         self,
         num_classes,
@@ -22,9 +22,15 @@ class SoftTripleLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         la=20,
         gamma=0.1,
         margin=0.01,
+        *,
+        weight_regularizer=None,
+        weight_reg_weight=1,
+        weight_init_func=None,
         **kwargs,
     ):
         super().__init__(**kwargs)
+        self.weight_regularizer = weight_regularizer
+        self.weight_reg_weight = weight_reg_weight
         assert self.distance.is_inverted
         self.la = la
         self.gamma = 1.0 / gamma
@@ -32,9 +38,9 @@ class SoftTripleLoss(WeightRegularizerMixin, BaseMetricLossFunction):
         self.num_classes = num_classes
         self.centers_per_class = centers_per_class
         self.fc = torch.nn.Parameter(
-            torch.Tensor(embedding_size, num_classes * centers_per_class)
+            torch.empty(embedding_size, num_classes * centers_per_class)
         )
-        self.weight_init_func(self.fc)
+        (weight_init_func or default_center_init)(self.fc)
         self.add_to_recordable_attributes(
             list_of_names=[
                 "la",
@@ -47,14 +53,11 @@ class SoftTripleLoss(WeightRegularizerMixin, BaseMetricLossFunction):
             is_stat=False,
         )
 
-    def cast_types(self, dtype, device):
-        self.fc.data = c_f.to_device(self.fc.data, device=device, dtype=dtype)
-
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
         c_f.labels_required(labels)
         c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
-        dtype, device = embeddings.dtype, embeddings.device
-        self.cast_types(dtype, device)
+        c_f.check_parameter_placement(self, self.fc, embeddings)
+        dtype = embeddings.dtype
         miner_weights = lmu.convert_to_weights(indices_tuple, labels, dtype=dtype)
         sim_to_classes = self.get_logits(embeddings)
         margin = torch.zeros(
@@ -65,21 +68,24 @@ class SoftTripleLoss(WeightRegularizerMixin, BaseMetricLossFunction):
             self.la * (sim_to_classes - margin), labels, reduction="none"
         )
         loss = loss * miner_weights
-        loss_dict = {
+        return {
             "loss": {
                 "losses": loss,
                 "indices": c_f.torch_arange_from_size(embeddings),
                 "reduction_type": "element",
             }
         }
-        self.add_weight_regularization_to_loss_dict(loss_dict, self.fc.t())
-        return loss_dict
+
+    def regularization_terms(self, embeddings):
+        terms = super().regularization_terms(embeddings)
+        if self.weight_regularizer is not None:
+            terms["weight_reg_loss"] = regularization_term(
+                self.weight_regularizer, self.weight_reg_weight, self.fc.t()
+            )
+        return terms
 
     def get_default_distance(self):
         return CosineSimilarity()
-
-    def get_default_weight_init_func(self):
-        return c_f.TorchInitWrapper(torch.nn.init.kaiming_uniform_, a=math.sqrt(5))
 
     def get_logits(self, embeddings):
         sim_to_centers = self.distance(embeddings, self.fc.t())

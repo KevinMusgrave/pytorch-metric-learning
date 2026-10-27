@@ -4,7 +4,29 @@ from .large_margin_softmax_loss import LargeMarginSoftmaxLoss
 
 
 class SphereFaceLoss(LargeMarginSoftmaxLoss):
-    # implementation of https://arxiv.org/pdf/1704.08063.pdf
+    def __init__(
+        self,
+        num_classes,
+        embedding_size,
+        margin=4,
+        scale=1,
+        *,
+        weight_regularizer=None,
+        weight_reg_weight=1,
+        weight_init_func=None,
+        **kwargs,
+    ):
+        super().__init__(
+            num_classes,
+            embedding_size,
+            margin=margin,
+            scale=scale,
+            weight_regularizer=weight_regularizer,
+            weight_reg_weight=weight_reg_weight,
+            weight_init_func=weight_init_func,
+            **kwargs,
+        )
+
     def scale_logits(self, logits, embeddings):
         embedding_norms = torch.norm(embeddings, p=2, dim=1)
         return logits * embedding_norms.unsqueeze(1) * self.scale

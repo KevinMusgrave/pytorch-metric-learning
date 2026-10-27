@@ -73,7 +73,7 @@ class FullFeaturedLoss(BaseMetricLossFunction):
     def get_default_distance(self):
         return CosineSimilarity()
 
-    def _sub_loss_names(self):
+    def sub_loss_names(self):
         return ["loss1", "loss2", "loss3"]
 ```
 
@@ -81,9 +81,63 @@ Here are a few details about this loss function:
 
 - It operates on triplets, so `convert_to_triplets` is used to convert `indices_tuple` to triplet form.
 - `self.distance` returns a pairwise distance matrix
-- The output of the loss function is a dictionary that contains multiple sub losses. This is why it overrides the `_sub_loss_names` function.
+- The output of the loss function is a dictionary that contains multiple sub losses. It overrides `sub_loss_names` to return their names. The method must return constants: the default reducer is copied once per name while the loss is constructed, and `zero_losses()` returns one zero entry per name. Regularization terms are not sub losses; do not list them.
 - `get_default_reducer` is overriden to use `AvgNonZeroReducer` by default, rather than `MeanReducer`.
 - `get_default_distance` is overriden to use `CosineSimilarity` by default, rather than `LpDistances(p=2)`.
+
+## Losses with learnable parameters
+
+Declare learnable weights as parameters of the loss and expose their
+regularization explicitly. Add the weight penalty in `regularization_terms`, not
+in `compute_loss`, so it is added after reduction like the embedding penalty:
+
+```python
+import torch
+from pytorch_metric_learning.losses import BaseMetricLossFunction
+from pytorch_metric_learning.losses.base_metric_loss_function import (
+    regularization_term,
+)
+from pytorch_metric_learning.utils import common_functions as c_f
+
+
+class CenterLoss(BaseMetricLossFunction):
+    def __init__(
+        self,
+        num_classes,
+        embedding_size,
+        *,
+        weight_regularizer=None,
+        weight_reg_weight=1,
+        **kwargs,
+    ):
+        super().__init__(**kwargs)
+        self.weight_regularizer = weight_regularizer
+        self.weight_reg_weight = weight_reg_weight
+        self.centers = torch.nn.Parameter(torch.randn(num_classes, embedding_size))
+
+    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+        c_f.check_parameter_placement(self, self.centers, embeddings)
+        losses = (embeddings - self.centers[labels]).square().sum(dim=1)
+        return {
+            "loss": {
+                "losses": losses,
+                "indices": c_f.torch_arange_from_size(embeddings),
+                "reduction_type": "element",
+            }
+        }
+
+    def regularization_terms(self, embeddings):
+        terms = super().regularization_terms(embeddings)
+        if self.weight_regularizer is not None:
+            terms["weight_reg_loss"] = regularization_term(
+                self.weight_regularizer, self.weight_reg_weight, self.centers
+            )
+        return terms
+```
+
+`check_parameter_placement` raises a clear `ValueError` when the caller forgot
+to move the loss to the embeddings' device or dtype. Do not move or cast
+parameters inside `forward`; that would silently change optimizer state.
 
 ## More on distances
 
@@ -93,7 +147,7 @@ There are also a few functions in `self.distance` that provide some of this logi
 
 ## Using `indices_tuple`
 
-This is an optional argument passed in from the outside. (See the [overview](../index.md#using-losses-and-miners-in-your-training-loop) for an example.) It currently has 3 possible forms:
+This is an optional argument passed in from the outside. (See the [loss usage examples](../losses.md) for an example.) It currently has 3 possible forms:
 
 - `None`
 - A tuple of size 4, representing the indices of mined pairs (anchors, positives, anchors, negatives)

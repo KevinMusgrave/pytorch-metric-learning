@@ -17,10 +17,10 @@ class TestLargeMarginSoftmaxLoss(unittest.TestCase):
         for dtype in TEST_DTYPES:
             loss_funcA = LargeMarginSoftmaxLoss(
                 margin=margin, scale=scale, num_classes=10, embedding_size=2
-            )
+            ).to(TEST_DEVICE, dtype)
             loss_funcB = SphereFaceLoss(
                 margin=margin, scale=scale, num_classes=10, embedding_size=2
-            )
+            ).to(TEST_DEVICE, dtype)
 
             embedding_angles = torch.arange(0, 180)
             # multiply by 10 to make the embeddings unnormalized
@@ -117,10 +117,10 @@ class TestLargeMarginSoftmaxLoss(unittest.TestCase):
         for dtype in TEST_DTYPES:
             loss_funcA = LargeMarginSoftmaxLoss(
                 margin=margin, scale=scale, num_classes=10, embedding_size=2
-            )
+            ).to(TEST_DEVICE, dtype)
             loss_funcB = SphereFaceLoss(
                 margin=margin, scale=scale, num_classes=10, embedding_size=2
-            )
+            ).to(TEST_DEVICE, dtype)
             for loss_func in [loss_funcA, loss_funcB]:
                 embedding_angles = torch.arange(0, 180)
                 # multiply by 10 to make the embeddings unnormalized

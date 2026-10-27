@@ -56,6 +56,7 @@ class ManifoldLoss(BaseMetricLossFunction):
         c_f.labels_not_supported(labels, ref_labels)
 
         assert embeddings.shape[1] == self.l
+        c_f.check_parameter_placement(self, self.proxies, embeddings)
 
         N = len(embeddings)
         if indices_tuple is not None:

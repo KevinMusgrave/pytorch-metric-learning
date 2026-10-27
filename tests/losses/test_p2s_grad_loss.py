@@ -169,7 +169,7 @@ class TestP2SGradLoss(unittest.TestCase):
 
             loss_fn = P2SGradLoss(
                 descriptors_dim=descriptors_dim, num_classes=num_classes
-            )
+            ).to(TEST_DEVICE, dtype)
             optimizer = torch.optim.SGD([loss_fn.weight], lr=0.001)
             optimizer.zero_grad()
             copy_weights = loss_fn.weight.data.clone()
@@ -216,10 +216,10 @@ class TestP2SGradLoss(unittest.TestCase):
                 0, num_classes, size=(batch_size,), device=TEST_DEVICE
             )
 
-            loss_func = P2SGradLoss(descriptors_dim, num_classes)
+            loss_func = P2SGradLoss(descriptors_dim, num_classes).to(TEST_DEVICE, dtype)
             t_layer = TrustedImplementationP2SActivationLayer(
                 descriptors_dim, num_classes
-            )
+            ).to(TEST_DEVICE, dtype)
             t_loss_func = TrustedImplementationP2SGradLoss()
             loss_func.weight = (
                 t_layer.weight

@@ -3,43 +3,57 @@ import torch
 from ..distances import DotProductSimilarity
 from ..utils import common_functions as c_f
 from ..utils import loss_and_miner_utils as lmu
-from .base_metric_loss_function import BaseMetricLossFunction
-from .mixins import WeightRegularizerMixin
+from .base_metric_loss_function import BaseMetricLossFunction, regularization_term
 
 
-class NormalizedSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
-    def __init__(self, num_classes, embedding_size, temperature=0.05, **kwargs):
+class NormalizedSoftmaxLoss(BaseMetricLossFunction):
+    def __init__(
+        self,
+        num_classes,
+        embedding_size,
+        temperature=0.05,
+        *,
+        weight_regularizer=None,
+        weight_reg_weight=1,
+        weight_init_func=None,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
         self.temperature = temperature
-        self.W = torch.nn.Parameter(torch.Tensor(embedding_size, num_classes))
-        self.weight_init_func(self.W)
+        self.weight_regularizer = weight_regularizer
+        self.weight_reg_weight = weight_reg_weight
+        self.W = torch.nn.Parameter(torch.empty(embedding_size, num_classes))
+        (weight_init_func or torch.nn.init.normal_)(self.W)
         self.cross_entropy = torch.nn.CrossEntropyLoss(reduction="none")
         self.add_to_recordable_attributes(
             list_of_names=["embedding_size", "num_classes", "temperature"],
             is_stat=False,
         )
 
-    def cast_types(self, dtype, device):
-        self.W.data = c_f.to_device(self.W.data, device=device, dtype=dtype)
-
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
         c_f.labels_required(labels)
         c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
-        dtype, device = embeddings.dtype, embeddings.device
-        self.cast_types(dtype, device)
+        c_f.check_parameter_placement(self, self.W, embeddings)
+        dtype = embeddings.dtype
         miner_weights = lmu.convert_to_weights(indices_tuple, labels, dtype=dtype)
         logits = self.get_logits(embeddings)
         unweighted_loss = self.cross_entropy(logits, labels)
         miner_weighted_loss = unweighted_loss * miner_weights
-        loss_dict = {
+        return {
             "loss": {
                 "losses": miner_weighted_loss,
                 "indices": c_f.torch_arange_from_size(embeddings),
                 "reduction_type": "element",
             }
         }
-        self.add_weight_regularization_to_loss_dict(loss_dict, self.W.t())
-        return loss_dict
+
+    def regularization_terms(self, embeddings):
+        terms = super().regularization_terms(embeddings)
+        if self.weight_regularizer is not None:
+            terms["weight_reg_loss"] = regularization_term(
+                self.weight_regularizer, self.weight_reg_weight, self.W.t()
+            )
+        return terms
 
     def get_default_distance(self):
         return DotProductSimilarity()

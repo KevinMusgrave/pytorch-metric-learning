@@ -66,6 +66,34 @@ loss_func = losses.SomeClassificationLoss()
 logits = loss_func.get_logits(embeddings)
 ```
 
+## Regularization terms
+
+Every loss accepts `embedding_regularizer` and `embedding_reg_weight`. Losses
+with [learnable weights](#learnable-weight-arguments) also accept
+`weight_regularizer` and `weight_reg_weight`. The total loss is
+
+$$
+L = \operatorname{reduce}(\text{objective terms})
++ w_e \, R_e(\text{embeddings}) + w_w \, R_w(\text{weights}),
+$$
+
+where each penalty appears only when its regularizer is supplied. The
+[reducer](reducers.md) sees only the loss's own objective terms. Each
+regularizer applies its own reducer, and the weighted result is added after
+reduction. With `DoNothingReducer`, the returned dictionary also contains
+`"embedding_reg_loss"` and `"weight_reg_loss"` entries whose `"losses"` value is
+the weighted scalar penalty and whose `"reduction_type"` is
+`"already_reduced"`.
+
+```python
+from pytorch_metric_learning import losses, regularizers
+
+loss_func = losses.ContrastiveLoss(
+    embedding_regularizer=regularizers.LpRegularizer(),
+    embedding_reg_weight=0.1,
+)
+```
+
 ## AngularLoss
 
 [Deep Metric Learning with Angular Loss](https://arxiv.org/pdf/1708.01682.pdf){target=_blank}
@@ -117,7 +145,7 @@ losses.ArcFaceLoss(num_classes, embedding_size, margin=28.6, scale=64, **kwargs)
 
 **Other info**:
 
-- This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts `weight_regularizer`, `weight_reg_weight`, and `weight_init_func` as optional arguments.
+- Accepts the keyword-only [learnable weight arguments](#learnable-weight-arguments) `weight_regularizer`, `weight_reg_weight`, and `weight_init_func`.
 - This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
 
 ```python
@@ -158,7 +186,7 @@ losses.BaseMetricLossFunction(collect_stats = False,
 - **reducer**: A [reducer](reducers.md) object. If None, then the default reducer will be used.
 - **distance**: A [distance](distances.md) object. If None, then the default distance will be used.
 - **embedding_regularizer**: A [regularizer](regularizers.md) object that will be applied to embeddings. If None, then no embedding regularization will be used.
-- **embedding_reg_weight**: If an embedding regularizer is used, then its loss will be multiplied by this amount before being added to the total loss.
+- **embedding_reg_weight**: If an embedding regularizer is used, then its loss will be multiplied by this amount before being added to the reduced loss.
 
 **Default distance**:
 
@@ -168,9 +196,8 @@ losses.BaseMetricLossFunction(collect_stats = False,
 
 - [MeanReducer](reducers.md#meanreducer)
 
-**Reducer input**:
-
-- **embedding_reg_loss**: Only exists if an embedding regularizer is used. It contains the loss per element in the batch. Reduction type is `"already_reduced"`.
+**Regularization**: `embedding_regularizer` and `embedding_reg_weight` are
+described in [regularization terms](#regularization-terms).
 
 **Required Implementations**:
 
@@ -279,7 +306,7 @@ losses.CosFaceLoss(num_classes, embedding_size, margin=0.35, scale=64, **kwargs)
 
 **Other info**:
 
-- This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts `weight_regularizer`, `weight_reg_weight`, and `weight_init_func` as optional arguments.
+- Accepts the keyword-only [learnable weight arguments](#learnable-weight-arguments) `weight_regularizer`, `weight_reg_weight`, and `weight_init_func`.
 - This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
 
 ```python
@@ -590,7 +617,7 @@ where
 
 **Other info**:
 
-- This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts `weight_regularizer`, `weight_reg_weight`, and `weight_init_func` as optional arguments.
+- Accepts the keyword-only [learnable weight arguments](#learnable-weight-arguments) `weight_regularizer`, `weight_reg_weight`, and `weight_init_func`.
 - This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
 
 ```python
@@ -836,7 +863,7 @@ losses.NormalizedSoftmaxLoss(num_classes, embedding_size, temperature=0.05, **kw
 
 **Other info**
 
-- This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts `weight_regularizer`, `weight_reg_weight`, and `weight_init_func` as optional arguments.
+- Accepts the keyword-only [learnable weight arguments](#learnable-weight-arguments) `weight_regularizer`, `weight_reg_weight`, and `weight_init_func`.
 - This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
 
 ```python
@@ -1014,7 +1041,7 @@ losses.ProxyAnchorLoss(num_classes, embedding_size, margin = 0.1, alpha = 32, **
 
 **Other info**
 
-- This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts `weight_regularizer`, `weight_reg_weight`, and `weight_init_func` as optional arguments.
+- Accepts the keyword-only [learnable weight arguments](#learnable-weight-arguments) `weight_regularizer`, `weight_reg_weight`, and `weight_init_func`.
 - This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
 
 ```python
@@ -1053,7 +1080,7 @@ losses.ProxyNCALoss(num_classes, embedding_size, softmax_scale=1, **kwargs)
 
 **Other info**
 
-- This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts `weight_regularizer`, `weight_reg_weight`, and `weight_init_func` as optional arguments.
+- Accepts the keyword-only [learnable weight arguments](#learnable-weight-arguments) `weight_regularizer`, `weight_reg_weight`, and `weight_init_func`.
 - This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
 
 ```python
@@ -1220,7 +1247,7 @@ where
 
 **Other info**
 
-- This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts `weight_regularizer`, `weight_reg_weight`, and `weight_init_func` as optional arguments.
+- Accepts the keyword-only [learnable weight arguments](#learnable-weight-arguments) `weight_regularizer`, `weight_reg_weight`, and `weight_init_func`.
 - This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
 
 ```python
@@ -1261,7 +1288,7 @@ See [LargeMarginSoftmaxLoss](losses.md#largemarginsoftmaxloss)
 
 **Other info**
 
-- This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts `weight_regularizer`, `weight_reg_weight`, and `weight_init_func` as optional arguments.
+- Accepts the keyword-only [learnable weight arguments](#learnable-weight-arguments) `weight_regularizer`, `weight_reg_weight`, and `weight_init_func`.
 - This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
 
 ```python
@@ -1454,30 +1481,40 @@ complete_loss = losses.MultipleLosses([main_loss, var_loss], weights=[1, 0.5])
 
 - **loss**: The loss per positive pair in the batch. Reduction type is `"pos_pair"`.
 
-## WeightRegularizerMixin
+## Learnable weight arguments
 
-Losses can extend this class in addition to BaseMetricLossFunction. You should extend this class if your loss function contains a learnable weight matrix.
+Losses that own class weights or proxies declare these keyword-only arguments
+in their signatures:
 
-```python
-losses.WeightRegularizerMixin(weight_init_func=None, weight_regularizer=None, weight_reg_weight=1, **kwargs)
-```
+- **weight_regularizer**: A [regularizer](regularizers.md) applied to the loss's
+  learnable weights, one row per class vector or proxy. If `None`, no weight
+  penalty is added.
+- **weight_reg_weight**: The weight multiplying that penalty before it is added
+  to the reduced loss.
+- **weight_init_func**: A callable that initializes the parameter in place, such
+  as `torch.nn.init.xavier_uniform_` or a
+  [TorchInitWrapper](common_functions.md#torchinitwrapper). If `None`, the loss's
+  default below is used.
 
-**Parameters**:
+| Loss                                                                                                                                                                                          | Parameter           | Default initialization                           |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- | ------------------------------------------------ |
+| [ArcFaceLoss](#arcfaceloss), [CosFaceLoss](#cosfaceloss), [LargeMarginSoftmaxLoss](#largemarginsoftmaxloss), [SphereFaceLoss](#spherefaceloss), [SubCenterArcFaceLoss](#subcenterarcfaceloss) | `W`, `(D, C)`       | `torch.nn.init.normal_`                          |
+| [NormalizedSoftmaxLoss](#normalizedsoftmaxloss)                                                                                                                                               | `W`, `(D, C)`       | `torch.nn.init.normal_`                          |
+| [ProxyAnchorLoss](#proxyanchorloss)                                                                                                                                                           | `proxies`, `(C, D)` | `torch.nn.init.kaiming_normal_(mode="fan_out")`  |
+| [ProxyNCALoss](#proxyncaloss)                                                                                                                                                                 | `proxies`, `(C, D)` | `torch.nn.init.normal_`                          |
+| [SoftTripleLoss](#softtripleloss)                                                                                                                                                             | `fc`, `(D, C·K)`    | `torch.nn.init.kaiming_uniform_(a=math.sqrt(5))` |
 
-- **weight_init_func**: An [TorchInitWrapper](common_functions.md#torchinitwrapper) object, which will be used to initialize the weights of the loss function.
-- **weight_regularizer**: The [regularizer](regularizers.md) to apply to the loss's learned weights.
-- **weight_reg_weight**: The amount the regularization loss will be multiplied by.
+`D` is the embedding size, `C` the number of classes, and `K` the centers per
+class. `SubCenterArcFaceLoss` stores `C·sub_centers` columns.
 
-Extended by:
-
-- [ArcFaceLoss](losses.md#arcfaceloss)
-- [CosFaceLoss](losses.md#cosfaceloss)
-- [LargeMarginSoftmaxLoss](losses.md#largemarginsoftmaxloss)
-- [NormalizedSoftmaxLoss](losses.md#normalizedsoftmaxloss)
-- [ProxyAnchorLoss](losses.md#proxyanchorloss)
-- [ProxyNCALoss](losses.md#proxyncaloss)
-- [SoftTripleLoss](losses.md#softtripleloss)
-- [SphereFaceLoss](losses.md#spherefaceloss)
+These parameters belong to the loss module. Move the loss with
+`loss_func.to(device, dtype)` and include `loss_func.parameters()` in the
+optimizer. Outside autocast, the parameters must have the embeddings' device and
+dtype; otherwise the loss raises `ValueError` naming both placements. Under
+autocast, parameters may keep a higher precision than the embeddings. The loss
+never moves or casts its own parameters during a forward pass.
+`P2SGradLoss` and `ManifoldLoss` own parameters with the same placement rule;
+their regularization arguments are only the embedding ones.
 
 ## VICRegLoss
 

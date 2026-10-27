@@ -27,6 +27,25 @@ count. With separate references, only anchor indices address query weights.
 Weighted random triplet sampling uses float32 probabilities for float16 inputs;
 the original precision choice followed [PyTorch's multinomial CUDA issue](https://github.com/pytorch/pytorch/issues/19900).
 
+Losses compose explicitly. A loss's reducer reduces only its own objective
+terms, named by `sub_loss_names()`, which returns constants so the default
+reducer can be copied per term while the loss is constructed. Embedding and
+weight regularization are constructor arguments, not mixins discovered by
+walking the class hierarchy or matching class names. Their weighted, already
+reduced penalties are added after reduction; an unreduced `DoNothingReducer`
+output carries them as `already_reduced` entries. Weight-bearing losses declare
+`weight_regularizer`, `weight_reg_weight`, and `weight_init_func` as keyword-only
+arguments so the public signature is complete without reading base classes.
+
+Learnable loss parameters follow ordinary PyTorch module placement. A forward
+pass never moves, casts, or reallocates parameters to match the embeddings.
+Doing so changed `state_dict` dtypes and broke optimizer state after a single
+mixed-precision call. Outside autocast, a placement mismatch raises
+`ValueError`; under autocast, parameters may keep higher precision. Constant
+coefficient tensors are non-persistent buffers so `.to()` moves them without
+changing checkpoint contents. P2SGrad still renormalizes its weight columns in
+place each forward, as its algorithm specifies.
+
 Distances declare whether larger values mean greater similarity. Losses and
 miners use that declaration when comparing margins. Reducers own averaging and
 filtering; losses retain the indices and reduction type needed by the reducer.

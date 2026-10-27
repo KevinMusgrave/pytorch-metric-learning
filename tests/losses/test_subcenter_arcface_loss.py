@@ -26,7 +26,7 @@ class TestSubCenterArcFaceLoss(unittest.TestCase):
                     num_classes=num_classes,
                     embedding_size=embedding_size,
                     sub_centers=sub_centers,
-                )
+                ).to(TEST_DEVICE, dtype)
 
                 embeddings = (
                     torch.randn(batch_size, embedding_size).to(TEST_DEVICE).type(dtype)
@@ -64,7 +64,7 @@ class TestSubCenterArcFaceLoss(unittest.TestCase):
                         scale=scale,
                         num_classes=num_classes,
                         embedding_size=embedding_size,
-                    )
+                    ).to(TEST_DEVICE, dtype)
                     regular_arcface.W = loss_func.W
                     regular_arcface_loss = regular_arcface(embeddings, labels)
                     self.assertTrue(
@@ -91,13 +91,17 @@ class TestSubCenterArcFaceLoss(unittest.TestCase):
         sub_centers = 3
         for dtype in TEST_DTYPES:
             for threshold in [75, 90, 180]:
-                loss_func = SubCenterArcFaceLoss(
-                    margin=margin,
-                    scale=scale,
-                    num_classes=num_classes,
-                    embedding_size=embedding_size,
-                    sub_centers=sub_centers,
-                ).to(TEST_DEVICE)
+                loss_func = (
+                    SubCenterArcFaceLoss(
+                        margin=margin,
+                        scale=scale,
+                        num_classes=num_classes,
+                        embedding_size=embedding_size,
+                        sub_centers=sub_centers,
+                    )
+                    .to(TEST_DEVICE, dtype)
+                    .to(TEST_DEVICE)
+                )
                 embeddings = (
                     torch.randn(batch_size, embedding_size).to(TEST_DEVICE).type(dtype)
                 )
@@ -151,10 +155,10 @@ class TestSubCenterArcFaceLoss(unittest.TestCase):
             sub_centers=3,
             embedding_size=64,
             reducer=DoNothingReducer(),
-        )
+        ).to(TEST_DEVICE)
 
-        emb = torch.randn(4, 64)
-        result = arcfaceloss(emb, torch.arange(4))
+        emb = torch.randn(4, 64, device=TEST_DEVICE)
+        result = arcfaceloss(emb, torch.arange(4, device=TEST_DEVICE))
 
         self.assertTrue(isinstance(result, dict))
         self.assertTrue(result["loss"]["losses"].shape[0] == 4)

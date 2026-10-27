@@ -79,7 +79,7 @@ class VICRegLoss(BaseMetricLossFunction):
         )
         return cov_loss
 
-    def _sub_loss_names(self):
+    def sub_loss_names(self):
         return [
             "invariance_loss",
             "variance_loss1",

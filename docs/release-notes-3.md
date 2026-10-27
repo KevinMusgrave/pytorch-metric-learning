@@ -62,6 +62,31 @@ extra.
 All Jupyter notebooks and the separate example gallery are removed. The README
 and canonical task index lead to small executable recipes beside API contracts.
 
+## Explicit loss composition and parameter placement
+
+`EmbeddingRegularizerMixin`, `WeightRegularizerMixin`, and `WeightMixin` are
+removed. Every loss still accepts `embedding_regularizer` and
+`embedding_reg_weight`. ArcFace, CosFace, large-margin softmax, SphereFace,
+sub-center ArcFace, normalized softmax, ProxyAnchor, ProxyNCA, and SoftTriple
+losses declare keyword-only `weight_regularizer`, `weight_reg_weight`, and
+`weight_init_func`; pass these by name. `weight_init_func` is any callable that
+initializes a tensor in place, including `torch.nn.init` functions.
+
+Regularization penalties are added after the reducer instead of passing through
+it. Loss values are unchanged for built-in reducers. A custom reducer that
+changed `already_reduced` regularization entries no longer sees them.
+`MultipleReducers` entries for `"embedding_reg_loss"` or `"weight_reg_loss"` are
+no longer used. Custom losses override `sub_loss_names` instead of
+`_sub_loss_names` and add weight penalties in `regularization_terms`.
+
+Losses with learnable parameters no longer move or cast those parameters to
+match the embeddings during `forward`. Previously one float64 call permanently
+converted a float32 proxy matrix and broke the optimizer's next step. Call
+`loss_func.to(device, dtype)` and include its parameters in the optimizer. A
+mismatch outside autocast raises `ValueError`. `SubCenterArcFaceLoss` accepts
+`num_classes` and `embedding_size` positionally, and
+`get_outliers(..., return_dominant_centers=False)` now returns only the outliers.
+
 ## Correctness and performance
 
 Distributed wrappers now define full-batch and local-anchor gradients explicitly,

@@ -16,7 +16,6 @@ from .large_margin_softmax_loss import LargeMarginSoftmaxLoss
 from .lifted_structure_loss import GeneralizedLiftedStructureLoss, LiftedStructureLoss
 from .manifold_loss import ManifoldLoss
 from .margin_loss import MarginLoss
-from .mixins import EmbeddingRegularizerMixin, WeightRegularizerMixin
 from .multi_similarity_loss import MultiSimilarityLoss
 from .multiple_losses import MultipleLosses
 from .n_pairs_loss import NPairsLoss
@@ -39,3 +38,47 @@ from .tcm_loss import ThresholdConsistentMarginLoss
 from .triplet_margin_loss import TripletMarginLoss
 from .tuplet_margin_loss import TupletMarginLoss
 from .vicreg_loss import VICRegLoss
+
+__all__ = [
+    "AngularLoss",
+    "ArcFaceLoss",
+    "BaseLossWrapper",
+    "BaseMetricLossFunction",
+    "CircleLoss",
+    "ContrastiveLoss",
+    "CosFaceLoss",
+    "CrossBatchMemory",
+    "DynamicSoftMarginLoss",
+    "FastAPLoss",
+    "GeneralizedLiftedStructureLoss",
+    "GenericPairLoss",
+    "HistogramLoss",
+    "InstanceLoss",
+    "IntraPairVarianceLoss",
+    "LargeMarginSoftmaxLoss",
+    "LiftedStructureLoss",
+    "ManifoldLoss",
+    "MarginLoss",
+    "MultiSimilarityLoss",
+    "MultipleLosses",
+    "NCALoss",
+    "NPairsLoss",
+    "NTXentLoss",
+    "NormalizedSoftmaxLoss",
+    "P2SGradLoss",
+    "PNPLoss",
+    "ProxyAnchorLoss",
+    "ProxyNCALoss",
+    "RankedListLoss",
+    "SelfSupervisedLoss",
+    "SignalToNoiseRatioContrastiveLoss",
+    "SmoothAPLoss",
+    "SoftTripleLoss",
+    "SphereFaceLoss",
+    "SubCenterArcFaceLoss",
+    "SupConLoss",
+    "ThresholdConsistentMarginLoss",
+    "TripletMarginLoss",
+    "TupletMarginLoss",
+    "VICRegLoss",
+]

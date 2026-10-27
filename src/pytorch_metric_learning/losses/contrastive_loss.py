@@ -50,5 +50,5 @@ class ContrastiveLoss(GenericPairLoss):
     def get_default_reducer(self):
         return AvgNonZeroReducer()
 
-    def _sub_loss_names(self):
+    def sub_loss_names(self):
         return ["pos_loss", "neg_loss"]

@@ -21,7 +21,7 @@ class TestCenterInvariantRegularizer(unittest.TestCase):
                 embedding_size=embedding_size,
                 weight_regularizer=CenterInvariantRegularizer(),
                 weight_reg_weight=reg_weight,
-            ).to(TEST_DEVICE)
+            ).to(TEST_DEVICE, dtype)
 
             embeddings = torch.nn.functional.normalize(
                 torch.randn((180, embedding_size), requires_grad=True)

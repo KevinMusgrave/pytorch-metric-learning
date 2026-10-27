@@ -41,11 +41,9 @@ class P2SGradLoss(BaseMetricLossFunction):
         c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
         c_f.indices_tuple_not_supported(indices_tuple)
 
+        c_f.check_parameter_placement(self, self.weight, embeddings)
         self.weight.data = self.weight.data.renorm(2, 1, 1e-5).mul(1e5)
         dtype = embeddings.dtype
-        self.weight.data = c_f.to_device(
-            self.weight.data, tensor=embeddings, dtype=dtype
-        )
 
         rtol = 1e-2 if dtype == torch.float16 else 1e-5
         w_modulus = self.weight.pow(2).sum(0).pow(0.5)

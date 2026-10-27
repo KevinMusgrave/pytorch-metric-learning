@@ -186,7 +186,8 @@
           "tests/regularizers/test_center_invariant_regularizer.py",
           "tests/losses/test_cross_batch_memory_state.py",
           "tests/losses/test_dynamic_soft_margin_loss.py",
-          "tests/utils/test_triplet_enumeration.py"
+          "tests/utils/test_triplet_enumeration.py",
+          "tests/losses/test_loss_composition.py"
         ],
         "module": "numerics",
         "focusedSuite": "numerics-focused"
@@ -339,7 +340,8 @@
           "tests/losses/utils.py",
           "tests/losses/test_cross_batch_memory_state.py",
           "tests/losses/test_dynamic_soft_margin_loss.py",
-          "tests/utils/test_triplet_enumeration.py"
+          "tests/utils/test_triplet_enumeration.py",
+          "tests/losses/test_loss_composition.py"
         ],
         "argv": [
           ".venv/bin/uv",
@@ -358,7 +360,8 @@
           "tests.regularizers.test_center_invariant_regularizer",
           "tests.losses.test_cross_batch_memory_state",
           "tests.losses.test_dynamic_soft_margin_loss",
-          "tests.utils.test_triplet_enumeration"
+          "tests.utils.test_triplet_enumeration",
+          "tests.losses.test_loss_composition"
         ],
         "timeoutSeconds": 120
       },

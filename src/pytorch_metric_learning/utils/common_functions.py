@@ -118,6 +118,19 @@ def assert_distance_type(obj, distance_type=None, **kwargs):
         )
 
 
+def check_parameter_placement(module, parameter, embeddings):
+    same_device = parameter.device == embeddings.device
+    autocast = torch.is_autocast_enabled(embeddings.device.type)
+    if same_device and (autocast or parameter.dtype == embeddings.dtype):
+        return
+    raise ValueError(
+        f"{type(module).__name__} parameters are {parameter.dtype} on "
+        f"{parameter.device}, but embeddings are {embeddings.dtype} on "
+        f"{embeddings.device}. Move the loss with .to(device, dtype) before "
+        "calling it, and include its parameters in the optimizer."
+    )
+
+
 def torch_arange_from_size(input, size_dim=0):
     return torch.arange(input.size(size_dim), device=input.device)
 

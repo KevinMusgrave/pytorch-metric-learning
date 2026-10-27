@@ -18,7 +18,7 @@ regularizers.BaseWeightRegularizer(collect_stats = False,
 								distance = None)
 ```
 
-An object that extends this class can be passed as the `embedding_regularizer` into any loss function. It can also be passed as the `weight_regularizer` into any class that extends [WeightRegularizerMixin](losses.md#weightregularizermixin).
+An object that extends this class can be passed as the `embedding_regularizer` into any loss function. It can also be passed as the `weight_regularizer` into any loss with [learnable weight arguments](losses.md#learnable-weight-arguments). The loss multiplies the regularizer's reduced value by its `*_reg_weight` and adds it after reducing its own objective terms.
 
 **Parameters**
 

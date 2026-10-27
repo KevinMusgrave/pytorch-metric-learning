@@ -187,7 +187,8 @@
           "tests/utils/test_triplet_enumeration.py",
           "tests/losses/test_loss_composition.py",
           "tests/docs/__init__.py",
-          "tests/docs/test_documented_signatures.py"
+          "tests/docs/test_documented_signatures.py",
+          "tests/docs/test_documentation_paths.py"
         ],
         "module": "numerics",
         "focusedSuite": "numerics-focused"
@@ -362,7 +363,8 @@
           "tests.losses.test_dynamic_soft_margin_loss",
           "tests.utils.test_triplet_enumeration",
           "tests.losses.test_loss_composition",
-          "tests.docs.test_documented_signatures"
+          "tests.docs.test_documented_signatures",
+          "tests.docs.test_documentation_paths"
         ],
         "timeoutSeconds": 120
       },

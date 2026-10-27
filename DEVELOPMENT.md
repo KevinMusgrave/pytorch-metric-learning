@@ -24,10 +24,9 @@ install this checkout using its reviewed, already-installed build backend:
 .venv/bin/uv pip install --no-deps --no-build-isolation --editable .
 ```
 
-The initial adoption still has existing source findings to resolve. The CUDA
-package metadata and PyTorch multiprocessing blockers were fixed by the Code
-Polishy upgrade. See [the baseline status](docs/development-baseline.md) for
-verification results and remaining work.
+`./code-polishyw check --all` reports no findings on this branch. CUDA and
+two-GPU acceptance remain outstanding; see [the baseline status](docs/development-baseline.md)
+for the original adoption evidence.
 
 ## CPU tests
 
@@ -92,8 +91,9 @@ Read [AGENTS.md](AGENTS.md) and the version-matched guidance before edits:
 ```
 
 Source comments and docstrings are disallowed. Design rationale belongs in the
-mapped documents under `docs/design/`. Existing findings are not exempted by
-adoption; policy checks must remain visible until they are resolved.
+mapped documents under `docs/design/`, and adapted-code provenance in
+`THIRD_PARTY_NOTICES.md`. Keep the repository check at zero findings; fix new
+findings at their cause rather than suppressing them.
 
 CI owns the final merge gate. Ordinary local task completion uses focused
 verification; the merge gate runs at a real merge or release checkpoint.

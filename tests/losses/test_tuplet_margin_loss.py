@@ -87,5 +87,19 @@ class TestTupletMarginLoss(unittest.TestCase):
             self.assertEqual(loss, 0)
 
 
+class TestTupletMarginDuplicates(unittest.TestCase):
+    def test_identical_positive_pair_has_finite_loss_and_gradient(self):
+        for dtype in TEST_DTYPES:
+            with self.subTest(dtype=dtype):
+                torch.manual_seed(0)
+                embeddings = torch.randn(4, 8, device=TEST_DEVICE, dtype=dtype)
+                embeddings = torch.cat([embeddings, embeddings[:1]]).requires_grad_()
+                labels = torch.tensor([0, 1, 2, 3, 0], device=TEST_DEVICE)
+                loss = TupletMarginLoss()(embeddings, labels)
+                loss.backward()
+                self.assertTrue(torch.isfinite(loss))
+                self.assertTrue(torch.isfinite(embeddings.grad).all())
+
+
 if __name__ == "__main__":
     unittest.main()

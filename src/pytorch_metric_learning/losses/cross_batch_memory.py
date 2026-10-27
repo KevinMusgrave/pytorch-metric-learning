@@ -33,7 +33,6 @@ class CrossBatchMemory(BaseLossWrapper, ModuleWithRecords):
             "ContrastiveLoss",
             "GeneralizedLiftedStructureLoss",
             "IntraPairVarianceLoss",
-            "LiftedStructureLoss",
             "MarginLoss",
             "MultiSimilarityLoss",
             "NCALoss",

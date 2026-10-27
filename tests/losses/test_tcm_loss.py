@@ -11,6 +11,7 @@ from pytorch_metric_learning.losses import (
 )
 
 from .. import TEST_DEVICE, TEST_DTYPES
+from pytorch_metric_learning.losses import ThresholdConsistentMarginLoss
 
 
 class TestThresholdConsistentMarginLoss(unittest.TestCase):
@@ -57,3 +58,22 @@ class TestThresholdConsistentMarginLoss(unittest.TestCase):
                 rtol = 1e-2 if dtype == torch.float16 else 1e-5
                 atol = 1e-4
                 self.assertTrue(torch.isclose(res, correct_loss, rtol=rtol, atol=atol))
+
+
+class TestThresholdConsistentMarginReference(unittest.TestCase):
+    def test_reference_embeddings_are_used(self):
+        torch.manual_seed(7)
+        query = torch.randn(4, 3, dtype=torch.float64)
+        reference = torch.randn(6, 3, dtype=torch.float64)
+        labels = torch.tensor([0, 1, 0, 1])
+        ref_labels = torch.tensor([0, 0, 1, 1, 2, 1])
+        loss = ThresholdConsistentMarginLoss(margin_plus=0.5, margin_minus=-0.5)(
+            query, labels, ref_emb=reference, ref_labels=ref_labels
+        )
+        sims = F.normalize(query, dim=1) @ F.normalize(reference, dim=1).T
+        same = labels[:, None] == ref_labels[None, :]
+        pos, neg = sims[same], sims[~same]
+        pos_terms = (0.5 - pos)[pos <= 0.5]
+        neg_terms = (neg + 0.5)[neg >= -0.5]
+        expected = pos_terms.mean() + neg_terms.mean()
+        torch.testing.assert_close(loss, expected)

@@ -101,6 +101,23 @@ reports its length without generating batches during construction.
 
 ## Correctness and performance
 
+Verifying every documented equation found and fixed these defects, each with a
+reference test that fails on the previous implementation:
+
+- `SmoothAPLoss` built positive sets from positional blocks of the wrong size;
+  results were correct only when the number of classes equaled the samples per
+  class. It now derives positives from the labels, so labels need not be grouped
+  or balanced, and it returns the embeddings' dtype.
+- `ThresholdConsistentMarginLoss` ignored `ref_emb`, indexing the query
+  embeddings with reference indices.
+- `LiftedStructureLoss` compared query and reference indices when given a
+  separate `ref_emb`; it now raises `ValueError` for that unsupported case. It is no longer listed as
+  supported by `CrossBatchMemory` or `SelfSupervisedLoss`, which pass reference
+  embeddings.
+- `TupletMarginLoss` returned NaN when an anchor and positive were identical.
+- `AngularLoss` normalized anchors and positives but not negatives. Values
+  change only for unnormalized embeddings.
+
 Distributed wrappers now define full-batch and local-anchor gradients explicitly,
 handle non-distributed fallback, and synchronize queue order. Cross-batch memory
 preserves state across empty enqueues, checkpoint restore, and multiple forwards

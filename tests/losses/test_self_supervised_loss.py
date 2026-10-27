@@ -83,7 +83,6 @@ class TestSelfSupervisedLoss(unittest.TestCase):
             losses.ContrastiveLoss(),
             losses.GeneralizedLiftedStructureLoss(),
             losses.IntraPairVarianceLoss(),
-            losses.LiftedStructureLoss(),
             losses.MultiSimilarityLoss(),
             losses.NTXentLoss(),
             losses.SignalToNoiseRatioContrastiveLoss(),

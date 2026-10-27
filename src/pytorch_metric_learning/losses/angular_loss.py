@@ -34,8 +34,9 @@ class AngularLoss(BaseMetricLossFunction):
 
         sq_tan_alpha = torch.tan(self.alpha) ** 2
         ap_dot = torch.sum(anchors * positives, dim=1, keepdim=True)
+        negatives = self.distance.normalize(ref_emb)
         ap_matmul_embeddings = torch.matmul(
-            (anchors + positives), (ref_emb.unsqueeze(2))
+            (anchors + positives), (negatives.unsqueeze(2))
         )
         ap_matmul_embeddings = ap_matmul_embeddings.squeeze(2).t()
 

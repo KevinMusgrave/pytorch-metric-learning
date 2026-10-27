@@ -32,26 +32,22 @@ class ThresholdConsistentMarginLoss(BaseMetricLossFunction):
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
         ap, p, an, n = convert_to_pairs(indices_tuple, labels, ref_labels)
 
-        # calculate the similarities for positive and negative pairs
-        ap, p = embeddings[ap], embeddings[p]
-        an, n = embeddings[an], embeddings[n]
+        ap, p = embeddings[ap], ref_emb[p]
+        an, n = embeddings[an], ref_emb[n]
 
         pos_sims = F.cosine_similarity(ap, p)
         neg_sims = F.cosine_similarity(an, n)
 
-        # calculate the positive part
         s_lte_m = pos_sims <= self.margin_plus
         tcm_pos_num = ((self.margin_plus - pos_sims) * s_lte_m).sum()
         tcm_pos_denom = s_lte_m.sum()
         pos_tcm = 0 if s_lte_m.sum() == 0 else tcm_pos_num / tcm_pos_denom
 
-        # calculate the negative part
         s_gte_m = neg_sims >= self.margin_minus
         tcm_neg_num = ((neg_sims - self.margin_minus) * s_gte_m).sum()
         tcm_neg_denom = s_gte_m.sum()
         neg_tcm = 0 if s_gte_m.sum() == 0 else tcm_neg_num / tcm_neg_denom
 
-        # add the components for final loss
         tcm_loss = self.lambda_plus * pos_tcm + self.lambda_minus * neg_tcm
         return {
             "loss": {

@@ -8,6 +8,8 @@ from pytorch_metric_learning.losses import AngularLoss
 from .. import TEST_DEVICE, TEST_DTYPES
 from ..zzz_testing_utils.testing_utils import angle_to_coord
 from .utils import get_triplet_embeddings_with_ref
+import math
+import torch.nn.functional as F
 
 
 class TestAngularLoss(unittest.TestCase):
@@ -87,3 +89,27 @@ class TestAngularLoss(unittest.TestCase):
             loss = loss_func(embeddings, labels)
             loss.backward()
             self.assertEqual(loss, 0)
+
+
+class TestAngularLossNormalization(unittest.TestCase):
+    def test_negatives_are_normalized_like_anchors_and_positives(self):
+        torch.manual_seed(5)
+        embeddings = 3 * torch.randn(6, 4, dtype=torch.float64)
+        labels = torch.tensor([0, 0, 1, 1, 2, 2])
+        alpha = 40
+        loss = AngularLoss(alpha=alpha)(embeddings, labels)
+        x = F.normalize(embeddings, dim=1)
+        tan_sq = math.tan(math.radians(alpha)) ** 2
+        terms = []
+        for a in range(6):
+            for p in range(6):
+                if a == p or labels[a] != labels[p]:
+                    continue
+                f = [
+                    4 * tan_sq * (x[a] + x[p]) @ x[n] - 2 * (1 + tan_sq) * x[a] @ x[p]
+                    for n in range(6)
+                    if labels[n] != labels[a]
+                ]
+                terms.append(torch.log1p(torch.exp(torch.stack(f)).sum()))
+        torch.testing.assert_close(loss, torch.stack(terms).mean())
+        torch.testing.assert_close(AngularLoss(alpha=alpha)(x, labels), loss)

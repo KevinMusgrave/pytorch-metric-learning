@@ -14,6 +14,12 @@ class LiftedStructureLoss(GenericPairLoss):
             list_of_names=["pos_margin", "neg_margin"], is_stat=False
         )
 
+    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+        c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
+        return super().compute_loss(
+            embeddings, labels, indices_tuple, ref_emb, ref_labels
+        )
+
     def _compute_loss(self, pos_pairs, neg_pairs, indices_tuple):
         a1, p, a2, _ = indices_tuple
 
@@ -36,9 +42,7 @@ class LiftedStructureLoss(GenericPairLoss):
             )
             loss_per_pos_pair = neg_pairs_loss + remaining_pos_margin
             loss_per_pos_pair = torch.relu(loss_per_pos_pair) ** 2
-            loss_per_pos_pair /= (
-                2  # divide by 2 since each positive pair will be counted twice
-            )
+            loss_per_pos_pair /= 2
             return {
                 "loss": {
                     "losses": loss_per_pos_pair,

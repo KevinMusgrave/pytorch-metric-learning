@@ -181,11 +181,65 @@ class TestSmoothAPLoss(unittest.TestCase):
                 loss2 = SmoothAPLoss(temperature=HYPERPARAMETERS["temp"])
                 # The original code assumes the label is in this format
                 labels = []
-                for i in range(
-                    HYPERPARAMETERS["batch_size"] // HYPERPARAMETERS["num_id"]
-                ):
-                    labels.extend([i for _ in range(HYPERPARAMETERS["num_id"])])
+                group = HYPERPARAMETERS["batch_size"] // HYPERPARAMETERS["num_id"]
+                for i in range(HYPERPARAMETERS["num_id"]):
+                    labels.extend([i] * group)
 
                 labels = torch.tensor(labels)
                 output2 = loss2.forward(rand_tensor, labels)
-                self.assertTrue(torch.isclose(output, output2))
+                self.assertEqual(output2.dtype, dtype)
+                self.assertTrue(torch.isclose(output.double(), output2.double()))
+
+
+def direct_smooth_ap(embeddings, labels, temperature):
+    x = F.normalize(embeddings.double(), dim=1)
+    sims = x @ x.T
+    batch = len(labels)
+    precisions = []
+    for q in range(batch):
+        positives = [i for i in range(batch) if labels[i] == labels[q]]
+        total = 0
+        for i in positives:
+
+            def above(j):
+                return torch.sigmoid((sims[q, j] - sims[q, i]) / temperature)
+
+            all_rank = 1 + sum(above(j) for j in range(batch) if j != i)
+            positive_rank = 1 + sum(above(j) for j in positives if j != i)
+            total = total + positive_rank / all_rank
+        precisions.append(total / len(positives))
+    return (1 - torch.stack(precisions)).mean()
+
+
+class TestSmoothAPLabelSets(unittest.TestCase):
+    def test_arbitrary_label_order_and_class_sizes(self):
+        torch.manual_seed(3)
+        label_sets = (
+            [0, 0, 1, 1, 2, 2],
+            [0, 1, 0, 1],
+            [2, 0, 2, 1, 1, 0, 0],
+            [5, 5, 5, 9],
+        )
+        for labels in label_sets:
+            for dtype in TEST_DTYPES:
+                with self.subTest(labels=labels, dtype=dtype):
+                    labels_tensor = torch.tensor(labels, device=TEST_DEVICE)
+                    embeddings = torch.randn(
+                        len(labels),
+                        8,
+                        device=TEST_DEVICE,
+                        dtype=dtype,
+                        requires_grad=True,
+                    )
+                    actual = SmoothAPLoss(temperature=0.1)(embeddings, labels_tensor)
+                    expected = direct_smooth_ap(embeddings, labels_tensor, 0.1)
+                    self.assertEqual(actual.dtype, dtype)
+                    tolerance = (
+                        {} if dtype == torch.float64 else {"rtol": 1e-4, "atol": 1e-5}
+                    )
+                    torch.testing.assert_close(actual.double(), expected, **tolerance)
+                    torch.testing.assert_close(
+                        torch.autograd.grad(actual, embeddings)[0].double(),
+                        torch.autograd.grad(expected, embeddings)[0].double(),
+                        **tolerance,
+                    )

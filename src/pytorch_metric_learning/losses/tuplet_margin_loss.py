@@ -21,12 +21,12 @@ class TupletMarginLoss(GenericPairLoss):
             list_of_names=["avg_pos_angle", "avg_neg_angle"], is_stat=True
         )
 
-    # pos_pairs and neg_pairs already represent cos(theta)
     def _compute_loss(self, pos_pairs, neg_pairs, indices_tuple):
         a1, p, a2, _ = indices_tuple
 
         if len(a1) > 0 and len(a2) > 0:
-            pos_angles = torch.acos(pos_pairs)
+            bound = 1 - 4 * torch.finfo(pos_pairs.dtype).eps
+            pos_angles = torch.acos(pos_pairs.clamp(-bound, bound))
             self.set_stats(pos_angles, neg_pairs)
             pos_pairs = torch.cos(pos_angles - self.margin)
             pos_pairs = pos_pairs.unsqueeze(1)

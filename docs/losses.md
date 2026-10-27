@@ -113,7 +113,7 @@ $$
 
 Here $N$ is the batch size. Terms that depend only on $\lVert \mathbf{x} \rVert$ are dropped from $f_{a,p,n}$, as in the N-pair loss.
 
-**Implementation notes**: The default distance normalizes anchors and positives, but $f_{a,p,n}$ uses unnormalized negative embeddings. The paper derives the loss for unit-length features. The loss is averaged over all ordered positive pairs rather than one positive per anchor; pairs without negatives contribute 0.
+**Implementation notes**: Anchors, positives, and negatives are L2-normalized, matching the unit-length derivation of the equation. The loss is averaged over all ordered positive pairs rather than one positive per anchor; pairs without negatives contribute 0.
 
 **Parameters**:
 
@@ -421,7 +421,6 @@ metadata and are not accepted as complete resumable state.
 - [ContrastiveLoss](losses.md#contrastiveloss)
 - [GeneralizedLiftedStructureLoss](losses.md#generalizedliftedstructureloss)
 - [IntraPairVarianceLoss](losses.md#intrapairvarianceloss)
-- [LiftedStructureLoss](losses.md#liftedstructureloss)
 - [MarginLoss](losses.md#marginloss)
 - [MultiSimilarityLoss](losses.md#multisimilarityloss)
 - [NCALoss](losses.md#ncaloss)
@@ -727,6 +726,8 @@ $$
 $$
 
 Here $\mathcal{P}$ and $\mathcal{N}$ are the positive and negative pairs in the batch, and $D_{i,j}$ is the distance between embeddings $i$ and $j$.
+
+**Implementation notes**: $\tilde{J}_{i,j}$ uses the negatives of both $i$ and $j$, so the anchors and positives must come from the same set. Passing a separate `ref_emb` raises `ValueError`; use [GeneralizedLiftedStructureLoss](#generalizedliftedstructureloss) for separate query and reference sets.
 
 **Parameters**:
 
@@ -1348,7 +1349,7 @@ Here $D_{ij} = s_j - s_i$, where $s_i$ is the cosine similarity between query $q
 
 **Other info**:
 
-- The loss requires the same number of number of elements for each class in the batch labels. An example of valid labels is: `[1, 1, 2, 2, 3, 3]`. An example of invalid labels is `[1, 1, 1, 2, 2, 3, 3]` because there are `3` elements with the value `1`. This can be achieved by using [`samplers.MPerClassSampler`](samplers.md/#mperclasssampler) and setting the `batch_size` and `m` hyperparameters.
+- Positive sets come from the labels, so classes may appear in any order and with different counts. Each element is a query against the rest of the batch. Memory grows with the cube of the batch size.
 
 **Default distance**:
 
@@ -1622,7 +1623,7 @@ $$
 
 Here $\theta_{ap}$ and $\theta_{an_i}$ are the angles from the anchor to its positive and to its $i$-th negative. The implementation sums over all $k - 1$ negatives of the anchor in the batch.
 
-**Implementation notes**: Each positive pair contributes one loss term, averaged by the default reducer.
+**Implementation notes**: Each positive pair contributes one loss term, averaged by the default reducer. Cosines are clamped just inside $[-1, 1]$ before $\arccos$, so identical anchor-positive pairs, such as duplicates from sampling with replacement, have finite values and gradients.
 
 **Parameters**:
 

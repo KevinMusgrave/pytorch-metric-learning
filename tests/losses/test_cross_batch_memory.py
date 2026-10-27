@@ -540,7 +540,6 @@ class TestCrossBatchMemory(unittest.TestCase):
             losses.ContrastiveLoss(),
             losses.GeneralizedLiftedStructureLoss(),
             losses.IntraPairVarianceLoss(),
-            losses.LiftedStructureLoss(),
             losses.MarginLoss(),
             losses.MultiSimilarityLoss(),
             losses.NCALoss(),

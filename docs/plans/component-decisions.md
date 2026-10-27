@@ -76,8 +76,9 @@ PyTorch process groups.
 Remove `record-keeper` and `tensorboard` when their integration disappears.
 Move `scikit-learn` to an optional clustering extra if its retained metrics still
 require it. Keep Faiss optional. Remove Pillow, torchvision, SciPy, and tqdm
-where no retained code or maintained example needs them; decide NumPy from
-actual retained callers. Update the exact lock and security assessments together,
+where no retained code or maintained example needs them. NumPy remains a
+declared core dependency: it is standard alongside PyTorch, and removing it
+would not justify the churn. Update the exact lock and security assessments together,
 using the pinned dependency-review workflow.
 
 The next major release removes trainers, testers, `InferenceModel`, dataset

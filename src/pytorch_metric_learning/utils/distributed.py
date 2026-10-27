@@ -102,13 +102,14 @@ class DistributedLossWrapper(torch.nn.Module):
         ref_labels=None,
         enqueue_mask=None,
     ):
-        if not is_distributed():
+        if is_distributed():
+            world_size = torch.distributed.get_world_size()
+        else:
+            world_size = 1
             warnings.warn(
                 "DistributedLossWrapper is being used in a non-distributed setting. Returning the loss as is."
             )
-            return self.loss(embeddings, labels, indices_tuple, ref_emb, ref_labels)
 
-        world_size = torch.distributed.get_world_size()
         common_args = [
             embeddings,
             labels,
@@ -119,6 +120,8 @@ class DistributedLossWrapper(torch.nn.Module):
         ]
         if isinstance(self.loss, CrossBatchMemory):
             return self.forward_cross_batch(*common_args, enqueue_mask)
+        if enqueue_mask is not None:
+            raise ValueError("enqueue_mask requires a CrossBatchMemory loss")
         return self.forward_regular_loss(*common_args)
 
     def forward_regular_loss(
@@ -180,7 +183,7 @@ class DistributedMinerWrapper(torch.nn.Module):
         self.efficient = efficient
 
     def forward(self, emb, labels, ref_emb=None, ref_labels=None):
-        world_size = torch.distributed.get_world_size()
+        world_size = torch.distributed.get_world_size() if is_distributed() else 1
         if world_size <= 1:
             return self.miner(emb, labels, ref_emb, ref_labels)
 

@@ -5,8 +5,17 @@ preserving the gradients and local-anchor semantics required by the wrapped
 loss or miner. They depend on numerical components and process-group state,
 not on the training orchestration classes.
 
-A CPU run verifies the loss wrapper’s single-process fallback and explicitly skips
-CUDA collectives. A requested CUDA distributed run must fail when fewer than
+Without a process group, or with an initialized one-rank group, wrappers delegate
+to the wrapped component without gathering or scaling. Memory losses receive
+`indices_tuple` and `enqueue_mask` through their own forward signature; ordinary
+losses receive the query/reference arguments. Memory losses reject explicit
+reference arguments, and ordinary losses reject enqueue masks. Validation precedes
+memory updates. The absence of a process group must not bypass this dispatch.
+
+CPU regression tests compare values, query/reference gradients, mined pairs, and
+memory queue contents through wraparound for these single-process modes. They
+exercise a real one-rank Gloo group and explicitly skip CUDA collectives. A
+requested CUDA distributed run must fail when fewer than
 two CUDA devices are visible. Returning successfully from an empty world-size
 loop cannot establish distributed correctness.
 

@@ -252,7 +252,11 @@ for those design documents or evidence that the listed work is complete.
 
 - Phase 1: principles added, including attribution; component inventory,
   dependency direction, recipe requirements, and open-work priorities recorded.
-- Phase 2: not complete. Known fallback regressions and reported numerical
-  defects are the first implementation targets. CUDA/NCCL evidence is absent.
+- Phase 2: in progress. Seven CPU fallback tests pass, including a real one-rank
+  Gloo group, reference gradients, mined pairs, and memory queue wraparound with
+  enqueue masks. A two-rank probe reproduced world-size over-scaling of learnable
+  loss-parameter gradients and rank-dependent queue ordering; both remain to be
+  fixed and verified. CUDA/NCCL evidence is absent. Contributor PRs are deferred
+  until after the modernization merge as described above.
 - Phases 3–5: not started. The current package still contains the subsystems
   selected for removal.

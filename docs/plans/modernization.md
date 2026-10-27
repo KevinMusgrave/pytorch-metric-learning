@@ -58,6 +58,11 @@ guidance intact.
    contributors, and preserve required copyright and license notices in
    distributed artifacts. Keep the provenance of adapted algorithms and code
    discoverable through refactors.
+9. **Design for agent use.** Make APIs and documentation easy to discover,
+   retrieve in small relevant sections, and verify through executable examples.
+   State defaults, tensor contracts, supported combinations, and failure behavior
+   explicitly. Keep one canonical documentation source shared by agent and human
+   interfaces.
 
 Source comments and docstrings remain disallowed by the selected repository
 policy. Preserve mathematical explanations in documentation and retain required
@@ -204,6 +209,28 @@ memory behavior are measured. Extend only the design that meets those criteria.
   between the README and documentation index.
 - Document public contracts, customization, paper references, improved defaults,
   paper-faithful settings, and measured performance guidance.
+- Organize canonical Markdown into small, searchable topics with stable headings
+  and a component/task index. Put complete runnable examples beside the relevant
+  contracts. Make installed/public signatures and types agree with those docs;
+  an agent should not need to inspect the internal hierarchy to use an API.
+- Keep the documentation website as a generated rendering of the same Markdown,
+  with readable static content and links to sources. Establish content and
+  navigation first. Add a documentation CLI only if a demonstrated lookup or
+  offline installed-package need justifies it; it must retrieve the same content
+  rather than create a second set of documentation.
+- Replace every equation image with editable LaTeX in the canonical Markdown.
+  Use MathJax on the website and GitHub's native math rendering where equations
+  appear in the README. Verify transcriptions against the paper and implemented
+  conventions, including normalization and reduction. Pin and review the math
+  renderer like other dependencies, inspect rendered equations in a browser,
+  and remove obsolete raster assets once their references are gone.
+- Completely redesign the main README architecture diagram for both correctness
+  and visual quality after the component boundaries settle. Use a clear reading
+  order, restrained colors, consistent typography, generous spacing, and an
+  editable vector/diagram source. Show the retained library's relationship to
+  ordinary PyTorch code. Check the README and website renderings at narrow and
+  wide widths; update or remove the separate loss-flow diagram if it conflicts
+  with the final design.
 - Keep a small set of executable examples using ordinary PyTorch training loops.
   Remove obsolete tutorials, broken downloads, redundant pages, and unused
   assets after checking their references. Preserve useful mathematical material
@@ -220,8 +247,10 @@ memory behavior are measured. Extend only the design that meets those criteria.
   configured CI owner.
 
 Completion: documentation matches the final API, maintained examples execute,
-required verification passes, remaining policy findings are resolved, and the
-major-release notes explain removals and changed defaults.
+equations render from LaTeX without equation images, the redesigned architecture
+diagram is accurate and visually verified, required verification passes,
+remaining policy findings are resolved, and the major-release notes explain
+removals and changed defaults.
 
 ## Delivery sequence
 

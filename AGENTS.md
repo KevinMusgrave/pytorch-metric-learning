@@ -114,3 +114,8 @@
    contributors, and preserve
    required copyright and license notices in distributed artifacts. Keep the
    provenance of adapted algorithms and code discoverable through refactors.
+9. **Design for agent use.** Make APIs and documentation easy to discover,
+   retrieve in small relevant sections, and verify through executable examples.
+   State defaults, tensor contracts, supported combinations, and failure behavior
+   explicitly. Keep one canonical documentation source shared by agent and human
+   interfaces.

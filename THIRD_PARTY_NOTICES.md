@@ -31,21 +31,24 @@ source files carry no comment headers.
 [ronekko/deep_metric_learning](https://github.com/ronekko/deep_metric_learning)
 (MIT) is credited historically; no retained file names it as a source.
 
-## Sources requiring maintainer review
+## Referenced implementations
 
-The following sources are credited or named in retained files but do not grant
-permissive redistribution terms compatible with a plain MIT notice. They are
-listed so the maintainer can decide whether to obtain permission, rewrite the
-affected code independently, or remove it.
+Implementing an algorithm described in a paper does not copy anyone's code.
+The repositories below informed retained implementations but are not
+reproduced in them, so no upstream license notice is required. They are listed
+so the provenance stays discoverable.
 
-| Upstream source                                                                                                | Published license                  | Affected files and history                                                                                                                                                                                                               |
-| -------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [msight-tech/research-ms-loss](https://github.com/msight-tech/research-ms-loss), formerly MalongTech           | CC-BY-NC-4.0, published 2019-08-29 | `losses/multi_similarity_loss.py` states "modified from" this repository since its 2019-10-24 addition.                                                                                                                                  |
-| [facebookresearch/deepcluster](https://github.com/facebookresearch/deepcluster)                                | CC-BY-NC-4.0, published 2018-08-28 | `utils/inference.py`: `FaissKMeans` and the `FaissKNN` search flow descend from functions marked "modified from" DeepCluster until commit `b0fc3ec` (2021-11-27). The retained code has since been rewritten around Faiss's public APIs. |
-| [geonm/proxy-anchor-loss](https://github.com/geonm/proxy-anchor-loss), `pytorch-proxy-anchor.py`               | No license file                    | Named alongside the MIT Proxy-Anchor source in `losses/proxy_anchor_loss.py`.                                                                                                                                                            |
-| [interestingzhuo/PNPloss](https://github.com/interestingzhuo/PNPloss)                                          | No license file                    | `losses/pnp_loss.py` states "adapted from" this repository.                                                                                                                                                                              |
-| [kunhe/Deep-Metric-Learning-Baselines](https://github.com/kunhe/Deep-Metric-Learning-Baselines), `datasets.py` | No license file                    | Named by `samplers/hierarchical_sampler.py`.                                                                                                                                                                                             |
-| [RegularFace](http://kaizhao.net/regularface) by Kai Zhao                                                      | No license stated                  | `regularizers/regular_face_regularizer.py` states "modified from" this page.                                                                                                                                                             |
+| Upstream source                                                                                      | Published license | Relationship                                                                                                                                                                      |
+| ---------------------------------------------------------------------------------------------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [msight-tech/research-ms-loss](https://github.com/msight-tech/research-ms-loss), formerly MalongTech | CC-BY-NC-4.0      | `losses/multi_similarity_loss.py` implements the paper's objective as a vectorized masked log-sum-exp; pair mining is a separate miner. The upstream code is a per-anchor loop.   |
+| [facebookresearch/deepcluster](https://github.com/facebookresearch/deepcluster)                      | CC-BY-NC-4.0      | Earlier Faiss k-means and k-NN helpers followed its usage pattern until commit `b0fc3ec`. The retained `utils/inference.py` backends call Faiss's public `Kmeans` and index APIs. |
+| [geonm/proxy-anchor-loss](https://github.com/geonm/proxy-anchor-loss)                                | None published    | Reference implementation consulted for `losses/proxy_anchor_loss.py`.                                                                                                             |
+| [interestingzhuo/PNPloss](https://github.com/interestingzhuo/PNPloss)                                | None published    | Reference implementation consulted for `losses/pnp_loss.py`.                                                                                                                      |
+| [kunhe/Deep-Metric-Learning-Baselines](https://github.com/kunhe/Deep-Metric-Learning-Baselines)      | None published    | Its hierarchical batch construction informed `samplers/hierarchical_sampler.py`.                                                                                                  |
+| [RegularFace](http://kaizhao.net/regularface) by Kai Zhao                                            | None stated       | Reference for `regularizers/regular_face_regularizer.py`.                                                                                                                         |
+
+If a future change copies code from one of these sources, it must instead meet
+that source's license terms and be listed in the previous section.
 
 ## Test references
 

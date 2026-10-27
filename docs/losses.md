@@ -754,9 +754,9 @@ Here $\mathcal{P}$ and $\mathcal{N}$ are the positive and negative pairs in the 
 
 ```python
 losses.ManifoldLoss(
-        l: int,
-        K: int = 50,
-        lambdaC: float = 1.0,
+        embedding_size: int,
+        num_proxies: int = 50,
+        lambda_c: float = 1.0,
         alpha: float = 0.8,
         margin: float = 5e-4,
         **kwargs
@@ -765,12 +765,11 @@ losses.ManifoldLoss(
 
 **Parameters**
 
-- **l**: embedding size.
+- **embedding_size**: embedding size, $l$ in the paper.
 
-- **K**: number of proxies.
+- **num_proxies**: number of proxies, $K$ in the paper.
 
-- **lambdaC**: regularization weight. Used in the formula `loss = intrinsic_loss + lambdaC*context_loss`. `lambdaC=0` uses only the intrinsic loss, and `lambdaC=math.inf` uses only the context loss.
-  If `lambdaC=0`, then it uses only the intrinsic loss. If `lambdaC=np.inf`, then it uses only the context loss.
+- **lambda_c**: regularization weight $\lambda_C$ in `loss = intrinsic_loss + lambda_c * context_loss`. `lambda_c=0` uses only the intrinsic loss, and `lambda_c=math.inf` uses only the context loss.
 
 - **alpha**: parameter of the Random Walk. Must be in the range `(0,1)`. It specifies the amount of similarity between neighboring nodes.
 
@@ -1658,9 +1657,9 @@ in their signatures:
 - **weight_reg_weight**: The weight multiplying that penalty before it is added
   to the reduced loss.
 - **weight_init_func**: A callable that initializes the parameter in place, such
-  as `torch.nn.init.xavier_uniform_` or a
-  [TorchInitWrapper](common_functions.md#torchinitwrapper). If `None`, the loss's
-  default below is used.
+  as `torch.nn.init.xavier_uniform_` or
+  `functools.partial(torch.nn.init.kaiming_uniform_, a=1, mode="fan_out")`. If
+  `None`, the loss's default below is used.
 
 | Loss                                                                                                                                                                                          | Parameter           | Default initialization                           |
 | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- | ------------------------------------------------ |

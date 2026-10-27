@@ -33,7 +33,22 @@ All reducers extend this class.
 reducers.BaseReducer()
 ```
 
-**Parameters**:
+A reducer receives one loss term, `{"losses", "indices", "reduction_type"}`,
+and returns a scalar. Subclasses implement:
+
+```python
+def element_reduction(self, losses, loss_indices, embeddings, labels, **kwargs):
+    raise NotImplementedError
+```
+
+`losses` has one value per batch element and `loss_indices` holds the element
+indices. For `"pos_pair"`, `"neg_pair"`, and `"triplet"` terms, the default
+`pos_pair_reduction`, `neg_pair_reduction`, and `triplet_reduction` call
+`element_reduction` with the anchor indices, `loss_indices[0]`. Override them
+when tuple terms need different treatment, as
+[PerAnchorReducer](#peranchorreducer) does. `"already_reduced"` terms are
+returned unchanged, and a term whose `"losses"` is the Python value `0` becomes a
+differentiable zero.
 
 ## ClassWeightedReducer
 

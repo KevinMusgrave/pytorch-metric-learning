@@ -5,9 +5,6 @@ from .base_reducer import BaseReducer
 
 
 class DivisorReducer(BaseReducer):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
     def unpack_loss_info(self, loss_info):
         losses, loss_indices, reduction_type, kwargs = super().unpack_loss_info(
             loss_info
@@ -25,14 +22,5 @@ class DivisorReducer(BaseReducer):
             return output
         return self.zero_loss(embeddings)
 
-    def element_reduction(self, losses, loss_indices, embeddings, labels, divisor=1):
-        return self.sum_and_divide(losses, embeddings, divisor)
-
-    def pos_pair_reduction(self, *args, **kwargs):
-        return self.element_reduction(*args, **kwargs)
-
-    def neg_pair_reduction(self, *args, **kwargs):
-        return self.element_reduction(*args, **kwargs)
-
-    def triplet_reduction(self, *args, **kwargs):
-        return self.element_reduction(*args, **kwargs)
+    def element_reduction(self, losses, loss_indices, embeddings, labels, **kwargs):
+        return self.sum_and_divide(losses, embeddings, kwargs.get("divisor", 1))

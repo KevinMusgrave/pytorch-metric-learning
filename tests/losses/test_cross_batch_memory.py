@@ -242,12 +242,6 @@ class TestCrossBatchMemory(unittest.TestCase):
                     embedding_size=self.embedding_size,
                     memory_size=self.memory_size,
                 )
-                self.loss_with_miner2 = CrossBatchMemory(
-                    loss=inner_loss,
-                    miner=inner_miner,
-                    embedding_size=self.embedding_size,
-                    memory_size=self.memory_size,
-                )
                 all_embeddings = torch.tensor([], dtype=dtype).to(TEST_DEVICE)
                 all_labels = torch.LongTensor([]).to(TEST_DEVICE)
                 for _ in range(num_iter):

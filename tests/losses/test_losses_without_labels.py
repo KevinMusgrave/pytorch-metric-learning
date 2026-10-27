@@ -46,7 +46,7 @@ def get_incompatible_losses():
 
 
 class TestLossesWithoutLabels(unittest.TestCase):
-    def test(self):
+    def test_indices_tuple_without_labels(self):
         emb = torch.randn(32, 32, device=TEST_DEVICE)
         labels = torch.randint(0, 10, size=(32,), device=TEST_DEVICE)
         pairs1 = get_all_pairs_indices(labels)

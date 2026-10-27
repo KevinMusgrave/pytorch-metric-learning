@@ -119,6 +119,21 @@ one `_compute_loss` whose signature depended on the flag. Regularizer
 same candidates return the same pairs. `PNPLoss` and `SelfSupervisedLoss`
 raise `ValueError` for unsupported variants and losses.
 
+## Smaller utility surface
+
+`ManifoldLoss(l, K, lambdaC)` is now `ManifoldLoss(embedding_size, num_proxies,
+lambda_c)`, matching the other losses' parameter names.
+
+`common_functions.TorchInitWrapper` is removed; pass any in-place initializer,
+for example `functools.partial(torch.nn.init.kaiming_uniform_, a=1)`, as
+`weight_init_func`. The unused `loss_and_miner_utils.matched_size_indices` and
+`repeat_to_match_size` are removed. Reducers dispatch reduction types through an
+explicit table: tuple reductions default to `element_reduction` with anchor
+indices, so custom reducers implement only `element_reduction` unless tuples
+need different treatment. `AccuracyCalculator` metrics are registered by
+overriding `metric_functions()` instead of discovered from `calculate_` method
+names.
+
 ## Sampler randomness
 
 `MPerClassSampler`, `HierarchicalSampler`, and `FixedSetOfTriplets` use

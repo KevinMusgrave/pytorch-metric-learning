@@ -6,7 +6,6 @@ from pytorch_metric_learning.distances import CosineSimilarity, LpDistance
 from pytorch_metric_learning.miners import TripletMarginMiner
 
 from .. import TEST_DEVICE, TEST_DTYPES
-from ..zzz_testing_utils import testing_utils
 from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 TRIPLET_TYPES = ("all", "hard", "semihard", "easy")

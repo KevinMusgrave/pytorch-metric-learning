@@ -11,24 +11,21 @@ from .base_metric_loss_function import BaseMetricLossFunction
 class ManifoldLoss(BaseMetricLossFunction):
     def __init__(
         self,
-        l: int,
-        K: int = 50,
-        lambdaC: float = 1.0,
+        embedding_size: int,
+        num_proxies: int = 50,
+        lambda_c: float = 1.0,
         alpha: float = 0.8,
         margin: float = 5e-4,
         **kwargs,
     ):
         super().__init__(**kwargs)
-        if lambdaC < 0:
-            raise ValueError(
-                f"Incorrect value for lambdaC argument. "
-                f"Given lambdaC={lambdaC} but accepted only non-negative values"
-            )
+        if lambda_c < 0:
+            raise ValueError(f"lambda_c must be non-negative; got {lambda_c}")
 
-        self.K = K
-        self.l = l
-        self.proxies = nn.Parameter(torch.randn(K, l))
-        self.lambdaC = lambdaC
+        self.num_proxies = num_proxies
+        self.embedding_size = embedding_size
+        self.proxies = nn.Parameter(torch.randn(num_proxies, embedding_size))
+        self.lambda_c = lambda_c
         self.alpha = alpha
         self.margin = margin
 
@@ -36,15 +33,15 @@ class ManifoldLoss(BaseMetricLossFunction):
         c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
         c_f.labels_not_supported(labels, ref_labels)
 
-        assert embeddings.shape[1] == self.l
+        assert embeddings.shape[1] == self.embedding_size
         c_f.check_parameter_placement(self, self.proxies, embeddings)
 
         N = len(embeddings)
         if indices_tuple is not None:
             meta_classes = indices_tuple
         else:
-            meta_classes = torch.randint(0, self.K, (N - self.K,))
-            meta_classes = torch.cat((torch.arange(self.K), meta_classes))
+            meta_classes = torch.randint(0, self.num_proxies, (N - self.num_proxies,))
+            meta_classes = torch.cat((torch.arange(self.num_proxies), meta_classes))
             meta_classes = meta_classes[torch.randperm(N)]
 
         loss_int = torch.zeros(1, device=embeddings.device, dtype=embeddings.dtype)
@@ -52,7 +49,7 @@ class ManifoldLoss(BaseMetricLossFunction):
 
         S = self.distance(embs_and_proxies, embs_and_proxies).clamp(0, math.inf)
         S = torch.exp(S / 0.5)
-        Y = torch.eye(N + self.K, device=S.device, dtype=S.dtype)
+        Y = torch.eye(N + self.num_proxies, device=S.device, dtype=S.dtype)
         S = S - S * Y
 
         D_inv_half = torch.pow(torch.sum(S, dim=1), -1 / 2).diag()
@@ -67,7 +64,7 @@ class ManifoldLoss(BaseMetricLossFunction):
 
         F_p = F[N:, :].clone()
         F_e = F[:N, :].clone()
-        if self.lambdaC != math.inf:
+        if self.lambda_c != math.inf:
             F = F[:N, N:]
             loss_int = F - F[torch.arange(N), meta_classes].view(-1, 1) + self.margin
             loss_int[torch.arange(N), meta_classes] = -math.inf
@@ -87,7 +84,7 @@ class ManifoldLoss(BaseMetricLossFunction):
         loss_ctx = torch.exp(loss_ctx)
         loss_ctx = torch.log(1 + torch.sum(loss_ctx, dim=1))
         loss_ctx = loss_ctx.mean()
-        loss = loss_int + self.lambdaC * loss_ctx
+        loss = loss_int + self.lambda_c * loss_ctx
 
         return {
             "loss": {

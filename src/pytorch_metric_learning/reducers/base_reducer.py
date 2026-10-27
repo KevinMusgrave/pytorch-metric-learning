@@ -27,31 +27,42 @@ class BaseReducer(torch.nn.Module):
     ):
         if self.input_is_zero_loss(losses):
             return self.zero_loss(embeddings)
-        self.assert_sizes(losses, loss_indices, reduction_type)
-        reduction_func = self.get_reduction_func(reduction_type)
-        return reduction_func(losses, loss_indices, embeddings, labels, **kwargs)
+        assert_sizes, reduction = {
+            "already_reduced": (
+                self.assert_sizes_already_reduced,
+                self.already_reduced_reduction,
+            ),
+            "element": (self.assert_sizes_element, self.element_reduction),
+            "pos_pair": (self.assert_sizes_pair, self.pos_pair_reduction),
+            "neg_pair": (self.assert_sizes_pair, self.neg_pair_reduction),
+            "triplet": (self.assert_sizes_triplet, self.triplet_reduction),
+        }[reduction_type]
+        assert_sizes(losses, loss_indices)
+        return reduction(losses, loss_indices, embeddings, labels, **kwargs)
 
-    def already_reduced_reduction(self, losses, loss_indices, embeddings, labels):
+    def already_reduced_reduction(
+        self, losses, loss_indices, embeddings, labels, **kwargs
+    ):
         assert losses.ndim == 0 or len(losses) == 1
         return losses
 
-    def element_reduction(self, losses, loss_indices, embeddings, labels):
+    def element_reduction(self, losses, loss_indices, embeddings, labels, **kwargs):
         raise NotImplementedError
 
-    def pos_pair_reduction(self, losses, loss_indices, embeddings, labels):
-        raise NotImplementedError
+    def pos_pair_reduction(self, losses, loss_indices, embeddings, labels, **kwargs):
+        return self.element_reduction(
+            losses, loss_indices[0], embeddings, labels, **kwargs
+        )
 
-    def neg_pair_reduction(self, losses, loss_indices, embeddings, labels):
-        raise NotImplementedError
+    def neg_pair_reduction(self, losses, loss_indices, embeddings, labels, **kwargs):
+        return self.element_reduction(
+            losses, loss_indices[0], embeddings, labels, **kwargs
+        )
 
-    def triplet_reduction(self, losses, loss_indices, embeddings, labels):
-        raise NotImplementedError
-
-    def get_reduction_func(self, reduction_type):
-        return getattr(self, f"{reduction_type}_reduction")
-
-    def assert_sizes(self, losses, loss_indices, reduction_type):
-        getattr(self, f"assert_sizes_{reduction_type}")(losses, loss_indices)
+    def triplet_reduction(self, losses, loss_indices, embeddings, labels, **kwargs):
+        return self.element_reduction(
+            losses, loss_indices[0], embeddings, labels, **kwargs
+        )
 
     def zero_loss(self, embeddings):
         return torch.sum(embeddings * 0)
@@ -73,12 +84,6 @@ class BaseReducer(torch.nn.Module):
         assert len(loss_indices) == 2
         assert all(torch.is_tensor(x) for x in loss_indices)
         assert len(losses) == len(loss_indices[0]) == len(loss_indices[1])
-
-    def assert_sizes_pos_pair(self, losses, loss_indices):
-        self.assert_sizes_pair(losses, loss_indices)
-
-    def assert_sizes_neg_pair(self, losses, loss_indices):
-        self.assert_sizes_pair(losses, loss_indices)
 
     def assert_sizes_triplet(self, losses, loss_indices):
         assert torch.is_tensor(losses)

@@ -167,6 +167,14 @@ def measure(
         "validation": validation,
         "forward_ms": describe_samples([s.forward_ms for s in samples]),
         "backward_ms": describe_samples(backward) if backward else None,
+        "peak_allocated_delta_bytes": max(
+            (
+                s.peak_allocated_delta_bytes
+                for s in samples
+                if s.peak_allocated_delta_bytes is not None
+            ),
+            default=None,
+        ),
         "samples": [asdict(sample) for sample in samples],
     }
 

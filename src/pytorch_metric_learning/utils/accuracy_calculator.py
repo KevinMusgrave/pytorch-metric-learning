@@ -234,12 +234,7 @@ class AccuracyCalculator:
         knn_func=None,
         kmeans_func=None,
     ):
-        self.function_keyword = "calculate_"
-        function_names = [x for x in dir(self) if x.startswith(self.function_keyword)]
-        metrics = [x.replace(self.function_keyword, "", 1) for x in function_names]
-        self.original_function_dict = {
-            x: getattr(self, y) for x, y in zip(metrics, function_names, strict=True)
-        }
+        self.original_function_dict = self.metric_functions()
         self.check_primary_metrics(include, exclude)
         if len(include) == 0:
             include = [
@@ -285,6 +280,17 @@ class AccuracyCalculator:
             x in self.requires_clustering() for x in self.get_curr_metrics()
         ):
             raise ValueError(KMEANS_REQUIRED)
+
+    def metric_functions(self):
+        return {
+            "AMI": self.calculate_AMI,
+            "NMI": self.calculate_NMI,
+            "mean_average_precision": self.calculate_mean_average_precision,
+            "mean_average_precision_at_r": (self.calculate_mean_average_precision_at_r),
+            "mean_reciprocal_rank": self.calculate_mean_reciprocal_rank,
+            "precision_at_1": self.calculate_precision_at_1,
+            "r_precision": self.calculate_r_precision,
+        }
 
     def get_function_dict(self, include=(), exclude=()):
         if len(include) == 0:

@@ -84,15 +84,6 @@ def torch_arange_from_size(input, size_dim=0):
     return torch.arange(input.size(size_dim), device=input.device)
 
 
-class TorchInitWrapper:
-    def __init__(self, init_func, **kwargs):
-        self.init_func = init_func
-        self.kwargs = kwargs
-
-    def __call__(self, tensor):
-        self.init_func(tensor, **self.kwargs)
-
-
 def torch_all_from_dim_to_end(x, dim):
     return torch.all(x.view(*x.shape[:dim], -1), dim=-1)
 

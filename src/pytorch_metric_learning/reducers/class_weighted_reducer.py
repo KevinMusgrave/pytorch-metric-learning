@@ -9,18 +9,6 @@ class ClassWeightedReducer(BaseReducer):
         super().__init__(**kwargs)
         self.weights = weights
 
-    def element_reduction(self, losses, loss_indices, embeddings, labels):
-        return self.element_reduction_helper(losses, loss_indices, labels)
-
-    def pos_pair_reduction(self, losses, loss_indices, embeddings, labels):
-        return self.element_reduction_helper(losses, loss_indices[0], labels)
-
-    def neg_pair_reduction(self, losses, loss_indices, embeddings, labels):
-        return self.element_reduction_helper(losses, loss_indices[0], labels)
-
-    def triplet_reduction(self, losses, loss_indices, embeddings, labels):
-        return self.element_reduction_helper(losses, loss_indices[0], labels)
-
-    def element_reduction_helper(self, losses, indices, labels):
-        self.weights = c_f.to_device(self.weights, losses, dtype=losses.dtype)
-        return torch.mean(losses * self.weights[labels[indices]])
+    def element_reduction(self, losses, loss_indices, embeddings, labels, **kwargs):
+        weights = c_f.to_device(self.weights, losses, dtype=losses.dtype)
+        return torch.mean(losses * weights[labels[loss_indices]])

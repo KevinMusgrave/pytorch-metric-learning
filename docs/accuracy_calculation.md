@@ -134,7 +134,7 @@ AccuracyCalculator's `mean_average_precision_at_r` and `r_precision` are correct
 
 ### Adding custom accuracy metrics
 
-Let's say you want to use the existing metrics but also compute precision @ 2, and a fancy mutual info method. You can extend the existing class, and write methods that start with the keyword `calculate_`
+Let's say you want to use the existing metrics but also compute precision @ 2, and a fancy mutual info method. Extend the class, write a method for each metric, and add the methods to `metric_functions()`, which maps metric names to methods:
 
 ```python
 from pytorch_metric_learning.utils import accuracy_calculator
@@ -153,14 +153,21 @@ class YourCalculator(accuracy_calculator.AccuracyCalculator):
     def calculate_fancy_mutual_info(self, query_labels, cluster_labels, **kwargs):
         return fancy_computations
 
+    def metric_functions(self):
+        return {
+            **super().metric_functions(),
+            "precision_at_2": self.calculate_precision_at_2,
+            "fancy_mutual_info": self.calculate_fancy_mutual_info,
+        }
+
     def requires_clustering(self):
         return super().requires_clustering() + ["fancy_mutual_info"]
 
     def requires_knn(self):
-    	return super().requires_knn() + ["precision_at_2"]
+        return super().requires_knn() + ["precision_at_2"]
 ```
 
-Any method that starts with "calculate_" will be passed the following kwargs:
+Every metric function is called with the following kwargs:
 
 ```python
 kwargs = {"query": query,                    # query embeddings

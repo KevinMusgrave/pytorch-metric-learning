@@ -1,5 +1,3 @@
-import math
-
 import torch
 
 from . import common_functions as c_f
@@ -155,23 +153,6 @@ def get_random_triplet_indices(
     else:
         empty = torch.tensor([], device=labels_device, dtype=torch.long)
         return empty.clone(), empty.clone(), empty.clone()
-
-
-def repeat_to_match_size(smaller_set, larger_size, smaller_size):
-    num_repeat = math.ceil(float(larger_size) / float(smaller_size))
-    return smaller_set.repeat(num_repeat)[:larger_size]
-
-
-def matched_size_indices(curr_p_idx, curr_n_idx):
-    num_pos_pairs = len(curr_p_idx)
-    num_neg_pairs = len(curr_n_idx)
-    if num_pos_pairs > num_neg_pairs:
-        n_idx = repeat_to_match_size(curr_n_idx, num_pos_pairs, num_neg_pairs)
-        p_idx = curr_p_idx
-    else:
-        p_idx = repeat_to_match_size(curr_p_idx, num_neg_pairs, num_pos_pairs)
-        n_idx = curr_n_idx
-    return p_idx, n_idx
 
 
 def convert_to_triplets(indices_tuple, labels, ref_labels=None, t_per_anchor=100):

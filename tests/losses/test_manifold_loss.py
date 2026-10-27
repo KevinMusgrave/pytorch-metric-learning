@@ -92,7 +92,7 @@ class OriginalImplementationManifoldLoss(Module):
 
 def loss_incorrect_descriptors_dim():
     embeddings = torch.randn(10, 10)
-    loss_fn = ManifoldLoss(l=999)
+    loss_fn = ManifoldLoss(embedding_size=999)
     loss_fn(embeddings)
 
 
@@ -124,14 +124,14 @@ class TestManifoldLoss(unittest.TestCase):
             original_loss = original_loss_func(embeddings, labels)
 
             with self.assertRaises(ValueError):
-                ManifoldLoss(l=embedding_size, lambdaC=-999)
+                ManifoldLoss(embedding_size=embedding_size, lambda_c=-999)
             self.assertRaises(AssertionError, loss_incorrect_descriptors_dim)
 
             loss_func = ManifoldLoss(
-                l=embedding_size,
-                K=n_proxies,
+                embedding_size=embedding_size,
+                num_proxies=n_proxies,
                 alpha=alpha,
-                lambdaC=0,
+                lambda_c=0,
                 margin=ORIGINAL_IMPLEMENTATION_MARGIN,
             )
             loss_func.proxies.data = proxies.data
@@ -168,8 +168,8 @@ class TestManifoldLoss(unittest.TestCase):
             original_loss = original_loss_func(embeddings, labels)
 
             loss_func = ManifoldLoss(
-                l=embedding_size,
-                K=n_proxies,
+                embedding_size=embedding_size,
+                num_proxies=n_proxies,
                 alpha=alpha,
                 margin=ORIGINAL_IMPLEMENTATION_MARGIN,
             )

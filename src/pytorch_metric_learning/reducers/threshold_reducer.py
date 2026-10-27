@@ -12,19 +12,7 @@ class ThresholdReducer(BaseReducer):
         self.low = low
         self.high = high
 
-    def element_reduction(self, losses, loss_indices, embeddings, labels):
-        return self.element_reduction_helper(losses, embeddings)
-
-    def pos_pair_reduction(self, losses, loss_indices, embeddings, labels):
-        return self.element_reduction_helper(losses, embeddings)
-
-    def neg_pair_reduction(self, losses, loss_indices, embeddings, labels):
-        return self.element_reduction_helper(losses, embeddings)
-
-    def triplet_reduction(self, losses, loss_indices, embeddings, labels):
-        return self.element_reduction_helper(losses, embeddings)
-
-    def element_reduction_helper(self, losses, embeddings):
+    def element_reduction(self, losses, loss_indices, embeddings, labels, **kwargs):
         if self.low is not None:
             losses = losses[losses > self.low]
         if self.high is not None:

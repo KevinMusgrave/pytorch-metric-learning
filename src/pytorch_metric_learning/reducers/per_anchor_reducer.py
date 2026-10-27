@@ -18,7 +18,7 @@ class PerAnchorReducer(BaseReducer):
         self.reducer = reducer if reducer is not None else MeanReducer()
         self.aggregation_func = aggregation_func
 
-    def element_reduction(self, losses, loss_indices, embeddings, labels):
+    def element_reduction(self, losses, loss_indices, embeddings, labels, **kwargs):
         loss_dict = {
             "loss": {
                 "losses": losses,
@@ -28,7 +28,7 @@ class PerAnchorReducer(BaseReducer):
         }
         return self.reducer(loss_dict, embeddings, labels)
 
-    def tuple_reduction_helper(self, losses, loss_indices, embeddings, labels):
+    def pair_reduction(self, losses, loss_indices, embeddings, labels):
         batch_size = embeddings.shape[0]
         device, dtype = losses.device, losses.dtype
         new_array = torch.zeros(batch_size, batch_size, device=device, dtype=dtype)
@@ -53,11 +53,11 @@ class PerAnchorReducer(BaseReducer):
         }
         return self.reducer(loss_dict, embeddings, labels)
 
-    def pos_pair_reduction(self, *args, **kwargs):
-        return self.tuple_reduction_helper(*args, **kwargs)
+    def pos_pair_reduction(self, losses, loss_indices, embeddings, labels, **kwargs):
+        return self.pair_reduction(losses, loss_indices, embeddings, labels)
 
-    def neg_pair_reduction(self, *args, **kwargs):
-        return self.tuple_reduction_helper(*args, **kwargs)
+    def neg_pair_reduction(self, losses, loss_indices, embeddings, labels, **kwargs):
+        return self.pair_reduction(losses, loss_indices, embeddings, labels)
 
-    def triplet_reduction(self, *args, **kwargs):
-        raise NotImplementedError("Triplet reduction not supported")
+    def triplet_reduction(self, losses, loss_indices, embeddings, labels, **kwargs):
+        raise NotImplementedError("PerAnchorReducer does not support triplets")

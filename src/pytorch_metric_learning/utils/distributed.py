@@ -134,7 +134,7 @@ def get_indices_tuple(
         indices_tuple = miner(embeddings, labels, ref_emb, ref_labels)
     else:
         indices_tuple = lmu.get_all_pairs_indices(labels, ref_labels)
-    if remove_self and len(labels):
+    if remove_self:
         return lmu.remove_self_comparisons(
             indices_tuple, curr_batch_idx, len(ref_labels)
         )

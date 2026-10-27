@@ -293,10 +293,15 @@ for those design documents or evidence that the listed work is complete.
   over-scaling and rank-dependent queue ordering are fixed. Broader numerical
   references, benchmarks, and CUDA/NCCL evidence remain outstanding. Contributor
   PRs are deferred until after the modernization merge as described above.
-- Next numerical regressions: `CrossBatchMemory` marks an initially empty queue
-  filled after an all-false enqueue mask and computes against unused buffer
-  rows; an empty batch raises `IndexError`; two forwards before backward with
-  unnormalized distances invalidate saved autograd state when the queue changes.
-  All three were reproduced locally and remain to be fixed.
+- Cross-batch memory: empty enqueues and batches preserve queue state; references
+  remain stable across multiple forwards before backward; masked enqueues cannot
+  exceed capacity. Queue metadata now persists in module checkpoints so restored
+  training matches uninterrupted values and gradients. Six focused state tests
+  cover these contracts. The full CPU suite passed 200 tests with 11 skips before
+  the checkpoint-state addition; affected memory tests cover that later change.
+- Verification: the distributed milestone passed all five affected focused
+  suites (26 tests, one statistics-related skip). Its checkpoint gate still
+  reported 1,645 findings in the wider repository; the changed distributed files
+  passed their source checks. No merge/release acceptance is claimed.
 - Phases 3–5: not started. The current package still contains the subsystems
   selected for removal.

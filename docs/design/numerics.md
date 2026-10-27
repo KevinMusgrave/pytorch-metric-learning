@@ -17,6 +17,20 @@ miners use that declaration when comparing margins. Reducers own averaging and
 filtering; losses retain the indices and reduction type needed by the reducer.
 An empty valid set must yield a differentiable zero without introducing NaNs.
 
+Cross-batch memory stores detached reference embeddings. Each forward uses a
+snapshot of the occupied embeddings and labels so subsequent queue writes cannot
+invalidate tensors saved for backward. This supports accumulating several
+forward losses before backpropagating. Only the occupied portion is copied while
+the queue is warming up. An empty enqueue leaves the queue and its filled state
+unchanged; an empty query yields a differentiable zero. Self-comparison removal
+with no current queue indices removes nothing. A call cannot enqueue more rows
+than the queue capacity, including when an enqueue mask is supplied.
+The queue cursor and filled flag belong to PyTorch module extra state so a
+`state_dict` checkpoint restores the next loss and gradients, not just the raw
+buffers. The checkpoint contains tensors and primitive metadata and supports
+`torch.load(..., weights_only=True)`. Older checkpoints without that metadata
+do not describe a resumable queue and are not silently interpreted as one.
+
 The mathematical definitions, supported arguments, and paper references remain
 in `docs/losses.md`, `docs/miners.md`, `docs/distances.md`, `docs/reducers.md`,
 and `docs/regularizers.md`. In particular, P2SGrad computes mean squared error

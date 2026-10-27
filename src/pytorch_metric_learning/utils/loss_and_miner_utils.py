@@ -264,8 +264,9 @@ def convert_to_weights(indices_tuple, labels, dtype, using_ref=False):
 def remove_self_comparisons(
     indices_tuple, curr_batch_idx, ref_size, ref_is_subset=False
 ):
-    # remove self-comparisons
     assert len(indices_tuple) in [3, 4]
+    if len(curr_batch_idx) == 0:
+        return indices_tuple
     s, e = curr_batch_idx[0], curr_batch_idx[-1]
     if len(indices_tuple) == 3:
         a, p, n = indices_tuple

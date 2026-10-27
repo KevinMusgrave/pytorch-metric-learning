@@ -1,9 +1,16 @@
+from typing import TypedDict
+
 import torch
 
 from ..utils import common_functions as c_f
 from ..utils import loss_and_miner_utils as lmu
 from ..utils.module_with_records import ModuleWithRecords
 from .base_loss_wrapper import BaseLossWrapper
+
+
+class _MemoryState(TypedDict):
+    queue_idx: int
+    has_been_filled: bool
 
 
 class CrossBatchMemory(BaseLossWrapper, ModuleWithRecords):
@@ -40,15 +47,13 @@ class CrossBatchMemory(BaseLossWrapper, ModuleWithRecords):
     @classmethod
     def check_loss_support(cls, loss_name):
         if loss_name not in cls.supported_losses():
-            raise Exception(f"CrossBatchMemory not supported for {loss_name}")
+            raise ValueError(f"CrossBatchMemory not supported for {loss_name}")
 
     def forward(self, embeddings, labels, indices_tuple=None, enqueue_mask=None):
         if indices_tuple is not None and enqueue_mask is not None:
             raise ValueError("indices_tuple and enqueue_mask are mutually exclusive")
         if enqueue_mask is not None:
             assert len(enqueue_mask) == len(embeddings)
-        else:
-            assert len(embeddings) <= len(self.embedding_memory)
         self.reset_stats()
         device = embeddings.device
         labels = c_f.to_device(labels, device=device)
@@ -73,12 +78,9 @@ class CrossBatchMemory(BaseLossWrapper, ModuleWithRecords):
         queue_batch_size = len(emb_for_queue)
         self.add_to_memory(emb_for_queue, labels_for_queue, queue_batch_size)
 
-        if not self.has_been_filled:
-            E_mem = self.embedding_memory[: self.queue_idx]
-            L_mem = self.label_memory[: self.queue_idx]
-        else:
-            E_mem = self.embedding_memory
-            L_mem = self.label_memory
+        memory_end = self.memory_size if self.has_been_filled else self.queue_idx
+        E_mem = self.embedding_memory[:memory_end].clone()
+        L_mem = self.label_memory[:memory_end].clone()
 
         indices_tuple = self.create_indices_tuple(
             embeddings,
@@ -92,12 +94,18 @@ class CrossBatchMemory(BaseLossWrapper, ModuleWithRecords):
         return loss
 
     def add_to_memory(self, embeddings, labels, batch_size):
+        if batch_size > self.memory_size:
+            raise ValueError(
+                "The number of enqueued embeddings must not exceed memory_size"
+            )
         self.curr_batch_idx = (
             torch.arange(
                 self.queue_idx, self.queue_idx + batch_size, device=labels.device
             )
             % self.memory_size
         )
+        if batch_size == 0:
+            return
         self.embedding_memory[self.curr_batch_idx] = embeddings.detach()
         self.label_memory[self.curr_batch_idx] = labels.detach()
         prev_queue_idx = self.queue_idx
@@ -144,3 +152,10 @@ class CrossBatchMemory(BaseLossWrapper, ModuleWithRecords):
         self.register_buffer("label_memory", torch.zeros(self.memory_size).long())
         self.has_been_filled = False
         self.queue_idx = 0
+
+    def get_extra_state(self) -> _MemoryState:
+        return {"queue_idx": self.queue_idx, "has_been_filled": self.has_been_filled}
+
+    def set_extra_state(self, state: _MemoryState) -> None:
+        self.queue_idx = state["queue_idx"]
+        self.has_been_filled = state["has_been_filled"]

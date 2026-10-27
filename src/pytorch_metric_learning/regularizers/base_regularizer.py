@@ -7,9 +7,6 @@ class BaseRegularizer(ModuleWithRecordsReducerAndDistance):
         raise NotImplementedError
 
     def forward(self, x):
-        """
-        x should have shape (N, embedding_size)
-        """
         self.reset_stats()
         loss_dict = self.compute_loss(x)
         return self.reducer(loss_dict, x, c_f.torch_arange_from_size(x))

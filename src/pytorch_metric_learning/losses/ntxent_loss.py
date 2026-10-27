@@ -10,12 +10,11 @@ class NTXentLoss(GenericPairLoss):
         super().__init__(mat_based_loss=False, **kwargs)
         self.temperature = temperature
 
-    def _compute_loss(self, pos_pairs, neg_pairs, indices_tuple):
+    def _compute_pair_loss(self, pos_pairs, neg_pairs, indices_tuple):
         a1, p, a2, _ = indices_tuple
 
         if len(a1) > 0 and len(a2) > 0:
             dtype = neg_pairs.dtype
-            # if dealing with actual distances, use negative distances
             if not self.distance.is_inverted:
                 pos_pairs = -pos_pairs
                 neg_pairs = -neg_pairs

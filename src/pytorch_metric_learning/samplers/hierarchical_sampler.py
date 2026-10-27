@@ -40,7 +40,11 @@ class HierarchicalSampler(Sampler[list[int]]):
 
         groups = defaultdict(lambda: defaultdict(list))
         for idx, (super_label, label) in enumerate(
-            zip(labels[:, outer_label].tolist(), labels[:, inner_label].tolist())
+            zip(
+                labels[:, outer_label].tolist(),
+                labels[:, inner_label].tolist(),
+                strict=True,
+            )
         ):
             groups[super_label][label].append(idx)
         self.super_image_lists = {

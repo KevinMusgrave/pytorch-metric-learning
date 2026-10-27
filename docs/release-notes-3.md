@@ -96,6 +96,17 @@ when `collect_stats` is enabled. Attributes that registration previously
 created as placeholder zeros, such as `NormalizedSoftmaxLoss.num_classes`, no
 longer exist.
 
+## Extension hooks
+
+`GenericPairLoss` subclasses implement `_compute_matrix_loss(mat, pos_mask,
+neg_mask)` when constructed with `mat_based_loss=True`, or
+`_compute_pair_loss(pos_pairs, neg_pairs, indices_tuple)` otherwise, instead of
+one `_compute_loss` whose signature depended on the flag. Regularizer
+`compute_loss` takes one argument, `x`, which is embeddings or weights.
+`HDCMiner` no longer mutates externally set candidates; repeated calls with the
+same candidates return the same pairs. `PNPLoss` and `SelfSupervisedLoss`
+raise `ValueError` for unsupported variants and losses.
+
 ## Sampler randomness
 
 `MPerClassSampler`, `HierarchicalSampler`, and `FixedSetOfTriplets` use

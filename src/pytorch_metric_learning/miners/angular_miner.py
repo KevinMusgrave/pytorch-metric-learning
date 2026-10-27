@@ -9,12 +9,6 @@ from .base_miner import BaseMiner
 
 
 class AngularMiner(BaseMiner):
-    """
-    Returns triplets that form an angle greater than some threshold (angle).
-    The angle is computed as defined in the angular loss paper:
-    https://arxiv.org/abs/1708.01682
-    """
-
     def __init__(self, angle=20, **kwargs):
         super().__init__(**kwargs)
         c_f.assert_distance_type(

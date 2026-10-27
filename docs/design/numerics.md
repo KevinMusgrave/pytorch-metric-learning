@@ -86,6 +86,17 @@ values, gradients, and sequential updates. Float16 histogram and gradient compar
 `5e-4` absolute and `5e-3` relative error for rounding during normalization and
 accumulation; float32 and float64 retain PyTorch's default comparison tolerances.
 
+Some implementation choices are numerical rather than mathematical.
+`LpDistance` computes float16 matrices from row pairs because `torch.cdist` has
+no float16 kernel. `ManifoldLoss` inverts its random-walk matrix in float32,
+which half precision lacks, and masks excluded terms with $-\infty$ before
+log-sum-exp rather than subtracting margins, avoiding cancellation; a sample's
+correlation with its own proxy contributes no loss. `DistanceWeightedMiner`
+clamps distances at `cutoff` to bound weight variance, works in log space with
+the maximum subtracted, and zeroes same-class weights so only negatives are
+sampled, following the first equation of Section 4 of Wu et al. `SupConLoss`
+subtracts each row's maximum before exponentiation.
+
 The mathematical definitions, supported arguments, and paper references remain
 in `docs/losses.md`, `docs/miners.md`, `docs/distances.md`, `docs/reducers.md`,
 and `docs/regularizers.md`. In particular, P2SGrad computes mean squared error

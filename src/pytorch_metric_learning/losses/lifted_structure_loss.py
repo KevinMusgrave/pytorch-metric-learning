@@ -17,7 +17,7 @@ class LiftedStructureLoss(GenericPairLoss):
             embeddings, labels, indices_tuple, ref_emb, ref_labels
         )
 
-    def _compute_loss(self, pos_pairs, neg_pairs, indices_tuple):
+    def _compute_pair_loss(self, pos_pairs, neg_pairs, indices_tuple):
         a1, p, a2, _ = indices_tuple
 
         if len(a1) > 0 and len(a2) > 0:
@@ -51,15 +51,12 @@ class LiftedStructureLoss(GenericPairLoss):
 
 
 class GeneralizedLiftedStructureLoss(GenericPairLoss):
-    # The 'generalized' lifted structure loss shown on page 4
-    # of the "in defense of triplet loss" paper
-    # https://arxiv.org/pdf/1703.07737.pdf
     def __init__(self, neg_margin=1, pos_margin=0, **kwargs):
         super().__init__(mat_based_loss=True, **kwargs)
         self.neg_margin = neg_margin
         self.pos_margin = pos_margin
 
-    def _compute_loss(self, mat, pos_mask, neg_mask):
+    def _compute_matrix_loss(self, mat, pos_mask, neg_mask):
         remaining_pos_margin = self.distance.margin(mat, self.pos_margin)
         remaining_neg_margin = self.distance.margin(self.neg_margin, mat)
 

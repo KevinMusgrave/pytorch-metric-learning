@@ -20,7 +20,10 @@ class GenericPairLoss(BaseMetricLossFunction):
         mat = self.distance(embeddings, ref_emb)
         return self.loss_method(mat, indices_tuple)
 
-    def _compute_loss(self):
+    def _compute_matrix_loss(self, mat, pos_mask, neg_mask):
+        raise NotImplementedError
+
+    def _compute_pair_loss(self, pos_pairs, neg_pairs, indices_tuple):
         raise NotImplementedError
 
     def mat_based_loss(self, mat, indices_tuple):
@@ -29,7 +32,7 @@ class GenericPairLoss(BaseMetricLossFunction):
         pos_mask[a1, p] = 1
         neg_mask[a2, n] = 1
         self._assert_either_pos_or_neg(pos_mask, neg_mask)
-        return self._compute_loss(mat, pos_mask, neg_mask)
+        return self._compute_matrix_loss(mat, pos_mask, neg_mask)
 
     def pair_based_loss(self, mat, indices_tuple):
         a1, p, a2, n = indices_tuple
@@ -38,7 +41,7 @@ class GenericPairLoss(BaseMetricLossFunction):
             pos_pair = mat[a1, p]
         if len(a2) > 0:
             neg_pair = mat[a2, n]
-        return self._compute_loss(pos_pair, neg_pair, indices_tuple)
+        return self._compute_pair_loss(pos_pair, neg_pair, indices_tuple)
 
     @staticmethod
     def _assert_either_pos_or_neg(pos_mask, neg_mask):

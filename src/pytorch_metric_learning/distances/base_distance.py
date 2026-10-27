@@ -53,7 +53,6 @@ class BaseDistance(ModuleWithRecords):
             return torch.min(*args, **kwargs)
         return torch.max(*args, **kwargs)
 
-    # This measures the margin between x and y
     def margin(self, x, y):
         if self.is_inverted:
             return y - x

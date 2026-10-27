@@ -7,15 +7,6 @@ from .base_metric_loss_function import BaseMetricLossFunction
 
 
 class TripletMarginLoss(BaseMetricLossFunction):
-    """
-    Args:
-        margin: The desired difference between the anchor-positive distance and the
-                anchor-negative distance.
-        swap: Use the positive-negative distance instead of anchor-negative distance,
-              if it violates the margin more.
-        smooth_loss: Use the log-exp version of the triplet loss
-    """
-
     def __init__(
         self,
         margin=0.05,

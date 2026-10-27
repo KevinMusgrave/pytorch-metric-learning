@@ -8,17 +8,6 @@ from .base_metric_loss_function import BaseMetricLossFunction
 
 
 class RankedListLoss(BaseMetricLossFunction):
-    r"""Ranked List Loss described in https://arxiv.org/abs/1903.03238
-       Default parameters correspond to RLL-Simpler, preferred for exploratory analysis.
-
-    Args:
-        * margin (float): margin between positive and negative set
-        * imbalance (float): tradeoff between positive and negative sets. As the name suggests this takes into account
-                            the imbalance between positive and negative samples in the dataset
-        * alpha (float): smallest distance between negative points
-        * Tp & Tn (float): temperatures for, respectively, positive and negative pairs weighting.
-    """
-
     def __init__(self, margin, Tn, imbalance=0.5, alpha=None, Tp=0, **kwargs):
         super().__init__(**kwargs)
 
@@ -34,7 +23,7 @@ class RankedListLoss(BaseMetricLossFunction):
 
         if Tp > 5 or Tn > 5:
             warnings.warn(
-                "Values of Tp or Tn are too high. Too large temperature values may lead to overflow."
+                "Values of Tp or Tn are too high and may overflow.", stacklevel=2
             )
 
         self.Tp = Tp
@@ -46,7 +35,6 @@ class RankedListLoss(BaseMetricLossFunction):
         c_f.indices_tuple_not_supported(indices_tuple)
 
         mat = self.distance(embeddings, embeddings)
-        # mat.fill_diagonal_(0)
         mat = mat - mat * torch.eye(len(mat), device=embeddings.device)
         mat = c_f.to_device(mat, device=embeddings.device, dtype=embeddings.dtype)
         y = labels.unsqueeze(1) == labels.unsqueeze(0)
@@ -74,10 +62,6 @@ class RankedListLoss(BaseMetricLossFunction):
         loss_N = torch.sum(w_n * (self.alpha - N_star), dim=1) / torch.sum(
             w_n + 1e-5, dim=1
         )
-
-        # with torch.no_grad():
-        #     loss_P[loss_P.isnan()] = 0
-        #     loss_N[loss_N.isnan()] = 0
 
         loss_RLL = (1 - self.imbalance) * loss_P + self.imbalance * loss_N
 

@@ -9,23 +9,6 @@ from .base_metric_loss_function import BaseMetricLossFunction
 
 
 class ManifoldLoss(BaseMetricLossFunction):
-    r"""
-    The parameters are defined as in the paper https://openaccess.thecvf.com/content_CVPR_2019/papers/Aziere_Ensemble_Deep_Manifold_Similarity_Learning_Using_Hard_Proxies_CVPR_2019_paper.pdf
-    - l: embedding size.
-
-    - K: number of proxies. Optional
-
-    - lambdaC: regularization weight. Used in the formula
-                :math:`loss = loss^{int} + \lambda_C*loss^{ctx}`.
-        For :math:`\lambda_C=0` use only intrinsic loss, for :math:`\lambda_C=\infty` use only context loss.
-        Optional
-
-    - alpha: parameter of the Random Walk. It is contained in :math:`(0,1)` and specifies the amount of similarity from
-           each node is passed to neighbor nodes. Optional
-
-    - margin: margin used in the calculation of the loss. Optional
-    """
-
     def __init__(
         self,
         l: int,
@@ -77,9 +60,7 @@ class ManifoldLoss(BaseMetricLossFunction):
         S_bar = S_bar.mm(D_inv_half)
 
         dt = S_bar.dtype
-        L = torch.inverse(
-            Y.float() - self.alpha * S_bar.float()
-        )  # Added float cast since inverse is not available for Half
+        L = torch.inverse(Y.float() - self.alpha * S_bar.float())
         L = L.to(dt)
 
         F = (1 - self.alpha) * L
@@ -89,13 +70,8 @@ class ManifoldLoss(BaseMetricLossFunction):
         if self.lambdaC != math.inf:
             F = F[:N, N:]
             loss_int = F - F[torch.arange(N), meta_classes].view(-1, 1) + self.margin
-            loss_int[
-                torch.arange(N), meta_classes
-            ] = -math.inf  # This way avoid numerical cancellation happening   # NoQA
-            # instead with subtraction of margin term           # NoQA
-            loss_int[
-                loss_int < 0
-            ] = -math.inf  # This way no loss for positive correlation with own proxy
+            loss_int[torch.arange(N), meta_classes] = -math.inf
+            loss_int[loss_int < 0] = -math.inf
 
             loss_int = torch.exp(loss_int)
             loss_int = torch.log(1 + torch.sum(loss_int, dim=1))
@@ -105,13 +81,9 @@ class ManifoldLoss(BaseMetricLossFunction):
             F_e, F_p.unsqueeze(1), dim=-1
         ).t()
         loss_ctx += -loss_ctx[torch.arange(N), meta_classes].view(-1, 1) + self.margin
-        loss_ctx[
-            torch.arange(N), meta_classes
-        ] = -math.inf  # This way avoid numerical cancellation happening   # NoQA
-        # instead with subtraction of margin term           # NoQA
+        loss_ctx[torch.arange(N), meta_classes] = -math.inf
         loss_ctx[loss_ctx < 0] = -math.inf
 
-        # This way no loss for positive correlation with own proxy
         loss_ctx = torch.exp(loss_ctx)
         loss_ctx = torch.log(1 + torch.sum(loss_ctx, dim=1))
         loss_ctx = loss_ctx.mean()

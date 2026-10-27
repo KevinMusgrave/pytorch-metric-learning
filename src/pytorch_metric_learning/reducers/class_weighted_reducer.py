@@ -15,11 +15,9 @@ class ClassWeightedReducer(BaseReducer):
     def pos_pair_reduction(self, losses, loss_indices, embeddings, labels):
         return self.element_reduction_helper(losses, loss_indices[0], labels)
 
-    # based on anchor label
     def neg_pair_reduction(self, losses, loss_indices, embeddings, labels):
         return self.element_reduction_helper(losses, loss_indices[0], labels)
 
-    # based on anchor label
     def triplet_reduction(self, losses, loss_indices, embeddings, labels):
         return self.element_reduction_helper(losses, loss_indices[0], labels)
 

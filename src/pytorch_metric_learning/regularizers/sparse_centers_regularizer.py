@@ -14,9 +14,9 @@ class SparseCentersRegularizer(BaseRegularizer):
         self.set_class_masks(num_classes, centers_per_class)
         self.register_stats("same_class_center_sim", "diff_class_center_sim")
 
-    def compute_loss(self, weights):
-        center_similarities = self.distance(weights)
-        small_val = c_f.small_val(weights.dtype)
+    def compute_loss(self, x):
+        center_similarities = self.distance(x)
+        small_val = c_f.small_val(x.dtype)
         center_similarities_masked = torch.clamp(
             2.0 * center_similarities[self.same_class_mask], max=2
         )

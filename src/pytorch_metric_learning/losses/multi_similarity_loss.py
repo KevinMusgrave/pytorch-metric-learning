@@ -5,21 +5,13 @@ from .generic_pair_loss import GenericPairLoss
 
 
 class MultiSimilarityLoss(GenericPairLoss):
-    """
-    modified from https://github.com/MalongTech/research-ms-loss/
-    Args:
-        alpha: The exponential weight for positive pairs
-        beta: The exponential weight for negative pairs
-        base: The shift in the exponent applied to both positive and negative pairs
-    """
-
     def __init__(self, alpha=2, beta=50, base=0.5, **kwargs):
         super().__init__(mat_based_loss=True, **kwargs)
         self.alpha = alpha
         self.beta = beta
         self.base = base
 
-    def _compute_loss(self, mat, pos_mask, neg_mask):
+    def _compute_matrix_loss(self, mat, pos_mask, neg_mask):
         pos_exp = self.distance.margin(mat, self.base)
         neg_exp = self.distance.margin(self.base, mat)
         pos_loss = (1.0 / self.alpha) * lmu.logsumexp(

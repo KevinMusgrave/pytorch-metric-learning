@@ -46,5 +46,5 @@ class ArcFaceLoss(LargeMarginSoftmaxLoss):
 
         return unscaled_logits
 
-    def scale_logits(self, logits, *_):
+    def scale_logits(self, logits, embeddings):
         return logits * self.scale

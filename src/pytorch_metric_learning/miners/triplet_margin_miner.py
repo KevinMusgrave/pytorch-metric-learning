@@ -5,17 +5,6 @@ from .base_miner import BaseMiner
 
 
 class TripletMarginMiner(BaseMiner):
-    """
-    Returns triplets that violate the margin
-    Args:
-        margin
-        type_of_triplets: options are "all", "hard", or "semihard".
-                "all" means all triplets that violate the margin
-                "hard" is a subset of "all", but the negative is closer to the anchor than the positive
-                "semihard" is a subset of "all", but the negative is further from the anchor than the positive
-            "easy" is all triplets that are not in "all"
-    """
-
     def __init__(self, margin=0.2, type_of_triplets="all", **kwargs):
         super().__init__(**kwargs)
         self.margin = margin

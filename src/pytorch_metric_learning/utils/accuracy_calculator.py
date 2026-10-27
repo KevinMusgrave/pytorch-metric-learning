@@ -480,8 +480,8 @@ class AccuracyCalculator:
             and torch.allclose(query_labels, reference_labels[: len(query)])
         ):
             raise ValueError(
-                "When ref_includes_query is True, the first len(query) elements of reference must be equal to query.\n"
-                "Likewise, the first len(query_labels) elements of reference_labels must be equal to query_labels.\n"
+                "When ref_includes_query is True, the first len(query) rows of "
+                "reference and reference_labels must equal query and query_labels."
             )
 
         self.curr_function_dict = self.get_function_dict(include, exclude)

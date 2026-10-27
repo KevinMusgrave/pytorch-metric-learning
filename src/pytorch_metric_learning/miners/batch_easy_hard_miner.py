@@ -10,7 +10,7 @@ class BatchEasyHardMiner(BaseMiner):
     SEMIHARD = "semihard"
     EASY = "easy"
     ALL = "all"
-    all_batch_mining_strategies = [HARD, SEMIHARD, EASY, ALL]
+    all_batch_mining_strategies = (HARD, SEMIHARD, EASY, ALL)
 
     def __init__(
         self,
@@ -26,10 +26,9 @@ class BatchEasyHardMiner(BaseMiner):
             pos_strategy in self.all_batch_mining_strategies
             and neg_strategy in self.all_batch_mining_strategies
         ):
+            choices = '" or "'.join(self.all_batch_mining_strategies)
             raise ValueError(
-                '\npos_strategy must be one of "{0}"\nneg_strategy must be one of "{0}"'.format(
-                    '" or "'.join(self.all_batch_mining_strategies)
-                )
+                f'pos_strategy and neg_strategy must each be one of "{choices}"'
             )
         if pos_strategy == neg_strategy == self.SEMIHARD:
             raise ValueError('pos_strategy and neg_strategy cannot both be "semihard"')

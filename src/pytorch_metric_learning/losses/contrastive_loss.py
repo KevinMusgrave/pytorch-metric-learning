@@ -11,23 +11,21 @@ class ContrastiveLoss(GenericPairLoss):
         self.pos_margin = pos_margin
         self.neg_margin = neg_margin
 
-    def _compute_loss(self, pos_pair_dist, neg_pair_dist, indices_tuple):
+    def _compute_pair_loss(self, pos_pairs, neg_pairs, indices_tuple):
         pos_loss, neg_loss = 0, 0
-        if len(pos_pair_dist) > 0:
-            pos_loss = self.get_per_pair_loss(pos_pair_dist, "pos")
-        if len(neg_pair_dist) > 0:
-            neg_loss = self.get_per_pair_loss(neg_pair_dist, "neg")
-        pos_pairs = lmu.pos_pairs_from_tuple(indices_tuple)
-        neg_pairs = lmu.neg_pairs_from_tuple(indices_tuple)
+        if len(pos_pairs) > 0:
+            pos_loss = self.get_per_pair_loss(pos_pairs, "pos")
+        if len(neg_pairs) > 0:
+            neg_loss = self.get_per_pair_loss(neg_pairs, "neg")
         return {
             "pos_loss": {
                 "losses": pos_loss,
-                "indices": pos_pairs,
+                "indices": lmu.pos_pairs_from_tuple(indices_tuple),
                 "reduction_type": "pos_pair",
             },
             "neg_loss": {
                 "losses": neg_loss,
-                "indices": neg_pairs,
+                "indices": lmu.neg_pairs_from_tuple(indices_tuple),
                 "reduction_type": "neg_pair",
             },
         }
@@ -38,11 +36,11 @@ class ContrastiveLoss(GenericPairLoss):
         per_pair_loss = loss_calc_func(pair_dists, margin)
         return per_pair_loss
 
-    def pos_calc(self, pos_pair_dist, margin):
-        return torch.nn.functional.relu(self.distance.margin(pos_pair_dist, margin))
+    def pos_calc(self, pos_pairs, margin):
+        return torch.nn.functional.relu(self.distance.margin(pos_pairs, margin))
 
-    def neg_calc(self, neg_pair_dist, margin):
-        return torch.nn.functional.relu(self.distance.margin(margin, neg_pair_dist))
+    def neg_calc(self, neg_pairs, margin):
+        return torch.nn.functional.relu(self.distance.margin(margin, neg_pairs))
 
     def get_default_reducer(self):
         return AvgNonZeroReducer()

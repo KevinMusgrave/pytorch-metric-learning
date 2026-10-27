@@ -10,14 +10,14 @@ class LpRegularizer(BaseRegularizer):
         self.p = p
         self.power = power
 
-    def compute_loss(self, embeddings):
-        reg = torch.norm(embeddings, p=self.p, dim=1)
+    def compute_loss(self, x):
+        reg = torch.norm(x, p=self.p, dim=1)
         if self.power != 1:
             reg = reg**self.power
         return {
             "loss": {
                 "losses": reg,
-                "indices": c_f.torch_arange_from_size(embeddings),
+                "indices": c_f.torch_arange_from_size(x),
                 "reduction_type": "element",
             }
         }

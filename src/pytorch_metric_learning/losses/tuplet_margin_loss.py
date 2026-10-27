@@ -16,7 +16,7 @@ class TupletMarginLoss(GenericPairLoss):
         self.scale = scale
         self.register_stats("avg_pos_angle", "avg_neg_angle")
 
-    def _compute_loss(self, pos_pairs, neg_pairs, indices_tuple):
+    def _compute_pair_loss(self, pos_pairs, neg_pairs, indices_tuple):
         a1, p, a2, _ = indices_tuple
 
         if len(a1) > 0 and len(a2) > 0:

@@ -1,8 +1,8 @@
 import torch
 
-from pytorch_metric_learning.reducers import MeanReducer
+from .mean_reducer import MeanReducer
 
 
 class SumReducer(MeanReducer):
-    def element_reduction(self, losses, *_):
+    def element_reduction(self, losses, loss_indices, embeddings, labels):
         return torch.sum(losses)

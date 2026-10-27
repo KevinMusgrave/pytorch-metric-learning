@@ -14,11 +14,6 @@ class VICRegLoss(BaseMetricLossFunction):
         if "embedding_regularizer" in kwargs:
             raise ValueError("VICRegLoss cannot use a regularizer")
         super().__init__(**kwargs)
-        """
-        The overall loss function is a weighted average of the invariance, variance and covariance terms:
-            L(Z, Z') = λs(Z, Z') + µ[v(Z) + v(Z')] + ν[c(Z) + c(Z')],
-        where λ, µ and ν are hyper-parameters controlling the importance of each term in the loss.
-        """
         self.invariance_lambda = invariance_lambda
         self.variance_mu = variance_mu
         self.covariance_v = covariance_v
@@ -63,7 +58,7 @@ class VICRegLoss(BaseMetricLossFunction):
     def variance_loss(self, emb, ref_emb):
         std_emb = torch.sqrt(emb.var(dim=0) + self.eps)
         std_ref_emb = torch.sqrt(ref_emb.var(dim=0) + self.eps)
-        return F.relu(1 - std_emb) / 2, F.relu(1 - std_ref_emb) / 2  # / 2 for averaging
+        return F.relu(1 - std_emb) / 2, F.relu(1 - std_ref_emb) / 2
 
     def covariance_loss(self, emb, ref_emb):
         N, D = emb.size()

@@ -4,8 +4,6 @@ from .base_miner import BaseMiner
 
 
 class EmbeddingsAlreadyPackagedAsTriplets(BaseMiner):
-    # If the embeddings are grouped by triplet,
-    # then use this miner to force the loss function to use the already-formed triplets
     def mine(self, embeddings, labels, ref_emb, ref_labels):
         batch_size = embeddings.size(0)
         a = torch.arange(0, batch_size, 3)

@@ -12,7 +12,7 @@ class BaseReducer(ModuleWithRecords):
     def forward(self, loss_dict, embeddings, labels):
         self.reset_stats()
         assert len(loss_dict) == 1
-        loss_name = list(loss_dict.keys())[0]
+        loss_name = next(iter(loss_dict))
         loss_info = loss_dict[loss_name]
         losses, loss_indices, reduction_type, kwargs = self.unpack_loss_info(loss_info)
         loss_val = self.reduce_the_loss(
@@ -55,18 +55,16 @@ class BaseReducer(ModuleWithRecords):
         raise NotImplementedError
 
     def get_reduction_func(self, reduction_type):
-        return getattr(self, "{}_reduction".format(reduction_type))
+        return getattr(self, f"{reduction_type}_reduction")
 
     def assert_sizes(self, losses, loss_indices, reduction_type):
-        getattr(self, "assert_sizes_{}".format(reduction_type))(losses, loss_indices)
+        getattr(self, f"assert_sizes_{reduction_type}")(losses, loss_indices)
 
     def zero_loss(self, embeddings):
         return torch.sum(embeddings * 0)
 
     def input_is_zero_loss(self, losses):
-        if (not torch.is_tensor(losses)) and (losses == 0):
-            return True
-        return False
+        return (not torch.is_tensor(losses)) and losses == 0
 
     def assert_sizes_already_reduced(self, losses, loss_indices):
         pass

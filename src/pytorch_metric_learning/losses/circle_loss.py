@@ -8,22 +8,6 @@ from .generic_pair_loss import GenericPairLoss
 
 
 class CircleLoss(GenericPairLoss):
-    """
-    Circle loss for pairwise labels only.
-
-    Args:
-    m:  The relaxation factor that controls the radious of the decision boundary.
-    gamma: The scale factor that determines the largest scale of each similarity score.
-
-    According to the paper, the suggested default values of m and gamma are:
-
-    Face Recognition: m = 0.25, gamma = 256
-    Person Reidentification: m = 0.25, gamma = 128
-    Fine-grained Image Retrieval: m = 0.4, gamma = 80
-
-    By default, we set m = 0.4 and gamma = 80
-    """
-
     def __init__(self, m=0.4, gamma=80, **kwargs):
         super().__init__(mat_based_loss=True, **kwargs)
         c_f.assert_distance_type(self, CosineSimilarity)
@@ -35,7 +19,7 @@ class CircleLoss(GenericPairLoss):
         self.delta_p = 1 - self.m
         self.delta_n = self.m
 
-    def _compute_loss(self, mat, pos_mask, neg_mask):
+    def _compute_matrix_loss(self, mat, pos_mask, neg_mask):
         pos_mask_bool = pos_mask.bool()
         neg_mask_bool = neg_mask.bool()
         anchor_positive = mat[pos_mask_bool]

@@ -10,13 +10,13 @@ class CenterInvariantRegularizer(BaseRegularizer):
         super().__init__(**kwargs)
         c_f.assert_distance_type(self, LpDistance, power=1, normalize_embeddings=False)
 
-    def compute_loss(self, weights):
-        squared_weight_norms = self.distance.get_norm(weights) ** 2
+    def compute_loss(self, x):
+        squared_weight_norms = self.distance.get_norm(x) ** 2
         deviations_from_mean = squared_weight_norms - torch.mean(squared_weight_norms)
         return {
             "loss": {
                 "losses": (deviations_from_mean**2) / 4,
-                "indices": c_f.torch_arange_from_size(weights),
+                "indices": c_f.torch_arange_from_size(x),
                 "reduction_type": "element",
             }
         }

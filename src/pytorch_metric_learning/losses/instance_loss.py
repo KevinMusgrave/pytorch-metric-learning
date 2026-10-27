@@ -8,12 +8,6 @@ from .base_metric_loss_function import BaseMetricLossFunction
 
 
 class InstanceLoss(BaseMetricLossFunction):
-    """
-    Implementation of  Dual-Path Convolutional Image-Text Embeddings with Instance Loss, ACM TOMM 2020
-    https://arxiv.org/abs/1711.05535
-    using cross-entropy loss for every sample if label is not available, else use given label.
-    """
-
     def __init__(self, gamma=64, **kwargs):
         super().__init__(**kwargs)
         c_f.assert_distance_type(self, CosineSimilarity)

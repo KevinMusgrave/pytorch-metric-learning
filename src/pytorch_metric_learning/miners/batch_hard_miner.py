@@ -10,5 +10,5 @@ class BatchHardMiner(BatchEasyHardMiner):
         )
 
     def mine(self, *args, **kwargs):
-        a1, p, a2, n = super().mine(*args, **kwargs)
+        a1, p, _, n = super().mine(*args, **kwargs)
         return a1, p, n

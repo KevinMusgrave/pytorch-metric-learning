@@ -5,11 +5,6 @@ from .base_miner import BaseMiner
 
 
 class PairMarginMiner(BaseMiner):
-    """
-    Returns positive pairs that have distance greater than a margin and negative
-    pairs that have distance less than a margin
-    """
-
     def __init__(self, pos_margin=0.2, neg_margin=0.8, **kwargs):
         super().__init__(**kwargs)
         self.pos_margin = pos_margin

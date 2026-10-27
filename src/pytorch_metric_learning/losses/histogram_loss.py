@@ -14,17 +14,17 @@ def filter_pairs(*tensors: torch.Tensor):
 
 
 class HistogramLoss(BaseMetricLossFunction):
-    def __init__(self, n_bins: int = None, delta: float = None, **kwargs):
+    def __init__(self, n_bins: int | None = None, delta: float | None = None, **kwargs):
         super().__init__(**kwargs)
         if delta is not None and n_bins is not None:
             assert delta == 2 / n_bins, (
-                f"delta and n_bins must satisfy the equation delta = 2/n_bins.\nPassed values are delta={delta} and n_bins={n_bins}"
+                "delta and n_bins must satisfy delta = 2 / n_bins; "
+                f"got delta={delta} and n_bins={n_bins}"
             )
 
-        if delta is None and n_bins is None:
-            n_bins = 100
-
-        self.delta = delta if delta is not None else 2 / n_bins
+        if delta is None:
+            delta = 2 / (100 if n_bins is None else n_bins)
+        self.delta = delta
 
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
         c_f.labels_or_indices_tuple_required(labels, indices_tuple)
@@ -56,9 +56,7 @@ class HistogramLoss(BaseMetricLossFunction):
 
     def compute_density(self, distances):
         size = distances.size(0)
-        r_star = torch.floor(
-            (distances.float() + 1) / self.delta
-        )  # Indices of the bins containing the values of the distances
+        r_star = torch.floor((distances.float() + 1) / self.delta)
         r_star = c_f.to_device(r_star, tensor=distances, dtype=torch.long)
 
         delta_ijr_a = (distances + 1 - r_star * self.delta) / self.delta
@@ -69,9 +67,7 @@ class HistogramLoss(BaseMetricLossFunction):
         density = torch.zeros(round(1 + 2 / self.delta))
         density = c_f.to_device(density, tensor=distances, dtype=distances.dtype)
 
-        # For each node sum the contributions of the bins whose ending node is this one
         density.scatter_add_(0, r_star + 1, delta_ijr_a)
-        # For each node sum the contributions of the bins whose starting node is this one
         density.scatter_add_(0, r_star, delta_ijr_b)
         return density / size
 

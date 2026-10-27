@@ -11,7 +11,6 @@ class NCALoss(BaseMetricLossFunction):
         super().__init__(**kwargs)
         self.softmax_scale = softmax_scale
 
-    # https://www.cs.toronto.edu/~hinton/absps/nca.pdf
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
         if len(embeddings) <= 1:
             return self.zero_losses()

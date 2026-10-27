@@ -5,16 +5,15 @@ from ..utils import common_functions as c_f
 from .base_regularizer import BaseRegularizer
 
 
-# modified from http://kaizhao.net/regularface
 class RegularFaceRegularizer(BaseRegularizer):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         assert self.distance.is_inverted
 
-    def compute_loss(self, weights):
-        dtype, device = weights.dtype, weights.device
-        num_classes = weights.size(0)
-        cos = self.distance(weights)
+    def compute_loss(self, x):
+        dtype, device = x.dtype, x.device
+        num_classes = x.size(0)
+        cos = self.distance(x)
         with torch.no_grad():
             cos1 = cos.clone()
             cos1.fill_diagonal_(c_f.neg_inf(dtype))
@@ -26,7 +25,7 @@ class RegularFaceRegularizer(BaseRegularizer):
         return {
             "loss": {
                 "losses": losses,
-                "indices": c_f.torch_arange_from_size(weights),
+                "indices": c_f.torch_arange_from_size(x),
                 "reduction_type": "element",
             }
         }

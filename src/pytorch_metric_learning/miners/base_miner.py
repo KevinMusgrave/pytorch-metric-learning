@@ -13,15 +13,6 @@ class BaseMiner(ModuleWithRecordsAndDistance):
         raise NotImplementedError
 
     def output_assertion(self, output):
-        """
-        Args:
-            output: the output of self.mine
-        This asserts that the mining function is outputting
-        properly formatted indices. The default is to require a tuple representing
-        a,p,n indices or a1,p,a2,n indices within a batch of embeddings.
-        For example, a tuple of (anchors, positives, negatives) will be
-        (torch.tensor, torch.tensor, torch.tensor)
-        """
         if len(output) == 3:
             self.num_triplets = len(output[0])
             assert self.num_triplets == len(output[1]) == len(output[2])
@@ -34,13 +25,6 @@ class BaseMiner(ModuleWithRecordsAndDistance):
             raise TypeError
 
     def forward(self, embeddings, labels, ref_emb=None, ref_labels=None):
-        """
-        Args:
-            embeddings: tensor of size (batch_size, embedding_size)
-            labels: tensor of size (batch_size)
-        Does any necessary preprocessing, then does mining, and then checks the
-        shape of the mining output before returning it
-        """
         self.reset_stats()
         with torch.no_grad():
             c_f.check_shapes(embeddings, labels)

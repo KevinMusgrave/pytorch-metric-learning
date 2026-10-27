@@ -7,7 +7,7 @@ from .base_metric_loss_function import BaseMetricLossFunction
 
 
 class PNPLoss(BaseMetricLossFunction):
-    VARIANTS = ["Ds", "Dq", "Iu", "Ib", "O"]
+    VARIANTS = ("Ds", "Dq", "Iu", "Ib", "O")
 
     def __init__(self, b=2, alpha=1, anneal=0.01, variant="O", **kwargs):
         super().__init__(**kwargs)
@@ -45,11 +45,8 @@ class PNPLoss(BaseMetricLossFunction):
         mask = I_neg.unsqueeze(dim=0).repeat(N, 1, 1)
 
         sim_all_repeat = sim_all.unsqueeze(dim=1).repeat(1, N, 1)
-        # compute the difference matrix
         sim_diff = sim_all_repeat - sim_all_repeat.permute(0, 2, 1)
-        # pass through the sigmoid and ignores the relevance score of the query to itself
         sim_sg = self.sigmoid(sim_diff, temp=self.anneal) * mask
-        # compute the number of negatives before
         sim_all_rk = torch.sum(sim_sg, dim=-1)
 
         if self.variant == "Ds":
@@ -66,7 +63,7 @@ class PNPLoss(BaseMetricLossFunction):
         elif self.variant == "O":
             pass
         else:
-            raise Exception(f"variant <{self.variant}> not available!")
+            raise ValueError(f"variant <{self.variant}> not available!")
 
         loss = torch.sum(sim_all_rk * I_pos, dim=-1)[safe_N] / N_pos[safe_N].reshape(-1)
         loss = torch.sum(loss) / torch.sum(safe_N)
@@ -82,11 +79,7 @@ class PNPLoss(BaseMetricLossFunction):
         }
 
     def sigmoid(self, tensor, temp=1.0):
-        """temperature controlled sigmoid
-        takes as input a torch tensor (tensor) and passes it through a sigmoid, controlled by temperature: temp
-        """
         exponent = -tensor / temp
-        # clamp the input tensor for stability
         exponent = torch.clamp(exponent, min=-50, max=50)
         y = 1.0 / (1.0 + torch.exp(exponent))
         return y

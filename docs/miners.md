@@ -184,20 +184,17 @@ miners.HDCMiner(filter_percentage=0.5, **kwargs)
 
 - [`LpDistance(normalize_embeddings=True, p=2, power=1)`](distances.md#lpdistance)
 
-**Important methods**:
+**Candidate pairs**:
 
-```python
-# Pairs or triplets extracted from another miner,
-# and then passed in to HDCMiner using this function
-def set_idx_externally(self, external_indices_tuple, labels):
-    self.a1, self.p, self.a2, self.n = lmu.convert_to_pairs(external_indices_tuple, labels)
-    self.was_set_externally = True
+- `set_idx_externally(indices_tuple, labels)` restricts later calls to the given
+  pairs or triplets, converted to pairs. Passing `None` selects all pairs for
+  `labels`.
+- `reset_idx()` returns to the default: all pairs of each call's labels.
 
-# Reset the internal state of the HDCMiner
-def reset_idx(self):
-    self.a1, self.p, self.a2, self.n = None, None, None, None
-    self.was_set_externally = False
-```
+Each call keeps the hardest `filter_percentage` of the positive and of the
+negative candidates, rounding up, and leaves the external candidates
+unchanged, so repeated calls with the same candidates return the same pairs.
+Call `reset_idx()` before mining a batch the candidates do not describe.
 
 **Example of passing another miner output to HDCMiner**:
 

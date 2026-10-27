@@ -513,14 +513,19 @@ losses.GenericPairLoss(mat_based_loss, **kwargs)
 
 **Parameters**:
 
-- **mat_based_loss**: See required implementations.
+- **mat_based_loss**: If `True`, the loss receives the distance matrix and pair masks; otherwise it receives the distances of the positive and negative pairs. See required implementations.
 
 **Required Implementations**:
 
+Implement the hook that matches `mat_based_loss`:
+
 ```python
-# If mat_based_loss is True, then this takes in mat, pos_mask, neg_mask
-# If False, this takes in pos_pair, neg_pair, indices_tuple
-def _compute_loss(self):
+# mat_based_loss=True: the full query-by-reference matrix and 0/1 pair masks
+def _compute_matrix_loss(self, mat, pos_mask, neg_mask):
+    raise NotImplementedError
+
+# mat_based_loss=False: distances of the selected pairs and their indices
+def _compute_pair_loss(self, pos_pairs, neg_pairs, indices_tuple):
     raise NotImplementedError
 ```
 
@@ -767,7 +772,7 @@ losses.ManifoldLoss(
 
 - **K**: number of proxies.
 
-- **lambdaC**: regularization weight. Used in the formula `loss = intrinsic_loss + lambdaC*context_loss`.
+- **lambdaC**: regularization weight. Used in the formula `loss = intrinsic_loss + lambdaC*context_loss`. `lambdaC=0` uses only the intrinsic loss, and `lambdaC=math.inf` uses only the context loss.
   If `lambdaC=0`, then it uses only the intrinsic loss. If `lambdaC=np.inf`, then it uses only the context loss.
 
 - **alpha**: parameter of the Random Walk. Must be in the range `(0,1)`. It specifies the amount of similarity between neighboring nodes.
@@ -896,7 +901,7 @@ losses.MultipleLosses(losses, miners=None, weights=None)
 
 **Parameters**:
 
-- **losses**: A list or dictionary of initialized loss functions. On the forward call of MultipleLosses, each wrapped loss will be computed, and then the average will be returned.
+- **losses**: A list or dictionary of initialized loss functions. On the forward call of MultipleLosses, each wrapped loss is computed and the weighted sum is returned.
 - **miners**: Optional. A list or dictionary of mining functions. This allows you to pair mining functions with loss functions. For example, if `losses = [loss_A, loss_B]`, and `miners = [None, miner_B]` then no mining will be done for `loss_A`, but the output of `miner_B` will be passed to `loss_B`. The same logic applies if `losses = {"loss_A": loss_A, "loss_B": loss_B}` and `miners = {"loss_B": miner_B}`.
 - **weights**: Optional. A list or dictionary of loss weights, which will be multiplied by the corresponding losses obtained by the loss functions. The default is to multiply each loss by 1. If `losses` is a list, then `weights` must be a list. If `losses` is a dictionary, `weights` must contain the same keys as `losses`.
 
@@ -1241,6 +1246,8 @@ losses.RankedListLoss(margin, Tn, imbalance=0.5, alpha=None, Tp=0, **kwargs)
 ```
 
 **Parameters**:
+
+The defaults correspond to the paper's RLL-Simpler variant, which it recommends for exploratory analysis: `Tp=0` weights positives uniformly, and `alpha=None` sets $\alpha = 1 + m/2$ for margin $m$.
 
 - **margin** (float): margin between positive and negative set
 - **imbalance** (float): tradeoff between positive and negative sets. As the name suggests this takes into account

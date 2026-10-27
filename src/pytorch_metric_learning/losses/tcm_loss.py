@@ -7,10 +7,6 @@ from .base_metric_loss_function import BaseMetricLossFunction
 
 
 class ThresholdConsistentMarginLoss(BaseMetricLossFunction):
-    """
-    Implements the TCM loss from: https://arxiv.org/abs/2307.04047
-    """
-
     def __init__(
         self,
         lambda_plus=1.0,

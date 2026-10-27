@@ -3,7 +3,6 @@ import torch
 from .base_distance import BaseDistance
 
 
-# Signal to Noise Ratio
 class SNRDistance(BaseDistance):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

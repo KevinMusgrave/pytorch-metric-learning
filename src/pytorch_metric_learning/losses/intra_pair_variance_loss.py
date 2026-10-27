@@ -1,8 +1,8 @@
 import torch
 
 from ..distances import CosineSimilarity
-from ..losses import GenericPairLoss
 from ..utils import loss_and_miner_utils as lmu
+from .generic_pair_loss import GenericPairLoss
 
 
 class IntraPairVarianceLoss(GenericPairLoss):
@@ -11,8 +11,7 @@ class IntraPairVarianceLoss(GenericPairLoss):
         self.pos_eps = pos_eps
         self.neg_eps = neg_eps
 
-    # pos_pairs and neg_pairs already represent cos(theta)
-    def _compute_loss(self, pos_pairs, neg_pairs, indices_tuple):
+    def _compute_pair_loss(self, pos_pairs, neg_pairs, indices_tuple):
         pos_loss, neg_loss = 0, 0
         if len(pos_pairs) > 0:
             mean_pos_sim = torch.mean(pos_pairs)

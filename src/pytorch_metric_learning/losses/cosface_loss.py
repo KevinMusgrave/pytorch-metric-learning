@@ -36,5 +36,5 @@ class CosFaceLoss(LargeMarginSoftmaxLoss):
                 self.get_angles(cosine_of_target_classes)
         return cosine_of_target_classes - self.margin
 
-    def scale_logits(self, logits, *_):
+    def scale_logits(self, logits, embeddings):
         return logits * self.scale

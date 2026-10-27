@@ -9,6 +9,11 @@ from .base_metric_loss_function import BaseMetricLossFunction, regularization_te
 
 
 class LargeMarginSoftmaxLoss(BaseMetricLossFunction):
+    n_range: torch.Tensor
+    margin_choose_n: torch.Tensor
+    cos_powers: torch.Tensor
+    alternating: torch.Tensor
+
     def __init__(
         self,
         num_classes,

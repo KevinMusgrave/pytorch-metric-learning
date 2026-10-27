@@ -36,7 +36,7 @@ class SubCenterArcFaceLoss(ArcFaceLoss):
     def get_cosine(self, embeddings):
         cosine = self.distance(embeddings, self.W.t())
         cosine = cosine.view(-1, self.num_classes, self.sub_centers)
-        cosine, _ = cosine.max(axis=2)
+        cosine, _ = cosine.max(dim=2)
         return cosine
 
     def get_outliers(
@@ -62,7 +62,7 @@ class SubCenterArcFaceLoss(ArcFaceLoss):
                     :, label * self.sub_centers : (label + 1) * self.sub_centers
                 ]
                 distances = self.distance(target_embeddings, sub_centers.t())
-                max_sub_center_idxs = torch.argmax(distances, axis=1)
+                max_sub_center_idxs = torch.argmax(distances, dim=1)
                 max_sub_center_count = torch.bincount(max_sub_center_idxs)
                 dominant_idx = torch.argmax(max_sub_center_count)
                 dominant_centers[:, label] = sub_centers[:, dominant_idx]

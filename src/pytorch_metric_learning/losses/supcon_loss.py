@@ -5,20 +5,18 @@ from ..utils import loss_and_miner_utils as lmu
 from .generic_pair_loss import GenericPairLoss
 
 
-# adapted from https://github.com/HobbitLong/SupContrast
 class SupConLoss(GenericPairLoss):
     def __init__(self, temperature=0.1, **kwargs):
         super().__init__(mat_based_loss=True, **kwargs)
         self.temperature = temperature
 
-    def _compute_loss(self, mat, pos_mask, neg_mask):
+    def _compute_matrix_loss(self, mat, pos_mask, neg_mask):
         if pos_mask.bool().any() and neg_mask.bool().any():
-            # if dealing with actual distances, use negative distances
             if not self.distance.is_inverted:
                 mat = -mat
             mat = mat / self.temperature
             mat_max, _ = mat.max(dim=1, keepdim=True)
-            mat = mat - mat_max.detach()  # for numerical stability
+            mat = mat - mat_max.detach()
 
             denominator = lmu.logsumexp(
                 mat, keep_mask=(pos_mask + neg_mask).bool(), add_one=False, dim=1

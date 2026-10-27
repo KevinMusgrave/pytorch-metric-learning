@@ -283,8 +283,7 @@
           "tests/utils/test_distributed.py"
         ],
         "module": "distributed",
-        "focusedSuite": "distributed-focused",
-        "executionSuite": "cpu-full"
+        "focusedSuite": "distributed-focused"
       }
     ],
     "suites": [
@@ -415,6 +414,7 @@
         ],
         "paths": [
           "tests/utils/test_distributed_fallback.py",
+          "tests/utils/test_distributed.py",
           "tests/__init__.py",
           "tests/zzz_testing_utils/**",
           "tests/losses/utils.py"
@@ -429,7 +429,8 @@
           "python",
           "-m",
           "unittest",
-          "tests.utils.test_distributed_fallback"
+          "tests.utils.test_distributed_fallback",
+          "tests.utils.test_distributed"
         ],
         "timeoutSeconds": 120
       },

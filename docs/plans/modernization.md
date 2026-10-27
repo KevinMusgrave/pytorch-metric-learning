@@ -286,9 +286,17 @@ for those design documents or evidence that the listed work is complete.
   dependency direction, recipe requirements, and open-work priorities recorded.
 - Phase 2: in progress. Seven CPU fallback tests pass, including a real one-rank
   Gloo group, reference gradients, mined pairs, and memory queue wraparound with
-  enqueue masks. A two-rank probe reproduced world-size over-scaling of learnable
-  loss-parameter gradients and rank-dependent queue ordering; both remain to be
-  fixed and verified. CUDA/NCCL evidence is absent. Contributor PRs are deferred
-  until after the modernization merge as described above.
+  enqueue masks. Two-rank Gloo references now verify full-batch values and
+  encoder/proxy DDP gradients, uneven and empty ranks, explicit references,
+  supplied mined indices, memory queue ordering, local-anchor semantics, and
+  collective argument failures in float32/float64. The reported world-size
+  over-scaling and rank-dependent queue ordering are fixed. Broader numerical
+  references, benchmarks, and CUDA/NCCL evidence remain outstanding. Contributor
+  PRs are deferred until after the modernization merge as described above.
+- Next numerical regressions: `CrossBatchMemory` marks an initially empty queue
+  filled after an all-false enqueue mask and computes against unused buffer
+  rows; an empty batch raises `IndexError`; two forwards before backward with
+  unnormalized distances invalidate saved autograd state when the queue changes.
+  All three were reproduced locally and remain to be fixed.
 - Phases 3–5: not started. The current package still contains the subsystems
   selected for removal.

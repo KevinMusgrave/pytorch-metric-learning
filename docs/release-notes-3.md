@@ -121,6 +121,10 @@ raise `ValueError` for unsupported variants and losses.
 
 ## Smaller utility surface
 
+`BaseDistance.largest_dist` is removed; use `smallest_dist` with the opposite
+reduction or check `is_inverted`. `CrossBatchMemory` checkpoints store the queue
+cursor and filled flag under a `queue_state` key instead of `_extra_state`.
+
 `ManifoldLoss(l, K, lambdaC)` is now `ManifoldLoss(embedding_size, num_proxies,
 lambda_c)`, matching the other losses' parameter names.
 

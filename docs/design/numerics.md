@@ -59,9 +59,10 @@ the queue is warming up. An empty enqueue leaves the queue and its filled state
 unchanged; an empty query yields a differentiable zero. Self-comparison removal
 with no current queue indices removes nothing. A call cannot enqueue more rows
 than the queue capacity, including when an enqueue mask is supplied.
-The queue cursor and filled flag belong to PyTorch module extra state so a
-`state_dict` checkpoint restores the next loss and gradients, not just the raw
-buffers. The checkpoint contains tensors and primitive metadata and supports
+The queue cursor and filled flag are saved under a `queue_state` entry by an
+explicitly registered state-dict hook, so a `state_dict` checkpoint restores
+the next loss and gradients, not just the raw buffers. A checkpoint without
+that entry reports it as a missing key. The checkpoint contains tensors and primitive metadata and supports
 `torch.load(..., weights_only=True)`. Older checkpoints without that metadata
 do not describe a resumable queue and are not silently interpreted as one.
 

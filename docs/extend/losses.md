@@ -143,7 +143,7 @@ parameters inside `forward`; that would silently change optimizer state.
 
 To make your loss compatible with inverted distances (like cosine similarity), you can check `self.distance.is_inverted`, and write whatever logic necessary to make your loss make sense in that context.
 
-There are also a few functions in `self.distance` that provide some of this logic, specifically `self.distance.smallest_dist`, `self.distance.largest_dist`, and `self.distance.margin`. The function definitions are pretty straightforward, and you can find them [here](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/src/pytorch_metric_learning/distances/base_distance.py#L39-L53).
+Two helpers in `self.distance` provide some of this logic: `self.distance.smallest_dist(*args, **kwargs)` calls `torch.max` for similarities and `torch.min` for distances, and `self.distance.margin(x, y)` returns `y - x` for similarities and `x - y` for distances.
 
 ## Using `indices_tuple`
 

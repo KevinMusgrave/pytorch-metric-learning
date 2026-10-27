@@ -36,11 +36,6 @@ class BaseDistance(torch.nn.Module):
             return torch.max(*args, **kwargs)
         return torch.min(*args, **kwargs)
 
-    def largest_dist(self, *args, **kwargs):
-        if self.is_inverted:
-            return torch.min(*args, **kwargs)
-        return torch.max(*args, **kwargs)
-
     def margin(self, x, y):
         if self.is_inverted:
             return y - x

@@ -160,6 +160,7 @@ class ProxyModel(torch.nn.Module):
 
 
 def check_trainable_loss(rank: int, device: torch.device, dtype: torch.dtype) -> None:
+    torch.manual_seed(0)
     model = ProxyModel().to(device=device, dtype=dtype)
     ddp = DistributedDataParallel(
         model, device_ids=[rank] if device.type == "cuda" else None

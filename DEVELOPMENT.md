@@ -70,10 +70,18 @@ TEST_DEVICE=cuda TEST_DTYPES=float16,float32,float64 OMP_NUM_THREADS=1 OPENBLAS_
 ```
 
 The distributed tests spawn their own ranks; do not launch them with `torchrun`.
-They skip explicitly under the CPU profile and fail a requested CUDA run when
-fewer than two GPUs are available. Record the device/driver versions, test
+The CPU profile runs the two-rank references with Gloo. A requested CUDA run
+fails when fewer than two GPUs are available. Record the device/driver versions, test
 counts, failures, and skips. GPU provisioning and Linux/CUDA acceptance remain
 separate from local Mac verification.
+
+On the two-A40 host with driver 595.91.07, direct GPU-to-GPU transfers hung
+even in a bare PyTorch/NCCL probe without library code. For this host, set
+`export NCCL_P2P_DISABLE=1` before the CUDA tests and distributed benchmarks.
+This disables NCCL's direct peer-to-peer transport while retaining two-device
+NCCL execution. Record the setting with results: they do not establish direct
+peer-to-peer transport correctness or its performance. Do not apply this
+workaround to other hosts unless a separate transport probe shows the same issue.
 
 ### Rented GPU hosts
 

@@ -52,6 +52,15 @@ queue wraparound with masks, and collective argument failures. A requested CUDA
 run executes the same reference cases with NCCL and must fail when fewer than
 two CUDA devices are visible.
 
+The trainable-loss fixture seeds PyTorch with zero before constructing the
+encoder and proxy weights for each dtype. Unseeded initializations made the
+float16 gradient comparison intermittent. Ten repeated two-A40 comparisons per
+dtype retained the existing float16 `atol=rtol=1e-3`: maximum absolute errors
+were `0.000244140625` for encoder gradients and `0.0004425048828125` for proxy
+gradients, below 44% of the elementwise tolerance. Float32 and float64 keep
+PyTorch's default tolerances. Both DDP parameter gradients are still compared
+with an independent single-process normalized-softmax formula.
+
 GPU acceptance requires one host with two visible devices, a successful
 two-rank NCCL collective, and executed distributed tests with their counts and
 skip reasons recorded. These tests create their own worker processes; they must

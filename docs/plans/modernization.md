@@ -456,6 +456,19 @@ for those design documents or evidence that the listed work is complete.
   implementation retains zero k-NN output bytes and zero allocated CUDA bytes
   above the warmed baseline. Peak output storage during the call remains
   quadratic; query blocking and metric values are unchanged.
+- Fixed-k small galleries, 2026-10-28 UTC: revision
+  `5fb5dd316afc29b14b63e7e4eab85fec9f45942f` caps a positive integer `k` at
+  the reference count minus any excluded self-match, preserving the configured
+  value across calls. Two new regression tests fail before the fix and verify
+  metric values for separate galleries, self-search, query prefixes, singleton
+  galleries, and reuse across gallery sizes with `k` up to 1,000. All 22 targeted
+  retrieval, calculator-contract, and evaluation-recipe tests pass on CPU in
+  0.620 seconds and CUDA in 3.451 seconds, with no failures, errors, or skips.
+  CUDA uses the same A40 environment and `NCCL_P2P_DISABLE=1` recorded above,
+  from the clean checkout `/workspace/pml-v3-5fb5dd3`. The source checkpoint
+  gate passes with no findings. These focused results supplement the full
+  227-test CPU/CUDA results above; the full suites were not repeated for this
+  bounded change.
 
 ## Remaining merge and release checks
 

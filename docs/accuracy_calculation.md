@@ -90,8 +90,9 @@ For example, if the input `query_labels` is `[0,0,1,1]` and `reference_labels` i
 The default backend runs on the input device and processes 256 queries at a
 time, so its temporary distance block is `(256, len(reference))`. Its outputs
 are `(len(query), effective_k)`. When `k=None`, all references except excluded
-self-matches are retrieved, so output storage is quadratic for self-search. For large evaluations,
-set `k` to a number, like `k = 1000`, or try `k = "max_bin_count"`.
+self-matches are retrieved, so output storage is quadratic for self-search.
+For large evaluations, set `k` to a number, like `k = 1000`, or try
+`k = "max_bin_count"`.
 
 With [`FaissKNN`](retrieval.md#faissknn), searches run on a CPU copy unless a
 GPU-enabled Faiss build is installed, and on GPU only when `k <= 2048`.

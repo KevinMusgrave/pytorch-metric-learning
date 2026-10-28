@@ -109,7 +109,12 @@ class CrossBatchMemory(torch.nn.Module):
         if indices_tuple is not None and enqueue_mask is not None:
             raise ValueError("indices_tuple and enqueue_mask are mutually exclusive")
         if enqueue_mask is not None:
-            assert len(enqueue_mask) == len(embeddings)
+            if enqueue_mask.dtype != torch.bool:
+                raise TypeError("enqueue_mask must be a boolean tensor")
+            if enqueue_mask.ndim != 1:
+                raise ValueError("enqueue_mask must be one-dimensional")
+            if len(enqueue_mask) != len(embeddings):
+                raise ValueError("enqueue_mask must contain one value per embedding")
         c_f.check_parameter_placement(self, self.embedding_memory, embeddings)
         embeddings = embeddings.to(dtype=self.embedding_memory.dtype)
         if not torch.can_cast(labels.dtype, self.label_memory.dtype):

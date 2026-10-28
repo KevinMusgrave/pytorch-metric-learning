@@ -56,7 +56,7 @@ class TestMPerClassSampler(unittest.TestCase):
             or (m * num_labels < batch_size)
             or (batch_size % m != 0)
         ):
-            self.assertRaises(AssertionError, MPerClassSampler, *args)
+            self.assertRaises(ValueError, MPerClassSampler, *args)
             return
         sampler = MPerClassSampler(*args)
         iterator = iter(sampler)

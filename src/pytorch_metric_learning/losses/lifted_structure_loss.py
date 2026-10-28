@@ -1,4 +1,7 @@
 import torch
+from torch import Tensor
+
+from ..types import IndicesTuple, LossDict
 
 from ..utils import common_functions as c_f
 from ..utils import loss_and_miner_utils as lmu
@@ -11,7 +14,14 @@ class LiftedStructureLoss(GenericPairLoss):
         self.neg_margin = neg_margin
         self.pos_margin = pos_margin
 
-    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+    def compute_loss(
+        self,
+        embeddings: Tensor,
+        labels: Tensor | None,
+        indices_tuple: IndicesTuple | None,
+        ref_emb: Tensor,
+        ref_labels: Tensor | None,
+    ) -> LossDict:
         c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
         return super().compute_loss(
             embeddings, labels, indices_tuple, ref_emb, ref_labels

@@ -16,22 +16,31 @@ class MPerClassSampler(Sampler[int]):
     ):
         self.m_per_class = int(m)
         self.batch_size = int(batch_size) if batch_size is not None else batch_size
+        if self.m_per_class <= 0:
+            raise ValueError("m must be positive")
+        if self.batch_size is not None and self.batch_size <= 0:
+            raise ValueError("batch_size must be positive")
+        if length_before_new_iter < 0:
+            raise ValueError("length_before_new_iter must be nonnegative")
         self.generator = generator
         self.labels_to_indices = indices_by_label(as_label_list(labels))
         self.labels = list(self.labels_to_indices)
+        if not self.labels:
+            raise ValueError("labels must not be empty")
         self.length_of_single_pass = self.m_per_class * len(self.labels)
         self.list_size = length_before_new_iter
         if self.batch_size is None:
             if self.length_of_single_pass < self.list_size:
                 self.list_size -= (self.list_size) % (self.length_of_single_pass)
         else:
-            assert self.list_size >= self.batch_size
-            assert self.length_of_single_pass >= self.batch_size, (
-                "m * (number of unique labels) must be >= batch_size"
-            )
-            assert (self.batch_size % self.m_per_class) == 0, (
-                "m_per_class must divide batch_size without any remainder"
-            )
+            if self.list_size < self.batch_size:
+                raise ValueError("length_before_new_iter must be at least batch_size")
+            if self.length_of_single_pass < self.batch_size:
+                raise ValueError("m * (number of unique labels) must be >= batch_size")
+            if self.batch_size % self.m_per_class != 0:
+                raise ValueError(
+                    "m_per_class must divide batch_size without any remainder"
+                )
             self.list_size -= self.list_size % self.batch_size
 
     def __len__(self):

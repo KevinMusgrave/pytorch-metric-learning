@@ -11,8 +11,9 @@ class SparseCentersRegularizer(BaseRegularizer):
 
     def __init__(self, num_classes, centers_per_class, **kwargs):
         super().__init__(**kwargs)
-        assert centers_per_class > 1
-        c_f.assert_distance_type(self, CosineSimilarity)
+        if centers_per_class <= 1:
+            raise ValueError("centers_per_class must be greater than one")
+        c_f.check_distance_type(self, CosineSimilarity)
         self.set_class_masks(num_classes, centers_per_class)
 
     def compute_loss(self, x):

@@ -1,4 +1,7 @@
 import torch
+from torch import Tensor
+
+from ..types import IndicesTuple, LossDict
 
 from ..utils import common_functions as c_f
 from .base_metric_loss_function import regularization_term
@@ -25,7 +28,14 @@ class ProxyNCALoss(NCALoss):
             "proxy_labels", torch.arange(num_classes), persistent=False
         )
 
-    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+    def compute_loss(
+        self,
+        embeddings: Tensor,
+        labels: Tensor | None,
+        indices_tuple: IndicesTuple | None,
+        ref_emb: Tensor,
+        ref_labels: Tensor | None,
+    ) -> LossDict:
         c_f.labels_required(labels)
         c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
         c_f.check_parameter_placement(self, self.proxies, embeddings)

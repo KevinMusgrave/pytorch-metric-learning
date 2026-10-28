@@ -1,4 +1,7 @@
 import torch
+from torch import Tensor
+
+from ..types import IndicesTuple, LossDict
 import torch.nn.functional as F
 
 from ..utils import common_functions as c_f
@@ -19,7 +22,14 @@ class VICRegLoss(BaseMetricLossFunction):
         self.covariance_v = covariance_v
         self.eps = eps
 
-    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+    def compute_loss(
+        self,
+        embeddings: Tensor,
+        labels: Tensor | None,
+        indices_tuple: IndicesTuple | None,
+        ref_emb: Tensor,
+        ref_labels: Tensor | None,
+    ) -> LossDict:
         c_f.indices_tuple_not_supported(indices_tuple)
         c_f.labels_not_supported(labels, ref_labels)
 

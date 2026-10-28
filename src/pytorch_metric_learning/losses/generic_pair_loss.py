@@ -1,4 +1,7 @@
 import torch
+from torch import Tensor
+
+from ..types import IndicesTuple, LossDict
 
 from ..utils import common_functions as c_f
 from ..utils import loss_and_miner_utils as lmu
@@ -12,7 +15,14 @@ class GenericPairLoss(BaseMetricLossFunction):
             self.mat_based_loss if mat_based_loss else self.pair_based_loss
         )
 
-    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+    def compute_loss(
+        self,
+        embeddings: Tensor,
+        labels: Tensor | None,
+        indices_tuple: IndicesTuple | None,
+        ref_emb: Tensor,
+        ref_labels: Tensor | None,
+    ) -> LossDict:
         c_f.labels_or_indices_tuple_required(labels, indices_tuple)
         indices_tuple = lmu.convert_to_pairs(indices_tuple, labels, ref_labels)
         if all(len(x) <= 1 for x in indices_tuple):
@@ -31,7 +41,7 @@ class GenericPairLoss(BaseMetricLossFunction):
         pos_mask, neg_mask = torch.zeros_like(mat), torch.zeros_like(mat)
         pos_mask[a1, p] = 1
         neg_mask[a2, n] = 1
-        self._assert_either_pos_or_neg(pos_mask, neg_mask)
+        self._check_either_pos_or_neg(pos_mask, neg_mask)
         return self._compute_matrix_loss(mat, pos_mask, neg_mask)
 
     def pair_based_loss(self, mat, indices_tuple):
@@ -44,7 +54,6 @@ class GenericPairLoss(BaseMetricLossFunction):
         return self._compute_pair_loss(pos_pair, neg_pair, indices_tuple)
 
     @staticmethod
-    def _assert_either_pos_or_neg(pos_mask, neg_mask):
-        assert not torch.any((pos_mask != 0) & (neg_mask != 0)), (
-            "Each pair should be either be positive or negative"
-        )
+    def _check_either_pos_or_neg(pos_mask, neg_mask):
+        if torch.any((pos_mask != 0) & (neg_mask != 0)):
+            raise ValueError("Each pair should be either be positive or negative")

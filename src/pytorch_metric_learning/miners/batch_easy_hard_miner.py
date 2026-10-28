@@ -1,4 +1,7 @@
 import torch
+from torch import Tensor
+
+from ..types import IndicesTuple
 
 from ..utils import common_functions as c_f
 from ..utils import loss_and_miner_utils as lmu
@@ -22,28 +25,36 @@ class BatchEasyHardMiner(BaseMiner):
     ):
         super().__init__(**kwargs)
 
-        if not (
-            pos_strategy in self.all_batch_mining_strategies
-            and neg_strategy in self.all_batch_mining_strategies
+        if (
+            pos_strategy not in self.all_batch_mining_strategies
+            or neg_strategy not in self.all_batch_mining_strategies
         ):
             choices = '" or "'.join(self.all_batch_mining_strategies)
             raise ValueError(
                 f'pos_strategy and neg_strategy must each be one of "{choices}"'
             )
         if pos_strategy == neg_strategy == self.SEMIHARD:
-            raise ValueError('pos_strategy and neg_strategy cannot both be "semihard"')
+            raise ValueError(
+                "pos_strategy and neg_strategy cannot both be \"semihard\""
+            )
 
         if (pos_strategy == self.ALL and neg_strategy == self.SEMIHARD) or (
             neg_strategy == self.ALL and pos_strategy == self.SEMIHARD
         ):
-            raise ValueError('"semihard" cannot be used in combination with "all"')
+            raise ValueError("\"semihard\" cannot be used in combination with \"all\"")
 
         self.pos_strategy = pos_strategy
         self.neg_strategy = neg_strategy
         self.allowed_pos_range = allowed_pos_range
         self.allowed_neg_range = allowed_neg_range
 
-    def mine(self, embeddings, labels, ref_emb, ref_labels):
+    def mine(
+        self,
+        embeddings: Tensor,
+        labels: Tensor,
+        ref_emb: Tensor,
+        ref_labels: Tensor,
+    ) -> IndicesTuple:
         mat = self.distance(embeddings, ref_emb)
         a1_idx, p_idx, a2_idx, n_idx = lmu.get_all_pairs_indices(labels, ref_labels)
         a = torch.arange(mat.size(0), device=mat.device)
@@ -132,7 +143,8 @@ class BatchEasyHardMiner(BaseMiner):
         val_range=None,
         semihard_thresholds=None,
     ):
-        assert xtype in ["min", "max"]
+        if xtype not in ['min', 'max']:
+            raise ValueError("xtype must be \"min\" or \"max\"")
         inf = c_f.pos_inf(mat.dtype) if xtype == "min" else c_f.neg_inf(mat.dtype)
         mask = torch.ones_like(mat) * inf
         mask[anchor_idx, other_idx] = 1

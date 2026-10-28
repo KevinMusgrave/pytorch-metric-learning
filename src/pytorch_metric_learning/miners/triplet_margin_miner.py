@@ -1,3 +1,6 @@
+from torch import Tensor
+
+from ..types import IndicesTuple
 from ..utils import loss_and_miner_utils as lmu
 from .base_miner import BaseMiner
 
@@ -8,7 +11,13 @@ class TripletMarginMiner(BaseMiner):
         self.margin = margin
         self.type_of_triplets = type_of_triplets
 
-    def mine(self, embeddings, labels, ref_emb, ref_labels):
+    def mine(
+        self,
+        embeddings: Tensor,
+        labels: Tensor,
+        ref_emb: Tensor,
+        ref_labels: Tensor,
+    ) -> IndicesTuple:
         anchor_idx, positive_idx, negative_idx = lmu.get_all_triplets_indices(
             labels, ref_labels
         )

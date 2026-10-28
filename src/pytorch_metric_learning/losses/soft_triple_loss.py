@@ -1,6 +1,9 @@
+import torch
+from torch import Tensor
+
+from ..types import IndicesTuple, LossDict
 import math
 
-import torch
 import torch.nn.functional as F
 
 from ..distances import CosineSimilarity
@@ -31,7 +34,8 @@ class SoftTripleLoss(BaseMetricLossFunction):
         super().__init__(**kwargs)
         self.weight_regularizer = weight_regularizer
         self.weight_reg_weight = weight_reg_weight
-        assert self.distance.is_inverted
+        if not self.distance.is_inverted:
+            raise ValueError("distance must be a similarity with is_inverted=True")
         self.la = la
         self.gamma = 1.0 / gamma
         self.margin = margin
@@ -42,7 +46,14 @@ class SoftTripleLoss(BaseMetricLossFunction):
         )
         (weight_init_func or default_center_init)(self.fc)
 
-    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+    def compute_loss(
+        self,
+        embeddings: Tensor,
+        labels: Tensor | None,
+        indices_tuple: IndicesTuple | None,
+        ref_emb: Tensor,
+        ref_labels: Tensor | None,
+    ) -> LossDict:
         c_f.labels_required(labels)
         c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
         c_f.check_parameter_placement(self, self.fc, embeddings)

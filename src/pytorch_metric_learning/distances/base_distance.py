@@ -2,16 +2,25 @@ import torch
 
 
 class BaseDistance(torch.nn.Module):
+    is_inverted: bool = False
+
     def __init__(
-        self, normalize_embeddings=True, p=2, power=1, is_inverted=False, **kwargs
-    ):
+        self,
+        normalize_embeddings: bool = True,
+        p: float = 2,
+        power: float = 1,
+        **kwargs,
+    ) -> None:
         super().__init__(**kwargs)
         self.normalize_embeddings = normalize_embeddings
         self.p = p
         self.power = power
-        self.is_inverted = is_inverted
 
-    def forward(self, query_emb, ref_emb=None):
+    def forward(
+        self,
+        query_emb: torch.Tensor,
+        ref_emb: torch.Tensor | None = None,
+    ) -> torch.Tensor:
         self.check_shapes(query_emb, ref_emb)
         query_emb_normalized = self.maybe_normalize(query_emb)
         if ref_emb is None:
@@ -22,7 +31,10 @@ class BaseDistance(torch.nn.Module):
         mat = self.compute_mat(query_emb_normalized, ref_emb_normalized)
         if self.power != 1:
             mat = mat**self.power
-        assert mat.size() == torch.Size((query_emb.size(0), ref_emb.size(0)))
+        if mat.size() != torch.Size((query_emb.size(0), ref_emb.size(0))):
+            raise ValueError(
+                "compute_mat must return shape (num_queries, num_references)"
+            )
         return mat
 
     def compute_mat(self, query_emb, ref_emb):

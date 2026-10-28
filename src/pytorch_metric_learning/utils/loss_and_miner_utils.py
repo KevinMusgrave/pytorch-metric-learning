@@ -148,7 +148,8 @@ def get_random_triplet_indices(
         a_idx = torch.cat(a_idx).to(device=labels_device, dtype=torch.long)
         p_idx = torch.cat(p_idx).to(device=labels_device, dtype=torch.long)
         n_idx = torch.cat(n_idx).to(device=labels_device, dtype=torch.long)
-        assert len(a_idx) == len(p_idx) == len(n_idx)
+        if not len(a_idx) == len(p_idx) == len(n_idx):
+            raise ValueError("Generated triplet indices must have equal lengths")
         return a_idx, p_idx, n_idx
     else:
         empty = torch.tensor([], device=labels_device, dtype=torch.long)
@@ -187,7 +188,10 @@ def convert_to_weights(indices_tuple, labels, dtype, using_ref=False):
 def remove_self_comparisons(
     indices_tuple, curr_batch_idx, ref_size, ref_is_subset=False
 ):
-    assert len(indices_tuple) in [3, 4]
+    if len(indices_tuple) not in [3, 4]:
+        raise ValueError(
+            "indices_tuple must contain three triplet tensors or four pair tensors"
+        )
     if len(curr_batch_idx) == 0:
         return indices_tuple
     s, e = curr_batch_idx[0], curr_batch_idx[-1]
@@ -199,7 +203,8 @@ def remove_self_comparisons(
         a = a[keep_mask]
         p = p[keep_mask]
         n = n[keep_mask]
-        assert len(a) == len(p) == len(n)
+        if not len(a) == len(p) == len(n):
+            raise ValueError("Triplet indices must have equal lengths")
         return a, p, n
     elif len(indices_tuple) == 4:
         a1, p, a2, n = indices_tuple
@@ -208,8 +213,10 @@ def remove_self_comparisons(
         )
         a1 = a1[keep_mask]
         p = p[keep_mask]
-        assert len(a1) == len(p)
-        assert len(a2) == len(n)
+        if len(a1) != len(p):
+            raise ValueError("Positive pair indices must have equal lengths")
+        if len(a2) != len(n):
+            raise ValueError("Negative pair indices must have equal lengths")
         return a1, p, a2, n
 
 

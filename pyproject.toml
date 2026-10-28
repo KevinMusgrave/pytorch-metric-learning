@@ -11,9 +11,20 @@ requires-python = ">=3.12"
 license = "MIT"
 license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md", "CREDITS.md"]
 authors = [{ name = "Kevin Musgrave" }]
+keywords = ["metric learning", "deep learning", "pytorch", "embeddings", "retrieval"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Typing :: Typed",
+]
 dependencies = [
-    "numpy==2.5.3",
-    "torch==2.14.0",
+    "numpy>=2.5.3",
+    "torch>=2.14.0",
 ]
 
 [project.urls]
@@ -22,22 +33,27 @@ Documentation = "https://kevinmusgrave.github.io/pytorch-metric-learning/"
 Issues = "https://github.com/KevinMusgrave/pytorch-metric-learning/issues"
 
 [project.optional-dependencies]
-faiss = ["faiss-cpu==1.15.1"]
-clustering = ["scikit-learn==1.9.1"]
-docs = ["mkdocs-material==9.7.7"]
+faiss = ["faiss-cpu>=1.15.1"]
+clustering = ["scikit-learn>=1.9.1"]
 
 [dependency-groups]
 dev = [
     "build==1.6.1",
     "faiss-cpu==1.15.1",
+    "mkdocs-material==9.7.7",
+    "numpy==2.5.3",
     "packaging==26.3",
     "scikit-learn==1.9.1",
     "setuptools==84.0.0",
+    "torch==2.14.0",
     "uv==0.13.4",
 ]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+pytorch_metric_learning = ["py.typed"]
 
 [tool.uv]
 required-version = "==0.13.4"

@@ -1,4 +1,7 @@
 import torch
+from torch import Tensor
+
+from ..types import IndicesTuple, LossDict
 
 from ..distances import CosineSimilarity
 from ..utils import common_functions as c_f
@@ -11,7 +14,7 @@ class PNPLoss(BaseMetricLossFunction):
 
     def __init__(self, b=2, alpha=1, anneal=0.01, variant="O", **kwargs):
         super().__init__(**kwargs)
-        c_f.assert_distance_type(self, CosineSimilarity)
+        c_f.check_distance_type(self, CosineSimilarity)
         self.b = b
         self.alpha = alpha
         self.anneal = anneal
@@ -19,11 +22,14 @@ class PNPLoss(BaseMetricLossFunction):
         if self.variant not in self.VARIANTS:
             raise ValueError(f"variant={variant} but must be one of {self.VARIANTS}")
 
-        """
-        Adapted from https://github.com/interestingzhuo/PNPloss
-        """
-
-    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+    def compute_loss(
+        self,
+        embeddings: Tensor,
+        labels: Tensor | None,
+        indices_tuple: IndicesTuple | None,
+        ref_emb: Tensor,
+        ref_labels: Tensor | None,
+    ) -> LossDict:
         c_f.indices_tuple_not_supported(indices_tuple)
         c_f.labels_required(labels)
         c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)

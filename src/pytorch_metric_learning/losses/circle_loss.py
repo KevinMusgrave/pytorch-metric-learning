@@ -10,7 +10,7 @@ from .generic_pair_loss import GenericPairLoss
 class CircleLoss(GenericPairLoss):
     def __init__(self, m=0.4, gamma=80, **kwargs):
         super().__init__(mat_based_loss=True, **kwargs)
-        c_f.assert_distance_type(self, CosineSimilarity)
+        c_f.check_distance_type(self, CosineSimilarity)
         self.m = m
         self.gamma = gamma
         self.soft_plus = torch.nn.Softplus(beta=1)

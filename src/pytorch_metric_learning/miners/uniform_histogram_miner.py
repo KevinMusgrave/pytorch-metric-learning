@@ -1,4 +1,7 @@
 import torch
+from torch import Tensor
+
+from ..types import IndicesTuple
 
 from ..utils import loss_and_miner_utils as lmu
 from .base_miner import BaseMiner
@@ -11,7 +14,13 @@ class UniformHistogramMiner(BaseMiner):
         self.pos_per_bin = pos_per_bin
         self.neg_per_bin = neg_per_bin
 
-    def mine(self, embeddings, labels, ref_emb, ref_labels):
+    def mine(
+        self,
+        embeddings: Tensor,
+        labels: Tensor,
+        ref_emb: Tensor,
+        ref_labels: Tensor,
+    ) -> IndicesTuple:
         mat = self.distance(embeddings, ref_emb)
         a1, p, a2, n = lmu.get_all_pairs_indices(labels, ref_labels)
         pos_pairs = mat[a1, p]

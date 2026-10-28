@@ -145,8 +145,8 @@ class TestHistogramLoss(unittest.TestCase):
             loss.backward()
 
     def test_assertion_raises(self):
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(ValueError):
             _ = HistogramLoss(n_bins=1, delta=0.5)
 
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(ValueError):
             _ = HistogramLoss(n_bins=10, delta=0.4)

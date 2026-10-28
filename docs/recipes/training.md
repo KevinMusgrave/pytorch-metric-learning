@@ -119,5 +119,5 @@ Wang et al., [Cross-Batch Memory for Embedding Learning](https://openaccess.thec
 motivate delayed memory use by slow feature drift. Two steps and capacity 32
 only make the integration executable quickly; they do not claim the paper's
 training schedule or memory size. Choose those from the intended experiment.
-See [CrossBatchMemory](../losses.md#crossbatchmemory) for supported losses,
+See [CrossBatchMemory](../losses/cross_batch_memory.md#crossbatchmemory) for supported losses,
 enqueue masks, and queue ownership.

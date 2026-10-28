@@ -1,10 +1,11 @@
 # PyTorch Metric Learning modernization plan
 
-Status: all five phases are implemented. The final utility cleanup passes all
-243 CPU tests; two-GPU CUDA/NCCL acceptance passed before that cleanup and needs
-to be repeated for the updated numerical sources. The CI-owned final merge gate,
-PyPI publisher setup, and visual verification of GitHub-native math rendering
-also remain outstanding.
+Status: all five phases are implemented. Release cleanup passes 249 CPU tests,
+28 CPU mixed-precision cases, the strict documentation build, and an isolated
+wheel check at the supported runtime minimums. Two-GPU acceptance is being
+repeated on the exact committed candidate. Locked Code Polishy 0.31.5 rejects
+Python library compatibility ranges; that policy support, the CI-owned final
+merge gate, publisher/Pages setup, and visual math verification remain open.
 
 ## Purpose
 
@@ -302,236 +303,17 @@ Track implementation progress against this plan and keep current architectural
 rationale in `docs/design/`. This plan is a work sequence, not a replacement
 for those design documents or evidence that the listed work is complete.
 
-## Progress
+## Completed work
 
-- Phase 1: principles added, including attribution; component inventory,
-  dependency direction, recipe requirements, and open-work priorities recorded.
-- Phase 2: in progress. Seven CPU fallback tests pass, including a real one-rank
-  Gloo group, reference gradients, mined pairs, and memory queue wraparound with
-  enqueue masks. Two-rank Gloo references now verify full-batch values and
-  encoder/proxy DDP gradients, uneven and empty ranks, explicit references,
-  supplied mined indices, memory queue ordering, local-anchor semantics, and
-  collective argument failures in float32/float64. The reported world-size
-  over-scaling and rank-dependent queue ordering are fixed. Broader numerical
-  references, benchmarks, and CUDA/NCCL evidence remain outstanding. Contributor
-  PRs are deferred until after the modernization merge as described above.
-- Cross-batch memory: empty enqueues and batches preserve queue state; references
-  remain stable across multiple forwards before backward; masked enqueues cannot
-  exceed capacity. Queue metadata now persists in module checkpoints so restored
-  training matches uninterrupted values and gradients. Six focused state tests
-  cover these contracts. The full CPU suite passed 200 tests with 11 skips before
-  the checkpoint-state addition; affected memory tests cover that later change.
-- Verification: the distributed milestone passed all five affected focused
-  suites (26 tests, one statistics-related skip). Its checkpoint gate still
-  reported 1,645 findings in the wider repository; the changed distributed files
-  passed their source checks. No merge/release acceptance is claimed.
-- Dynamic soft margin: reproduced backward failures in the paired path and on
-  successive training steps, plus an out-of-bounds histogram update at maximum
-  distance. Detached, checkpointed histogram state, endpoint-safe interpolation,
-  normalized batch momentum, and non-mutating matched-pair mining now have
-  independent value and gradient references. Unequal streams use only actual
-  matched pairs; supplied triplets retain reference gradients without labels.
-  Eight reference tests pass on CPU in float16, float32, and float64, and all
-  five affected focused suites pass (40 tests, one statistics-related skip).
-- Performance tooling: a separate benchmark module now measures representative
-  pair, triplet, miner, proxy, and distributed workloads, with raw samples and
-  explicit hardware, data, dtype, timing, compilation, and memory semantics.
-  Core smoke workloads and a two-process Gloo run pass. All six affected focused
-  suites pass. Clean-revision CPU baselines cover batches 128 and 512, two-rank
-  Gloo, and full-graph proxy compilation. The larger triplet forward takes
-  341.808 ms versus 6.076 ms at batch 128, identifying cubic candidate enumeration
-  as an optimization target. Compilation does not improve this small CPU proxy
-  workload. CUDA/NCCL evidence remains outstanding. Commands and raw results are
-  in [performance measurements](../performance.md).
-- Triplet enumeration now expands actual positive pairs by their negative
-  counts, preserving ordered indices, self/reference semantics, loss values,
-  and gradients without an unconditional cubic candidate mask. Independent
-  references cover exhaustive small label sets, empty and unequal references,
-  label dtypes, noncontiguous inputs, and embedding/reference gradients. The
-  full CPU suite passes 208 tests with 11 skips. Clean-revision measurements
-  confirm batch-512 forward time falls from 341.808 ms to 15.358 ms and batch-128
-  from 6.076 ms to 1.032 ms, with backward roughly unchanged. Raw measurements
-  and limitations are recorded in the performance document.
-- Phase 3: training orchestration, logging hooks, model-aware weighted sampling,
-  and their private helpers are removed after extracting the numerical
-  composition into agent-facing recipes. Six recipe tests verify optimization,
-  cascaded candidate filtering, analytical adversarial values/gradients,
-  alternating parameter ownership, subset weights, and memory warmup.
-- Phase 3, evaluation: testers, `InferenceModel`, PCA wrapping, and dataset
-  adapters are removed. An evaluation recipe preserves split composition,
-  two-stream, and parent-conditioned metrics; its tests reproduce every removed
-  tester fixture value. `AccuracyCalculator` defaults to exact PyTorch search on
-  the input device; Faiss and scikit-learn are optional, lazily imported extras,
-  and clustering metrics require explicit `kmeans_func`. A reproduced
-  pre-existing failure computing `mean_reciprocal_rank` alone is fixed. Core
-  dependencies are NumPy and PyTorch; Pillow, torchvision, tqdm, and the Pillow
-  age admission are removed. On macOS, Faiss and PyTorch wheels need
-  `KMP_DUPLICATE_LIB_OK=TRUE` and single-threaded OpenMP to coexist; the CPU
-  profile now sets this explicitly instead of inheriting it from a scikit-learn
-  import. Retrieval metric discovery still uses `calculate_` name inspection,
-  which dead-code analysis reports; replacing it is a class-design item. The
-  locked repository-wide Ruff format check fails on 42 inherited files.
-- Phase 3 complete: the wheel installs in a clean environment with only its
-  declared dependencies and imports all 91 modules without optional backends.
-  Adapted-code provenance and upstream license texts ship in
-  `THIRD_PARTY_NOTICES.md` and `CREDITS.md`.
-- Phase 4: regularization is explicit (no mixins, MRO walk, or class-name
-  matching) and penalties are added after reduction; weight-bearing losses
-  declare their arguments. Parameter losses no longer cast or move parameters
-  in forward, which had broken optimizer state. Contrastive and proxy
-  benchmarks are unchanged within noise. Samplers use PyTorch generators with
-  explicit reproducibility and documented coverage semantics.
-- Phase 5, equations: all equation images are LaTeX rendered by pinned MathJax
-  3.2.2 with subresource integrity, verified against implementations and
-  papers. Verification fixed SmoothAP positive sets, TCM and LiftedStructure
-  reference handling, Tuplet NaNs, and Angular negative normalization, and
-  documented intentional deviations. A new SVG architecture diagram replaces
-  the obsolete raster diagrams. GitHub-native math rendering is unverified.
-- Phase 5: all Jupyter notebooks and the separate example gallery are removed.
-  The README now provides a human-readable introduction and minimal training
-  step, leading to a shared task/component index and agent-facing executable
-  recipes beside their contracts. API documentation agreement and complete
-  policy adoption remain outstanding.
-- Phase 4, explicit state: the stateless-API pass removed remaining implicit
-  behavior. Recorded statistics (`COLLECT_STATS`) are removed. `HDCMiner` takes
-  explicit `candidates` instead of `set_idx_externally`/`reset_idx`. Retrieval
-  backends live in `utils.retrieval`. `CrossBatchMemory` and
-  `DynamicSoftMarginLoss` check, rather than move or cast, their buffers; the
-  label queue dtype is an explicit `label_dtype`. Cross-batch memory checkpoints
-  use explicitly registered state-dict hooks.
-- Phase 5, discovery and policy: documented constructor signatures are tested
-  against the classes. The README example executes, and all 257 relative links
-  in the README and published docs resolve, 180 of them with anchors.
-  `code-polishy check --all` reports zero findings, down from about 840. The
-  full CPU suite passes with 220 tests. CUDA and NCCL evidence needs a GPU host.
-- Version 3 acceptance, 2026-10-28 UTC: revision
-  `0616ea964cc6b87dc8a8c0abcb562204b16bf1a3` passes all 222 CPU tests in
-  180.204 seconds and all 222 CUDA tests in 275.563 seconds, with no failures,
-  errors, or skips. The CPU profile covers float32/float64 on the M1 Pro;
-  Linux x86_64 covers float16/float32/float64 on two NVIDIA A40 GPUs (46,068 MiB
-  each), driver 595.91.07, Python 3.12.13, and PyTorch 2.14.0+cu130. The CUDA
-  run executes two-rank NCCL value, embedding-gradient, trainable-parameter,
-  uneven/empty-batch, reference, mining, memory, and argument-validation cases.
-  Command: the CUDA `python -m unittest discover -v` profile in
-  [Development](../../DEVELOPMENT.md#cuda-and-distributed-verification).
-- CUDA corrections: fixed and learnable `MarginLoss.beta` now follow module
-  placement; memory reset preserves queue device, dtype, and storage; the
-  sparse-centers mask moves as a module buffer. Float16 reference comparisons
-  use dtype-appropriate tolerances. The trainable distributed fixture uses seed
-  zero, with ten repetitions per dtype passing under unchanged tolerances;
-  measured errors are recorded in [distributed rationale](../design/distributed.md).
-- Host limitation: every two-A40 CUDA run uses `NCCL_P2P_DISABLE=1` because
-  direct GPU-to-GPU transfers also hang in a bare PyTorch/NCCL probe without
-  library code. This verifies NCCL with direct peer-to-peer transport disabled;
-  it does not verify that transport path. The workaround is documented in
-  Development and must accompany performance results from this host.
-- CUDA performance: clean-revision float32 references now cover contrastive,
-  all-triplet, pair-mining, and proxy workloads at batches 128/512, two-rank
-  NCCL at global batches 128/512, and a cold-cache full-graph compiled proxy.
-  Forward/backward timings, peak allocated memory, hardware, transport limits,
-  and raw per-rank samples are recorded in
-  [performance measurements](../performance.md#cuda-and-nccl-reference).
-- Packaging and policy: wheel and source distributions identify as 3.0.0.
-  The wheel installs in a clean environment with only core dependencies,
-  imports all 91 package modules, runs the README optimization step, and
-  includes required license/attribution files. Strict MkDocs build and the
-  source checkpoint gate pass. Online supply-chain verification passes with
-  five exact vulnerability assessments and one uv release-age admission.
-  Certifi's disabled-client assessment still expires on 2026-11-02 UTC;
-  reassess before merging after that date. Its fixed release reaches 30 days
-  on 2026-11-19; no exception was extended or fresh version admitted here.
-- Autocast and retrieval memory, 2026-10-28 UTC: revision
-  `37d9f049c3ef4800f677705b8ef50015930099b8` converts incoming memory-loss
-  embeddings to the queue dtype without detaching anchor gradients, computes
-  dynamic-margin bin coordinates and contributions in histogram precision, and
-  releases batched k-NN callbacks on both success and failure. Five new
-  regression tests fail before these fixes and cover float16/bfloat16 autocast,
-  histogram values and gradients near bin boundaries, masked memory enqueues,
-  repeated metric calls, and recovery after a partial search failure.
-  All 32 targeted tests pass on CPU and CUDA, including two-rank NCCL.
-  The full suites then pass all 227 tests on CPU in 182.400 seconds and CUDA
-  in 282.819 seconds, with no failures, errors, or skips. CUDA uses the same
-  two-A40 environment and `NCCL_P2P_DISABLE=1` recorded above; the new autocast
-  cases explicitly cover float16 and bfloat16. The source checkpoint gate and
-  strict documentation build also pass.
-- Retrieval memory measurement: with 4,096 float32 query and reference rows,
-  eight dimensions, `k=None`, and `torch.no_grad()`, the default calculator
-  retained 201,326,592 bytes (192 MiB) after returning metrics. The corrected
-  implementation retains zero k-NN output bytes and zero allocated CUDA bytes
-  above the warmed baseline. Peak output storage during the call remains
-  quadratic; query blocking and metric values are unchanged.
-- Fixed-k small galleries, 2026-10-28 UTC: revision
-  `5fb5dd316afc29b14b63e7e4eab85fec9f45942f` caps a positive integer `k` at
-  the reference count minus any excluded self-match, preserving the configured
-  value across calls. Two new regression tests fail before the fix and verify
-  metric values for separate galleries, self-search, query prefixes, singleton
-  galleries, and reuse across gallery sizes with `k` up to 1,000. All 22 targeted
-  retrieval, calculator-contract, and evaluation-recipe tests pass on CPU in
-  0.620 seconds and CUDA in 3.451 seconds, with no failures, errors, or skips.
-  CUDA uses the same A40 environment and `NCCL_P2P_DISABLE=1` recorded above,
-  from the clean checkout `/workspace/pml-v3-5fb5dd3`. The source checkpoint
-  gate passes with no findings. These focused results supplement the full
-  227-test CPU/CUDA results above; the full suites were not repeated for this
-  bounded change.
-- The subsequent merge review of revision
-  `de1e190a40f93dbe6ae7c9f72e80d8b5bf14671e` passes all 229 tests on CPU in
-  175.086 seconds and CUDA in 282.381 seconds, with no failures, errors, or
-  skips. CUDA uses two A40s and `NCCL_P2P_DISABLE=1`. These results precede the
-  benchmark import and ProxyNCA autocast fixes below.
-- Clean benchmark execution, 2026-10-28 UTC: revision
-  `111b41cc5dea941c08169395a8bc5c2ed5f203b4` makes the benchmark runner import
-  its checkout's `src` directory. In a clean checkout on the M1 Pro,
-  `uv sync --frozen --all-extras --no-build --no-install-project` creates a new
-  environment with no installed project. With `PYTHONPATH` unset,
-  `./code-polishyw test --suite benchmarks-focused` passes all four workloads.
-  Pre-install dependency review and deferred online supply-chain checks pass
-  under the existing assessments; dependency pins and exceptions are unchanged.
-- ProxyNCA autocast at the same revision converts embeddings to the proxies'
-  dtype for both loss and logits computation. The new regression fails before
-  the fix and verifies float16/bfloat16 encoder outputs, loss values, logits,
-  encoder/proxy gradients, and parameter/optimizer state across two Adam steps
-  against an independent squared-distance cross-entropy reference. All 10
-  targeted ProxyNCA, NCA, and composition tests pass on CPU in 0.534 seconds and
-  CUDA in 5.737 seconds, with no failures, errors, or skips. The new regression
-  also passes separately on Linux CPU. GPU verification uses the clean checkout
-  `/workspace/pml-v3-111b41c` with the A40 environment recorded above. All six
-  focused checkpoint suites and the strict documentation build pass. The full
-  suites were not repeated for these bounded fixes; the CI-owned merge gate
-  remains outstanding.
-- Merge review, 2026-10-28 UTC: revision
-  `b32145b4bc345025ac566eaff58ea135b312e246` has no blocking findings against
-  `master` (`c8350998ebc8aacf2c45de50e2556bc854cc0361`). All 230 CPU tests pass
-  in 175.725 seconds and all 230 CUDA/NCCL tests pass in 277.750 seconds, with
-  no failures, errors, or skips. CUDA uses two A40s and `NCCL_P2P_DISABLE=1`.
-  Another 56 mixed-precision cases pass: 14 parameter- or buffer-bearing losses
-  under float16/bfloat16 autocast on both CPU and CUDA, including gradients
-  through two Adam steps. The author-metadata correction produces revision
-  `66358d54017aab9bada9595b08109761a9017cff` with the same source tree.
-- PyPI release automation, revision
-  `6e8561d1bb1dbce9315c2bec454efe9765c631e6`: an annotated version tag selects
-  a clean commit in `master` history with successful CI. Separate build and
-  publish jobs retain the verified wheel/source distributions and publish
-  through PyPI OIDC. Ten release preflight tests and all seven focused
-  checkpoint suites pass, with no policy findings. A fresh frozen environment
-  builds both distributions, installs and exercises the wheel in isolated
-  Python, and passes `uv publish --dry-run --trusted-publishing never`.
-  The strict documentation build passes. Hosted publication remains unverified
-  until the one-time account configuration in
-  [Development](../../DEVELOPMENT.md#publishing-to-pypi) is completed.
+All five implementation phases are complete. The retained architecture and
+mathematical decisions are documented in `docs/design/`; public changes are
+listed in the version 3 release notes. Git history records the implementation
+sequence and earlier verification measurements.
 
-- Utility cleanup, 2026-10-28 UTC: `MatchFinder` row matching now honors
-  normalization and distance power. Loss wrappers accept supported subclasses
-  through type checks and reject ProxyNCA's incompatible reference contract.
-  Batched callbacks belong to individual calls; standard Python loggers and
-  explicit PyTorch conversions replace mutable logging and conversion helpers.
-  P2SGrad preserves parameter storage and snapshots weights for accumulated
-  forwards. Histogram indices stay in tensors. Obsolete wrapper/miner APIs,
-  duplicate API documentation, unused artwork, and dead branches are removed;
-  module/test helper names and historical adoption documentation are clarified.
-  All 243 CPU tests pass in 179.685 seconds, with no failures, errors, or skips.
-  The 28 CPU float16/bfloat16 autocast cases pass, as do changed-source checks
-  and the strict documentation build. Earlier CUDA evidence does not cover
-  this cleanup; the GPU pod remains stopped.
+The release cleanup passes 249 CPU tests and 28 CPU mixed-precision cases.
+The strict website build and isolated wheel check at supported runtime
+minimums also pass. Earlier CUDA/NCCL evidence predates this cleanup; current
+platform acceptance and open release conditions are tracked below.
 
 ## Remaining merge and release checks
 
@@ -543,6 +325,15 @@ for those design documents or evidence that the listed work is complete.
   equations; check the linked mathematical documentation, such as `losses.md`.
   The strict website build passes, but that does not establish GitHub rendering.
 - Configure the GitHub `pypi` environment and matching PyPI trusted publisher
-  before the first annotated release tag is pushed.
+  before the first annotated release tag is pushed. Set Pages to GitHub Actions
+  and allow release tags in the `github-pages` environment.
 - Keep the dated dependency assessments valid at merge/release time, starting
-  with the certifi deadline above. Publication remains a separate operation.
+  with the certifi assessment expiry on 2026-11-02 UTC. Publication remains a separate operation.
+
+- Land contributor PR #763 through its original PR after modernization merges
+  and before tagging v3. It fixes large integer labels colliding after a float32
+  cast in `AccuracyCalculator`. Preserve its authorship and review history.
+- Adopt Code Polishy support for Python library compatibility ranges. The
+  maintainer authorized ranges in published metadata with exact development
+  pins; locked policy 0.31.5 currently rejects that valid manifest. Do not
+  publish while the required policy checks remain blocked.

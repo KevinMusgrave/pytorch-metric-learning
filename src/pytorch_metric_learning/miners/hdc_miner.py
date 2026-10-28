@@ -1,6 +1,9 @@
+import torch
+from torch import Tensor
+
+from ..types import IndicesTuple
 import math
 
-import torch
 
 from ..utils import loss_and_miner_utils as lmu
 from .base_miner import BaseMiner
@@ -20,10 +23,16 @@ class HDCMiner(BaseMiner):
             )
             pairs = lmu.convert_to_pairs(candidates, labels, ref_labels)
             mining_output = self.hardest_pairs(embeddings, ref_emb, pairs)
-        self.output_assertion(mining_output)
+        self.validate_output(mining_output)
         return mining_output
 
-    def mine(self, embeddings, labels, ref_emb, ref_labels):
+    def mine(
+        self,
+        embeddings: Tensor,
+        labels: Tensor,
+        ref_emb: Tensor,
+        ref_labels: Tensor,
+    ) -> IndicesTuple:
         pairs = lmu.get_all_pairs_indices(labels, ref_labels)
         return self.hardest_pairs(embeddings, ref_emb, pairs)
 

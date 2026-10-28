@@ -37,6 +37,22 @@ output carries them as `already_reduced` entries. Weight-bearing losses declare
 `weight_regularizer`, `weight_reg_weight`, and `weight_init_func` as keyword-only
 arguments so the public signature is complete without reading base classes.
 
+The public types in `pytorch_metric_learning.types` describe this protocol
+without wrapping its dictionaries or tensors. `LossDict` maps sub-loss names to
+`LossTerm`; `IndicesTuple` distinguishes the existing three-tensor triplets
+from four-tensor pairs. Loss computation and mining expose these annotations,
+and reducer inputs share the same term type. `DoNothingReducer` returns the
+dictionary; ordinary reducers return a tensor. The distribution includes
+`py.typed` for consumers of these annotated boundaries.
+
+Validation uses explicit exceptions and remains active under `python -O`.
+Invalid argument types raise `TypeError`; invalid values, shapes, tuple lengths,
+and reduction names raise `ValueError`. Miners validate output before handing
+indices to losses, and memory validates enqueue masks before modifying its
+queue. Distance orientation is a class property: similarities declare
+`is_inverted = True`, while distance classes inherit `False`. The normalization
+norm `p` still applies to similarities that normalize embeddings.
+
 Learnable loss parameters follow ordinary PyTorch module placement. A forward
 pass never moves, casts, or reallocates parameters to match the embeddings.
 Doing so changed `state_dict` dtypes and broke optimizer state after a single

@@ -69,8 +69,8 @@ Note: by default, `embeddings == ref_emb` and `labels == ref_labels`.
 
 ```python
 # Validate the output of the miner.
-def output_assertion(self, output):
-	raise NotImplementedError
+def validate_output(self, output):
+    ...
 ```
 
 ## BatchEasyHardMiner
@@ -79,7 +79,7 @@ def output_assertion(self, output):
 
 Returns positive and negative pairs according to the specified `pos_strategy` and `neg_strategy`.
 
-To implement the loss function described in the paper, use this miner in combination with [`NTXentLoss(temperature=0.1)`](losses.md#ntxentloss).
+To implement the loss function described in the paper, use this miner in combination with [`NTXentLoss(temperature=0.1)`](losses/ntxent_loss.md#ntxentloss).
 
 ```python
 miners.BatchEasyHardMiner(
@@ -286,3 +286,8 @@ In a given batch, this will:
 
 - Divide up the positive distances into 100 bins, and return 25 positive pairs per bin, or 0 if no pairs exist in that bin
 - Divide up the negative distances into 100 bins, and return 33 negative pairs per bin, or 0 if no pairs exist in that bin
+
+`BaseMiner.validate_output` checks for three triplet index tensors or four pair
+index tensors. Every tensor must be one-dimensional; corresponding anchor and
+partner lengths must match. Invalid types raise `TypeError`; invalid shapes or
+lengths raise `ValueError`, including when Python optimizations are enabled.

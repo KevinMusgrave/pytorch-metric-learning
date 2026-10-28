@@ -47,7 +47,7 @@ class TestMultipleLosses(unittest.TestCase):
                     + lossB(embeddings, labels, indices_tupleB) * 0.23
                 )
                 self.assertTrue(torch.isclose(loss, correct_loss))
-                with self.assertRaises(AssertionError):
+                with self.assertRaises(ValueError):
                     loss_func(embeddings, labels, indices_tupleB)
 
     def test_input_indices_tuple(self):
@@ -84,7 +84,7 @@ class TestMultipleLosses(unittest.TestCase):
         lossA = ContrastiveLoss()
         lossB = TripletMarginLoss(0.1)
         self.assertRaises(
-            AssertionError,
+            ValueError,
             lambda: MultipleLosses(
                 losses={"lossA": lossA, "lossB": lossB},
                 weights={"blah": 1, "lossB": 0.23},
@@ -93,7 +93,7 @@ class TestMultipleLosses(unittest.TestCase):
 
         minerA = MultiSimilarityMiner()
         self.assertRaises(
-            AssertionError,
+            ValueError,
             lambda: MultipleLosses(
                 losses={"lossA": lossA, "lossB": lossB},
                 weights={"lossA": 1, "lossB": 0.23},
@@ -105,13 +105,13 @@ class TestMultipleLosses(unittest.TestCase):
         lossA = ContrastiveLoss()
         lossB = TripletMarginLoss(0.1)
         self.assertRaises(
-            AssertionError,
+            ValueError,
             lambda: MultipleLosses(losses=[lossA, lossB], weights=[1]),
         )
 
         minerA = MultiSimilarityMiner()
         self.assertRaises(
-            AssertionError,
+            ValueError,
             lambda: MultipleLosses(
                 losses=[lossA, lossB],
                 weights=[1, 0.2],

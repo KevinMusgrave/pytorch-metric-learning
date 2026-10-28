@@ -21,7 +21,10 @@ class MultipleLosses(torch.nn.Module):
 
     def forward(self, embeddings, labels, indices_tuple=None):
         if self.miners:
-            assert indices_tuple is None
+            if indices_tuple is not None:
+                raise ValueError(
+                    "indices_tuple cannot be supplied with configured miners"
+                )
         total_loss = 0
         for name, loss_func in self.losses.items():
             curr_indices_tuple = indices_tuple
@@ -38,11 +41,26 @@ class MultipleLosses(torch.nn.Module):
 
     def check_names(self, names, values, match_all_keys):
         if self.is_dict:
-            assert isinstance(values, dict)
+            if not isinstance(values, dict):
+                raise TypeError(
+                    "miners and weights must be dictionaries when losses is a "
+                    "dictionary"
+                )
             if match_all_keys:
-                assert sorted(values) == sorted(names)
+                if sorted(values) != sorted(names):
+                    raise ValueError(
+                        "weights must have exactly the same keys as losses"
+                    )
             else:
-                assert all(k in names for k in values)
+                if not all(k in names for k in values):
+                    raise ValueError("miner keys must be present in losses")
         else:
-            assert isinstance(values, (list, tuple))
-            assert len(values) == len(names)
+            if not isinstance(values, (list, tuple)):
+                raise TypeError(
+                    "miners and weights must be lists or tuples when losses is a "
+                    "sequence"
+                )
+            if len(values) != len(names):
+                raise ValueError(
+                    "miners and weights must have the same length as losses"
+                )

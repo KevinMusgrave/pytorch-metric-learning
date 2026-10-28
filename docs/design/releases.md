@@ -34,3 +34,20 @@ Git repositories and recorded GitHub API responses. Real CI identity, artifact
 transfer, and PyPI OIDC exchange are verified only by the hosted workflow.
 The one-time account configuration and release steps are in
 [Development](../../DEVELOPMENT.md#publishing-to-pypi).
+
+Published Python requirements declare compatibility bounds, while development,
+build, and release environments remain exactly pinned and frozen. Current
+lower bounds match the tested versions. CI installs the built wheel in a
+separate environment containing only its core runtime dependencies, verifies
+that those versions equal the published lower bounds, and runs a differentiable
+loss in isolated Python. Future development dependency upgrades must retain
+minimum-version coverage instead of silently testing only the newer stack.
+
+The build job also builds the tagged MkDocs site with the pinned development
+environment and retains a Pages artifact. After PyPI publication succeeds, a
+separate job deploys that artifact through GitHub Pages with `pages: write` and
+OIDC permission in the `github-pages` environment. It has no repository-content
+write permission and does not rebuild the site. Documentation therefore describes
+the released API; a deployment failure can be retried independently. The Pages
+source must be GitHub Actions because a `GITHUB_TOKEN` push to a branch does
+not trigger another workflow or the legacy Pages build.

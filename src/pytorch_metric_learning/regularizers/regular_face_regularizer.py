@@ -8,7 +8,8 @@ from .base_regularizer import BaseRegularizer
 class RegularFaceRegularizer(BaseRegularizer):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        assert self.distance.is_inverted
+        if not self.distance.is_inverted:
+            raise ValueError("distance must be a similarity with is_inverted=True")
 
     def compute_loss(self, x):
         dtype, device = x.dtype, x.device

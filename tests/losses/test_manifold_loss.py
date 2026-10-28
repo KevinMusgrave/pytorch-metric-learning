@@ -125,7 +125,7 @@ class TestManifoldLoss(unittest.TestCase):
 
             with self.assertRaises(ValueError):
                 ManifoldLoss(embedding_size=embedding_size, lambda_c=-999)
-            self.assertRaises(AssertionError, loss_incorrect_descriptors_dim)
+            self.assertRaises(ValueError, loss_incorrect_descriptors_dim)
 
             loss_func = ManifoldLoss(
                 embedding_size=embedding_size,

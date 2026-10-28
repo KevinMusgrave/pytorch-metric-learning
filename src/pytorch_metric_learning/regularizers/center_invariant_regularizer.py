@@ -8,7 +8,7 @@ from .base_regularizer import BaseRegularizer
 class CenterInvariantRegularizer(BaseRegularizer):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        c_f.assert_distance_type(self, LpDistance, power=1, normalize_embeddings=False)
+        c_f.check_distance_type(self, LpDistance, power=1, normalize_embeddings=False)
 
     def compute_loss(self, x):
         squared_weight_norms = self.distance.get_norm(x) ** 2

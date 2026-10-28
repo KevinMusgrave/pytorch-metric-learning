@@ -16,7 +16,7 @@ MISSING = object()
 
 
 def documented_signatures():
-    for path in sorted(DOCS.glob("*.md")):
+    for path in sorted([*DOCS.glob("*.md"), *(DOCS / "losses").glob("*.md")]):
         for match in BLOCK.finditer(path.read_text()):
             module_name = match.group(1).split(".")[0]
             yield path.name, module_name, match.group(2), match.group(3)

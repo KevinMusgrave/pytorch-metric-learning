@@ -1,3 +1,6 @@
+from torch import Tensor
+
+from ..types import IndicesTuple, LossDict
 import torch.nn.functional as F
 
 from ..distances import CosineSimilarity
@@ -16,7 +19,7 @@ class ThresholdConsistentMarginLoss(BaseMetricLossFunction):
         **kwargs,
     ):
         super().__init__(**kwargs)
-        c_f.assert_distance_type(self, CosineSimilarity)
+        c_f.check_distance_type(self, CosineSimilarity)
         self.lambda_plus = lambda_plus
         self.lambda_minus = lambda_minus
         self.margin_plus = margin_plus
@@ -25,7 +28,14 @@ class ThresholdConsistentMarginLoss(BaseMetricLossFunction):
     def get_default_distance(self):
         return CosineSimilarity()
 
-    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+    def compute_loss(
+        self,
+        embeddings: Tensor,
+        labels: Tensor | None,
+        indices_tuple: IndicesTuple | None,
+        ref_emb: Tensor,
+        ref_labels: Tensor | None,
+    ) -> LossDict:
         ap, p, an, n = convert_to_pairs(indices_tuple, labels, ref_labels)
 
         ap, p = embeddings[ap], ref_emb[p]

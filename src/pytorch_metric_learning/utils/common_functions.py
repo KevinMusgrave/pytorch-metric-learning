@@ -20,21 +20,22 @@ def check_shapes(embeddings, labels):
         raise ValueError("labels must be a 1D tensor of shape (batch_size,)")
 
 
-def assert_distance_type(obj, distance_type=None, **kwargs):
+def check_distance_type(obj, distance_type=None, **kwargs):
     obj_name = type(obj).__name__
     if distance_type is not None:
         if isinstance(distance_type, (list, tuple)):
+            distance_type = tuple(distance_type)
             distance_type_str = ", ".join(x.__name__ for x in distance_type)
             distance_type_str = "one of " + distance_type_str
         else:
             distance_type_str = distance_type.__name__
-        assert isinstance(obj.distance, distance_type), (
-            f"{obj_name} requires the distance metric to be {distance_type_str}"
-        )
+        if not isinstance(obj.distance, distance_type):
+            raise TypeError(
+                f"{obj_name} requires the distance metric to be {distance_type_str}"
+            )
     for k, v in kwargs.items():
-        assert getattr(obj.distance, k) == v, (
-            f"{obj_name} requires distance.{k} to be {v}"
-        )
+        if getattr(obj.distance, k) != v:
+            raise ValueError(f"{obj_name} requires distance.{k} to be {v}")
 
 
 def check_parameter_placement(module, parameter, embeddings):

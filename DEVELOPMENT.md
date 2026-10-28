@@ -179,6 +179,19 @@ short-lived OIDC identity, following the
 [PyPI trusted-publisher setup](https://docs.pypi.org/trusted-publishers/adding-a-publisher/)
 and [uv publishing workflow](https://docs.astral.sh/uv/guides/integration/github/#publishing-to-pypi).
 
+In repository Settings → Pages, set the source to **GitHub Actions**. Allow
+release tags matching `v*.*.*` in the `github-pages` environment. After PyPI
+publication, the release workflow deploys the site artifact built from the
+same tag using pinned MkDocs Material. No local `mkdocs gh-deploy` step or
+repository-content write token is required.
+
+Published runtime and optional dependency requirements are compatibility lower
+bounds. Their exact development versions live in the `dev` dependency group and
+`uv.lock`; build tools and package managers remain exactly pinned. CI verifies
+the wheel in a separate core-only environment at the declared minimum versions.
+If a development upgrade raises locked versions above the supported floor,
+retain a separate minimum-version test environment before making that change.
+
 For each release, update the version in `pyproject.toml` and
 `src/pytorch_metric_learning/__init__.py`, regenerate `uv.lock` with the pinned
 `uv lock`, and complete the release notes and platform checks. Merge the
@@ -196,3 +209,7 @@ If an upload is interrupted, rerun the failed publish job within the artifact's
 already on PyPI and rejects conflicting contents. Keep dependency assessments
 current at release time. Source changes require a new version and tag rather
 than moving an existing release tag.
+
+If only documentation publication fails, rerun the failed docs job within the
+artifact retention period. It deploys the same site artifact and leaves the
+already published PyPI files unchanged.

@@ -165,6 +165,6 @@ class TestRankedListLoss(unittest.TestCase):
                     loss.backward()
 
     def test_assertion_raises(self):
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(ValueError):
             _ = RankedListLoss(margin=1, Tn=0, imbalance=-1)
             _ = RankedListLoss(margin=1, Tn=0, imbalance=2)

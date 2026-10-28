@@ -1,10 +1,35 @@
 # Version 3.0.0
 
-This document describes changes implemented on the modernization branch. The
-full CPU suite passes. Two-GPU CUDA/NCCL acceptance passed before the final
-utility cleanup and needs to be repeated for that candidate. Publication also
-requires the CI-owned final gate and remaining checks in
-[the modernization plan](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/docs/plans/modernization.md#remaining-merge-and-release-checks).
+Version 3 focuses the library on composable metric-learning components and
+explicit PyTorch training and evaluation. It removes training orchestration,
+simplifies extension contracts, and fixes numerical and distributed behavior.
+
+## Supported environment
+
+Python 3.12 or newer is required deliberately; Python 3.10 and 3.11 are no
+longer supported. The tested minimums are PyTorch 2.14.0 and NumPy 2.5.3.
+Published requirements permit newer versions. Development and release builds
+use exact versions in the frozen lockfile. Optional Faiss and scikit-learn
+backends require at least 1.15.1 and 1.9.1 respectively. Documentation tooling
+is a development dependency; the former `docs` installation extra is removed.
+
+## Explicit validation and typing
+
+Public argument checks raise `TypeError` for incompatible types and `ValueError`
+for invalid values or shapes, including with `python -O`. Custom miners use
+`validate_output` instead of `output_assertion`; custom reducers use the
+`check_sizes_*` hooks instead of `assert_sizes_*`. The distance validation helper
+is now `utils.common_functions.check_distance_type`.
+
+`BaseDistance.is_inverted` is a class attribute, not a constructor parameter.
+Custom similarities set `is_inverted = True` on their class. `p` still controls
+embedding normalization, including for similarities.
+
+`pytorch_metric_learning.types` exposes `LossTerm`, `LossDict`, `PairIndices`,
+`TripletIndices`, and `IndicesTuple`. Loss computation, mining, and reducer
+boundaries have type annotations, and distributions include `py.typed`. Runtime
+loss terms remain dictionaries and mined indices remain tuples. A default
+reducer returns a tensor; `DoNothingReducer` returns the typed loss dictionary.
 
 ## Removed training orchestration
 

@@ -1,4 +1,4 @@
-![PyTorch Metric Learning](docs/imgs/Logo2.png)
+![PyTorch Metric Learning](https://raw.githubusercontent.com/KevinMusgrave/pytorch-metric-learning/master/docs/imgs/Logo2.png)
 
 Train embedding models with composable PyTorch losses, hard-example miners,
 distances, reducers, and regularizers. Use them in your own training loop for
@@ -16,10 +16,10 @@ The core package needs only PyTorch and NumPy. Optional extras add the Faiss
 retrieval backend, `pytorch-metric-learning[faiss]`, and scikit-learn for the
 NMI/AMI clustering metrics, `pytorch-metric-learning[clustering]`.
 
-This branch is preparing the next major release. Its development baseline is
-Python 3.12.13 and PyTorch 2.14.0; published versions have their own requirements.
-See the [release notes](docs/release-notes-3.md) for breaking changes and
-[development setup](DEVELOPMENT.md) to run this checkout.
+Version 3 requires Python 3.12 or newer, PyTorch 2.14.0 or newer, and NumPy
+2.5.3 or newer. Development and CI use exact versions from the frozen lockfile.
+See the [release notes](https://kevinmusgrave.github.io/pytorch-metric-learning/release-notes-3/) for breaking changes and
+[development setup](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/DEVELOPMENT.md) to run this checkout.
 
 ## A minimal training step
 
@@ -47,12 +47,12 @@ optimizer.step()
 The model returns embeddings shaped `(12, 4)` and labels have shape `(12,)`.
 This loss L2-normalizes embeddings by default. It averages active positive and
 negative pair penalties separately, then adds them. See the
-[contrastive-loss contract](docs/losses.md#contrastiveloss) for distances,
+[contrastive-loss contract](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/contrastive_loss/#contrastiveloss) for distances,
 margins, and reduction options.
 
 ## How it fits together
 
-[![Your PyTorch code computes embeddings and calls the library's miner and loss to get a scalar loss, then calls backward and steps its optimizer. For evaluation, your code extracts embeddings and AccuracyCalculator retrieves nearest neighbors to compute metrics.](docs/imgs/architecture.svg)](docs/imgs/architecture.svg)
+[![Your PyTorch code computes embeddings and calls the library's miner and loss to get a scalar loss, then calls backward and steps its optimizer. For evaluation, your code extracts embeddings and AccuracyCalculator retrieves nearest neighbors to compute metrics.](https://raw.githubusercontent.com/KevinMusgrave/pytorch-metric-learning/master/docs/imgs/architecture.svg)](https://raw.githubusercontent.com/KevinMusgrave/pytorch-metric-learning/master/docs/imgs/architecture.svg)
 
 Your code keeps the training loop. The library turns embeddings and labels
 into a differentiable loss, and turns query and reference embeddings into
@@ -60,28 +60,28 @@ retrieval metrics.
 
 ## Find the right component
 
-Start with the [task and component index](docs/index.md). It links to public
+Start with the [task and component index](https://kevinmusgrave.github.io/pytorch-metric-learning/). It links to public
 signatures, defaults, tensor contracts, paper references, and small runnable
 recipes using ordinary PyTorch code.
 
-- [Losses](docs/losses.md) define the training objective.
-- [Miners](docs/miners.md) select pairs or triplets within a batch.
-- [Distances](docs/distances.md), [reducers](docs/reducers.md), and
-  [regularizers](docs/regularizers.md) customize the computation.
-- [Samplers](docs/samplers.md) construct batches with useful label structure.
-- [Retrieval metrics](docs/accuracy_calculation.md) measure embedding quality.
-- [Distributed support](docs/distributed.md) documents multi-device gradients
+- [Losses](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/) define the training objective.
+- [Miners](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/) select pairs or triplets within a batch.
+- [Distances](https://kevinmusgrave.github.io/pytorch-metric-learning/distances/), [reducers](https://kevinmusgrave.github.io/pytorch-metric-learning/reducers/), and
+  [regularizers](https://kevinmusgrave.github.io/pytorch-metric-learning/regularizers/) customize the computation.
+- [Samplers](https://kevinmusgrave.github.io/pytorch-metric-learning/samplers/) construct batches with useful label structure.
+- [Retrieval metrics](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/) measure embedding quality.
+- [Distributed support](https://kevinmusgrave.github.io/pytorch-metric-learning/distributed/) documents multi-device gradients
   and supported combinations.
 
 The [documentation website](https://kevinmusgrave.github.io/pytorch-metric-learning/)
 resides alongside the Markdown sources in this repository. For timing and memory
-measurements, see [performance](docs/performance.md).
+measurements, see [performance](https://kevinmusgrave.github.io/pytorch-metric-learning/performance/).
 
 ## Contributing and credit
 
-See [DEVELOPMENT.md](DEVELOPMENT.md) for environment setup and verification,
-and [AGENTS.md](AGENTS.md) for repository maintenance rules. Thanks to all
-[contributors, upstream projects, and supporters](CREDITS.md).
+See [DEVELOPMENT.md](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/DEVELOPMENT.md) for environment setup and verification,
+and [AGENTS.md](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/AGENTS.md) for repository maintenance rules. Thanks to all
+[contributors, upstream projects, and supporters](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/CREDITS.md).
 
 ## Citing this library
 

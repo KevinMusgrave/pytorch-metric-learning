@@ -206,3 +206,11 @@ forward/backward takes 27.607 seconds using fresh `TORCHINDUCTOR_CACHE_DIR` and
 `TRITON_CACHE_DIR` directories. Compiler registration and import precede that
 measurement. Compilation helps steady-state execution for this workload; its
 startup cost and workload dependence still require measurement before adoption.
+
+## Large batches and tuple memory
+
+The number of valid pairs and triplets can grow rapidly with batch size and
+label composition. Triplet enumeration allocates only valid triplets, but the
+result can still exceed available memory. A PyTorch `nonzero` error mentioning
+`INT_MAX` means an intermediate exceeds its indexing limit. Reduce batch size
+or use a miner that selects a bounded subset of pairs or triplets.

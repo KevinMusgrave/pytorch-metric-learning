@@ -1,6 +1,9 @@
+import torch
+from torch import Tensor
+
+from ..types import IndicesTuple, LossDict
 import math
 
-import torch
 from torch import nn
 
 from ..distances import CosineSimilarity
@@ -29,11 +32,19 @@ class ManifoldLoss(BaseMetricLossFunction):
         self.alpha = alpha
         self.margin = margin
 
-    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+    def compute_loss(
+        self,
+        embeddings: Tensor,
+        labels: Tensor | None,
+        indices_tuple: IndicesTuple | None,
+        ref_emb: Tensor,
+        ref_labels: Tensor | None,
+    ) -> LossDict:
         c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
         c_f.labels_not_supported(labels, ref_labels)
 
-        assert embeddings.shape[1] == self.embedding_size
+        if embeddings.shape[1] != self.embedding_size:
+            raise ValueError("Embedding dimension must match embedding_size")
         c_f.check_parameter_placement(self, self.proxies, embeddings)
 
         N = len(embeddings)

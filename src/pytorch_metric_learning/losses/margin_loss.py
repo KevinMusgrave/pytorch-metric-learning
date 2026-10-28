@@ -1,4 +1,7 @@
 import torch
+from torch import Tensor
+
+from ..types import IndicesTuple, LossDict
 
 from ..reducers import DivisorReducer
 from ..utils import common_functions as c_f
@@ -24,7 +27,14 @@ class MarginLoss(BaseMetricLossFunction):
         self.initialize_beta(beta, num_classes)
         self.triplets_per_anchor = triplets_per_anchor
 
-    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+    def compute_loss(
+        self,
+        embeddings: Tensor,
+        labels: Tensor | None,
+        indices_tuple: IndicesTuple | None,
+        ref_emb: Tensor,
+        ref_labels: Tensor | None,
+    ) -> LossDict:
         c_f.labels_or_indices_tuple_required(labels, indices_tuple)
         indices_tuple = lmu.convert_to_triplets(
             indices_tuple, labels, ref_labels, self.triplets_per_anchor

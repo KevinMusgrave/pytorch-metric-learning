@@ -73,6 +73,13 @@ jobs:
           loss.backward()
           assert torch.isfinite(loss) and torch.isfinite(embeddings.grad).all()
           PY
+      - name: Build the tagged documentation
+        run: uv run --frozen --no-sync mkdocs build --strict
+      - name: Retain the documentation site
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9
+        with:
+          path: site/
+          retention-days: 30
       - name: Retain the verified distributions
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
@@ -104,3 +111,22 @@ jobs:
           path: dist/
       - name: Publish through PyPI trusted publishing
         run: uv publish --trusted-publishing always
+
+  docs:
+    name: Publish documentation
+    needs: [build, publish]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    concurrency:
+      group: github-pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - name: Deploy the verified documentation site
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346

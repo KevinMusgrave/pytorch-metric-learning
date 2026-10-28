@@ -11,7 +11,7 @@ from .generic_pair_loss import GenericPairLoss
 class TupletMarginLoss(GenericPairLoss):
     def __init__(self, margin=5.73, scale=64, **kwargs):
         super().__init__(mat_based_loss=False, **kwargs)
-        c_f.assert_distance_type(self, CosineSimilarity)
+        c_f.check_distance_type(self, CosineSimilarity)
         self.margin = math.radians(margin)
         self.scale = scale
 

@@ -1,4 +1,7 @@
 import torch
+from torch import Tensor
+
+from ..types import IndicesTuple, LossDict
 from torch import nn
 
 from ..utils import common_functions as c_f
@@ -16,7 +19,14 @@ class P2SGradLoss(BaseMetricLossFunction):
 
         self.m_loss = nn.MSELoss()
 
-    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+    def compute_loss(
+        self,
+        embeddings: Tensor,
+        labels: Tensor | None,
+        indices_tuple: IndicesTuple | None,
+        ref_emb: Tensor,
+        ref_labels: Tensor | None,
+    ) -> LossDict:
         c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
         c_f.indices_tuple_not_supported(indices_tuple)
 
@@ -28,7 +38,10 @@ class P2SGradLoss(BaseMetricLossFunction):
 
         rtol = 1e-2 if dtype == torch.float16 else 1e-5
         w_modulus = weight.pow(2).sum(0).pow(0.5)
-        assert torch.all(torch.abs(w_modulus - 1.0) < rtol)
+        if not torch.all(torch.abs(w_modulus - 1.0) < rtol):
+            raise RuntimeError(
+                "P2SGrad weight columns must have unit norm after normalization"
+            )
 
         x_modulus = embeddings.pow(2).sum(1).pow(0.5)
         cos_theta = embeddings.mm(weight)

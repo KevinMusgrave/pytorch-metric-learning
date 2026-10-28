@@ -1,3 +1,6 @@
+from torch import Tensor
+
+from ..types import IndicesTuple
 from ..utils import loss_and_miner_utils as lmu
 from .base_miner import BaseMiner
 
@@ -8,7 +11,13 @@ class PairMarginMiner(BaseMiner):
         self.pos_margin = pos_margin
         self.neg_margin = neg_margin
 
-    def mine(self, embeddings, labels, ref_emb, ref_labels):
+    def mine(
+        self,
+        embeddings: Tensor,
+        labels: Tensor,
+        ref_emb: Tensor,
+        ref_labels: Tensor,
+    ) -> IndicesTuple:
         mat = self.distance(embeddings, ref_emb)
         a1, p, a2, n = lmu.get_all_pairs_indices(labels, ref_labels)
         pos_pair = mat[a1, p]

@@ -6,9 +6,8 @@ from .base_reducer import BaseReducer
 class ThresholdReducer(BaseReducer):
     def __init__(self, low=None, high=None, **kwargs):
         super().__init__(**kwargs)
-        assert (low is not None) or (high is not None), (
-            "At least one of low or high must be specified"
-        )
+        if not (low is not None or high is not None):
+            raise ValueError("At least one of low or high must be specified")
         self.low = low
         self.high = high
 

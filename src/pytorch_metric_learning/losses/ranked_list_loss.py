@@ -1,6 +1,9 @@
+import torch
+from torch import Tensor
+
+from ..types import IndicesTuple, LossDict
 import warnings
 
-import torch
 
 from ..distances import LpDistance
 from ..utils import common_functions as c_f
@@ -13,7 +16,8 @@ class RankedListLoss(BaseMetricLossFunction):
 
         self.margin = margin
 
-        assert 0 <= imbalance <= 1, "Imbalance must be between 0 and 1"
+        if not 0 <= imbalance <= 1:
+            raise ValueError("Imbalance must be between 0 and 1")
         self.imbalance = imbalance
 
         if alpha is not None:
@@ -29,7 +33,14 @@ class RankedListLoss(BaseMetricLossFunction):
         self.Tp = Tp
         self.Tn = Tn
 
-    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+    def compute_loss(
+        self,
+        embeddings: Tensor,
+        labels: Tensor | None,
+        indices_tuple: IndicesTuple | None,
+        ref_emb: Tensor,
+        ref_labels: Tensor | None,
+    ) -> LossDict:
         c_f.labels_required(labels)
         c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
         c_f.indices_tuple_not_supported(indices_tuple)

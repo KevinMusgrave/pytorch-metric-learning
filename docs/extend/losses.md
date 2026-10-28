@@ -4,10 +4,11 @@
 
 ```python
 from pytorch_metric_learning.losses import BaseMetricLossFunction
+from pytorch_metric_learning.types import LossDict
 import torch
 
 class BarebonesLoss(BaseMetricLossFunction):
-    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels) -> LossDict:
         # perform some calculation #
         some_loss = torch.mean(embeddings)
 
@@ -21,7 +22,7 @@ class BarebonesLoss(BaseMetricLossFunction):
         }
 ```
 
-## Compatability with distances and reducers
+## Compatibility with distances and reducers
 
 You can make your loss function a lot more powerful by adding support for distance metrics and reducers:
 
@@ -191,3 +192,20 @@ Here are some existing loss functions that might be useful for reference:
 - [ContrastiveLoss](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/src/pytorch_metric_learning/losses/contrastive_loss.py)
 - [MultiSimilarityLoss](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/src/pytorch_metric_learning/losses/multi_similarity_loss.py)
 - [NormalizedSoftmaxLoss](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/src/pytorch_metric_learning/losses/normalized_softmax_loss.py)
+
+## Typed return contract
+
+`compute_loss` returns `pytorch_metric_learning.types.LossDict`, a dictionary
+from sub-loss names to `LossTerm` dictionaries. Each term has `losses`, `indices`,
+and `reduction_type`, plus an optional `divisor` for `DivisorReducer`. The literal
+zero loss uses `losses=0`, `indices=None`, and `reduction_type="already_reduced"`;
+reducers turn it into a differentiable zero connected to the embeddings.
+
+`PairIndices` contains four tensors and `TripletIndices` contains three. Their
+union, `IndicesTuple`, describes the optional input to loss computation and the
+output of mining. Reducer pair indices contain only the two tensors for that
+term, as shown in the reduction table. These are annotations for the existing
+dictionaries and tuples; there is no runtime wrapper or conversion.
+
+The normal `forward` result is a tensor. With `DoNothingReducer`, it is a
+`LossDict` so callers can implement their own aggregation.

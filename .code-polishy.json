@@ -22,7 +22,9 @@
         "src/pytorch_metric_learning/utils/common_functions.py",
         "src/pytorch_metric_learning/utils/loss_and_miner_utils.py",
         "src/pytorch_metric_learning/utils/__init__.py",
-        "src/pytorch_metric_learning/utils/module_with_distance_and_reducer.py"
+        "src/pytorch_metric_learning/utils/module_with_distance_and_reducer.py",
+        "src/pytorch_metric_learning/types.py",
+        "src/pytorch_metric_learning/py.typed"
       ]
     },
     {
@@ -220,7 +222,8 @@
           "tests/losses/test_loss_composition.py",
           "tests/docs/__init__.py",
           "tests/docs/test_documented_signatures.py",
-          "tests/docs/test_documentation_paths.py"
+          "tests/docs/test_documentation_paths.py",
+          "tests/utils/test_validation.py"
         ],
         "module": "numerics",
         "focusedSuite": "numerics-focused"
@@ -381,7 +384,8 @@
           "tests/losses/test_dynamic_soft_margin_loss.py",
           "tests/utils/test_triplet_enumeration.py",
           "tests/losses/test_loss_composition.py",
-          "tests/docs/**"
+          "tests/docs/**",
+          "tests/utils/test_validation.py"
         ],
         "argv": [
           ".venv/bin/uv",
@@ -402,7 +406,8 @@
           "tests.utils.test_triplet_enumeration",
           "tests.losses.test_loss_composition",
           "tests.docs.test_documented_signatures",
-          "tests.docs.test_documentation_paths"
+          "tests.docs.test_documentation_paths",
+          "tests.utils.test_validation"
         ],
         "timeoutSeconds": 120
       },

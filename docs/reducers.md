@@ -1,6 +1,6 @@
 # Reducers
 
-Reducers specify how to go from many loss values to a single loss value. For example, the [ContrastiveLoss](losses.md#contrastiveloss) computes a loss for every positive and negative pair in a batch. A reducer will take all these per-pair losses, and reduce them to a single value. Here's where reducers fit in this library's flow of filters and computations:
+Reducers specify how to go from many loss values to a single loss value. For example, the [ContrastiveLoss](losses/contrastive_loss.md#contrastiveloss) computes a loss for every positive and negative pair in a batch. A reducer will take all these per-pair losses, and reduce them to a single value. Here's where reducers fit in this library's flow of filters and computations:
 
 `Your Data --> Sampler --> Miner --> Loss --> Reducer --> Final loss value`
 
@@ -23,7 +23,7 @@ This computes the average loss, using only the losses that are greater than 0. F
 reducers.AvgNonZeroReducer(**kwargs)
 ```
 
-This class is equivalent to using `ThresholdReducer(low=0)`. See [ThresholdReducer](reducers.md#thresholdreducer).
+This class is equivalent to using `ThresholdReducer(low=0)`. See [ThresholdReducer](#thresholdreducer).
 
 ## BaseReducer
 
@@ -70,7 +70,7 @@ This divides each loss by a custom value specified inside the loss function. Thi
 reducers.DivisorReducer(**kwargs)
 ```
 
-To use this reducer, the loss function must include `divisor` in its loss dictionary. For example, the [ProxyAnchorLoss](losses.md#proxyanchorloss) uses `DivisorReducer` by default, and returns the following dictionary:
+To use this reducer, the loss function must include `divisor` in its loss dictionary. For example, the [ProxyAnchorLoss](losses/proxy_anchor_loss.md#proxyanchorloss) uses `DivisorReducer` by default, and returns the following dictionary:
 
 ```python
 loss_dict = {
@@ -120,7 +120,7 @@ reducers.MultipleReducers(reducers, default_reducer=None, **kwargs)
 
 **Example usage**:
 
-The [ContrastiveLoss](losses.md#contrastiveloss) has two sub-losses: `pos_loss` for the positive pairs, and `neg_loss` for the negative pairs. In this example, a [ThresholdReducer](reducers.md#thresholdreducer) is used for the `pos_loss` and a [MeanReducer](reducers.md#meanreducer) is used for the `neg_loss`.
+The [ContrastiveLoss](losses/contrastive_loss.md#contrastiveloss) has two sub-losses: `pos_loss` for the positive pairs, and `neg_loss` for the negative pairs. In this example, a [ThresholdReducer](#thresholdreducer) is used for the `pos_loss` and a [MeanReducer](#meanreducer) is used for the `neg_loss`.
 
 ```python
 from pytorch_metric_learning.losses import ContrastiveLoss
@@ -132,7 +132,7 @@ loss_func = ContrastiveLoss(reducer=reducer)
 
 ## PerAnchorReducer
 
-This converts unreduced pairs to unreduced elements. For example, [NTXentLoss](losses.md#ntxentloss) returns losses per positive pair. If you used PerAnchorReducer with NTXentLoss, then the losses per pair would first be converted to losses per batch element, before being passed to the inner reducer.
+This converts unreduced pairs to unreduced elements. For example, [NTXentLoss](losses/ntxent_loss.md#ntxentloss) returns losses per positive pair. If you used PerAnchorReducer with NTXentLoss, then the losses per pair would first be converted to losses per batch element, before being passed to the inner reducer.
 
 ```python
 def aggregation_func(x, num_per_row):

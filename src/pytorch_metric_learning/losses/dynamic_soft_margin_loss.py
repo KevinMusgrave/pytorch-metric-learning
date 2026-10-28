@@ -1,6 +1,9 @@
+import torch
+from torch import Tensor
+
+from ..types import IndicesTuple, LossDict
 import math
 
-import torch
 
 from ..distances import LpDistance
 from ..utils import common_functions as c_f
@@ -13,7 +16,7 @@ class DynamicSoftMarginLoss(BaseMetricLossFunction):
 
     def __init__(self, min_val=-2.0, num_bins=10, momentum=0.01, **kwargs):
         super().__init__(**kwargs)
-        c_f.assert_distance_type(
+        c_f.check_distance_type(
             self, LpDistance, normalize_embeddings=True, p=2, power=1
         )
         if not math.isfinite(min_val) or min_val >= 0:
@@ -28,7 +31,14 @@ class DynamicSoftMarginLoss(BaseMetricLossFunction):
         self.momentum = momentum
         self.register_buffer("hist_", torch.zeros(num_bins))
 
-    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+    def compute_loss(
+        self,
+        embeddings: Tensor,
+        labels: Tensor | None,
+        indices_tuple: IndicesTuple | None,
+        ref_emb: Tensor,
+        ref_labels: Tensor | None,
+    ) -> LossDict:
         c_f.check_parameter_placement(self, self.hist_, embeddings)
         if labels is None and indices_tuple is None:
             differences = self.compute_loss_without_labels(embeddings, ref_emb)

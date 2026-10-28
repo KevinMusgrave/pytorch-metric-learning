@@ -1,4 +1,7 @@
 import torch
+from torch import Tensor
+
+from ..types import IndicesTuple, LossDict
 
 from ..distances import CosineSimilarity
 from ..reducers import DivisorReducer
@@ -33,7 +36,14 @@ class ProxyAnchorLoss(BaseMetricLossFunction):
         self.margin = margin
         self.alpha = alpha
 
-    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+    def compute_loss(
+        self,
+        embeddings: Tensor,
+        labels: Tensor | None,
+        indices_tuple: IndicesTuple | None,
+        ref_emb: Tensor,
+        ref_labels: Tensor | None,
+    ) -> LossDict:
         c_f.labels_required(labels)
         c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
         c_f.check_parameter_placement(self, self.proxies, embeddings)

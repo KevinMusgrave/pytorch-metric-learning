@@ -5,10 +5,6 @@ from .base_distance import BaseDistance
 
 
 class LpDistance(BaseDistance):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        assert not self.is_inverted
-
     def compute_mat(self, query_emb, ref_emb):
         dtype, device = query_emb.dtype, query_emb.device
         if ref_emb is None:

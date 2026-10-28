@@ -1,4 +1,7 @@
 import torch
+from torch import Tensor
+
+from ..types import IndicesTuple, LossDict
 
 from ..distances import CosineSimilarity
 from ..utils import common_functions as c_f
@@ -14,19 +17,32 @@ def filter_pairs(*tensors: torch.Tensor):
 
 
 class HistogramLoss(BaseMetricLossFunction):
-    def __init__(self, n_bins: int | None = None, delta: float | None = None, **kwargs):
+    def __init__(
+        self,
+        n_bins: int | None = None,
+        delta: float | None = None,
+        **kwargs,
+    ):
         super().__init__(**kwargs)
         if delta is not None and n_bins is not None:
-            assert delta == 2 / n_bins, (
-                "delta and n_bins must satisfy delta = 2 / n_bins; "
-                f"got delta={delta} and n_bins={n_bins}"
-            )
+            if delta != 2 / n_bins:
+                raise ValueError(
+                    "delta and n_bins must satisfy delta = 2 / n_bins; "
+                    f"got delta={delta} and n_bins={n_bins}"
+                )
 
         if delta is None:
             delta = 2 / (100 if n_bins is None else n_bins)
         self.delta = delta
 
-    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+    def compute_loss(
+        self,
+        embeddings: Tensor,
+        labels: Tensor | None,
+        indices_tuple: IndicesTuple | None,
+        ref_emb: Tensor,
+        ref_labels: Tensor | None,
+    ) -> LossDict:
         c_f.labels_or_indices_tuple_required(labels, indices_tuple)
         c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
         indices_tuple = lmu.convert_to_triplets(

@@ -27,16 +27,22 @@ class HierarchicalSampler(Sampler[list[int]]):
         self.super_classes_per_batch = super_classes_per_batch
         self.generator = generator
 
-        assert self.batch_size % super_classes_per_batch == 0, (
-            f"batch_size should be a multiple of {super_classes_per_batch}"
-        )
+        if batch_size <= 0 or super_classes_per_batch <= 0:
+            raise ValueError("batch_size and super_classes_per_batch must be positive")
+        if batches_per_super_tuple < 0:
+            raise ValueError("batches_per_super_tuple must be nonnegative")
+
+        if self.batch_size % super_classes_per_batch != 0:
+            raise ValueError(
+                f"batch_size should be a multiple of {super_classes_per_batch}"
+            )
         self.sub_batch_len = self.batch_size // super_classes_per_batch
 
         if self.samples_per_class != "all":
-            assert self.samples_per_class > 0
-            assert self.sub_batch_len % self.samples_per_class == 0, (
-                "batch_size not a multiple of samples_per_class"
-            )
+            if self.samples_per_class <= 0:
+                raise ValueError("samples_per_class must be positive or \"all\"")
+            if self.sub_batch_len % self.samples_per_class != 0:
+                raise ValueError("batch_size not a multiple of samples_per_class")
 
         groups = defaultdict(lambda: defaultdict(list))
         for idx, (super_label, label) in enumerate(

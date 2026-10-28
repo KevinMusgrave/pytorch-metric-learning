@@ -1,4 +1,7 @@
 import torch
+from torch import Tensor
+
+from ..types import LossDict
 
 from .base_reducer import BaseReducer
 from .mean_reducer import MeanReducer
@@ -12,7 +15,12 @@ class MultipleReducers(BaseReducer):
             MeanReducer() if default_reducer is None else default_reducer
         )
 
-    def forward(self, loss_dict, embeddings, labels):
+    def forward(
+        self,
+        loss_dict: LossDict,
+        embeddings: Tensor,
+        labels: Tensor | None,
+    ) -> Tensor:
         sub_losses = torch.zeros(
             len(loss_dict), dtype=embeddings.dtype, device=embeddings.device
         )

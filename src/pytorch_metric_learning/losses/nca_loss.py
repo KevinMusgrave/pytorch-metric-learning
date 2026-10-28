@@ -1,4 +1,7 @@
 import torch
+from torch import Tensor
+
+from ..types import IndicesTuple, LossDict
 
 from ..distances import LpDistance
 from ..utils import common_functions as c_f
@@ -11,7 +14,14 @@ class NCALoss(BaseMetricLossFunction):
         super().__init__(**kwargs)
         self.softmax_scale = softmax_scale
 
-    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+    def compute_loss(
+        self,
+        embeddings: Tensor,
+        labels: Tensor | None,
+        indices_tuple: IndicesTuple | None,
+        ref_emb: Tensor,
+        ref_labels: Tensor | None,
+    ) -> LossDict:
         if len(embeddings) <= 1:
             return self.zero_losses()
         c_f.labels_required(labels)

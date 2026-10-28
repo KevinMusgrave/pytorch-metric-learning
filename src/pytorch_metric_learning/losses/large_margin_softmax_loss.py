@@ -1,6 +1,9 @@
+import torch
+from torch import Tensor
+
+from ..types import IndicesTuple, LossDict
 import math
 
-import torch
 
 from ..distances import CosineSimilarity
 from ..utils import common_functions as c_f
@@ -27,7 +30,7 @@ class LargeMarginSoftmaxLoss(BaseMetricLossFunction):
         **kwargs,
     ):
         super().__init__(**kwargs)
-        c_f.assert_distance_type(self, CosineSimilarity)
+        c_f.check_distance_type(self, CosineSimilarity)
         self.weight_regularizer = weight_regularizer
         self.weight_reg_weight = weight_reg_weight
         self.margin = margin
@@ -88,7 +91,14 @@ class LargeMarginSoftmaxLoss(BaseMetricLossFunction):
         product_of_magnitudes = weight_norms.unsqueeze(0) * embedding_norms.unsqueeze(1)
         return logits * product_of_magnitudes * self.scale
 
-    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+    def compute_loss(
+        self,
+        embeddings: Tensor,
+        labels: Tensor | None,
+        indices_tuple: IndicesTuple | None,
+        ref_emb: Tensor,
+        ref_labels: Tensor | None,
+    ) -> LossDict:
         c_f.labels_required(labels)
         c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
         c_f.check_parameter_placement(self, self.W, embeddings)

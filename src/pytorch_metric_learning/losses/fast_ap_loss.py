@@ -1,4 +1,7 @@
 import torch
+from torch import Tensor
+
+from ..types import IndicesTuple, LossDict
 
 from ..distances import LpDistance
 from ..utils import common_functions as c_f
@@ -9,15 +12,18 @@ from .base_metric_loss_function import BaseMetricLossFunction
 class FastAPLoss(BaseMetricLossFunction):
     def __init__(self, num_bins=10, **kwargs):
         super().__init__(**kwargs)
-        c_f.assert_distance_type(self, LpDistance, normalize_embeddings=True, p=2)
+        c_f.check_distance_type(self, LpDistance, normalize_embeddings=True, p=2)
         self.num_bins = int(num_bins)
         self.num_edges = self.num_bins + 1
 
-    """
-    Adapted from https://github.com/kunhe/FastAP-metric-learning
-    """
-
-    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+    def compute_loss(
+        self,
+        embeddings: Tensor,
+        labels: Tensor | None,
+        indices_tuple: IndicesTuple | None,
+        ref_emb: Tensor,
+        ref_labels: Tensor | None,
+    ) -> LossDict:
         c_f.labels_required(labels)
         c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
         dtype, device = embeddings.dtype, embeddings.device

@@ -39,3 +39,10 @@ jobs:
         run: uv sync --frozen --all-extras --no-build --no-install-project
       - name: Verify the candidate
         run: ./code-polishyw merge-gate --base="$BASE_SHA"
+      - name: Verify the wheel with minimum supported runtimes
+        env:
+          UV_PROJECT_ENVIRONMENT: ${{ runner.temp }}/pml-wheel
+        run: |
+          uv sync --frozen --no-dev --no-build --no-install-project
+          uv pip install --python "$UV_PROJECT_ENVIRONMENT/bin/python" --no-deps --no-build dist/*.whl
+          uv run --frozen --no-sync python -I scripts/check_wheel.py

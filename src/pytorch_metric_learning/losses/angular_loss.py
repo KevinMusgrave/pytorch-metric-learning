@@ -1,6 +1,9 @@
+import torch
+from torch import Tensor
+
+from ..types import IndicesTuple, LossDict
 import math
 
-import torch
 
 from ..distances import LpDistance
 from ..utils import common_functions as c_f
@@ -11,12 +14,19 @@ from .base_metric_loss_function import BaseMetricLossFunction
 class AngularLoss(BaseMetricLossFunction):
     def __init__(self, alpha=40, **kwargs):
         super().__init__(**kwargs)
-        c_f.assert_distance_type(
+        c_f.check_distance_type(
             self, LpDistance, p=2, power=1, normalize_embeddings=True
         )
         self.alpha = torch.tensor(math.radians(alpha), dtype=torch.float64)
 
-    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+    def compute_loss(
+        self,
+        embeddings: Tensor,
+        labels: Tensor | None,
+        indices_tuple: IndicesTuple | None,
+        ref_emb: Tensor,
+        ref_labels: Tensor | None,
+    ) -> LossDict:
         c_f.labels_required(labels)
         anchors, positives, keep_mask, anchor_idx, positive_idx = self.get_pairs(
             embeddings, labels, indices_tuple, ref_emb, ref_labels

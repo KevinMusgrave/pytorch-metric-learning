@@ -1,4 +1,7 @@
 import torch
+from torch import Tensor
+
+from ..types import IndicesTuple
 
 from ..distances import CosineSimilarity
 from ..utils import common_functions as c_f
@@ -11,7 +14,13 @@ class MultiSimilarityMiner(BaseMiner):
         super().__init__(**kwargs)
         self.epsilon = epsilon
 
-    def mine(self, embeddings, labels, ref_emb, ref_labels):
+    def mine(
+        self,
+        embeddings: Tensor,
+        labels: Tensor,
+        ref_emb: Tensor,
+        ref_labels: Tensor,
+    ) -> IndicesTuple:
         mat = self.distance(embeddings, ref_emb)
         a1, p, a2, n = lmu.get_all_pairs_indices(labels, ref_labels)
 

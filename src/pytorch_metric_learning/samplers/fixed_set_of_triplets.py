@@ -23,8 +23,11 @@ class FixedSetOfTriplets(Sampler[int]):
         return iter(self.fixed_set_of_triplets[order].flatten().tolist())
 
     def create_fixed_set_of_triplets(self):
-        assert self.num_triplets > 0
+        if self.num_triplets <= 0:
+            raise ValueError("num_triplets must be positive")
         label_list = list(self.labels_to_indices)
+        if len(label_list) < 2:
+            raise ValueError("Triplet sampling requires at least two classes")
         triplets = torch.empty(self.num_triplets, 3, dtype=torch.long)
         for i in range(self.num_triplets):
             classes = torch.randperm(len(label_list), generator=self.generator)[:2]

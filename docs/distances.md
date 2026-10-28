@@ -45,16 +45,17 @@ All distances extend this class and therefore inherit its `__init__` parameters.
 ```python
 distances.BaseDistance(normalize_embeddings=True,
 						p=2,
-						power=1,
-						is_inverted=False)
+						power=1)
 ```
 
 **Parameters**:
 
 - **normalize_embeddings**: If True, embeddings will be normalized to have an Lp norm of 1, before the distance/similarity matrix is computed.
-- **p**: The distance norm.
+- **p**: The norm used for embedding normalization and, in `LpDistance`, distance computation.
 - **power**: If not 1, each element of the distance/similarity matrix will be raised to this power.
-- **is_inverted**: Should be set by child classes. If False, then small values represent embeddings that are close together. If True, then large values represent embeddings that are similar to each other.
+  **Class attribute**: `is_inverted = False` means smaller values are closer.
+  Similarity subclasses set `is_inverted = True` because larger values are more
+  similar. This is part of the distance definition, not a constructor argument.
 
 **Required Implementations**:
 
@@ -110,12 +111,12 @@ distance(embeddings, ref_emb, iter_fn=fn)
 distances.CosineSimilarity(**kwargs)
 ```
 
-The returned `mat[i,j]` is the cosine similarity between `query_emb[i]` and `ref_emb[j]`. This class is equivalent to [`DotProductSimilarity(normalize_embeddings=True)`](distances.md#dotproductsimilarity).
+The returned `mat[i,j]` is the cosine similarity between `query_emb[i]` and `ref_emb[j]`. This class is equivalent to [`DotProductSimilarity(normalize_embeddings=True)`](#dotproductsimilarity).
 
 ## DotProductSimilarity
 
 ```python
-distances.DotProductSimilarity(**kwargs)
+distances.DotProductSimilarity(normalize_embeddings=True, p=2, power=1, **kwargs)
 ```
 
 The returned `mat[i,j]` is equal to `torch.sum(query_emb[i] * ref_emb[j])`
@@ -123,7 +124,7 @@ The returned `mat[i,j]` is equal to `torch.sum(query_emb[i] * ref_emb[j])`
 ## LpDistance
 
 ```python
-distances.LpDistance(**kwargs)
+distances.LpDistance(normalize_embeddings=True, p=2, power=1, **kwargs)
 ```
 
 The returned `mat[i,j]` is the Lp distance between `query_emb[i]` and `ref_emb[j]`. With default parameters, this is the Euclidean distance.
@@ -133,7 +134,7 @@ The returned `mat[i,j]` is the Lp distance between `query_emb[i]` and `ref_emb[j
 [Signal-to-Noise Ratio: A Robust Distance Metric for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Yuan_Signal-To-Noise_Ratio_A_Robust_Distance_Metric_for_Deep_Metric_Learning_CVPR_2019_paper.pdf){target=_blank}
 
 ```python
-distances.SNRDistance(**kwargs)
+distances.SNRDistance(normalize_embeddings=True, p=2, power=1, **kwargs)
 ```
 
 The returned `mat[i,j]` is equal to:

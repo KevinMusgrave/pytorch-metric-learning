@@ -1,8 +1,11 @@
+from torch import Tensor, nn
+
+from ..types import IndicesTuple, LossDict, LossTerm
 from ..utils import common_functions as c_f
 from ..utils.module_with_distance_and_reducer import ModuleWithReducerAndDistance
 
 
-def regularization_term(regularizer, weight, x):
+def regularization_term(regularizer: nn.Module, weight: float, x: Tensor) -> LossTerm:
     return {
         "losses": regularizer(x) * weight,
         "indices": None,
@@ -11,17 +14,34 @@ def regularization_term(regularizer, weight, x):
 
 
 class BaseMetricLossFunction(ModuleWithReducerAndDistance):
-    def __init__(self, embedding_regularizer=None, embedding_reg_weight=1, **kwargs):
+    def __init__(
+        self,
+        embedding_regularizer: nn.Module | None = None,
+        embedding_reg_weight: float = 1,
+        **kwargs,
+    ) -> None:
         super().__init__(**kwargs)
         self.embedding_regularizer = embedding_regularizer
         self.embedding_reg_weight = embedding_reg_weight
 
-    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+    def compute_loss(
+        self,
+        embeddings: Tensor,
+        labels: Tensor | None,
+        indices_tuple: IndicesTuple | None,
+        ref_emb: Tensor,
+        ref_labels: Tensor | None,
+    ) -> LossDict:
         raise NotImplementedError
 
     def forward(
-        self, embeddings, labels=None, indices_tuple=None, ref_emb=None, ref_labels=None
-    ):
+        self,
+        embeddings: Tensor,
+        labels: Tensor | None = None,
+        indices_tuple: IndicesTuple | None = None,
+        ref_emb: Tensor | None = None,
+        ref_labels: Tensor | None = None,
+    ) -> Tensor | LossDict:
         c_f.check_shapes(embeddings, labels)
         if labels is not None:
             labels = labels.to(device=embeddings.device)
@@ -37,7 +57,7 @@ class BaseMetricLossFunction(ModuleWithReducerAndDistance):
             return {**output, **regularization}
         return output + sum(term["losses"] for term in regularization.values())
 
-    def regularization_terms(self, embeddings):
+    def regularization_terms(self, embeddings: Tensor) -> LossDict:
         if self.embedding_regularizer is None:
             return {}
         return {
@@ -46,8 +66,8 @@ class BaseMetricLossFunction(ModuleWithReducerAndDistance):
             )
         }
 
-    def zero_loss(self):
+    def zero_loss(self) -> LossTerm:
         return {"losses": 0, "indices": None, "reduction_type": "already_reduced"}
 
-    def zero_losses(self):
+    def zero_losses(self) -> LossDict:
         return {loss_name: self.zero_loss() for loss_name in self.sub_loss_names()}

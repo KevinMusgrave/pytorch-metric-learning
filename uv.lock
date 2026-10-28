@@ -866,9 +866,6 @@ dependencies = [
 clustering = [
     { name = "scikit-learn" },
 ]
-docs = [
-    { name = "mkdocs-material" },
-]
 faiss = [
     { name = "faiss-cpu" },
 ]
@@ -877,29 +874,34 @@ faiss = [
 dev = [
     { name = "build" },
     { name = "faiss-cpu" },
+    { name = "mkdocs-material" },
+    { name = "numpy" },
     { name = "packaging" },
     { name = "scikit-learn" },
     { name = "setuptools" },
+    { name = "torch" },
     { name = "uv" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "faiss-cpu", marker = "extra == 'faiss'", specifier = "==1.15.1" },
-    { name = "mkdocs-material", marker = "extra == 'docs'", specifier = "==9.7.7" },
-    { name = "numpy", specifier = "==2.5.3" },
-    { name = "scikit-learn", marker = "extra == 'clustering'", specifier = "==1.9.1" },
-    { name = "torch", specifier = "==2.14.0" },
+    { name = "faiss-cpu", marker = "extra == 'faiss'", specifier = ">=1.15.1" },
+    { name = "numpy", specifier = ">=2.5.3" },
+    { name = "scikit-learn", marker = "extra == 'clustering'", specifier = ">=1.9.1" },
+    { name = "torch", specifier = ">=2.14.0" },
 ]
-provides-extras = ["faiss", "clustering", "docs"]
+provides-extras = ["faiss", "clustering"]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "build", specifier = "==1.6.1" },
     { name = "faiss-cpu", specifier = "==1.15.1" },
+    { name = "mkdocs-material", specifier = "==9.7.7" },
+    { name = "numpy", specifier = "==2.5.3" },
     { name = "packaging", specifier = "==26.3" },
     { name = "scikit-learn", specifier = "==1.9.1" },
     { name = "setuptools", specifier = "==84.0.0" },
+    { name = "torch", specifier = "==2.14.0" },
     { name = "uv", specifier = "==0.13.4" },
 ]
 

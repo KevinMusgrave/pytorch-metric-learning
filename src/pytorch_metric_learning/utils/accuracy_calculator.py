@@ -21,9 +21,9 @@ def mutual_information_scores():
         return importlib.import_module("sklearn.metrics")
     except ModuleNotFoundError as error:
         raise ModuleNotFoundError(
-            "NMI and AMI require scikit-learn. Install the optional dependency "
-            "with `pip install pytorch-metric-learning[clustering]`."
-        ) from error
+            "NMI and AMI require scikit-learn. Install the optional dependency with "
+            "`pip install pytorch-metric-learning[clustering]`."
+        )
 
 
 def get_unique_labels(labels):
@@ -539,8 +539,8 @@ class AccuracyCalculator:
     def _get_accuracy(self, function_dict, **kwargs):
         return {k: v(**kwargs) for k, v in function_dict.items()}
 
-    def check_primary_metrics(calc, include=(), exclude=()):
-        primary_metrics = list(calc.original_function_dict.keys())
+    def check_primary_metrics(self, include=(), exclude=()):
+        primary_metrics = list(self.original_function_dict.keys())
         for met in [include, exclude]:
             if not isinstance(met, (tuple, list)):
                 raise TypeError(f"Arguments must be of type tuple, not {type(met)}.")

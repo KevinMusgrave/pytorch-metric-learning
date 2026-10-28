@@ -1,6 +1,9 @@
+import torch
+from torch import Tensor
+
+from ..types import IndicesTuple
 import math
 
-import torch
 
 from ..distances import LpDistance
 from ..utils import common_functions as c_f
@@ -11,12 +14,18 @@ from .base_miner import BaseMiner
 class AngularMiner(BaseMiner):
     def __init__(self, angle=20, **kwargs):
         super().__init__(**kwargs)
-        c_f.assert_distance_type(
+        c_f.check_distance_type(
             self, LpDistance, p=2, power=1, normalize_embeddings=True
         )
         self.angle = math.radians(angle)
 
-    def mine(self, embeddings, labels, ref_emb, ref_labels):
+    def mine(
+        self,
+        embeddings: Tensor,
+        labels: Tensor,
+        ref_emb: Tensor,
+        ref_labels: Tensor,
+    ) -> IndicesTuple:
         anchor_idx, positive_idx, negative_idx = lmu.get_all_triplets_indices(
             labels, ref_labels
         )

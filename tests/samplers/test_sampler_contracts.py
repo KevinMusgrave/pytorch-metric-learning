@@ -27,6 +27,15 @@ def make_samplers(generator):
 
 
 class TestSamplerContracts(unittest.TestCase):
+    def test_samplers_reject_impossible_batches(self):
+        with self.assertRaisesRegex(ValueError, "m must be positive"):
+            MPerClassSampler([0, 0, 1, 1], m=0)
+        with self.assertRaisesRegex(ValueError, "labels must not be empty"):
+            MPerClassSampler([], m=2)
+        with self.assertRaisesRegex(ValueError, "at least two classes"):
+            FixedSetOfTriplets([0, 0], num_triplets=2)
+
+
     def test_explicit_generator_reproduces_every_iteration(self):
         first = make_samplers(torch.Generator().manual_seed(3))
         second = make_samplers(torch.Generator().manual_seed(3))

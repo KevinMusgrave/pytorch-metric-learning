@@ -1,4 +1,7 @@
 import torch
+from torch import Tensor
+
+from ..types import IndicesTuple
 
 from ..distances import LpDistance
 from ..utils import common_functions as c_f
@@ -9,13 +12,19 @@ from .base_miner import BaseMiner
 class DistanceWeightedMiner(BaseMiner):
     def __init__(self, cutoff=0.5, nonzero_loss_cutoff=1.4, **kwargs):
         super().__init__(**kwargs)
-        c_f.assert_distance_type(
+        c_f.check_distance_type(
             self, LpDistance, p=2, power=1, normalize_embeddings=True
         )
         self.cutoff = float(cutoff)
         self.nonzero_loss_cutoff = float(nonzero_loss_cutoff)
 
-    def mine(self, embeddings, labels, ref_emb, ref_labels):
+    def mine(
+        self,
+        embeddings: Tensor,
+        labels: Tensor,
+        ref_emb: Tensor,
+        ref_labels: Tensor,
+    ) -> IndicesTuple:
         dtype = embeddings.dtype
         d = float(embeddings.size(1))
         mat = self.distance(embeddings, ref_emb)

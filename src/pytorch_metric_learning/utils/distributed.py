@@ -64,7 +64,8 @@ def _batch_sizes(emb: torch.Tensor, labels: torch.Tensor | None) -> list[int]:
         ):
             raise ValueError(
                 "Ranks must provide 2D embeddings with matching dimensions, dtypes, "
-                "and requires_grad, and consistent labels with one label per embedding"
+                "and requires_grad, and consistent labels with one label per "
+                "embedding"
             )
     return [row[0] for row in rows]
 
@@ -77,7 +78,8 @@ def _gather_tensor(
     padded = torch.cat((tensor, padding)).contiguous()
     if remote_gradients:
         group = torch.distributed.group.WORLD
-        assert group is not None
+        if group is None:
+            raise RuntimeError("A distributed process group must be initialized")
         combined = _functional_collectives.all_gather_single(padded, 0, group)
         rows = combined.split(padded_size)
     else:
@@ -156,7 +158,8 @@ class DistributedLossWrapper(torch.nn.Module):
         super().__init__()
         if not isinstance(loss, (BaseMetricLossFunction, CrossBatchMemory)):
             raise TypeError(
-                "The input loss must extend BaseMetricLossFunction or CrossBatchMemory"
+                "The input loss must extend BaseMetricLossFunction or "
+                "CrossBatchMemory"
             )
         if isinstance(loss, CrossBatchMemory) and efficient:
             raise ValueError(

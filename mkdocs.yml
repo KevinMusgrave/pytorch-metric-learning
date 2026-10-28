@@ -1,4 +1,5 @@
 site_name: PyTorch Metric Learning
+site_url: https://kevinmusgrave.github.io/pytorch-metric-learning/
 exclude_docs: |
   design/
   plans/
@@ -6,7 +7,53 @@ exclude_docs: |
 nav:
     - Home: index.md
     - Distances: distances.md
-    - Losses: losses.md
+    - Losses:
+      - Overview: losses.md
+      - Pair and triplet objectives:
+        - AngularLoss: losses/angular_loss.md
+        - CircleLoss: losses/circle_loss.md
+        - ContrastiveLoss: losses/contrastive_loss.md
+        - DynamicSoftMarginLoss: losses/dynamic_soft_margin_loss.md
+        - GeneralizedLiftedStructureLoss: losses/generalized_lifted_structure_loss.md
+        - HistogramLoss: losses/histogram_loss.md
+        - IntraPairVarianceLoss: losses/intra_pair_variance_loss.md
+        - LiftedStructureLoss: losses/lifted_structure_loss.md
+        - MarginLoss: losses/margin_loss.md
+        - MultiSimilarityLoss: losses/multi_similarity_loss.md
+        - NCALoss: losses/nca_loss.md
+        - NPairsLoss: losses/n_pairs_loss.md
+        - RankedListLoss: losses/ranked_list_loss.md
+        - SignalToNoiseRatioContrastiveLoss: losses/signal_to_noise_ratio_contrastive_loss.md
+        - TripletMarginLoss: losses/triplet_margin_loss.md
+        - TupletMarginLoss: losses/tuplet_margin_loss.md
+      - Classification and proxy objectives:
+        - ArcFaceLoss: losses/arcface_loss.md
+        - CosFaceLoss: losses/cosface_loss.md
+        - LargeMarginSoftmaxLoss: losses/large_margin_softmax_loss.md
+        - ManifoldLoss: losses/manifold_loss.md
+        - NormalizedSoftmaxLoss: losses/normalized_softmax_loss.md
+        - P2SGradLoss: losses/p2s_grad_loss.md
+        - ProxyAnchorLoss: losses/proxy_anchor_loss.md
+        - ProxyNCALoss: losses/proxy_nca_loss.md
+        - SoftTripleLoss: losses/soft_triple_loss.md
+        - SphereFaceLoss: losses/sphereface_loss.md
+        - SubCenterArcFaceLoss: losses/subcenter_arcface_loss.md
+      - Ranking objectives:
+        - FastAPLoss: losses/fast_ap_loss.md
+        - PNPLoss: losses/pnp_loss.md
+        - SmoothAPLoss: losses/smooth_ap.md
+        - ThresholdConsistentMarginLoss: losses/tcm_loss.md
+      - Self-supervised and supervised contrastive objectives:
+        - InstanceLoss: losses/instance_loss.md
+        - NTXentLoss: losses/ntxent_loss.md
+        - SupConLoss: losses/supcon_loss.md
+        - VICRegLoss: losses/vicreg_loss.md
+      - Composition and extension:
+        - BaseMetricLossFunction: losses/base_metric_loss_function.md
+        - CrossBatchMemory: losses/cross_batch_memory.md
+        - GenericPairLoss: losses/generic_pair_loss.md
+        - MultipleLosses: losses/multiple_losses.md
+        - SelfSupervisedLoss: losses/self_supervised_loss.md
     - Miners: miners.md
     - Reducers: reducers.md
     - Regularizers: regularizers.md
@@ -21,9 +68,8 @@ nav:
     - Recipes:
       - Training: recipes/training.md
       - Retrieval evaluation: recipes/evaluation.md
-    - Next major release: release-notes-3.md
+    - Version 3.0.0: release-notes-3.md
     - Performance: performance.md
-    - Frequently Asked Questions: faq.md
 theme:
   name: 'material'
   custom_dir: overrides

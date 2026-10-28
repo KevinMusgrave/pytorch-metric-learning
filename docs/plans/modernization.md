@@ -503,6 +503,17 @@ for those design documents or evidence that the listed work is complete.
   under float16/bfloat16 autocast on both CPU and CUDA, including gradients
   through two Adam steps. The author-metadata correction produces revision
   `66358d54017aab9bada9595b08109761a9017cff` with the same source tree.
+- PyPI release automation, revision
+  `6e8561d1bb1dbce9315c2bec454efe9765c631e6`: an annotated version tag selects
+  a clean commit in `master` history with successful CI. Separate build and
+  publish jobs retain the verified wheel/source distributions and publish
+  through PyPI OIDC. Ten release preflight tests and all seven focused
+  checkpoint suites pass, with no policy findings. A fresh frozen environment
+  builds both distributions, installs and exercises the wheel in isolated
+  Python, and passes `uv publish --dry-run --trusted-publishing never`.
+  The strict documentation build passes. Hosted publication remains unverified
+  until the one-time account configuration in
+  [Development](../../DEVELOPMENT.md#publishing-to-pypi) is completed.
 
 ## Remaining merge and release checks
 
@@ -511,5 +522,7 @@ for those design documents or evidence that the listed work is complete.
 - Visually verify GitHub-native equations. The README currently contains no
   equations; check the linked mathematical documentation, such as `losses.md`.
   The strict website build passes, but that does not establish GitHub rendering.
+- Configure the GitHub `pypi` environment and matching PyPI trusted publisher
+  before the first annotated release tag is pushed.
 - Keep the dated dependency assessments valid at merge/release time, starting
   with the certifi deadline above. Publication remains a separate operation.

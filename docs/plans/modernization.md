@@ -1,10 +1,11 @@
 # PyTorch Metric Learning modernization plan
 
 Status: all five phases are implemented. Release cleanup passes 249 CPU tests,
-28 CPU mixed-precision cases, the strict documentation build, and an isolated
-wheel check at the supported runtime minimums. Two-GPU acceptance is being
-repeated on the exact committed candidate. Locked Code Polishy 0.31.5 rejects
-Python library compatibility ranges; that policy support, the CI-owned final
+56 mixed-precision cases across CPU and CUDA, the strict documentation build,
+and an isolated wheel check at the supported runtime minimums. All 249
+CUDA/NCCL tests also pass on two A40s at the committed cleanup candidate.
+Locked Code Polishy 0.31.5 rejects Python library compatibility ranges; that
+policy support, the CI-owned final
 merge gate, publisher/Pages setup, and visual math verification remain open.
 
 ## Purpose
@@ -310,26 +311,33 @@ mathematical decisions are documented in `docs/design/`; public changes are
 listed in the version 3 release notes. Git history records the implementation
 sequence and earlier verification measurements.
 
-The release cleanup passes 249 CPU tests and 28 CPU mixed-precision cases.
-The strict website build and isolated wheel check at supported runtime
-minimums also pass. Earlier CUDA/NCCL evidence predates this cleanup; current
-platform acceptance and open release conditions are tracked below.
+The release cleanup passes 249 CPU tests and 56 mixed-precision cases
+(28 CPU and 28 CUDA). The strict website build and isolated wheel check at
+supported runtime minimums also pass. The same 249 tests pass on two A40s
+with `NCCL_P2P_DISABLE=1`. The accepted
+source candidate is `5f35f13a2e168ac8405ddd1a68fa556f9688e410`: CPU 178.895 s,
+CUDA/NCCL 276.984 s, with no failures or skips. The CUDA run used Python
+3.12.13, PyTorch 2.14.0+cu130, CUDA 13.0, NCCL 2.30.7, driver 595.91.07,
+and two A40s in EU-SE-1. The temporary pod was terminated after collecting
+results; the original pod and its workspace remain stopped and retained.
+Seven affected boundary suites also pass. Verification artifacts are retained
+under
+`.code-polishy-artifacts/reviews/release-5f35f13/`.
 
 ## Remaining merge and release checks
 
-- Repeat CUDA/NCCL acceptance for the final cleanup candidate. The previous
-  two-A40 acceptance covered the numerical sources before this utility pass.
 - Run the configured CI-owned `merge-gate` against `master` for the final
   pushed candidate. Local CPU/CUDA and checkpoint results do not replace it.
 - Visually verify GitHub-native equations. The README currently contains no
-  equations; check the linked mathematical documentation, such as `losses.md`.
+  equations; check the linked mathematical documentation, such as
+  `losses/circle_loss.md`.
   The strict website build passes, but that does not establish GitHub rendering.
 - Configure the GitHub `pypi` environment and matching PyPI trusted publisher
   before the first annotated release tag is pushed. Set Pages to GitHub Actions
   and allow release tags in the `github-pages` environment.
 - Keep the dated dependency assessments valid at merge/release time, starting
-  with the certifi assessment expiry on 2026-11-02 UTC. Publication remains a separate operation.
-
+  with the certifi assessment expiry on 2026-11-02 UTC. Publication remains
+  a separate operation.
 - Land contributor PR #763 through its original PR after modernization merges
   and before tagging v3. It fixes large integer labels colliding after a float32
   cast in `AccuracyCalculator`. Preserve its authorship and review history.

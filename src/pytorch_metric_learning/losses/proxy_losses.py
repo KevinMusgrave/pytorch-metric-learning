@@ -29,6 +29,7 @@ class ProxyNCALoss(NCALoss):
         c_f.labels_required(labels)
         c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
         c_f.check_parameter_placement(self, self.proxies, embeddings)
+        embeddings = embeddings.to(dtype=self.proxies.dtype)
         return self.nca_computation(
             embeddings, self.proxies, labels, self.proxy_labels, indices_tuple
         )
@@ -42,4 +43,6 @@ class ProxyNCALoss(NCALoss):
         return terms
 
     def get_logits(self, embeddings):
+        c_f.check_parameter_placement(self, self.proxies, embeddings)
+        embeddings = embeddings.to(dtype=self.proxies.dtype)
         return self.distance(embeddings, self.proxies)

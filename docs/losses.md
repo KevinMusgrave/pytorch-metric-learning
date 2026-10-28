@@ -1239,6 +1239,11 @@ loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
 loss_optimizer.step()
 ```
 
+Under autocast, embeddings are converted to the proxies' dtype before
+normalization and distance computation. This applies to both the loss and
+`get_logits`, preserves encoder gradients, and leaves parameter placement and
+optimizer state unchanged.
+
 **Default distance**:
 
 - [`LpDistance(normalize_embeddings=True, p=2, power=2)`](distances.md#lpdistance)

@@ -46,6 +46,13 @@ coefficient tensors are non-persistent buffers so `.to()` moves them without
 changing checkpoint contents. P2SGrad still renormalizes its weight columns in
 place each forward, as its algorithm specifies.
 
+ProxyNCA converts embeddings to its proxies' dtype before normalization and
+distance computation, in both the loss and `get_logits`. This keeps distance
+inputs compatible under float16 and bfloat16 autocast without changing the
+parameter or optimizer state. The conversion remains part of autograd so
+encoder gradients pass through it. Outside autocast, the placement check still
+requires the caller to match the module's device and dtype.
+
 Distances declare whether larger values mean greater similarity. Losses and
 miners use that declaration when comparing margins. Reducers own averaging and
 filtering; losses retain the indices and reduction type needed by the reducer.

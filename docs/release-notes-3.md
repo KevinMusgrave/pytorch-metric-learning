@@ -93,6 +93,10 @@ mismatch outside autocast raises `ValueError`. `SubCenterArcFaceLoss` accepts
 `num_classes` and `embedding_size` positionally, and
 `get_outliers(..., return_dominant_centers=False)` now returns only the outliers.
 
+Under autocast, ProxyNCA converts embeddings to the proxies' dtype for both
+loss and logits computation. CPU float16 encoder outputs are supported while
+the parameters and optimizer state retain their configured precision.
+
 ## Statistics removed
 
 The `collect_stats` argument, the global `common_functions.COLLECT_STATS` flag,

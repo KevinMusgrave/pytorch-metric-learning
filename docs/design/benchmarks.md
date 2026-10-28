@@ -3,6 +3,10 @@
 The benchmark runner exercises public loss, miner, and distributed APIs. It is
 development tooling, separate from the installable library. It depends on the
 numerical and distributed modules; neither module imports the runner.
+The runner imports the sibling `src` directory directly, so measurements use
+that checkout even when another version is installed. This also lets the quick
+boundary command run after CI's frozen dependency-only installation, without
+an editable install or a caller-provided `PYTHONPATH`.
 
 Measure autograd-enabled forward and backward separately on fresh graphs. Clear
 gradients before each step, warm up before sampling, and synchronize CUDA at

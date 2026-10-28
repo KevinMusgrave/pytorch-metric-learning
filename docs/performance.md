@@ -2,7 +2,8 @@
 
 Run benchmarks from the repository's frozen development environment. These
 measurements establish a reference for changes; they do not impose a universal
-speed requirement across machines.
+speed requirement across machines. The runner imports this checkout's `src`
+directory directly; an editable project install is optional.
 
 ```sh
 uv run --frozen --no-sync python -m benchmarks.run \

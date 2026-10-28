@@ -1,6 +1,7 @@
 import unittest
 
 import torch
+from torch.nn import functional as F
 
 from pytorch_metric_learning.losses import ProxyNCALoss
 
@@ -9,6 +10,49 @@ from ..zzz_testing_utils.testing_utils import angle_to_coord
 
 
 class TestProxyNCALoss(unittest.TestCase):
+    def test_autocast_preserves_parameters_and_matches_reference_gradients(self):
+        for dtype in (torch.float16, torch.bfloat16):
+            with self.subTest(dtype=dtype):
+                torch.manual_seed(234)
+                loss_func = ProxyNCALoss(4, 8).to(TEST_DEVICE)
+                encoder = torch.nn.Linear(8, 8).to(TEST_DEVICE)
+                parameters = (*encoder.parameters(), loss_func.proxies)
+                optimizer = torch.optim.Adam(parameters, lr=0.01)
+                labels = torch.arange(4, device=TEST_DEVICE).repeat_interleave(3)
+                inputs = torch.randn(12, 8, device=TEST_DEVICE)
+                for _ in range(2):
+                    optimizer.zero_grad(set_to_none=True)
+                    with torch.autocast(TEST_DEVICE.type, dtype=dtype):
+                        embeddings = encoder(inputs)
+                        actual = loss_func(embeddings, labels)
+                        logits = loss_func.get_logits(embeddings)
+                    self.assertEqual(embeddings.dtype, dtype)
+                    normalized_embeddings = F.normalize(embeddings.float(), dim=1)
+                    normalized_proxies = F.normalize(loss_func.proxies, dim=1)
+                    distances = (
+                        (normalized_embeddings[:, None] - normalized_proxies[None])
+                        .square()
+                        .sum(dim=2)
+                    )
+                    expected = F.cross_entropy(-distances, labels)
+                    torch.testing.assert_close(logits, distances)
+                    torch.testing.assert_close(actual, expected)
+                    expected_grads = torch.autograd.grad(
+                        expected, parameters, retain_graph=True
+                    )
+                    actual.backward()
+                    for parameter, expected_grad in zip(
+                        parameters, expected_grads, strict=True
+                    ):
+                        torch.testing.assert_close(parameter.grad, expected_grad)
+                    optimizer.step()
+                    self.assertIs(loss_func.proxies, parameters[-1])
+                    self.assertEqual(loss_func.proxies.dtype, torch.float32)
+                    self.assertEqual(
+                        optimizer.state[loss_func.proxies]["exp_avg"].dtype,
+                        torch.float32,
+                    )
+
     def test_proxy_nca_loss(self):
         torch.manual_seed(14892)
         for dtype in TEST_DTYPES:

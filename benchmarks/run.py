@@ -4,6 +4,7 @@ import os
 import platform
 import statistics
 import subprocess
+import sys
 import time
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime, timedelta
@@ -14,6 +15,7 @@ from torch import distributed as dist
 from torch import nn
 from torch.nn.parallel import DistributedDataParallel
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from pytorch_metric_learning import losses, miners
 from pytorch_metric_learning.utils.distributed import DistributedLossWrapper
 

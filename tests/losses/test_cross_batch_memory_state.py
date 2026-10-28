@@ -35,6 +35,58 @@ def reference_pairs(
 
 
 class TestCrossBatchMemoryState(unittest.TestCase):
+    def test_autocast_preserves_queue_dtype_and_anchor_gradients(self) -> None:
+        inputs, labels = make_inputs(torch.float32)
+        mask = torch.tensor([True, True, False, False], device=TEST_DEVICE)
+        for dtype in (torch.float16, torch.bfloat16):
+            for enqueue_mask in (None, mask):
+                with self.subTest(dtype=dtype, masked=enqueue_mask is not None):
+                    encoder = torch.nn.Linear(2, 2, bias=False).to(TEST_DEVICE)
+                    with torch.no_grad():
+                        encoder.weight.copy_(
+                            inputs.new_tensor([[0.75, 0.25], [-0.25, 0.5]])
+                        )
+                    loss = CrossBatchMemory(
+                        make_loss(), embedding_size=2, memory_size=8
+                    ).to(TEST_DEVICE)
+                    stored, stored_labels = [], []
+                    for step in range(2):
+                        with torch.autocast(TEST_DEVICE.type, dtype=dtype):
+                            embeddings = encoder(inputs.detach() + step * 0.1)
+                            self.assertEqual(embeddings.dtype, dtype)
+                            actual = loss(embeddings, labels, enqueue_mask=enqueue_mask)
+                        current = embeddings.float()
+                        enqueued = current if enqueue_mask is None else current[mask]
+                        queued_labels = labels if enqueue_mask is None else labels[mask]
+                        stored.append(enqueued.detach())
+                        stored_labels.append(queued_labels)
+                        references = torch.cat(stored)
+                        reference_labels = torch.cat(stored_labels)
+                        pairs = (
+                            reference_pairs(
+                                labels, reference_labels, step * len(labels)
+                            )
+                            if enqueue_mask is None
+                            else None
+                        )
+                        expected = make_loss()(
+                            current if enqueue_mask is None else current[~mask],
+                            labels if enqueue_mask is None else labels[~mask],
+                            pairs,
+                            references,
+                            reference_labels,
+                        )
+                        expected_gradient = torch.autograd.grad(expected, embeddings)[0]
+                        gradient = torch.autograd.grad(actual, embeddings)[0]
+                        torch.testing.assert_close(actual, expected)
+                        torch.testing.assert_close(gradient, expected_gradient)
+                        self.assertGreater(gradient.abs().sum().item(), 0)
+                        self.assertEqual(loss.embedding_memory.dtype, torch.float32)
+                        self.assertFalse(loss.embedding_memory.requires_grad)
+                        torch.testing.assert_close(
+                            loss.embedding_memory[: len(references)], references
+                        )
+
     def assert_queue_unchanged(
         self,
         loss: CrossBatchMemory,

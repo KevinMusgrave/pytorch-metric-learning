@@ -206,8 +206,12 @@ class CustomKNN:
                 len(query), k, device=query.device, dtype=query.dtype
             )
             indices = torch.zeros(len(query), k, device=query.device, dtype=torch.long)
-            self.distance.iter_fn = get_topk(distances, indices, k, get_largest)
-            self.distance(query, reference)
+            previous_iter_fn = self.distance.iter_fn
+            try:
+                self.distance.iter_fn = get_topk(distances, indices, k, get_largest)
+                self.distance(query, reference)
+            finally:
+                self.distance.iter_fn = previous_iter_fn
         else:
             mat = self.distance(query, reference)
             distances, indices = torch.topk(mat, k, largest=get_largest, dim=1)

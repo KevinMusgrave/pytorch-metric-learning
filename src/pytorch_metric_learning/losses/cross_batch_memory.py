@@ -99,6 +99,7 @@ class CrossBatchMemory(BaseLossWrapper):
         if enqueue_mask is not None:
             assert len(enqueue_mask) == len(embeddings)
         c_f.check_parameter_placement(self, self.embedding_memory, embeddings)
+        embeddings = embeddings.to(dtype=self.embedding_memory.dtype)
         if not torch.can_cast(labels.dtype, self.label_memory.dtype):
             raise ValueError(
                 f"CrossBatchMemory stores {self.label_memory.dtype} labels and cannot "

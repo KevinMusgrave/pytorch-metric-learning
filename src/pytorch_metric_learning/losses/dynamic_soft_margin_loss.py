@@ -70,6 +70,7 @@ class DynamicSoftMarginLoss(BaseMetricLossFunction):
         return mat[anchor, positive] - mat[anchor, negative]
 
     def _bin_positions(self, data: torch.Tensor) -> torch.Tensor:
+        data = data.to(dtype=self.hist_.dtype)
         return ((data - self.min_val) / self.delta).clamp(0, self.num_bins - 1)
 
     @torch.no_grad()

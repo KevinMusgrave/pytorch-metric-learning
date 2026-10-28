@@ -138,6 +138,15 @@ learnable beta follow `.to(device, dtype)`. `CrossBatchMemory.reset_queue()`
 clears its buffers in place, preserving device, dtype, and storage.
 `SparseCentersRegularizer` registers its same-class mask as a non-persistent
 buffer so module placement moves it once instead of copying it on every call.
+Autocast inputs to `CrossBatchMemory` are converted to its queue dtype while
+preserving anchor gradients. Dynamic soft margin accumulates histogram
+contributions in the buffer's dtype, including with CPU float16 autocast.
+Both operations preserve the configured buffer precision.
+
+Batched `CustomKNN` searches release per-call distance/index matrices and
+autograd graphs after use, including on errors. `AccuracyCalculator` therefore
+does not retain these potentially quadratic allocations between evaluation and
+training.
 
 `ManifoldLoss(l, K, lambdaC)` is now `ManifoldLoss(embedding_size, num_proxies,
 lambda_c)`, matching the other losses' parameter names.

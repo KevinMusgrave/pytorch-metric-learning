@@ -388,6 +388,9 @@ losses.CrossBatchMemory(loss, embedding_size, memory_size=1024, miner=None, *, l
 The queue buffers belong to the module. Move it with `loss_fn.to(device, dtype)`
 so the embedding queue matches the embeddings; outside autocast a mismatch
 raises `ValueError`. Forward never moves or casts the queue.
+Under autocast, the incoming embeddings are converted to the queue's dtype for
+mining and loss computation. Anchor gradients flow through this conversion;
+enqueued embeddings are detached, and the queue keeps its configured precision.
 
 **Forward function**
 
@@ -454,6 +457,9 @@ losses.DynamicSoftMarginLoss(min_val=-2.0, num_bins=10, momentum=0.01, **kwargs)
 The running histogram is a buffer of the loss module. Move the loss with
 `loss_func.to(device, dtype)`; outside autocast, a placement mismatch raises
 `ValueError`.
+Under autocast, bin coordinates and histogram contributions use the buffer's
+dtype even when distance differences have lower precision. Updating the
+histogram does not change its dtype.
 
 **Parameters**:
 

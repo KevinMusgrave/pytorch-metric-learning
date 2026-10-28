@@ -46,6 +46,11 @@ CustomKNN(distance, batch_size=None)
 
 Distances have the query's dtype; indices are `torch.long`. Tied values are
 ordered by `torch.topk`, which does not guarantee index order.
+The backend retains no per-call result tensors or autograd graphs after results
+are discarded, including after a failed search. `AccuracyCalculator` releases
+the k-NN outputs before returning its metrics. With `k=None`, all neighbors are
+materialized during evaluation, so peak output storage is still quadratic when
+query and reference counts grow together.
 
 `AccuracyCalculator` defaults to
 `CustomKNN(LpDistance(normalize_embeddings=False, power=2), batch_size=256)`:

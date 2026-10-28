@@ -77,6 +77,57 @@ def assert_numeric_close(actual: torch.Tensor, expected: torch.Tensor) -> None:
 
 
 class TestDynamicSoftMarginLoss(unittest.TestCase):
+    def test_autocast_histogram_uses_buffer_precision(self) -> None:
+        for dtype in (torch.float16, torch.bfloat16):
+            with self.subTest(dtype=dtype):
+                loss = DynamicSoftMarginLoss(num_bins=5, momentum=0.25).to(TEST_DEVICE)
+                previous = None
+                for shift in (0.0, 0.25):
+                    data = (
+                        torch.tensor(
+                            [-1.5, -0.25, -0.0001, 0.5, 2.0],
+                            device=TEST_DEVICE,
+                            dtype=dtype,
+                        )
+                        .add(shift)
+                        .requires_grad_()
+                    )
+                    expected, previous = histogram_reference(data.float(), previous)
+                    with torch.autocast(TEST_DEVICE.type, dtype=dtype):
+                        loss.update_histogram(data)
+                        actual = loss.weigh_loss(data).mean()
+                    self.assertEqual(loss.hist_.dtype, torch.float32)
+                    torch.testing.assert_close(loss.hist_, previous)
+                    torch.testing.assert_close(actual, expected)
+                    torch.testing.assert_close(
+                        torch.autograd.grad(actual, data)[0],
+                        torch.autograd.grad(expected, data)[0],
+                    )
+
+    def test_autocast_training_steps_have_finite_gradients(self) -> None:
+        labels = torch.tensor([0, 0, 1, 1], device=TEST_DEVICE)
+        for dtype in (torch.float16, torch.bfloat16):
+            with self.subTest(dtype=dtype):
+                torch.manual_seed(17)
+                encoder = torch.nn.Linear(2, 2).to(TEST_DEVICE)
+                optimizer = torch.optim.SGD(encoder.parameters(), lr=0.01)
+                loss = DynamicSoftMarginLoss().to(TEST_DEVICE)
+                for _ in range(2):
+                    optimizer.zero_grad(set_to_none=True)
+                    with torch.autocast(TEST_DEVICE.type, dtype=dtype):
+                        embeddings = encoder(inputs(torch.float32))
+                        self.assertEqual(embeddings.dtype, dtype)
+                        value = loss(embeddings, labels)
+                    value.backward()
+                    self.assertTrue(torch.isfinite(value))
+                    self.assertEqual(loss.hist_.dtype, torch.float32)
+                    for parameter in encoder.parameters():
+                        gradient = parameter.grad
+                        assert gradient is not None
+                        self.assertTrue(torch.isfinite(gradient).all())
+                        self.assertGreater(gradient.abs().sum().item(), 0)
+                    optimizer.step()
+
     def test_values_and_gradients_across_training_steps(self) -> None:
         for dtype in TEST_DTYPES:
             with self.subTest(dtype=dtype):

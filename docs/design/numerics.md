@@ -61,6 +61,11 @@ the queue is warming up. An empty enqueue leaves the queue and its filled state
 unchanged; an empty query yields a differentiable zero. Self-comparison removal
 with no current queue indices removes nothing. A call cannot enqueue more rows
 than the queue capacity, including when an enqueue mask is supplied.
+Under autocast, the incoming batch is converted to the queue's dtype before
+mining and loss computation. The conversion preserves anchor gradients; only
+enqueued values are detached. Converting the batch once keeps anchors and
+references compatible with the wrapped distance without casting the larger
+queue or changing its configured precision.
 The queue cursor and filled flag are saved under a `queue_state` entry by an
 explicitly registered state-dict hook, so a `state_dict` checkpoint restores
 the next loss and gradients, not just the raw buffers. A checkpoint without
@@ -75,6 +80,9 @@ triplet count does not silently override that parameter. Bin centers include
 both endpoints of `[min_val, -min_val]`; out-of-range observations saturate their
 weights at the nearest endpoint without clipping the loss's distance difference.
 The histogram is a registered buffer and survives checkpointing and device moves.
+Bin coordinates and contributions use the buffer's dtype, including under
+autocast. Both histogram interpolation and cumulative-weight lookup use these
+coordinates so rounding near a bin boundary cannot select different bins.
 Matched-pair mining masks a separate distance tensor and never mutates the
 distance output saved by autograd. Unequal streams contribute only real matched
 diagonal pairs; their extra rows remain eligible negatives. Empty valid sets

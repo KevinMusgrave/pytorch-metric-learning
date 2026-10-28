@@ -1,7 +1,9 @@
+import gc
 import importlib
 import importlib.util
 import tempfile
 import unittest
+import weakref
 from pathlib import Path
 from unittest import mock
 
@@ -16,6 +18,57 @@ HAS_FAISS = importlib.util.find_spec("faiss") is not None
 
 
 class TestRetrievalBackends(unittest.TestCase):
+    def test_calculator_releases_knn_outputs_after_each_call(self):
+        query = torch.arange(257, device=TEST_DEVICE, dtype=torch.float32)[:, None]
+        labels = torch.arange(len(query), device=TEST_DEVICE) // 2
+        for k in (None, 3):
+            with self.subTest(k=k):
+                calculator = accuracy_calculator.AccuracyCalculator(
+                    include=("precision_at_1",), k=k
+                )
+                search = calculator.knn_func
+                outputs = []
+
+                def track_outputs(*args, search=search, outputs=outputs):
+                    result = search(*args)
+                    outputs.extend(weakref.ref(tensor) for tensor in result)
+                    return result
+
+                calculator.knn_func = track_outputs
+                for shift in (0.1, 0.2):
+                    with torch.no_grad():
+                        metrics = calculator.get_accuracy(
+                            query, labels, query + shift, labels
+                        )
+                    self.assertEqual(metrics["precision_at_1"], 1.0)
+                    self.assertTrue(outputs)
+                    gc.collect()
+                    self.assertTrue(all(output() is None for output in outputs))
+
+    def test_failed_batched_search_releases_inputs_and_recovers(self):
+        class CompleteBatchDistance(LpDistance):
+            def forward(self, query_emb, ref_emb=None):
+                if len(query_emb) != 2:
+                    raise ValueError("expected a complete batch")
+                return super().forward(query_emb, ref_emb)
+
+        knn = retrieval.CustomKNN(
+            CompleteBatchDistance(normalize_embeddings=False), batch_size=2
+        )
+        query = torch.tensor(
+            [[0.0], [1.0], [2.0]], device=TEST_DEVICE, requires_grad=True
+        )
+        reference = torch.tensor([[0.1], [1.1], [2.1], [3.1]], device=TEST_DEVICE)
+        query_reference = weakref.ref(query)
+        with self.assertRaisesRegex(ValueError, "complete batch"):
+            knn(query, 1, reference)
+        del query
+        gc.collect()
+        self.assertIsNone(query_reference())
+        distances, indices = knn(reference - 0.1, 1, reference)
+        torch.testing.assert_close(distances, torch.full_like(distances, 0.1))
+        self.assertEqual(indices[:, 0].tolist(), [0, 1, 2, 3])
+
     def test_custom_knn_matches_exhaustive_reference(self):
         torch.manual_seed(11)
         for dtype in TEST_DTYPES:

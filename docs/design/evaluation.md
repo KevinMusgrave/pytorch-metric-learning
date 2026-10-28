@@ -24,6 +24,13 @@ in blocks of 256 so temporary memory is one `(256, references)` block plus the
 contract. The calculator moves inputs only to a device the caller names; it
 never chooses a GPU itself.
 
+Search results belong to the caller, not to the backend. Batched search scopes
+its output-collecting callback to one call and restores the previous callback
+even when a distance raises. This releases result matrices and their autograd
+graphs after the caller drops them; metric-only calls retain no k-NN outputs.
+With `k=None`, those outputs are quadratic in the reference count, so retaining
+them between evaluation and training would consume substantial GPU memory.
+
 Faiss and scikit-learn are optional and imported only when a Faiss backend is
 constructed or a mutual-information metric is computed. Missing packages raise
 `ModuleNotFoundError` naming the extra. Clustering metrics run only when named

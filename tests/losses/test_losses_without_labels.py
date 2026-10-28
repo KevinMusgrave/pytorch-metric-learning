@@ -52,8 +52,10 @@ class TestLossesWithoutLabels(unittest.TestCase):
         pairs1 = get_all_pairs_indices(labels)
         pairs2 = MultiSimilarityMiner()(emb, labels)
         pairs3 = TripletMarginMiner()(emb, labels)
-        compatible_losses = get_compatible_losses()
-        incompatible_losses = get_incompatible_losses()
+        compatible_losses = [loss.to(TEST_DEVICE) for loss in get_compatible_losses()]
+        incompatible_losses = [
+            loss.to(TEST_DEVICE) for loss in get_incompatible_losses()
+        ]
 
         for p in [pairs1, pairs2, pairs3]:
             for loss_fn in compatible_losses:

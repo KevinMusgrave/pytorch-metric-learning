@@ -26,7 +26,7 @@ class TestMarginLoss(unittest.TestCase):
                 beta=beta,
                 learn_beta=learn_beta,
                 num_classes=num_classes,
-            )
+            ).to(TEST_DEVICE, dtype)
 
             loss = loss_func(embeddings, labels, ref_emb=ref_emb, ref_labels=ref_labels)
 
@@ -113,7 +113,7 @@ class TestMarginLoss(unittest.TestCase):
                 dtype=dtype,
             ).to(TEST_DEVICE)
             labels = torch.LongTensor([0, 1, 2, 3, 4])
-            loss = loss_func(embeddings, labels)
+            loss = loss_func.to(TEST_DEVICE, dtype)(embeddings, labels)
             loss.backward()
             self.assertEqual(loss, 0)
 
@@ -127,3 +127,17 @@ class TestMarginLoss(unittest.TestCase):
             margin=margin, nu=nu, beta=beta, learn_beta=True, num_classes=35
         )
         self.assertTrue(len(loss_func.beta) == 35)
+
+    def test_beta_follows_module_placement(self):
+        for learn_beta in (False, True):
+            loss_func = MarginLoss(beta=1.2, learn_beta=learn_beta, num_classes=3)
+            loss_func.to(torch.float64)
+            self.assertEqual(loss_func.beta.dtype, torch.float64)
+            self.assertIn("beta", loss_func.state_dict())
+            self.assertEqual(
+                any(p is loss_func.beta for p in loss_func.parameters()), learn_beta
+            )
+            embeddings = torch.randn(6, 2, dtype=torch.float32)
+            labels = torch.tensor([0, 0, 1, 1, 2, 2])
+            with self.assertRaisesRegex(ValueError, "float64"):
+                loss_func(embeddings, labels)

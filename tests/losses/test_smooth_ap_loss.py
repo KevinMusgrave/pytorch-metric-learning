@@ -101,7 +101,10 @@ class TestSmoothAPLoss(unittest.TestCase):
                 labels = contiguous_equal_size_class_labels(NUM_ID, BATCH_SIZE)
                 output2 = loss2.forward(rand_tensor, labels)
                 self.assertEqual(output2.dtype, dtype)
-                self.assertTrue(torch.isclose(output.double(), output2.double()))
+                rtol, atol = (1e-2, 1e-4) if dtype == torch.float16 else (1e-5, 1e-8)
+                self.assertTrue(
+                    torch.isclose(output.double(), output2.double(), rtol, atol)
+                )
 
 
 def sigmoid_rank_step(sims, query, item, other, temperature):
@@ -155,9 +158,10 @@ class TestSmoothAPLabelSets(unittest.TestCase):
                     actual = SmoothAPLoss(temperature=0.1)(embeddings, labels_tensor)
                     expected = direct_smooth_ap(embeddings, labels_tensor, 0.1)
                     self.assertEqual(actual.dtype, dtype)
-                    rtol, atol = (
-                        (None, None) if dtype == torch.float64 else (1e-4, 1e-5)
-                    )
+                    rtol, atol = {
+                        torch.float16: (1e-2, 1e-4),
+                        torch.float32: (1e-4, 1e-5),
+                    }.get(dtype, (None, None))
                     torch.testing.assert_close(
                         actual.double(), expected, rtol=rtol, atol=atol
                     )

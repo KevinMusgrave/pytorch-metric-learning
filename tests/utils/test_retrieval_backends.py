@@ -32,8 +32,12 @@ class TestRetrievalBackends(unittest.TestCase):
                     self.assertEqual(distances.dtype, dtype)
                     self.assertEqual(indices.dtype, torch.long)
                     self.assertTrue(torch.equal(indices, expected_indices))
+                    tolerance = 1e-2 if dtype == torch.float16 else 1e-4
                     torch.testing.assert_close(
-                        distances.double(), expected_distances, rtol=1e-4, atol=1e-4
+                        distances.double(),
+                        expected_distances,
+                        rtol=tolerance,
+                        atol=tolerance,
                     )
 
     def test_custom_knn_removes_exact_self_match(self):

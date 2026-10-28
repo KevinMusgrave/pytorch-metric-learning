@@ -33,8 +33,8 @@ class MarginLoss(BaseMetricLossFunction):
         if len(anchor_idx) == 0:
             return self.zero_losses()
 
+        c_f.check_parameter_placement(self, self.beta, embeddings)
         beta = self.beta if len(self.beta) == 1 else self.beta[labels[anchor_idx]]
-        beta = c_f.to_device(beta, device=embeddings.device, dtype=embeddings.dtype)
 
         mat = self.distance(embeddings, ref_emb)
 
@@ -92,8 +92,8 @@ class MarginLoss(BaseMetricLossFunction):
         return DivisorReducer()
 
     def initialize_beta(self, beta, num_classes):
-        self.beta = torch.tensor([float(beta)])
-        if num_classes:
-            self.beta = torch.ones(num_classes) * self.beta
+        initial = torch.full((num_classes or 1,), float(beta))
         if self.learn_beta:
-            self.beta = torch.nn.Parameter(self.beta)
+            self.beta = torch.nn.Parameter(initial)
+        else:
+            self.register_buffer("beta", initial)

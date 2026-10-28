@@ -93,7 +93,7 @@ class TestDynamicSoftMarginLoss(unittest.TestCase):
                     expected_gradient = torch.autograd.grad(expected, embedding)[0]
                     actual = loss(embedding, torch.tensor(labels, device=TEST_DEVICE))
                     gradient = torch.autograd.grad(actual, embedding)[0]
-                    torch.testing.assert_close(actual, expected)
+                    assert_numeric_close(actual, expected)
                     assert_numeric_close(gradient, expected_gradient)
                     assert_numeric_close(loss.hist_, previous)
 

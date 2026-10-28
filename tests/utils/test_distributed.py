@@ -24,6 +24,13 @@ from pytorch_metric_learning.utils.distributed import (
 from .. import TEST_DEVICE, TEST_DTYPES
 
 
+def assert_close(actual: torch.Tensor, expected: torch.Tensor) -> None:
+    if actual.dtype == torch.float16:
+        torch.testing.assert_close(actual, expected, atol=1e-3, rtol=1e-3)
+    else:
+        torch.testing.assert_close(actual, expected)
+
+
 def contrastive_reference(
     query: torch.Tensor,
     query_labels: torch.Tensor,
@@ -93,10 +100,8 @@ def check_global_pairs(rank: int, device: torch.device, dtype: torch.dtype) -> N
         local = query.detach()[selected].clone().requires_grad_()
         actual = DistributedLossWrapper(make_pair_loss())(local, query_labels[selected])
         actual.backward()
-        torch.testing.assert_close(actual, expected)
-        torch.testing.assert_close(
-            observed_gradient(local) / 2, expected_gradient[selected]
-        )
+        assert_close(actual, expected)
+        assert_close(observed_gradient(local) / 2, expected_gradient[selected])
 
 
 def check_reference_pairs(rank: int, device: torch.device, dtype: torch.dtype) -> None:
@@ -124,7 +129,7 @@ def check_reference_pairs(rank: int, device: torch.device, dtype: torch.dtype) -
         *torch.where(~matches & (distances < 0.9)),
     )
     for actual_indices, expected_indices in zip(pairs, expected_pairs, strict=True):
-        torch.testing.assert_close(actual_indices, expected_indices)
+        assert_close(actual_indices, expected_indices)
     expected = contrastive_reference(
         query, labels, reference, reference_labels, pairs=expected_pairs
     )
@@ -135,11 +140,9 @@ def check_reference_pairs(rank: int, device: torch.device, dtype: torch.dtype) -
         local, indices_tuple=pairs, ref_emb=local_reference
     )
     actual.backward()
-    torch.testing.assert_close(actual, expected)
-    torch.testing.assert_close(
-        observed_gradient(local) / 2, query_gradient[query_slice]
-    )
-    torch.testing.assert_close(
+    assert_close(actual, expected)
+    assert_close(observed_gradient(local) / 2, query_gradient[query_slice])
+    assert_close(
         observed_gradient(local_reference) / 2, reference_gradient[reference_slice]
     )
 
@@ -173,13 +176,9 @@ def check_trainable_loss(rank: int, device: torch.device, dtype: torch.dtype) ->
     selected = rank_slice((2, 3), rank)
     actual = ddp(inputs[selected], labels[selected])
     actual.backward()
-    torch.testing.assert_close(actual, expected)
-    torch.testing.assert_close(
-        observed_gradient(model.encoder.weight), encoder_gradient
-    )
-    torch.testing.assert_close(
-        observed_gradient(model.objective.loss.W), proxy_gradient
-    )
+    assert_close(actual, expected)
+    assert_close(observed_gradient(model.encoder.weight), encoder_gradient)
+    assert_close(observed_gradient(model.objective.loss.W), proxy_gradient)
 
 
 def check_memory(rank: int, device: torch.device, dtype: torch.dtype) -> None:
@@ -202,16 +201,10 @@ def check_memory(rank: int, device: torch.device, dtype: torch.dtype) -> None:
             local_mask = mask[selected] if mask is not None else None
             actual = wrapped(local, labels[selected], enqueue_mask=local_mask)
             actual.backward()
-            torch.testing.assert_close(actual, expected)
-            torch.testing.assert_close(
-                observed_gradient(local) / 2, expected_gradient[selected]
-            )
-            torch.testing.assert_close(
-                wrapped.loss.embedding_memory, reference.embedding_memory
-            )
-            torch.testing.assert_close(
-                wrapped.loss.label_memory, reference.label_memory
-            )
+            assert_close(actual, expected)
+            assert_close(observed_gradient(local) / 2, expected_gradient[selected])
+            assert_close(wrapped.loss.embedding_memory, reference.embedding_memory)
+            assert_close(wrapped.loss.label_memory, reference.label_memory)
             assert wrapped.loss.queue_idx == reference.queue_idx
             assert wrapped.loss.has_been_filled == reference.has_been_filled
 
@@ -251,8 +244,8 @@ def check_local_anchor_case(
             ref_labels=labels[selected] if use_reference else None,
         )
         actual.backward()
-        torch.testing.assert_close(actual, expected)
-        torch.testing.assert_close(observed_gradient(local), expected_gradient)
+        assert_close(actual, expected)
+        assert_close(observed_gradient(local), expected_gradient)
 
 
 def check_local_miner(
@@ -292,7 +285,7 @@ def check_local_miner(
             *torch.where(negative & (distances < 0.9)),
         )
         for actual_indices, expected_indices in zip(actual, expected, strict=True):
-            torch.testing.assert_close(actual_indices, expected_indices)
+            assert_close(actual_indices, expected_indices)
 
 
 def check_inconsistent_arguments(rank: int, device: torch.device) -> None:

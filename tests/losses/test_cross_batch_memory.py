@@ -548,18 +548,42 @@ class TestCrossBatchMemory(unittest.TestCase):
             memory_size=self.memory_size,
         ).to(TEST_DEVICE)
 
-        init_emb = torch.zeros(self.memory_size, self.embedding_size)
-        init_label = torch.zeros(self.memory_size).long()
+        init_emb = torch.zeros(
+            self.memory_size, self.embedding_size, device=TEST_DEVICE
+        )
+        init_label = torch.zeros(self.memory_size, dtype=torch.long, device=TEST_DEVICE)
         self.assertTrue(torch.equal(self.loss.embedding_memory, init_emb))
         self.assertTrue(torch.equal(self.loss.label_memory, init_label))
 
-        self.loss(torch.randn(32, 128), torch.randint(0, 2, size=(32,)))
+        self.loss(
+            torch.randn(32, 128, device=TEST_DEVICE),
+            torch.randint(0, 2, size=(32,), device=TEST_DEVICE),
+        )
         self.assertTrue(not torch.equal(self.loss.embedding_memory, init_emb))
         self.assertTrue(not torch.equal(self.loss.label_memory, init_label))
 
         self.loss.reset_queue()
         self.assertTrue(torch.equal(self.loss.embedding_memory, init_emb))
         self.assertTrue(torch.equal(self.loss.label_memory, init_label))
+
+    def test_reset_queue_keeps_placement(self):
+        loss = CrossBatchMemory(
+            loss=ContrastiveLoss(),
+            embedding_size=2,
+            memory_size=4,
+            label_dtype=torch.int32,
+        ).to(TEST_DEVICE, torch.float64)
+        loss(
+            torch.randn(3, 2, device=TEST_DEVICE, dtype=torch.float64),
+            torch.tensor([0, 0, 1], device=TEST_DEVICE),
+        )
+        loss.reset_queue()
+        self.assertEqual(loss.embedding_memory.dtype, torch.float64)
+        self.assertEqual(loss.embedding_memory.device.type, TEST_DEVICE.type)
+        self.assertEqual(loss.label_memory.dtype, torch.int32)
+        self.assertFalse(loss.embedding_memory.any())
+        self.assertFalse(loss.label_memory.any())
+        self.assertEqual((loss.queue_idx, loss.has_been_filled), (0, False))
 
 
 if __name__ == "__main__":

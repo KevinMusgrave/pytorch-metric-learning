@@ -60,6 +60,12 @@ class CrossBatchMemory(BaseLossWrapper):
         self.embedding_size = embedding_size
         self.memory_size = memory_size
         self.label_dtype = label_dtype
+        self.register_buffer(
+            "embedding_memory", torch.zeros(memory_size, embedding_size)
+        )
+        self.register_buffer(
+            "label_memory", torch.zeros(memory_size, dtype=label_dtype)
+        )
         self.reset_queue()
         self.register_state_dict_post_hook(save_queue_state)
         self.register_load_state_dict_pre_hook(load_queue_state)
@@ -182,11 +188,7 @@ class CrossBatchMemory(BaseLossWrapper):
         return indices_tuple
 
     def reset_queue(self):
-        self.register_buffer(
-            "embedding_memory", torch.zeros(self.memory_size, self.embedding_size)
-        )
-        self.register_buffer(
-            "label_memory", torch.zeros(self.memory_size, dtype=self.label_dtype)
-        )
+        self.embedding_memory.zero_()
+        self.label_memory.zero_()
         self.has_been_filled = False
         self.queue_idx = 0

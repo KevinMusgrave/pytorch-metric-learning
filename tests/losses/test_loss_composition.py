@@ -42,6 +42,64 @@ class TestLossComposition(unittest.TestCase):
         labels = torch.tensor([0, 0, 1, 1, 2, 2, 0, 1], device=TEST_DEVICE)
         return embeddings.requires_grad_(), labels
 
+    def test_wrappers_preserve_custom_subclass_values_and_gradients(self):
+        class ScaledContrastiveLoss(losses.ContrastiveLoss):
+            def forward(self, *args, **kwargs):
+                return 2 * super().forward(*args, **kwargs)
+
+        for dtype in TEST_DTYPES:
+            for mode in ("memory", "symmetric", "asymmetric"):
+                with self.subTest(dtype=dtype, mode=mode):
+                    inputs, labels = self.fixture(dtype)
+                    components = [losses.ContrastiveLoss(), ScaledContrastiveLoss()]
+                    if mode == "memory":
+                        wrappers = [
+                            losses.CrossBatchMemory(component, 3, memory_size=16).to(
+                                TEST_DEVICE, dtype
+                            )
+                            for component in components
+                        ]
+                        args = (inputs, labels)
+                    else:
+                        wrappers = [
+                            losses.SelfSupervisedLoss(
+                                component, symmetric=mode == "symmetric"
+                            )
+                            for component in components
+                        ]
+                        args = (inputs[:4], inputs[4:])
+                    expected, actual = [wrapper(*args) for wrapper in wrappers]
+                    torch.testing.assert_close(
+                        actual, 2 * expected, **tolerances(dtype)
+                    )
+                    torch.testing.assert_close(
+                        torch.autograd.grad(actual, inputs)[0],
+                        2 * torch.autograd.grad(expected, inputs)[0],
+                        **tolerances(dtype),
+                    )
+
+    def test_wrappers_reject_unsupported_types_and_proxy_nca_subclasses(self):
+        class ContrastiveLoss(torch.nn.Module):
+            pass
+
+        class CustomProxyNCA(losses.ProxyNCALoss):
+            pass
+
+        for component in (
+            ContrastiveLoss(),
+            losses.ProxyNCALoss(3, 3),
+            CustomProxyNCA(3, 3),
+        ):
+            for wrapper in (losses.SelfSupervisedLoss, losses.CrossBatchMemory):
+                with self.subTest(component=type(component), wrapper=wrapper):
+                    kwargs = (
+                        {"embedding_size": 3}
+                        if wrapper is losses.CrossBatchMemory
+                        else {}
+                    )
+                    with self.assertRaisesRegex(TypeError, "not supported"):
+                        wrapper(component, **kwargs)
+
     def test_embedding_regularization_adds_weighted_penalty(self):
         for dtype in TEST_DTYPES:
             with self.subTest(dtype=dtype):

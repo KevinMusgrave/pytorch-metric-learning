@@ -5,7 +5,6 @@ from torch.distributed import _functional_collectives
 
 from ..losses import BaseMetricLossFunction, CrossBatchMemory
 from ..miners import BaseMiner
-from ..utils import common_functions as c_f
 from ..utils import loss_and_miner_utils as lmu
 
 _DTYPES = (
@@ -144,7 +143,7 @@ def get_indices_tuple(
 def gather_enqueue_mask(enqueue_mask, device, sizes):
     if enqueue_mask is None:
         return enqueue_mask
-    enqueue_mask = c_f.to_device(enqueue_mask, device=device)
+    enqueue_mask = enqueue_mask.to(device=device)
     return _gather_tensor(enqueue_mask, sizes)
 
 

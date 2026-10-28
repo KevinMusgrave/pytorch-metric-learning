@@ -1,6 +1,5 @@
 from .angular_loss import AngularLoss
 from .arcface_loss import ArcFaceLoss
-from .base_loss_wrapper import BaseLossWrapper
 from .base_metric_loss_function import BaseMetricLossFunction
 from .circle_loss import CircleLoss
 from .contrastive_loss import ContrastiveLoss
@@ -25,7 +24,7 @@ from .ntxent_loss import NTXentLoss
 from .p2s_grad_loss import P2SGradLoss
 from .pnp_loss import PNPLoss
 from .proxy_anchor_loss import ProxyAnchorLoss
-from .proxy_losses import ProxyNCALoss
+from .proxy_nca_loss import ProxyNCALoss
 from .ranked_list_loss import RankedListLoss
 from .self_supervised_loss import SelfSupervisedLoss
 from .signal_to_noise_ratio_losses import SignalToNoiseRatioContrastiveLoss
@@ -42,7 +41,6 @@ from .vicreg_loss import VICRegLoss
 __all__ = [
     "AngularLoss",
     "ArcFaceLoss",
-    "BaseLossWrapper",
     "BaseMetricLossFunction",
     "CircleLoss",
     "ContrastiveLoss",

@@ -1,9 +1,10 @@
-import numpy as np
+import math
 
 
 def angle_to_coord(angle, normalized=False):
-    x = np.cos(np.radians(angle))
-    y = np.sin(np.radians(angle))
+    radians = math.radians(angle)
+    x = math.cos(radians)
+    y = math.sin(radians)
     if not normalized:
         x *= 2
         y *= 0.5

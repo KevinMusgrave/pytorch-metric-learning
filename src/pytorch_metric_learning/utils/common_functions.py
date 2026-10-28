@@ -1,16 +1,4 @@
-import logging
-
 import torch
-
-LOGGER_NAME = "PML"
-LOGGER = logging.getLogger(LOGGER_NAME)
-
-
-def set_logger_name(name):
-    global LOGGER_NAME
-    global LOGGER
-    LOGGER_NAME = name
-    LOGGER = logging.getLogger(LOGGER_NAME)
 
 
 def pos_inf(dtype):
@@ -25,24 +13,6 @@ def small_val(dtype):
     return torch.finfo(dtype).tiny
 
 
-def is_list_or_tuple(x):
-    return isinstance(x, (list, tuple))
-
-
-def numpy_to_torch(v):
-    try:
-        return torch.from_numpy(v)
-    except TypeError:
-        return v
-
-
-def to_numpy(v):
-    try:
-        return v.cpu().numpy()
-    except AttributeError:
-        return v
-
-
 def check_shapes(embeddings, labels):
     if labels is not None and embeddings.shape[0] != labels.shape[0]:
         raise ValueError("Number of embeddings must equal number of labels")
@@ -53,7 +23,7 @@ def check_shapes(embeddings, labels):
 def assert_distance_type(obj, distance_type=None, **kwargs):
     obj_name = type(obj).__name__
     if distance_type is not None:
-        if is_list_or_tuple(distance_type):
+        if isinstance(distance_type, (list, tuple)):
             distance_type_str = ", ".join(x.__name__ for x in distance_type)
             distance_type_str = "one of " + distance_type_str
         else:
@@ -88,37 +58,10 @@ def torch_all_from_dim_to_end(x, dim):
     return torch.all(x.view(*x.shape[:dim], -1), dim=-1)
 
 
-def to_dtype(x, tensor=None, dtype=None):
-    if not torch.is_autocast_enabled():
-        if dtype is not None:
-            dt = dtype
-        elif tensor is not None:
-            dt = tensor.dtype
-        else:
-            raise ValueError("to_dtype requires tensor or dtype")
-        if x.dtype != dt:
-            x = x.type(dt)
-    return x
-
-
-def to_device(x, tensor=None, device=None, dtype=None):
-    if device is not None:
-        dv = device
-    elif tensor is not None:
-        dv = tensor.device
-    else:
-        raise ValueError("to_device requires tensor or device")
-    if x.device != dv:
-        x = x.to(dv)
-    if dtype is not None:
-        x = to_dtype(x, dtype=dtype)
-    return x
-
-
 def set_ref_emb(embeddings, labels, ref_emb, ref_labels):
     if ref_emb is not None:
         if ref_labels is not None:
-            ref_labels = to_device(ref_labels, ref_emb)
+            ref_labels = ref_labels.to(device=ref_emb.device)
     else:
         ref_emb, ref_labels = embeddings, labels
     check_shapes(ref_emb, ref_labels)
@@ -154,5 +97,6 @@ def labels_or_indices_tuple_required(labels, indices_tuple):
 
 def concatenate_indices_tuples(it1, it2):
     return tuple(
-        torch.cat([x, to_device(y, x)], dim=0) for x, y in zip(it1, it2, strict=True)
+        torch.cat([x, y.to(device=x.device)], dim=0)
+        for x, y in zip(it1, it2, strict=True)
     )

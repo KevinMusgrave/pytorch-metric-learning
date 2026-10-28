@@ -1,4 +1,5 @@
 import importlib
+import logging
 
 import torch
 
@@ -7,6 +8,7 @@ from . import common_functions as c_f
 from .retrieval import CustomKNN
 
 EQUALITY = torch.eq
+LOGGER = logging.getLogger(__name__)
 DEFAULT_KNN_BATCH_SIZE = 256
 KMEANS_REQUIRED = (
     "NMI and AMI require kmeans_func, for example FaissKMeans() from "
@@ -325,7 +327,7 @@ class AccuracyCalculator:
 
     def calculate_NMI(self, query_labels, cluster_labels, **kwargs):
         [query_labels, cluster_labels] = [
-            c_f.to_numpy(x) for x in [query_labels, cluster_labels]
+            torch.as_tensor(x).cpu().numpy() for x in [query_labels, cluster_labels]
         ]
         return mutual_information_scores().normalized_mutual_info_score(
             query_labels, cluster_labels
@@ -333,7 +335,7 @@ class AccuracyCalculator:
 
     def calculate_AMI(self, query_labels, cluster_labels, **kwargs):
         [query_labels, cluster_labels] = [
-            c_f.to_numpy(x) for x in [query_labels, cluster_labels]
+            torch.as_tensor(x).cpu().numpy() for x in [query_labels, cluster_labels]
         ]
         return mutual_information_scores().adjusted_mutual_info_score(
             query_labels, cluster_labels
@@ -469,9 +471,9 @@ class AccuracyCalculator:
 
         device = self.device
         if device is None:
-            device = c_f.numpy_to_torch(query).device
+            device = torch.as_tensor(query).device
         [query, reference, query_labels, reference_labels] = [
-            c_f.numpy_to_torch(x).to(device).type(torch.float)
+            torch.as_tensor(x).to(device).type(torch.float)
             for x in [query, reference, query_labels, reference_labels]
         ]
 
@@ -522,7 +524,7 @@ class AccuracyCalculator:
 
             knn_labels = reference_labels[knn_indices]
             if not any(not_lone_query_mask):
-                c_f.LOGGER.warning("None of the query labels are in the reference set.")
+                LOGGER.warning("None of the query labels are in the reference set.")
             kwargs["label_counts"] = label_counts
             kwargs["knn_labels"] = knn_labels
             kwargs["knn_distances"] = knn_distances
@@ -559,7 +561,7 @@ class AccuracyCalculator:
                 set({"r_precision", "mean_average_precision_at_r"})
             )
             if len(intersection) > 0:
-                c_f.LOGGER.warning(
+                LOGGER.warning(
                     "You are computing %s, but k (%s) is less than the max bin "
                     "count (%s), so these metrics will be incorrect. Set "
                     "k='max_bin_count'. For MAP@%s instead of MAP@R, use "

@@ -1,11 +1,12 @@
 import importlib
+import logging
 
 import torch
 
 from ..distances import BatchedDistance
-from . import common_functions as c_f
 
 FAISS_GPU_MAX_K = 2048
+LOGGER = logging.getLogger(__name__)
 
 
 def import_faiss():
@@ -51,7 +52,12 @@ class MatchFinder:
     def is_match(self, x, y, threshold=None):
         threshold = self._threshold(threshold)
         with torch.no_grad():
-            return self._compare(self.distance.pairwise_distance(x, y), threshold)
+            x = self.distance.maybe_normalize(x)
+            y = self.distance.maybe_normalize(y)
+            values = self.distance.pairwise_distance(x, y)
+            if self.distance.power != 1:
+                values = values**self.distance.power
+            return self._compare(values, threshold)
 
 
 class FaissKNN:
@@ -83,8 +89,8 @@ class FaissKNN:
             k = k + 1
         device = query.device
         d = query.shape[1]
-        c_f.LOGGER.info("running k-nn with k=%d", k)
-        c_f.LOGGER.info("embedding dimensionality is %d", d)
+        LOGGER.info("running k-nn with k=%d", k)
+        LOGGER.info("embedding dimensionality is %d", d)
         if self.reset_before:
             self.index = self.index_init_fn(d)
         if self.index is None:
@@ -92,8 +98,8 @@ class FaissKNN:
                 "self.index is None. It needs to be initialized before being used."
             )
         distances, indices = self.search(self.index, query, reference, k)
-        distances = c_f.to_device(distances, device=device)
-        indices = c_f.to_device(indices, device=device)
+        distances = distances.to(device=device)
+        indices = indices.to(device=device)
         if self.reset_after:
             self.reset()
         return return_results(distances, indices, ref_includes_query)
@@ -107,7 +113,7 @@ class FaissKNN:
                 self.to_gpu_index(index), query, reference, k
             )
         if use_gpu:
-            c_f.LOGGER.warning(
+            LOGGER.warning(
                 f"Using CPU for k-nn search because k = {k} > {FAISS_GPU_MAX_K}, "
                 "which is the maximum allowable on GPU."
             )
@@ -132,7 +138,7 @@ class FaissKNN:
     def add(self, embeddings):
         if self.index is None:
             raise ValueError("Call train before adding embeddings to FaissKNN")
-        self.index.add(c_f.numpy_to_torch(embeddings).float().cpu())
+        self.index.add(torch.as_tensor(embeddings).float().cpu())
 
     def save(self, filename):
         self.faiss.write_index(self.to_cpu_index(self.index), filename)
@@ -153,8 +159,8 @@ class FaissKMeans:
         device = x.device
         x = x.detach().float().cpu().numpy()
         d = x.shape[1]
-        c_f.LOGGER.info("running k-means clustering with k=%d", nmb_clusters)
-        c_f.LOGGER.info("embedding dimensionality is %d", d)
+        LOGGER.info("running k-means clustering with k=%d", nmb_clusters)
+        LOGGER.info("embedding dimensionality is %d", d)
         kmeans = self.faiss.Kmeans(d, nmb_clusters, **self.kwargs)
         kmeans.train(x)
         _, idxs = kmeans.index.search(x, 1)
@@ -206,12 +212,9 @@ class CustomKNN:
                 len(query), k, device=query.device, dtype=query.dtype
             )
             indices = torch.zeros(len(query), k, device=query.device, dtype=torch.long)
-            previous_iter_fn = self.distance.iter_fn
-            try:
-                self.distance.iter_fn = get_topk(distances, indices, k, get_largest)
-                self.distance(query, reference)
-            finally:
-                self.distance.iter_fn = previous_iter_fn
+            self.distance(
+                query, reference, iter_fn=get_topk(distances, indices, k, get_largest)
+            )
         else:
             mat = self.distance(query, reference)
             distances, indices = torch.topk(mat, k, largest=get_largest, dim=1)

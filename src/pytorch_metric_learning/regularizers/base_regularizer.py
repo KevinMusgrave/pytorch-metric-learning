@@ -1,5 +1,5 @@
 from ..utils import common_functions as c_f
-from ..utils.module_with_reducer import ModuleWithReducerAndDistance
+from ..utils.module_with_distance_and_reducer import ModuleWithReducerAndDistance
 
 
 class BaseRegularizer(ModuleWithReducerAndDistance):

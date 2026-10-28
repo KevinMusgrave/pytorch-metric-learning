@@ -6,8 +6,7 @@ from pytorch_metric_learning.distances import CosineSimilarity, LpDistance
 from pytorch_metric_learning.losses import ContrastiveLoss
 from pytorch_metric_learning.reducers import MeanReducer
 
-from .. import TEST_DEVICE, TEST_DTYPES
-from ..zzz_testing_utils import testing_utils
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 
 
 def pair_losses(embeddings, pairs, loss_of_pair):
@@ -42,7 +41,7 @@ class TestContrastiveLoss(unittest.TestCase):
         for dtype in TEST_DTYPES:
             embedding_angles = [0, 20, 40, 60, 80]
             embeddings = torch.tensor(
-                [testing_utils.angle_to_coord(a) for a in embedding_angles],
+                [helpers.angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
             ).to(TEST_DEVICE)
@@ -110,7 +109,7 @@ class TestContrastiveLoss(unittest.TestCase):
         for dtype in TEST_DTYPES:
             embedding_angles = [0]
             embeddings = torch.tensor(
-                [testing_utils.angle_to_coord(a) for a in embedding_angles],
+                [helpers.angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
             ).to(TEST_DEVICE)
@@ -127,7 +126,7 @@ class TestContrastiveLoss(unittest.TestCase):
             for loss_func in [loss_funcA, loss_funcB]:
                 embedding_angles = [0]
                 embeddings = torch.tensor(
-                    [testing_utils.angle_to_coord(a) for a in embedding_angles],
+                    [helpers.angle_to_coord(a) for a in embedding_angles],
                     requires_grad=True,
                     dtype=dtype,
                 ).to(TEST_DEVICE)

@@ -32,11 +32,17 @@ and parent-conditioned subsets of different sizes. This bound applies to every
 backend and prevents requesting nonexistent neighbors or padding metric inputs.
 
 Search results belong to the caller, not to the backend. Batched search scopes
-its output-collecting callback to one call and restores the previous callback
-even when a distance raises. This releases result matrices and their autograd
+its output-collecting callback to one call by passing it directly to
+`BatchedDistance.forward`; no callback is stored on either module. This releases result matrices and their autograd
 graphs after the caller drops them; metric-only calls retain no k-NN outputs.
 With `k=None`, those outputs are quadratic in the reference count, so retaining
 them between evaluation and training would consume substantial GPU memory.
+
+Threshold matching applies the same distance normalization and power for
+matrix comparisons and corresponding-row comparisons. The row path uses
+pairwise distances after normalization, then applies the power, so it needs no
+quadratic intermediate. Evaluation diagnostics use standard module loggers;
+applications configure the `pytorch_metric_learning` logger hierarchy.
 
 Faiss and scikit-learn are optional and imported only when a Faiss backend is
 constructed or a mutual-information metric is computed. Missing packages raise

@@ -27,27 +27,12 @@ class TestBatchedDistance(unittest.TestCase):
                 for dist_fn in [CosineSimilarity()]:
                     for use_ref in [False, True]:
                         mat = []
-                        distance = BatchedDistance(dist_fn, collect_fn(mat), batch_size)
+                        distance = BatchedDistance(dist_fn, batch_size=batch_size)
                         if use_ref:
-                            distance(embeddings, ref)
+                            distance(embeddings, ref, iter_fn=collect_fn(mat))
                             correct_mat = dist_fn(embeddings, ref)
                         else:
-                            distance(embeddings)
+                            distance(embeddings, iter_fn=collect_fn(mat))
                             correct_mat = dist_fn(embeddings)
                         mat = torch.cat(mat, dim=0)
                         self.assertTrue(torch.allclose(mat, correct_mat))
-
-    def test_attr(self):
-        dist_fn = CosineSimilarity()
-        distance = BatchedDistance(dist_fn, None)
-        with self.subTest(access="getattr"):
-            for attr in ["is_inverted", "normalize_embeddings", "p", "power"]:
-                self.assertTrue(getattr(distance, attr) == getattr(dist_fn, attr))
-
-        with self.subTest(access="attribute"):
-            self.assertTrue(dist_fn.is_inverted == distance.is_inverted)
-            self.assertTrue(
-                dist_fn.normalize_embeddings == distance.normalize_embeddings
-            )
-            self.assertTrue(dist_fn.p == distance.p)
-            self.assertTrue(dist_fn.power == distance.power)

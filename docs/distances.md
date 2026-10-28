@@ -72,17 +72,24 @@ def pairwise_distance(self, query_emb, ref_emb):
 
 ## BatchedDistance
 
-Computes distance matrices iteratively, passing each matrix into `iter_fn`.
+Computes distance matrices iteratively. Each call supplies an `iter_fn`
+callback that consumes the blocks; the module retains no callback between calls.
 
 ```python
-distances.BatchedDistance(distance, iter_fn=None, batch_size=32)
+distances.BatchedDistance(distance, batch_size=32)
 ```
 
 **Parameters**:
 
 - **distance**: The wrapped distance function.
-- **iter_fn**: This function will be called at every iteration. It receives `(mat, s, e)` as input, where `mat` is the current distance matrix, and `s, e` is the range of query embeddings used to construct `mat`.
 - **batch_size**: Each distance matrix will be size `(batch_size, len(ref_emb))`.
+
+Call `distance(query_emb, ref_emb=None, *, iter_fn=callback)`. The required
+callback receives `(mat, s, e)`, where `mat` is the current distance matrix and
+`s:e` selects its query rows. The final block may be shorter than `batch_size`.
+The call returns `None`; the callback owns any collected outputs. The wrapper
+exposes `is_inverted` for search ordering. Other wrapped configuration is
+available explicitly through `distance.distance`.
 
 **Example usage**:
 
@@ -92,14 +99,9 @@ from pytorch_metric_learning.distances import BatchedDistance, CosineSimilarity
 def fn(mat, s, e):
 	print(f"At query indices {s}:{e}")
 
-distance = BatchedDistance(CosineSimilarity(), fn)
-
-# Works like a regular distance function, except nothing is returned.
-# So any persistent changes need to be done in the supplied iter_fn.
-# query vs query
-distance(embeddings)
-# query vs ref
-distance(embeddings, ref_emb)
+distance = BatchedDistance(CosineSimilarity())
+distance(embeddings, iter_fn=fn)
+distance(embeddings, ref_emb, iter_fn=fn)
 ```
 
 ## CosineSimilarity

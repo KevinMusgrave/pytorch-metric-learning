@@ -6,7 +6,7 @@ from pytorch_metric_learning.miners import DistanceWeightedMiner
 from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
 
 from .. import TEST_DEVICE, TEST_DTYPES
-from ..zzz_testing_utils.testing_utils import angle_to_coord
+from ..helpers import angle_to_coord
 
 
 def normalized_planar_embeddings(num_points, dtype):

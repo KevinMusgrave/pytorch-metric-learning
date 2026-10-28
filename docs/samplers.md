@@ -114,8 +114,13 @@ samplers.FixedSetOfTriplets(labels, num_triplets, *, generator=None)
 
 The triplets are drawn once, when the sampler is created; each iterator yields
 them in a new random order as consecutive `(anchor, positive, negative)` index
-triples. Use a `DataLoader` batch size divisible by 3 and
-`miners.EmbeddingsAlreadyPackagedAsTriplets` to recover them.
+triples. Use a `DataLoader` batch size divisible by 3 and recover the tuple
+indices directly from each embedding batch:
+
+```python
+indices_tuple = torch.arange(len(embeddings), device=embeddings.device).reshape(-1, 3).unbind(1)
+loss = loss_func(embeddings, labels, indices_tuple=indices_tuple)
+```
 
 **Parameters**:
 

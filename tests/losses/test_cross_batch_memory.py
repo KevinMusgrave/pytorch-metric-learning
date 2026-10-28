@@ -18,7 +18,7 @@ from pytorch_metric_learning.miners import (
 from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
 
 from .. import TEST_DEVICE, TEST_DTYPES
-from ..zzz_testing_utils.testing_utils import angle_to_coord
+from ..helpers import angle_to_coord
 
 
 class TestCrossBatchMemory(unittest.TestCase):
@@ -536,8 +536,8 @@ class TestCrossBatchMemory(unittest.TestCase):
             losses.TupletMarginLoss(),
         ]
 
-        loaded_loss_names = [type(loss).__name__ for loss in loss_fns]
-        assert set(loaded_loss_names) == set(supported_losses)
+        loaded_loss_types = [type(loss) for loss in loss_fns]
+        assert set(loaded_loss_types) == set(supported_losses)
 
         return loss_fns
 

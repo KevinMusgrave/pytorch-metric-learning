@@ -1,6 +1,5 @@
 import torch
 
-from ..utils import common_functions as c_f
 from .base_reducer import BaseReducer
 
 
@@ -17,8 +16,8 @@ class DivisorReducer(BaseReducer):
         if divisor != 0:
             output = torch.sum(losses) / divisor
             if torch.isnan(output) and losses.dtype == torch.float16:
-                output = torch.sum(c_f.to_dtype(losses, dtype=torch.float32)) / divisor
-                output = c_f.to_dtype(output, dtype=torch.float16)
+                output = torch.sum(losses.to(dtype=torch.float32)) / divisor
+                output = output.to(dtype=torch.float16)
             return output
         return self.zero_loss(embeddings)
 

@@ -6,7 +6,7 @@ from pytorch_metric_learning.distances import DotProductSimilarity
 from pytorch_metric_learning.losses import NormalizedSoftmaxLoss
 
 from .. import TEST_DEVICE, TEST_DTYPES
-from ..zzz_testing_utils.testing_utils import angle_to_coord
+from ..helpers import angle_to_coord
 
 
 class TestNormalizedSoftmaxLoss(unittest.TestCase):

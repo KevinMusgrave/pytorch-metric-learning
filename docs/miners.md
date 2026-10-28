@@ -153,20 +153,6 @@ miners.DistanceWeightedMiner(cutoff=0.5, nonzero_loss_cutoff=1.4, **kwargs)
 
 This miner works well only with low dimensionality embeddings (e.g 64-dim) and L2-normalized distances. Check out [UniformHistogramMiner](#uniformhistogramminer) for a miner that is roughly equivalent, but works with embeddings of any dimensionality and any distance metric.
 
-## EmbeddingsAlreadyPackagedAsTriplets
-
-If your embeddings are already ordered sequentially as triplets, then use this miner to force your loss function to use the already-formed triplets.
-
-```python
-miners.EmbeddingsAlreadyPackagedAsTriplets()
-```
-
-For example, here's what a batch size of size 6 should look like:
-
-```python
-torch.stack([anchor1, positive1, negative1, anchor2, positive2, negative2], dim=0)
-```
-
 ## HDCMiner
 
 [Hard-Aware Deeply Cascaded Embedding](http://openaccess.thecvf.com/content_ICCV_2017/papers/Yuan_Hard-Aware_Deeply_Cascaded_ICCV_2017_paper.pdf)

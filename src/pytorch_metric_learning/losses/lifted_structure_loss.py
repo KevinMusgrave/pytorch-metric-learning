@@ -23,11 +23,10 @@ class LiftedStructureLoss(GenericPairLoss):
         if len(a1) > 0 and len(a2) > 0:
             pos_pairs = pos_pairs.unsqueeze(1)
             dtype = pos_pairs.dtype
-            n_per_p = c_f.to_dtype(
+            n_per_p = (
                 (a2.unsqueeze(0) == a1.unsqueeze(1))
-                | (a2.unsqueeze(0) == p.unsqueeze(1)),
-                dtype=dtype,
-            )
+                | (a2.unsqueeze(0) == p.unsqueeze(1))
+            ).to(dtype=dtype)
             neg_pairs = neg_pairs * n_per_p
             keep_mask = ~(n_per_p == 0)
 

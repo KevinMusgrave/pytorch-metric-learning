@@ -4,7 +4,20 @@ import torch
 
 from ..utils import common_functions as c_f
 from ..utils import loss_and_miner_utils as lmu
-from .base_loss_wrapper import BaseLossWrapper
+from .angular_loss import AngularLoss
+from .circle_loss import CircleLoss
+from .contrastive_loss import ContrastiveLoss
+from .intra_pair_variance_loss import IntraPairVarianceLoss
+from .lifted_structure_loss import GeneralizedLiftedStructureLoss
+from .margin_loss import MarginLoss
+from .multi_similarity_loss import MultiSimilarityLoss
+from .nca_loss import NCALoss
+from .ntxent_loss import NTXentLoss
+from .proxy_nca_loss import ProxyNCALoss
+from .signal_to_noise_ratio_losses import SignalToNoiseRatioContrastiveLoss
+from .supcon_loss import SupConLoss
+from .triplet_margin_loss import TripletMarginLoss
+from .tuplet_margin_loss import TupletMarginLoss
 
 QUEUE_STATE_KEY = "queue_state"
 
@@ -40,7 +53,7 @@ def load_queue_state(
     module.has_been_filled = state["has_been_filled"]
 
 
-class CrossBatchMemory(BaseLossWrapper):
+class CrossBatchMemory(torch.nn.Module):
     embedding_memory: torch.Tensor
     label_memory: torch.Tensor
 
@@ -54,7 +67,11 @@ class CrossBatchMemory(BaseLossWrapper):
         label_dtype=torch.long,
         **kwargs,
     ):
-        super().__init__(loss=loss, **kwargs)
+        super().__init__(**kwargs)
+        if not isinstance(loss, self.supported_losses()) or isinstance(
+            loss, ProxyNCALoss
+        ):
+            raise TypeError(f"CrossBatchMemory not supported for {type(loss).__name__}")
         self.loss = loss
         self.miner = miner
         self.embedding_size = embedding_size
@@ -72,26 +89,21 @@ class CrossBatchMemory(BaseLossWrapper):
 
     @staticmethod
     def supported_losses():
-        return [
-            "AngularLoss",
-            "CircleLoss",
-            "ContrastiveLoss",
-            "GeneralizedLiftedStructureLoss",
-            "IntraPairVarianceLoss",
-            "MarginLoss",
-            "MultiSimilarityLoss",
-            "NCALoss",
-            "NTXentLoss",
-            "SignalToNoiseRatioContrastiveLoss",
-            "SupConLoss",
-            "TripletMarginLoss",
-            "TupletMarginLoss",
-        ]
-
-    @classmethod
-    def check_loss_support(cls, loss_name):
-        if loss_name not in cls.supported_losses():
-            raise ValueError(f"CrossBatchMemory not supported for {loss_name}")
+        return (
+            AngularLoss,
+            CircleLoss,
+            ContrastiveLoss,
+            GeneralizedLiftedStructureLoss,
+            IntraPairVarianceLoss,
+            MarginLoss,
+            MultiSimilarityLoss,
+            NCALoss,
+            NTXentLoss,
+            SignalToNoiseRatioContrastiveLoss,
+            SupConLoss,
+            TripletMarginLoss,
+            TupletMarginLoss,
+        )
 
     def forward(self, embeddings, labels, indices_tuple=None, enqueue_mask=None):
         if indices_tuple is not None and enqueue_mask is not None:

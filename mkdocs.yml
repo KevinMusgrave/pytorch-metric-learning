@@ -3,7 +3,6 @@ exclude_docs: |
   design/
   plans/
   security/
-  development-baseline.md
 nav:
     - Home: index.md
     - Distances: distances.md
@@ -15,7 +14,6 @@ nav:
     - Utils:
       - Accuracy Calculation: accuracy_calculation.md
       - Retrieval Backends: retrieval.md
-      - Common Functions: common_functions.md
       - Distributed: distributed.md
     - How to extend this library:
       - Custom losses: extend/losses.md

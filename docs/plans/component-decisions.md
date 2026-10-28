@@ -1,8 +1,9 @@
 # Modernization component decisions
 
-These are the accepted scope decisions for the next major release. The package
-still exposes the historical API until the corresponding implementation work is
-completed. Current implementation rationale remains in `docs/design/`.
+These record the scope decisions made at the start of version 3 modernization.
+The starting inventory below describes the old package, including components
+since removed. Current implementation rationale remains in `docs/design/`;
+the [release notes](../release-notes-3.md) describe the implemented public API.
 
 ## Inventory and target surface
 

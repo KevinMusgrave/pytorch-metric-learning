@@ -6,7 +6,7 @@ from pytorch_metric_learning.distances import CosineSimilarity, LpDistance
 from pytorch_metric_learning.miners import BatchHardMiner
 
 from .. import TEST_DEVICE, TEST_DTYPES
-from ..zzz_testing_utils.testing_utils import angle_to_coord
+from ..helpers import angle_to_coord
 
 
 class TestBatchHardMiner(unittest.TestCase):

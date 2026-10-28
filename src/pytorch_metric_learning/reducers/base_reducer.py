@@ -1,7 +1,5 @@
 import torch
 
-from ..utils import common_functions as c_f
-
 
 class BaseReducer(torch.nn.Module):
     def forward(self, loss_dict, embeddings, labels):
@@ -80,13 +78,13 @@ class BaseReducer(torch.nn.Module):
 
     def assert_sizes_pair(self, losses, loss_indices):
         assert torch.is_tensor(losses)
-        assert c_f.is_list_or_tuple(loss_indices)
+        assert isinstance(loss_indices, (list, tuple))
         assert len(loss_indices) == 2
         assert all(torch.is_tensor(x) for x in loss_indices)
         assert len(losses) == len(loss_indices[0]) == len(loss_indices[1])
 
     def assert_sizes_triplet(self, losses, loss_indices):
         assert torch.is_tensor(losses)
-        assert c_f.is_list_or_tuple(loss_indices)
+        assert isinstance(loss_indices, (list, tuple))
         assert len(loss_indices) == 3
         assert all(len(x) == len(losses) for x in loss_indices)

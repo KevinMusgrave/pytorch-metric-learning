@@ -44,7 +44,26 @@ mixed-precision call. Outside autocast, a placement mismatch raises
 `ValueError`; under autocast, parameters may keep higher precision. Constant
 coefficient tensors are non-persistent buffers so `.to()` moves them without
 changing checkpoint contents. P2SGrad still renormalizes its weight columns in
-place each forward, as its algorithm specifies.
+place each forward, as its algorithm specifies, under `torch.no_grad()`.
+Each computation uses a differentiable clone of the normalized parameter, so
+another forward cannot mutate the weights saved for its backward pass.
+Parameter identity and storage remain stable; `.data` never bypasses autograd.
+
+Tensor conversion uses explicit `Tensor.to`, `torch.as_tensor`, and
+`Tensor.cpu().numpy()` calls. Device-only transfers preserve label dtypes;
+explicit dtype requests also apply during autocast. The removed conversion
+helpers silently ignored dtype requests under CUDA autocast, making placement
+and accumulation depend on hidden global state.
+Histogram pair deduplication returns tensor-index tuples on the input device,
+avoiding Python-list conversion, host synchronization, and deprecated list
+indexing.
+
+Memory and self-supervision wrappers check supported loss types with
+`isinstance`, so subclasses that preserve those contracts remain usable.
+`supported_losses()` returns the actual types. ProxyNCA is explicitly excluded,
+including subclasses: although it derives from NCA, its references are learned
+proxies and it rejects the separate references required by these wrappers.
+The wrappers directly inherit `torch.nn.Module`; no name-dispatch base is needed.
 
 ProxyNCA converts embeddings to its proxies' dtype before normalization and
 distance computation, in both the loss and `get_logits`. This keeps distance

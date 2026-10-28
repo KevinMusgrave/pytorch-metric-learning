@@ -7,7 +7,7 @@ import torch.nn.functional as F
 from pytorch_metric_learning.losses import ArcFaceLoss
 
 from .. import TEST_DEVICE, TEST_DTYPES
-from ..zzz_testing_utils.testing_utils import angle_to_coord
+from ..helpers import angle_to_coord
 
 
 class TestArcFaceLoss(unittest.TestCase):

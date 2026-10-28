@@ -7,7 +7,7 @@ from pytorch_metric_learning.losses import NTXentLoss, SupConLoss
 from pytorch_metric_learning.reducers import AvgNonZeroReducer, PerAnchorReducer
 
 from .. import TEST_DEVICE, TEST_DTYPES
-from ..zzz_testing_utils.testing_utils import angle_to_coord
+from ..helpers import angle_to_coord
 from .utils import get_pair_embeddings_with_ref
 
 

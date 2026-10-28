@@ -134,7 +134,9 @@ class TestManifoldLoss(unittest.TestCase):
                 lambda_c=0,
                 margin=ORIGINAL_IMPLEMENTATION_MARGIN,
             )
-            loss_func.proxies.data = proxies.data
+            loss_func.to(device=proxies.device, dtype=proxies.dtype)
+            with torch.no_grad():
+                loss_func.proxies.copy_(proxies)
             loss = loss_func(embeddings, indices_tuple=labels)
             loss.backward()
 
@@ -174,7 +176,9 @@ class TestManifoldLoss(unittest.TestCase):
                 margin=ORIGINAL_IMPLEMENTATION_MARGIN,
             )
 
-            loss_func.proxies.data = proxies.data
+            loss_func.to(device=proxies.device, dtype=proxies.dtype)
+            with torch.no_grad():
+                loss_func.proxies.copy_(proxies)
             loss = loss_func(embeddings, indices_tuple=labels)
             loss.backward()
 

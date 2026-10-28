@@ -47,8 +47,8 @@ class SubCenterArcFaceLoss(ArcFaceLoss):
         dtype, device = embeddings.dtype, embeddings.device
         cos_threshold = math.cos(math.radians(threshold))
         outliers = []
-        dominant_centers = torch.Tensor(self.W.shape[0], self.num_classes).to(
-            dtype=dtype, device=device
+        dominant_centers = torch.empty(
+            self.W.shape[0], self.num_classes, dtype=dtype, device=device
         )
         with torch.no_grad():
             for label in range(self.num_classes):

@@ -21,7 +21,7 @@ class NPairsLoss(BaseMetricLossFunction):
         if num_pairs == 0:
             return self.zero_losses()
         anchors, positives = embeddings[anchor_idx], embeddings[positive_idx]
-        targets = c_f.to_device(torch.arange(num_pairs), embeddings)
+        targets = torch.arange(num_pairs, device=embeddings.device)
         sim_mat = self.distance(anchors, positives)
         if not self.distance.is_inverted:
             sim_mat = -sim_mat

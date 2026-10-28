@@ -1,6 +1,5 @@
 import torch
 from torch import nn
-from torch.nn import Parameter
 
 from ..utils import common_functions as c_f
 from .base_metric_loss_function import BaseMetricLossFunction
@@ -12,8 +11,8 @@ class P2SGradLoss(BaseMetricLossFunction):
         self.descriptors_dim = descriptors_dim
         self.num_classes = num_classes
 
-        self.weight = Parameter(torch.Tensor(descriptors_dim, num_classes))
-        self.weight.data.uniform_(-1, 1).renorm_(2, 1, 1e-5).mul_(1e5)
+        weight = torch.empty(descriptors_dim, num_classes).uniform_(-1, 1)
+        self.weight = nn.Parameter(weight.renorm_(2, 1, 1e-5).mul_(1e5))
 
         self.m_loss = nn.MSELoss()
 
@@ -22,15 +21,17 @@ class P2SGradLoss(BaseMetricLossFunction):
         c_f.indices_tuple_not_supported(indices_tuple)
 
         c_f.check_parameter_placement(self, self.weight, embeddings)
-        self.weight.data = self.weight.data.renorm(2, 1, 1e-5).mul(1e5)
+        with torch.no_grad():
+            self.weight.renorm_(2, 1, 1e-5).mul_(1e5)
+        weight = self.weight.clone()
         dtype = embeddings.dtype
 
         rtol = 1e-2 if dtype == torch.float16 else 1e-5
-        w_modulus = self.weight.pow(2).sum(0).pow(0.5)
+        w_modulus = weight.pow(2).sum(0).pow(0.5)
         assert torch.all(torch.abs(w_modulus - 1.0) < rtol)
 
         x_modulus = embeddings.pow(2).sum(1).pow(0.5)
-        cos_theta = embeddings.mm(self.weight)
+        cos_theta = embeddings.mm(weight)
         cos_theta = cos_theta / x_modulus.view(-1, 1)
         cos_theta = cos_theta.clamp(-1, 1)
 

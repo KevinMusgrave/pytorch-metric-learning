@@ -5,7 +5,6 @@ import torch
 
 from pytorch_metric_learning.distances import LpDistance
 from pytorch_metric_learning.utils import accuracy_calculator
-from pytorch_metric_learning.utils.common_functions import LOGGER
 from pytorch_metric_learning.utils.retrieval import CustomKNN
 
 from .. import TEST_DEVICE
@@ -22,10 +21,10 @@ class TestCalculateAccuraciesValidK(unittest.TestCase):
             embeddings = torch.randn(10000, 32)
             labels = torch.randint(0, 10, size=(10000,))
             if k in [10, 100]:
-                with self.assertLogs(LOGGER, level="WARNING"):
+                with self.assertLogs("pytorch_metric_learning", level="WARNING"):
                     AC.get_accuracy(embeddings, labels)
             else:
-                with self.assertNoLogs(LOGGER, level="WARNING"):
+                with self.assertNoLogs("pytorch_metric_learning", level="WARNING"):
                     AC.get_accuracy(embeddings, labels)
 
 

@@ -19,6 +19,9 @@ replacement when a class has fewer than M members. Hierarchical sampling uses
 the provided label columns to balance the requested levels. These are behavior
 contracts, independent of a training framework. Fixed triplets preserve the
 anchor/positive/negative label relation.
+Their consecutive triples map directly to an `indices_tuple` through
+`torch.arange(batch_size).reshape(-1, 3).unbind(1)` on the embeddings' device;
+there is no miner class for recovering already supplied triplets.
 
 Mining-weighted sampling belongs to the agent-facing recipe in
 `docs/recipes/mining_weights.py`: callers compute embeddings, the numerical

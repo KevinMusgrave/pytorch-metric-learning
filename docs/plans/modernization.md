@@ -1,8 +1,10 @@
 # PyTorch Metric Learning modernization plan
 
-Status: all five phases are implemented. CPU and two-GPU CUDA/NCCL correctness
-acceptance pass for version 3.0.0. The CI-owned final merge gate and visual
-verification of GitHub-native math rendering remain outstanding.
+Status: all five phases are implemented. The final utility cleanup passes all
+243 CPU tests; two-GPU CUDA/NCCL acceptance passed before that cleanup and needs
+to be repeated for the updated numerical sources. The CI-owned final merge gate,
+PyPI publisher setup, and visual verification of GitHub-native math rendering
+also remain outstanding.
 
 ## Purpose
 
@@ -86,12 +88,14 @@ record-keeper repository. Do not introduce compatibility shims or maintain old
 PyTorch support without a separate explicit requirement. Explain breaking
 changes in the next major release's documentation.
 
-## Starting evidence
+## Historical starting evidence
 
-The [development baseline](../development-baseline.md) records the environment,
-CPU results, dependency assessments, and remaining source-policy findings.
-Code Polishy 0.31.4 resolves the two tooling blockers found during adoption.
-Linux/CUDA and live two-GPU acceptance are still outstanding.
+This section describes the checkout before modernization. The
+[historical development baseline](development-baseline.md) records its
+environment, CPU results, dependency assessments, and source-policy findings.
+Code Polishy 0.31.4 resolved the two tooling blockers found during adoption.
+Linux/CUDA and live two-GPU acceptance were still outstanding at that point.
+The [progress record](#progress) documents the later fixes and verification.
 
 Two local probes identified concrete distributed-wrapper issues:
 
@@ -107,7 +111,7 @@ The [distributed documentation](../distributed.md) also states that
 choice, not a newly demonstrated numerical bug. It needs an explicit contract
 and clearer treatment than a switch that appears to affect only performance.
 
-The current loss base class discovers regularizers by walking the inheritance
+The original loss base class discovered regularizers by walking the inheritance
 hierarchy and matching class names. This is a concrete candidate for
 simplification; the usefulness of distance/miner/reducer composition should
 survive that change.
@@ -515,8 +519,24 @@ for those design documents or evidence that the listed work is complete.
   until the one-time account configuration in
   [Development](../../DEVELOPMENT.md#publishing-to-pypi) is completed.
 
+- Utility cleanup, 2026-10-28 UTC: `MatchFinder` row matching now honors
+  normalization and distance power. Loss wrappers accept supported subclasses
+  through type checks and reject ProxyNCA's incompatible reference contract.
+  Batched callbacks belong to individual calls; standard Python loggers and
+  explicit PyTorch conversions replace mutable logging and conversion helpers.
+  P2SGrad preserves parameter storage and snapshots weights for accumulated
+  forwards. Histogram indices stay in tensors. Obsolete wrapper/miner APIs,
+  duplicate API documentation, unused artwork, and dead branches are removed;
+  module/test helper names and historical adoption documentation are clarified.
+  All 243 CPU tests pass in 179.685 seconds, with no failures, errors, or skips.
+  The 28 CPU float16/bfloat16 autocast cases pass, as do changed-source checks
+  and the strict documentation build. Earlier CUDA evidence does not cover
+  this cleanup; the GPU pod remains stopped.
+
 ## Remaining merge and release checks
 
+- Repeat CUDA/NCCL acceptance for the final cleanup candidate. The previous
+  two-A40 acceptance covered the numerical sources before this utility pass.
 - Run the configured CI-owned `merge-gate` against `master` for the final
   pushed candidate. Local CPU/CUDA and checkpoint results do not replace it.
 - Visually verify GitHub-native equations. The README currently contains no

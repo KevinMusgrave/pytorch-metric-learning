@@ -1,4 +1,10 @@
-# Development baseline status
+# Historical development baseline
+
+This is the adoption snapshot from 2026-10-26 and 2026-10-27, before the
+modernization removals and CUDA acceptance. Its module inventory, failures,
+and remaining-work list describe that historical checkout. Use
+[DEVELOPMENT.md](../../DEVELOPMENT.md) for current commands and the
+[modernization plan](modernization.md) for current acceptance evidence.
 
 Recorded on 2026-10-26; upgrade verified on 2026-10-27 UTC.
 The local Mac environment is usable; Code Polishy

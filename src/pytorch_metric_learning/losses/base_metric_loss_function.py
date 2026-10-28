@@ -1,5 +1,5 @@
 from ..utils import common_functions as c_f
-from ..utils.module_with_reducer import ModuleWithReducerAndDistance
+from ..utils.module_with_distance_and_reducer import ModuleWithReducerAndDistance
 
 
 def regularization_term(regularizer, weight, x):
@@ -24,7 +24,7 @@ class BaseMetricLossFunction(ModuleWithReducerAndDistance):
     ):
         c_f.check_shapes(embeddings, labels)
         if labels is not None:
-            labels = c_f.to_device(labels, embeddings)
+            labels = labels.to(device=embeddings.device)
         ref_emb, ref_labels = c_f.set_ref_emb(embeddings, labels, ref_emb, ref_labels)
         loss_dict = self.compute_loss(
             embeddings, labels, indices_tuple, ref_emb, ref_labels

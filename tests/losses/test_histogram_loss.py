@@ -4,7 +4,6 @@ import torch
 from numpy.testing import assert_almost_equal
 
 from pytorch_metric_learning.losses import HistogramLoss
-from pytorch_metric_learning.utils import common_functions as c_f
 
 from .. import TEST_DEVICE, TEST_DTYPES
 
@@ -23,8 +22,8 @@ class OriginalImplementationHistogramLoss(torch.nn.Module):
     def forward(self, features, classes):
         def histogram(inds, size):
             s_repeat_ = s_repeat.clone()
-            inds = c_f.to_device(inds, tensor=s_repeat_floor)
-            self.t = c_f.to_device(self.t, tensor=s_repeat_floor)
+            inds = inds.to(device=s_repeat_floor.device)
+            self.t = self.t.to(device=s_repeat_floor.device)
             indsa = (
                 (s_repeat_floor - (self.t - self.step) > -self.eps)
                 & (s_repeat_floor - (self.t - self.step) < self.eps)
@@ -50,12 +49,12 @@ class OriginalImplementationHistogramLoss(torch.nn.Module):
         classes_eq = (
             classes.repeat(classes_size, 1)
             == classes.view(-1, 1).repeat(1, classes_size)
-        ).data
+        ).detach()
         dists = torch.mm(features, features.transpose(0, 1))
         assert (
             (dists > 1 + self.eps).sum().item() + (dists < -1 - self.eps).sum().item()
         ) == 0, "L2 normalization should be used"
-        s_inds = torch.triu(torch.ones(classes_eq.size()), 1).byte()
+        s_inds = torch.triu(torch.ones(classes_eq.size(), dtype=torch.bool), 1)
         if self.use_cuda:
             s_inds = s_inds.cuda()
         classes_eq = classes_eq.to(device=s_inds.device)
@@ -65,7 +64,9 @@ class OriginalImplementationHistogramLoss(torch.nn.Module):
         neg_size = (~classes_eq[s_inds]).sum().item()
         s = dists[s_inds].view(1, -1)
         s_repeat = s.repeat(self.tsize, 1)
-        s_repeat_floor = (torch.floor(s_repeat.data / self.step) * self.step).float()
+        s_repeat_floor = (
+            torch.floor(s_repeat.detach() / self.step) * self.step
+        ).float()
 
         histogram_pos = histogram(pos_inds, pos_size)
         assert_almost_equal(

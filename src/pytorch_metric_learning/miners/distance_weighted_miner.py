@@ -34,9 +34,7 @@ class DistanceWeightedMiner(BaseMiner):
         log_weights = log_weights * mask
         weights = torch.exp(log_weights - torch.max(log_weights[~inf_or_nan]))
 
-        weights = (
-            weights * mask * (c_f.to_dtype(mat < self.nonzero_loss_cutoff, dtype=dtype))
-        )
+        weights = weights * mask * ((mat < self.nonzero_loss_cutoff).to(dtype=dtype))
         weights[inf_or_nan] = 0
 
         weights = weights / torch.sum(weights, dim=1, keepdim=True)

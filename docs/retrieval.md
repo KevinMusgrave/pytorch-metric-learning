@@ -89,11 +89,27 @@ passed to a method overrides the constructor value; omitting both raises
 - `is_match(x, y, threshold=None)` compares row `i` of `x` with row `i` of `y`
   and returns a boolean tensor shaped `(len(x),)`.
 
+Both methods honor the configured distance normalization and `power`, including
+cosine similarity and squared Euclidean distance. Row matching computes only
+corresponding pairs, without materializing a full matrix.
+
 ```python
 from pytorch_metric_learning.distances import CosineSimilarity
 
 finder = MatchFinder(CosineSimilarity(), threshold=0.9)
 matches = finder.get_matching_pairs(query + 1e-3, reference)
+```
+
+## Logging
+
+Retrieval and accuracy calculation use ordinary Python module loggers under
+`pytorch_metric_learning`. Applications configure handlers and levels:
+
+```python
+import logging
+
+logging.basicConfig()
+logging.getLogger("pytorch_metric_learning").setLevel(logging.INFO)
 ```
 
 ## FaissKNN

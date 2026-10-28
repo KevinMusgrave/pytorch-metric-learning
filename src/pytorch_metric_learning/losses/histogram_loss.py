@@ -10,7 +10,7 @@ def filter_pairs(*tensors: torch.Tensor):
     t = torch.stack(tensors)
     t, _ = torch.sort(t, dim=0)
     t = torch.unique(t, dim=1)
-    return t.tolist()
+    return t.unbind(0)
 
 
 class HistogramLoss(BaseMetricLossFunction):
@@ -57,15 +57,14 @@ class HistogramLoss(BaseMetricLossFunction):
     def compute_density(self, distances):
         size = distances.size(0)
         r_star = torch.floor((distances.float() + 1) / self.delta)
-        r_star = c_f.to_device(r_star, tensor=distances, dtype=torch.long)
+        r_star = r_star.to(dtype=torch.long)
 
         delta_ijr_a = (distances + 1 - r_star * self.delta) / self.delta
         delta_ijr_b = ((r_star + 1) * self.delta - 1 - distances) / self.delta
-        delta_ijr_a = c_f.to_dtype(delta_ijr_a, tensor=distances)
-        delta_ijr_b = c_f.to_dtype(delta_ijr_b, tensor=distances)
+        delta_ijr_a = delta_ijr_a.to(dtype=distances.dtype)
+        delta_ijr_b = delta_ijr_b.to(dtype=distances.dtype)
 
-        density = torch.zeros(round(1 + 2 / self.delta))
-        density = c_f.to_device(density, tensor=distances, dtype=distances.dtype)
+        density = distances.new_zeros(round(1 + 2 / self.delta))
 
         density.scatter_add_(0, r_star + 1, delta_ijr_a)
         density.scatter_add_(0, r_star, delta_ijr_b)

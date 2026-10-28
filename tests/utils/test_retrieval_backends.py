@@ -160,6 +160,18 @@ class TestRetrievalBackends(unittest.TestCase):
         for row, neighbors in enumerate(indices.tolist()):
             self.assertNotIn(row, neighbors)
 
+    def test_batched_cosine_search_orders_by_similarity(self):
+        query = torch.tensor([[1.0, 0.0], [-1.0, 0.0]], device=TEST_DEVICE)
+        reference = torch.tensor(
+            [[3.0, 0.0], [0.0, 2.0], [-4.0, 0.0]], device=TEST_DEVICE
+        )
+        search = retrieval.CustomKNN(CosineSimilarity(), batch_size=1)
+        distances, indices = search(query, 2, reference)
+        self.assertEqual(indices.tolist(), [[0, 1], [2, 1]])
+        torch.testing.assert_close(
+            distances, query.new_tensor([[1.0, 0.0], [1.0, 0.0]])
+        )
+
     def test_match_finder_returns_tensors_on_input_device(self):
         query = torch.tensor([[1.0, 0.0], [0.0, 1.0]], device=TEST_DEVICE)
         reference = torch.tensor(
@@ -184,6 +196,33 @@ class TestRetrievalBackends(unittest.TestCase):
         )
         with self.assertRaisesRegex(ValueError, "threshold"):
             retrieval.MatchFinder(LpDistance()).get_matching_pairs(query)
+
+    def test_row_matching_honors_distance_normalization_and_power(self):
+        cases = (
+            (CosineSimilarity(), 0.9, [0.1, 0.0], [0.1, 0.0], True),
+            (CosineSimilarity(), 0.9, [10.0, 0.0], [1.0, 10.0], False),
+            (LpDistance(), 0.5, [1.0, 0.0], [10.0, 0.0], True),
+            (
+                LpDistance(normalize_embeddings=False, power=2),
+                3.0,
+                [0.0, 0.0],
+                [2.0, 0.0],
+                False,
+            ),
+        )
+        for dtype in TEST_DTYPES:
+            for distance, threshold, x, y, expected in cases:
+                with self.subTest(dtype=dtype, distance=distance, x=x, y=y):
+                    query = torch.tensor([x], device=TEST_DEVICE, dtype=dtype)
+                    reference = torch.tensor([y], device=TEST_DEVICE, dtype=dtype)
+                    finder = retrieval.MatchFinder(distance, threshold=threshold)
+                    self.assertEqual(
+                        finder.is_match(query, reference).tolist(), [expected]
+                    )
+                    self.assertEqual(
+                        finder.get_matching_pairs(query, reference).tolist(),
+                        [[expected]],
+                    )
 
     def test_missing_optional_backends_are_explicit(self):
         import_module = importlib.import_module

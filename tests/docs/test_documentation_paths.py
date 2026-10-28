@@ -13,7 +13,6 @@ PUBLISHED = [
         for path in (ROOT / "docs").rglob("*.md")
         if path.relative_to(ROOT / "docs").parts[0]
         not in ("plans", "design", "security")
-        and path.name != "development-baseline.md"
     ),
 ]
 LINK = re.compile(r"(?<!!)\[[^\]]*\]\(([^)\s]+)\)|!\[[^\]]*\]\(([^)\s]+)\)")

@@ -12,7 +12,7 @@ from pytorch_metric_learning.regularizers import SparseCentersRegularizer
 from pytorch_metric_learning.utils import common_functions as c_f
 
 from .. import TEST_DEVICE, TEST_DTYPES
-from ..zzz_testing_utils.testing_utils import angle_to_coord
+from ..helpers import angle_to_coord
 
 
 class OriginalImplementationSoftTriple(nn.Module):
@@ -89,7 +89,7 @@ class TestSoftTripleLoss(unittest.TestCase):
                     centers_per_class,
                 ).to(TEST_DEVICE)
 
-                original_loss_func.fc.data = original_loss_func.fc.data.type(dtype)
+                original_loss_func.to(dtype=dtype)
                 loss_func.fc = original_loss_func.fc
 
                 embedding_angles = torch.arange(0, 180)

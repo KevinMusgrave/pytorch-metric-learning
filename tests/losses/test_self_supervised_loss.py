@@ -92,8 +92,8 @@ class TestSelfSupervisedLoss(unittest.TestCase):
             losses.TupletMarginLoss(),
         ]
 
-        loaded_loss_names = [type(loss).__name__ for loss in loss_fns]
-        assert set(loaded_loss_names).intersection(set(supported_losses)) == set(
+        loaded_loss_types = [type(loss) for loss in loss_fns]
+        assert set(loaded_loss_types).intersection(set(supported_losses)) == set(
             supported_losses
         )
 

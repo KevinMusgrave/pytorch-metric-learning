@@ -28,8 +28,9 @@ Version 3.0.0 acceptance includes full CPU and CUDA suites, two-GPU NCCL
 references, and focused regression checks. See
 [current acceptance and remaining checks](docs/plans/modernization.md#progress)
 for the tested revisions and results.
-The [development baseline](docs/development-baseline.md) retains the original
-adoption evidence.
+The [historical development baseline](docs/plans/development-baseline.md)
+retains the original adoption evidence; it is not current setup or acceptance
+guidance.
 
 ## CPU tests
 

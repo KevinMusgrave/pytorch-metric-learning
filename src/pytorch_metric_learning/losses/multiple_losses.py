@@ -1,7 +1,5 @@
 import torch
 
-from ..utils import common_functions as c_f
-
 
 class MultipleLosses(torch.nn.Module):
     def __init__(self, losses, miners=None, weights=None):
@@ -46,5 +44,5 @@ class MultipleLosses(torch.nn.Module):
             else:
                 assert all(k in names for k in values)
         else:
-            assert c_f.is_list_or_tuple(values)
+            assert isinstance(values, (list, tuple))
             assert len(values) == len(names)

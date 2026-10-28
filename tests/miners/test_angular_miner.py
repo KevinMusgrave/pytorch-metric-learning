@@ -5,13 +5,12 @@ import torch
 
 from pytorch_metric_learning.miners import AngularMiner
 
-from .. import TEST_DEVICE, TEST_DTYPES
-from ..zzz_testing_utils import testing_utils
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 
 
 def planar_embeddings(num_points, dtype):
     return torch.tensor(
-        [testing_utils.angle_to_coord(a) for a in torch.arange(0, num_points)],
+        [helpers.angle_to_coord(a) for a in torch.arange(0, num_points)],
         requires_grad=True,
         dtype=dtype,
     ).to(TEST_DEVICE)

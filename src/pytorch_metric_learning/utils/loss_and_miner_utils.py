@@ -145,9 +145,9 @@ def get_random_triplet_indices(
         n_idx.append(n)
 
     if len(a_idx) > 0:
-        a_idx = c_f.to_device(torch.cat(a_idx), device=labels_device, dtype=torch.long)
-        p_idx = c_f.to_device(torch.cat(p_idx), device=labels_device, dtype=torch.long)
-        n_idx = c_f.to_device(torch.cat(n_idx), device=labels_device, dtype=torch.long)
+        a_idx = torch.cat(a_idx).to(device=labels_device, dtype=torch.long)
+        p_idx = torch.cat(p_idx).to(device=labels_device, dtype=torch.long)
+        n_idx = torch.cat(n_idx).to(device=labels_device, dtype=torch.long)
         assert len(a_idx) == len(p_idx) == len(n_idx)
         return a_idx, p_idx, n_idx
     else:
@@ -172,8 +172,7 @@ def convert_to_triplets(indices_tuple, labels, ref_labels=None, t_per_anchor=100
 
 
 def convert_to_weights(indices_tuple, labels, dtype, using_ref=False):
-    weights = torch.zeros(labels.shape[0], device=labels.device)
-    weights = c_f.to_dtype(weights, dtype=dtype)
+    weights = torch.zeros(labels.shape[0], device=labels.device, dtype=dtype)
     if (indices_tuple is None) or (all(len(x) == 0 for x in indices_tuple)):
         return weights + 1
     if using_ref:
@@ -181,7 +180,7 @@ def convert_to_weights(indices_tuple, labels, dtype, using_ref=False):
     else:
         indices = torch.cat(indices_tuple, dim=0)
     indices, counts = torch.unique(indices, return_counts=True)
-    weights[indices] = c_f.to_dtype(counts, dtype=dtype) / torch.max(counts)
+    weights[indices] = counts.to(dtype=dtype) / torch.max(counts)
     return weights
 
 

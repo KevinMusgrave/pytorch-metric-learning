@@ -5,8 +5,7 @@ import torch
 
 from pytorch_metric_learning.losses import TupletMarginLoss
 
-from .. import TEST_DEVICE, TEST_DTYPES
-from ..zzz_testing_utils import testing_utils
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 
 
 class TestTupletMarginLoss(unittest.TestCase):
@@ -17,7 +16,7 @@ class TestTupletMarginLoss(unittest.TestCase):
         for dtype in TEST_DTYPES:
             embedding_angles = [0, 20, 40, 60, 80]
             embeddings = torch.tensor(
-                [testing_utils.angle_to_coord(a) for a in embedding_angles],
+                [helpers.angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
             ).to(TEST_DEVICE)
@@ -71,7 +70,7 @@ class TestTupletMarginLoss(unittest.TestCase):
         for dtype in TEST_DTYPES:
             embedding_angles = [0]
             embeddings = torch.tensor(
-                [testing_utils.angle_to_coord(a) for a in embedding_angles],
+                [helpers.angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
             ).to(TEST_DEVICE)

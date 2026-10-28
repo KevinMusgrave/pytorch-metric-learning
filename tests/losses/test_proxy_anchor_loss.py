@@ -8,7 +8,7 @@ from torch import nn
 from pytorch_metric_learning.losses import ProxyAnchorLoss
 
 from .. import TEST_DEVICE, TEST_DTYPES
-from ..zzz_testing_utils.testing_utils import angle_to_coord
+from ..helpers import angle_to_coord
 
 
 def binarize(T, nb_classes):
@@ -87,9 +87,7 @@ class TestProxyAnchorLoss(unittest.TestCase):
                 ).to(TEST_DEVICE)
 
                 if not use_autocast:
-                    original_loss_func.proxies.data = (
-                        original_loss_func.proxies.data.type(dtype)
-                    )
+                    original_loss_func.to(dtype=dtype)
                 loss_func.proxies = original_loss_func.proxies
 
                 embedding_angles = list(range(180))

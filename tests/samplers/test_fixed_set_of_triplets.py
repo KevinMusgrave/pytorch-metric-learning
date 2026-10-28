@@ -2,7 +2,6 @@ import unittest
 
 import torch
 
-from pytorch_metric_learning.miners import EmbeddingsAlreadyPackagedAsTriplets
 from pytorch_metric_learning.samplers import FixedSetOfTriplets
 
 
@@ -16,9 +15,8 @@ def next_or_restart(iterator, iterable):
 
 class TestFixedSetOfTriplet(unittest.TestCase):
     def test_fixed_set_of_triplets_with_batch_size(self):
-        miner = EmbeddingsAlreadyPackagedAsTriplets()
         for batch_size in [3, 33, 99]:
-            batch_of_fake_embeddings = torch.randn(batch_size, 2)
+            a, p, n = torch.arange(batch_size).reshape(-1, 3).unbind(1)
             for num_labels in [2, 10, 55]:
                 for num_triplets in [100, 999, 10000]:
                     fake_embeddings = torch.randn(10000, 2)
@@ -32,7 +30,6 @@ class TestFixedSetOfTriplet(unittest.TestCase):
                             iterator, curr_batch = next_or_restart(iterator, sampler)
                             x.append(curr_batch)
                         curr_labels = labels[x]
-                        a, p, n = miner(batch_of_fake_embeddings, curr_labels)
                         self.assertTrue(len(a) == batch_size // 3)
                         self.assertTrue(torch.all(curr_labels[a] == curr_labels[p]))
                         self.assertTrue(torch.all(curr_labels[a] != curr_labels[n]))
@@ -42,7 +39,6 @@ class TestFixedSetOfTriplet(unittest.TestCase):
                     )
                     for _ in range(2):
                         for _, curr_labels in dataloader:
-                            a, p, n = miner(batch_of_fake_embeddings, curr_labels)
                             self.assertTrue(len(a) == batch_size // 3)
                             self.assertTrue(torch.all(curr_labels[a] == curr_labels[p]))
                             self.assertTrue(torch.all(curr_labels[a] != curr_labels[n]))

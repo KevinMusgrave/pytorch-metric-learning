@@ -7,7 +7,7 @@ from pytorch_metric_learning.miners import MultiSimilarityMiner
 from pytorch_metric_learning.utils import common_functions as c_f
 
 from .. import TEST_DEVICE, TEST_DTYPES
-from ..zzz_testing_utils.testing_utils import angle_to_coord
+from ..helpers import angle_to_coord
 
 
 def planar_embeddings(num_points, dtype):

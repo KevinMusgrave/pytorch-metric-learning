@@ -1,7 +1,7 @@
 import torch
 
 from ..utils import common_functions as c_f
-from ..utils.module_with_reducer import ModuleWithDistance
+from ..utils.module_with_distance_and_reducer import ModuleWithDistance
 
 
 class BaseMiner(ModuleWithDistance):
@@ -19,7 +19,7 @@ class BaseMiner(ModuleWithDistance):
 
     def prepare_inputs(self, embeddings, labels, ref_emb, ref_labels):
         c_f.check_shapes(embeddings, labels)
-        labels = c_f.to_device(labels, embeddings)
+        labels = labels.to(device=embeddings.device)
         ref_emb, ref_labels = c_f.set_ref_emb(embeddings, labels, ref_emb, ref_labels)
         return labels, ref_emb, ref_labels
 

@@ -22,7 +22,7 @@
         "src/pytorch_metric_learning/utils/common_functions.py",
         "src/pytorch_metric_learning/utils/loss_and_miner_utils.py",
         "src/pytorch_metric_learning/utils/__init__.py",
-        "src/pytorch_metric_learning/utils/module_with_reducer.py"
+        "src/pytorch_metric_learning/utils/module_with_distance_and_reducer.py"
       ]
     },
     {
@@ -291,8 +291,7 @@
           "tests/utils/__init__.py",
           "tests/utils/test_common_functions.py",
           "tests/utils/test_loss_and_miner_utils.py",
-          "tests/zzz_testing_utils/__init__.py",
-          "tests/zzz_testing_utils/testing_utils.py"
+          "tests/helpers.py"
         ],
         "module": "numerics",
         "focusedSuite": "numerics-focused",
@@ -376,7 +375,7 @@
           "tests/losses/test_contrastive_loss.py",
           "tests/regularizers/test_center_invariant_regularizer.py",
           "tests/__init__.py",
-          "tests/zzz_testing_utils/**",
+          "tests/helpers.py",
           "tests/losses/utils.py",
           "tests/losses/test_cross_batch_memory_state.py",
           "tests/losses/test_dynamic_soft_margin_loss.py",
@@ -417,7 +416,7 @@
         "paths": [
           "tests/utils/test_retrieval_backends.py",
           "tests/__init__.py",
-          "tests/zzz_testing_utils/**",
+          "tests/helpers.py",
           "tests/losses/utils.py"
         ],
         "argv": [
@@ -444,7 +443,7 @@
         "paths": [
           "tests/samplers/test_m_per_class_sampler.py",
           "tests/__init__.py",
-          "tests/zzz_testing_utils/**",
+          "tests/helpers.py",
           "tests/losses/utils.py",
           "tests/samplers/test_sampler_contracts.py"
         ],
@@ -474,7 +473,7 @@
           "tests/utils/test_distributed_fallback.py",
           "tests/utils/test_distributed.py",
           "tests/__init__.py",
-          "tests/zzz_testing_utils/**",
+          "tests/helpers.py",
           "tests/losses/utils.py"
         ],
         "argv": [

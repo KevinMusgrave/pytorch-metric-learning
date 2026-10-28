@@ -424,6 +424,11 @@ reports as a missing key.
 
 **Supported Loss Functions**
 
+The listed types and subclasses that preserve their contracts are supported.
+`supported_losses()` returns a tuple of types. ProxyNCA and its subclasses
+are excluded because their learned proxies do not accept separate reference
+embeddings. Other unsupported losses raise `TypeError` at construction.
+
 - [AngularLoss](losses.md#angularloss)
 - [CircleLoss](losses.md#circleloss)
 - [ContrastiveLoss](losses.md#contrastiveloss)
@@ -1301,6 +1306,11 @@ loss = loss_fn(embeddings, ref_emb)
 ```
 
 **Supported Loss Functions**
+
+The listed types and subclasses that preserve their contracts are supported.
+`supported_losses()` returns a tuple of types. ProxyNCA and its subclasses
+are excluded because their learned proxies do not accept separate reference
+embeddings. Other unsupported losses raise `TypeError` at construction.
 
 - [AngularLoss](losses.md#angularloss)
 - [CircleLoss](losses.md#circleloss)

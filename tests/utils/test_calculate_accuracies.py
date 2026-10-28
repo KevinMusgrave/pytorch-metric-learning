@@ -7,7 +7,6 @@ import torch
 
 from pytorch_metric_learning.distances import LpDistance
 from pytorch_metric_learning.utils import accuracy_calculator
-from pytorch_metric_learning.utils.common_functions import LOGGER
 from pytorch_metric_learning.utils.retrieval import CustomKNN, FaissKMeans, FaissKNN
 
 from .. import TEST_DEVICE
@@ -800,7 +799,9 @@ class TestCalculateAccuraciesFaissKNN(unittest.TestCase):
 
 class TestCalculateAccuraciesCustomKNN(unittest.TestCase):
     def test_custom_knn(self):
-        LOGGER.setLevel(logging.CRITICAL)
+        logger = logging.getLogger("pytorch_metric_learning")
+        self.addCleanup(logger.setLevel, logger.level)
+        logger.setLevel(logging.CRITICAL)
         torch.manual_seed(6920)
         for dataset_size in [200, 1000]:
             for batch_size in [None, 32, 33, 2000]:
@@ -835,7 +836,6 @@ class TestCalculateAccuraciesCustomKNN(unittest.TestCase):
 
                         for acc_name, v in acc1.items():
                             self.assertTrue(np.isclose(v, acc2[acc_name], rtol=1e-3))
-        LOGGER.setLevel(logging.INFO)
 
 
 class TestWithinAutocast(unittest.TestCase):

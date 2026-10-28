@@ -18,10 +18,7 @@ class InstanceLoss(BaseMetricLossFunction):
         c_f.indices_tuple_not_supported(indices_tuple)
         c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
         sim1 = self.distance(embeddings) * self.gamma
-        if labels is None:
-            sim_label = c_f.torch_arange_from_size(embeddings)
-        else:
-            _, sim_label = torch.unique(labels, return_inverse=True)
+        _, sim_label = torch.unique(labels, return_inverse=True)
         loss = F.cross_entropy(sim1, sim_label, reduction="none")
         return {
             "loss": {

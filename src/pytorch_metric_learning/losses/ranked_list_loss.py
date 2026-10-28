@@ -36,7 +36,7 @@ class RankedListLoss(BaseMetricLossFunction):
 
         mat = self.distance(embeddings, embeddings)
         mat = mat - mat * torch.eye(len(mat), device=embeddings.device)
-        mat = c_f.to_device(mat, device=embeddings.device, dtype=embeddings.dtype)
+        mat = mat.to(device=embeddings.device, dtype=embeddings.dtype)
         y = labels.unsqueeze(1) == labels.unsqueeze(0)
 
         P_star = torch.zeros_like(mat)

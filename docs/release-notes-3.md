@@ -1,8 +1,9 @@
 # Version 3.0.0
 
 This document describes changes implemented on the modernization branch. The
-full CPU and two-GPU CUDA/NCCL suites pass. Publication still requires the
-CI-owned final gate and remaining checks in
+full CPU suite passes. Two-GPU CUDA/NCCL acceptance passed before the final
+utility cleanup and needs to be repeated for that candidate. Publication also
+requires the CI-owned final gate and remaining checks in
 [the modernization plan](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/docs/plans/modernization.md#remaining-merge-and-release-checks).
 
 ## Removed training orchestration
@@ -127,10 +128,42 @@ one `_compute_loss` whose signature depended on the flag. Regularizer
 `compute_loss` takes one argument, `x`, which is embeddings or weights.
 `HDCMiner.set_idx_externally` and `reset_idx` are replaced by a `candidates`
 argument: `miner(embeddings, labels, candidates=pairs)`. The miner keeps no
-candidate state between calls. `PNPLoss` and `SelfSupervisedLoss`
-raise `ValueError` for unsupported variants and losses.
+candidate state between calls. `PNPLoss` raises `ValueError` for unsupported
+variants; `SelfSupervisedLoss` and `CrossBatchMemory` raise `TypeError` for
+unsupported loss types.
 
 ## Smaller utility surface
+
+`BaseLossWrapper` is removed. `CrossBatchMemory` and `SelfSupervisedLoss`
+inherit `torch.nn.Module` directly and accept subclasses of their supported
+loss types. Their `supported_losses()` methods return tuples of types instead
+of class-name strings. ProxyNCA and its subclasses remain unsupported because
+their learned proxies cannot serve the wrappers' separate-reference contract.
+
+`EmbeddingsAlreadyPackagedAsTriplets` is removed. For consecutively packed
+triplets, create `torch.arange(len(embeddings), device=embeddings.device)` and
+use `.reshape(-1, 3).unbind(1)` as the loss's `indices_tuple`; see
+[fixed triplet sampling](samplers.md#fixedsetoftriplets).
+
+`common_functions.LOGGER`, `LOGGER_NAME`, and `set_logger_name` are removed.
+Configure ordinary Python logging through
+`logging.getLogger("pytorch_metric_learning")`; individual modules use
+`logging.getLogger(__name__)`. The [retrieval logging example](retrieval.md#logging)
+shows application-owned setup.
+
+The redundant `common_functions.to_device`, `to_dtype`, `numpy_to_torch`,
+`to_numpy`, and `is_list_or_tuple` helpers are removed. Use `Tensor.to`,
+`torch.as_tensor`, `Tensor.cpu().numpy()`, and `isinstance(x, (list, tuple))`
+directly. Explicit dtype conversions are honored during autocast as well.
+
+`BatchedDistance(distance, batch_size=32)` receives its required callback when
+called: `distance(query, reference, iter_fn=callback)`. It stores no callback
+between calls. Wrapped distance options are available through `.distance`;
+the wrapper directly exposes only `is_inverted` for search ordering.
+
+The module containing `ProxyNCALoss` is now `losses.proxy_nca_loss`; the usual
+`losses.ProxyNCALoss` import is unchanged. Distance/reducer composition bases
+live in `utils.module_with_distance_and_reducer`.
 
 `BaseDistance.largest_dist` is removed; use `smallest_dist` with the opposite
 reduction or check `is_inverted`. `CrossBatchMemory` checkpoints store the queue
@@ -157,6 +190,14 @@ training.
 
 `ManifoldLoss(l, K, lambdaC)` is now `ManifoldLoss(embedding_size, num_proxies,
 lambda_c)`, matching the other losses' parameter names.
+
+P2SGrad normalizes its weights under `torch.no_grad()` and uses a differentiable
+snapshot for each computation. Parameter identity and storage remain stable,
+and multiple forwards can precede one backward without changing saved weights.
+
+`MatchFinder.is_match()` now applies the configured normalization and distance
+power, matching the semantics of `get_matching_pairs()` for cosine similarity,
+normalized distances, and squared distances.
 
 `common_functions.TorchInitWrapper` is removed; pass any in-place initializer,
 for example `functools.partial(torch.nn.init.kaiming_uniform_, a=1)`, as

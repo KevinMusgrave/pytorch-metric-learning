@@ -494,6 +494,15 @@ for those design documents or evidence that the listed work is complete.
   focused checkpoint suites and the strict documentation build pass. The full
   suites were not repeated for these bounded fixes; the CI-owned merge gate
   remains outstanding.
+- Merge review, 2026-10-28 UTC: revision
+  `b32145b4bc345025ac566eaff58ea135b312e246` has no blocking findings against
+  `master` (`c8350998ebc8aacf2c45de50e2556bc854cc0361`). All 230 CPU tests pass
+  in 175.725 seconds and all 230 CUDA/NCCL tests pass in 277.750 seconds, with
+  no failures, errors, or skips. CUDA uses two A40s and `NCCL_P2P_DISABLE=1`.
+  Another 56 mixed-precision cases pass: 14 parameter- or buffer-bearing losses
+  under float16/bfloat16 autocast on both CPU and CUDA, including gradients
+  through two Adam steps. The author-metadata correction produces revision
+  `66358d54017aab9bada9595b08109761a9017cff` with the same source tree.
 
 ## Remaining merge and release checks
 

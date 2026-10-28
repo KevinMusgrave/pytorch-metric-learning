@@ -72,6 +72,13 @@
         "numerics",
         "evaluation"
       ]
+    },
+    {
+      "name": "release",
+      "paths": [
+        ".github/workflows/**",
+        "scripts/**"
+      ]
     }
   ],
   "checks": [
@@ -86,7 +93,8 @@
         "sampling",
         "distributed",
         "benchmarks",
-        "recipes"
+        "recipes",
+        "release"
       ],
       "argv": [
         ".venv/bin/uv",
@@ -167,6 +175,30 @@
         "compileall",
         "-q",
         "docs/recipes"
+      ],
+      "runOn": [
+        "build"
+      ],
+      "timeoutSeconds": 60
+    },
+    {
+      "name": "release-bytecode",
+      "provides": [
+        "build"
+      ],
+      "modules": [
+        "release"
+      ],
+      "argv": [
+        ".venv/bin/uv",
+        "run",
+        "--frozen",
+        "--no-sync",
+        "python",
+        "-m",
+        "compileall",
+        "-q",
+        "scripts"
       ],
       "runOn": [
         "build"
@@ -321,6 +353,13 @@
         ],
         "module": "recipes",
         "focusedSuite": "recipes-focused"
+      },
+      {
+        "paths": [
+          "tests/release/**"
+        ],
+        "module": "release",
+        "focusedSuite": "release-focused"
       }
     ],
     "suites": [
@@ -535,6 +574,31 @@
           "tests.recipes.test_evaluation"
         ],
         "timeoutSeconds": 120
+      },
+      {
+        "name": "release-focused",
+        "kind": "unit",
+        "scope": "module",
+        "modules": [
+          "release"
+        ],
+        "paths": [
+          "tests/release/**",
+          "tests/__init__.py"
+        ],
+        "argv": [
+          ".venv/bin/uv",
+          "run",
+          "--frozen",
+          "--no-sync",
+          "--env-file",
+          "tests/cpu.env",
+          "python",
+          "-m",
+          "unittest",
+          "tests.release.test_release"
+        ],
+        "timeoutSeconds": 120
       }
     ]
   },
@@ -672,6 +736,10 @@
       {
         "path": "docs/design/recipes.md",
         "module": "recipes"
+      },
+      {
+        "path": "docs/design/releases.md",
+        "module": "release"
       }
     ]
   }

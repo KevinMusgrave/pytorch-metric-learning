@@ -147,3 +147,51 @@ Build both distributions with the locked backend:
 ```
 
 Do not publish a new release until the required policy and platform checks pass.
+
+## Publishing to PyPI
+
+[The release workflow](.github/workflows/release.yml) publishes a wheel and a
+source distribution when an annotated version tag such as `v3.0.0` is pushed.
+The tag must match `pyproject.toml`, point at a commit in `master` history, and
+have a successful `master` push run of the CI workflow for that exact commit.
+The release workflow checks that result and refreshes dependency policy; it
+does not repeat the ordinary merge gate.
+
+Configure trusted publishing once:
+
+1. Create a GitHub environment named `pypi` in
+   [repository settings](https://github.com/KevinMusgrave/pytorch-metric-learning/settings/environments).
+   Allow release tags matching `v*.*.*`. Leave required reviewers unset for
+   automatic publication after the workflow checks pass.
+2. Add a GitHub trusted publisher in the project's
+   [PyPI publishing settings](https://pypi.org/manage/project/pytorch-metric-learning/settings/publishing/):
+
+   | Field             | Value                     |
+   | ----------------- | ------------------------- |
+   | Owner             | `KevinMusgrave`           |
+   | Repository        | `pytorch-metric-learning` |
+   | Workflow filename | `release.yml`             |
+   | Environment       | `pypi`                    |
+
+No PyPI API token or repository secret is required. The publisher uses a
+short-lived OIDC identity, following the
+[PyPI trusted-publisher setup](https://docs.pypi.org/trusted-publishers/adding-a-publisher/)
+and [uv publishing workflow](https://docs.astral.sh/uv/guides/integration/github/#publishing-to-pypi).
+
+For each release, update the version in `pyproject.toml` and
+`src/pytorch_metric_learning/__init__.py`, regenerate `uv.lock` with the pinned
+`uv lock`, and complete the release notes and platform checks. Merge the
+candidate into `master` and wait for its CI run to succeed. Create an annotated
+`v<VERSION>` tag on that exact commit and push only that tag. Python prerelease
+versions use PEP 440 spelling, for example `v3.1.0rc1`.
+
+The build job installs frozen dependencies, builds with the locked backend,
+installs the wheel, and checks its version and a loss backward pass in isolated
+Python. The publish job downloads those verified distributions and runs
+`uv publish --trusted-publishing always` in the `pypi` environment.
+
+If an upload is interrupted, rerun the failed publish job within the artifact's
+30-day retention period. It reuses the same files; uv skips identical files
+already on PyPI and rejects conflicting contents. Keep dependency assessments
+current at release time. Source changes require a new version and tag rather
+than moving an existing release tag.

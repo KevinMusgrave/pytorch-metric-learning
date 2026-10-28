@@ -58,8 +58,10 @@ coexist only with that setting and single-threaded OpenMP. See
 ## CUDA and distributed verification
 
 The CPU suite cannot establish CUDA correctness. For GPU acceptance, use a
-Linux machine with two visible NVIDIA GPUs and a driver compatible with the
-locked PyTorch CUDA build. Verify the actual runtime first:
+Linux x86_64 machine with two visible NVIDIA GPUs. The lock resolves PyTorch's
+CUDA 13 wheels, which need an NVIDIA driver from the 580 series or newer:
+`nvidia-smi` must report `CUDA Version: 13.0` or higher. The image's own CUDA
+toolkit and Python are not used. Verify the actual runtime first:
 
 ```sh
 .venv/bin/uv run --frozen --no-sync python -c 'import torch; print(torch.__version__, torch.version.cuda, torch.cuda.device_count()); assert torch.cuda.device_count() >= 2'
@@ -73,11 +75,40 @@ fewer than two GPUs are available. Record the device/driver versions, test
 counts, failures, and skips. GPU provisioning and Linux/CUDA acceptance remain
 separate from local Mac verification.
 
-For occasional remote development, retain the checkout and caches on persistent
-storage, rebuild `.venv` from the lock on that host, and retain the agent's state
-in its configured persistent home. A Mac virtual environment is not portable
-to Linux. The Runpod/cloud-devbox lifecycle must verify restart, recreation,
-and laptop-disconnected operation before it is relied on for unattended work.
+### Rented GPU hosts
+
+For occasional remote development, keep everything that should persist on
+storage that outlives the machine, and rebuild `.venv` from the lock on that
+host; a Mac virtual environment is not portable to Linux. On RunPod, create a
+network volume once, then create a Pod with two GPUs, that volume, and exposed
+TCP port 22 for each session, and terminate the Pod afterwards. The volume mounts
+at `/workspace` and survives termination; the rest of the container, including
+`/root`, does not. A network volume is tied to its datacenter, and it bills until
+deleted. Connect with the Pod's direct TCP address and port.
+
+Create a persistent home on the volume. Tools installed under it, uv's Python
+builds and caches, Git configuration, and agent logins then survive Pod
+replacement:
+
+```sh
+mkdir -p /workspace/home
+cat > /workspace/env.sh <<'EOF'
+export HOME=/workspace/home
+export PATH="$HOME/.local/bin:$PATH"
+cd "$HOME/pytorch-metric-learning" 2>/dev/null || cd "$HOME"
+EOF
+. /workspace/env.sh
+curl -LsSf https://astral.sh/uv/0.13.4/install.sh | env UV_NO_MODIFY_PATH=1 sh
+git clone https://github.com/KevinMusgrave/pytorch-metric-learning
+cd pytorch-metric-learning
+git switch BRANCH_UNDER_TEST
+```
+
+Then follow [Set up a checkout](#set-up-a-checkout) and the CUDA commands above.
+Each later session needs only `. /workspace/env.sh` after connecting. Run
+`uv sync --frozen --all-extras --no-build --no-install-project` again only when
+`uv.lock` changes. Logins saved under the persistent home are stored on the
+provider's disk.
 
 ## Policy and packaging
 

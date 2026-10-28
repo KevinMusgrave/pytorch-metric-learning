@@ -1,6 +1,7 @@
 import gc
 import importlib
 import importlib.util
+import math
 import tempfile
 import unittest
 import weakref
@@ -18,6 +19,64 @@ HAS_FAISS = importlib.util.find_spec("faiss") is not None
 
 
 class TestRetrievalBackends(unittest.TestCase):
+    def test_fixed_k_adapts_to_each_gallery_and_self_exclusion(self):
+        embeddings = torch.tensor([[0.0], [2.0], [3.0], [7.0]], device=TEST_DEVICE)
+        labels = torch.tensor([0, 0, 1, 1], device=TEST_DEVICE)
+        query = embeddings[:1]
+        query_labels = labels[2:3]
+        reference = torch.tensor([[0.1], [1.0], [3.0]], device=TEST_DEVICE)
+        reference_labels = labels[:3]
+        for k in (1, 2, 3, 4, 1000):
+            calculator = accuracy_calculator.AccuracyCalculator(k=k)
+            cases = (
+                (
+                    "one reference",
+                    (query, query_labels, reference[-1:], reference_labels[-1:]),
+                    1.0,
+                    1.0,
+                ),
+                (
+                    "three references",
+                    (query, query_labels, reference, reference_labels),
+                    0.0,
+                    1 / 3 if k >= 3 else 0.0,
+                ),
+                (
+                    "self search",
+                    (embeddings, labels),
+                    0.5,
+                    {1: 0.5, 2: 0.625}.get(k, 17 / 24),
+                ),
+                (
+                    "query prefix",
+                    (embeddings[:2], labels[:2], embeddings, labels, True),
+                    0.5,
+                    0.75 if k >= 2 else 0.5,
+                ),
+            )
+            for name, args, precision, rank_score in cases:
+                with self.subTest(k=k, gallery=name):
+                    result = calculator.get_accuracy(*args)
+                    for metric in (
+                        "precision_at_1",
+                        "r_precision",
+                        "mean_average_precision_at_r",
+                    ):
+                        self.assertAlmostEqual(result[metric], precision)
+                    for metric in ("mean_average_precision", "mean_reciprocal_rank"):
+                        self.assertAlmostEqual(result[metric], rank_score)
+
+    def test_fixed_k_singleton_self_search_has_no_valid_neighbors(self):
+        embeddings = torch.tensor([[0.0]], device=TEST_DEVICE)
+        labels = torch.tensor([0], device=TEST_DEVICE)
+        for k in (None, 1, 4):
+            with self.subTest(k=k):
+                result = accuracy_calculator.AccuracyCalculator(k=k).get_accuracy(
+                    embeddings, labels
+                )
+                self.assertEqual(len(result), 5)
+                self.assertTrue(all(math.isnan(value) for value in result.values()))
+
     def test_calculator_releases_knn_outputs_after_each_call(self):
         query = torch.arange(257, device=TEST_DEVICE, dtype=torch.float32)[:, None]
         labels = torch.arange(len(query), device=TEST_DEVICE) // 2

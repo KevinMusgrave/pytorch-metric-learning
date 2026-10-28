@@ -24,6 +24,13 @@ in blocks of 256 so temporary memory is one `(256, references)` block plus the
 contract. The calculator moves inputs only to a device the caller names; it
 never chooses a GPU itself.
 
+A positive integer `k` is an upper bound on the available neighbors for each
+evaluation call. The calculator caps it at the reference count minus one when
+self-matches are excluded, before the backend adds its self-search candidate.
+The configured `k` remains unchanged so one calculator can evaluate galleries
+and parent-conditioned subsets of different sizes. This bound applies to every
+backend and prevents requesting nonexistent neighbors or padding metric inputs.
+
 Search results belong to the caller, not to the backend. Batched search scopes
 its output-collecting callback to one call and restores the previous callback
 even when a distance raises. This releases result matrices and their autograd

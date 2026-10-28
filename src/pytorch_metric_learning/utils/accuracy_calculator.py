@@ -570,4 +570,4 @@ class AccuracyCalculator:
                     max_bin_count,
                     self.k,
                 )
-        return self.k
+        return min(self.k, num_reference_embeddings - self_count)

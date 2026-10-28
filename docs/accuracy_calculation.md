@@ -22,8 +22,8 @@ AccuracyCalculator(include=(),
 - **avg_of_avgs**: If True, the average accuracy per class is computed, and then the average of those averages is returned. This can be useful if your dataset has unbalanced classes. If False, the global average will be returned.
 - **return_per_class**: If True, the average accuracy per class is computed and returned.
 - **k**: The number of nearest neighbors that will be retrieved for metrics that require k-nearest neighbors. The allowed values are:
-  - `None`. This means k will be set to the total number of reference embeddings.
-  - An integer greater than 0. This means k will be set to the input integer.
+  - `None`. Retrieve all available reference embeddings, excluding the query's own row when `ref_includes_query=True`.
+  - An integer greater than 0. Retrieve at most this many neighbors, capped at `len(reference) - int(ref_includes_query)` for each call. The configured value is preserved when evaluating smaller galleries or subsets.
   - `"max_bin_count"`. This means k will be set to `max(bincount(reference_labels)) - self_count` where `self_count == 1` if the query and reference embeddings come from the same source.
 - **label_comparison_fn**: A function that compares two torch arrays of labels and returns a boolean array. The default is `torch.eq`. If a custom function is used, then you must exclude clustering based metrics ("NMI" and "AMI"). The example below shows a custom function for two-dimensional labels. It returns `True` if the 0th column matches, and the 1st column does **not** match.
 - **device**: A `torch.device` or device string such as `"cpu"` or `"cuda:0"`. Inputs are moved there before metrics are computed. If `None`, the query's device is used, and NumPy inputs use the CPU. The calculator never selects a GPU on its own.
@@ -89,8 +89,8 @@ For example, if the input `query_labels` is `[0,0,1,1]` and `reference_labels` i
 
 The default backend runs on the input device and processes 256 queries at a
 time, so its temporary distance block is `(256, len(reference))`. Its outputs
-are `(len(query), k)`. When `k=None`, `k` equals the number of references, which
-makes the outputs as large as the full distance matrix. For large evaluations,
+are `(len(query), effective_k)`. When `k=None`, all references except excluded
+self-matches are retrieved, so output storage is quadratic for self-search. For large evaluations,
 set `k` to a number, like `k = 1000`, or try `k = "max_bin_count"`.
 
 With [`FaissKNN`](retrieval.md#faissknn), searches run on a CPU copy unless a

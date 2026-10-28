@@ -49,6 +49,9 @@ The retrieval backends moved from `utils.inference` to `utils.retrieval`.
 - `device=None` uses the query's device instead of selecting CUDA when
   available. Device strings are accepted.
 - Non-finite embeddings raise a clear `ValueError`.
+- Fixed `k` is capped at each gallery's available neighbor count, excluding
+  self-matches when requested. Small galleries and parent-conditioned subsets
+  can reuse the same calculator without changing its configured `k`.
 
 `MatchFinder` returns boolean tensors on the input device instead of NumPy
 arrays or Python booleans. With `return_tuples=True`, it returns an

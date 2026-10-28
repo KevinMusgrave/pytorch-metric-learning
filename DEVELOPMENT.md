@@ -24,9 +24,11 @@ install this checkout using its reviewed, already-installed build backend:
 .venv/bin/uv pip install --no-deps --no-build-isolation --editable .
 ```
 
-`./code-polishyw check --all` reports no findings on this branch. CUDA and
-two-GPU acceptance remain outstanding; see [the baseline status](docs/development-baseline.md)
-for the original adoption evidence.
+`./code-polishyw check --all` reports no findings on this branch. Version 3.0.0
+passes 222 CPU tests and 222 CUDA tests, including two-GPU NCCL references;
+see [current acceptance and remaining checks](docs/plans/modernization.md#progress).
+The [development baseline](docs/development-baseline.md) retains the original
+adoption evidence.
 
 ## CPU tests
 

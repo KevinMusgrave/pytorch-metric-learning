@@ -1,8 +1,9 @@
-# Next major release
+# Version 3.0.0
 
 This document describes changes implemented on the modernization branch. The
-release is not yet accepted for publication; CUDA/NCCL and policy acceptance
-remain outstanding in [the modernization plan](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/docs/plans/modernization.md).
+full CPU and two-GPU CUDA/NCCL suites pass. Publication still requires the
+CI-owned final gate and remaining checks in
+[the modernization plan](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/docs/plans/modernization.md#remaining-merge-and-release-checks).
 
 ## Removed training orchestration
 
@@ -131,6 +132,12 @@ cursor and filled flag under a `queue_state` key instead of `_extra_state`.
 it with `.to(device, dtype)`. The label queue dtype is the new keyword-only
 `label_dtype`, `torch.long` by default.
 `DynamicSoftMarginLoss` likewise checks rather than moves its histogram buffer.
+
+`MarginLoss` registers a fixed `beta` as a checkpointed buffer; both fixed and
+learnable beta follow `.to(device, dtype)`. `CrossBatchMemory.reset_queue()`
+clears its buffers in place, preserving device, dtype, and storage.
+`SparseCentersRegularizer` registers its same-class mask as a non-persistent
+buffer so module placement moves it once instead of copying it on every call.
 
 `ManifoldLoss(l, K, lambdaC)` is now `ManifoldLoss(embedding_size, num_proxies,
 lambda_c)`, matching the other losses' parameter names.

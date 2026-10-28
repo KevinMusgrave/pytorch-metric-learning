@@ -111,7 +111,7 @@ succeeded at batch 128: 0.127 ms forward and 0.130 ms backward, versus 0.092 ms
 and 0.134 ms eager. Its first forward/backward took 9.467 seconds; compiler
 registration and import costs are additional and were not timed. Compiler-cache
 state was not isolated. This workload does not justify enabling compilation by
-default. CUDA performance and peak tensor memory remain unmeasured.
+default. CUDA timing and peak tensor memory measurements appear below.
 
 ## Valid-triplet expansion
 
@@ -152,3 +152,56 @@ median milliseconds.
 The differences are within run-to-run variation on this laptop; the change
 neither adds nor removes measurable cost on these workloads. Raw results are
 `docs/benchmarks/composition-{before,after}-{contrastive,proxy}-b{128,512}.json`.
+
+## CUDA and NCCL reference
+
+Measured on 2026-10-28 UTC at clean revision
+`0616ea964cc6b87dc8a8c0abcb562204b16bf1a3`: Linux x86_64, Intel Xeon Gold 6342,
+two NVIDIA A40 GPUs (46,068 MiB each), NVIDIA driver 595.91.07, Python 3.12.13,
+PyTorch 2.14.0+cu130, CUDA 13.0, and NCCL 2.30.7. Each workload uses float32,
+128 dimensions, four examples per class, seed 17, one CPU thread per rank,
+ten warmup steps after the first call, and fifty measured steps. Timings are
+median milliseconds; memory is peak additional allocated tensor memory in MiB.
+
+This host requires `NCCL_P2P_DISABLE=1`: direct GPU-to-GPU transfers hang even
+in a bare PyTorch/NCCL probe. Distributed results therefore include NCCL's
+alternative transport and cannot establish direct peer-to-peer performance.
+See the [host workaround](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/DEVELOPMENT.md#cuda-and-distributed-verification).
+These measurements are specific to this shared rented host; retain the raw
+sample spread when comparing later runs.
+
+| Case                     | Batch | Forward | Backward | Peak MiB |
+| ------------------------ | ----: | ------: | -------: | -------: |
+| Contrastive              |   128 |   2.787 |    3.890 |    1.299 |
+| Contrastive              |   512 |   3.339 |    5.119 |   19.478 |
+| All-triplet margin       |   128 |   3.138 |    3.218 |    4.045 |
+| All-triplet margin       |   512 |   3.686 |    4.347 |   65.729 |
+| Pair-margin miner        |   128 |   0.763 |        — |    0.546 |
+| Pair-margin miner        |   512 |   0.919 |        — |    8.712 |
+| Normalized-softmax proxy |   128 |   1.228 |    2.322 |    0.331 |
+| Normalized-softmax proxy |   512 |   1.582 |    3.205 |    1.318 |
+
+Raw results: [batch 128](benchmarks/cuda-a40-b128.json) and
+[batch 512](benchmarks/cuda-a40-b512.json).
+
+The distributed workload includes the encoder and full-batch contrastive loss.
+Each timing below is the slower per-rank median for that interval; memory is
+the maximum across ranks.
+
+| Rows per rank | Global batch | Forward | Backward | Peak MiB per rank |
+| ------------: | -----------: | ------: | -------: | ----------------: |
+|            64 |          128 |   7.184 |    6.626 |             1.361 |
+|           256 |          512 |   7.086 |    6.306 |            19.728 |
+
+Raw results: [64 rows per rank](benchmarks/nccl-a40-b64.json) and
+[256 rows per rank](benchmarks/nccl-a40-b256.json). Reproduce the eager runs
+with the commands above, adding `--warmup 10 --repeats 50`, and set
+`NCCL_P2P_DISABLE=1` on this host before running `torchrun`.
+
+The [full-graph compiled proxy](benchmarks/compiled-proxy-a40-b128.json) at
+batch 128 takes 0.475 ms forward and 1.118 ms backward, versus 1.228 ms and
+2.322 ms eager. Peak additional memory is 0.174 MiB versus 0.331 MiB. Its first
+forward/backward takes 27.607 seconds using fresh `TORCHINDUCTOR_CACHE_DIR` and
+`TRITON_CACHE_DIR` directories. Compiler registration and import precede that
+measurement. Compilation helps steady-state execution for this workload; its
+startup cost and workload dependence still require measurement before adoption.

@@ -1,8 +1,8 @@
 # PyTorch Metric Learning modernization plan
 
-Status: in progress. Phases 1 and 3 are complete; phases 2, 4, and 5 are
-implemented and verified on CPU. CUDA and two-GPU NCCL acceptance remain
-outstanding, as does verification of GitHub-native math rendering.
+Status: all five phases are implemented. CPU and two-GPU CUDA/NCCL correctness
+acceptance pass for version 3.0.0. The CI-owned final merge gate and visual
+verification of GitHub-native math rendering remain outstanding.
 
 ## Purpose
 
@@ -400,3 +400,49 @@ for those design documents or evidence that the listed work is complete.
   in the README and published docs resolve, 180 of them with anchors.
   `code-polishy check --all` reports zero findings, down from about 840. The
   full CPU suite passes with 220 tests. CUDA and NCCL evidence needs a GPU host.
+- Version 3 acceptance, 2026-10-28 UTC: revision
+  `0616ea964cc6b87dc8a8c0abcb562204b16bf1a3` passes all 222 CPU tests in
+  180.204 seconds and all 222 CUDA tests in 275.563 seconds, with no failures,
+  errors, or skips. The CPU profile covers float32/float64 on the M1 Pro;
+  Linux x86_64 covers float16/float32/float64 on two NVIDIA A40 GPUs (46,068 MiB
+  each), driver 595.91.07, Python 3.12.13, and PyTorch 2.14.0+cu130. The CUDA
+  run executes two-rank NCCL value, embedding-gradient, trainable-parameter,
+  uneven/empty-batch, reference, mining, memory, and argument-validation cases.
+  Command: the CUDA `python -m unittest discover -v` profile in
+  [Development](../../DEVELOPMENT.md#cuda-and-distributed-verification).
+- CUDA corrections: fixed and learnable `MarginLoss.beta` now follow module
+  placement; memory reset preserves queue device, dtype, and storage; the
+  sparse-centers mask moves as a module buffer. Float16 reference comparisons
+  use dtype-appropriate tolerances. The trainable distributed fixture uses seed
+  zero, with ten repetitions per dtype passing under unchanged tolerances;
+  measured errors are recorded in [distributed rationale](../design/distributed.md).
+- Host limitation: every two-A40 CUDA run uses `NCCL_P2P_DISABLE=1` because
+  direct GPU-to-GPU transfers also hang in a bare PyTorch/NCCL probe without
+  library code. This verifies NCCL with direct peer-to-peer transport disabled;
+  it does not verify that transport path. The workaround is documented in
+  Development and must accompany performance results from this host.
+- CUDA performance: clean-revision float32 references now cover contrastive,
+  all-triplet, pair-mining, and proxy workloads at batches 128/512, two-rank
+  NCCL at global batches 128/512, and a cold-cache full-graph compiled proxy.
+  Forward/backward timings, peak allocated memory, hardware, transport limits,
+  and raw per-rank samples are recorded in
+  [performance measurements](../performance.md#cuda-and-nccl-reference).
+- Packaging and policy: wheel and source distributions identify as 3.0.0.
+  The wheel installs in a clean environment with only core dependencies,
+  imports all 91 package modules, runs the README optimization step, and
+  includes required license/attribution files. Strict MkDocs build and the
+  source checkpoint gate pass. Online supply-chain verification passes with
+  five exact vulnerability assessments and one uv release-age admission.
+  Certifi's disabled-client assessment still expires on 2026-11-02 UTC;
+  reassess before merging after that date. Its fixed release reaches 30 days
+  on 2026-11-19; no exception was extended or fresh version admitted here.
+
+## Remaining merge and release checks
+
+- Run the configured CI-owned `merge-gate` against `master` for the final
+  pushed candidate. Local CPU/CUDA and checkpoint results do not replace it.
+- Visually verify GitHub-native equations. The README currently contains no
+  equations; check the linked mathematical documentation, such as `losses.md`.
+  The strict website build passes, but that does not establish GitHub rendering.
+- Keep the dated dependency assessments valid at merge/release time, starting
+  with the certifi deadline above. Publication remains a separate operation.

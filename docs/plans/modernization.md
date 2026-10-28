@@ -469,6 +469,31 @@ for those design documents or evidence that the listed work is complete.
   gate passes with no findings. These focused results supplement the full
   227-test CPU/CUDA results above; the full suites were not repeated for this
   bounded change.
+- The subsequent merge review of revision
+  `de1e190a40f93dbe6ae7c9f72e80d8b5bf14671e` passes all 229 tests on CPU in
+  175.086 seconds and CUDA in 282.381 seconds, with no failures, errors, or
+  skips. CUDA uses two A40s and `NCCL_P2P_DISABLE=1`. These results precede the
+  benchmark import and ProxyNCA autocast fixes below.
+- Clean benchmark execution, 2026-10-28 UTC: revision
+  `111b41cc5dea941c08169395a8bc5c2ed5f203b4` makes the benchmark runner import
+  its checkout's `src` directory. In a clean checkout on the M1 Pro,
+  `uv sync --frozen --all-extras --no-build --no-install-project` creates a new
+  environment with no installed project. With `PYTHONPATH` unset,
+  `./code-polishyw test --suite benchmarks-focused` passes all four workloads.
+  Pre-install dependency review and deferred online supply-chain checks pass
+  under the existing assessments; dependency pins and exceptions are unchanged.
+- ProxyNCA autocast at the same revision converts embeddings to the proxies'
+  dtype for both loss and logits computation. The new regression fails before
+  the fix and verifies float16/bfloat16 encoder outputs, loss values, logits,
+  encoder/proxy gradients, and parameter/optimizer state across two Adam steps
+  against an independent squared-distance cross-entropy reference. All 10
+  targeted ProxyNCA, NCA, and composition tests pass on CPU in 0.534 seconds and
+  CUDA in 5.737 seconds, with no failures, errors, or skips. The new regression
+  also passes separately on Linux CPU. GPU verification uses the clean checkout
+  `/workspace/pml-v3-111b41c` with the A40 environment recorded above. All six
+  focused checkpoint suites and the strict documentation build pass. The full
+  suites were not repeated for these bounded fixes; the CI-owned merge gate
+  remains outstanding.
 
 ## Remaining merge and release checks
 

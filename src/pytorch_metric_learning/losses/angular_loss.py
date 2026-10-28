@@ -1,11 +1,10 @@
+import math
+
 import torch
 from torch import Tensor
 
-from ..types import IndicesTuple, LossDict
-import math
-
-
 from ..distances import LpDistance
+from ..types import IndicesTuple, LossDict
 from ..utils import common_functions as c_f
 from ..utils import loss_and_miner_utils as lmu
 from .base_metric_loss_function import BaseMetricLossFunction
@@ -27,7 +26,7 @@ class AngularLoss(BaseMetricLossFunction):
         ref_emb: Tensor,
         ref_labels: Tensor | None,
     ) -> LossDict:
-        c_f.labels_required(labels)
+        labels = c_f.labels_required(labels)
         anchors, positives, keep_mask, anchor_idx, positive_idx = self.get_pairs(
             embeddings, labels, indices_tuple, ref_emb, ref_labels
         )

@@ -86,9 +86,10 @@ def indices_tuple_not_supported(indices_tuple):
         raise ValueError("indices_tuple is not supported for this loss function")
 
 
-def labels_required(labels):
+def labels_required(labels: torch.Tensor | None) -> torch.Tensor:
     if labels is None:
         raise ValueError("labels are required for this loss function")
+    return labels
 
 
 def labels_or_indices_tuple_required(labels, indices_tuple):

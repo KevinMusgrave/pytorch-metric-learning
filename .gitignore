@@ -8,6 +8,7 @@ site/
 venv/
 .venv/
 .ruff_cache/
+.pytest_cache/
 **/.vscode
 .ipynb_checkpoints
 /.code-polishy-reports/

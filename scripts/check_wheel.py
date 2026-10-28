@@ -16,6 +16,8 @@ def main():
     if installed != project["version"] or installed != pml.__version__:
         raise RuntimeError("Installed wheel and source metadata versions must match")
     requirements = requires("pytorch-metric-learning")
+    if requirements is None:
+        raise RuntimeError("Installed wheel must declare its runtime requirements")
     for name in ("numpy", "torch"):
         minimum = f"{name}>={version(name).split('+')[0]}"
         if minimum not in requirements:
@@ -25,6 +27,8 @@ def main():
     )
     loss = ContrastiveLoss()(embeddings, torch.tensor([0, 0, 1, 1]))
     loss.backward()
+    if embeddings.grad is None:
+        raise RuntimeError("Installed wheel must propagate gradients to embeddings")
     if not torch.isfinite(loss) or not torch.isfinite(embeddings.grad).all():
         raise RuntimeError("Installed wheel must produce finite loss and gradients")
     if not Path(pml.__file__).with_name("py.typed").is_file():

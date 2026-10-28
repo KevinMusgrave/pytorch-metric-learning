@@ -1,11 +1,10 @@
 import torch
-from torch import Tensor
-
-from ..types import IndicesTuple, LossDict
 import torch.nn.functional as F
+from torch import Tensor
 
 from ..distances import CosineSimilarity
 from ..reducers import MeanReducer
+from ..types import IndicesTuple, LossDict
 from ..utils import common_functions as c_f
 from .base_metric_loss_function import BaseMetricLossFunction
 
@@ -24,7 +23,7 @@ class InstanceLoss(BaseMetricLossFunction):
         ref_emb: Tensor,
         ref_labels: Tensor | None,
     ) -> LossDict:
-        c_f.labels_required(labels)
+        labels = c_f.labels_required(labels)
         c_f.indices_tuple_not_supported(indices_tuple)
         c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
         sim1 = self.distance(embeddings) * self.gamma

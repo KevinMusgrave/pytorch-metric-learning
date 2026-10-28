@@ -40,7 +40,7 @@ class HierarchicalSampler(Sampler[list[int]]):
 
         if self.samples_per_class != "all":
             if self.samples_per_class <= 0:
-                raise ValueError("samples_per_class must be positive or \"all\"")
+                raise ValueError('samples_per_class must be positive or "all"')
             if self.sub_batch_len % self.samples_per_class != 0:
                 raise ValueError("batch_size not a multiple of samples_per_class")
 

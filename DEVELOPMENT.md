@@ -26,7 +26,7 @@ install this checkout using its reviewed, already-installed build backend:
 
 Version 3.0.0 acceptance includes full CPU and CUDA suites, two-GPU NCCL
 references, and focused regression checks. See
-[current acceptance and remaining checks](docs/plans/modernization.md#progress)
+[current acceptance and remaining checks](docs/plans/modernization.md#completed-work)
 for the tested revisions and results.
 The [historical development baseline](docs/plans/development-baseline.md)
 retains the original adoption evidence; it is not current setup or acceptance
@@ -34,12 +34,23 @@ guidance.
 
 ## CPU tests
 
-The CPU profile uses float32 and float64 and limits numerical-library
-threads. Run a specific test during development:
+Pytest is the test runner for local development and CI. Existing
+`unittest.TestCase` tests run directly; new tests can use pytest fixtures and
+parametrization. Collection adds `src` through the checked-in pytest
+configuration. Third-party plugin autoloading is disabled so the frozen
+environment determines test behavior. Empty selections, skipped tests, and
+expected failures fail verification rather than silently reducing coverage.
+
+Tests default to CPU with float32 and float64. The CPU profile also limits
+numerical-library threads and sets the macOS OpenMP configuration. Run a
+specific test during development:
 
 ```sh
-.venv/bin/uv run --frozen --no-sync --env-file tests/cpu.env python -m unittest tests.losses.test_contrastive_loss
+.venv/bin/uv run --frozen --no-sync --env-file tests/cpu.env python -m pytest tests/losses/test_contrastive_loss.py
 ```
+
+Append `::TestContrastiveLoss::test_contrastive_loss` to select one test, or
+use `-k contrastive` to filter by name.
 
 At a completed source boundary, use the configured selection and receipts:
 
@@ -69,8 +80,8 @@ toolkit and Python are not used. Verify the actual runtime first:
 
 ```sh
 .venv/bin/uv run --frozen --no-sync python -c 'import torch; print(torch.__version__, torch.version.cuda, torch.cuda.device_count()); assert torch.cuda.device_count() >= 2'
-TEST_DEVICE=cuda TEST_DTYPES=float16,float32,float64 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 .venv/bin/uv run --frozen --no-sync python -m unittest tests.utils.test_distributed
-TEST_DEVICE=cuda TEST_DTYPES=float16,float32,float64 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 .venv/bin/uv run --frozen --no-sync python -m unittest discover
+TEST_DEVICE=cuda TEST_DTYPES=float16,float32,float64 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 .venv/bin/uv run --frozen --no-sync python -m pytest tests/utils/test_distributed.py
+TEST_DEVICE=cuda TEST_DTYPES=float16,float32,float64 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 .venv/bin/uv run --frozen --no-sync python -m pytest
 ```
 
 The distributed tests spawn their own ranks; do not launch them with `torchrun`.

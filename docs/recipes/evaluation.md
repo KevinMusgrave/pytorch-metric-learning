@@ -15,7 +15,7 @@ library API.
 Verify the contracts with the same fixtures the removed testers used:
 
 ```sh
-uv run --frozen --no-sync --env-file tests/cpu.env python -m unittest tests.recipes.test_evaluation
+uv run --frozen --no-sync --env-file tests/cpu.env python -m pytest tests/recipes/test_evaluation.py
 ```
 
 The command prints `precision_at_1` and `r_precision` for one query split against

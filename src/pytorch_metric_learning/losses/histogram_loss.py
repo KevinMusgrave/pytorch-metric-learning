@@ -1,9 +1,8 @@
 import torch
 from torch import Tensor
 
-from ..types import IndicesTuple, LossDict
-
 from ..distances import CosineSimilarity
+from ..types import IndicesTuple, LossDict
 from ..utils import common_functions as c_f
 from ..utils import loss_and_miner_utils as lmu
 from .base_metric_loss_function import BaseMetricLossFunction
@@ -24,12 +23,11 @@ class HistogramLoss(BaseMetricLossFunction):
         **kwargs,
     ):
         super().__init__(**kwargs)
-        if delta is not None and n_bins is not None:
-            if delta != 2 / n_bins:
-                raise ValueError(
-                    "delta and n_bins must satisfy delta = 2 / n_bins; "
-                    f"got delta={delta} and n_bins={n_bins}"
-                )
+        if delta is not None and n_bins is not None and delta != 2 / n_bins:
+            raise ValueError(
+                "delta and n_bins must satisfy delta = 2 / n_bins; "
+                f"got delta={delta} and n_bins={n_bins}"
+            )
 
         if delta is None:
             delta = 2 / (100 if n_bins is None else n_bins)

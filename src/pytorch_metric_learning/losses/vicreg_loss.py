@@ -1,9 +1,8 @@
 import torch
+import torch.nn.functional as F
 from torch import Tensor
 
 from ..types import IndicesTuple, LossDict
-import torch.nn.functional as F
-
 from ..utils import common_functions as c_f
 from .base_metric_loss_function import BaseMetricLossFunction
 

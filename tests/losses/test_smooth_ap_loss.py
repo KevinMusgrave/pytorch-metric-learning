@@ -100,6 +100,7 @@ class TestSmoothAPLoss(unittest.TestCase):
                 loss2 = SmoothAPLoss(temperature=TEMPERATURE)
                 labels = contiguous_equal_size_class_labels(NUM_ID, BATCH_SIZE)
                 output2 = loss2.forward(rand_tensor, labels)
+                assert isinstance(output2, torch.Tensor)
                 self.assertEqual(output2.dtype, dtype)
                 rtol, atol = (1e-2, 1e-4) if dtype == torch.float16 else (1e-5, 1e-8)
                 self.assertTrue(

@@ -158,8 +158,7 @@ class DistributedLossWrapper(torch.nn.Module):
         super().__init__()
         if not isinstance(loss, (BaseMetricLossFunction, CrossBatchMemory)):
             raise TypeError(
-                "The input loss must extend BaseMetricLossFunction or "
-                "CrossBatchMemory"
+                "The input loss must extend BaseMetricLossFunction or CrossBatchMemory"
             )
         if isinstance(loss, CrossBatchMemory) and efficient:
             raise ValueError(

@@ -60,6 +60,23 @@ class TestThresholdConsistentMarginLoss(unittest.TestCase):
 
 
 class TestThresholdConsistentMarginReference(unittest.TestCase):
+    def test_no_margin_violations_produce_differentiable_zero(self):
+        loss_func = ThresholdConsistentMarginLoss()
+        for dtype in TEST_DTYPES:
+            for labels in ([0, 0, 1, 1], [0, 0, 0, 0], [0, 1, 2, 3]):
+                with self.subTest(dtype=dtype, labels=labels):
+                    embeddings = torch.eye(4, device=TEST_DEVICE, dtype=dtype)[
+                        labels
+                    ].requires_grad_()
+                    loss = loss_func(
+                        embeddings, torch.tensor(labels, device=TEST_DEVICE)
+                    )
+                    self.assertEqual(loss.item(), 0)
+                    loss.backward()
+                    torch.testing.assert_close(
+                        embeddings.grad, torch.zeros_like(embeddings)
+                    )
+
     def test_reference_embeddings_are_used(self):
         torch.manual_seed(7)
         query = torch.randn(4, 3, dtype=torch.float64)

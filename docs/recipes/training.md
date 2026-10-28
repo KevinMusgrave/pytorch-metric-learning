@@ -23,7 +23,7 @@ optimizers, data loading, logging, and checkpoints.
 Verify the contracts and optimization behavior together:
 
 ```sh
-uv run --frozen --no-sync --env-file tests/cpu.env python -m unittest tests.recipes.test_training
+uv run --frozen --no-sync --env-file tests/cpu.env python -m pytest tests/recipes/test_training.py
 ```
 
 ## Metric, classifier, proxy, and two-stream inputs

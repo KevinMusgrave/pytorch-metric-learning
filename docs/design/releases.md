@@ -42,6 +42,17 @@ separate environment containing only its core runtime dependencies, verifies
 that those versions equal the published lower bounds, and runs a differentiable
 loss in isolated Python. Future development dependency upgrades must retain
 minimum-version coverage instead of silently testing only the newer stack.
+Code Polishy's `supplyChain.pythonLibraries` names `pyproject.toml` explicitly;
+the policy validates every published requirement against its exact development
+pin and still audits the entire frozen dependency graph.
+
+Local and CI numerical suites use the same pinned pytest runner. Existing
+unittest cases remain supported directly by pytest; its configuration owns
+source imports, strict markers, and disabled third-party plugin discovery.
+The shared session hook fails skipped and expected-failure cases. Runner tests
+execute temporary passing, failing, empty, skipped, and expected-failure suites
+to verify the exit codes consumed by CI. CPU and CUDA profiles select tensor
+devices and dtypes, while distributed tests continue spawning their own ranks.
 
 The build job also builds the tagged MkDocs site with the pinned development
 environment and retains a Pages artifact. After PyPI publication succeeds, a

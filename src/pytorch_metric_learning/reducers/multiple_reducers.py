@@ -2,7 +2,6 @@ import torch
 from torch import Tensor
 
 from ..types import LossDict
-
 from .base_reducer import BaseReducer
 from .mean_reducer import MeanReducer
 

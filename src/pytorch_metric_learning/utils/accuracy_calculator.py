@@ -23,7 +23,7 @@ def mutual_information_scores():
         raise ModuleNotFoundError(
             "NMI and AMI require scikit-learn. Install the optional dependency with "
             "`pip install pytorch-metric-learning[clustering]`."
-        )
+        ) from error
 
 
 def get_unique_labels(labels):

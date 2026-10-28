@@ -1,9 +1,8 @@
 import torch
 from torch import Tensor
 
-from ..types import IndicesTuple
-
 from ..distances import LpDistance
+from ..types import IndicesTuple
 from ..utils import common_functions as c_f
 from ..utils import loss_and_miner_utils as lmu
 from .base_miner import BaseMiner

@@ -1,12 +1,10 @@
-import torch
-from torch import Tensor
-
-from ..types import IndicesTuple, LossDict
 import math
 
-from torch import nn
+import torch
+from torch import Tensor, nn
 
 from ..distances import CosineSimilarity
+from ..types import IndicesTuple, LossDict
 from ..utils import common_functions as c_f
 from .base_metric_loss_function import BaseMetricLossFunction
 

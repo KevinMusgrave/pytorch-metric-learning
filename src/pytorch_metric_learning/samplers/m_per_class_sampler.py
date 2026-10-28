@@ -29,6 +29,9 @@ class MPerClassSampler(Sampler[int]):
             raise ValueError("labels must not be empty")
         self.length_of_single_pass = self.m_per_class * len(self.labels)
         self.list_size = length_before_new_iter
+        self.adjust_list_size()
+
+    def adjust_list_size(self):
         if self.batch_size is None:
             if self.length_of_single_pass < self.list_size:
                 self.list_size -= (self.list_size) % (self.length_of_single_pass)

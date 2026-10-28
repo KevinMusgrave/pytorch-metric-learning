@@ -35,7 +35,6 @@ class TestSamplerContracts(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "at least two classes"):
             FixedSetOfTriplets([0, 0], num_triplets=2)
 
-
     def test_explicit_generator_reproduces_every_iteration(self):
         first = make_samplers(torch.Generator().manual_seed(3))
         second = make_samplers(torch.Generator().manual_seed(3))

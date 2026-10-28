@@ -2,7 +2,6 @@ import torch
 from torch import Tensor
 
 from ..types import IndicesTuple
-
 from ..utils import loss_and_miner_utils as lmu
 from .base_miner import BaseMiner
 

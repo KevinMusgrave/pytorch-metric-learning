@@ -2,7 +2,6 @@ import torch
 from torch import Tensor
 
 from ..types import IndicesTuple
-
 from ..utils import common_functions as c_f
 from ..utils import loss_and_miner_utils as lmu
 from .base_miner import BaseMiner
@@ -34,14 +33,12 @@ class BatchEasyHardMiner(BaseMiner):
                 f'pos_strategy and neg_strategy must each be one of "{choices}"'
             )
         if pos_strategy == neg_strategy == self.SEMIHARD:
-            raise ValueError(
-                "pos_strategy and neg_strategy cannot both be \"semihard\""
-            )
+            raise ValueError('pos_strategy and neg_strategy cannot both be "semihard"')
 
         if (pos_strategy == self.ALL and neg_strategy == self.SEMIHARD) or (
             neg_strategy == self.ALL and pos_strategy == self.SEMIHARD
         ):
-            raise ValueError("\"semihard\" cannot be used in combination with \"all\"")
+            raise ValueError('"semihard" cannot be used in combination with "all"')
 
         self.pos_strategy = pos_strategy
         self.neg_strategy = neg_strategy
@@ -143,8 +140,8 @@ class BatchEasyHardMiner(BaseMiner):
         val_range=None,
         semihard_thresholds=None,
     ):
-        if xtype not in ['min', 'max']:
-            raise ValueError("xtype must be \"min\" or \"max\"")
+        if xtype not in ["min", "max"]:
+            raise ValueError('xtype must be "min" or "max"')
         inf = c_f.pos_inf(mat.dtype) if xtype == "min" else c_f.neg_inf(mat.dtype)
         mask = torch.ones_like(mat) * inf
         mask[anchor_idx, other_idx] = 1

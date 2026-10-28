@@ -20,11 +20,8 @@ class MultipleLosses(torch.nn.Module):
             self.weights = self.by_name(names, weights)
 
     def forward(self, embeddings, labels, indices_tuple=None):
-        if self.miners:
-            if indices_tuple is not None:
-                raise ValueError(
-                    "indices_tuple cannot be supplied with configured miners"
-                )
+        if self.miners and indices_tuple is not None:
+            raise ValueError("indices_tuple cannot be supplied with configured miners")
         total_loss = 0
         for name, loss_func in self.losses.items():
             curr_indices_tuple = indices_tuple

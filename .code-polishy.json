@@ -4,7 +4,16 @@
     "kind": "library",
     "capabilities": []
   },
-  "scope": {},
+  "scope": {
+    "pythonContracts": [
+      {
+        "project": "pyproject.toml",
+        "kind": "decorator",
+        "target": "pytest.hookimpl",
+        "reason": "Pytest registers decorated conftest hooks and invokes them through its plugin manager."
+      }
+    ]
+  },
   "quality": {
     "allowComments": false
   },
@@ -80,6 +89,9 @@
       "paths": [
         ".github/workflows/**",
         "scripts/**"
+      ],
+      "dependsOn": [
+        "numerics"
       ]
     }
   ],
@@ -294,7 +306,8 @@
           "tests/utils/__init__.py",
           "tests/utils/test_common_functions.py",
           "tests/utils/test_loss_and_miner_utils.py",
-          "tests/helpers.py"
+          "tests/helpers.py",
+          "tests/conftest.py"
         ],
         "module": "numerics",
         "focusedSuite": "numerics-focused",
@@ -385,7 +398,8 @@
           "tests/utils/test_triplet_enumeration.py",
           "tests/losses/test_loss_composition.py",
           "tests/docs/**",
-          "tests/utils/test_validation.py"
+          "tests/utils/test_validation.py",
+          "tests/conftest.py"
         ],
         "argv": [
           ".venv/bin/uv",
@@ -396,18 +410,18 @@
           "tests/cpu.env",
           "python",
           "-m",
-          "unittest",
-          "tests.reducers.test_mean_reducer",
-          "tests.miners.test_pair_margin_miner",
-          "tests.losses.test_contrastive_loss",
-          "tests.regularizers.test_center_invariant_regularizer",
-          "tests.losses.test_cross_batch_memory_state",
-          "tests.losses.test_dynamic_soft_margin_loss",
-          "tests.utils.test_triplet_enumeration",
-          "tests.losses.test_loss_composition",
-          "tests.docs.test_documented_signatures",
-          "tests.docs.test_documentation_paths",
-          "tests.utils.test_validation"
+          "pytest",
+          "tests/reducers/test_mean_reducer.py",
+          "tests/miners/test_pair_margin_miner.py",
+          "tests/losses/test_contrastive_loss.py",
+          "tests/regularizers/test_center_invariant_regularizer.py",
+          "tests/losses/test_cross_batch_memory_state.py",
+          "tests/losses/test_dynamic_soft_margin_loss.py",
+          "tests/utils/test_triplet_enumeration.py",
+          "tests/losses/test_loss_composition.py",
+          "tests/docs/test_documented_signatures.py",
+          "tests/docs/test_documentation_paths.py",
+          "tests/utils/test_validation.py"
         ],
         "timeoutSeconds": 120
       },
@@ -422,7 +436,8 @@
           "tests/utils/test_retrieval_backends.py",
           "tests/__init__.py",
           "tests/helpers.py",
-          "tests/losses/utils.py"
+          "tests/losses/utils.py",
+          "tests/conftest.py"
         ],
         "argv": [
           ".venv/bin/uv",
@@ -433,8 +448,8 @@
           "tests/cpu.env",
           "python",
           "-m",
-          "unittest",
-          "tests.utils.test_retrieval_backends"
+          "pytest",
+          "tests/utils/test_retrieval_backends.py"
         ],
         "timeoutSeconds": 120
       },
@@ -450,7 +465,8 @@
           "tests/__init__.py",
           "tests/helpers.py",
           "tests/losses/utils.py",
-          "tests/samplers/test_sampler_contracts.py"
+          "tests/samplers/test_sampler_contracts.py",
+          "tests/conftest.py"
         ],
         "argv": [
           ".venv/bin/uv",
@@ -461,9 +477,9 @@
           "tests/cpu.env",
           "python",
           "-m",
-          "unittest",
-          "tests.samplers.test_m_per_class_sampler",
-          "tests.samplers.test_sampler_contracts"
+          "pytest",
+          "tests/samplers/test_m_per_class_sampler.py",
+          "tests/samplers/test_sampler_contracts.py"
         ],
         "timeoutSeconds": 120
       },
@@ -479,7 +495,8 @@
           "tests/utils/test_distributed.py",
           "tests/__init__.py",
           "tests/helpers.py",
-          "tests/losses/utils.py"
+          "tests/losses/utils.py",
+          "tests/conftest.py"
         ],
         "argv": [
           ".venv/bin/uv",
@@ -490,9 +507,9 @@
           "tests/cpu.env",
           "python",
           "-m",
-          "unittest",
-          "tests.utils.test_distributed_fallback",
-          "tests.utils.test_distributed"
+          "pytest",
+          "tests/utils/test_distributed_fallback.py",
+          "tests/utils/test_distributed.py"
         ],
         "timeoutSeconds": 120
       },
@@ -513,8 +530,8 @@
           "tests/cpu.env",
           "python",
           "-m",
-          "unittest",
-          "discover"
+          "pytest",
+          "tests"
         ],
         "runOn": [
           "recommended",
@@ -562,7 +579,8 @@
         ],
         "paths": [
           "tests/recipes/**",
-          "tests/__init__.py"
+          "tests/__init__.py",
+          "tests/conftest.py"
         ],
         "argv": [
           ".venv/bin/uv",
@@ -573,9 +591,9 @@
           "tests/cpu.env",
           "python",
           "-m",
-          "unittest",
-          "tests.recipes.test_training",
-          "tests.recipes.test_evaluation"
+          "pytest",
+          "tests/recipes/test_training.py",
+          "tests/recipes/test_evaluation.py"
         ],
         "timeoutSeconds": 120
       },
@@ -588,7 +606,8 @@
         ],
         "paths": [
           "tests/release/**",
-          "tests/__init__.py"
+          "tests/__init__.py",
+          "tests/conftest.py"
         ],
         "argv": [
           ".venv/bin/uv",
@@ -599,8 +618,8 @@
           "tests/cpu.env",
           "python",
           "-m",
-          "unittest",
-          "tests.release.test_release"
+          "pytest",
+          "tests/release"
         ],
         "timeoutSeconds": 120
       }
@@ -611,6 +630,9 @@
     "finalGateOwner": "ci"
   },
   "supplyChain": {
+    "pythonLibraries": [
+      "pyproject.toml"
+    ],
     "releaseAgeAssessments": [
       {
         "id": "uv-compromised-root",
@@ -711,6 +733,193 @@
         "owner": "Codex",
         "reviewed": "2026-10-26",
         "expires": "2026-11-02"
+      },
+      {
+        "id": "ghsa-6627-m3xw-93mp",
+        "ecosystem": "pypi",
+        "advisory": "GHSA-6627-m3xw-93mp",
+        "package": "filelock",
+        "affectedVersion": "4.0.3",
+        "scope": "uv.lock",
+        "severity": "moderate",
+        "status": "not-affected",
+        "basis": "unreachable",
+        "evidence": "https://github.com/advisories/GHSA-6627-m3xw-93mp",
+        "reason": "No project or installed dependency caller selects StrictSoftFileLock, SoftReadWriteLock or SQLite ReadWriteLock; PyTorch selects native UnixFileLock. See docs/security/dependency-assessments.md#filelock-local-filesystem-advisories.",
+        "owner": "Codex",
+        "reviewed": "2026-10-28",
+        "expires": "2026-11-25",
+        "impact": "The advisory cannot cross its local-file trust boundary in the reviewed development and verification environments. Reassess before enabling affected APIs, Windows verification, untrusted shared caches or soft-lock fallback; review an aged fixed release from 2026-11-16."
+      },
+      {
+        "id": "ghsa-69hj-f68j-2879",
+        "ecosystem": "pypi",
+        "advisory": "GHSA-69hj-f68j-2879",
+        "package": "filelock",
+        "affectedVersion": "4.0.3",
+        "scope": "uv.lock",
+        "severity": "moderate",
+        "status": "not-affected",
+        "basis": "unreachable",
+        "evidence": "https://github.com/advisories/GHSA-69hj-f68j-2879",
+        "reason": "PyTorch compiler locks are in the private per-user macOS temporary tree; CI and GPU checks use isolated Linux hosts and eager execution. No untrusted account can replace lock paths in the reviewed environments. See docs/security/dependency-assessments.md#filelock-local-filesystem-advisories.",
+        "owner": "Codex",
+        "reviewed": "2026-10-28",
+        "expires": "2026-11-25",
+        "impact": "The advisory cannot cross its local-file trust boundary in the reviewed development and verification environments. Reassess before enabling affected APIs, Windows verification, untrusted shared caches or soft-lock fallback; review an aged fixed release from 2026-11-16."
+      },
+      {
+        "id": "ghsa-8mx5-7m5m-r77g",
+        "ecosystem": "pypi",
+        "advisory": "GHSA-8mx5-7m5m-r77g",
+        "package": "filelock",
+        "affectedVersion": "4.0.3",
+        "scope": "uv.lock",
+        "severity": "moderate",
+        "status": "not-affected",
+        "basis": "unreachable",
+        "evidence": "https://github.com/advisories/GHSA-8mx5-7m5m-r77g",
+        "reason": "The reviewed development, CI and GPU environments are macOS/Linux; WindowsFileLock and SQLite ReadWriteLock are not enabled. See docs/security/dependency-assessments.md#filelock-local-filesystem-advisories.",
+        "owner": "Codex",
+        "reviewed": "2026-10-28",
+        "expires": "2026-11-25",
+        "impact": "The advisory cannot cross its local-file trust boundary in the reviewed development and verification environments. Reassess before enabling affected APIs, Windows verification, untrusted shared caches or soft-lock fallback; review an aged fixed release from 2026-11-16."
+      },
+      {
+        "id": "ghsa-9c4x-gm8v-wgc4",
+        "ecosystem": "pypi",
+        "advisory": "GHSA-9c4x-gm8v-wgc4",
+        "package": "filelock",
+        "affectedVersion": "4.0.3",
+        "scope": "uv.lock",
+        "severity": "moderate",
+        "status": "not-affected",
+        "basis": "unreachable",
+        "evidence": "https://github.com/advisories/GHSA-9c4x-gm8v-wgc4",
+        "reason": "No project or installed dependency caller selects StrictSoftFileLock, SoftReadWriteLock or SQLite ReadWriteLock; PyTorch selects native UnixFileLock. See docs/security/dependency-assessments.md#filelock-local-filesystem-advisories.",
+        "owner": "Codex",
+        "reviewed": "2026-10-28",
+        "expires": "2026-11-25",
+        "impact": "The advisory cannot cross its local-file trust boundary in the reviewed development and verification environments. Reassess before enabling affected APIs, Windows verification, untrusted shared caches or soft-lock fallback; review an aged fixed release from 2026-11-16."
+      },
+      {
+        "id": "ghsa-9j6q-wvj5-jgjg",
+        "ecosystem": "pypi",
+        "advisory": "GHSA-9j6q-wvj5-jgjg",
+        "package": "filelock",
+        "affectedVersion": "4.0.3",
+        "scope": "uv.lock",
+        "severity": "low",
+        "status": "not-affected",
+        "basis": "unreachable",
+        "evidence": "https://github.com/advisories/GHSA-9j6q-wvj5-jgjg",
+        "reason": "PyTorch selects native UnixFileLock on the reviewed macOS/Linux local filesystems. SoftFileLock, leases and ENOSYS soft-lock fallback are not enabled. See docs/security/dependency-assessments.md#filelock-local-filesystem-advisories.",
+        "owner": "Codex",
+        "reviewed": "2026-10-28",
+        "expires": "2026-11-25",
+        "impact": "The advisory cannot cross its local-file trust boundary in the reviewed development and verification environments. Reassess before enabling affected APIs, Windows verification, untrusted shared caches or soft-lock fallback; review an aged fixed release from 2026-11-16."
+      },
+      {
+        "id": "ghsa-cwqr-hh33-gh44",
+        "ecosystem": "pypi",
+        "advisory": "GHSA-cwqr-hh33-gh44",
+        "package": "filelock",
+        "affectedVersion": "4.0.3",
+        "scope": "uv.lock",
+        "severity": "moderate",
+        "status": "not-affected",
+        "basis": "unreachable",
+        "evidence": "https://github.com/advisories/GHSA-cwqr-hh33-gh44",
+        "reason": "No project or installed dependency caller selects StrictSoftFileLock, SoftReadWriteLock or SQLite ReadWriteLock; PyTorch selects native UnixFileLock. See docs/security/dependency-assessments.md#filelock-local-filesystem-advisories.",
+        "owner": "Codex",
+        "reviewed": "2026-10-28",
+        "expires": "2026-11-25",
+        "impact": "The advisory cannot cross its local-file trust boundary in the reviewed development and verification environments. Reassess before enabling affected APIs, Windows verification, untrusted shared caches or soft-lock fallback; review an aged fixed release from 2026-11-16."
+      },
+      {
+        "id": "ghsa-fj95-fr6c-h845",
+        "ecosystem": "pypi",
+        "advisory": "GHSA-fj95-fr6c-h845",
+        "package": "filelock",
+        "affectedVersion": "4.0.3",
+        "scope": "uv.lock",
+        "severity": "moderate",
+        "status": "not-affected",
+        "basis": "unreachable",
+        "evidence": "https://github.com/advisories/GHSA-fj95-fr6c-h845",
+        "reason": "No project or installed dependency caller selects StrictSoftFileLock, SoftReadWriteLock or SQLite ReadWriteLock; PyTorch selects native UnixFileLock. See docs/security/dependency-assessments.md#filelock-local-filesystem-advisories.",
+        "owner": "Codex",
+        "reviewed": "2026-10-28",
+        "expires": "2026-11-25",
+        "impact": "The advisory cannot cross its local-file trust boundary in the reviewed development and verification environments. Reassess before enabling affected APIs, Windows verification, untrusted shared caches or soft-lock fallback; review an aged fixed release from 2026-11-16."
+      },
+      {
+        "id": "ghsa-fq56-3cx3-fjxp",
+        "ecosystem": "pypi",
+        "advisory": "GHSA-fq56-3cx3-fjxp",
+        "package": "filelock",
+        "affectedVersion": "4.0.3",
+        "scope": "uv.lock",
+        "severity": "moderate",
+        "status": "not-affected",
+        "basis": "unreachable",
+        "evidence": "https://github.com/advisories/GHSA-fq56-3cx3-fjxp",
+        "reason": "PyTorch selects native UnixFileLock on the reviewed macOS/Linux local filesystems. SoftFileLock, leases and ENOSYS soft-lock fallback are not enabled. See docs/security/dependency-assessments.md#filelock-local-filesystem-advisories.",
+        "owner": "Codex",
+        "reviewed": "2026-10-28",
+        "expires": "2026-11-25",
+        "impact": "The advisory cannot cross its local-file trust boundary in the reviewed development and verification environments. Reassess before enabling affected APIs, Windows verification, untrusted shared caches or soft-lock fallback; review an aged fixed release from 2026-11-16."
+      },
+      {
+        "id": "ghsa-j8f7-rjxc-mr56",
+        "ecosystem": "pypi",
+        "advisory": "GHSA-j8f7-rjxc-mr56",
+        "package": "filelock",
+        "affectedVersion": "4.0.3",
+        "scope": "uv.lock",
+        "severity": "moderate",
+        "status": "not-affected",
+        "basis": "unreachable",
+        "evidence": "https://github.com/advisories/GHSA-j8f7-rjxc-mr56",
+        "reason": "No project or installed dependency caller selects StrictSoftFileLock, SoftReadWriteLock or SQLite ReadWriteLock; PyTorch selects native UnixFileLock. See docs/security/dependency-assessments.md#filelock-local-filesystem-advisories.",
+        "owner": "Codex",
+        "reviewed": "2026-10-28",
+        "expires": "2026-11-25",
+        "impact": "The advisory cannot cross its local-file trust boundary in the reviewed development and verification environments. Reassess before enabling affected APIs, Windows verification, untrusted shared caches or soft-lock fallback; review an aged fixed release from 2026-11-16."
+      },
+      {
+        "id": "ghsa-m462-7rxw-wvpg",
+        "ecosystem": "pypi",
+        "advisory": "GHSA-m462-7rxw-wvpg",
+        "package": "filelock",
+        "affectedVersion": "4.0.3",
+        "scope": "uv.lock",
+        "severity": "moderate",
+        "status": "not-affected",
+        "basis": "unreachable",
+        "evidence": "https://github.com/advisories/GHSA-m462-7rxw-wvpg",
+        "reason": "No project or installed dependency caller selects StrictSoftFileLock, SoftReadWriteLock or SQLite ReadWriteLock; PyTorch selects native UnixFileLock. See docs/security/dependency-assessments.md#filelock-local-filesystem-advisories.",
+        "owner": "Codex",
+        "reviewed": "2026-10-28",
+        "expires": "2026-11-25",
+        "impact": "The advisory cannot cross its local-file trust boundary in the reviewed development and verification environments. Reassess before enabling affected APIs, Windows verification, untrusted shared caches or soft-lock fallback; review an aged fixed release from 2026-11-16."
+      },
+      {
+        "id": "ghsa-rfpc-qcw5-3pc4",
+        "ecosystem": "pypi",
+        "advisory": "GHSA-rfpc-qcw5-3pc4",
+        "package": "filelock",
+        "affectedVersion": "4.0.3",
+        "scope": "uv.lock",
+        "severity": "moderate",
+        "status": "not-affected",
+        "basis": "unreachable",
+        "evidence": "https://github.com/advisories/GHSA-rfpc-qcw5-3pc4",
+        "reason": "PyTorch selects native UnixFileLock on the reviewed macOS/Linux local filesystems. SoftFileLock, leases and ENOSYS soft-lock fallback are not enabled. See docs/security/dependency-assessments.md#filelock-local-filesystem-advisories.",
+        "owner": "Codex",
+        "reviewed": "2026-10-28",
+        "expires": "2026-11-25",
+        "impact": "The advisory cannot cross its local-file trust boundary in the reviewed development and verification environments. Reassess before enabling affected APIs, Windows verification, untrusted shared caches or soft-lock fallback; review an aged fixed release from 2026-11-16."
       }
     ]
   },

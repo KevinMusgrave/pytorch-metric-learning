@@ -1,9 +1,8 @@
 import torch
 from torch import Tensor
 
-from ..types import IndicesTuple, LossDict
-
 from ..distances import DotProductSimilarity
+from ..types import IndicesTuple, LossDict
 from ..utils import common_functions as c_f
 from ..utils import loss_and_miner_utils as lmu
 from .base_metric_loss_function import BaseMetricLossFunction
@@ -22,7 +21,7 @@ class NPairsLoss(BaseMetricLossFunction):
         ref_emb: Tensor,
         ref_labels: Tensor | None,
     ) -> LossDict:
-        c_f.labels_required(labels)
+        labels = c_f.labels_required(labels)
         c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
         anchor_idx, positive_idx = lmu.convert_to_pos_pairs_with_unique_labels(
             indices_tuple, labels

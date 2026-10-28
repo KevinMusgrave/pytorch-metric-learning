@@ -45,7 +45,9 @@ class TestLossComposition(unittest.TestCase):
     def test_wrappers_preserve_custom_subclass_values_and_gradients(self):
         class ScaledContrastiveLoss(losses.ContrastiveLoss):
             def forward(self, *args, **kwargs):
-                return 2 * super().forward(*args, **kwargs)
+                loss = super().forward(*args, **kwargs)
+                assert isinstance(loss, torch.Tensor)
+                return 2 * loss
 
         for dtype in TEST_DTYPES:
             for mode in ("memory", "symmetric", "asymmetric"):

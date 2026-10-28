@@ -4,8 +4,8 @@ Status: all five phases are implemented. Release cleanup passes 249 CPU tests,
 56 mixed-precision cases across CPU and CUDA, the strict documentation build,
 and an isolated wheel check at the supported runtime minimums. All 249
 CUDA/NCCL tests also pass on two A40s at the committed cleanup candidate.
-Locked Code Polishy 0.31.5 rejects Python library compatibility ranges; that
-policy support, the CI-owned final
+Code Polishy 0.31.6 supports the published Python compatibility ranges with
+exact development pins. The CI-owned final
 merge gate, publisher/Pages setup, and visual math verification remain open.
 
 ## Purpose
@@ -97,7 +97,7 @@ This section describes the checkout before modernization. The
 environment, CPU results, dependency assessments, and source-policy findings.
 Code Polishy 0.31.4 resolved the two tooling blockers found during adoption.
 Linux/CUDA and live two-GPU acceptance were still outstanding at that point.
-The [progress record](#progress) documents the later fixes and verification.
+The [completed work](#completed-work) documents the later fixes and verification.
 
 Two local probes identified concrete distributed-wrapper issues:
 
@@ -341,7 +341,3 @@ under
 - Land contributor PR #763 through its original PR after modernization merges
   and before tagging v3. It fixes large integer labels colliding after a float32
   cast in `AccuracyCalculator`. Preserve its authorship and review history.
-- Adopt Code Polishy support for Python library compatibility ranges. The
-  maintainer authorized ranges in published metadata with exact development
-  pins; locked policy 0.31.5 currently rejects that valid manifest. Do not
-  publish while the required policy checks remain blocked.

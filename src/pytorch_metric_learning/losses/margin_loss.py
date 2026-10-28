@@ -1,9 +1,8 @@
 import torch
 from torch import Tensor
 
-from ..types import IndicesTuple, LossDict
-
 from ..reducers import DivisorReducer
+from ..types import IndicesTuple, LossDict, LossTerm
 from ..utils import common_functions as c_f
 from ..utils import loss_and_miner_utils as lmu
 from .base_metric_loss_function import BaseMetricLossFunction
@@ -44,7 +43,11 @@ class MarginLoss(BaseMetricLossFunction):
             return self.zero_losses()
 
         c_f.check_parameter_placement(self, self.beta, embeddings)
-        beta = self.beta if len(self.beta) == 1 else self.beta[labels[anchor_idx]]
+        if len(self.beta) == 1:
+            beta = self.beta
+        else:
+            labels = c_f.labels_required(labels)
+            beta = self.beta[labels[anchor_idx]]
 
         mat = self.distance(embeddings, ref_emb)
 
@@ -65,7 +68,7 @@ class MarginLoss(BaseMetricLossFunction):
 
         margin_loss = pos_loss + neg_loss
 
-        loss_dict = {
+        loss_dict: LossDict = {
             "margin_loss": {
                 "losses": margin_loss,
                 "indices": indices_tuple,
@@ -77,7 +80,7 @@ class MarginLoss(BaseMetricLossFunction):
 
         return loss_dict
 
-    def compute_reg_loss(self, beta, anchor_idx, divisor):
+    def compute_reg_loss(self, beta, anchor_idx, divisor) -> LossTerm:
         if self.learn_beta:
             loss = beta * self.nu
             if len(self.beta) == 1:

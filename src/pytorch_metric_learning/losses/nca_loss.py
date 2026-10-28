@@ -1,9 +1,8 @@
 import torch
 from torch import Tensor
 
-from ..types import IndicesTuple, LossDict
-
 from ..distances import LpDistance
+from ..types import IndicesTuple, LossDict
 from ..utils import common_functions as c_f
 from ..utils import loss_and_miner_utils as lmu
 from .base_metric_loss_function import BaseMetricLossFunction
@@ -24,7 +23,7 @@ class NCALoss(BaseMetricLossFunction):
     ) -> LossDict:
         if len(embeddings) <= 1:
             return self.zero_losses()
-        c_f.labels_required(labels)
+        labels = c_f.labels_required(labels)
         return self.nca_computation(
             embeddings, ref_emb, labels, ref_labels, indices_tuple
         )

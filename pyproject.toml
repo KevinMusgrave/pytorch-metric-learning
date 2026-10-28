@@ -43,6 +43,7 @@ dev = [
     "mkdocs-material==9.7.7",
     "numpy==2.5.3",
     "packaging==26.3",
+    "pytest==9.1.1",
     "scikit-learn==1.9.1",
     "setuptools==84.0.0",
     "torch==2.14.0",
@@ -54,6 +55,12 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 pytorch_metric_learning = ["py.typed"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = ["--strict-config", "--strict-markers", "--disable-plugin-autoload", "-ra"]
+xfail_strict = true
 
 [tool.uv]
 required-version = "==0.13.4"

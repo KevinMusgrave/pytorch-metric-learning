@@ -1,9 +1,7 @@
 import torch
-from torch import Tensor
+from torch import Tensor, nn
 
 from ..types import IndicesTuple, LossDict
-from torch import nn
-
 from ..utils import common_functions as c_f
 from .base_metric_loss_function import BaseMetricLossFunction
 
@@ -27,6 +25,7 @@ class P2SGradLoss(BaseMetricLossFunction):
         ref_emb: Tensor,
         ref_labels: Tensor | None,
     ) -> LossDict:
+        labels = c_f.labels_required(labels)
         c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
         c_f.indices_tuple_not_supported(indices_tuple)
 

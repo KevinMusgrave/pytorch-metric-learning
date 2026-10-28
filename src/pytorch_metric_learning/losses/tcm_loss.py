@@ -1,9 +1,8 @@
+import torch.nn.functional as F
 from torch import Tensor
 
-from ..types import IndicesTuple, LossDict
-import torch.nn.functional as F
-
 from ..distances import CosineSimilarity
+from ..types import IndicesTuple, LossDict
 from ..utils import common_functions as c_f
 from ..utils.loss_and_miner_utils import convert_to_pairs
 from .base_metric_loss_function import BaseMetricLossFunction
@@ -47,12 +46,12 @@ class ThresholdConsistentMarginLoss(BaseMetricLossFunction):
         s_lte_m = pos_sims <= self.margin_plus
         tcm_pos_num = ((self.margin_plus - pos_sims) * s_lte_m).sum()
         tcm_pos_denom = s_lte_m.sum()
-        pos_tcm = 0 if s_lte_m.sum() == 0 else tcm_pos_num / tcm_pos_denom
+        pos_tcm = tcm_pos_num / tcm_pos_denom.clamp_min(1)
 
         s_gte_m = neg_sims >= self.margin_minus
         tcm_neg_num = ((neg_sims - self.margin_minus) * s_gte_m).sum()
         tcm_neg_denom = s_gte_m.sum()
-        neg_tcm = 0 if s_gte_m.sum() == 0 else tcm_neg_num / tcm_neg_denom
+        neg_tcm = tcm_neg_num / tcm_neg_denom.clamp_min(1)
 
         tcm_loss = self.lambda_plus * pos_tcm + self.lambda_minus * neg_tcm
         return {

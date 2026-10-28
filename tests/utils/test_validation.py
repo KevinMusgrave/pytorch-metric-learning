@@ -3,7 +3,13 @@ import unittest
 import torch
 
 from pytorch_metric_learning.distances import CosineSimilarity, LpDistance
-from pytorch_metric_learning.losses import CircleLoss, CrossBatchMemory, ContrastiveLoss
+from pytorch_metric_learning.losses import (
+    CircleLoss,
+    ContrastiveLoss,
+    CrossBatchMemory,
+    MarginLoss,
+    P2SGradLoss,
+)
 from pytorch_metric_learning.miners import BaseMiner
 from pytorch_metric_learning.reducers import MeanReducer
 
@@ -18,6 +24,14 @@ class InvalidMiner(BaseMiner):
 
 
 class TestValidation(unittest.TestCase):
+    def test_label_dependent_parameters_require_labels(self):
+        embeddings = torch.eye(3)
+        with self.assertRaisesRegex(ValueError, "labels are required"):
+            P2SGradLoss(3, 3)(embeddings)
+        indices = tuple(torch.tensor([i]) for i in range(3))
+        with self.assertRaisesRegex(ValueError, "labels are required"):
+            MarginLoss(num_classes=3)(embeddings, indices_tuple=indices)
+
     def test_reducer_preserves_column_losses(self):
         values = torch.tensor([[2.0], [4.0]], requires_grad=True)
         index = torch.arange(2)
@@ -29,7 +43,13 @@ class TestValidation(unittest.TestCase):
         ]:
             with self.subTest(reduction=reduction):
                 loss = MeanReducer()(
-                    {"loss": {"losses": values, "indices": indices, "reduction_type": reduction}},
+                    {
+                        "loss": {
+                            "losses": values,
+                            "indices": indices,
+                            "reduction_type": reduction,
+                        }
+                    },
                     torch.randn(2, 3),
                     torch.arange(2),
                 )
@@ -47,9 +67,8 @@ class TestValidation(unittest.TestCase):
             ((index, index, index[:, None]), ValueError, "one-dimensional"),
         ]
         for output, error, message in cases:
-            with self.subTest(output=output):
-                with self.assertRaisesRegex(error, message):
-                    InvalidMiner(output)(torch.randn(2, 3), torch.arange(2))
+            with self.subTest(output=output), self.assertRaisesRegex(error, message):
+                InvalidMiner(output)(torch.randn(2, 3), torch.arange(2))
 
     def test_reducer_rejects_malformed_loss_terms(self):
         values = torch.tensor([1.0, 2.0], requires_grad=True)
@@ -63,13 +82,21 @@ class TestValidation(unittest.TestCase):
             (values, index[:, None], "element", ValueError, "one-dimensional"),
         ]
         for losses, indices, reduction, error, message in cases:
-            with self.subTest(reduction=reduction, indices=indices):
-                with self.assertRaisesRegex(error, message):
-                    MeanReducer()(
-                        {"loss": {"losses": losses, "indices": indices, "reduction_type": reduction}},
-                        torch.randn(2, 3),
-                        torch.arange(2),
-                    )
+            with (
+                self.subTest(reduction=reduction, indices=indices),
+                self.assertRaisesRegex(error, message),
+            ):
+                MeanReducer()(
+                    {
+                        "loss": {
+                            "losses": losses,
+                            "indices": indices,
+                            "reduction_type": reduction,
+                        }
+                    },
+                    torch.randn(2, 3),
+                    torch.arange(2),
+                )
 
     def test_distance_contracts(self):
         with self.assertRaisesRegex(TypeError, "CosineSimilarity"):
@@ -92,6 +119,7 @@ class TestValidation(unittest.TestCase):
                     loss(embeddings, labels, enqueue_mask=mask)
                 self.assertEqual(loss.queue_idx, 0)
                 self.assertFalse(loss.has_been_filled)
+
 
 if __name__ == "__main__":
     unittest.main()

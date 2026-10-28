@@ -1,12 +1,12 @@
 # PyTorch Metric Learning modernization plan
 
-Status: all five phases are implemented. Release cleanup passes 249 CPU tests,
-56 mixed-precision cases across CPU and CUDA, the strict documentation build,
-and an isolated wheel check at the supported runtime minimums. All 249
-CUDA/NCCL tests also pass on two A40s at the committed cleanup candidate.
+Status: all five phases are implemented. The pytest candidate passes 257 CPU
+tests, 257 CUDA/NCCL tests on two A40s, all seven affected boundary suites,
+the strict documentation build, and an isolated wheel check at the supported
+runtime minimums.
 Code Polishy 0.31.6 supports the published Python compatibility ranges with
-exact development pins. The CI-owned final
-merge gate, publisher/Pages setup, and visual math verification remain open.
+exact development pins. Policy and online dependency checks pass. The CI-owned
+final merge gate, publisher/Pages setup, and visual math verification remain open.
 
 ## Purpose
 
@@ -311,18 +311,23 @@ mathematical decisions are documented in `docs/design/`; public changes are
 listed in the version 3 release notes. Git history records the implementation
 sequence and earlier verification measurements.
 
-The release cleanup passes 249 CPU tests and 56 mixed-precision cases
-(28 CPU and 28 CUDA). The strict website build and isolated wheel check at
-supported runtime minimums also pass. The same 249 tests pass on two A40s
-with `NCCL_P2P_DISABLE=1`. The accepted
-source candidate is `5f35f13a2e168ac8405ddd1a68fa556f9688e410`: CPU 178.895 s,
-CUDA/NCCL 276.984 s, with no failures or skips. The CUDA run used Python
-3.12.13, PyTorch 2.14.0+cu130, CUDA 13.0, NCCL 2.30.7, driver 595.91.07,
-and two A40s in EU-SE-1. The temporary pod was terminated after collecting
-results; the original pod and its workspace remain stopped and retained.
-Seven affected boundary suites also pass. Verification artifacts are retained
-under
-`.code-polishy-artifacts/reviews/release-5f35f13/`.
+The verified source candidate is
+`08b8ed6a4303c611943d0ab0b284c9f0b9e14620`. Pytest 9.1.1 runs the existing
+unittest cases and new runner-contract tests: 257 CPU tests pass in 186.92 s,
+and 257 CUDA/NCCL tests pass in 286.22 s, with no failures or skips. The CUDA
+run used Python 3.12.13, PyTorch 2.14.0+cu130, CUDA 13.0, NCCL 2.30.7,
+driver 595.91.07, and two A40s in EU-SE-1 with `NCCL_P2P_DISABLE=1`.
+The temporary pod was terminated after collecting results; the original pod
+and its workspace remain stopped and retained.
+
+Code Polishy 0.31.6 accepts the published compatibility ranges with exact
+development pins. Its branch checkpoint passes with zero policy findings and
+seven affected boundary suites. The online dependency check passes with the
+dated assessments in `docs/security/dependency-assessments.md`. The strict
+website build and isolated wheel check at supported runtime minimums pass.
+Evidence is retained under `.code-polishy-artifacts/reviews/pytest-08b8ed6/`.
+Earlier acceptance evidence, including 56 mixed-precision cases at `5f35f13`,
+remains under `.code-polishy-artifacts/reviews/release-5f35f13/`.
 
 ## Remaining merge and release checks
 

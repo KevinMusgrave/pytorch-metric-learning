@@ -25,7 +25,7 @@ install this checkout using its reviewed, already-installed build backend:
 ```
 
 `./code-polishyw check --all` reports no findings on this branch. Version 3.0.0
-passes 222 CPU tests and 222 CUDA tests, including two-GPU NCCL references;
+passes 227 CPU tests and 227 CUDA tests, including two-GPU NCCL references;
 see [current acceptance and remaining checks](docs/plans/modernization.md#progress).
 The [development baseline](docs/development-baseline.md) retains the original
 adoption evidence.

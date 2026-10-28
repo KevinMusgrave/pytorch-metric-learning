@@ -436,6 +436,26 @@ for those design documents or evidence that the listed work is complete.
   Certifi's disabled-client assessment still expires on 2026-11-02 UTC;
   reassess before merging after that date. Its fixed release reaches 30 days
   on 2026-11-19; no exception was extended or fresh version admitted here.
+- Autocast and retrieval memory, 2026-10-28 UTC: revision
+  `37d9f049c3ef4800f677705b8ef50015930099b8` converts incoming memory-loss
+  embeddings to the queue dtype without detaching anchor gradients, computes
+  dynamic-margin bin coordinates and contributions in histogram precision, and
+  releases batched k-NN callbacks on both success and failure. Five new
+  regression tests fail before these fixes and cover float16/bfloat16 autocast,
+  histogram values and gradients near bin boundaries, masked memory enqueues,
+  repeated metric calls, and recovery after a partial search failure.
+  All 32 targeted tests pass on CPU and CUDA, including two-rank NCCL.
+  The full suites then pass all 227 tests on CPU in 182.400 seconds and CUDA
+  in 282.819 seconds, with no failures, errors, or skips. CUDA uses the same
+  two-A40 environment and `NCCL_P2P_DISABLE=1` recorded above; the new autocast
+  cases explicitly cover float16 and bfloat16. The source checkpoint gate and
+  strict documentation build also pass.
+- Retrieval memory measurement: with 4,096 float32 query and reference rows,
+  eight dimensions, `k=None`, and `torch.no_grad()`, the default calculator
+  retained 201,326,592 bytes (192 MiB) after returning metrics. The corrected
+  implementation retains zero k-NN output bytes and zero allocated CUDA bytes
+  above the warmed baseline. Peak output storage during the call remains
+  quadratic; query blocking and metric values are unchanged.
 
 ## Remaining merge and release checks
 

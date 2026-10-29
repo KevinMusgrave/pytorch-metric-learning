@@ -26,8 +26,8 @@ install this checkout using its reviewed, already-installed build backend:
 
 Version 3.0.0 acceptance includes the full CPU suite, the full CUDA suite with
 two-GPU NCCL references, the strict documentation build, and the isolated wheel
-check. The latest accepted candidate passed 282 CPU tests with 719 subtests on
-the Apple M1 Pro development machine and 282 CUDA tests with 757 subtests
+check. The latest accepted candidate passed 288 CPU tests with 724 subtests on
+the Apple M1 Pro development machine and 288 CUDA tests with 762 subtests
 (float16, float32, and float64) on a rented host with two NVIDIA A40s, driver
 595.91.07, PyTorch 2.14.0+cu130, CUDA 13.0, and NCCL 2.30.7, with
 `NCCL_P2P_DISABLE=1` because the bare two-rank probe hung on that host. The

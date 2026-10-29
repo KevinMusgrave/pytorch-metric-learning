@@ -69,6 +69,6 @@ def test_half_precision_nearby_rows(dtype, batch):
     assert torch.all(expected > 0)
     torch.testing.assert_close(actual.double(), expected, rtol=4 * tolerance, atol=0)
     torch.testing.assert_close(
-        gradient.double()[:, 0], torch.full((batch,), float(batch), dtype=torch.float64)
+        gradient.double()[:, 0], torch.full_like(expected[:, 0], float(batch))
     )
     assert torch.all(gradient[:, 1:] == 0)

@@ -217,7 +217,10 @@ workloads, seed, shapes, one CPU thread per rank, ten warmup steps, and fifty
 measured steps as the earlier CUDA reference. This rented host also required
 `NCCL_P2P_DISABLE=1`: the bare two-rank probe hung with direct peer-to-peer
 transport. Timings are median milliseconds; memory is peak additional allocated
-tensor memory in MiB.
+tensor memory in MiB. The full CUDA suite was rerun on an identical rented
+configuration at revision `56d459d`, which fixed the distance-weighted sampling
+and half-precision distance regressions described below; the loss, miner, and
+distributed benchmark cases in these tables do not exercise those paths.
 
 | Case                     | Batch | Forward | Backward | Peak MiB |
 | ------------------------ | ----: | ------: | -------: | -------: |
@@ -254,20 +257,20 @@ memory, versus 1.424 ms, 2.787 ms, and 0.331 MiB eager; its first step took
 
 The vectorized random triplet sampling and the float32 `cdist` path for
 low-precision `LpDistance` were compared with the preceding branch revision
-`83a9355` on both hosts above, with one CPU thread, 128 dimensions, four
+`83a9355` at revision `56d459d` on both hosts above, with one CPU thread, 128 dimensions, four
 examples per class, three warmup calls, and twenty measured calls. Values are
 median milliseconds for one call; the CUDA column synchronizes after each call.
 
 | Case                                                 | Batch | M1 Pro before | M1 Pro after | A40 before | A40 after |
 | ---------------------------------------------------- | ----: | ------------: | -----------: | ---------: | --------: |
-| `get_random_triplet_indices(t_per_anchor=100)`       |   128 |         1.268 |        0.581 |     11.310 |     0.532 |
-| `get_random_triplet_indices(t_per_anchor=100)`       |   512 |         5.216 |        3.281 |     44.957 |     0.551 |
-| `DistanceWeightedMiner` (normalized, 128 dimensions) |   512 |        54.846 |        3.516 |     66.761 |     1.052 |
-| `LpDistance` matrix, half-precision inputs           |   512 |        46.967 |       16.643 |      1.266 |     0.202 |
+| `get_random_triplet_indices(t_per_anchor=100)`       |   128 |         1.268 |        0.581 |      9.374 |     0.533 |
+| `get_random_triplet_indices(t_per_anchor=100)`       |   512 |         5.216 |        3.281 |     37.591 |     0.530 |
+| `DistanceWeightedMiner` (normalized, 128 dimensions) |   512 |        54.846 |        3.516 |     66.215 |     1.006 |
+| `LpDistance` matrix, half-precision inputs           |   512 |        46.967 |       16.643 |      1.263 |     0.686 |
 
 The CPU rows use bfloat16 and the A40 rows use float16 for the distance case.
 On the A40, the old half-precision distance allocated 261.1 MiB of peak
-additional memory for the 512-by-512 matrix; the new path allocates 2.1 MiB.
+additional memory for the 512-by-512 matrix; the new path allocates 1.6 MiB.
 The low-precision distance uses `torch.cdist`'s direct difference kernel rather
 than its matrix-product formula, which cancels nearby rows to zero; on CPU that
 kernel is a scalar loop, so the CPU gain is limited to the removed expansion,

@@ -32,6 +32,8 @@ class DistanceWeightedMiner(BaseMiner):
     ) -> IndicesTuple:
         d = float(embeddings.size(1))
         mat = torch.clamp(self.distance(embeddings, ref_emb), min=self.cutoff)
+        if mat.numel() == 0:
+            return _common.empty_triplets(mat.device)
         log_weights = (2.0 - d) * torch.log(mat) - ((d - 3) / 2) * torch.log(
             1.0 - 0.25 * (mat**2.0)
         )

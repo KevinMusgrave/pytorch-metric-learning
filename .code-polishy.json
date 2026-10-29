@@ -300,6 +300,7 @@
           "tests/miners/test_batch_hard_miner.py",
           "tests/miners/test_distance_weighted_miner.py",
           "tests/miners/test_hdc_miner.py",
+          "tests/miners/test_empty_inputs.py",
           "tests/miners/test_multi_similarity_miner.py",
           "tests/miners/test_triplet_margin_miner.py",
           "tests/miners/test_uniform_histogram_miner.py",

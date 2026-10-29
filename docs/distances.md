@@ -226,7 +226,8 @@ distances.SNRDistance(*, normalize_embeddings=True, p=2, power=1)
 
 `mat[i, j]` is the variance of `query_emb[i] - ref_emb[j]` divided by the
 variance of `query_emb[i]`, computed after normalization when
-`normalize_embeddings=True`:
+`normalize_embeddings=True`. The ratio is undefined for a query row whose
+elements are all equal, such as a zero row, and its entries are NaN:
 
 ```python
 import torch

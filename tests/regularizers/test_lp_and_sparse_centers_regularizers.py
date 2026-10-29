@@ -3,11 +3,12 @@ import itertools
 import pytest
 import torch
 
-from pytorch_metric_learning.distances import DotProductSimilarity
+from pytorch_metric_learning.distances import DotProductSimilarity, LpDistance
 from pytorch_metric_learning.reducers import MeanReducer, SumReducer
 from pytorch_metric_learning.regularizers import (
     LpRegularizer,
     SparseCentersRegularizer,
+    ZeroMeanRegularizer,
 )
 
 from .. import TEST_DEVICE, TEST_DTYPES
@@ -94,3 +95,14 @@ def test_sparse_centers_rejects_invalid_configuration():
         SparseCentersRegularizer(3, 2, distance=DotProductSimilarity())
     with pytest.raises(ValueError):
         SparseCentersRegularizer(3, 2, reducer=MeanReducer())(ROWS)
+
+
+@pytest.mark.parametrize("regularizer_class", [LpRegularizer, ZeroMeanRegularizer])
+def test_distance_free_regularizers_reject_distance(regularizer_class):
+    options: dict = {"distance": LpDistance()}
+    with pytest.raises(TypeError):
+        regularizer_class(**options)
+    rows = ROWS.to(TEST_DEVICE)
+    summed = regularizer_class(reducer=SumReducer())(rows)
+    averaged = regularizer_class()(rows)
+    torch.testing.assert_close(summed, averaged * len(rows))

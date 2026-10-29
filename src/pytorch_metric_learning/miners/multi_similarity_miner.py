@@ -23,6 +23,8 @@ class MultiSimilarityMiner(BaseMiner):
         ref_labels: Tensor | None,
     ) -> IndicesTuple:
         mat = self.distance(embeddings, ref_emb)
+        if mat.numel() == 0:
+            return _common.empty_pairs(mat.device)
         pairs = indexing.convert_to_pairs(indices_tuple, labels, ref_labels)
         pos_mask, neg_mask = indexing._pair_masks(
             pairs, (mat.shape[0], mat.shape[1]), mat.device

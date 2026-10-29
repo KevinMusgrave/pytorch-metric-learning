@@ -1,18 +1,17 @@
-from typing import Unpack
-
 import torch
 from torch import Tensor
 
-from ..types import LossDict, RegularizerOptions
+from ..reducers import BaseReducer
+from ..types import LossDict
 from ..utils._common import arange_like
 from .base_regularizer import BaseRegularizer
 
 
 class LpRegularizer(BaseRegularizer):
     def __init__(
-        self, p: float = 2, power: float = 1, **options: Unpack[RegularizerOptions]
+        self, p: float = 2, power: float = 1, *, reducer: BaseReducer | None = None
     ) -> None:
-        super().__init__(**options)
+        super().__init__(reducer=reducer)
         self.p = p
         self.power = power
 

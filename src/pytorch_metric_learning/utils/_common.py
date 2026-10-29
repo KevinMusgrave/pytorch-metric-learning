@@ -36,6 +36,16 @@ def check_index_dtypes(tensors: Sequence[Tensor], name: str) -> None:
         raise TypeError(f"{name} must be int64 or int32 tensors")
 
 
+def empty_pairs(device: torch.device) -> PairIndices:
+    empty = torch.empty(0, dtype=torch.long, device=device)
+    return PairIndices(empty, empty, empty, empty)
+
+
+def empty_triplets(device: torch.device) -> TripletIndices:
+    empty = torch.empty(0, dtype=torch.long, device=device)
+    return TripletIndices(empty, empty, empty)
+
+
 def zero_loss(embeddings: Tensor) -> Tensor:
     return embeddings.reshape(-1)[:0].sum()
 

@@ -30,8 +30,10 @@ An object that extends this class can be passed as the `embedding_regularizer` i
 - **reducer**: A [reducer](reducers.md) object. If `None`, the regularizer's
   default reducer is used.
 
-Every regularizer signature ends with `**options`, which accepts these two
+Regularizer signatures end with `**options`, which accepts these two
 keyword-only arguments; see `pytorch_metric_learning.types.RegularizerOptions`.
+LpRegularizer and ZeroMeanRegularizer use no distance and accept only
+`reducer`.
 
 Calling `regularizer(x)` computes one loss term with one value per row of `x`,
 or per selected pair of rows, and reduces it with the regularizer's reducer. The
@@ -75,7 +77,7 @@ This encourages embeddings or weights to have a small Lp norm. The loss for
 row `i` is `torch.norm(x[i], p=p) ** power`.
 
 ```python {.signature}
-regularizers.LpRegularizer(p=2, power=1, **options)
+regularizers.LpRegularizer(p=2, power=1, *, reducer=None)
 ```
 
 **Parameters**
@@ -85,9 +87,7 @@ regularizers.LpRegularizer(p=2, power=1, **options)
 - **power**: The exponent applied to each row's norm. `power=2` penalizes the
   squared norm.
 
-**Default distance**:
-
-- This regularizer does not use a distance object, so setting this parameter will have no effect.
+**Distance**: None. The regularizer takes no `distance` argument.
 
 **Default reducer**:
 
@@ -151,7 +151,7 @@ it requires [DivisorReducer](reducers.md#divisorreducer), the default.
 [Signal-to-Noise Ratio: A Robust Distance Metric for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Yuan_Signal-To-Noise_Ratio_A_Robust_Distance_Metric_for_Deep_Metric_Learning_CVPR_2019_paper.pdf)
 
 ```python {.signature}
-regularizers.ZeroMeanRegularizer(**options)
+regularizers.ZeroMeanRegularizer(*, reducer=None)
 ```
 
 **Equation**
@@ -164,9 +164,7 @@ $$
 
 Here $h_{im}$ is the $m$-th component of the $i$-th embedding. The loss that applies the regularizer multiplies $L_r$ by its `embedding_reg_weight` or `weight_reg_weight`, which is $\lambda$ in the paper.
 
-**Default distance**:
-
-- This regularizer does not use a distance object, so setting this parameter will have no effect.
+**Distance**: None. The regularizer takes no `distance` argument.
 
 **Default reducer**:
 

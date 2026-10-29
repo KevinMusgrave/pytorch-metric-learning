@@ -48,6 +48,8 @@ class BatchEasyHardMiner(BaseMiner):
         ref_labels: Tensor | None,
     ) -> IndicesTuple:
         mat = self.distance(embeddings, ref_emb)
+        if mat.numel() == 0:
+            return _common.empty_pairs(mat.device)
         a1_idx, p_idx, a2_idx, n_idx = indexing.convert_to_pairs(
             indices_tuple, labels, ref_labels
         )

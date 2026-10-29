@@ -158,16 +158,20 @@ class CrossBatchMemory(torch.nn.Module):
         input_indices_tuple: IndicesTuple | None,
         curr_batch_idx: Tensor | None,
     ) -> IndicesTuple:
-        if self.miner:
+        if self.miner and curr_batch_idx is None:
             indices_tuple = self.miner(
                 embeddings, labels, ref_emb=E_mem, ref_labels=L_mem
             )
         else:
             indices_tuple = indexing.get_all_pairs_indices(labels, L_mem)
-        if curr_batch_idx is not None:
-            indices_tuple = indexing.remove_self_comparisons(
-                indices_tuple, curr_batch_idx
-            )
+            if curr_batch_idx is not None:
+                indices_tuple = indexing.remove_self_comparisons(
+                    indices_tuple, curr_batch_idx
+                )
+            if self.miner:
+                indices_tuple = self.miner(
+                    embeddings, labels, indices_tuple, E_mem, L_mem
+                )
         if input_indices_tuple is None:
             return indices_tuple
         if isinstance(indices_tuple, PairIndices):

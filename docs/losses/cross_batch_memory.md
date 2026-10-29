@@ -24,7 +24,8 @@ then commits the new rows to the queue. All inputs are validated before any
 state changes, and a wrapped loss that raises leaves the queue unchanged.
 
 - Without `enqueue_mask`, every row is enqueued and is also an anchor; pairs of
-  an anchor with its own enqueued copy are removed.
+  an anchor with its own enqueued copy are excluded before mining, so a miner
+  that selects one pair per anchor chooses among the other rows.
 - With `enqueue_mask`, the selected rows are enqueued as references and the
   other rows are anchors.
 - The number of enqueued rows must not exceed `memory_size`; otherwise the call

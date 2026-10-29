@@ -3,6 +3,7 @@ import unittest
 import torch
 
 from pytorch_metric_learning import losses
+from pytorch_metric_learning.distances import LpDistance
 from pytorch_metric_learning.losses import (
     ContrastiveLoss,
     CrossBatchMemory,
@@ -10,6 +11,7 @@ from pytorch_metric_learning.losses import (
     NTXentLoss,
 )
 from pytorch_metric_learning.miners import (
+    BatchEasyHardMiner,
     DistanceWeightedMiner,
     MultiSimilarityMiner,
     PairMarginMiner,
@@ -598,6 +600,49 @@ class TestCrossBatchMemory(unittest.TestCase):
         self.assertFalse(loss.embedding_memory.any())
         self.assertFalse(loss.label_memory.any())
         self.assertEqual((loss.queue_idx, loss.has_been_filled), (0, False))
+
+
+class TestCrossBatchMemorySelectingMiner(unittest.TestCase):
+    def test_easy_positive_miner_skips_each_anchors_queued_copy(self):
+        distance = LpDistance(normalize_embeddings=False)
+        miner = BatchEasyHardMiner(
+            pos_strategy="easy", neg_strategy="hard", distance=distance
+        )
+        memory = CrossBatchMemory(
+            NTXentLoss(), embedding_size=2, memory_size=8, miner=miner
+        ).to(TEST_DEVICE, torch.float64)
+        batches = [
+            [[1.0, 0.0], [0.9, 0.3], [-1.0, 0.0], [-0.8, 0.4]],
+            [[0.7, -0.6], [0.2, 1.0], [-0.3, -1.0], [-0.6, 0.7]],
+        ]
+        labels = torch.tensor([0, 0, 1, 1], device=TEST_DEVICE)
+        stored = torch.empty(0, 2, device=TEST_DEVICE, dtype=torch.float64)
+        stored_labels = labels[:0]
+        for batch in batches:
+            embeddings = torch.tensor(
+                batch, device=TEST_DEVICE, dtype=torch.float64, requires_grad=True
+            )
+            own = torch.arange(len(stored), len(stored) + 4, device=TEST_DEVICE)
+            stored = torch.cat((stored, embeddings.detach()))
+            stored_labels = torch.cat((stored_labels, labels))
+            distances = torch.cdist(embeddings.detach(), stored)
+            same = labels[:, None] == stored_labels[None]
+            positive = same.clone()
+            positive[torch.arange(4, device=TEST_DEVICE), own] = False
+            anchors = torch.arange(4, device=TEST_DEVICE)
+            pairs = PairIndices(
+                anchors,
+                distances.masked_fill(~positive, torch.inf).argmin(dim=1),
+                anchors,
+                distances.masked_fill(same, torch.inf).argmin(dim=1),
+            )
+            expected = NTXentLoss()(embeddings, labels, pairs, stored, stored_labels)
+            expected_grad = torch.autograd.grad(expected, embeddings)[0]
+            loss = memory(embeddings, labels)
+            loss.backward()
+            self.assertGreater(loss.item(), 0)
+            torch.testing.assert_close(loss, expected)
+            torch.testing.assert_close(embeddings.grad, expected_grad)
 
 
 if __name__ == "__main__":

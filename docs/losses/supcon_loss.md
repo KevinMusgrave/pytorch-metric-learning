@@ -3,7 +3,7 @@
 Described in [Supervised Contrastive Learning](https://arxiv.org/abs/2004.11362){target=_blank}.
 
 ```python
-losses.SupConLoss(temperature=0.1, **kwargs)
+losses.SupConLoss(temperature=0.1, **options)
 ```
 
 **Equation**:

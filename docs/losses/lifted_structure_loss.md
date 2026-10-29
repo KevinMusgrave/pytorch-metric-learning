@@ -3,7 +3,7 @@
 The original lifted structure loss as presented in [Deep Metric Learning via Lifted Structured Feature Embedding](https://arxiv.org/pdf/1511.06452.pdf){target=_blank}
 
 ```python
-losses.LiftedStructureLoss(neg_margin=1, pos_margin=0, **kwargs):
+losses.LiftedStructureLoss(neg_margin=1, pos_margin=0, **options):
 ```
 
 **Equation**:

@@ -31,10 +31,9 @@
         "src/pytorch_metric_learning/regularizers/**",
         "src/pytorch_metric_learning/losses/**",
         "src/pytorch_metric_learning/miners/**",
-        "src/pytorch_metric_learning/utils/common_functions.py",
-        "src/pytorch_metric_learning/utils/loss_and_miner_utils.py",
+        "src/pytorch_metric_learning/utils/_common.py",
+        "src/pytorch_metric_learning/utils/indexing.py",
         "src/pytorch_metric_learning/utils/__init__.py",
-        "src/pytorch_metric_learning/utils/module_with_distance_and_reducer.py",
         "src/pytorch_metric_learning/types.py",
         "src/pytorch_metric_learning/py.typed"
       ]
@@ -237,6 +236,7 @@
           "tests/utils/test_triplet_enumeration.py",
           "tests/losses/test_loss_composition.py",
           "tests/docs/__init__.py",
+          "tests/docs/test_documented_capabilities.py",
           "tests/docs/test_documented_signatures.py",
           "tests/docs/test_documentation_paths.py",
           "tests/utils/test_validation.py",
@@ -302,7 +302,6 @@
           "tests/reducers/test_avg_non_zero_reducer.py",
           "tests/reducers/test_class_weighted_reducer.py",
           "tests/reducers/test_divisor_reducer.py",
-          "tests/reducers/test_do_nothing_reducer.py",
           "tests/reducers/test_multiple_reducers.py",
           "tests/reducers/test_per_anchor_reducer.py",
           "tests/reducers/test_setting_reducers.py",
@@ -311,7 +310,7 @@
           "tests/regularizers/test_regular_face_regularizer.py",
           "tests/utils/__init__.py",
           "tests/utils/test_common_functions.py",
-          "tests/utils/test_loss_and_miner_utils.py",
+          "tests/utils/test_indexing.py",
           "tests/helpers.py",
           "conftest.py"
         ],
@@ -426,6 +425,7 @@
           "tests/losses/test_dynamic_soft_margin_loss.py",
           "tests/utils/test_triplet_enumeration.py",
           "tests/losses/test_loss_composition.py",
+          "tests/docs/test_documented_capabilities.py",
           "tests/docs/test_documented_signatures.py",
           "tests/docs/test_documentation_paths.py",
           "tests/utils/test_validation.py",
@@ -741,8 +741,8 @@
         "impact": "No enabled HTTPS client uses the affected certifi trust bundle. Review before enabling a Requests caller or these plugins; update once the fix ages in.",
         "evidence": "https://github.com/certifi/python-certifi/security/advisories/GHSA-6q48-6c7w-9gw2",
         "owner": "Codex",
-        "reviewed": "2026-10-26",
-        "expires": "2026-11-02"
+        "reviewed": "2026-10-28",
+        "expires": "2026-11-04"
       },
       {
         "id": "ghsa-6627-m3xw-93mp",

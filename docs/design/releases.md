@@ -46,7 +46,13 @@ Code Polishy's `supplyChain.pythonLibraries` names `pyproject.toml` explicitly;
 the policy validates every published requirement against its exact development
 pin and still audits the entire frozen dependency graph.
 
-Local and CI numerical suites use the same pinned pytest runner. Existing
+CI runs on pull requests, `master` pushes, and a weekly schedule, so expiring
+dependency assessments fail before a release attempt discovers them. The policy
+gate runs once on the locked Python 3.12 development environment; a second job
+syncs the same lockfile under Python 3.13 and 3.14 and runs the CPU suite, so
+the published `requires-python` range is exercised without a second policy
+installation. The policy tool's installation directory is cached by the lock
+digest. Local and CI numerical suites use the same pinned pytest runner. Existing
 unittest cases remain supported directly by pytest; its configuration owns
 source imports, strict markers, and disabled third-party plugin discovery.
 The root `conftest.py` sets macOS OpenMP defaults before importing Torch or the

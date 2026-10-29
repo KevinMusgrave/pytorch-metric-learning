@@ -33,7 +33,7 @@ class TestCenterInvariantRegularizer(unittest.TestCase):
             loss = loss_func(embeddings, labels)
             loss.backward()
 
-            weights = torch.nn.functional.normalize(loss_func.W, p=2, dim=0)
+            weights = torch.nn.functional.normalize(loss_func.weight, p=2, dim=1).t()
             logits = torch.matmul(embeddings, weights)
             correct_class_loss = torch.nn.functional.cross_entropy(
                 logits / temperature, labels
@@ -42,11 +42,13 @@ class TestCenterInvariantRegularizer(unittest.TestCase):
             correct_reg_loss = 0
             average_squared_weight_norms = 0
             for i in range(num_classes):
-                average_squared_weight_norms += torch.norm(loss_func.W[:, i], p=2) ** 2
+                average_squared_weight_norms += (
+                    torch.norm(loss_func.weight[i], p=2) ** 2
+                )
             average_squared_weight_norms /= num_classes
             for i in range(num_classes):
                 deviation = (
-                    torch.norm(loss_func.W[:, i], p=2) ** 2
+                    torch.norm(loss_func.weight[i], p=2) ** 2
                     - average_squared_weight_norms
                 )
                 correct_reg_loss += (deviation**2) / 4

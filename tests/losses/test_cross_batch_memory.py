@@ -15,7 +15,7 @@ from pytorch_metric_learning.miners import (
     PairMarginMiner,
     TripletMarginMiner,
 )
-from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
+from pytorch_metric_learning.utils import indexing
 
 from .. import TEST_DEVICE, TEST_DTYPES
 from ..helpers import angle_to_coord
@@ -66,7 +66,7 @@ class TestCrossBatchMemory(unittest.TestCase):
                         p[rand_diff_idx] += offsets
                     p %= self.memory_size
                     n = torch.randint(0, batch_size, (num_tuples,)).to(TEST_DEVICE)
-                    a_new, p_new, n_new = lmu.remove_self_comparisons(
+                    a_new, p_new, n_new = indexing.remove_self_comparisons(
                         (a, p, n), loss.curr_batch_idx, loss.memory_size
                     )
                     if identical:
@@ -106,7 +106,7 @@ class TestCrossBatchMemory(unittest.TestCase):
                         torch.randint(0, batch_size, (num_tuples,)).to(TEST_DEVICE)
                         + loss.curr_batch_idx[0]
                     ) % self.memory_size
-                    a1_new, p_new, a2_new, n_new = lmu.remove_self_comparisons(
+                    a1_new, p_new, a2_new, n_new = indexing.remove_self_comparisons(
                         (a1, p, a2, n), loss.curr_batch_idx, loss.memory_size
                     )
                     if identical:
@@ -164,7 +164,7 @@ class TestCrossBatchMemory(unittest.TestCase):
                             not_enqueue_labels = labels[~enqueue_mask]
                             enqueue_emb = embeddings[enqueue_mask]
                             enqueue_labels = labels[enqueue_mask]
-                            pairs = lmu.get_all_pairs_indices(
+                            pairs = indexing.get_all_pairs_indices(
                                 not_enqueue_labels, enqueue_labels
                             )
                             inner_loss_val = inner_loss(
@@ -243,7 +243,7 @@ class TestCrossBatchMemory(unittest.TestCase):
                     memory_size=self.memory_size,
                 ).to(TEST_DEVICE, dtype)
                 all_embeddings = torch.tensor([], dtype=dtype).to(TEST_DEVICE)
-                all_labels = torch.LongTensor([]).to(TEST_DEVICE)
+                all_labels = torch.tensor([], dtype=torch.long).to(TEST_DEVICE)
                 for _ in range(num_iter):
                     embeddings = (
                         torch.randn(batch_size, self.embedding_size)
@@ -256,8 +256,8 @@ class TestCrossBatchMemory(unittest.TestCase):
                     all_embeddings = torch.cat([all_embeddings, embeddings])
                     all_labels = torch.cat([all_labels, labels])
 
-                    indices_tuple = lmu.get_all_pairs_indices(labels, all_labels)
-                    a1, p, a2, n = lmu.remove_self_comparisons(
+                    indices_tuple = indexing.get_all_pairs_indices(labels, all_labels)
+                    a1, p, a2, n = indexing.remove_self_comparisons(
                         indices_tuple, self.loss.curr_batch_idx, self.loss.memory_size
                     )
                     correct_loss = inner_loss(
@@ -272,7 +272,7 @@ class TestCrossBatchMemory(unittest.TestCase):
                     indices_tuple = inner_miner(
                         embeddings, labels, all_embeddings, all_labels
                     )
-                    a1, p, a2, n = lmu.remove_self_comparisons(
+                    a1, p, a2, n = indexing.remove_self_comparisons(
                         indices_tuple,
                         self.loss_with_miner.curr_batch_idx,
                         self.loss_with_miner.memory_size,
@@ -394,7 +394,9 @@ class TestCrossBatchMemory(unittest.TestCase):
                 labels = torch.arange(batch_size).to(TEST_DEVICE)
                 self.loss(embeddings, labels)
 
-                a1, p, a2, n = lmu.get_all_pairs_indices(labels, self.loss.label_memory)
+                a1, p, a2, n = indexing.get_all_pairs_indices(
+                    labels, self.loss.label_memory
+                )
                 self.assertTrue(
                     not torch.any((labels[a1] - self.loss.label_memory[p]).bool())
                 )
@@ -448,13 +450,13 @@ class TestCrossBatchMemory(unittest.TestCase):
                 self.loss(embeddings, labels)
                 for curr_miner in [pair_miner, triplet_miner]:
                     input_indices_tuple = curr_miner(embeddings, labels)
-                    a1ii, pii, a2ii, nii = lmu.convert_to_pairs(
+                    a1ii, pii, a2ii, nii = indexing.convert_to_pairs(
                         input_indices_tuple, labels
                     )
-                    indices_tuple = lmu.get_all_pairs_indices(
+                    indices_tuple = indexing.get_all_pairs_indices(
                         labels, self.loss.label_memory
                     )
-                    a1i, pi, a2i, ni = lmu.remove_self_comparisons(
+                    a1i, pi, a2i, ni = indexing.remove_self_comparisons(
                         indices_tuple, self.loss.curr_batch_idx, self.loss.memory_size
                     )
                     a1, p, a2, n = self.loss.create_indices_tuple(
@@ -489,7 +491,7 @@ class TestCrossBatchMemory(unittest.TestCase):
                 ).to(TEST_DEVICE, dtype)
 
                 all_embeddings = torch.tensor([], dtype=dtype).to(TEST_DEVICE)
-                all_labels = torch.LongTensor([]).to(TEST_DEVICE)
+                all_labels = torch.tensor([], dtype=torch.long).to(TEST_DEVICE)
                 for _ in range(num_iter):
                     embeddings = torch.randn(
                         batch_size, self.embedding_size, device=TEST_DEVICE, dtype=dtype
@@ -503,8 +505,8 @@ class TestCrossBatchMemory(unittest.TestCase):
                     all_embeddings = torch.cat([all_embeddings, embeddings])
                     all_labels = torch.cat([all_labels, labels])
 
-                    indices_tuple = lmu.get_all_pairs_indices(labels, all_labels)
-                    a1, p, a2, n = lmu.remove_self_comparisons(
+                    indices_tuple = indexing.get_all_pairs_indices(labels, all_labels)
+                    a1, p, a2, n = indexing.remove_self_comparisons(
                         indices_tuple, self.loss.curr_batch_idx, self.loss.memory_size
                     )
 
@@ -518,8 +520,6 @@ class TestCrossBatchMemory(unittest.TestCase):
                     self.assertTrue(torch.isclose(loss, correct_loss))
 
     def load_valid_loss_fns(self):
-        supported_losses = CrossBatchMemory.supported_losses()
-
         loss_fns = [
             losses.AngularLoss(),
             losses.CircleLoss(),
@@ -535,9 +535,6 @@ class TestCrossBatchMemory(unittest.TestCase):
             losses.TripletMarginLoss(),
             losses.TupletMarginLoss(),
         ]
-
-        loaded_loss_types = [type(loss) for loss in loss_fns]
-        assert set(loaded_loss_types) == set(supported_losses)
 
         return loss_fns
 

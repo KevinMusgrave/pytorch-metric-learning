@@ -1,23 +1,29 @@
-import torch
+from typing import Unpack
 
-from ..utils import common_functions as c_f
+import torch
+from torch import Tensor
+
+from ..types import LossDict, RegularizerOptions
+from ..utils._common import arange_like
 from .base_regularizer import BaseRegularizer
 
 
 class LpRegularizer(BaseRegularizer):
-    def __init__(self, p=2, power=1, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(
+        self, p: float = 2, power: float = 1, **options: Unpack[RegularizerOptions]
+    ) -> None:
+        super().__init__(**options)
         self.p = p
         self.power = power
 
-    def compute_loss(self, x):
+    def compute_loss(self, x: Tensor) -> LossDict:
         reg = torch.norm(x, p=self.p, dim=1)
         if self.power != 1:
             reg = reg**self.power
         return {
             "loss": {
                 "losses": reg,
-                "indices": c_f.torch_arange_from_size(x),
+                "indices": arange_like(x),
                 "reduction_type": "element",
             }
         }

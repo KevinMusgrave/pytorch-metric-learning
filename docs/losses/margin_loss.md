@@ -9,7 +9,7 @@ losses.MarginLoss(margin=0.2,
                 triplets_per_anchor="all",
                 learn_beta=False,
                 num_classes=None,
-                **kwargs)
+                **options)
 ```
 
 **Equation**:

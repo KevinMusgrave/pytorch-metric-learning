@@ -4,7 +4,7 @@
 
 ```python
 losses.CosFaceLoss(num_classes, embedding_size, margin=0.35, scale=64,
-    *, weight_regularizer=None, weight_reg_weight=1, weight_init_func=None, **kwargs)
+    *, weight_regularizer=None, weight_reg_weight=1, weight_init_func=None, **options)
 ```
 
 **Equation**:

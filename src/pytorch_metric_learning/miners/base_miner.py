@@ -1,63 +1,67 @@
 import torch
+from torch import Tensor
 
+from ..distances import BaseDistance, LpDistance
 from ..types import IndicesTuple
-from ..utils import common_functions as c_f
-from ..utils.module_with_distance_and_reducer import ModuleWithDistance
+from ..utils import _common
 
 
-class BaseMiner(ModuleWithDistance):
+class BaseMiner(torch.nn.Module):
+    def __init__(self, *, distance: BaseDistance | None = None) -> None:
+        super().__init__()
+        self.distance = distance if distance is not None else self.default_distance()
+
+    def default_distance(self) -> BaseDistance:
+        return LpDistance()
+
     def mine(
-        self,
-        embeddings: torch.Tensor,
-        labels: torch.Tensor,
-        ref_emb: torch.Tensor,
-        ref_labels: torch.Tensor,
+        self, embeddings: Tensor, labels: Tensor, ref_emb: Tensor, ref_labels: Tensor
     ) -> IndicesTuple:
         raise NotImplementedError
 
-    def validate_output(self, output: IndicesTuple) -> None:
-        if not isinstance(output, (tuple, list)) or not all(
-            isinstance(index, torch.Tensor) for index in output
-        ):
-            raise TypeError("Mining must return a tuple or list of index tensors")
-        if any(index.ndim != 1 for index in output):
-            raise ValueError("Mining indices must be one-dimensional tensors")
-        if len(output) == 3:
-            if not len(output[0]) == len(output[1]) == len(output[2]):
-                raise ValueError(
-                    "Triplet mining must return three tensors of equal length"
-                )
-        elif len(output) == 4:
-            if len(output[0]) != len(output[1]):
-                raise ValueError(
-                    "Positive anchor and partner indices must have equal lengths"
-                )
-            if len(output[2]) != len(output[3]):
-                raise ValueError(
-                    "Negative anchor and partner indices must have equal lengths"
-                )
-        else:
-            raise ValueError(
-                "Mining must return three triplet or four pair index tensors"
-            )
-
-    def prepare_inputs(self, embeddings, labels, ref_emb, ref_labels):
-        c_f.check_shapes(embeddings, labels)
-        labels = labels.to(device=embeddings.device)
-        ref_emb, ref_labels = c_f.set_ref_emb(embeddings, labels, ref_emb, ref_labels)
-        return labels, ref_emb, ref_labels
-
     def forward(
         self,
-        embeddings: torch.Tensor,
-        labels: torch.Tensor,
-        ref_emb: torch.Tensor | None = None,
-        ref_labels: torch.Tensor | None = None,
+        embeddings: Tensor,
+        labels: Tensor,
+        ref_emb: Tensor | None = None,
+        ref_labels: Tensor | None = None,
     ) -> IndicesTuple:
         with torch.no_grad():
-            labels, ref_emb, ref_labels = self.prepare_inputs(
+            embeddings, labels, ref_emb, ref_labels = prepare_mining_inputs(
                 embeddings, labels, ref_emb, ref_labels
             )
-            mining_output = self.mine(embeddings, labels, ref_emb, ref_labels)
-        self.validate_output(mining_output)
-        return mining_output
+            output = self.mine(embeddings, labels, ref_emb, ref_labels)
+        validate_output(output)
+        return output
+
+
+def prepare_mining_inputs(
+    embeddings: Tensor,
+    labels: Tensor,
+    ref_emb: Tensor | None,
+    ref_labels: Tensor | None,
+) -> tuple[Tensor, Tensor, Tensor, Tensor]:
+    prepared = _common.prepare_inputs(embeddings, labels, ref_emb, ref_labels)
+    embeddings, prepared_labels, ref_emb, prepared_ref_labels = prepared
+    if prepared_labels is None or prepared_ref_labels is None:
+        raise ValueError("Mining requires labels and ref_labels")
+    return embeddings, prepared_labels, ref_emb, prepared_ref_labels
+
+
+def validate_output(output: IndicesTuple) -> None:
+    if not isinstance(output, (tuple, list)) or not all(
+        isinstance(index, Tensor) for index in output
+    ):
+        raise TypeError("Mining must return a tuple of index tensors")
+    if any(index.ndim != 1 for index in output):
+        raise ValueError("Mining indices must be one-dimensional tensors")
+    if len(output) == 3:
+        if not len(output[0]) == len(output[1]) == len(output[2]):
+            raise ValueError("Triplet mining must return three tensors of equal length")
+    elif len(output) == 4:
+        if len(output[0]) != len(output[1]) or len(output[2]) != len(output[3]):
+            raise ValueError(
+                "Pair mining must return anchor and partner indices of equal length"
+            )
+    else:
+        raise ValueError("Mining must return three triplet or four pair index tensors")

@@ -2,16 +2,24 @@
 
 [SphereFace: Deep Hypersphere Embedding for Face Recognition](https://arxiv.org/pdf/1704.08063.pdf){target=_blank}
 
-**Mathematical reference**: The paper linked above defines the objective and derivation. This page specifies the library interface and its settings.
-
 ```python
 losses.SphereFaceLoss(num_classes, embedding_size, margin=4, scale=1,
-    *, weight_regularizer=None, weight_reg_weight=1, weight_init_func=None, **kwargs)
+    *, weight_regularizer=None, weight_reg_weight=1, weight_init_func=None, **options)
 ```
+
+**Equation**:
+
+$$
+L_i = -\log\left(\frac{e^{\lVert \mathbf{x}_i \rVert \psi(\theta_{y_i})}}{e^{\lVert \mathbf{x}_i \rVert \psi(\theta_{y_i})} + \sum_{j \neq y_i} e^{\lVert \mathbf{x}_i \rVert \cos(\theta_j)}}\right)
+$$
+
+with $\psi$ as in [LargeMarginSoftmaxLoss](large_margin_softmax_loss.md#largemarginsoftmaxloss). The weight vectors are L2-normalized, so only the embedding norm scales the logits.
+
+**Implementation notes**: The paper's annealing with a decreasing $\lambda$ is not implemented.
 
 **Parameters**:
 
-See [LargeMarginSoftmaxLoss](large_margin_softmax_loss.md#largemarginsoftmaxloss)
+See [LargeMarginSoftmaxLoss](large_margin_softmax_loss.md#largemarginsoftmaxloss). `margin` must be a positive integer; the paper uses 4.
 
 **Other info**
 

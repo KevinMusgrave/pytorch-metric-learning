@@ -1,35 +1,28 @@
 from torch import Tensor
 
+from ..distances import BaseDistance
 from ..types import IndicesTuple
-from ..utils import loss_and_miner_utils as lmu
+from ..utils import indexing
 from .base_miner import BaseMiner
 
 
 class PairMarginMiner(BaseMiner):
-    def __init__(self, pos_margin=0.2, neg_margin=0.8, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(
+        self,
+        pos_margin: float = 0.2,
+        neg_margin: float = 0.8,
+        *,
+        distance: BaseDistance | None = None,
+    ) -> None:
+        super().__init__(distance=distance)
         self.pos_margin = pos_margin
         self.neg_margin = neg_margin
 
     def mine(
-        self,
-        embeddings: Tensor,
-        labels: Tensor,
-        ref_emb: Tensor,
-        ref_labels: Tensor,
+        self, embeddings: Tensor, labels: Tensor, ref_emb: Tensor, ref_labels: Tensor
     ) -> IndicesTuple:
         mat = self.distance(embeddings, ref_emb)
-        a1, p, a2, n = lmu.get_all_pairs_indices(labels, ref_labels)
-        pos_pair = mat[a1, p]
-        neg_pair = mat[a2, n]
-        pos_mask = (
-            pos_pair < self.pos_margin
-            if self.distance.is_inverted
-            else pos_pair > self.pos_margin
-        )
-        neg_mask = (
-            neg_pair > self.neg_margin
-            if self.distance.is_inverted
-            else neg_pair < self.neg_margin
-        )
+        a1, p, a2, n = indexing.get_all_pairs_indices(labels, ref_labels)
+        pos_mask = self.distance.margin(mat[a1, p], self.pos_margin) > 0
+        neg_mask = self.distance.margin(self.neg_margin, mat[a2, n]) > 0
         return a1[pos_mask], p[pos_mask], a2[neg_mask], n[neg_mask]

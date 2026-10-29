@@ -1,15 +1,21 @@
+from typing import Unpack
+
 import torch
 from torch import Tensor
 
-from ..types import IndicesTuple, LossDict
-from ..utils import common_functions as c_f
-from ..utils import loss_and_miner_utils as lmu
+from ..types import IndicesTuple, LossDict, LossOptions, PairIndices
+from ..utils import _common
 from .generic_pair_loss import GenericPairLoss
 
 
 class LiftedStructureLoss(GenericPairLoss):
-    def __init__(self, neg_margin=1, pos_margin=0, **kwargs):
-        super().__init__(mat_based_loss=False, **kwargs)
+    def __init__(
+        self,
+        neg_margin: float = 1.0,
+        pos_margin: float = 0.0,
+        **options: Unpack[LossOptions],
+    ) -> None:
+        super().__init__(**options)
         self.neg_margin = neg_margin
         self.pos_margin = pos_margin
 
@@ -21,63 +27,63 @@ class LiftedStructureLoss(GenericPairLoss):
         ref_emb: Tensor,
         ref_labels: Tensor | None,
     ) -> LossDict:
-        c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
+        _common.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
         return super().compute_loss(
             embeddings, labels, indices_tuple, ref_emb, ref_labels
         )
 
-    def _compute_pair_loss(self, pos_pairs, neg_pairs, indices_tuple):
-        a1, p, a2, _ = indices_tuple
-
-        if len(a1) > 0 and len(a2) > 0:
-            pos_pairs = pos_pairs.unsqueeze(1)
-            dtype = pos_pairs.dtype
-            n_per_p = (
-                (a2.unsqueeze(0) == a1.unsqueeze(1))
-                | (a2.unsqueeze(0) == p.unsqueeze(1))
-            ).to(dtype=dtype)
-            neg_pairs = neg_pairs * n_per_p
-            keep_mask = ~(n_per_p == 0)
-
-            remaining_pos_margin = self.distance.margin(pos_pairs, self.pos_margin)
-            remaining_neg_margin = self.distance.margin(self.neg_margin, neg_pairs)
-
-            neg_pairs_loss = lmu.logsumexp(
-                remaining_neg_margin, keep_mask=keep_mask, add_one=False, dim=1
-            )
-            loss_per_pos_pair = neg_pairs_loss + remaining_pos_margin
-            loss_per_pos_pair = torch.relu(loss_per_pos_pair) ** 2
-            loss_per_pos_pair /= 2
-            return {
-                "loss": {
-                    "losses": loss_per_pos_pair,
-                    "indices": (a1, p),
-                    "reduction_type": "pos_pair",
-                }
+    def pair_loss(self, mat: Tensor, pairs: PairIndices) -> LossDict:
+        pos_pairs, neg_pairs = self.pair_values(mat, pairs)
+        a1, p, a2, _ = pairs
+        if len(a1) == 0 or len(a2) == 0:
+            return self.zero_losses(mat)
+        pos_pairs = pos_pairs.unsqueeze(1)
+        keep_mask = (a2.unsqueeze(0) == a1.unsqueeze(1)) | (
+            a2.unsqueeze(0) == p.unsqueeze(1)
+        )
+        remaining_pos_margin = self.distance.margin(pos_pairs, self.pos_margin)
+        remaining_neg_margin = self.distance.margin(self.neg_margin, neg_pairs)
+        neg_pairs_loss = _common.logsumexp(
+            remaining_neg_margin.expand(len(a1), -1),
+            keep_mask=keep_mask,
+            add_one=False,
+            dim=1,
+        )
+        loss_per_pos_pair = torch.relu(neg_pairs_loss + remaining_pos_margin) ** 2 / 2
+        return {
+            "loss": {
+                "losses": loss_per_pos_pair.squeeze(1),
+                "indices": (a1, p),
+                "reduction_type": "pos_pair",
             }
-        return self.zero_losses()
+        }
 
 
 class GeneralizedLiftedStructureLoss(GenericPairLoss):
-    def __init__(self, neg_margin=1, pos_margin=0, **kwargs):
-        super().__init__(mat_based_loss=True, **kwargs)
+    def __init__(
+        self,
+        neg_margin: float = 1.0,
+        pos_margin: float = 0.0,
+        **options: Unpack[LossOptions],
+    ) -> None:
+        super().__init__(**options)
         self.neg_margin = neg_margin
         self.pos_margin = pos_margin
 
-    def _compute_matrix_loss(self, mat, pos_mask, neg_mask):
+    def pair_loss(self, mat: Tensor, pairs: PairIndices) -> LossDict:
+        pos_mask, neg_mask = self.pair_masks(mat, pairs)
         remaining_pos_margin = self.distance.margin(mat, self.pos_margin)
         remaining_neg_margin = self.distance.margin(self.neg_margin, mat)
-
-        pos_loss = lmu.logsumexp(
-            remaining_pos_margin, keep_mask=pos_mask.bool(), add_one=False
+        pos_loss = _common.logsumexp(
+            remaining_pos_margin, keep_mask=pos_mask, add_one=False
         )
-        neg_loss = lmu.logsumexp(
-            remaining_neg_margin, keep_mask=neg_mask.bool(), add_one=False
+        neg_loss = _common.logsumexp(
+            remaining_neg_margin, keep_mask=neg_mask, add_one=False
         )
         return {
             "loss": {
-                "losses": torch.relu(pos_loss + neg_loss),
-                "indices": c_f.torch_arange_from_size(mat),
+                "losses": torch.relu(pos_loss + neg_loss).squeeze(1),
+                "indices": _common.arange_like(mat),
                 "reduction_type": "element",
             }
         }

@@ -1,43 +1,41 @@
 import torch
 from torch import Tensor
 
-from ..distances import CosineSimilarity
+from ..distances import BaseDistance, CosineSimilarity
 from ..types import IndicesTuple
-from ..utils import common_functions as c_f
-from ..utils import loss_and_miner_utils as lmu
+from ..utils import _common, indexing
 from .base_miner import BaseMiner
 
 
 class MultiSimilarityMiner(BaseMiner):
-    def __init__(self, epsilon=0.1, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(
+        self, epsilon: float = 0.1, *, distance: BaseDistance | None = None
+    ) -> None:
+        super().__init__(distance=distance)
         self.epsilon = epsilon
 
     def mine(
-        self,
-        embeddings: Tensor,
-        labels: Tensor,
-        ref_emb: Tensor,
-        ref_labels: Tensor,
+        self, embeddings: Tensor, labels: Tensor, ref_emb: Tensor, ref_labels: Tensor
     ) -> IndicesTuple:
         mat = self.distance(embeddings, ref_emb)
-        a1, p, a2, n = lmu.get_all_pairs_indices(labels, ref_labels)
-
+        a1, p, a2, n = indexing.get_all_pairs_indices(labels, ref_labels)
         if len(a1) == 0 or len(a2) == 0:
-            empty = torch.tensor([], device=labels.device, dtype=torch.long)
-            return empty.clone(), empty.clone(), empty.clone(), empty.clone()
-
-        mat_neg_sorting = mat
-        mat_pos_sorting = mat.clone()
+            empty = torch.empty(0, device=labels.device, dtype=torch.long)
+            return empty, empty.clone(), empty.clone(), empty.clone()
 
         dtype = mat.dtype
         pos_ignore = (
-            c_f.pos_inf(dtype) if self.distance.is_inverted else c_f.neg_inf(dtype)
+            _common.pos_inf(dtype)
+            if self.distance.is_inverted
+            else _common.neg_inf(dtype)
         )
         neg_ignore = (
-            c_f.neg_inf(dtype) if self.distance.is_inverted else c_f.pos_inf(dtype)
+            _common.neg_inf(dtype)
+            if self.distance.is_inverted
+            else _common.pos_inf(dtype)
         )
-
+        mat_pos_sorting = mat.clone()
+        mat_neg_sorting = mat.clone()
         mat_pos_sorting[a2, n] = pos_ignore
         mat_neg_sorting[a1, p] = neg_ignore
         if embeddings is ref_emb:
@@ -66,8 +64,7 @@ class MultiSimilarityMiner(BaseMiner):
         p = pos_sorted_idx[a1, hard_pos_idx[1]]
         a2 = hard_neg_idx[0]
         n = neg_sorted_idx[a2, hard_neg_idx[1]]
-
         return a1, p, a2, n
 
-    def get_default_distance(self):
+    def default_distance(self) -> BaseDistance:
         return CosineSimilarity()

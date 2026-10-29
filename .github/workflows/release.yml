@@ -33,6 +33,11 @@ jobs:
         with:
           version: 0.13.4
           python-version-file: .python-version
+      - name: Cache the locked policy tools
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: ~/.local/share/code-polishy
+          key: code-polishy-${{ runner.os }}-${{ hashFiles('.code-polishy.lock.json') }}
       - name: Install locked policy tools
         run: ./code-polishyw setup
       - name: Review dependencies

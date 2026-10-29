@@ -3,7 +3,7 @@
 This was presented in [In Defense of the Triplet Loss for Person Re-Identification](https://arxiv.org/pdf/1703.07737.pdf){target=_blank}. It is a modification of the original [LiftedStructureLoss](lifted_structure_loss.md#liftedstructureloss)
 
 ```python
-losses.GeneralizedLiftedStructureLoss(neg_margin=1, pos_margin=0, **kwargs)
+losses.GeneralizedLiftedStructureLoss(neg_margin=1, pos_margin=0, **options)
 ```
 
 **Equation**:

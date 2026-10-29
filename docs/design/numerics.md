@@ -27,23 +27,50 @@ count. With separate references, only anchor indices address query weights.
 Weighted random triplet sampling uses float32 probabilities for float16 inputs;
 the original precision choice followed [PyTorch's multinomial CUDA issue](https://github.com/pytorch/pytorch/issues/19900).
 
-Losses compose explicitly. A loss's reducer reduces only its own objective
-terms, named by `sub_loss_names()`, which returns constants so the default
-reducer can be copied per term while the loss is constructed. Embedding and
-weight regularization are constructor arguments, not mixins discovered by
-walking the class hierarchy or matching class names. Their weighted, already
-reduced penalties are added after reduction; an unreduced `DoNothingReducer`
-output carries them as `already_reduced` entries. Weight-bearing losses declare
-`weight_regularizer`, `weight_reg_weight`, and `weight_init_func` as keyword-only
-arguments so the public signature is complete without reading base classes.
+Losses compose explicitly. `BaseMetricLossFunction`, `BaseMiner`, and
+`BaseRegularizer` extend `torch.nn.Module` directly and declare their options as
+keyword-only parameters; concrete classes forward `**options` typed by
+`types.LossOptions` or `types.RegularizerOptions` so IDEs and the type checker
+see the full signature without cooperative multiple inheritance. A loss's
+reducer reduces every term it computes, named by the `sub_loss_names` class
+attribute, and returns one tensor. The reducer object is used as given: copying
+it hid shared state and made `loss.reducer` a different object from the one the
+caller held. `BaseReducer.forward` sums the per-term reductions, so a single
+reducer serves multi-term losses and `MultipleReducers` is the only mechanism
+for per-term choices. Embedding and weight regularization are constructor
+arguments, not mixins discovered by walking the class hierarchy or matching
+class names. Their weighted, already reduced penalties are added after
+reduction; `loss_terms()` returns the unreduced objective terms together with
+those penalties for callers who want their own aggregation. Weight-bearing
+losses declare `weight_regularizer`, `weight_reg_weight`, and
+`weight_init_func` as keyword-only arguments and store their class vectors in a
+parameter named `weight` with one row per class or center, the `nn.Linear`
+layout, so regularizers, initializers, and documentation address one shape.
+`ArcFaceLoss` takes its margin in radians because the paper does, and
+`LargeMarginSoftmaxLoss` rejects non-integer margins because the binomial
+expansion is defined for integers only.
 
 The public types in `pytorch_metric_learning.types` describe this protocol
 without wrapping its dictionaries or tensors. `LossDict` maps sub-loss names to
-`LossTerm`; `IndicesTuple` distinguishes the existing three-tensor triplets
+`LossTerm`, whose `losses` entry is always a tensor: an empty tensor reduces to
+a differentiable zero, which removed the literal-zero sentinel every reducer had
+to special-case. `IndicesTuple` distinguishes the existing three-tensor triplets
 from four-tensor pairs. Loss computation and mining expose these annotations,
-and reducer inputs share the same term type. `DoNothingReducer` returns the
-dictionary; ordinary reducers return a tensor. The distribution includes
-`py.typed` for consumers of these annotated boundaries.
+and reducer inputs share the same term type. Every reducer returns a tensor.
+The distribution includes `py.typed`, and the policy check type-checks the
+package, tests, and recipes, so the annotations are verified rather than
+decorative. `GenericPairLoss` exposes one hook, `pair_loss(mat, pairs)`, with
+`pair_values` and `pair_masks` helpers; the former constructor flag selecting
+between two private hooks made the contract depend on construction state.
+`CrossBatchMemory` and `SelfSupervisedLoss` accept any `BaseMetricLossFunction`
+and rely on the wrapped loss's own `ref_emb` validation instead of an allowlist
+of classes, so custom losses compose without registration.
+
+Public index utilities live in `utils.indexing`; everything else under `utils`
+with a leading underscore is private. Random triplet sampling draws positives
+and negatives with row-wise `torch.multinomial` over the match and difference
+masks, with one host synchronization for the maximum count, instead of a Python
+loop over labels with host random draws.
 
 Validation uses explicit exceptions and remains active under `python -O`.
 Invalid argument types raise `TypeError`; invalid values, shapes, tuple lengths,
@@ -146,12 +173,18 @@ values, gradients, and sequential updates. Float16 histogram and gradient compar
 accumulation; float32 and float64 retain PyTorch's default comparison tolerances.
 
 Some implementation choices are numerical rather than mathematical.
-`LpDistance` computes float16 and bfloat16 matrices from row pairs because
-`torch.cdist` lacks CPU kernels for those types. This preserves the input dtype
-and autograd outside autocast. Tests compare values and both input gradients
-against explicit float64 norms for normalized and unnormalized embeddings,
-L1 and L2 distances, and powers 1 and 2. Comparisons allow four machine epsilons
-of relative error and one of absolute error for low-precision rounding.
+`LpDistance` computes float16 and bfloat16 matrices with `torch.cdist` in
+float32 and casts the result, because `torch.cdist` lacks CPU kernels for those
+types and expanding every row pair costs memory proportional to queries times
+references times dimensions. The cast is differentiable, so the input dtype and
+autograd are preserved outside autocast. Tests compare values and both input
+gradients against explicit float64 norms for normalized and unnormalized
+embeddings, L1 and L2 distances, and powers 1 and 2. Comparisons allow four
+machine epsilons of relative error and one of absolute error for low-precision
+rounding. Default reductions avoid data-dependent shapes: `ThresholdReducer`
+masks and counts instead of indexing, and `DivisorReducer` selects with
+`torch.where`, so the common loss paths neither synchronize with the host nor
+break full-graph compilation.
 `ManifoldLoss` inverts its random-walk matrix in float32,
 which half precision lacks, and masks excluded terms with $-\infty$ before
 log-sum-exp rather than subtracting margins, avoiding cancellation; a sample's

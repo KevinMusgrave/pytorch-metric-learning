@@ -18,14 +18,14 @@ class TestThresholdConsistentMarginLoss(unittest.TestCase):
         torch.manual_seed(3459)
         for dtype in TEST_DTYPES:
             loss_func = MultipleLosses(
-                losses=[
-                    ContrastiveLoss(
+                losses={
+                    "contrastive": ContrastiveLoss(
                         distance=CosineSimilarity(),
                         pos_margin=0.9,
                         neg_margin=0.4,
                     ),
-                    ThresholdConsistentMarginLoss(),
-                ]
+                    "tcm": ThresholdConsistentMarginLoss(),
+                }
             )
             embs = torch.tensor(
                 [

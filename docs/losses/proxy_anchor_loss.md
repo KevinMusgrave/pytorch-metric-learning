@@ -4,7 +4,7 @@
 
 ```python
 losses.ProxyAnchorLoss(num_classes, embedding_size, margin = 0.1, alpha = 32,
-    *, weight_regularizer=None, weight_reg_weight=1, weight_init_func=None, **kwargs)
+    *, weight_regularizer=None, weight_reg_weight=1, weight_init_func=None, **options)
 ```
 
 **Equation**:
@@ -27,7 +27,7 @@ Here $P$ is the set of all proxies, $P^+$ the proxies whose class is in the batc
 
 **Other info**
 
-- Accepts the keyword-only [learnable weight arguments](../losses.md#learnable-weight-arguments) `weight_regularizer`, `weight_reg_weight`, and `weight_init_func`.
+- The proxies are the `weight` parameter, shaped `(num_classes, embedding_size)`. Accepts the keyword-only [learnable weight arguments](../losses.md#learnable-weight-arguments) `weight_regularizer`, `weight_reg_weight`, and `weight_init_func`.
 - This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
 
 ```python

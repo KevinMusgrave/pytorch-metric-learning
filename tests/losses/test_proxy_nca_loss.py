@@ -16,7 +16,7 @@ class TestProxyNCALoss(unittest.TestCase):
                 torch.manual_seed(234)
                 loss_func = ProxyNCALoss(4, 8).to(TEST_DEVICE)
                 encoder = torch.nn.Linear(8, 8).to(TEST_DEVICE)
-                parameters = (*encoder.parameters(), loss_func.proxies)
+                parameters = (*encoder.parameters(), loss_func.weight)
                 optimizer = torch.optim.Adam(parameters, lr=0.01)
                 labels = torch.arange(4, device=TEST_DEVICE).repeat_interleave(3)
                 inputs = torch.randn(12, 8, device=TEST_DEVICE)
@@ -28,7 +28,7 @@ class TestProxyNCALoss(unittest.TestCase):
                         logits = loss_func.get_logits(embeddings)
                     self.assertEqual(embeddings.dtype, dtype)
                     normalized_embeddings = F.normalize(embeddings.float(), dim=1)
-                    normalized_proxies = F.normalize(loss_func.proxies, dim=1)
+                    normalized_proxies = F.normalize(loss_func.weight, dim=1)
                     distances = (
                         (normalized_embeddings[:, None] - normalized_proxies[None])
                         .square()
@@ -46,10 +46,10 @@ class TestProxyNCALoss(unittest.TestCase):
                     ):
                         torch.testing.assert_close(parameter.grad, expected_grad)
                     optimizer.step()
-                    self.assertIs(loss_func.proxies, parameters[-1])
-                    self.assertEqual(loss_func.proxies.dtype, torch.float32)
+                    self.assertIs(loss_func.weight, parameters[-1])
+                    self.assertEqual(loss_func.weight.dtype, torch.float32)
                     self.assertEqual(
-                        optimizer.state[loss_func.proxies]["exp_avg"].dtype,
+                        optimizer.state[loss_func.weight]["exp_avg"].dtype,
                         torch.float32,
                     )
 
@@ -73,7 +73,7 @@ class TestProxyNCALoss(unittest.TestCase):
             loss.backward()
 
             normalized_embeddings = torch.nn.functional.normalize(embeddings)
-            proxies = torch.nn.functional.normalize(loss_func.proxies, p=2, dim=1)
+            proxies = torch.nn.functional.normalize(loss_func.weight, p=2, dim=1)
             correct_loss = torch.zeros((), dtype=dtype, device=TEST_DEVICE)
             for i in range(len(normalized_embeddings)):
                 curr_emb, curr_label = normalized_embeddings[i], labels[i]

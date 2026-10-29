@@ -1,8 +1,15 @@
 import torch
+from torch import Tensor
 
-from .mean_reducer import MeanReducer
+from .base_reducer import BaseReducer
 
 
-class SumReducer(MeanReducer):
-    def element_reduction(self, losses, loss_indices, embeddings, labels, **kwargs):
+class SumReducer(BaseReducer):
+    def element_reduction(
+        self,
+        losses: Tensor,
+        loss_indices: Tensor,
+        embeddings: Tensor,
+        labels: Tensor | None,
+    ) -> Tensor:
         return torch.sum(losses)

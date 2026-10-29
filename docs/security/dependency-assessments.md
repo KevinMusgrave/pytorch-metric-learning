@@ -32,8 +32,12 @@ executable dependencies is the greater risk during the remaining 24 days.
 ## Retained aged dependencies
 
 The following advisories remain visible under exact `not-affected` assessments
-expiring 2026-11-25, except certifi's critical-severity assessment, which must be
-reviewed again by 2026-11-02. Reassess before adding the affected APIs or deployment modes.
+expiring 2026-11-25, except certifi's critical-severity assessment, which the
+policy limits to seven days per review: it was re-verified on 2026-10-28 and
+expires on 2026-11-04. `mkdocs.yml` still enables no plugins and no repository
+source imports Requests. Repeat that check weekly until 2026-11-19, when the
+fixed release reaches 30 days and should replace the aged one. Reassess before
+adding the affected APIs or deployment modes.
 
 | Dependency        | Advisory                                 | Enabled path and absent prerequisite                                                                                                                                                                                                                                                                                                         |
 | ----------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

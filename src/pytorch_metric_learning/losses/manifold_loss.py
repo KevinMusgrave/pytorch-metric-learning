@@ -1,11 +1,12 @@
 import math
+from typing import Unpack
 
 import torch
 from torch import Tensor, nn
 
-from ..distances import CosineSimilarity
-from ..types import IndicesTuple, LossDict
-from ..utils import common_functions as c_f
+from ..distances import BaseDistance, CosineSimilarity
+from ..types import IndicesTuple, LossDict, LossOptions
+from ..utils import _common
 from .base_metric_loss_function import BaseMetricLossFunction
 
 
@@ -17,12 +18,11 @@ class ManifoldLoss(BaseMetricLossFunction):
         lambda_c: float = 1.0,
         alpha: float = 0.8,
         margin: float = 5e-4,
-        **kwargs,
-    ):
-        super().__init__(**kwargs)
+        **options: Unpack[LossOptions],
+    ) -> None:
+        super().__init__(**options)
         if lambda_c < 0:
             raise ValueError(f"lambda_c must be non-negative; got {lambda_c}")
-
         self.num_proxies = num_proxies
         self.embedding_size = embedding_size
         self.proxies = nn.Parameter(torch.randn(num_proxies, embedding_size))
@@ -38,70 +38,58 @@ class ManifoldLoss(BaseMetricLossFunction):
         ref_emb: Tensor,
         ref_labels: Tensor | None,
     ) -> LossDict:
-        c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
-        c_f.labels_not_supported(labels, ref_labels)
-
+        _common.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
+        _common.labels_not_supported(labels, ref_labels)
         if embeddings.shape[1] != self.embedding_size:
             raise ValueError("Embedding dimension must match embedding_size")
-        c_f.check_parameter_placement(self, self.proxies, embeddings)
+        _common.check_parameter_placement(self, self.proxies, embeddings)
 
         N = len(embeddings)
+        device = embeddings.device
         if indices_tuple is not None:
-            meta_classes = indices_tuple
+            meta_classes = torch.as_tensor(indices_tuple, device=device)
         else:
             meta_classes = torch.randint(0, self.num_proxies, (N - self.num_proxies,))
             meta_classes = torch.cat((torch.arange(self.num_proxies), meta_classes))
-            meta_classes = meta_classes[torch.randperm(N)]
+            meta_classes = meta_classes[torch.randperm(N)].to(device)
+        rows = torch.arange(N, device=device)
 
-        loss_int = torch.zeros(1, device=embeddings.device, dtype=embeddings.dtype)
         embs_and_proxies = torch.cat([embeddings, self.proxies], dim=0)
-
         S = self.distance(embs_and_proxies, embs_and_proxies).clamp(0, math.inf)
         S = torch.exp(S / 0.5)
         Y = torch.eye(N + self.num_proxies, device=S.device, dtype=S.dtype)
         S = S - S * Y
-
         D_inv_half = torch.pow(torch.sum(S, dim=1), -1 / 2).diag()
-        S_bar = D_inv_half.mm(S)
-        S_bar = S_bar.mm(D_inv_half)
-
-        dt = S_bar.dtype
-        L = torch.inverse(Y.float() - self.alpha * S_bar.float())
-        L = L.to(dt)
-
+        S_bar = D_inv_half.mm(S).mm(D_inv_half)
+        L = torch.inverse(Y.float() - self.alpha * S_bar.float()).to(S_bar.dtype)
         F = (1 - self.alpha) * L
+        F_p = F[N:, :]
+        F_e = F[:N, :]
 
-        F_p = F[N:, :].clone()
-        F_e = F[:N, :].clone()
+        loss_int = torch.zeros((), device=device, dtype=embeddings.dtype)
         if self.lambda_c != math.inf:
-            F = F[:N, N:]
-            loss_int = F - F[torch.arange(N), meta_classes].view(-1, 1) + self.margin
-            loss_int[torch.arange(N), meta_classes] = -math.inf
-            loss_int[loss_int < 0] = -math.inf
-
-            loss_int = torch.exp(loss_int)
-            loss_int = torch.log(1 + torch.sum(loss_int, dim=1))
-            loss_int = loss_int.mean()
-
+            F_ep = F[:N, N:]
+            loss_int = self.ranking_term(F_ep, rows, meta_classes)
         loss_ctx = torch.nn.functional.cosine_similarity(
             F_e, F_p.unsqueeze(1), dim=-1
         ).t()
-        loss_ctx += -loss_ctx[torch.arange(N), meta_classes].view(-1, 1) + self.margin
-        loss_ctx[torch.arange(N), meta_classes] = -math.inf
-        loss_ctx[loss_ctx < 0] = -math.inf
-
-        loss_ctx = torch.exp(loss_ctx)
-        loss_ctx = torch.log(1 + torch.sum(loss_ctx, dim=1))
-        loss_ctx = loss_ctx.mean()
-        loss = loss_int + self.lambda_c * loss_ctx
-
+        loss_ctx = self.ranking_term(loss_ctx, rows, meta_classes)
         return {
             "loss": {
-                "losses": loss,
+                "losses": loss_int + self.lambda_c * loss_ctx,
                 "indices": None,
                 "reduction_type": "already_reduced",
             }
         }
 
-    def get_default_distance(self):
+    def ranking_term(
+        self, scores: Tensor, rows: Tensor, meta_classes: Tensor
+    ) -> Tensor:
+        violations = scores - scores[rows, meta_classes].view(-1, 1) + self.margin
+        excluded = torch.zeros_like(violations, dtype=torch.bool)
+        excluded[rows, meta_classes] = True
+        violations = violations.masked_fill(excluded | (violations < 0), -math.inf)
+        return torch.log(1 + torch.sum(torch.exp(violations), dim=1)).mean()
+
+    def default_distance(self) -> BaseDistance:
         return CosineSimilarity()

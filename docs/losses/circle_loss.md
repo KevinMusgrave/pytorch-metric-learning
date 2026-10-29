@@ -3,7 +3,7 @@
 [Circle Loss: A Unified Perspective of Pair Similarity Optimization](https://arxiv.org/pdf/2002.10857.pdf){target=_blank}
 
 ```python
-losses.CircleLoss(m=0.4, gamma=80, **kwargs)
+losses.CircleLoss(m=0.4, gamma=80, **options)
 ```
 
 **Equation**:

@@ -1,15 +1,17 @@
 import torch
+from torch import Tensor
 
-from ..utils import common_functions as c_f
+from ..types import LossDict
+from ..utils._common import arange_like
 from .base_regularizer import BaseRegularizer
 
 
 class ZeroMeanRegularizer(BaseRegularizer):
-    def compute_loss(self, x):
+    def compute_loss(self, x: Tensor) -> LossDict:
         return {
             "loss": {
                 "losses": torch.abs(torch.sum(x, dim=1)),
-                "indices": c_f.torch_arange_from_size(x),
+                "indices": arange_like(x),
                 "reduction_type": "element",
             }
         }

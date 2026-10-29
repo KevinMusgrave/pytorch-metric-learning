@@ -4,7 +4,7 @@ import torch
 
 from pytorch_metric_learning import losses
 from pytorch_metric_learning.miners import MultiSimilarityMiner, TripletMarginMiner
-from pytorch_metric_learning.utils.loss_and_miner_utils import get_all_pairs_indices
+from pytorch_metric_learning.utils.indexing import get_all_pairs_indices
 
 from .. import TEST_DEVICE
 

@@ -16,7 +16,7 @@ def binarize(T, nb_classes):
     import sklearn.preprocessing
 
     T = sklearn.preprocessing.label_binarize(T, classes=range(nb_classes))
-    T = torch.FloatTensor(T)
+    T = torch.as_tensor(T, dtype=torch.float32)
     return T
 
 
@@ -88,7 +88,7 @@ class TestProxyAnchorLoss(unittest.TestCase):
 
                 if not use_autocast:
                     original_loss_func.to(dtype=dtype)
-                loss_func.proxies = original_loss_func.proxies
+                loss_func.weight = original_loss_func.proxies
 
                 embedding_angles = list(range(180))
                 embeddings = torch.tensor(
@@ -115,7 +115,7 @@ class TestProxyAnchorLoss(unittest.TestCase):
                     torch.allclose(
                         logits_out,
                         torch.matmul(
-                            F.normalize(embeddings), F.normalize(loss_func.proxies).t()
+                            F.normalize(embeddings), F.normalize(loss_func.weight).t()
                         ),
                     )
                 )

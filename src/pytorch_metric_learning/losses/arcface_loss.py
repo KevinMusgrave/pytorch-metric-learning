@@ -1,50 +1,45 @@
 import math
+from collections.abc import Callable
+from typing import Unpack
 
 import torch
+from torch import Tensor
 
-from .large_margin_softmax_loss import LargeMarginSoftmaxLoss
+from ..regularizers import BaseRegularizer
+from ..types import LossOptions
+from .large_margin_softmax_loss import CosineMarginSoftmaxLoss
 
 
-class ArcFaceLoss(LargeMarginSoftmaxLoss):
+class ArcFaceLoss(CosineMarginSoftmaxLoss):
     def __init__(
         self,
-        num_classes,
-        embedding_size,
-        margin=28.6,
-        scale=64,
+        num_classes: int,
+        embedding_size: int,
+        margin: float = 0.5,
+        scale: float = 64,
         *,
-        weight_regularizer=None,
-        weight_reg_weight=1,
-        weight_init_func=None,
-        **kwargs,
-    ):
+        weight_regularizer: BaseRegularizer | None = None,
+        weight_reg_weight: float = 1.0,
+        weight_init_func: Callable[[Tensor], object] | None = None,
+        **options: Unpack[LossOptions],
+    ) -> None:
         super().__init__(
             num_classes,
             embedding_size,
-            margin=margin,
-            scale=scale,
+            margin,
+            scale,
             weight_regularizer=weight_regularizer,
             weight_reg_weight=weight_reg_weight,
             weight_init_func=weight_init_func,
-            **kwargs,
+            **options,
         )
 
-    def init_margin(self):
-        self.margin = math.radians(self.margin)
-
-    def modify_cosine_of_target_classes(self, cosine_of_target_classes):
+    def modify_cosine_of_target_classes(
+        self, cosine_of_target_classes: Tensor
+    ) -> Tensor:
         angles = self.get_angles(cosine_of_target_classes)
-
-        cos_theta_plus_margin = torch.cos(angles + self.margin)
-        cos_theta = torch.cos(angles)
-
-        unscaled_logits = torch.where(
+        return torch.where(
             angles <= math.pi - self.margin,
-            cos_theta_plus_margin,
-            cos_theta - self.margin * math.sin(self.margin),
+            torch.cos(angles + self.margin),
+            torch.cos(angles) - self.margin * math.sin(self.margin),
         )
-
-        return unscaled_logits
-
-    def scale_logits(self, logits, embeddings):
-        return logits * self.scale

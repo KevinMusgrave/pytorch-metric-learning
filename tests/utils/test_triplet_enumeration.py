@@ -5,7 +5,7 @@ import torch
 
 from pytorch_metric_learning.distances import LpDistance
 from pytorch_metric_learning.losses import TripletMarginLoss
-from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
+from pytorch_metric_learning.utils import indexing
 
 from .. import TEST_DEVICE
 
@@ -34,7 +34,7 @@ class TestTripletEnumeration(unittest.TestCase):
             device=TEST_DEVICE,
             dtype=torch.long,
         ).reshape(-1, 3)
-        actual = lmu.get_all_triplets_indices(labels, reference)
+        actual = indexing.get_all_triplets_indices(labels, reference)
         for observed, wanted in zip(actual, expected.unbind(dim=1), strict=True):
             torch.testing.assert_close(observed, wanted)
 

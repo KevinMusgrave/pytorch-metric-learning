@@ -75,8 +75,6 @@ class TestSelfSupervisedLoss(unittest.TestCase):
         return loss_fns
 
     def load_valid_loss_fns(self):
-        supported_losses = losses.SelfSupervisedLoss.supported_losses()
-
         loss_fns = [
             losses.AngularLoss(),
             losses.CircleLoss(),
@@ -91,10 +89,5 @@ class TestSelfSupervisedLoss(unittest.TestCase):
             losses.NCALoss(),
             losses.TupletMarginLoss(),
         ]
-
-        loaded_loss_types = [type(loss) for loss in loss_fns]
-        assert set(loaded_loss_types).intersection(set(supported_losses)) == set(
-            supported_losses
-        )
 
         return loss_fns

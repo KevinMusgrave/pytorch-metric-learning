@@ -3,7 +3,7 @@
 [Neighbourhood Components Analysis](https://www.cs.toronto.edu/~hinton/absps/nca.pdf){target=_blank}
 
 ```python
-losses.NCALoss(softmax_scale=1, **kwargs)
+losses.NCALoss(softmax_scale=1, **options)
 ```
 
 **Equation**:

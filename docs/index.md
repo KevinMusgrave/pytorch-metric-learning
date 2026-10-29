@@ -22,7 +22,7 @@ See the [version 3.0.0 release notes](release-notes-3.md) for requirements and b
 | Use augmented views                         | `losses.SelfSupervisedLoss`, `losses.VICRegLoss`            | [Self-supervision](losses/self_supervised_loss.md#selfsupervisedloss)                                                                                |
 | Reuse detached embeddings                   | `losses.CrossBatchMemory`                                   | [Memory contract](losses/cross_batch_memory.md#crossbatchmemory), [warmup](recipes/training.md#memory-warmup-contract)                               |
 | Balance batches by label                    | `samplers.MPerClassSampler`, `samplers.HierarchicalSampler` | [Samplers](samplers.md)                                                                                                                              |
-| Sample from mined tuple frequency           | `utils.loss_and_miner_utils.convert_to_weights`             | [Weighted sampling](recipes/training.md#mining-weighted-sampling-contract)                                                                           |
+| Sample from mined tuple frequency           | `utils.indexing.convert_to_weights`                         | [Weighted sampling](recipes/training.md#mining-weighted-sampling-contract)                                                                           |
 | Evaluate retrieval                          | `utils.accuracy_calculator.AccuracyCalculator`              | [Metrics and query/reference rules](accuracy_calculation.md), [evaluation recipe](recipes/evaluation.md)                                             |
 | Evaluate hierarchical or two-stream labels  | `AccuracyCalculator` with explicit subsets                  | [Parent-conditioned and two-stream evaluation](recipes/evaluation.md#parent-conditioned-hierarchical-retrieval)                                      |
 | Find nearest neighbors or threshold matches | `utils.retrieval.CustomKNN`, `utils.retrieval.MatchFinder`  | [Retrieval backends](retrieval.md)                                                                                                                   |
@@ -60,9 +60,11 @@ Public utilities are imported from their documented submodules:
 from pytorch_metric_learning.utils.accuracy_calculator import AccuracyCalculator
 from pytorch_metric_learning.utils.retrieval import CustomKNN, MatchFinder
 from pytorch_metric_learning.utils.distributed import DistributedLossWrapper
-from pytorch_metric_learning.utils import loss_and_miner_utils
+from pytorch_metric_learning.utils import indexing
 ```
 
 The `utils` package does not re-export these classes. This keeps evaluation and
-distributed imports separate from the numerical core. Shared loss and index
-annotations are available from `pytorch_metric_learning.types`.
+distributed imports separate from the numerical core. `utils.indexing` holds the
+public pair, triplet, and weight utilities used by custom losses and miners.
+Shared type annotations are available from `pytorch_metric_learning.types`.
+Modules and names starting with an underscore are private.

@@ -1,7 +1,9 @@
 import inspect
 import unittest
+from typing import Any
 
 import torch
+from torch import Tensor
 from torch.nn import functional as F
 
 from pytorch_metric_learning import losses, reducers
@@ -29,8 +31,9 @@ def contrastive_reference(embeddings, labels):
 
 
 def normalized_softmax_reference(embeddings, labels, weights, temperature):
-    logits = F.normalize(embeddings.double(), dim=1) @ F.normalize(
-        weights.double(), dim=0
+    logits = (
+        F.normalize(embeddings.double(), dim=1)
+        @ F.normalize(weights.double(), dim=1).t()
     )
     return F.cross_entropy(logits / temperature, labels).to(embeddings.dtype)
 
@@ -80,27 +83,27 @@ class TestLossComposition(unittest.TestCase):
                         **tolerances(dtype),
                     )
 
-    def test_wrappers_reject_unsupported_types_and_proxy_nca_subclasses(self):
+    def test_wrappers_reject_foreign_modules_and_losses_without_references(self):
         class ContrastiveLoss(torch.nn.Module):
             pass
 
-        class CustomProxyNCA(losses.ProxyNCALoss):
-            pass
-
-        for component in (
-            ContrastiveLoss(),
-            losses.ProxyNCALoss(3, 3),
-            CustomProxyNCA(3, 3),
-        ):
-            for wrapper in (losses.SelfSupervisedLoss, losses.CrossBatchMemory):
-                with self.subTest(component=type(component), wrapper=wrapper):
-                    kwargs = (
-                        {"embedding_size": 3}
-                        if wrapper is losses.CrossBatchMemory
-                        else {}
-                    )
-                    with self.assertRaisesRegex(TypeError, "not supported"):
-                        wrapper(component, **kwargs)
+        embeddings, labels = self.fixture(torch.float32)
+        foreign: Any = ContrastiveLoss()
+        cases: tuple[tuple[Any, dict[str, Any], tuple[Tensor, Tensor]], ...] = (
+            (
+                losses.SelfSupervisedLoss,
+                {"symmetric": False},
+                (embeddings[:4], embeddings[4:]),
+            ),
+            (losses.CrossBatchMemory, {"embedding_size": 3}, (embeddings, labels)),
+        )
+        for wrapper, kwargs, args in cases:
+            with self.subTest(wrapper=wrapper):
+                with self.assertRaises(TypeError):
+                    wrapper(foreign, **kwargs)
+                wrapped = wrapper(losses.ProxyNCALoss(3, 3), **kwargs)
+                with self.assertRaisesRegex(ValueError, "ref_emb"):
+                    wrapped(*args)
 
     def test_embedding_regularization_adds_weighted_penalty(self):
         for dtype in TEST_DTYPES:
@@ -135,10 +138,10 @@ class TestLossComposition(unittest.TestCase):
                     embedding_reg_weight=0.1,
                 ).to(TEST_DEVICE, dtype)
                 actual = loss_func(embeddings, labels)
-                weights = loss_func.W
+                weights = loss_func.weight
                 expected = (
                     normalized_softmax_reference(embeddings, labels, weights, 0.5)
-                    + 0.2 * weights.norm(dim=0).mean()
+                    + 0.2 * weights.norm(dim=1).mean()
                     + 0.1 * embeddings.square().sum(dim=1).mean()
                 )
                 torch.testing.assert_close(actual, expected, **tolerances(dtype))
@@ -171,11 +174,10 @@ class TestLossComposition(unittest.TestCase):
     def test_unreduced_output_includes_regularization_terms(self):
         embeddings, labels = self.fixture(torch.float64)
         loss_func = losses.TripletMarginLoss(
-            reducer=reducers.DoNothingReducer(),
             embedding_regularizer=LpRegularizer(),
             embedding_reg_weight=0.5,
         )
-        output = loss_func(embeddings, labels)
+        output = loss_func.loss_terms(embeddings, labels)
         self.assertEqual(set(output), {"loss", "embedding_reg_loss"})
         self.assertEqual(
             output["embedding_reg_loss"]["reduction_type"], "already_reduced"
@@ -212,7 +214,7 @@ class TestLossComposition(unittest.TestCase):
         optimizer.step()
         with self.assertRaisesRegex(ValueError, "float32.*float64|float64.*float32"):
             loss_func(torch.randn(3, 4, dtype=torch.float64), labels)
-        self.assertEqual(loss_func.W.dtype, torch.float32)
+        self.assertEqual(loss_func.weight.dtype, torch.float32)
         loss_func(torch.randn(3, 4), labels).backward()
         optimizer.step()
 

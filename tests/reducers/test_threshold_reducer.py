@@ -48,5 +48,9 @@ class TestThresholdReducer(unittest.TestCase):
                             L = L[low_threshold < L]
                         if high_threshold is not None:
                             L = L[high_threshold > L]
-                        correct_output = torch.mean(L) if len(L) > 0 else 0
-                        self.assertTrue(output == correct_output)
+                        correct_output = (
+                            torch.mean(L) if len(L) > 0 else torch.zeros_like(output)
+                        )
+                        torch.testing.assert_close(
+                            output, correct_output.to(output.dtype)
+                        )

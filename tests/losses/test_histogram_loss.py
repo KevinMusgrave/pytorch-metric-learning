@@ -139,7 +139,7 @@ class TestHistogramLoss(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(TEST_DEVICE)
-            labels = torch.LongTensor([0, 1, 2, 3, 4])
+            labels = torch.tensor([0, 1, 2, 3, 4], dtype=torch.long)
             loss = loss_func(embeddings, labels)
             self.assertEqual(loss, 0)
             loss.backward()

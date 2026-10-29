@@ -9,6 +9,13 @@ combined those responsibilities; their numerical semantics now live in the
 [evaluation recipe](../recipes/evaluation.md), which reuses the testers'
 fixtures as tests.
 
+Labels keep the dtype the caller supplies, and floating embeddings keep their
+dtype, promoted to a common one when query and reference differ; integer or
+NumPy inputs become float32 embeddings. Casting labels to float32 made large
+integer identifiers collide (PR #763). Results are Python floats, or lists of
+per-class floats, because they are consumed by logging and comparison code
+rather than by autograd.
+
 Query and reference sets remain explicit. Self-matches are excluded only when
 the caller states that the query occupies the first rows of the reference set.
 Equal shapes or labels never imply that relationship. The k-NN backends remove each

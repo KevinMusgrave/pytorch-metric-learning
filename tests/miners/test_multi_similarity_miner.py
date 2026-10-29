@@ -4,7 +4,7 @@ import torch
 
 from pytorch_metric_learning.distances import CosineSimilarity, LpDistance
 from pytorch_metric_learning.miners import MultiSimilarityMiner
-from pytorch_metric_learning.utils import common_functions as c_f
+from pytorch_metric_learning.utils import _common as c_f
 
 from .. import TEST_DEVICE, TEST_DTYPES
 from ..helpers import angle_to_coord

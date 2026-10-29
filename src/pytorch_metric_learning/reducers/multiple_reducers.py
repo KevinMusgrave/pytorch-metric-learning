@@ -1,3 +1,7 @@
+import functools
+import operator
+from collections.abc import Mapping
+
 import torch
 from torch import Tensor
 
@@ -7,30 +11,29 @@ from .mean_reducer import MeanReducer
 
 
 class MultipleReducers(BaseReducer):
-    def __init__(self, reducers, default_reducer=None, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(
+        self,
+        reducers: Mapping[str, BaseReducer],
+        default_reducer: BaseReducer | None = None,
+    ) -> None:
+        super().__init__()
         self.reducers = torch.nn.ModuleDict(reducers)
         self.default_reducer = (
             MeanReducer() if default_reducer is None else default_reducer
         )
 
     def forward(
-        self,
-        loss_dict: LossDict,
-        embeddings: Tensor,
-        labels: Tensor | None,
+        self, loss_dict: LossDict, embeddings: Tensor, labels: Tensor | None
     ) -> Tensor:
-        sub_losses = torch.zeros(
-            len(loss_dict), dtype=embeddings.dtype, device=embeddings.device
-        )
-        for loss_count, (loss_name, loss_info) in enumerate(loss_dict.items()):
-            input_dict = {loss_name: loss_info}
-            if loss_name in self.reducers:
-                loss_val = self.reducers[loss_name](input_dict, embeddings, labels)
-            else:
-                loss_val = self.default_reducer(input_dict, embeddings, labels)
-            sub_losses[loss_count] = loss_val
-        return self.sub_loss_reduction(sub_losses, embeddings, labels)
+        reduced = [
+            self.reducer_for(name).reduce(term, embeddings, labels)
+            for name, term in loss_dict.items()
+        ]
+        return functools.reduce(operator.add, reduced)
 
-    def sub_loss_reduction(self, sub_losses, embeddings=None, labels=None):
-        return torch.sum(sub_losses)
+    def reducer_for(self, name: str) -> BaseReducer:
+        if name in self.reducers:
+            reducer = self.reducers[name]
+            assert isinstance(reducer, BaseReducer)
+            return reducer
+        return self.default_reducer

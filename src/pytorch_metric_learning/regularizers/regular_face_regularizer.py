@@ -1,35 +1,36 @@
-import torch
+from typing import Unpack
 
-from ..distances import CosineSimilarity
-from ..utils import common_functions as c_f
+import torch
+from torch import Tensor
+
+from ..distances import BaseDistance, CosineSimilarity
+from ..types import LossDict, RegularizerOptions
+from ..utils import _common
 from .base_regularizer import BaseRegularizer
 
 
 class RegularFaceRegularizer(BaseRegularizer):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, **options: Unpack[RegularizerOptions]) -> None:
+        super().__init__(**options)
         if not self.distance.is_inverted:
             raise ValueError("distance must be a similarity with is_inverted=True")
 
-    def compute_loss(self, x):
-        dtype, device = x.dtype, x.device
+    def compute_loss(self, x: Tensor) -> LossDict:
         num_classes = x.size(0)
         cos = self.distance(x)
         with torch.no_grad():
             cos1 = cos.clone()
-            cos1.fill_diagonal_(c_f.neg_inf(dtype))
+            cos1.fill_diagonal_(_common.neg_inf(x.dtype))
             _, indices = self.distance.smallest_dist(cos1, dim=1)
-            mask = torch.zeros((num_classes, num_classes), dtype=dtype, device=device)
-            row_nums = torch.arange(num_classes, device=device, dtype=torch.long)
-            mask[row_nums, indices] = 1
-        losses = torch.sum(cos * mask, dim=1)
+            mask = torch.zeros_like(cos)
+            mask[torch.arange(num_classes, device=x.device), indices] = 1
         return {
             "loss": {
-                "losses": losses,
-                "indices": c_f.torch_arange_from_size(x),
+                "losses": torch.sum(cos * mask, dim=1),
+                "indices": _common.arange_like(x),
                 "reduction_type": "element",
             }
         }
 
-    def get_default_distance(self):
+    def default_distance(self) -> BaseDistance:
         return CosineSimilarity()

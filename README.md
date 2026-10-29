@@ -6,10 +6,11 @@ retrieval, clustering, recognition, or learning from pairs and triplets.
 
 ## Install
 
-Install the published package from PyPI:
+Install the published package from PyPI with uv or pip:
 
 ```sh
 uv pip install pytorch-metric-learning
+pip install pytorch-metric-learning
 ```
 
 The core package needs only PyTorch and NumPy. Optional extras add the Faiss

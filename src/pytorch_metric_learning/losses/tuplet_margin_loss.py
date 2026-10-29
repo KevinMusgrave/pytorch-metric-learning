@@ -1,40 +1,42 @@
 import math
+from typing import Unpack
 
 import torch
+from torch import Tensor
 
-from ..distances import CosineSimilarity
-from ..utils import common_functions as c_f
-from ..utils import loss_and_miner_utils as lmu
+from ..distances import BaseDistance, CosineSimilarity
+from ..types import LossDict, LossOptions, PairIndices
+from ..utils import _common
 from .generic_pair_loss import GenericPairLoss
 
 
 class TupletMarginLoss(GenericPairLoss):
-    def __init__(self, margin=5.73, scale=64, **kwargs):
-        super().__init__(mat_based_loss=False, **kwargs)
-        c_f.check_distance_type(self, CosineSimilarity)
-        self.margin = math.radians(margin)
+    def __init__(
+        self, margin: float = 5.73, scale: float = 64, **options: Unpack[LossOptions]
+    ) -> None:
+        super().__init__(**options)
+        _common.check_distance_type(self, CosineSimilarity)
+        self.margin = margin
         self.scale = scale
 
-    def _compute_pair_loss(self, pos_pairs, neg_pairs, indices_tuple):
-        a1, p, a2, _ = indices_tuple
-
-        if len(a1) > 0 and len(a2) > 0:
-            bound = 1 - 4 * torch.finfo(pos_pairs.dtype).eps
-            pos_angles = torch.acos(pos_pairs.clamp(-bound, bound))
-            pos_pairs = torch.cos(pos_angles - self.margin)
-            pos_pairs = pos_pairs.unsqueeze(1)
-            neg_pairs = neg_pairs.repeat(pos_pairs.size(0), 1)
-            inside_exp = self.scale * (neg_pairs - pos_pairs)
-            keep_mask = a2.unsqueeze(0) == a1.unsqueeze(1)
-            loss = lmu.logsumexp(inside_exp, keep_mask=keep_mask, add_one=True, dim=1)
-            return {
-                "loss": {
-                    "losses": loss,
-                    "indices": (a1, p),
-                    "reduction_type": "pos_pair",
-                }
+    def pair_loss(self, mat: Tensor, pairs: PairIndices) -> LossDict:
+        pos_pairs, neg_pairs = self.pair_values(mat, pairs)
+        a1, p, a2, _ = pairs
+        if len(a1) == 0 or len(a2) == 0:
+            return self.zero_losses(mat)
+        bound = 1 - 4 * torch.finfo(pos_pairs.dtype).eps
+        pos_angles = torch.acos(pos_pairs.clamp(-bound, bound))
+        pos_pairs = torch.cos(pos_angles - math.radians(self.margin)).unsqueeze(1)
+        inside_exp = self.scale * (neg_pairs.unsqueeze(0) - pos_pairs)
+        keep_mask = a2.unsqueeze(0) == a1.unsqueeze(1)
+        loss = _common.logsumexp(inside_exp, keep_mask=keep_mask, add_one=True, dim=1)
+        return {
+            "loss": {
+                "losses": loss.squeeze(1),
+                "indices": (a1, p),
+                "reduction_type": "pos_pair",
             }
-        return self.zero_losses()
+        }
 
-    def get_default_distance(self):
+    def default_distance(self) -> BaseDistance:
         return CosineSimilarity()

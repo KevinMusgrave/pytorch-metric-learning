@@ -5,7 +5,7 @@
 ```python
 losses.SmoothAPLoss(
     temperature=0.01,
-    **kwargs
+    **options
 )
 ```
 

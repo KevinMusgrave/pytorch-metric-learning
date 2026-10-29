@@ -22,7 +22,7 @@ class TestNTXentLoss(unittest.TestCase):
                 dtype=dtype,
             ).to(TEST_DEVICE)
 
-            labels = torch.LongTensor([0, 0, 0, 1, 1, 2])
+            labels = torch.tensor([0, 0, 0, 1, 1, 2], dtype=torch.long)
             pos_pairs = [(0, 1), (0, 2), (1, 0), (1, 2), (2, 0), (2, 1), (3, 4), (4, 3)]
             neg_pairs = [
                 (0, 3),
@@ -158,9 +158,9 @@ class TestNTXentLoss(unittest.TestCase):
     def test_with_no_valid_pairs(self):
         all_embedding_angles = [[0], [0, 10, 20], [0, 40, 60]]
         all_labels = [
-            torch.LongTensor([0]),
-            torch.LongTensor([0, 0, 0]),
-            torch.LongTensor([1, 2, 3]),
+            torch.tensor([0], dtype=torch.long),
+            torch.tensor([0, 0, 0], dtype=torch.long),
+            torch.tensor([1, 2, 3], dtype=torch.long),
         ]
         temperature = 0.1
         for loss_class in [NTXentLoss, SupConLoss]:
@@ -193,6 +193,6 @@ class TestNTXentLoss(unittest.TestCase):
                         requires_grad=True,
                         dtype=dtype,
                     ).to(TEST_DEVICE)
-                    labels = torch.LongTensor([0, 0, 1, 1, 2])
+                    labels = torch.tensor([0, 0, 1, 1, 2], dtype=torch.long)
                     loss = loss_func(embeddings, labels)
                     loss.backward()

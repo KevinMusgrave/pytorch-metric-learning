@@ -12,7 +12,7 @@ from ..helpers import angle_to_coord
 
 class TestArcFaceLoss(unittest.TestCase):
     def test_arcface_loss(self):
-        margin = 30
+        margin = np.radians(30)
         scale = 64
         for dtype in TEST_DTYPES:
             loss_func = ArcFaceLoss(
@@ -29,18 +29,17 @@ class TestArcFaceLoss(unittest.TestCase):
             loss = loss_func(embeddings, labels)
             loss.backward()
 
-            weights = F.normalize(loss_func.W, p=2, dim=0)
+            weights = F.normalize(loss_func.weight, p=2, dim=1).t()
             logits = torch.matmul(F.normalize(embeddings), weights)
 
             for i, c in enumerate(labels):
                 acos = torch.acos(torch.clamp(logits[i, c], -1, 1))
-                if acos <= (np.pi - np.radians(margin)):
+                if acos <= (np.pi - margin):
                     logits[i, c] = torch.cos(
-                        acos
-                        + torch.tensor(np.radians(margin), dtype=dtype).to(TEST_DEVICE)
+                        acos + torch.tensor(margin, dtype=dtype).to(TEST_DEVICE)
                     )
                 else:
-                    mg = np.radians(margin)
+                    mg = margin
                     logits[i, c] -= torch.tensor(mg * np.sin(mg), dtype=dtype).to(
                         TEST_DEVICE
                     )

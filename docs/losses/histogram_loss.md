@@ -2,11 +2,25 @@
 
 [Learning Deep Embeddings with Histogram Loss](https://arxiv.org/pdf/1611.00822.pdf)
 
-**Mathematical reference**: The paper linked above defines the objective and derivation. This page specifies the library interface and its settings.
-
 ```python
-losses.HistogramLoss(n_bins=None, delta=None)
+losses.HistogramLoss(n_bins=None, delta=None, **options)
 ```
+
+**Equation**:
+
+$$
+L = \sum_{r=1}^{R} p^-_r \, \Phi^+_r, \qquad \Phi^+_r = \sum_{q=1}^{r} p^+_q
+$$
+
+$$
+p^\pm_r = \frac{1}{|\mathcal{S}^\pm|} \sum_{(i,j) \in \mathcal{S}^\pm} \delta_{ij,r},
+\qquad
+\delta_{ij,r} = \begin{cases} (s_{ij} - t_{r-1}) / \Delta & s_{ij} \in [t_{r-1}, t_r] \\ (t_{r+1} - s_{ij}) / \Delta & s_{ij} \in [t_r, t_{r+1}] \\ 0 & \text{otherwise} \end{cases}
+$$
+
+Here $s_{ij}$ is the cosine similarity of pair $(i, j)$, $\mathcal{S}^+$ and $\mathcal{S}^-$ are the sets of positive and negative pairs, $t_r$ are the $R$ uniformly spaced nodes of $[-1, 1]$ with spacing $\Delta$ (`delta`), and $p^\pm$ are the linearly interpolated histograms of positive and negative similarities. The loss is the probability that a random negative pair is more similar than a random positive pair.
+
+**Implementation notes**: Each unordered pair is counted once, so duplicate pairs from all-triplet enumeration do not change the histograms.
 
 **Parameters**:
 

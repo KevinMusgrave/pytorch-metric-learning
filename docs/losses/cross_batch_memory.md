@@ -55,24 +55,11 @@ reports as a missing key.
 
 **Supported Loss Functions**
 
-The listed types and subclasses that preserve their contracts are supported.
-`supported_losses()` returns a tuple of types. ProxyNCA and its subclasses
-are excluded because their learned proxies do not accept separate reference
-embeddings. Other unsupported losses raise `TypeError` at construction.
-
-- [AngularLoss](angular_loss.md#angularloss)
-- [CircleLoss](circle_loss.md#circleloss)
-- [ContrastiveLoss](contrastive_loss.md#contrastiveloss)
-- [GeneralizedLiftedStructureLoss](generalized_lifted_structure_loss.md#generalizedliftedstructureloss)
-- [IntraPairVarianceLoss](intra_pair_variance_loss.md#intrapairvarianceloss)
-- [MarginLoss](margin_loss.md#marginloss)
-- [MultiSimilarityLoss](multi_similarity_loss.md#multisimilarityloss)
-- [NCALoss](nca_loss.md#ncaloss)
-- [NTXentLoss](ntxent_loss.md#ntxentloss)
-- [SignalToNoiseRatioContrastiveLoss](signal_to_noise_ratio_contrastive_loss.md#signaltonoiseratiocontrastiveloss)
-- [SupConLoss](supcon_loss.md#supconloss)
-- [TripletMarginLoss](triplet_margin_loss.md#tripletmarginloss)
-- [TupletMarginLoss](tuplet_margin_loss.md#tupletmarginloss)
+The wrapped loss receives the current batch as `embeddings` and the queue as
+`ref_emb`, so it must be a `BaseMetricLossFunction` that
+[accepts `ref_emb`](../losses.md#supported-arguments). Any other module raises
+`TypeError` at construction; a loss that rejects references raises `ValueError`
+on the first call.
 
 **Reset queue**
 

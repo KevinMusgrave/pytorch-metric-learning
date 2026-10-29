@@ -24,11 +24,7 @@ class TestMultipleLosses(unittest.TestCase):
             miners={"lossB": minerB},
         )
 
-        loss_func2 = MultipleLosses(
-            losses=[lossA, lossB], weights=[1, 0.23], miners=[None, minerB]
-        )
-
-        for loss_func in [loss_func1, loss_func2]:
+        for loss_func in [loss_func1]:
             for dtype in TEST_DTYPES:
                 embedding_angles = torch.arange(0, 180)
                 embeddings = torch.tensor(
@@ -58,9 +54,7 @@ class TestMultipleLosses(unittest.TestCase):
             losses={"lossA": lossA, "lossB": lossB}, weights={"lossA": 1, "lossB": 0.23}
         )
 
-        loss_func2 = MultipleLosses(losses=[lossA, lossB], weights=[1, 0.23])
-
-        for loss_func in [loss_func1, loss_func2]:
+        for loss_func in [loss_func1]:
             for dtype in TEST_DTYPES:
                 embedding_angles = torch.arange(0, 180)
                 embeddings = torch.tensor(
@@ -98,23 +92,5 @@ class TestMultipleLosses(unittest.TestCase):
                 losses={"lossA": lossA, "lossB": lossB},
                 weights={"lossA": 1, "lossB": 0.23},
                 miners={"blah": minerA},
-            ),
-        )
-
-    def test_length_mistmatch(self):
-        lossA = ContrastiveLoss()
-        lossB = TripletMarginLoss(0.1)
-        self.assertRaises(
-            ValueError,
-            lambda: MultipleLosses(losses=[lossA, lossB], weights=[1]),
-        )
-
-        minerA = MultiSimilarityMiner()
-        self.assertRaises(
-            ValueError,
-            lambda: MultipleLosses(
-                losses=[lossA, lossB],
-                weights=[1, 0.2],
-                miners=[minerA],
             ),
         )

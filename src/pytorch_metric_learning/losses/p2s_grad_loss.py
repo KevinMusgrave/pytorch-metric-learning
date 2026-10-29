@@ -1,21 +1,23 @@
+from typing import Unpack
+
 import torch
+import torch.nn.functional as F
 from torch import Tensor, nn
 
-from ..types import IndicesTuple, LossDict
-from ..utils import common_functions as c_f
+from ..types import IndicesTuple, LossDict, LossOptions
+from ..utils import _common
 from .base_metric_loss_function import BaseMetricLossFunction
 
 
 class P2SGradLoss(BaseMetricLossFunction):
-    def __init__(self, descriptors_dim, num_classes, **kwargs):
-        super().__init__(**kwargs)
-        self.descriptors_dim = descriptors_dim
+    def __init__(
+        self, num_classes: int, embedding_size: int, **options: Unpack[LossOptions]
+    ) -> None:
+        super().__init__(**options)
         self.num_classes = num_classes
-
-        weight = torch.empty(descriptors_dim, num_classes).uniform_(-1, 1)
-        self.weight = nn.Parameter(weight.renorm_(2, 1, 1e-5).mul_(1e5))
-
-        self.m_loss = nn.MSELoss()
+        self.embedding_size = embedding_size
+        weight = torch.empty(num_classes, embedding_size).uniform_(-1, 1)
+        self.weight = nn.Parameter(F.normalize(weight, dim=1))
 
     def compute_loss(
         self,
@@ -25,37 +27,19 @@ class P2SGradLoss(BaseMetricLossFunction):
         ref_emb: Tensor,
         ref_labels: Tensor | None,
     ) -> LossDict:
-        labels = c_f.labels_required(labels)
-        c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
-        c_f.indices_tuple_not_supported(indices_tuple)
-
-        c_f.check_parameter_placement(self, self.weight, embeddings)
+        labels = _common.labels_required(labels)
+        _common.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
+        _common.indices_tuple_not_supported(indices_tuple)
+        _common.check_parameter_placement(self, self.weight, embeddings)
         with torch.no_grad():
-            self.weight.renorm_(2, 1, 1e-5).mul_(1e5)
+            self.weight.copy_(F.normalize(self.weight, dim=1))
         weight = self.weight.clone()
-        dtype = embeddings.dtype
-
-        rtol = 1e-2 if dtype == torch.float16 else 1e-5
-        w_modulus = weight.pow(2).sum(0).pow(0.5)
-        if not torch.all(torch.abs(w_modulus - 1.0) < rtol):
-            raise RuntimeError(
-                "P2SGrad weight columns must have unit norm after normalization"
-            )
-
-        x_modulus = embeddings.pow(2).sum(1).pow(0.5)
-        cos_theta = embeddings.mm(weight)
-        cos_theta = cos_theta / x_modulus.view(-1, 1)
+        cos_theta = F.normalize(embeddings, dim=1) @ weight.t()
         cos_theta = cos_theta.clamp(-1, 1)
-
-        with torch.no_grad():
-            index = torch.zeros_like(cos_theta)
-            index.scatter_(1, labels.view(-1, 1), 1)
-
-        loss = self.m_loss(cos_theta, index)
-
+        target = F.one_hot(labels, self.num_classes).to(cos_theta.dtype)
         return {
             "loss": {
-                "losses": loss,
+                "losses": F.mse_loss(cos_theta, target),
                 "indices": None,
                 "reduction_type": "already_reduced",
             }

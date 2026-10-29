@@ -1,44 +1,47 @@
+from typing import Literal
+
 from torch import Tensor
 
+from ..distances import BaseDistance
 from ..types import IndicesTuple
-from ..utils import loss_and_miner_utils as lmu
+from ..utils import indexing
 from .base_miner import BaseMiner
+
+type TripletType = Literal["all", "hard", "semihard", "easy"]
 
 
 class TripletMarginMiner(BaseMiner):
-    def __init__(self, margin=0.2, type_of_triplets="all", **kwargs):
-        super().__init__(**kwargs)
+    def __init__(
+        self,
+        margin: float = 0.2,
+        type_of_triplets: TripletType = "all",
+        *,
+        distance: BaseDistance | None = None,
+    ) -> None:
+        super().__init__(distance=distance)
+        if type_of_triplets not in ("all", "hard", "semihard", "easy"):
+            raise ValueError(
+                'type_of_triplets must be "all", "hard", "semihard" or "easy"'
+            )
         self.margin = margin
         self.type_of_triplets = type_of_triplets
 
     def mine(
-        self,
-        embeddings: Tensor,
-        labels: Tensor,
-        ref_emb: Tensor,
-        ref_labels: Tensor,
+        self, embeddings: Tensor, labels: Tensor, ref_emb: Tensor, ref_labels: Tensor
     ) -> IndicesTuple:
-        anchor_idx, positive_idx, negative_idx = lmu.get_all_triplets_indices(
+        anchor_idx, positive_idx, negative_idx = indexing.get_all_triplets_indices(
             labels, ref_labels
         )
         mat = self.distance(embeddings, ref_emb)
         ap_dist = mat[anchor_idx, positive_idx]
         an_dist = mat[anchor_idx, negative_idx]
-        triplet_margin = (
-            ap_dist - an_dist if self.distance.is_inverted else an_dist - ap_dist
-        )
-
+        triplet_margin = self.distance.margin(an_dist, ap_dist)
         if self.type_of_triplets == "easy":
-            threshold_condition = triplet_margin > self.margin
+            keep = triplet_margin > self.margin
         else:
-            threshold_condition = triplet_margin <= self.margin
+            keep = triplet_margin <= self.margin
             if self.type_of_triplets == "hard":
-                threshold_condition &= triplet_margin <= 0
+                keep &= triplet_margin <= 0
             elif self.type_of_triplets == "semihard":
-                threshold_condition &= triplet_margin > 0
-
-        return (
-            anchor_idx[threshold_condition],
-            positive_idx[threshold_condition],
-            negative_idx[threshold_condition],
-        )
+                keep &= triplet_margin > 0
+        return anchor_idx[keep], positive_idx[keep], negative_idx[keep]

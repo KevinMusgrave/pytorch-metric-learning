@@ -1,6 +1,7 @@
 import math
 import unittest
 from collections import Counter
+from typing import Any
 
 import torch
 
@@ -15,10 +16,8 @@ class TestHierarchicalSampler(unittest.TestCase):
 
         for super_classes_per_batch in range(1, 4):
             batch_size = 50 * super_classes_per_batch
-            for samples_per_class, num_labels_per_super_labels in [
-                (5, 17),
-                ("all", 93),
-            ]:
+            cases: list[tuple[Any, int]] = [(5, 17), ("all", 93)]
+            for samples_per_class, num_labels_per_super_labels in cases:
                 num_labels = num_superlabels * num_labels_per_super_labels
                 labels = torch.randint(low=0, high=num_labels, size=(dataset_size,))
                 super_labels = torch.zeros_like(labels)

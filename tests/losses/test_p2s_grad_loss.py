@@ -53,7 +53,7 @@ class TestP2SGradLoss(unittest.TestCase):
         torch.manual_seed(31)
         for dtype in TEST_DTYPES:
             with self.subTest(dtype=dtype):
-                loss_func = P2SGradLoss(3, 4).to(TEST_DEVICE, dtype)
+                loss_func = P2SGradLoss(4, 3).to(TEST_DEVICE, dtype)
                 parameter = loss_func.weight
                 storage = parameter.data_ptr()
                 inputs = [
@@ -71,7 +71,7 @@ class TestP2SGradLoss(unittest.TestCase):
                     weights = parameter.detach().clone().requires_grad_()
                     snapshots.append(weights)
                     scores = (
-                        torch.nn.functional.normalize(embeddings, dim=1) @ weights
+                        torch.nn.functional.normalize(embeddings, dim=1) @ weights.t()
                     ).clamp(-1, 1)
                     targets = torch.nn.functional.one_hot(labels, 4).to(dtype=dtype)
                     expected.append((scores - targets).square().mean())
@@ -117,7 +117,7 @@ class TestP2SGradLoss(unittest.TestCase):
             )
 
             loss_fn = P2SGradLoss(
-                descriptors_dim=descriptors_dim, num_classes=num_classes
+                num_classes=num_classes, embedding_size=descriptors_dim
             ).to(TEST_DEVICE, dtype)
             copy_weights = loss_fn.weight.detach().clone()
 
@@ -126,7 +126,7 @@ class TestP2SGradLoss(unittest.TestCase):
 
             copy_weights = copy_weights.to(device=TEST_DEVICE, dtype=dtype)
             for j in range(num_classes):
-                w_j = copy_weights[:, j]
+                w_j = copy_weights[j]
                 x_norm = torch.norm(embeddings, p=2, dim=1).view(-1, 1)
                 w_norm = torch.norm(w_j, p=2, dim=0)
                 cos_theta_j = embeddings.mm(w_j.unsqueeze(1)) / (x_norm * w_norm)
@@ -140,7 +140,7 @@ class TestP2SGradLoss(unittest.TestCase):
                 gradients = 2 * torch.mean(L_j * D_j, dim=0) / num_classes
                 gradients = gradients.to(dtype)
                 self.assertTrue(
-                    torch.all(torch.isclose(gradients, weight_grad[:, j], rtol=0.5e-1))
+                    torch.all(torch.isclose(gradients, weight_grad[j], rtol=0.5e-1))
                 )
 
     def test_p2s_grad_loss_with_trusted_implementation(self):
@@ -161,12 +161,14 @@ class TestP2SGradLoss(unittest.TestCase):
                 0, num_classes, size=(batch_size,), device=TEST_DEVICE
             )
 
-            loss_func = P2SGradLoss(descriptors_dim, num_classes).to(TEST_DEVICE, dtype)
+            loss_func = P2SGradLoss(num_classes, descriptors_dim).to(TEST_DEVICE, dtype)
             t_layer = TrustedImplementationP2SActivationLayer(
                 descriptors_dim, num_classes
             ).to(TEST_DEVICE, dtype)
             t_loss_func = TrustedImplementationP2SGradLoss()
-            loss_func.weight = t_layer.weight
+            loss_func.weight = torch.nn.Parameter(
+                t_layer.weight.detach().t().contiguous()
+            )
 
             rtol = 1e-2 if dtype == torch.float16 else 1e-5
 

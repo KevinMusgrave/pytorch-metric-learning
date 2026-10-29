@@ -2,11 +2,23 @@
 
 [Learning Local Descriptors With a CDF-Based Dynamic Soft Margin](https://openaccess.thecvf.com/content_ICCV_2019/papers/Zhang_Learning_Local_Descriptors_With_a_CDF-Based_Dynamic_Soft_Margin_ICCV_2019_paper.pdf)
 
-**Mathematical reference**: The paper linked above defines the objective and derivation. This page specifies the library interface and its settings.
-
 ```python
-losses.DynamicSoftMarginLoss(min_val=-2.0, num_bins=10, momentum=0.01, **kwargs)
+losses.DynamicSoftMarginLoss(min_val=-2.0, num_bins=10, momentum=0.01, **options)
 ```
+
+**Equation**:
+
+$$
+L = \frac{1}{T} \sum_{t=1}^{T} \hat F(\Delta_t)\, \Delta_t, \qquad \Delta_t = d(\mathbf{x}_a, \mathbf{x}_p) - d(\mathbf{x}_a, \mathbf{x}_n)
+$$
+
+Here $\Delta_t$ is the distance difference of triplet $t$, and $\hat F$ is the running empirical cumulative distribution of $\Delta$, estimated with a histogram updated by momentum:
+
+$$
+\hat h \leftarrow (1 - \eta)\, \hat h + \eta\, h_{\text{batch}}, \qquad \hat F(\Delta) = \sum_{b \le \operatorname{bin}(\Delta)} \hat h_b
+$$
+
+**Paper settings**: The authors use 512 bins; the library default is 10. Pass `num_bins=512` to match.
 
 The running histogram is a buffer of the loss module. Move the loss with
 `loss_func.to(device, dtype)`; outside autocast, a placement mismatch raises

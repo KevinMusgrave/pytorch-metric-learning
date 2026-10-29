@@ -7,22 +7,24 @@ Here is an example of a weight regularizer being passed to a loss function.
 ```python
 from pytorch_metric_learning import losses, regularizers
 R = regularizers.RegularFaceRegularizer()
-loss = losses.ArcFaceLoss(margin=30, num_classes=100, embedding_size=128, weight_regularizer=R)
+loss = losses.ArcFaceLoss(num_classes=100, embedding_size=128, weight_regularizer=R)
 ```
 
 ## BaseRegularizer
 
 ```python
-regularizers.BaseRegularizer(reducer = None,
-								distance = None)
+regularizers.BaseRegularizer(*, distance=None, reducer=None)
 ```
 
 An object that extends this class can be passed as the `embedding_regularizer` into any loss function. It can also be passed as the `weight_regularizer` into any loss with [learnable weight arguments](losses.md#learnable-weight-arguments). The loss multiplies the regularizer's reduced value by its `*_reg_weight` and adds it after reducing its own objective terms.
 
 **Parameters**
 
-- **reducer**: A [reducer](reducers.md) object. If None, then the default reducer will be used.
 - **distance**: A [distance](distances.md) object. If None, then the default distance will be used.
+- **reducer**: A [reducer](reducers.md) object. If None, then the default reducer will be used.
+
+Every regularizer signature ends with `**options`, which accepts these two
+keyword-only arguments; see `pytorch_metric_learning.types.RegularizerOptions`.
 
 **Default distance**:
 
@@ -39,7 +41,7 @@ An object that extends this class can be passed as the `embedding_regularizer` i
 This encourages unnormalized embeddings or weights to all have the same Lp norm.
 
 ```python
-regularizers.CenterInvariantRegularizer(**kwargs)
+regularizers.CenterInvariantRegularizer(**options)
 ```
 
 **Default distance**:
@@ -56,7 +58,7 @@ regularizers.CenterInvariantRegularizer(**kwargs)
 This encourages embeddings/weights to have a small Lp norm.
 
 ```python
-regularizers.LpRegularizer(p=2, power=1, **kwargs)
+regularizers.LpRegularizer(p=2, power=1, **options)
 ```
 
 **Parameters**
@@ -78,7 +80,7 @@ regularizers.LpRegularizer(p=2, power=1, **kwargs)
 This should be applied as a weight regularizer. It penalizes class vectors that are very close together.
 
 ```python
-regularizers.RegularFaceRegularizer(**kwargs)
+regularizers.RegularFaceRegularizer(**options)
 ```
 
 **Default distance**:
@@ -97,7 +99,7 @@ regularizers.RegularFaceRegularizer(**kwargs)
 This should be applied as a weight regularizer. It encourages multiple class centers to "merge", i.e. group together.
 
 ```python
-regularizers.SparseCentersRegularizer(num_classes, centers_per_class, **kwargs)
+regularizers.SparseCentersRegularizer(num_classes, centers_per_class, **options)
 ```
 
 **Parameters**
@@ -119,7 +121,7 @@ regularizers.SparseCentersRegularizer(num_classes, centers_per_class, **kwargs)
 [Signal-to-Noise Ratio: A Robust Distance Metric for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Yuan_Signal-To-Noise_Ratio_A_Robust_Distance_Metric_for_Deep_Metric_Learning_CVPR_2019_paper.pdf){target=_blank}
 
 ```python
-regularizers.ZeroMeanRegularizer(**kwargs)
+regularizers.ZeroMeanRegularizer(**options)
 ```
 
 **Equation**

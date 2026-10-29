@@ -48,4 +48,4 @@ class TestAvgNonZeroReducer(unittest.TestCase):
                         correct_output = torch.mean(filtered_L)
                     else:
                         correct_output = torch.mean(L) * 0
-                    self.assertTrue(output == correct_output)
+                    torch.testing.assert_close(output, correct_output.to(output.dtype))

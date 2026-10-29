@@ -1,36 +1,41 @@
+from collections.abc import Callable
+from typing import Unpack
+
 import torch
 from torch import Tensor
 
-from ..distances import CosineSimilarity
-from ..reducers import DivisorReducer
-from ..types import IndicesTuple, LossDict
-from ..utils import common_functions as c_f
-from ..utils import loss_and_miner_utils as lmu
+from ..distances import BaseDistance, CosineSimilarity
+from ..reducers import BaseReducer, DivisorReducer
+from ..regularizers import BaseRegularizer
+from ..types import IndicesTuple, LossDict, LossOptions
+from ..utils import _common, indexing
 from .base_metric_loss_function import BaseMetricLossFunction, regularization_term
 
 
-def default_proxy_init(proxies):
+def default_proxy_init(proxies: Tensor) -> None:
     torch.nn.init.kaiming_normal_(proxies, mode="fan_out")
 
 
 class ProxyAnchorLoss(BaseMetricLossFunction):
+    sub_loss_names = ("pos_loss", "neg_loss")
+
     def __init__(
         self,
-        num_classes,
-        embedding_size,
-        margin=0.1,
-        alpha=32,
+        num_classes: int,
+        embedding_size: int,
+        margin: float = 0.1,
+        alpha: float = 32,
         *,
-        weight_regularizer=None,
-        weight_reg_weight=1,
-        weight_init_func=None,
-        **kwargs,
-    ):
-        super().__init__(**kwargs)
+        weight_regularizer: BaseRegularizer | None = None,
+        weight_reg_weight: float = 1.0,
+        weight_init_func: Callable[[Tensor], object] | None = None,
+        **options: Unpack[LossOptions],
+    ) -> None:
+        super().__init__(**options)
         self.weight_regularizer = weight_regularizer
         self.weight_reg_weight = weight_reg_weight
-        self.proxies = torch.nn.Parameter(torch.empty(num_classes, embedding_size))
-        (weight_init_func or default_proxy_init)(self.proxies)
+        self.weight = torch.nn.Parameter(torch.empty(num_classes, embedding_size))
+        (weight_init_func or default_proxy_init)(self.weight)
         self.num_classes = num_classes
         self.margin = margin
         self.alpha = alpha
@@ -43,46 +48,36 @@ class ProxyAnchorLoss(BaseMetricLossFunction):
         ref_emb: Tensor,
         ref_labels: Tensor | None,
     ) -> LossDict:
-        labels = c_f.labels_required(labels)
-        c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
-        c_f.check_parameter_placement(self, self.proxies, embeddings)
+        labels = _common.labels_required(labels)
+        _common.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
+        _common.check_parameter_placement(self, self.weight, embeddings)
         dtype = embeddings.dtype
-        miner_weights = lmu.convert_to_weights(
-            indices_tuple, labels, dtype=dtype
-        ).unsqueeze(1)
-        miner_weights = miner_weights - 1
-
+        miner_weights = indexing.convert_to_weights(indices_tuple, labels, dtype=dtype)
+        miner_weights = miner_weights.unsqueeze(1) - 1
         cos = self.get_logits(embeddings)
-
-        pos_mask = torch.nn.functional.one_hot(labels, self.num_classes)
-        neg_mask = 1 - pos_mask
-
-        with_pos_proxies = torch.where(torch.sum(pos_mask, dim=0) != 0)[0]
-
+        pos_mask = torch.nn.functional.one_hot(labels, self.num_classes).bool()
+        neg_mask = ~pos_mask
         pos_exp = self.distance.margin(cos, self.margin)
         neg_exp = self.distance.margin(-self.margin, cos)
-
-        pos_term = lmu.logsumexp(
+        pos_term = _common.logsumexp(
             (self.alpha * pos_exp) + miner_weights,
-            keep_mask=pos_mask.bool(),
+            keep_mask=pos_mask,
             add_one=True,
             dim=0,
         )
-        neg_term = lmu.logsumexp(
+        neg_term = _common.logsumexp(
             (self.alpha * neg_exp) + miner_weights,
-            keep_mask=neg_mask.bool(),
+            keep_mask=neg_mask,
             add_one=True,
             dim=0,
         )
-
-        loss_indices = c_f.torch_arange_from_size(self.proxies)
-
+        loss_indices = _common.arange_like(self.weight)
         return {
             "pos_loss": {
                 "losses": pos_term.squeeze(0),
                 "indices": loss_indices,
                 "reduction_type": "element",
-                "divisor": len(with_pos_proxies),
+                "divisor": pos_mask.any(dim=0).sum(),
             },
             "neg_loss": {
                 "losses": neg_term.squeeze(0),
@@ -92,22 +87,19 @@ class ProxyAnchorLoss(BaseMetricLossFunction):
             },
         }
 
-    def regularization_terms(self, embeddings):
+    def regularization_terms(self, embeddings: Tensor) -> LossDict:
         terms = super().regularization_terms(embeddings)
         if self.weight_regularizer is not None:
             terms["weight_reg_loss"] = regularization_term(
-                self.weight_regularizer, self.weight_reg_weight, self.proxies
+                self.weight_regularizer, self.weight_reg_weight, self.weight
             )
         return terms
 
-    def get_default_reducer(self):
+    def default_reducer(self) -> BaseReducer:
         return DivisorReducer()
 
-    def get_default_distance(self):
+    def default_distance(self) -> BaseDistance:
         return CosineSimilarity()
 
-    def sub_loss_names(self):
-        return ["pos_loss", "neg_loss"]
-
-    def get_logits(self, embeddings):
-        return self.distance(embeddings, self.proxies)
+    def get_logits(self, embeddings: Tensor) -> Tensor:
+        return self.distance(embeddings, self.weight)

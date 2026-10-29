@@ -2,8 +2,6 @@
 
 [Ensemble Deep Manifold Similarity Learning using Hard Proxies](https://openaccess.thecvf.com/content_CVPR_2019/papers/Aziere_Ensemble_Deep_Manifold_Similarity_Learning_Using_Hard_Proxies_CVPR_2019_paper.pdf)
 
-**Mathematical reference**: The paper linked above defines the objective and derivation. This page specifies the library interface and its settings.
-
 ```python
 losses.ManifoldLoss(
         embedding_size: int,
@@ -11,9 +9,29 @@ losses.ManifoldLoss(
         lambda_c: float = 1.0,
         alpha: float = 0.8,
         margin: float = 5e-4,
-        **kwargs
+        **options
     )
 ```
+
+**Equation**:
+
+$$
+F = (1 - \alpha)\left(I - \alpha \bar S\right)^{-1}, \qquad \bar S = D^{-1/2} S D^{-1/2}, \qquad S_{ij} = e^{\max(\cos(\mathbf{x}_i, \mathbf{x}_j), 0) / 0.5} \; (i \neq j)
+$$
+
+$$
+L_{int} = \frac{1}{N} \sum_{i=1}^{N} \log\left(1 + \sum_{k \neq c(i)} e^{\left[F_{i,k} - F_{i,c(i)} + m\right]_+}\right),
+\qquad
+L_{ctx} = \frac{1}{N} \sum_{i=1}^{N} \log\left(1 + \sum_{k \neq c(i)} e^{\left[\cos(F_i, F_{p_k}) - \cos(F_i, F_{p_{c(i)}}) + m\right]_+}\right)
+$$
+
+$$
+L = L_{int} + \lambda_C L_{ctx}
+$$
+
+Here $S$ is the similarity graph over the $N$ embeddings and $K$ proxies, $D$ is its degree matrix, $F_{i,k}$ is the random-walk affinity between embedding $i$ and proxy $k$, $c(i)$ is the proxy assigned to embedding $i$, and only violating terms with $[\cdot]_+ > 0$ enter the sums.
+
+**Implementation notes**: The matrix inverse is computed in float32. With `indices_tuple=None`, every proxy is assigned to at least one embedding and the remaining embeddings receive random proxies.
 
 **Parameters**
 

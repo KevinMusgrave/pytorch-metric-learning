@@ -18,20 +18,24 @@ is a development dependency; the former `docs` installation extra is removed.
 ## Explicit validation and typing
 
 Public argument checks raise `TypeError` for incompatible types and `ValueError`
-for invalid values or shapes, including with `python -O`. Custom miners use
-`validate_output` instead of `output_assertion`; custom reducers use the
-`check_sizes_*` hooks instead of `assert_sizes_*`. The distance validation helper
-is now `utils.common_functions.check_distance_type`.
+for invalid values or shapes, including with `python -O`. Miner outputs are
+validated by `BaseMiner.forward`; reducer terms are validated by one
+`validate_term` function. String choices such as `triplets_per_anchor="all"`,
+`type_of_triplets="semihard"`, and `k="max_bin_count"` are declared as
+`Literal` types.
 
 `BaseDistance.is_inverted` is a class attribute, not a constructor parameter.
 Custom similarities set `is_inverted = True` on their class. `p` still controls
-embedding normalization, including for similarities.
+embedding normalization, including for similarities. `CosineSimilarity` takes
+only `p` and `power`.
 
 `pytorch_metric_learning.types` exposes `LossTerm`, `LossDict`, `PairIndices`,
-`TripletIndices`, and `IndicesTuple`. Loss computation, mining, and reducer
-boundaries have type annotations, and distributions include `py.typed`. Runtime
-loss terms remain dictionaries and mined indices remain tuples. A default
-reducer returns a tensor; `DoNothingReducer` returns the typed loss dictionary.
+`TripletIndices`, `IndicesTuple`, `LossOptions`, `RegularizerOptions`, and the
+`KNNFunction`, `KMeansFunction`, and `LabelComparison` callable types. Public
+signatures are annotated and type-checked in CI, and distributions include
+`py.typed`. Runtime loss terms remain dictionaries whose `losses` entry is
+always a tensor, and mined indices remain tuples. Every reducer returns a
+tensor; `loss_func.loss_terms(...)` returns the unreduced dictionary.
 
 ## Removed training orchestration
 
@@ -98,13 +102,30 @@ and canonical task index lead to small executable recipes beside API contracts.
 
 ## Explicit loss composition and parameter placement
 
-`EmbeddingRegularizerMixin`, `WeightRegularizerMixin`, and `WeightMixin` are
-removed. Every loss still accepts `embedding_regularizer` and
-`embedding_reg_weight`. ArcFace, CosFace, large-margin softmax, SphereFace,
-sub-center ArcFace, normalized softmax, ProxyAnchor, ProxyNCA, and SoftTriple
-losses declare keyword-only `weight_regularizer`, `weight_reg_weight`, and
-`weight_init_func`; pass these by name. `weight_init_func` is any callable that
-initializes a tensor in place, including `torch.nn.init` functions.
+`EmbeddingRegularizerMixin`, `WeightRegularizerMixin`, `WeightMixin`, and the
+`ModuleWithReducer`, `ModuleWithDistance`, and `ModuleWithReducerAndDistance`
+composition bases are removed. `BaseMetricLossFunction`, `BaseMiner`, and
+`BaseRegularizer` extend `torch.nn.Module` directly and declare their options as
+keyword-only parameters. Every loss signature ends with `**options`, typed by
+`types.LossOptions`: `distance`, `reducer`, `embedding_regularizer`, and
+`embedding_reg_weight`. Miners take `*, distance=None`; regularizers take
+`**options` typed by `types.RegularizerOptions`. A reducer passed to a loss is
+used as given rather than deep-copied, and a loss with several terms applies it
+to each term unless it is a `MultipleReducers`.
+
+ArcFace, CosFace, large-margin softmax, SphereFace, sub-center ArcFace,
+normalized softmax, ProxyAnchor, ProxyNCA, and SoftTriple losses store their
+class vectors in one parameter named `weight` with shape
+`(num_classes, embedding_size)`, or `(num_classes * centers, embedding_size)`
+for multi-center losses, replacing the `W`, `proxies`, and `fc` attributes with
+mixed layouts. They declare keyword-only `weight_regularizer`,
+`weight_reg_weight`, and `weight_init_func`; pass these by name.
+`weight_init_func` is any callable that initializes a tensor in place, including
+`torch.nn.init` functions. `ArcFaceLoss` and `SubCenterArcFaceLoss` take their
+margin in radians with the paper's default of 0.5; earlier releases used
+degrees. `LargeMarginSoftmaxLoss` requires an integer margin instead of
+truncating. `P2SGradLoss(num_classes, embedding_size)` follows the other
+classification losses' argument order.
 
 Regularization penalties are added after the reducer instead of passing through
 it. Loss values are unchanged for built-in reducers. A custom reducer that
@@ -148,29 +169,39 @@ classes are replaced by `ModuleWithReducer`, `ModuleWithDistance`, and
 
 ## Extension hooks
 
-`GenericPairLoss` subclasses implement `_compute_matrix_loss(mat, pos_mask,
-neg_mask)` when constructed with `mat_based_loss=True`, or
-`_compute_pair_loss(pos_pairs, neg_pairs, indices_tuple)` otherwise, instead of
-one `_compute_loss` whose signature depended on the flag. Regularizer
-`compute_loss` takes one argument, `x`, which is embeddings or weights.
-`HDCMiner.set_idx_externally` and `reset_idx` are replaced by a `candidates`
-argument: `miner(embeddings, labels, candidates=pairs)`. The miner keeps no
-candidate state between calls. `PNPLoss` raises `ValueError` for unsupported
-variants; `SelfSupervisedLoss` and `CrossBatchMemory` raise `TypeError` for
-unsupported loss types.
+`GenericPairLoss` subclasses implement one hook, `pair_loss(mat, pairs)`, and
+use `pair_values` or `pair_masks` for pair distances or boolean masks; the
+`mat_based_loss` flag and the two private hooks are gone. `sub_loss_names` is a
+class attribute, `zero_losses(embeddings)` returns differentiable zero terms,
+and `default_distance()` and `default_reducer()` replace the `get_default_*`
+methods on losses, miners, and regularizers. Regularizer `compute_loss` takes
+one argument, `x`, which is embeddings or weights. Custom reducers implement
+`element_reduction(losses, loss_indices, embeddings, labels)` without extra
+keyword arguments. `HDCMiner.set_idx_externally` and `reset_idx` are replaced by
+a `candidates` argument: `miner(embeddings, labels, candidates=pairs)`. The
+miner keeps no candidate state between calls. `PNPLoss` raises `ValueError` for
+unsupported variants.
 
 ## Smaller utility surface
 
 `BaseLossWrapper` is removed. `CrossBatchMemory` and `SelfSupervisedLoss`
-inherit `torch.nn.Module` directly and accept subclasses of their supported
-loss types. Their `supported_losses()` methods return tuples of types instead
-of class-name strings. ProxyNCA and its subclasses remain unsupported because
-their learned proxies cannot serve the wrappers' separate-reference contract.
+inherit `torch.nn.Module` directly and accept any `BaseMetricLossFunction`
+instead of an allowlist of classes. A wrapped loss that rejects `ref_emb`, such
+as ProxyNCA, raises `ValueError` on the first call that supplies references.
+`VICRegLoss` is a plain module called as `loss(embeddings, ref_emb)`; it has no
+distance, reducer, or regularizer options. `MultipleLosses` takes mappings for
+`losses`, `miners`, and `weights`; the list form is removed.
 
 `EmbeddingsAlreadyPackagedAsTriplets` is removed. For consecutively packed
 triplets, create `torch.arange(len(embeddings), device=embeddings.device)` and
 use `.reshape(-1, 3).unbind(1)` as the loss's `indices_tuple`; see
 [fixed triplet sampling](samplers.md#fixedsetoftriplets).
+
+`utils.loss_and_miner_utils` is replaced by `utils.indexing`, whose public
+functions are `get_all_pairs_indices`, `get_all_triplets_indices`,
+`get_random_triplet_indices`, `convert_to_pairs`, `convert_to_triplets`, and
+`convert_to_weights`. `utils.common_functions` is private; its validation and
+numerical helpers are not part of the public API.
 
 `common_functions.LOGGER`, `LOGGER_NAME`, and `set_logger_name` are removed.
 Configure ordinary Python logging through
@@ -183,17 +214,18 @@ The redundant `common_functions.to_device`, `to_dtype`, `numpy_to_torch`,
 `torch.as_tensor`, `Tensor.cpu().numpy()`, and `isinstance(x, (list, tuple))`
 directly. Explicit dtype conversions are honored during autocast as well.
 
-`BatchedDistance(distance, batch_size=32)` receives its required callback when
-called: `distance(query, reference, iter_fn=callback)`. It stores no callback
-between calls. Wrapped distance options are available through `.distance`;
-the wrapper directly exposes only `is_inverted` for search ordering.
+`BatchedDistance(distance, batch_size=32)` returns an iterator of
+`(mat, start, end)` blocks when called; the callback argument is gone. Wrapped
+distance options are available through `.distance`; the wrapper directly
+exposes only `is_inverted` for search ordering.
 
 The module containing `ProxyNCALoss` is now `losses.proxy_nca_loss`; the usual
 `losses.ProxyNCALoss` import is unchanged. Distance/reducer composition bases
 live in `utils.module_with_distance_and_reducer`.
 
 `BaseDistance.largest_dist` is removed; use `smallest_dist` with the opposite
-reduction or check `is_inverted`. `CrossBatchMemory` checkpoints store the queue
+reduction or check `is_inverted`. `DoNothingReducer` is removed; call
+`loss_func.loss_terms(...)` for the unreduced dictionary. `CrossBatchMemory` checkpoints store the queue
 cursor and filled flag under a `queue_state` key instead of `_extra_state`.
 `CrossBatchMemory` no longer moves or casts its queue to match each batch; place
 it with `.to(device, dtype)`. The label queue dtype is the new keyword-only
@@ -229,12 +261,19 @@ normalized distances, and squared distances.
 `common_functions.TorchInitWrapper` is removed; pass any in-place initializer,
 for example `functools.partial(torch.nn.init.kaiming_uniform_, a=1)`, as
 `weight_init_func`. The unused `loss_and_miner_utils.matched_size_indices` and
-`repeat_to_match_size` are removed. Reducers dispatch reduction types through an
-explicit table: tuple reductions default to `element_reduction` with anchor
-indices, so custom reducers implement only `element_reduction` unless tuples
-need different treatment. `AccuracyCalculator` metrics are registered by
-overriding `metric_functions()` instead of discovered from `calculate_` method
-names.
+`repeat_to_match_size` are removed. `BaseReducer.forward` reduces every term in the
+dictionary and sums them; tuple reductions default to `element_reduction` with
+anchor indices, so custom reducers implement only `element_reduction` unless
+tuples need different treatment. `ThresholdReducer` and `AvgNonZeroReducer`
+use a masked sum and count instead of boolean indexing, and `DivisorReducer`
+branches with `torch.where`, so default reductions perform no host
+synchronization and keep fixed shapes under `torch.compile`. `DivisorReducer`
+accumulates float16 and bfloat16 sums in float32. `AccuracyCalculator` metrics
+are registered by overriding `metric_functions()` instead of discovered from
+`calculate_` method names, and `get_accuracy` keeps the dtype of labels and
+floating embeddings instead of casting everything to float32, which made large
+integer identifiers collide (reported and fixed by Akshit Khokhani in
+[#763](https://github.com/KevinMusgrave/pytorch-metric-learning/pull/763)).
 
 ## Sampler randomness
 
@@ -275,5 +314,11 @@ and handles histogram endpoints safely. See [distributed contracts](distributed.
 and [loss contracts](losses.md) for the supported combinations.
 
 All-triplet enumeration avoids an unconditional cubic candidate mask while
-preserving index order, values, and gradients. See [performance measurements](performance.md)
-for the measured workload and its limits.
+preserving index order, values, and gradients. Random triplet sampling, used by
+integer `triplets_per_anchor` values and `DistanceWeightedMiner`, is vectorized
+with `torch.multinomial` instead of a Python loop over labels with host random
+draws; `t_per_anchor=None` now draws one triplet per positive of each anchor.
+`LpDistance` computes float16 and bfloat16 matrices with `torch.cdist` in
+float32 and casts the result, replacing an expansion that materialized every row
+pair. See [performance measurements](performance.md) for the measured workload
+and its limits.

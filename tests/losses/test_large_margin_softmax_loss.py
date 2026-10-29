@@ -40,8 +40,8 @@ class TestLargeMarginSoftmaxLoss(unittest.TestCase):
             lossA = loss_funcA(embeddings, labels)
             lossB = loss_funcB(embeddings, labels)
 
-            weightsA = loss_funcA.W
-            weightsB = torch.nn.functional.normalize(loss_funcB.W, dim=0)
+            weightsA = loss_funcA.weight.t()
+            weightsB = torch.nn.functional.normalize(loss_funcB.weight, dim=1).t()
 
             product_of_magnitudesA = torch.norm(weightsA, p=2, dim=0).unsqueeze(
                 0

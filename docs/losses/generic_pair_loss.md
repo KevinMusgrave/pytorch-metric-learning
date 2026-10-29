@@ -1,23 +1,24 @@
 # GenericPairLoss
 
 ```python
-losses.GenericPairLoss(mat_based_loss, **kwargs)
+losses.GenericPairLoss(**options)
 ```
 
-**Parameters**:
-
-- **mat_based_loss**: If `True`, the loss receives the distance matrix and pair masks; otherwise it receives the distances of the positive and negative pairs. See required implementations.
+A base class for losses over positive and negative pairs. Its `compute_loss`
+converts labels or a supplied `indices_tuple` to pairs, returns zero when there
+are none, computes the distance matrix between `embeddings` and `ref_emb`, and
+calls `pair_loss`.
 
 **Required Implementations**:
 
-Implement the hook that matches `mat_based_loss`:
-
 ```python
-# mat_based_loss=True: the full query-by-reference matrix and 0/1 pair masks
-def _compute_matrix_loss(self, mat, pos_mask, neg_mask):
-    raise NotImplementedError
-
-# mat_based_loss=False: distances of the selected pairs and their indices
-def _compute_pair_loss(self, pos_pairs, neg_pairs, indices_tuple):
+def pair_loss(self, mat, pairs):
     raise NotImplementedError
 ```
+
+`mat` is the `(len(embeddings), len(ref_emb))` distance matrix and `pairs` is
+the four-tensor `(a1, p, a2, n)` tuple. Two static helpers extract the common
+views: `self.pair_values(mat, pairs)` returns the positive-pair and
+negative-pair distances, and `self.pair_masks(mat, pairs)` returns boolean
+positive and negative masks over `mat`. See
+[pair-based losses](../extend/losses.md#pair-based-losses) for an example.

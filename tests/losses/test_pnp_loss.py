@@ -1,4 +1,5 @@
 import unittest
+from typing import Any
 
 import torch
 import torch.nn
@@ -118,8 +119,9 @@ class TestPNPLoss(unittest.TestCase):
                 rtol = 1e-2 if dtype == torch.float16 else 1e-5
                 self.assertTrue(torch.isclose(loss, correct_loss[0], rtol=rtol))
 
+        invalid: Any = "PNP"
         with self.assertRaises(ValueError):
-            PNPLoss(b, alpha, anneal, "PNP")
+            PNPLoss(b, alpha, anneal, invalid)
 
     def test_negatives_that_have_no_positives(self):
         loss_func = PNPLoss()

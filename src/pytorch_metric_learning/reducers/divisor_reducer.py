@@ -1,25 +1,33 @@
 import torch
+from torch import Tensor
 
-from .base_reducer import BaseReducer
+from ..types import LossTerm
+from ..utils._common import LOW_PRECISION
+from .base_reducer import BaseReducer, validate_term
 
 
 class DivisorReducer(BaseReducer):
-    def unpack_loss_info(self, loss_info):
-        losses, loss_indices, reduction_type, kwargs = super().unpack_loss_info(
-            loss_info
-        )
-        if reduction_type != "already_reduced":
-            kwargs = {"divisor": loss_info["divisor"]}
-        return losses, loss_indices, reduction_type, kwargs
+    def reduce(
+        self, term: LossTerm, embeddings: Tensor, labels: Tensor | None
+    ) -> Tensor:
+        losses, _ = validate_term(term)
+        if term["reduction_type"] == "already_reduced":
+            return losses
+        return self.sum_and_divide(losses, term.get("divisor", 1))
 
-    def sum_and_divide(self, losses, embeddings, divisor):
-        if divisor != 0:
-            output = torch.sum(losses) / divisor
-            if torch.isnan(output) and losses.dtype == torch.float16:
-                output = torch.sum(losses.to(dtype=torch.float32)) / divisor
-                output = output.to(dtype=torch.float16)
-            return output
-        return self.zero_loss(embeddings)
+    def sum_and_divide(self, losses: Tensor, divisor: Tensor | float) -> Tensor:
+        dtype = torch.float32 if losses.dtype in LOW_PRECISION else losses.dtype
+        divisor = torch.as_tensor(divisor, device=losses.device).to(dtype)
+        total = losses.sum(dtype=dtype)
+        safe = torch.where(divisor != 0, divisor, torch.ones_like(divisor))
+        output = torch.where(divisor != 0, total / safe, torch.zeros_like(total))
+        return output.to(losses.dtype)
 
-    def element_reduction(self, losses, loss_indices, embeddings, labels, **kwargs):
-        return self.sum_and_divide(losses, embeddings, kwargs.get("divisor", 1))
+    def element_reduction(
+        self,
+        losses: Tensor,
+        loss_indices: Tensor,
+        embeddings: Tensor,
+        labels: Tensor | None,
+    ) -> Tensor:
+        return self.sum_and_divide(losses, 1)

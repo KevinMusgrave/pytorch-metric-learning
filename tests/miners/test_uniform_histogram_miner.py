@@ -4,7 +4,7 @@ import torch
 
 from pytorch_metric_learning.distances import LpDistance, SNRDistance
 from pytorch_metric_learning.miners import UniformHistogramMiner
-from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
+from pytorch_metric_learning.utils import indexing
 
 from .. import TEST_DEVICE, TEST_DTYPES
 
@@ -35,7 +35,7 @@ class TestUniformHistogramMiner(unittest.TestCase):
                 )
                 labels = torch.randint(0, 2, size=(batch_size,), device=TEST_DEVICE)
 
-                a1, p, a2, n = lmu.get_all_pairs_indices(labels)
+                a1, p, a2, n = indexing.get_all_pairs_indices(labels)
                 dist_mat = distance(embeddings)
                 pos_pairs = dist_mat[a1, p]
                 neg_pairs = dist_mat[a2, n]

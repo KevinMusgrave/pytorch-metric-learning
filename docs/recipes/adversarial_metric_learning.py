@@ -3,7 +3,7 @@ from torch import Tensor, nn
 from torch.nn import functional as F
 
 from pytorch_metric_learning import losses
-from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
+from pytorch_metric_learning.utils import indexing
 
 
 def generator_losses(
@@ -92,7 +92,7 @@ def main() -> None:
     generator_optimizer = torch.optim.SGD(generator.parameters(), lr=0.05)
     data = torch.randn(12, 8)
     labels = torch.arange(4).repeat_interleave(3)
-    triplets = lmu.get_all_triplets_indices(labels)
+    triplets = indexing.get_all_triplets_indices(labels)
     for _ in range(10):
         generator_loss = generator_step(
             trunk, embedder, generator, data, triplets, generator_optimizer

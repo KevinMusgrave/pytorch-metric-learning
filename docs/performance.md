@@ -207,6 +207,30 @@ forward/backward takes 27.607 seconds using fresh `TORCHINDUCTOR_CACHE_DIR` and
 measurement. Compilation helps steady-state execution for this workload; its
 startup cost and workload dependence still require measurement before adoption.
 
+## Sampling and half-precision distances
+
+The vectorized random triplet sampling and the float32 `cdist` path for
+low-precision `LpDistance` were compared with the preceding branch revision
+`83a9355` on the Apple M1 Pro described above, with one CPU thread, 128
+dimensions, four examples per class, three warmup calls, and twenty measured
+calls. Values are median milliseconds for one call.
+
+| Case                                                 | Batch | Before | After |
+| ---------------------------------------------------- | ----: | -----: | ----: |
+| `get_random_triplet_indices(t_per_anchor=100)`       |   128 |  1.267 | 0.571 |
+| `get_random_triplet_indices(t_per_anchor=100)`       |   512 |  5.242 | 3.356 |
+| `DistanceWeightedMiner` (normalized, 128 dimensions) |   512 | 54.919 | 3.592 |
+| `LpDistance` matrix, bfloat16 inputs                 |   512 | 47.047 | 0.303 |
+
+The previous sampler looped over labels with host random draws; the previous
+low-precision distance gathered every row pair, allocating memory proportional
+to queries times references times dimensions. Both paths now stay on the
+tensor's device with one host synchronization for the sampled count. Sampled
+triplets follow the same distributions as before, but seeded sequences differ.
+Reproduce the comparison with the public functions above and
+`time.perf_counter`; CUDA timings for these paths are recorded with the release
+acceptance run.
+
 ## Large batches and tuple memory
 
 The number of valid pairs and triplets can grow rapidly with batch size and

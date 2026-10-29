@@ -1,6 +1,7 @@
 import itertools
 import logging
 import unittest
+from typing import Any
 
 import numpy as np
 import torch
@@ -97,7 +98,7 @@ class TestCalculateAccuracies(unittest.TestCase):
                 for i, (knn_labels, label_counts) in enumerate(
                     [(knn_labels1, label_counts1), (knn_labels2, label_counts2)]
                 ):
-                    init_kwargs = {
+                    init_kwargs: dict[str, Any] = {
                         "exclude": ("NMI", "AMI"),
                         "avg_of_avgs": avg_of_avgs,
                         "return_per_class": return_per_class,
@@ -909,7 +910,7 @@ class TestMutualInformation(unittest.TestCase):
             normalized_mutual_info_score,
         )
 
-        def sklearn_kmeans(x, nmb_clusters):
+        def sklearn_kmeans(x, _):
             return KMeans(n_clusters=2).fit_predict(x.cpu().numpy())
 
         dataset_size = 2000

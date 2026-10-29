@@ -27,7 +27,7 @@ Note that an anchor can belong to multiple positive pairs if its label is presen
 Are you trying to use `NTXentLoss` for self-supervised learning? Specifically, do you have two sets of embeddings which are derived from data that are augmented versions of each other? If so, you can skip the step of creating the `labels` array, by wrapping `NTXentLoss` with [`SelfSupervisedLoss`](self_supervised_loss.md#selfsupervisedloss).
 
 ```python
-losses.NTXentLoss(temperature=0.07, **kwargs)
+losses.NTXentLoss(temperature=0.07, **options)
 ```
 
 **Equation**:

@@ -1,34 +1,35 @@
 import warnings
+from typing import Unpack
 
 import torch
 from torch import Tensor
 
-from ..distances import LpDistance
-from ..types import IndicesTuple, LossDict
-from ..utils import common_functions as c_f
+from ..distances import BaseDistance, LpDistance
+from ..types import IndicesTuple, LossDict, LossOptions
+from ..utils import _common
 from .base_metric_loss_function import BaseMetricLossFunction
 
 
 class RankedListLoss(BaseMetricLossFunction):
-    def __init__(self, margin, Tn, imbalance=0.5, alpha=None, Tp=0, **kwargs):
-        super().__init__(**kwargs)
-
-        self.margin = margin
-
+    def __init__(
+        self,
+        margin: float,
+        Tn: float,
+        imbalance: float = 0.5,
+        alpha: float | None = None,
+        Tp: float = 0,
+        **options: Unpack[LossOptions],
+    ) -> None:
+        super().__init__(**options)
         if not 0 <= imbalance <= 1:
             raise ValueError("Imbalance must be between 0 and 1")
-        self.imbalance = imbalance
-
-        if alpha is not None:
-            self.alpha = alpha
-        else:
-            self.alpha = 1 + margin / 2
-
         if Tp > 5 or Tn > 5:
             warnings.warn(
                 "Values of Tp or Tn are too high and may overflow.", stacklevel=2
             )
-
+        self.margin = margin
+        self.imbalance = imbalance
+        self.alpha = alpha if alpha is not None else 1 + margin / 2
         self.Tp = Tp
         self.Tn = Tn
 
@@ -40,48 +41,38 @@ class RankedListLoss(BaseMetricLossFunction):
         ref_emb: Tensor,
         ref_labels: Tensor | None,
     ) -> LossDict:
-        labels = c_f.labels_required(labels)
-        c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
-        c_f.indices_tuple_not_supported(indices_tuple)
+        labels = _common.labels_required(labels)
+        _common.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
+        _common.indices_tuple_not_supported(indices_tuple)
 
-        mat = self.distance(embeddings, embeddings)
-        mat = mat - mat * torch.eye(len(mat), device=embeddings.device)
-        mat = mat.to(device=embeddings.device, dtype=embeddings.dtype)
-        y = labels.unsqueeze(1) == labels.unsqueeze(0)
+        mat = self.distance(embeddings)
+        eye = torch.eye(len(mat), dtype=torch.bool, device=mat.device)
+        mat = mat.masked_fill(eye, 0)
+        same = labels.unsqueeze(1) == labels.unsqueeze(0)
 
-        P_star = torch.zeros_like(mat)
-        N_star = torch.zeros_like(mat)
-        w_p = torch.zeros_like(mat)
-        w_n = torch.zeros_like(mat)
-
-        N_star[(~y) * (mat < self.alpha)] = mat[(~y) * (mat < self.alpha)]
-        y.fill_diagonal_(False)
-        P_star[y * (mat > (self.alpha - self.margin))] = mat[
-            y * (mat > (self.alpha - self.margin))
-        ]
-
-        w_p[P_star > 0] = torch.exp(
-            self.Tp * (P_star[P_star > 0] - (self.alpha - self.margin))
+        negative = ~same & (mat < self.alpha)
+        positive = same & ~eye & (mat > (self.alpha - self.margin))
+        N_star = torch.where(negative, mat, 0.0)
+        P_star = torch.where(positive, mat, 0.0)
+        w_p = torch.where(
+            P_star > 0, torch.exp(self.Tp * (P_star - (self.alpha - self.margin))), 0.0
         )
-        w_n[N_star > 0] = torch.exp(self.Tn * (self.alpha - N_star[N_star > 0]))
+        w_n = torch.where(N_star > 0, torch.exp(self.Tn * (self.alpha - N_star)), 0.0)
 
         loss_P = torch.sum(
             w_p * (P_star - (self.alpha - self.margin)), dim=1
         ) / torch.sum(w_p + 1e-5, dim=1)
-
         loss_N = torch.sum(w_n * (self.alpha - N_star), dim=1) / torch.sum(
             w_n + 1e-5, dim=1
         )
-
         loss_RLL = (1 - self.imbalance) * loss_P + self.imbalance * loss_N
-
         return {
             "loss": {
                 "losses": loss_RLL,
-                "indices": c_f.torch_arange_from_size(loss_RLL),
+                "indices": _common.arange_like(loss_RLL),
                 "reduction_type": "element",
             }
         }
 
-    def get_default_distance(self):
+    def default_distance(self) -> BaseDistance:
         return LpDistance()

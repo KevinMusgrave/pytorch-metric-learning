@@ -7,8 +7,8 @@ from pytorch_metric_learning.reducers import (
     MeanReducer,
     PerAnchorReducer,
 )
-from pytorch_metric_learning.utils import common_functions as c_f
-from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
+from pytorch_metric_learning.utils import _common as c_f
+from pytorch_metric_learning.utils import indexing
 
 from .. import TEST_DEVICE, TEST_DTYPES
 
@@ -24,9 +24,9 @@ class TestPerAnchorReducer(unittest.TestCase):
                     torch.randn(batch_size, embedding_size).type(dtype).to(TEST_DEVICE)
                 )
                 labels = torch.randint(0, 10, (batch_size,))
-                pos_pair_indices = lmu.get_all_pairs_indices(labels)[:2]
-                neg_pair_indices = lmu.get_all_pairs_indices(labels)[2:]
-                triplet_indices = lmu.get_all_triplets_indices(labels)
+                pos_pair_indices = indexing.get_all_pairs_indices(labels)[:2]
+                neg_pair_indices = indexing.get_all_pairs_indices(labels)[2:]
+                triplet_indices = indexing.get_all_triplets_indices(labels)
 
                 for indices, reduction_type in [
                     (torch.arange(batch_size), "element"),
@@ -56,7 +56,7 @@ class TestPerAnchorReducer(unittest.TestCase):
                         loss_dict = {
                             "loss": {
                                 "losses": losses,
-                                "indices": c_f.torch_arange_from_size(embeddings),
+                                "indices": c_f.arange_like(embeddings),
                                 "reduction_type": "element",
                             }
                         }
@@ -76,7 +76,7 @@ class TestPerAnchorReducer(unittest.TestCase):
                         loss_dict = {
                             "loss": {
                                 "losses": correct_output,
-                                "indices": c_f.torch_arange_from_size(embeddings),
+                                "indices": c_f.arange_like(embeddings),
                                 "reduction_type": "element",
                             }
                         }

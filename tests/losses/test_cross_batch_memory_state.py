@@ -1,11 +1,12 @@
 import unittest
 from io import BytesIO
+from typing import Any
 
 import torch
 
 from pytorch_metric_learning.distances import LpDistance
 from pytorch_metric_learning.losses import ContrastiveLoss, CrossBatchMemory
-from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
+from pytorch_metric_learning.utils import indexing
 
 from .. import TEST_DEVICE, TEST_DTYPES
 
@@ -258,7 +259,7 @@ class TestCrossBatchMemoryState(unittest.TestCase):
     def test_empty_self_indices_leave_pair_and_triplet_indices_unchanged(self) -> None:
         empty = torch.empty(0, dtype=torch.long, device=TEST_DEVICE)
         for indices in (([0], [1], [2]), ([0], [1], [0], [2])):
-            values = tuple(torch.tensor(x, device=TEST_DEVICE) for x in indices)
-            actual = lmu.remove_self_comparisons(values, empty, 3)
+            values: Any = tuple(torch.tensor(x, device=TEST_DEVICE) for x in indices)
+            actual = indexing.remove_self_comparisons(values, empty, 3)
             for observed, wanted in zip(actual, values, strict=True):
                 torch.testing.assert_close(observed, wanted)

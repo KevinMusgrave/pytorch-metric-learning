@@ -5,6 +5,8 @@ on:
     branches: [master]
   pull_request:
   workflow_dispatch:
+  schedule:
+    - cron: "17 6 * * 1"
 
 permissions:
   contents: read
@@ -25,6 +27,11 @@ jobs:
           version: 0.13.4
           python-version-file: .python-version
           enable-cache: true
+      - name: Cache the locked policy tools
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: ~/.local/share/code-polishy
+          key: code-polishy-${{ runner.os }}-${{ hashFiles('.code-polishy.lock.json') }}
       - name: Resolve verification base
         run: |
           if [ -z "$BASE_SHA" ] || [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ]; then
@@ -46,3 +53,24 @@ jobs:
           uv sync --frozen --no-dev --no-build --no-install-project
           uv pip install --python "$UV_PROJECT_ENVIRONMENT/bin/python" --no-deps --no-build dist/*.whl
           uv run --frozen --no-sync python -I scripts/check_wheel.py
+
+  newer-python:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78
+        with:
+          version: 0.13.4
+          python-version: ${{ matrix.python }}
+          enable-cache: true
+      - name: Install locked development dependencies
+        run: uv sync --frozen --all-extras --no-build --no-install-project --python ${{ matrix.python }}
+      - name: Run the CPU suite
+        run: uv run --frozen --no-sync --env-file tests/cpu.env python -m pytest -q

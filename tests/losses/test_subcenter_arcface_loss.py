@@ -6,7 +6,6 @@ import torch
 import torch.nn.functional as F
 
 from pytorch_metric_learning.losses import ArcFaceLoss, SubCenterArcFaceLoss
-from pytorch_metric_learning.reducers import DoNothingReducer
 
 from .. import TEST_DEVICE, TEST_DTYPES
 
@@ -15,7 +14,7 @@ class TestSubCenterArcFaceLoss(unittest.TestCase):
     def test_subcenter_arcface_loss(self):
         batch_size = 64
         embedding_size = 32
-        margin = 30
+        margin = np.radians(30)
         scale = 64
         num_classes = 10
         for dtype in TEST_DTYPES:
@@ -34,12 +33,12 @@ class TestSubCenterArcFaceLoss(unittest.TestCase):
                 labels = torch.randint(low=0, high=num_classes, size=(batch_size,)).to(
                     TEST_DEVICE
                 )
-                self.assertTrue(loss_func.W.shape[1] == num_classes * sub_centers)
+                self.assertTrue(loss_func.weight.shape[0] == num_classes * sub_centers)
 
                 loss = loss_func(embeddings, labels)
                 loss.backward()
 
-                weights = F.normalize(loss_func.W, p=2, dim=0)
+                weights = F.normalize(loss_func.weight, p=2, dim=1).t()
                 logits = torch.matmul(F.normalize(embeddings), weights)
                 logits = logits.view(-1, num_classes, sub_centers)
                 logits, _ = logits.max(dim=2)
@@ -47,8 +46,7 @@ class TestSubCenterArcFaceLoss(unittest.TestCase):
                 for i, c in enumerate(labels):
                     acos = torch.acos(torch.clamp(logits[i, c], -1, 1))
                     logits[i, c] = torch.cos(
-                        acos
-                        + torch.tensor(np.radians(margin), dtype=dtype).to(TEST_DEVICE)
+                        acos + torch.tensor(margin, dtype=dtype).to(TEST_DEVICE)
                     )
 
                 correct_loss = F.cross_entropy(logits * scale, labels.to(TEST_DEVICE))
@@ -63,7 +61,7 @@ class TestSubCenterArcFaceLoss(unittest.TestCase):
                         num_classes=num_classes,
                         embedding_size=embedding_size,
                     ).to(TEST_DEVICE, dtype)
-                    regular_arcface.W = loss_func.W
+                    regular_arcface.weight = loss_func.weight
                     regular_arcface_loss = regular_arcface(embeddings, labels)
                     self.assertTrue(
                         torch.isclose(loss, regular_arcface_loss, rtol=rtol)
@@ -81,7 +79,7 @@ class TestSubCenterArcFaceLoss(unittest.TestCase):
     def test_inference_subcenter_arcface(self):
         batch_size = 64
         embedding_size = 32
-        margin = 30
+        margin = np.radians(30)
         scale = 64
         num_classes = 10
         sub_centers = 3
@@ -114,12 +112,12 @@ class TestSubCenterArcFaceLoss(unittest.TestCase):
                     continue
                 self.assertTrue(len(outliers) < len(labels))
                 self.assertTrue(
-                    dominant_centers.shape == torch.Size([embedding_size, num_classes])
+                    dominant_centers.shape == torch.Size([num_classes, embedding_size])
                 )
 
                 cos_threshold = math.cos(math.pi * threshold / 180.0)
                 distances = torch.mm(
-                    F.normalize(embeddings), F.normalize(dominant_centers, dim=0)
+                    F.normalize(embeddings), F.normalize(dominant_centers, dim=1).t()
                 )
                 outliers_labels = labels[outliers]
                 outliers_distances = distances[outliers, outliers_labels]
@@ -147,11 +145,10 @@ class TestSubCenterArcFaceLoss(unittest.TestCase):
             num_classes=10,
             sub_centers=3,
             embedding_size=64,
-            reducer=DoNothingReducer(),
         ).to(TEST_DEVICE)
 
         emb = torch.randn(4, 64, device=TEST_DEVICE)
-        result = arcfaceloss(emb, torch.arange(4, device=TEST_DEVICE))
+        result = arcfaceloss.loss_terms(emb, torch.arange(4, device=TEST_DEVICE))
 
         self.assertTrue(isinstance(result, dict))
         self.assertTrue(result["loss"]["losses"].shape[0] == 4)

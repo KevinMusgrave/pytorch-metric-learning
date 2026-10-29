@@ -10,7 +10,7 @@ losses.ThresholdConsistentMarginLoss(
     lambda_minus=1.0,
     margin_plus=0.9,
     margin_minus=0.5,
-    **kwargs
+    **options
 )
 ```
 

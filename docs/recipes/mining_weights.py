@@ -3,17 +3,18 @@ from torch import Tensor, nn
 from torch.utils.data import DataLoader, TensorDataset, WeightedRandomSampler
 
 from pytorch_metric_learning import miners
-from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
+from pytorch_metric_learning.types import IndicesTuple
+from pytorch_metric_learning.utils import indexing
 
 
 def subset_weights(
     dataset_size: int,
     subset_indices: Tensor,
     subset_labels: Tensor,
-    mined_tuples: tuple[Tensor, ...],
+    mined_tuples: IndicesTuple,
 ) -> Tensor:
     weights = torch.zeros(dataset_size, device=subset_labels.device)
-    weights[subset_indices] = lmu.convert_to_weights(
+    weights[subset_indices] = indexing.convert_to_weights(
         mined_tuples, subset_labels, dtype=weights.dtype
     )
     return weights

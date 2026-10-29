@@ -51,7 +51,7 @@ class TestDivisorReducer(unittest.TestCase):
                         correct_output = torch.sum(L) * 0
                     else:
                         correct_output = torch.sum(L) / (32 + 15)
-                    self.assertTrue(output == correct_output)
+                    torch.testing.assert_close(output, correct_output.to(output.dtype))
 
             loss_dict = {
                 "loss": {
@@ -62,4 +62,4 @@ class TestDivisorReducer(unittest.TestCase):
             }
             output = reducer(loss_dict, embeddings, labels)
             correct_output = losses[0]
-            self.assertTrue(output == correct_output)
+            torch.testing.assert_close(output, correct_output.to(output.dtype))

@@ -1,21 +1,27 @@
 import math
+from typing import Unpack
 
 import torch
 from torch import Tensor
 
 from ..distances import LpDistance
-from ..types import IndicesTuple, LossDict
-from ..utils import common_functions as c_f
-from ..utils import loss_and_miner_utils as lmu
+from ..types import IndicesTuple, LossDict, LossOptions
+from ..utils import _common, indexing
 from .base_metric_loss_function import BaseMetricLossFunction
 
 
 class DynamicSoftMarginLoss(BaseMetricLossFunction):
-    hist_: torch.Tensor
+    hist_: Tensor
 
-    def __init__(self, min_val=-2.0, num_bins=10, momentum=0.01, **kwargs):
-        super().__init__(**kwargs)
-        c_f.check_distance_type(
+    def __init__(
+        self,
+        min_val: float = -2.0,
+        num_bins: int = 10,
+        momentum: float = 0.01,
+        **options: Unpack[LossOptions],
+    ) -> None:
+        super().__init__(**options)
+        _common.check_distance_type(
             self, LpDistance, normalize_embeddings=True, p=2, power=1
         )
         if not math.isfinite(min_val) or min_val >= 0:
@@ -38,7 +44,7 @@ class DynamicSoftMarginLoss(BaseMetricLossFunction):
         ref_emb: Tensor,
         ref_labels: Tensor | None,
     ) -> LossDict:
-        c_f.check_parameter_placement(self, self.hist_, embeddings)
+        _common.check_parameter_placement(self, self.hist_, embeddings)
         if labels is None and indices_tuple is None:
             differences = self.compute_loss_without_labels(embeddings, ref_emb)
         else:
@@ -46,7 +52,7 @@ class DynamicSoftMarginLoss(BaseMetricLossFunction):
                 embeddings, labels, indices_tuple, ref_emb, ref_labels
             )
         if len(differences) == 0:
-            return self.zero_losses()
+            return self.zero_losses(embeddings)
         self.update_histogram(differences)
         return {
             "loss": {
@@ -56,7 +62,9 @@ class DynamicSoftMarginLoss(BaseMetricLossFunction):
             }
         }
 
-    def compute_loss_without_labels(self, embeddings, ref_emb):
+    def compute_loss_without_labels(
+        self, embeddings: Tensor, ref_emb: Tensor
+    ) -> Tensor:
         mat = self.distance(embeddings, ref_emb)
         rows, columns = mat.shape
         paired_count = min(rows, columns)
@@ -70,21 +78,26 @@ class DynamicSoftMarginLoss(BaseMetricLossFunction):
         return mat.diagonal() - torch.minimum(row_min, column_min)
 
     def compute_loss_with_labels(
-        self, embeddings, labels, indices_tuple, ref_emb, ref_labels
-    ):
-        anchor, positive, negative = lmu.convert_to_triplets(
+        self,
+        embeddings: Tensor,
+        labels: Tensor | None,
+        indices_tuple: IndicesTuple | None,
+        ref_emb: Tensor,
+        ref_labels: Tensor | None,
+    ) -> Tensor:
+        anchor, positive, negative = indexing.convert_to_triplets(
             indices_tuple, labels, ref_labels, t_per_anchor="all"
         )
         mat = self.distance(embeddings, ref_emb)
         return mat[anchor, positive] - mat[anchor, negative]
 
-    def _bin_positions(self, data: torch.Tensor) -> torch.Tensor:
+    def bin_positions(self, data: Tensor) -> Tensor:
         data = data.to(dtype=self.hist_.dtype)
         return ((data - self.min_val) / self.delta).clamp(0, self.num_bins - 1)
 
     @torch.no_grad()
-    def update_histogram(self, data: torch.Tensor) -> None:
-        positions = self._bin_positions(data)
+    def update_histogram(self, data: Tensor) -> None:
+        positions = self.bin_positions(data)
         lower = positions.long()
         upper = (lower + 1).clamp_max(self.num_bins - 1)
         fraction = positions - lower
@@ -95,6 +108,6 @@ class DynamicSoftMarginLoss(BaseMetricLossFunction):
         momentum = torch.where(self.hist_.sum() > 0, self.momentum, 1.0)
         self.hist_ = (1 - momentum) * self.hist_ + momentum * histogram
 
-    def weigh_loss(self, data: torch.Tensor) -> torch.Tensor:
-        positions = self._bin_positions(data).long()
+    def weigh_loss(self, data: Tensor) -> Tensor:
+        positions = self.bin_positions(data).long()
         return self.hist_.cumsum(0)[positions] * data

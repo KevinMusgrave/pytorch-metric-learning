@@ -8,21 +8,36 @@ from pathlib import Path
 import torch
 
 DOCS = Path(__file__).resolve().parents[2] / "docs"
-MODULES = ("distances", "losses", "miners", "reducers", "regularizers", "samplers")
+MODULES = (
+    "distances",
+    "losses",
+    "miners",
+    "reducers",
+    "regularizers",
+    "samplers",
+    "utils.accuracy_calculator",
+    "utils.retrieval",
+    "utils.distributed",
+)
 BLOCK = re.compile(
-    r"```python\n((?:" + "|".join(MODULES) + r")\.(\w+)\(((?:.|\n)*?)\))\s*:?\s*\n```"
+    r"```python\n("
+    + "|".join(re.escape(module) for module in MODULES)
+    + r")\.(\w+)\(((?:.|\n)*?)\)\s*:?\s*\n```"
 )
 MISSING = object()
+OPTIONS = {
+    "losses": ("distance", "reducer", "embedding_regularizer", "embedding_reg_weight"),
+    "regularizers": ("distance", "reducer"),
+}
 
 
 def documented_signatures():
     for path in sorted([*DOCS.glob("*.md"), *(DOCS / "losses").glob("*.md")]):
         for match in BLOCK.finditer(path.read_text()):
-            module_name = match.group(1).split(".")[0]
-            yield path.name, module_name, match.group(2), match.group(3)
+            yield path.name, match.group(1), match.group(2), match.group(3)
 
 
-def parse_parameters(class_name, arguments, namespace):
+def parse_parameters(class_name, arguments, namespace, module_name):
     function = ast.parse(f"def {class_name}({arguments}): pass").body[0]
     assert isinstance(function, ast.FunctionDef)
     args = function.args
@@ -33,6 +48,9 @@ def parse_parameters(class_name, arguments, namespace):
         parameters[arg.arg] = (inspect.Parameter.POSITIONAL_OR_KEYWORD, default)
     for arg, default in zip(args.kwonlyargs, args.kw_defaults, strict=True):
         parameters[arg.arg] = (inspect.Parameter.KEYWORD_ONLY, default)
+    if args.kwarg is not None and args.kwarg.arg == "options":
+        for name in OPTIONS[module_name]:
+            parameters.setdefault(name, (inspect.Parameter.KEYWORD_ONLY, None))
     return {
         name: (kind, evaluate_default(default, namespace))
         for name, (kind, default) in parameters.items()
@@ -77,7 +95,10 @@ class TestDocumentedSignatures(unittest.TestCase):
                 self.assertIn(class_name, module.__all__)
                 cls = getattr(module, class_name)
                 documented = parse_parameters(
-                    class_name, arguments, {class_name: cls, "torch": torch}
+                    class_name,
+                    arguments,
+                    {class_name: cls, "torch": torch},
+                    module_name,
                 )
                 own = explicit_parameters(cls)
                 accepted = accepted_parameters(cls)

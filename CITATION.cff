@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the paper below."
+title: "PyTorch Metric Learning"
+authors:
+  - family-names: Musgrave
+    given-names: Kevin
+repository-code: "https://github.com/KevinMusgrave/pytorch-metric-learning"
+url: "https://kevinmusgrave.github.io/pytorch-metric-learning/"
+license: MIT
+preferred-citation:
+  type: article
+  title: "PyTorch Metric Learning"
+  authors:
+    - family-names: Musgrave
+      given-names: Kevin
+    - family-names: Belongie
+      given-names: Serge J.
+    - family-names: Lim
+      given-names: Ser-Nam
+  journal: "arXiv"
+  year: 2020
+  volume: "abs/2008.09164"
+  url: "https://arxiv.org/abs/2008.09164"

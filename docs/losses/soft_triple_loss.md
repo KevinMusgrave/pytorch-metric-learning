@@ -4,7 +4,7 @@
 
 ```python
 losses.SoftTripleLoss(num_classes, embedding_size, centers_per_class=10, la=20, gamma=0.1, margin=0.01,
-    *, weight_regularizer=None, weight_reg_weight=1, weight_init_func=None, **kwargs)
+    *, weight_regularizer=None, weight_reg_weight=1, weight_init_func=None, **options)
 ```
 
 **Equation**:

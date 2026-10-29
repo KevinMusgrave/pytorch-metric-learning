@@ -14,7 +14,7 @@ from docs.recipes.memory_warmup import train_with_memory
 from docs.recipes.mining_weights import subset_weights
 from docs.recipes.training import train_metric, train_proxy, train_two_stream
 from pytorch_metric_learning import losses, miners
-from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
+from pytorch_metric_learning.utils import indexing
 
 from .. import TEST_DEVICE, TEST_DTYPES
 
@@ -151,7 +151,7 @@ class TestTrainingRecipes(unittest.TestCase):
         generator_optimizer = torch.optim.SGD(generator.parameters(), lr=0.1)
         data = torch.randn(6, 4)
         labels = torch.tensor([0, 0, 1, 1, 2, 2])
-        triplets = lmu.get_all_triplets_indices(labels)
+        triplets = indexing.get_all_triplets_indices(labels)
         for _ in range(2):
             model_optimizer.zero_grad(set_to_none=True)
             model_before = [x.detach().clone() for x in model_params]
@@ -189,7 +189,8 @@ class TestTrainingRecipes(unittest.TestCase):
             weights.tolist(), 32, generator=torch.Generator().manual_seed(17)
         )
         self.assertTrue(set(sampler).issubset(set(subset.tolist())))
-        empty = (torch.empty(0, dtype=torch.long),) * 3
+        no_index = torch.empty(0, dtype=torch.long)
+        empty = (no_index, no_index, no_index)
         torch.testing.assert_close(
             subset_weights(8, subset, labels, empty),
             torch.tensor([0.0, 1, 0, 1, 1, 0, 1, 0]),

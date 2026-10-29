@@ -5,7 +5,7 @@ losses.TripletMarginLoss(margin=0.05,
                         swap=False,
                         smooth_loss=False,
                         triplets_per_anchor="all",
-                        **kwargs)
+                        **options)
 ```
 
 **Equation**:

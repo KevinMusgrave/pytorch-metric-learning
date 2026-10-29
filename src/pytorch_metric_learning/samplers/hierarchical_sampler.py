@@ -1,5 +1,6 @@
 import itertools
 from collections import defaultdict
+from typing import Literal
 
 import torch
 from torch.utils.data.sampler import Sampler
@@ -11,15 +12,15 @@ class HierarchicalSampler(Sampler[list[int]]):
     def __init__(
         self,
         labels,
-        batch_size,
-        samples_per_class,
-        batches_per_super_tuple=4,
-        super_classes_per_batch=2,
-        inner_label=0,
-        outer_label=1,
+        batch_size: int,
+        samples_per_class: int | Literal["all"],
+        batches_per_super_tuple: int = 4,
+        super_classes_per_batch: int = 2,
+        inner_label: int = 0,
+        outer_label: int = 1,
         *,
         generator: torch.Generator | None = None,
-    ):
+    ) -> None:
         labels = torch.as_tensor(labels)
         self.batch_size = batch_size
         self.batches_per_super_tuple = batches_per_super_tuple

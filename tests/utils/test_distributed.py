@@ -167,9 +167,9 @@ def check_trainable_loss(rank: int, device: torch.device, dtype: torch.dtype) ->
     )
     inputs, labels = make_inputs(device, dtype)
     encoder = model.encoder.weight.detach().clone().requires_grad_()
-    proxies = model.objective.loss.W.detach().clone().requires_grad_()
+    proxies = model.objective.loss.weight.detach().clone().requires_grad_()
     embedded = F.normalize(F.linear(inputs, encoder), dim=1)
-    logits = embedded @ F.normalize(proxies, dim=0) / 0.5
+    logits = embedded @ F.normalize(proxies, dim=1).t() / 0.5
     expected = -F.log_softmax(logits, dim=1)[
         torch.arange(len(labels), device=device), labels
     ].mean()
@@ -179,7 +179,7 @@ def check_trainable_loss(rank: int, device: torch.device, dtype: torch.dtype) ->
     actual.backward()
     assert_close(actual, expected)
     assert_close(observed_gradient(model.encoder.weight), encoder_gradient)
-    assert_close(observed_gradient(model.objective.loss.W), proxy_gradient)
+    assert_close(observed_gradient(model.objective.loss.weight), proxy_gradient)
 
 
 def check_memory(rank: int, device: torch.device, dtype: torch.dtype) -> None:

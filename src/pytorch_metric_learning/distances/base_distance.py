@@ -1,4 +1,5 @@
 import torch
+from torch import Tensor
 
 
 class BaseDistance(torch.nn.Module):
@@ -9,18 +10,13 @@ class BaseDistance(torch.nn.Module):
         normalize_embeddings: bool = True,
         p: float = 2,
         power: float = 1,
-        **kwargs,
     ) -> None:
-        super().__init__(**kwargs)
+        super().__init__()
         self.normalize_embeddings = normalize_embeddings
         self.p = p
         self.power = power
 
-    def forward(
-        self,
-        query_emb: torch.Tensor,
-        ref_emb: torch.Tensor | None = None,
-    ) -> torch.Tensor:
+    def forward(self, query_emb: Tensor, ref_emb: Tensor | None = None) -> Tensor:
         self.check_shapes(query_emb, ref_emb)
         query_emb_normalized = self.maybe_normalize(query_emb)
         if ref_emb is None:
@@ -37,10 +33,10 @@ class BaseDistance(torch.nn.Module):
             )
         return mat
 
-    def compute_mat(self, query_emb, ref_emb):
+    def compute_mat(self, query_emb: Tensor, ref_emb: Tensor) -> Tensor:
         raise NotImplementedError
 
-    def pairwise_distance(self, query_emb, ref_emb):
+    def pairwise_distance(self, query_emb: Tensor, ref_emb: Tensor) -> Tensor:
         raise NotImplementedError
 
     def smallest_dist(self, *args, **kwargs):
@@ -48,23 +44,23 @@ class BaseDistance(torch.nn.Module):
             return torch.max(*args, **kwargs)
         return torch.min(*args, **kwargs)
 
-    def margin(self, x, y):
-        if self.is_inverted:
-            return y - x
-        return x - y
+    def margin(self, x: Tensor | float, y: Tensor | float) -> Tensor:
+        difference = y - x if self.is_inverted else x - y
+        assert isinstance(difference, Tensor)
+        return difference
 
-    def normalize(self, embeddings, dim=1, **kwargs):
-        return torch.nn.functional.normalize(embeddings, p=self.p, dim=dim, **kwargs)
+    def normalize(self, embeddings: Tensor, dim: int = 1) -> Tensor:
+        return torch.nn.functional.normalize(embeddings, p=self.p, dim=dim)
 
-    def maybe_normalize(self, embeddings, dim=1, **kwargs):
+    def maybe_normalize(self, embeddings: Tensor, dim: int = 1) -> Tensor:
         if self.normalize_embeddings:
-            return self.normalize(embeddings, dim=dim, **kwargs)
+            return self.normalize(embeddings, dim=dim)
         return embeddings
 
-    def get_norm(self, embeddings, dim=1, **kwargs):
-        return torch.norm(embeddings, p=self.p, dim=dim, **kwargs)
+    def get_norm(self, embeddings: Tensor, dim: int = 1) -> Tensor:
+        return torch.norm(embeddings, p=self.p, dim=dim)
 
-    def check_shapes(self, query_emb, ref_emb):
+    def check_shapes(self, query_emb: Tensor, ref_emb: Tensor | None) -> None:
         if query_emb.ndim != 2 or (ref_emb is not None and ref_emb.ndim != 2):
             raise ValueError(
                 "embeddings must be a 2D tensor of shape (batch_size, embedding_size)"

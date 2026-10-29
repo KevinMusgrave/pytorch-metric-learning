@@ -19,6 +19,8 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Typing :: Typed",
 ]
@@ -55,6 +57,14 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 pytorch_metric_learning = ["py.typed"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+src = ["src", "."]
+
+[tool.ruff.lint]
+select = ["B", "C4", "E", "F", "I", "PIE", "RUF", "SIM", "UP"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

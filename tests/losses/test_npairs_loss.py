@@ -23,7 +23,7 @@ class TestNPairsLoss(unittest.TestCase):
                 dtype=dtype,
             ).to(TEST_DEVICE)
             embeddings_for_loss_fn = embeddings * embedding_norm
-            labels = torch.LongTensor([0, 0, 1, 1, 1, 2, 3])
+            labels = torch.tensor([0, 0, 1, 1, 1, 2, 3], dtype=torch.long)
 
             lossA = loss_funcA(embeddings_for_loss_fn, labels)
             lossB = loss_funcB(embeddings_for_loss_fn, labels)
@@ -63,7 +63,7 @@ class TestNPairsLoss(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(TEST_DEVICE)
-            labels = torch.LongTensor([0])
+            labels = torch.tensor([0], dtype=torch.long)
             loss = loss_func(embeddings, labels)
             loss.backward()
             self.assertEqual(loss, 0)
@@ -80,7 +80,7 @@ class TestNPairsLoss(unittest.TestCase):
                     requires_grad=True,
                     dtype=dtype,
                 ).to(TEST_DEVICE)
-                labels = torch.LongTensor([0, 0, 1, 1, 1, 2, 3])
+                labels = torch.tensor([0, 0, 1, 1, 1, 2, 3], dtype=torch.long)
 
                 loss = loss_func(embeddings, labels)
                 loss.backward()

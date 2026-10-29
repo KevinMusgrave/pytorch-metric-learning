@@ -4,7 +4,7 @@ import torch
 
 from pytorch_metric_learning.losses import NormalizedSoftmaxLoss
 from pytorch_metric_learning.regularizers import RegularFaceRegularizer
-from pytorch_metric_learning.utils import common_functions as c_f
+from pytorch_metric_learning.utils import _common as c_f
 
 from .. import TEST_DEVICE, TEST_DTYPES
 
@@ -34,7 +34,7 @@ class TestRegularFaceRegularizer(unittest.TestCase):
             loss = loss_func(embeddings, labels)
             loss.backward()
 
-            weights = torch.nn.functional.normalize(loss_func.W, p=2, dim=0)
+            weights = torch.nn.functional.normalize(loss_func.weight, p=2, dim=1).t()
             logits = torch.matmul(embeddings, weights)
             correct_class_loss = torch.nn.functional.cross_entropy(
                 logits / temperature, labels

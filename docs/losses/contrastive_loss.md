@@ -1,7 +1,7 @@
 # ContrastiveLoss
 
 ```python
-losses.ContrastiveLoss(pos_margin=0, neg_margin=1, **kwargs):
+losses.ContrastiveLoss(pos_margin=0, neg_margin=1, **options):
 ```
 
 **Equation**:

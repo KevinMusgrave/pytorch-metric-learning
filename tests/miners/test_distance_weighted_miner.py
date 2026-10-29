@@ -3,7 +3,7 @@ import unittest
 import torch
 
 from pytorch_metric_learning.miners import DistanceWeightedMiner
-from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
+from pytorch_metric_learning.utils import indexing
 
 from .. import TEST_DEVICE, TEST_DTYPES
 from ..helpers import angle_to_coord
@@ -42,7 +42,7 @@ class TestDistanceWeightedMiner(unittest.TestCase):
             )
             pair_embeddings = embeddings if ref_embeddings is None else ref_embeddings
 
-            a, _, n = lmu.get_all_triplets_indices(labels, ref_labels)
+            a, _, n = indexing.get_all_triplets_indices(labels, ref_labels)
             all_an_dist = torch.nn.functional.pairwise_distance(
                 embeddings[a], pair_embeddings[n], 2
             )

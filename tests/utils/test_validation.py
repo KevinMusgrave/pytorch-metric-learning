@@ -1,4 +1,5 @@
 import unittest
+from typing import Any
 
 import torch
 
@@ -32,8 +33,7 @@ class TestValidation(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "labels are required"):
             MarginLoss(num_classes=3)(embeddings, indices_tuple=indices)
 
-    def test_reducer_preserves_column_losses(self):
-        values = torch.tensor([[2.0], [4.0]], requires_grad=True)
+    def test_reducer_requires_vector_losses(self):
         index = torch.arange(2)
         for reduction, indices in [
             ("element", index),
@@ -42,16 +42,16 @@ class TestValidation(unittest.TestCase):
             ("triplet", (index, index, index)),
         ]:
             with self.subTest(reduction=reduction):
+                term = {"indices": indices, "reduction_type": reduction}
+                with self.assertRaisesRegex(ValueError, "one-dimensional"):
+                    MeanReducer()(
+                        {"loss": {"losses": torch.tensor([[2.0], [4.0]]), **term}},
+                        torch.randn(2, 3),
+                        torch.arange(2),
+                    )
+                values = torch.tensor([2.0, 4.0], requires_grad=True)
                 loss = MeanReducer()(
-                    {
-                        "loss": {
-                            "losses": values,
-                            "indices": indices,
-                            "reduction_type": reduction,
-                        }
-                    },
-                    torch.randn(2, 3),
-                    torch.arange(2),
+                    {"loss": {"losses": values, **term}}, torch.randn(2, 3), index
                 )
                 self.assertEqual(loss.item(), 3.0)
                 gradient = torch.autograd.grad(loss, values)[0]
@@ -101,8 +101,9 @@ class TestValidation(unittest.TestCase):
     def test_distance_contracts(self):
         with self.assertRaisesRegex(TypeError, "CosineSimilarity"):
             CircleLoss(distance=LpDistance())
+        unknown: dict[str, Any] = {"is_inverted": True}
         with self.assertRaisesRegex(TypeError, "is_inverted"):
-            LpDistance(is_inverted=True)
+            LpDistance(**unknown)
         points = torch.eye(2)
         self.assertTrue(torch.equal(CosineSimilarity()(points), points))
 

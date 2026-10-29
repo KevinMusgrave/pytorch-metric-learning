@@ -9,7 +9,7 @@ from torch.nn.parameter import Parameter
 
 from pytorch_metric_learning.losses import SoftTripleLoss
 from pytorch_metric_learning.regularizers import SparseCentersRegularizer
-from pytorch_metric_learning.utils import common_functions as c_f
+from pytorch_metric_learning.utils import _common as c_f
 
 from .. import TEST_DEVICE, TEST_DTYPES
 from ..helpers import angle_to_coord
@@ -90,7 +90,9 @@ class TestSoftTripleLoss(unittest.TestCase):
                 ).to(TEST_DEVICE)
 
                 original_loss_func.to(dtype=dtype)
-                loss_func.fc = original_loss_func.fc
+                loss_func.weight = torch.nn.Parameter(
+                    original_loss_func.fc.detach().t().contiguous()
+                )
 
                 embedding_angles = torch.arange(0, 180)
                 embeddings = torch.tensor(

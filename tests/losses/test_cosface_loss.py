@@ -30,7 +30,7 @@ class TestCosFaceLoss(unittest.TestCase):
             loss = loss_func(embeddings, labels)
             loss.backward()
 
-            weights = F.normalize(loss_func.W, p=2, dim=0)
+            weights = F.normalize(loss_func.weight, p=2, dim=1).t()
             logits = torch.matmul(F.normalize(embeddings), weights)
             for i, c in enumerate(labels):
                 logits[i, c] -= margin

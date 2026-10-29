@@ -2,8 +2,8 @@ site_name: PyTorch Metric Learning
 site_url: https://kevinmusgrave.github.io/pytorch-metric-learning/
 exclude_docs: |
   design/
-  plans/
   security/
+  **/__pycache__/
 nav:
     - Home: index.md
     - Distances: distances.md

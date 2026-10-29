@@ -24,6 +24,8 @@ through their own DDP wrapper.
 The gather uses the current pinned PyTorch's
 `torch.distributed._functional_collectives.all_gather_single`, the replacement
 recommended by its deprecated `torch.distributed.nn.functional.all_gather`.
+The module is private to PyTorch, so a PyTorch upgrade must re-run the
+distributed tests and, if the function moves, switch to its public successor.
 There is no handwritten autograd collective or old-version fallback. Batches
 are padded for the collective and sliced back to their actual lengths; uneven
 and empty ranks retain their gradient connection. Small metadata collectives

@@ -3,7 +3,7 @@
 [Deep Metric Learning with Tuplet Margin Loss](http://openaccess.thecvf.com/content_ICCV_2019/papers/Yu_Deep_Metric_Learning_With_Tuplet_Margin_Loss_ICCV_2019_paper.pdf){target=_blank}
 
 ```python
-losses.TupletMarginLoss(margin=5.73, scale=64, **kwargs)
+losses.TupletMarginLoss(margin=5.73, scale=64, **options)
 ```
 
 **Equation**:
@@ -24,9 +24,10 @@ Here $\theta_{ap}$ and $\theta_{an_i}$ are the angles from the anchor to its pos
 The paper combines this loss with [IntraPairVarianceLoss](intra_pair_variance_loss.md#intrapairvarianceloss). You can accomplish this by using [MultipleLosses](multiple_losses.md#multiplelosses):
 
 ```python
-main_loss = losses.TupletMarginLoss()
-var_loss = losses.IntraPairVarianceLoss()
-complete_loss = losses.MultipleLosses([main_loss, var_loss], weights=[1, 0.5])
+complete_loss = losses.MultipleLosses(
+    {"tuplet": losses.TupletMarginLoss(), "variance": losses.IntraPairVarianceLoss()},
+    weights={"tuplet": 1, "variance": 0.5},
+)
 ```
 
 **Default distance**:

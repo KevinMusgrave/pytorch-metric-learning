@@ -24,13 +24,10 @@ install this checkout using its reviewed, already-installed build backend:
 .venv/bin/uv pip install --no-deps --no-build-isolation --editable .
 ```
 
-Version 3.0.0 acceptance includes full CPU and CUDA suites, two-GPU NCCL
-references, and focused regression checks. See
-[current acceptance and remaining checks](docs/plans/modernization.md#completed-work)
-for the tested revisions and results.
-The [historical development baseline](docs/plans/development-baseline.md)
-retains the original adoption evidence; it is not current setup or acceptance
-guidance.
+Version 3.0.0 acceptance includes the full CPU suite, the full CUDA suite with
+two-GPU NCCL references, the strict documentation build, and the isolated wheel
+check. The [release checklist](#release-checklist) lists what each release
+records.
 
 ## CPU tests
 
@@ -152,8 +149,12 @@ Read [AGENTS.md](AGENTS.md) and the version-matched guidance before edits:
 
 Source comments and docstrings are disallowed. Design rationale belongs in the
 mapped documents under `docs/design/`, and adapted-code provenance in
-`THIRD_PARTY_NOTICES.md`. Keep the repository check at zero findings; fix new
-findings at their cause rather than suppressing them.
+`THIRD_PARTY_NOTICES.md`. The check includes formatting, linting, type checking
+of the annotated public surface, dead-code detection, and module dependency
+direction from `.code-polishy.json`. Keep it at zero findings; fix new findings
+at their cause rather than suppressing them. Formatting and lint rules are also
+available to plain `ruff` through `[tool.ruff]` in `pyproject.toml` for
+contributors without the policy tool.
 
 CI owns the final merge gate. Ordinary local task completion uses focused
 verification; the merge gate runs at a real merge or release checkpoint.
@@ -165,6 +166,21 @@ Build both distributions with the locked backend:
 ```
 
 Do not publish a new release until the required policy and platform checks pass.
+
+## Release checklist
+
+Before tagging a release:
+
+1. Run the full CPU suite and the CUDA suite on a two-GPU host, and record the
+   revision, device, driver, PyTorch build, test counts, and any skips in the
+   release notes or pull request.
+2. Build the documentation with `mkdocs build --strict` and check a page with
+   equations on GitHub and on the built site.
+3. Confirm the dated dependency assessments in `.code-polishy.json` are valid
+   through the release date; CI runs the dependency review weekly and fails
+   when one expires.
+4. Merge into `master`, wait for its CI run, then create and push the annotated
+   tag as described below.
 
 ## Publishing to PyPI
 

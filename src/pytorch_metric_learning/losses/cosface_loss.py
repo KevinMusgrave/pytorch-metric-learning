@@ -1,35 +1,38 @@
-from .large_margin_softmax_loss import LargeMarginSoftmaxLoss
+from collections.abc import Callable
+from typing import Unpack
+
+from torch import Tensor
+
+from ..regularizers import BaseRegularizer
+from ..types import LossOptions
+from .large_margin_softmax_loss import CosineMarginSoftmaxLoss
 
 
-class CosFaceLoss(LargeMarginSoftmaxLoss):
+class CosFaceLoss(CosineMarginSoftmaxLoss):
     def __init__(
         self,
-        num_classes,
-        embedding_size,
-        margin=0.35,
-        scale=64,
+        num_classes: int,
+        embedding_size: int,
+        margin: float = 0.35,
+        scale: float = 64,
         *,
-        weight_regularizer=None,
-        weight_reg_weight=1,
-        weight_init_func=None,
-        **kwargs,
-    ):
+        weight_regularizer: BaseRegularizer | None = None,
+        weight_reg_weight: float = 1.0,
+        weight_init_func: Callable[[Tensor], object] | None = None,
+        **options: Unpack[LossOptions],
+    ) -> None:
         super().__init__(
             num_classes,
             embedding_size,
-            margin=margin,
-            scale=scale,
+            margin,
+            scale,
             weight_regularizer=weight_regularizer,
             weight_reg_weight=weight_reg_weight,
             weight_init_func=weight_init_func,
-            **kwargs,
+            **options,
         )
 
-    def init_margin(self):
-        pass
-
-    def modify_cosine_of_target_classes(self, cosine_of_target_classes):
+    def modify_cosine_of_target_classes(
+        self, cosine_of_target_classes: Tensor
+    ) -> Tensor:
         return cosine_of_target_classes - self.margin
-
-    def scale_logits(self, logits, embeddings):
-        return logits * self.scale

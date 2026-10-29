@@ -5,7 +5,9 @@ from torch.distributed import _functional_collectives
 
 from ..losses import BaseMetricLossFunction, CrossBatchMemory
 from ..miners import BaseMiner
-from ..utils import loss_and_miner_utils as lmu
+from ..utils import indexing
+
+__all__ = ["DistributedLossWrapper", "DistributedMinerWrapper"]
 
 _DTYPES = (
     torch.float16,
@@ -134,9 +136,9 @@ def get_indices_tuple(
     if miner:
         indices_tuple = miner(embeddings, labels, ref_emb, ref_labels)
     else:
-        indices_tuple = lmu.get_all_pairs_indices(labels, ref_labels)
+        indices_tuple = indexing.get_all_pairs_indices(labels, ref_labels)
     if remove_self:
-        return lmu.remove_self_comparisons(
+        return indexing.remove_self_comparisons(
             indices_tuple, curr_batch_idx, len(ref_labels)
         )
     return indices_tuple

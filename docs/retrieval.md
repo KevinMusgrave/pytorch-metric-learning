@@ -30,10 +30,7 @@ first `len(query)` rows of `reference`.
 ## CustomKNN
 
 ```python
-from pytorch_metric_learning.distances import LpDistance
-from pytorch_metric_learning.utils.retrieval import CustomKNN
-
-CustomKNN(distance, batch_size=None)
+utils.retrieval.CustomKNN(distance, batch_size=None)
 ```
 
 - **distance**: A [distance](distances.md). Similarities such as
@@ -59,6 +56,8 @@ Normalize embeddings before evaluation when cosine geometry is intended.
 
 ```python
 import torch
+from pytorch_metric_learning.distances import LpDistance
+from pytorch_metric_learning.utils.retrieval import CustomKNN
 
 query = torch.tensor([[0.0, 0.0], [3.0, 0.0]])
 reference = torch.tensor([[0.0, 1.0], [3.0, 0.5], [9.0, 9.0]])
@@ -71,9 +70,7 @@ assert distances.tolist() == [[1.0], [0.25]]
 ## MatchFinder
 
 ```python
-from pytorch_metric_learning.utils.retrieval import MatchFinder
-
-MatchFinder(distance, threshold=None)
+utils.retrieval.MatchFinder(distance, threshold=None)
 ```
 
 A pair matches when its distance is at most `threshold`, or when its similarity
@@ -115,9 +112,7 @@ logging.getLogger("pytorch_metric_learning").setLevel(logging.INFO)
 ## FaissKNN
 
 ```python
-from pytorch_metric_learning.utils.retrieval import FaissKNN
-
-FaissKNN(reset_before=True, reset_after=True, index_init_fn=None, gpus=None)
+utils.retrieval.FaissKNN(reset_before=True, reset_after=True, index_init_fn=None, gpus=None)
 ```
 
 - **reset_before**: Build a new index from `index_init_fn(dimension)` on every
@@ -148,9 +143,7 @@ restored.load("reference.index")
 ## FaissKMeans
 
 ```python
-from pytorch_metric_learning.utils.retrieval import FaissKMeans
-
-FaissKMeans(**kwargs)
+utils.retrieval.FaissKMeans(**kwargs)
 ```
 
 Keyword arguments go to `faiss.Kmeans`. Calling `kmeans(x, num_clusters)` trains

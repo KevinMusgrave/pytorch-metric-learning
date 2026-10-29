@@ -3,7 +3,7 @@
 [Rethinking the Optimization of Average Precision: Only Penalizing Negative Instances before Positive Ones is Enough](https://arxiv.org/pdf/2102.04640.pdf){target=_blank}
 
 ```python
-losses.PNPLoss(b=2, alpha=1, anneal=0.01, variant="O", **kwargs)
+losses.PNPLoss(b=2, alpha=1, anneal=0.01, variant="O", **options)
 ```
 
 **Equation**:

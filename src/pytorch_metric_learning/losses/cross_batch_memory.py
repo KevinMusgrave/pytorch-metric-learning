@@ -1,23 +1,12 @@
 from typing import TypedDict
 
 import torch
+from torch import Tensor
 
-from ..utils import common_functions as c_f
-from ..utils import loss_and_miner_utils as lmu
-from .angular_loss import AngularLoss
-from .circle_loss import CircleLoss
-from .contrastive_loss import ContrastiveLoss
-from .intra_pair_variance_loss import IntraPairVarianceLoss
-from .lifted_structure_loss import GeneralizedLiftedStructureLoss
-from .margin_loss import MarginLoss
-from .multi_similarity_loss import MultiSimilarityLoss
-from .nca_loss import NCALoss
-from .ntxent_loss import NTXentLoss
-from .proxy_nca_loss import ProxyNCALoss
-from .signal_to_noise_ratio_losses import SignalToNoiseRatioContrastiveLoss
-from .supcon_loss import SupConLoss
-from .triplet_margin_loss import TripletMarginLoss
-from .tuplet_margin_loss import TupletMarginLoss
+from ..miners import BaseMiner
+from ..types import IndicesTuple
+from ..utils import _common, indexing
+from .base_metric_loss_function import BaseMetricLossFunction
 
 QUEUE_STATE_KEY = "queue_state"
 
@@ -27,7 +16,7 @@ class _MemoryState(TypedDict):
     has_been_filled: bool
 
 
-def save_queue_state(module, state_dict, prefix, _local_metadata):
+def save_queue_state(module, state_dict, prefix, _local_metadata) -> None:
     state: _MemoryState = {
         "queue_idx": module.queue_idx,
         "has_been_filled": module.has_been_filled,
@@ -44,7 +33,7 @@ def load_queue_state(
     missing_keys,
     _unexpected_keys,
     _error_msgs,
-):
+) -> None:
     state = state_dict.pop(prefix + QUEUE_STATE_KEY, None)
     if state is None:
         missing_keys.append(prefix + QUEUE_STATE_KEY)
@@ -54,24 +43,21 @@ def load_queue_state(
 
 
 class CrossBatchMemory(torch.nn.Module):
-    embedding_memory: torch.Tensor
-    label_memory: torch.Tensor
+    embedding_memory: Tensor
+    label_memory: Tensor
 
     def __init__(
         self,
-        loss,
-        embedding_size,
-        memory_size=1024,
-        miner=None,
+        loss: BaseMetricLossFunction,
+        embedding_size: int,
+        memory_size: int = 1024,
+        miner: BaseMiner | None = None,
         *,
-        label_dtype=torch.long,
-        **kwargs,
-    ):
-        super().__init__(**kwargs)
-        if not isinstance(loss, self.supported_losses()) or isinstance(
-            loss, ProxyNCALoss
-        ):
-            raise TypeError(f"CrossBatchMemory not supported for {type(loss).__name__}")
+        label_dtype: torch.dtype = torch.long,
+    ) -> None:
+        super().__init__()
+        if not isinstance(loss, BaseMetricLossFunction):
+            raise TypeError("CrossBatchMemory requires a BaseMetricLossFunction")
         self.loss = loss
         self.miner = miner
         self.embedding_size = embedding_size
@@ -87,25 +73,13 @@ class CrossBatchMemory(torch.nn.Module):
         self.register_state_dict_post_hook(save_queue_state)
         self.register_load_state_dict_pre_hook(load_queue_state)
 
-    @staticmethod
-    def supported_losses():
-        return (
-            AngularLoss,
-            CircleLoss,
-            ContrastiveLoss,
-            GeneralizedLiftedStructureLoss,
-            IntraPairVarianceLoss,
-            MarginLoss,
-            MultiSimilarityLoss,
-            NCALoss,
-            NTXentLoss,
-            SignalToNoiseRatioContrastiveLoss,
-            SupConLoss,
-            TripletMarginLoss,
-            TupletMarginLoss,
-        )
-
-    def forward(self, embeddings, labels, indices_tuple=None, enqueue_mask=None):
+    def forward(
+        self,
+        embeddings: Tensor,
+        labels: Tensor,
+        indices_tuple: IndicesTuple | None = None,
+        enqueue_mask: Tensor | None = None,
+    ) -> Tensor:
         if indices_tuple is not None and enqueue_mask is not None:
             raise ValueError("indices_tuple and enqueue_mask are mutually exclusive")
         if enqueue_mask is not None:
@@ -115,7 +89,7 @@ class CrossBatchMemory(torch.nn.Module):
                 raise ValueError("enqueue_mask must be one-dimensional")
             if len(enqueue_mask) != len(embeddings):
                 raise ValueError("enqueue_mask must contain one value per embedding")
-        c_f.check_parameter_placement(self, self.embedding_memory, embeddings)
+        _common.check_parameter_placement(self, self.embedding_memory, embeddings)
         embeddings = embeddings.to(dtype=self.embedding_memory.dtype)
         if not torch.can_cast(labels.dtype, self.label_memory.dtype):
             raise ValueError(
@@ -135,25 +109,18 @@ class CrossBatchMemory(torch.nn.Module):
             labels_for_queue = labels
             do_remove_self_comparisons = True
 
-        queue_batch_size = len(emb_for_queue)
-        self.add_to_memory(emb_for_queue, labels_for_queue, queue_batch_size)
-
+        self.add_to_memory(emb_for_queue, labels_for_queue, len(emb_for_queue))
         memory_end = self.memory_size if self.has_been_filled else self.queue_idx
         E_mem = self.embedding_memory[:memory_end].clone()
         L_mem = self.label_memory[:memory_end].clone()
-
         indices_tuple = self.create_indices_tuple(
-            embeddings,
-            labels,
-            E_mem,
-            L_mem,
-            indices_tuple,
-            do_remove_self_comparisons,
+            embeddings, labels, E_mem, L_mem, indices_tuple, do_remove_self_comparisons
         )
-        loss = self.loss(embeddings, labels, indices_tuple, E_mem, L_mem)
-        return loss
+        return self.loss(embeddings, labels, indices_tuple, E_mem, L_mem)
 
-    def add_to_memory(self, embeddings, labels, batch_size):
+    def add_to_memory(
+        self, embeddings: Tensor, labels: Tensor, batch_size: int
+    ) -> None:
         if batch_size > self.memory_size:
             raise ValueError(
                 "The number of enqueued embeddings must not exceed memory_size"
@@ -175,37 +142,36 @@ class CrossBatchMemory(torch.nn.Module):
 
     def create_indices_tuple(
         self,
-        embeddings,
-        labels,
-        E_mem,
-        L_mem,
-        input_indices_tuple,
-        do_remove_self_comparisons,
-    ):
+        embeddings: Tensor,
+        labels: Tensor,
+        E_mem: Tensor,
+        L_mem: Tensor,
+        input_indices_tuple: IndicesTuple | None,
+        do_remove_self_comparisons: bool,
+    ) -> IndicesTuple:
         if self.miner:
             indices_tuple = self.miner(embeddings, labels, E_mem, L_mem)
         else:
-            indices_tuple = lmu.get_all_pairs_indices(labels, L_mem)
-
+            indices_tuple = indexing.get_all_pairs_indices(labels, L_mem)
         if do_remove_self_comparisons:
-            indices_tuple = lmu.remove_self_comparisons(
+            indices_tuple = indexing.remove_self_comparisons(
                 indices_tuple, self.curr_batch_idx, self.memory_size
             )
-
         if input_indices_tuple is not None:
             if len(input_indices_tuple) == 3 and len(indices_tuple) == 4:
-                input_indices_tuple = lmu.convert_to_pairs(input_indices_tuple, labels)
-            elif len(input_indices_tuple) == 4 and len(indices_tuple) == 3:
-                input_indices_tuple = lmu.convert_to_triplets(
+                input_indices_tuple = indexing.convert_to_pairs(
                     input_indices_tuple, labels
                 )
-            indices_tuple = c_f.concatenate_indices_tuples(
+            elif len(input_indices_tuple) == 4 and len(indices_tuple) == 3:
+                input_indices_tuple = indexing.convert_to_triplets(
+                    input_indices_tuple, labels
+                )
+            indices_tuple = indexing.concatenate_indices_tuples(
                 indices_tuple, input_indices_tuple
             )
-
         return indices_tuple
 
-    def reset_queue(self):
+    def reset_queue(self) -> None:
         self.embedding_memory.zero_()
         self.label_memory.zero_()
         self.has_been_filled = False

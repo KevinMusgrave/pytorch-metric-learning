@@ -1,11 +1,30 @@
-from ..utils import common_functions as c_f
-from ..utils.module_with_distance_and_reducer import ModuleWithReducerAndDistance
+from torch import Tensor, nn
+
+from ..distances import BaseDistance, LpDistance
+from ..reducers import BaseReducer, MeanReducer
+from ..types import LossDict
+from ..utils._common import arange_like
 
 
-class BaseRegularizer(ModuleWithReducerAndDistance):
-    def compute_loss(self, x):
+class BaseRegularizer(nn.Module):
+    def __init__(
+        self,
+        *,
+        distance: BaseDistance | None = None,
+        reducer: BaseReducer | None = None,
+    ) -> None:
+        super().__init__()
+        self.distance = distance if distance is not None else self.default_distance()
+        self.reducer = reducer if reducer is not None else self.default_reducer()
+
+    def default_distance(self) -> BaseDistance:
+        return LpDistance()
+
+    def default_reducer(self) -> BaseReducer:
+        return MeanReducer()
+
+    def compute_loss(self, x: Tensor) -> LossDict:
         raise NotImplementedError
 
-    def forward(self, x):
-        loss_dict = self.compute_loss(x)
-        return self.reducer(loss_dict, x, c_f.torch_arange_from_size(x))
+    def forward(self, x: Tensor) -> Tensor:
+        return self.reducer(self.compute_loss(x), x, arange_like(x))

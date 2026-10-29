@@ -3,17 +3,20 @@
 The AccuracyCalculator class computes several accuracy metrics given a query and reference embeddings. It can be easily extended to create custom accuracy metrics.
 
 ```python
-from pytorch_metric_learning.utils.accuracy_calculator import AccuracyCalculator
-AccuracyCalculator(include=(),
-                    exclude=(),
-                    avg_of_avgs=False,
-                    return_per_class=False,
-                    k=None,
-                    label_comparison_fn=None,
-                    device=None,
-                    knn_func=None,
-                    kmeans_func=None)
+utils.accuracy_calculator.AccuracyCalculator(
+    include=(),
+    exclude=(),
+    avg_of_avgs=False,
+    return_per_class=False,
+    k=None,
+    label_comparison_fn=None,
+    device=None,
+    knn_func=None,
+    kmeans_func=None,
+)
 ```
+
+Import it with `from pytorch_metric_learning.utils.accuracy_calculator import AccuracyCalculator`.
 
 ### Parameters
 
@@ -48,27 +51,25 @@ AccuracyCalculator(exclude=("NMI", "AMI"),
 Call the `get_accuracy` method to obtain a dictionary of accuracies.
 
 ```python
-def get_accuracy(self,
-	query,
+calculator.get_accuracy(
+    query,
     query_labels,
-	reference=None,
-	reference_labels=None,
-	ref_includes_query=False,
-	include=(),
-	exclude=()
-):
-# returns a dictionary mapping from metric names to accuracy values
-# The default metrics are:
-# "precision_at_1"
-# "r_precision"
-# "mean_average_precision"
-# "mean_average_precision_at_r"
-# "mean_reciprocal_rank"
-# "NMI" and "AMI" are computed only when included with a kmeans_func
+    reference=None,
+    reference_labels=None,
+    ref_includes_query=False,
+    include=(),
+    exclude=(),
+)
 ```
 
+It returns a dictionary from metric names to values: a float, or a list of
+per-class floats with `return_per_class=True`. The default metrics are
+`precision_at_1`, `r_precision`, `mean_average_precision`,
+`mean_average_precision_at_r`, and `mean_reciprocal_rank`. `NMI` and `AMI` are
+computed only when included with a `kmeans_func`.
+
 - **query**: A 2D torch or numpy array of size `(Nq, D)`, where Nq is the number of query samples. For each query sample, nearest neighbors are retrieved and accuracy is computed.
-- **query_labels**: A 1D torch or numpy array of size `(Nq)`. Each element should be an integer representing the sample's label.
+- **query_labels**: A 1D torch or numpy array of size `(Nq)`. Each element should be an integer representing the sample's label. Labels keep their dtype, so 64-bit identifiers compare exactly.
 - **reference**: A 2D torch or numpy array of size `(Nr, D)`, where Nr is the number of reference samples. This is where nearest neighbors are retrieved from.
 - **reference_labels**: A 1D torch or numpy array of size `(Nr)`. Each element should be an integer representing the sample's label.
 - **ref_includes_query**: Set to True if `query` is a subset of `reference` or if `query is reference`. Set to False otherwise.
@@ -77,7 +78,7 @@ def get_accuracy(self,
 
 Note that labels can be 2D if a [custom label comparison function](#using-a-custom-label-comparison-function) is used.
 
-Embeddings must be finite; NaN or infinite values raise `ValueError` before any search.
+Embeddings must be finite; NaN or infinite values raise `ValueError` before any search. Floating embeddings keep their dtype, promoted to the wider of the two when query and reference differ; integer inputs are converted to float32.
 
 ### Lone query labels
 

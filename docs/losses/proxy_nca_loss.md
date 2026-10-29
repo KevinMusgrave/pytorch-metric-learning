@@ -2,12 +2,20 @@
 
 [No Fuss Distance Metric Learning using Proxies](https://arxiv.org/pdf/1703.07464.pdf){target=_blank}
 
-**Mathematical reference**: The paper linked above defines the objective and derivation. This page specifies the library interface and its settings.
-
 ```python
 losses.ProxyNCALoss(num_classes, embedding_size, softmax_scale=1,
-    *, weight_regularizer=None, weight_reg_weight=1, weight_init_func=None, **kwargs)
+    *, weight_regularizer=None, weight_reg_weight=1, weight_init_func=None, **options)
 ```
+
+**Equation**:
+
+$$
+L = -\frac{1}{N} \sum_{i=1}^{N} \log \frac{\exp\left(-s \, d(\mathbf{x}_i, \mathbf{p}_{y_i})\right)}{\sum_{z \neq y_i} \exp\left(-s \, d(\mathbf{x}_i, \mathbf{p}_z)\right)}
+$$
+
+Here $\mathbf{p}_z$ is the proxy of class $z$, $d$ is the squared Euclidean distance between L2-normalized vectors, and $s$ is `softmax_scale`.
+
+**Implementation notes**: The paper uses one proxy per class and normalizes embeddings and proxies; both are the defaults here. The denominator excludes the target proxy, as in the paper's NCA formulation.
 
 **Parameters**:
 
@@ -17,7 +25,7 @@ losses.ProxyNCALoss(num_classes, embedding_size, softmax_scale=1,
 
 **Other info**
 
-- Accepts the keyword-only [learnable weight arguments](../losses.md#learnable-weight-arguments) `weight_regularizer`, `weight_reg_weight`, and `weight_init_func`.
+- The proxies are the `weight` parameter, shaped `(num_classes, embedding_size)`. Accepts the keyword-only [learnable weight arguments](../losses.md#learnable-weight-arguments) `weight_regularizer`, `weight_reg_weight`, and `weight_init_func`.
 - This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
 
 ```python

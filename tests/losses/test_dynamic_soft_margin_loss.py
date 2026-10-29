@@ -1,4 +1,5 @@
 import unittest
+from typing import Any
 
 import torch
 from torch.nn.functional import normalize
@@ -287,13 +288,14 @@ class TestDynamicSoftMarginLoss(unittest.TestCase):
         )
 
     def test_invalid_histogram_configuration(self) -> None:
-        for kwargs in (
+        invalid: tuple[dict[str, Any], ...] = (
             {"min_val": 0},
             {"min_val": float("nan")},
             {"min_val": -float("inf")},
             {"num_bins": 1},
             {"momentum": -0.1},
             {"momentum": 1.1},
-        ):
+        )
+        for kwargs in invalid:
             with self.subTest(kwargs=kwargs), self.assertRaises(ValueError):
                 DynamicSoftMarginLoss(**kwargs).to(TEST_DEVICE)

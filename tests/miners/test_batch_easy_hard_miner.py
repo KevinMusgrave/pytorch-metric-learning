@@ -1,26 +1,29 @@
 import unittest
+from typing import Any
 
 import torch
 
 from pytorch_metric_learning.distances import LpDistance
 from pytorch_metric_learning.miners import BatchEasyHardMiner
-from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
+from pytorch_metric_learning.utils import indexing
 
 from .. import TEST_DEVICE, TEST_DTYPES
 
 
 class TestBatchEasyHardMiner(unittest.TestCase):
+    gt: dict[str, dict[str, Any]]
+
     @classmethod
     def setUpClass(self):
-        self.labels = torch.LongTensor([0, 0, 1, 1, 0, 2, 1, 1, 1])
-        self.a1_idx, self.p_idx, self.a2_idx, self.n_idx = lmu.get_all_pairs_indices(
-            self.labels
+        self.labels = torch.tensor([0, 0, 1, 1, 0, 2, 1, 1, 1], dtype=torch.long)
+        self.a1_idx, self.p_idx, self.a2_idx, self.n_idx = (
+            indexing.get_all_pairs_indices(self.labels)
         )
         self.distance = LpDistance(normalize_embeddings=False)
         self.gt = {
             "batch_semihard_hard": {
-                "pos_strategy": BatchEasyHardMiner.SEMIHARD,
-                "neg_strategy": BatchEasyHardMiner.HARD,
+                "pos_strategy": "semihard",
+                "neg_strategy": "hard",
                 "easiest_triplet": -1,
                 "hardest_triplet": -1,
                 "easiest_pos_pair": 1,
@@ -28,20 +31,22 @@ class TestBatchEasyHardMiner(unittest.TestCase):
                 "easiest_neg_pair": 3,
                 "hardest_neg_pair": 2,
                 "expected": {
-                    "correct_a": torch.LongTensor([0, 7, 8]).to(TEST_DEVICE),
+                    "correct_a": torch.tensor([0, 7, 8], dtype=torch.long).to(
+                        TEST_DEVICE
+                    ),
                     "correct_p": [
-                        torch.LongTensor([1, 6, 6]).to(TEST_DEVICE),
-                        torch.LongTensor([1, 8, 6]).to(TEST_DEVICE),
+                        torch.tensor([1, 6, 6], dtype=torch.long).to(TEST_DEVICE),
+                        torch.tensor([1, 8, 6], dtype=torch.long).to(TEST_DEVICE),
                     ],
                     "correct_n": [
-                        torch.LongTensor([2, 5, 5]).to(TEST_DEVICE),
-                        torch.LongTensor([2, 5, 5]).to(TEST_DEVICE),
+                        torch.tensor([2, 5, 5], dtype=torch.long).to(TEST_DEVICE),
+                        torch.tensor([2, 5, 5], dtype=torch.long).to(TEST_DEVICE),
                     ],
                 },
             },
             "batch_hard_semihard": {
-                "pos_strategy": BatchEasyHardMiner.HARD,
-                "neg_strategy": BatchEasyHardMiner.SEMIHARD,
+                "pos_strategy": "hard",
+                "neg_strategy": "semihard",
                 "easiest_triplet": -1,
                 "hardest_triplet": -1,
                 "easiest_pos_pair": 3,
@@ -49,16 +54,20 @@ class TestBatchEasyHardMiner(unittest.TestCase):
                 "easiest_neg_pair": 7,
                 "hardest_neg_pair": 4,
                 "expected": {
-                    "correct_a": torch.LongTensor([0, 1, 6, 7, 8]).to(TEST_DEVICE),
-                    "correct_p": [torch.LongTensor([4, 4, 2, 2, 2]).to(TEST_DEVICE)],
+                    "correct_a": torch.tensor([0, 1, 6, 7, 8], dtype=torch.long).to(
+                        TEST_DEVICE
+                    ),
+                    "correct_p": [
+                        torch.tensor([4, 4, 2, 2, 2], dtype=torch.long).to(TEST_DEVICE)
+                    ],
                     "correct_n": [
-                        torch.LongTensor([5, 5, 1, 1, 1]).to(TEST_DEVICE),
+                        torch.tensor([5, 5, 1, 1, 1], dtype=torch.long).to(TEST_DEVICE),
                     ],
                 },
             },
             "batch_easy_semihard": {
-                "pos_strategy": BatchEasyHardMiner.EASY,
-                "neg_strategy": BatchEasyHardMiner.SEMIHARD,
+                "pos_strategy": "easy",
+                "neg_strategy": "semihard",
                 "easiest_triplet": -2,
                 "hardest_triplet": -1,
                 "easiest_pos_pair": 1,
@@ -66,24 +75,36 @@ class TestBatchEasyHardMiner(unittest.TestCase):
                 "easiest_neg_pair": 4,
                 "hardest_neg_pair": 2,
                 "expected": {
-                    "correct_a": torch.LongTensor([0, 1, 2, 3, 4, 6, 7, 8]).to(
-                        TEST_DEVICE
-                    ),
+                    "correct_a": torch.tensor(
+                        [0, 1, 2, 3, 4, 6, 7, 8], dtype=torch.long
+                    ).to(TEST_DEVICE),
                     "correct_p": [
-                        torch.LongTensor([1, 0, 3, 2, 1, 7, 8, 7]).to(TEST_DEVICE),
-                        torch.LongTensor([1, 0, 3, 2, 1, 7, 6, 7]).to(TEST_DEVICE),
+                        torch.tensor([1, 0, 3, 2, 1, 7, 8, 7], dtype=torch.long).to(
+                            TEST_DEVICE
+                        ),
+                        torch.tensor([1, 0, 3, 2, 1, 7, 6, 7], dtype=torch.long).to(
+                            TEST_DEVICE
+                        ),
                     ],
                     "correct_n": [
-                        torch.LongTensor([2, 3, 0, 1, 8, 4, 5, 5]).to(TEST_DEVICE),
-                        torch.LongTensor([2, 3, 4, 1, 8, 4, 5, 5]).to(TEST_DEVICE),
-                        torch.LongTensor([2, 3, 0, 5, 8, 4, 5, 5]).to(TEST_DEVICE),
-                        torch.LongTensor([2, 3, 4, 5, 8, 4, 5, 5]).to(TEST_DEVICE),
+                        torch.tensor([2, 3, 0, 1, 8, 4, 5, 5], dtype=torch.long).to(
+                            TEST_DEVICE
+                        ),
+                        torch.tensor([2, 3, 4, 1, 8, 4, 5, 5], dtype=torch.long).to(
+                            TEST_DEVICE
+                        ),
+                        torch.tensor([2, 3, 0, 5, 8, 4, 5, 5], dtype=torch.long).to(
+                            TEST_DEVICE
+                        ),
+                        torch.tensor([2, 3, 4, 5, 8, 4, 5, 5], dtype=torch.long).to(
+                            TEST_DEVICE
+                        ),
                     ],
                 },
             },
             "batch_hard_hard": {
-                "pos_strategy": BatchEasyHardMiner.HARD,
-                "neg_strategy": BatchEasyHardMiner.HARD,
+                "pos_strategy": "hard",
+                "neg_strategy": "hard",
                 "easiest_triplet": 2,
                 "hardest_triplet": 5,
                 "easiest_pos_pair": 3,
@@ -91,21 +112,27 @@ class TestBatchEasyHardMiner(unittest.TestCase):
                 "easiest_neg_pair": 3,
                 "hardest_neg_pair": 1,
                 "expected": {
-                    "correct_a": torch.LongTensor([0, 1, 2, 3, 4, 6, 7, 8]).to(
-                        TEST_DEVICE
-                    ),
+                    "correct_a": torch.tensor(
+                        [0, 1, 2, 3, 4, 6, 7, 8], dtype=torch.long
+                    ).to(TEST_DEVICE),
                     "correct_p": [
-                        torch.LongTensor([4, 4, 8, 8, 0, 2, 2, 2]).to(TEST_DEVICE)
+                        torch.tensor([4, 4, 8, 8, 0, 2, 2, 2], dtype=torch.long).to(
+                            TEST_DEVICE
+                        )
                     ],
                     "correct_n": [
-                        torch.LongTensor([2, 2, 1, 4, 3, 5, 5, 5]).to(TEST_DEVICE),
-                        torch.LongTensor([2, 2, 1, 4, 5, 5, 5, 5]).to(TEST_DEVICE),
+                        torch.tensor([2, 2, 1, 4, 3, 5, 5, 5], dtype=torch.long).to(
+                            TEST_DEVICE
+                        ),
+                        torch.tensor([2, 2, 1, 4, 5, 5, 5, 5], dtype=torch.long).to(
+                            TEST_DEVICE
+                        ),
                     ],
                 },
             },
             "batch_easy_hard": {
-                "pos_strategy": BatchEasyHardMiner.EASY,
-                "neg_strategy": BatchEasyHardMiner.HARD,
+                "pos_strategy": "easy",
+                "neg_strategy": "hard",
                 "easiest_triplet": -2,
                 "hardest_triplet": 2,
                 "easiest_pos_pair": 1,
@@ -113,22 +140,30 @@ class TestBatchEasyHardMiner(unittest.TestCase):
                 "easiest_neg_pair": 3,
                 "hardest_neg_pair": 1,
                 "expected": {
-                    "correct_a": torch.LongTensor([0, 1, 2, 3, 4, 6, 7, 8]).to(
-                        TEST_DEVICE
-                    ),
+                    "correct_a": torch.tensor(
+                        [0, 1, 2, 3, 4, 6, 7, 8], dtype=torch.long
+                    ).to(TEST_DEVICE),
                     "correct_p": [
-                        torch.LongTensor([1, 0, 3, 2, 1, 7, 8, 7]).to(TEST_DEVICE),
-                        torch.LongTensor([1, 0, 3, 2, 1, 7, 6, 7]).to(TEST_DEVICE),
+                        torch.tensor([1, 0, 3, 2, 1, 7, 8, 7], dtype=torch.long).to(
+                            TEST_DEVICE
+                        ),
+                        torch.tensor([1, 0, 3, 2, 1, 7, 6, 7], dtype=torch.long).to(
+                            TEST_DEVICE
+                        ),
                     ],
                     "correct_n": [
-                        torch.LongTensor([2, 2, 1, 4, 3, 5, 5, 5]).to(TEST_DEVICE),
-                        torch.LongTensor([2, 2, 1, 4, 5, 5, 5, 5]).to(TEST_DEVICE),
+                        torch.tensor([2, 2, 1, 4, 3, 5, 5, 5], dtype=torch.long).to(
+                            TEST_DEVICE
+                        ),
+                        torch.tensor([2, 2, 1, 4, 5, 5, 5, 5], dtype=torch.long).to(
+                            TEST_DEVICE
+                        ),
                     ],
                 },
             },
             "batch_hard_easy": {
-                "pos_strategy": BatchEasyHardMiner.HARD,
-                "neg_strategy": BatchEasyHardMiner.EASY,
+                "pos_strategy": "hard",
+                "neg_strategy": "easy",
                 "easiest_triplet": -4,
                 "hardest_triplet": 3,
                 "easiest_pos_pair": 3,
@@ -136,20 +171,24 @@ class TestBatchEasyHardMiner(unittest.TestCase):
                 "easiest_neg_pair": 8,
                 "hardest_neg_pair": 3,
                 "expected": {
-                    "correct_a": torch.LongTensor([0, 1, 2, 3, 4, 6, 7, 8]).to(
-                        TEST_DEVICE
-                    ),
+                    "correct_a": torch.tensor(
+                        [0, 1, 2, 3, 4, 6, 7, 8], dtype=torch.long
+                    ).to(TEST_DEVICE),
                     "correct_p": [
-                        torch.LongTensor([4, 4, 8, 8, 0, 2, 2, 2]).to(TEST_DEVICE)
+                        torch.tensor([4, 4, 8, 8, 0, 2, 2, 2], dtype=torch.long).to(
+                            TEST_DEVICE
+                        )
                     ],
                     "correct_n": [
-                        torch.LongTensor([8, 8, 5, 0, 8, 0, 0, 0]).to(TEST_DEVICE)
+                        torch.tensor([8, 8, 5, 0, 8, 0, 0, 0], dtype=torch.long).to(
+                            TEST_DEVICE
+                        )
                     ],
                 },
             },
             "batch_easy_easy": {
-                "pos_strategy": BatchEasyHardMiner.EASY,
-                "neg_strategy": BatchEasyHardMiner.EASY,
+                "pos_strategy": "easy",
+                "neg_strategy": "easy",
                 "easiest_triplet": -7,
                 "hardest_triplet": -1,
                 "easiest_pos_pair": 1,
@@ -157,21 +196,27 @@ class TestBatchEasyHardMiner(unittest.TestCase):
                 "easiest_neg_pair": 8,
                 "hardest_neg_pair": 3,
                 "expected": {
-                    "correct_a": torch.LongTensor([0, 1, 2, 3, 4, 6, 7, 8]).to(
-                        TEST_DEVICE
-                    ),
+                    "correct_a": torch.tensor(
+                        [0, 1, 2, 3, 4, 6, 7, 8], dtype=torch.long
+                    ).to(TEST_DEVICE),
                     "correct_p": [
-                        torch.LongTensor([1, 0, 3, 2, 1, 7, 8, 7]).to(TEST_DEVICE),
-                        torch.LongTensor([1, 0, 3, 2, 1, 7, 6, 7]).to(TEST_DEVICE),
+                        torch.tensor([1, 0, 3, 2, 1, 7, 8, 7], dtype=torch.long).to(
+                            TEST_DEVICE
+                        ),
+                        torch.tensor([1, 0, 3, 2, 1, 7, 6, 7], dtype=torch.long).to(
+                            TEST_DEVICE
+                        ),
                     ],
                     "correct_n": [
-                        torch.LongTensor([8, 8, 5, 0, 8, 0, 0, 0]).to(TEST_DEVICE)
+                        torch.tensor([8, 8, 5, 0, 8, 0, 0, 0], dtype=torch.long).to(
+                            TEST_DEVICE
+                        )
                     ],
                 },
             },
             "batch_easy_easy_with_min_val": {
-                "pos_strategy": BatchEasyHardMiner.EASY,
-                "neg_strategy": BatchEasyHardMiner.EASY,
+                "pos_strategy": "easy",
+                "neg_strategy": "easy",
                 "allowed_neg_range": [1, 7],
                 "allowed_pos_range": [1, 7],
                 "easiest_triplet": -6,
@@ -181,21 +226,27 @@ class TestBatchEasyHardMiner(unittest.TestCase):
                 "easiest_neg_pair": 7,
                 "hardest_neg_pair": 3,
                 "expected": {
-                    "correct_a": torch.LongTensor([0, 1, 2, 3, 4, 6, 7, 8]).to(
-                        TEST_DEVICE
-                    ),
+                    "correct_a": torch.tensor(
+                        [0, 1, 2, 3, 4, 6, 7, 8], dtype=torch.long
+                    ).to(TEST_DEVICE),
                     "correct_p": [
-                        torch.LongTensor([1, 0, 3, 2, 1, 7, 8, 7]).to(TEST_DEVICE),
-                        torch.LongTensor([1, 0, 3, 2, 1, 7, 6, 7]).to(TEST_DEVICE),
+                        torch.tensor([1, 0, 3, 2, 1, 7, 8, 7], dtype=torch.long).to(
+                            TEST_DEVICE
+                        ),
+                        torch.tensor([1, 0, 3, 2, 1, 7, 6, 7], dtype=torch.long).to(
+                            TEST_DEVICE
+                        ),
                     ],
                     "correct_n": [
-                        torch.LongTensor([7, 8, 5, 0, 8, 0, 0, 1]).to(TEST_DEVICE)
+                        torch.tensor([7, 8, 5, 0, 8, 0, 0, 1], dtype=torch.long).to(
+                            TEST_DEVICE
+                        )
                     ],
                 },
             },
             "batch_easy_all": {
-                "pos_strategy": BatchEasyHardMiner.EASY,
-                "neg_strategy": BatchEasyHardMiner.ALL,
+                "pos_strategy": "easy",
+                "neg_strategy": "all",
                 "easiest_triplet": 0,
                 "hardest_triplet": 0,
                 "easiest_pos_pair": 1,
@@ -203,20 +254,24 @@ class TestBatchEasyHardMiner(unittest.TestCase):
                 "easiest_neg_pair": 8,
                 "hardest_neg_pair": 1,
                 "expected": {
-                    "correct_a1": torch.LongTensor([0, 1, 2, 3, 4, 6, 7, 8]).to(
-                        TEST_DEVICE
-                    ),
+                    "correct_a1": torch.tensor(
+                        [0, 1, 2, 3, 4, 6, 7, 8], dtype=torch.long
+                    ).to(TEST_DEVICE),
                     "correct_p": [
-                        torch.LongTensor([1, 0, 3, 2, 1, 7, 8, 7]).to(TEST_DEVICE),
-                        torch.LongTensor([1, 0, 3, 2, 1, 7, 6, 7]).to(TEST_DEVICE),
+                        torch.tensor([1, 0, 3, 2, 1, 7, 8, 7], dtype=torch.long).to(
+                            TEST_DEVICE
+                        ),
+                        torch.tensor([1, 0, 3, 2, 1, 7, 6, 7], dtype=torch.long).to(
+                            TEST_DEVICE
+                        ),
                     ],
                     "correct_a2": self.a2_idx,
                     "correct_n": [self.n_idx],
                 },
             },
             "batch_all_easy": {
-                "pos_strategy": BatchEasyHardMiner.ALL,
-                "neg_strategy": BatchEasyHardMiner.EASY,
+                "pos_strategy": "all",
+                "neg_strategy": "easy",
                 "easiest_triplet": 0,
                 "hardest_triplet": 0,
                 "easiest_pos_pair": 1,
@@ -226,17 +281,19 @@ class TestBatchEasyHardMiner(unittest.TestCase):
                 "expected": {
                     "correct_a1": self.a1_idx,
                     "correct_p": [self.p_idx],
-                    "correct_a2": torch.LongTensor([0, 1, 2, 3, 4, 5, 6, 7, 8]).to(
-                        TEST_DEVICE
-                    ),
+                    "correct_a2": torch.tensor(
+                        [0, 1, 2, 3, 4, 5, 6, 7, 8], dtype=torch.long
+                    ).to(TEST_DEVICE),
                     "correct_n": [
-                        torch.LongTensor([8, 8, 5, 0, 8, 0, 0, 0, 0]).to(TEST_DEVICE),
+                        torch.tensor([8, 8, 5, 0, 8, 0, 0, 0, 0], dtype=torch.long).to(
+                            TEST_DEVICE
+                        ),
                     ],
                 },
             },
             "batch_all_all": {
-                "pos_strategy": BatchEasyHardMiner.ALL,
-                "neg_strategy": BatchEasyHardMiner.ALL,
+                "pos_strategy": "all",
+                "neg_strategy": "all",
                 "easiest_triplet": 0,
                 "hardest_triplet": 0,
                 "easiest_pos_pair": 1,
@@ -269,7 +326,8 @@ class TestBatchEasyHardMiner(unittest.TestCase):
                 self.helper(a1, p, a2, n, cfg["expected"])
 
     def test_strategy_assertion(self):
-        self.assertRaises(ValueError, lambda: BatchEasyHardMiner(pos_strategy="blah"))
+        invalid: Any = "blah"
+        self.assertRaises(ValueError, lambda: BatchEasyHardMiner(pos_strategy=invalid))
         self.assertRaises(
             ValueError,
             lambda: BatchEasyHardMiner(

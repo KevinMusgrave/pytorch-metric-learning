@@ -1,16 +1,19 @@
+from typing import Unpack
+
 import torch
 from torch import Tensor
 
-from ..distances import LpDistance
-from ..types import IndicesTuple, LossDict
-from ..utils import common_functions as c_f
-from ..utils import loss_and_miner_utils as lmu
+from ..distances import BaseDistance, LpDistance
+from ..types import IndicesTuple, LossDict, LossOptions
+from ..utils import _common, indexing
 from .base_metric_loss_function import BaseMetricLossFunction
 
 
 class NCALoss(BaseMetricLossFunction):
-    def __init__(self, softmax_scale=1, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(
+        self, softmax_scale: float = 1, **options: Unpack[LossOptions]
+    ) -> None:
+        super().__init__(**options)
         self.softmax_scale = softmax_scale
 
     def compute_loss(
@@ -21,25 +24,32 @@ class NCALoss(BaseMetricLossFunction):
         ref_emb: Tensor,
         ref_labels: Tensor | None,
     ) -> LossDict:
+        labels = _common.labels_required(labels)
+        if ref_labels is None:
+            raise ValueError("ref_labels are required with ref_emb")
         if len(embeddings) <= 1:
-            return self.zero_losses()
-        labels = c_f.labels_required(labels)
+            return self.zero_losses(embeddings)
         return self.nca_computation(
             embeddings, ref_emb, labels, ref_labels, indices_tuple
         )
 
     def nca_computation(
-        self, query, reference, query_labels, reference_labels, indices_tuple
-    ):
+        self,
+        query: Tensor,
+        reference: Tensor,
+        query_labels: Tensor,
+        reference_labels: Tensor,
+        indices_tuple: IndicesTuple | None,
+    ) -> LossDict:
         dtype = query.dtype
-        miner_weights = lmu.convert_to_weights(
+        miner_weights = indexing.convert_to_weights(
             indices_tuple, query_labels, dtype=dtype, using_ref=query is not reference
         )
         mat = self.distance(query, reference)
         if not self.distance.is_inverted:
             mat = -mat
         if query is reference:
-            mat.fill_diagonal_(c_f.neg_inf(dtype))
+            mat.fill_diagonal_(_common.neg_inf(dtype))
         same_labels = (query_labels.unsqueeze(1) == reference_labels.unsqueeze(0)).to(
             dtype=dtype
         )
@@ -50,10 +60,10 @@ class NCALoss(BaseMetricLossFunction):
         return {
             "loss": {
                 "losses": loss,
-                "indices": c_f.torch_arange_from_size(query)[non_zero],
+                "indices": _common.arange_like(query)[non_zero],
                 "reduction_type": "element",
             }
         }
 
-    def get_default_distance(self):
+    def default_distance(self) -> BaseDistance:
         return LpDistance(power=2)

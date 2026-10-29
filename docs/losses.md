@@ -1,75 +1,112 @@
 # Losses
 
-All loss functions are used as follows:
+Every loss takes embeddings and labels and returns a scalar tensor:
 
 ```python
 from pytorch_metric_learning import losses
 loss_func = losses.SomeLoss()
-loss = loss_func(embeddings, labels) # in your training for-loop
+loss = loss_func(embeddings, labels)
 ```
 
-Or if you are using a loss in conjunction with a [miner](miners.md):
+With a [miner](miners.md), pass the mined pairs or triplets as the third argument:
 
 ```python
 from pytorch_metric_learning import miners
 miner_func = miners.SomeMiner()
 loss_func = losses.SomeLoss()
-miner_output = miner_func(embeddings, labels) # in your training for-loop
+miner_output = miner_func(embeddings, labels)
 loss = loss_func(embeddings, labels, miner_output)
 ```
 
-For some losses, you don't need to pass in labels if you are already passing in pair/triplet indices:
+Tuple losses accept pair or triplet indices without labels:
 
 ```python
 loss = loss_func(embeddings, indices_tuple=pairs)
-# it also works with ref_emb
 loss = loss_func(embeddings, indices_tuple=pairs, ref_emb=ref_emb)
 ```
 
-**Losses for which you can pass in `indices_tuple` without `labels`**
+Tuple losses also accept a separate reference set. Anchors come from
+`embeddings` and positives and negatives from `ref_emb`:
+
+```python
+loss = loss_func(embeddings, labels, ref_emb=ref_emb, ref_labels=ref_labels)
+```
+
+## Supported arguments
+
+Each loss accepts the arguments listed for it below. Passing an unsupported
+argument raises `ValueError`. These lists are verified by the test suite.
+
+**Losses that accept `indices_tuple` without `labels`**
 
 - CircleLoss
 - ContrastiveLoss
-- IntraPairVarianceLoss
+- DynamicSoftMarginLoss
 - GeneralizedLiftedStructureLoss
+- HistogramLoss
+- IntraPairVarianceLoss
 - LiftedStructureLoss
 - MarginLoss
 - MultiSimilarityLoss
 - NTXentLoss
 - SignalToNoiseRatioContrastiveLoss
 - SupConLoss
+- ThresholdConsistentMarginLoss
 - TripletMarginLoss
 - TupletMarginLoss
 
-You can specify how losses get reduced to a single value by using a [reducer](reducers.md):
+**Losses that accept `ref_emb` and `ref_labels`**
+
+- AngularLoss
+- CircleLoss
+- ContrastiveLoss
+- DynamicSoftMarginLoss
+- GeneralizedLiftedStructureLoss
+- IntraPairVarianceLoss
+- MarginLoss
+- MultiSimilarityLoss
+- NCALoss
+- NTXentLoss
+- SignalToNoiseRatioContrastiveLoss
+- SupConLoss
+- ThresholdConsistentMarginLoss
+- TripletMarginLoss
+- TupletMarginLoss
+
+These are also the losses that work inside [CrossBatchMemory](losses/cross_batch_memory.md)
+and [SelfSupervisedLoss](losses/self_supervised_loss.md), which pass a separate
+reference set to the wrapped loss.
+
+## Loss options
+
+Every loss signature ends with `**options`. The accepted options are declared
+by `pytorch_metric_learning.types.LossOptions` and are the same for every loss:
+
+- **distance**: A [distance](distances.md) module. `None` selects the loss's
+  default distance.
+- **reducer**: A [reducer](reducers.md) module. `None` selects the loss's
+  default reducer. The reducer object is used as given, not copied; a loss with
+  several terms applies it to each term unless it is a
+  [MultipleReducers](reducers.md#multiplereducers).
+- **embedding_regularizer**: A [regularizer](regularizers.md) applied to the
+  embeddings. `None` adds no penalty.
+- **embedding_reg_weight**: The weight multiplying that penalty. The default is 1.
 
 ```python
-from pytorch_metric_learning import reducers
-reducer = reducers.SomeReducer()
-loss_func = losses.SomeLoss(reducer=reducer)
-loss = loss_func(embeddings, labels) # in your training for-loop
-```
+from pytorch_metric_learning import distances, losses, reducers, regularizers
 
-For tuple losses, you can separate the source of anchors and positives/negatives:
-
-```python
-loss_func = losses.SomeLoss()
-# anchors will come from embeddings
-# positives/negatives will come from ref_emb
-loss = loss_func(embeddings, labels, ref_emb=ref_emb, ref_labels=ref_labels)
-```
-
-For classification losses, you can get logits using the `get_logits` function:
-
-```python
-loss_func = losses.SomeClassificationLoss()
-logits = loss_func.get_logits(embeddings)
+loss_func = losses.ContrastiveLoss(
+    neg_margin=0.5,
+    distance=distances.CosineSimilarity(),
+    reducer=reducers.MeanReducer(),
+    embedding_regularizer=regularizers.LpRegularizer(),
+    embedding_reg_weight=0.1,
+)
 ```
 
 ## Regularization terms
 
-Every loss accepts `embedding_regularizer` and `embedding_reg_weight`. Losses
-with [learnable weights](#learnable-weight-arguments) also accept
+Losses with [learnable weights](#learnable-weight-arguments) also accept
 `weight_regularizer` and `weight_reg_weight`. The total loss is
 
 $$
@@ -80,45 +117,51 @@ $$
 where each penalty appears only when its regularizer is supplied. The
 [reducer](reducers.md) sees only the loss's own objective terms. Each
 regularizer applies its own reducer, and the weighted result is added after
-reduction. With `DoNothingReducer`, the returned dictionary also contains
-`"embedding_reg_loss"` and `"weight_reg_loss"` entries whose `"losses"` value is
-the weighted scalar penalty and whose `"reduction_type"` is
-`"already_reduced"`.
+reduction.
+
+## Unreduced loss terms
+
+`loss_func.loss_terms(embeddings, labels, ...)` takes the same arguments as
+`forward` and returns the `pytorch_metric_learning.types.LossDict` that the
+reducer would receive, plus any regularization terms as `already_reduced`
+entries. Use it to implement a custom aggregation or to inspect per-pair values:
 
 ```python
-from pytorch_metric_learning import losses, regularizers
-
-loss_func = losses.ContrastiveLoss(
-    embedding_regularizer=regularizers.LpRegularizer(),
-    embedding_reg_weight=0.1,
-)
+terms = loss_func.loss_terms(embeddings, labels)
+pos_pair_losses = terms["pos_loss"]["losses"]
 ```
+
+Each term is a dictionary with `losses` (a tensor), `indices`, and
+`reduction_type`; see [reduction types](extend/losses.md#reduction-type).
 
 ## Learnable weight arguments
 
-Losses that own class weights or proxies declare these keyword-only arguments
-in their signatures:
+Losses that own class weights or proxies store them in a parameter named
+`weight` with shape `(num_classes, embedding_size)`, or
+`(num_classes * centers, embedding_size)` when a class has several centers.
+Row `c` is the weight vector of class `c`, like `torch.nn.Linear.weight`. These
+losses declare keyword-only arguments:
 
-- **weight_regularizer**: A [regularizer](regularizers.md) applied to the loss's
-  learnable weights, one row per class vector or proxy. If `None`, no weight
-  penalty is added.
+- **weight_regularizer**: A [regularizer](regularizers.md) applied to `weight`.
+  If `None`, no weight penalty is added.
 - **weight_reg_weight**: The weight multiplying that penalty before it is added
   to the reduced loss.
-- **weight_init_func**: A callable that initializes the parameter in place, such
-  as `torch.nn.init.xavier_uniform_` or
+- **weight_init_func**: A callable that initializes `weight` in place, such as
+  `torch.nn.init.xavier_uniform_` or
   `functools.partial(torch.nn.init.kaiming_uniform_, a=1, mode="fan_out")`. If
   `None`, the loss's default below is used.
 
-| Loss                                                                                                                                                                                                                                                                                                                                  | Parameter           | Default initialization                           |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- | ------------------------------------------------ |
-| [ArcFaceLoss](losses/arcface_loss.md#arcfaceloss), [CosFaceLoss](losses/cosface_loss.md#cosfaceloss), [LargeMarginSoftmaxLoss](losses/large_margin_softmax_loss.md#largemarginsoftmaxloss), [SphereFaceLoss](losses/sphereface_loss.md#spherefaceloss), [SubCenterArcFaceLoss](losses/subcenter_arcface_loss.md#subcenterarcfaceloss) | `W`, `(D, C)`       | `torch.nn.init.normal_`                          |
-| [NormalizedSoftmaxLoss](losses/normalized_softmax_loss.md#normalizedsoftmaxloss)                                                                                                                                                                                                                                                      | `W`, `(D, C)`       | `torch.nn.init.normal_`                          |
-| [ProxyAnchorLoss](losses/proxy_anchor_loss.md#proxyanchorloss)                                                                                                                                                                                                                                                                        | `proxies`, `(C, D)` | `torch.nn.init.kaiming_normal_(mode="fan_out")`  |
-| [ProxyNCALoss](losses/proxy_nca_loss.md#proxyncaloss)                                                                                                                                                                                                                                                                                 | `proxies`, `(C, D)` | `torch.nn.init.normal_`                          |
-| [SoftTripleLoss](losses/soft_triple_loss.md#softtripleloss)                                                                                                                                                                                                                                                                           | `fc`, `(D, C·K)`    | `torch.nn.init.kaiming_uniform_(a=math.sqrt(5))` |
+| Loss                                                                                                                                                                                                                                                   | `weight` shape | Default initialization                                           |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------- | ---------------------------------------------------------------- |
+| [ArcFaceLoss](losses/arcface_loss.md#arcfaceloss), [CosFaceLoss](losses/cosface_loss.md#cosfaceloss), [LargeMarginSoftmaxLoss](losses/large_margin_softmax_loss.md#largemarginsoftmaxloss), [SphereFaceLoss](losses/sphereface_loss.md#spherefaceloss) | `(C, D)`       | `torch.nn.init.normal_`                                          |
+| [SubCenterArcFaceLoss](losses/subcenter_arcface_loss.md#subcenterarcfaceloss)                                                                                                                                                                          | `(C·S, D)`     | `torch.nn.init.normal_`                                          |
+| [NormalizedSoftmaxLoss](losses/normalized_softmax_loss.md#normalizedsoftmaxloss)                                                                                                                                                                       | `(C, D)`       | `torch.nn.init.normal_`                                          |
+| [ProxyAnchorLoss](losses/proxy_anchor_loss.md#proxyanchorloss)                                                                                                                                                                                         | `(C, D)`       | `torch.nn.init.kaiming_normal_(mode="fan_out")`                  |
+| [ProxyNCALoss](losses/proxy_nca_loss.md#proxyncaloss)                                                                                                                                                                                                  | `(C, D)`       | `torch.nn.init.normal_`                                          |
+| [SoftTripleLoss](losses/soft_triple_loss.md#softtripleloss)                                                                                                                                                                                            | `(C·K, D)`     | `torch.nn.init.kaiming_uniform_(a=math.sqrt(5), mode="fan_out")` |
 
-`D` is the embedding size, `C` the number of classes, and `K` the centers per
-class. `SubCenterArcFaceLoss` stores `C·sub_centers` columns.
+`D` is the embedding size, `C` the number of classes, `S` the sub-centers per
+class, and `K` the centers per class.
 
 These parameters belong to the loss module. Move the loss with
 `loss_func.to(device, dtype)` and include `loss_func.parameters()` in the
@@ -126,12 +169,15 @@ optimizer. Outside autocast, the parameters must have the embeddings' device and
 dtype; otherwise the loss raises `ValueError` naming both placements. Under
 autocast, parameters may keep a higher precision than the embeddings. The loss
 never moves or casts its own parameters during a forward pass.
-`P2SGradLoss` and `ManifoldLoss` own parameters with the same placement rule;
-their regularization arguments are only the embedding ones.
+`P2SGradLoss` owns a `weight` parameter and `ManifoldLoss` owns `proxies` under
+the same placement rule; their regularization arguments are only the embedding
+ones.
 
 ## Choose an objective
 
-Each loss has a separate contract page. Pages with an **Equation** block reproduce the stated formula; otherwise the linked paper is the mathematical reference. Default distances, reduction, and implementation notes describe the library behavior.
+Each loss has a separate contract page with its signature, equation, default
+distance and reducer, the arguments it supports, and the paper's settings when
+the library default differs.
 
 ### Pair and triplet objectives
 
@@ -165,6 +211,9 @@ Each loss has a separate contract page. Pages with an **Equation** block reprodu
 - [SoftTripleLoss](losses/soft_triple_loss.md)
 - [SphereFaceLoss](losses/sphereface_loss.md)
 - [SubCenterArcFaceLoss](losses/subcenter_arcface_loss.md)
+
+For classification losses, `loss_func.get_logits(embeddings)` returns the
+scaled class logits.
 
 ### Ranking objectives
 

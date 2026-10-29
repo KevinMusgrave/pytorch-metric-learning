@@ -25,9 +25,15 @@ class TupletMarginLoss(GenericPairLoss):
         a1, p, a2, _ = indices_tuple
 
         if len(a1) > 0 and len(a2) > 0:
-            pos_angles = torch.acos(pos_pairs)
+            # acos has an infinite derivative at +/-1. Keep the endpoint
+            # angles, but choose a zero angular gradient there.
+            pos_angles = torch.acos(pos_pairs.masked_fill(pos_pairs.abs() >= 1, 0))
+            pos_angles = pos_angles.masked_fill(pos_pairs >= 1, 0)
+            pos_angles = pos_angles.masked_fill(pos_pairs <= -1, np.pi)
             self.set_stats(pos_angles, neg_pairs)
-            pos_pairs = torch.cos(pos_angles - self.margin)
+            # At zero margin the objective is smooth in the cosine itself.
+            if self.margin != 0:
+                pos_pairs = torch.cos(pos_angles - self.margin)
             pos_pairs = pos_pairs.unsqueeze(1)
             neg_pairs = neg_pairs.repeat(pos_pairs.size(0), 1)
             inside_exp = self.scale * (neg_pairs - pos_pairs)

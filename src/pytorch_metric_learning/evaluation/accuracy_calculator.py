@@ -477,7 +477,7 @@ class AccuracyCalculator:
         available = num_reference_embeddings - int(ref_includes_query)
         max_relevant = int(counts.max().item()) if len(counts) else 0
         if self.k == "max_bin_count":
-            return max(min(max_relevant, available), 1)
+            return min(max(max_relevant, 1), available)
         if self.k is None:
             return available
         at_r = set(names) & {"r_precision", "mean_average_precision_at_r"}

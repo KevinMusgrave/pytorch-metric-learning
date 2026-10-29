@@ -19,7 +19,7 @@ from pytorch_metric_learning.losses import (
     CrossBatchMemory,
     NormalizedSoftmaxLoss,
 )
-from pytorch_metric_learning.miners import PairMarginMiner
+from pytorch_metric_learning.miners import BatchEasyHardMiner, PairMarginMiner
 
 from .. import TEST_DEVICE, TEST_DTYPES
 
@@ -291,6 +291,37 @@ def check_local_miner(
             assert_close(actual_indices, expected_indices)
 
 
+def check_local_selecting_miner(
+    rank: int, device: torch.device, dtype: torch.dtype, sizes: tuple[int, int]
+) -> None:
+    inputs, labels = make_inputs(device, dtype)
+    selected = rank_slice(sizes, rank)
+    miner = DistributedMinerWrapper(
+        BatchEasyHardMiner(
+            pos_strategy="easy",
+            neg_strategy="hard",
+            distance=LpDistance(normalize_embeddings=False),
+        ),
+        objective="local_anchor",
+    )
+    actual = miner(inputs[selected], labels[selected])
+    distances = torch.linalg.vector_norm(
+        inputs[selected, None] - inputs[None, :], dim=-1
+    )
+    local = torch.arange(len(distances), device=device)
+    positive = labels[selected, None] == labels[None, :]
+    positive[local, local + selected.start] = False
+    negative = labels[selected, None] != labels[None, :]
+    expected = (
+        local,
+        distances.masked_fill(~positive, torch.inf).argmin(dim=1),
+        local,
+        distances.masked_fill(~negative, torch.inf).argmin(dim=1),
+    )
+    for actual_indices, expected_indices in zip(actual, expected, strict=True):
+        assert_close(actual_indices, expected_indices)
+
+
 def check_inconsistent_arguments(rank: int, device: torch.device) -> None:
     inputs, labels = make_inputs(device, torch.float32)
     local = inputs[:2].clone().requires_grad_()
@@ -334,6 +365,7 @@ def run_references(rank: int, address: str, backend: str) -> None:
             for sizes in ((2, 3), (0, 5), (5, 0)):
                 check_local_anchor_case(rank, device, dtype, sizes)
                 check_local_miner(rank, device, dtype, sizes)
+                check_local_selecting_miner(rank, device, dtype, sizes)
         check_inconsistent_arguments(rank, device)
     finally:
         dist.destroy_process_group()

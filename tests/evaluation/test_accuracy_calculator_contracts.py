@@ -29,6 +29,15 @@ class TestCalculateAccuraciesValidK(unittest.TestCase):
 
 
 class TestAccuracyCalculatorContracts(unittest.TestCase):
+    def test_single_embedding_has_no_neighbors_for_every_k(self):
+        embeddings = torch.randn(1, 4)
+        labels = torch.tensor([0])
+        for k in (None, "max_bin_count", 1):
+            with self.subTest(k=k):
+                AC = accuracy_calculator.AccuracyCalculator(k=k)
+                accuracies = AC.get_accuracy(embeddings, labels)
+                self.assertTrue(all(np.isnan(v) for v in accuracies.values()))
+
     def test_default_metrics_and_backend(self):
         AC = accuracy_calculator.AccuracyCalculator()
         self.assertEqual(

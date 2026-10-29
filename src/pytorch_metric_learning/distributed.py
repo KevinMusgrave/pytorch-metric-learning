@@ -7,7 +7,7 @@ from torch.distributed import _functional_collectives
 
 from .losses import BaseMetricLossFunction, CrossBatchMemory
 from .miners import BaseMiner
-from .types import IndicesTuple
+from .types import IndicesTuple, PairIndices
 from .utils import _common, indexing
 
 __all__ = ["DistributedLossWrapper", "DistributedMinerWrapper"]
@@ -131,25 +131,14 @@ def gather(
     return Gathered(all_emb, all_labels, offset), sizes
 
 
-def local_anchor_indices(
-    labels: Tensor,
-    ref_labels: Tensor,
-    offset: int,
-    remove_self: bool,
-    miner: BaseMiner | None = None,
-    embeddings: Tensor | None = None,
-    ref_emb: Tensor | None = None,
-) -> IndicesTuple:
-    if miner is not None and embeddings is not None:
-        indices_tuple = miner(
-            embeddings, labels, ref_emb=ref_emb, ref_labels=ref_labels
-        )
-    else:
-        indices_tuple = indexing.get_all_pairs_indices(labels, ref_labels)
+def local_anchor_pairs(
+    labels: Tensor, ref_labels: Tensor, offset: int, remove_self: bool
+) -> PairIndices:
+    pairs = indexing.get_all_pairs_indices(labels, ref_labels)
     if not remove_self:
-        return indices_tuple
+        return pairs
     curr_batch_idx = torch.arange(len(labels), device=labels.device) + offset
-    return indexing.remove_self_comparisons(indices_tuple, curr_batch_idx)
+    return indexing.remove_self_comparisons(pairs, curr_batch_idx)
 
 
 class DistributedLossWrapper(torch.nn.Module):
@@ -253,7 +242,7 @@ class DistributedLossWrapper(torch.nn.Module):
             )
         all_ref = query if reference is None else reference
         if indices_tuple is None and labels is not None and all_ref.labels is not None:
-            indices_tuple = local_anchor_indices(
+            indices_tuple = local_anchor_pairs(
                 labels, all_ref.labels, query.offset, remove_self=reference is None
             )
         local = loss(emb, labels, indices_tuple, all_ref.embeddings, all_ref.labels)
@@ -326,12 +315,11 @@ class DistributedMinerWrapper(torch.nn.Module):
         all_ref = query if reference is None else reference
         if all_ref.labels is None:
             raise ValueError("Mining requires labels")
-        return local_anchor_indices(
-            labels,
-            all_ref.labels,
-            query.offset,
-            remove_self=reference is None,
-            miner=self.miner,
-            embeddings=embeddings,
-            ref_emb=all_ref.embeddings,
+        candidates = None
+        if reference is None:
+            candidates = local_anchor_pairs(
+                labels, all_ref.labels, query.offset, remove_self=True
+            )
+        return self.miner(
+            embeddings, labels, candidates, all_ref.embeddings, all_ref.labels
         )

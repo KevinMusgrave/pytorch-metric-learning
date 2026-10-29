@@ -2,7 +2,7 @@ import unittest
 
 import torch
 
-from pytorch_metric_learning.types import TripletIndices
+from pytorch_metric_learning.types import PairIndices, TripletIndices
 from pytorch_metric_learning.utils import _common as c_f
 from pytorch_metric_learning.utils import indexing
 
@@ -163,9 +163,21 @@ class TestLossAndMinerUtils(unittest.TestCase):
             )
 
             _, counts = torch.unique(a, return_counts=True, sorted=True)
-            counts = counts.type(weights.dtype) / torch.max(counts)
+            expected = (counts.double() / torch.max(counts)).to(weights.dtype)
 
-            self.assertTrue(torch.equal(weights, counts))
+            torch.testing.assert_close(weights, expected)
+
+    def test_convert_to_weights_normalizes_large_counts_before_casting(self):
+        anchors = torch.zeros(80000, dtype=torch.long, device=TEST_DEVICE)
+        others = torch.arange(1, 3, device=TEST_DEVICE).repeat_interleave(40000)
+        pairs = PairIndices(
+            anchors[:40000], others[:40000], anchors[40000:], others[40000:]
+        )
+        weights = indexing.convert_to_weights(
+            pairs, torch.arange(3, device=TEST_DEVICE), dtype=torch.float16
+        )
+        expected = torch.tensor([1.0, 0.5, 0.5], device=TEST_DEVICE)
+        torch.testing.assert_close(weights, expected.half())
 
     def test_get_random_triplet_indices(self):
         for dtype in TEST_DTYPES:

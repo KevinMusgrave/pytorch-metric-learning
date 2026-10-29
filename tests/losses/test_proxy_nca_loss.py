@@ -4,6 +4,7 @@ import torch
 from torch.nn import functional as F
 
 from pytorch_metric_learning.losses import ProxyNCALoss
+from pytorch_metric_learning.types import TripletIndices
 
 from .. import TEST_DEVICE, TEST_DTYPES, helpers
 from ..helpers import angle_to_coord
@@ -97,3 +98,23 @@ class TestProxyNCALoss(unittest.TestCase):
                         rtol=1e-2,
                     )
                 )
+
+
+class TestProxyNCAMinerWeights(unittest.TestCase):
+    def test_every_tuple_position_counts_toward_the_weight(self):
+        torch.manual_seed(5)
+        loss_func = ProxyNCALoss(3, 4).to(TEST_DEVICE, torch.float64)
+        embeddings = torch.randn(6, 4, device=TEST_DEVICE, dtype=torch.float64)
+        labels = torch.tensor([0, 0, 1, 1, 2, 2], device=TEST_DEVICE)
+        triplets = TripletIndices(
+            torch.tensor([0, 0, 2], device=TEST_DEVICE),
+            torch.tensor([1, 1, 3], device=TEST_DEVICE),
+            torch.tensor([2, 4, 4], device=TEST_DEVICE),
+        )
+        loss = loss_func(embeddings, labels, triplets)
+        proxies = F.normalize(loss_func.weight, dim=1)
+        distances = torch.cdist(F.normalize(embeddings, dim=1), proxies) ** 2
+        per_row = F.cross_entropy(-distances, labels, reduction="none")
+        counts = torch.tensor([2, 2, 2, 1, 2, 0], device=TEST_DEVICE)
+        expected = (per_row * counts / 2).mean()
+        torch.testing.assert_close(loss, expected.to(loss.dtype))

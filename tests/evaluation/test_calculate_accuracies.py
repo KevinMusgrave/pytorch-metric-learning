@@ -1,9 +1,9 @@
 import itertools
 import logging
 import unittest
-from typing import Any
 
 import numpy as np
+import pytest
 import torch
 
 from pytorch_metric_learning.distances import LpDistance
@@ -21,14 +21,14 @@ def isclose(x, y, many=False):
     rtol = 1e-6
     atol = 0
     if isinstance(x, dict):
-        x = list(x.values())
+        x = np.array(list(x.values()), dtype=float)
     if many:
         return np.allclose(x, y, atol=atol, rtol=rtol)
     return np.isclose(x, y, atol=atol, rtol=rtol)
 
 
 def metrics_from_knn(
-    calculator, query_labels, knn_labels, counts_by_label, self_search
+    calculator, query_labels, knn_labels, counts_by_label, self_search, per_class
 ):
     unique, index = torch.unique(query_labels, return_inverse=True)
     counts = torch.tensor(
@@ -43,6 +43,7 @@ def metrics_from_knn(
         "not_lone_query_mask": counts > 0,
         "unique_query_labels": unique,
         "query_label_index": index,
+        "per_class": per_class,
     }
     functions = calculator.metric_functions()
     return {name: functions[name](**kwargs) for name in calculator.metrics}
@@ -66,7 +67,7 @@ def lone_labels(query_labels, reference_labels, same_source, comparison_fn):
 
 def nan_values(value):
     values = list(value.values()) if isinstance(value, dict) else [value]
-    return np.all(np.isnan(values))
+    return np.all(np.isnan(np.array(values, dtype=float)))
 
 
 class TestCalculateAccuracies(unittest.TestCase):
@@ -146,22 +147,13 @@ class TestCalculateAccuracies(unittest.TestCase):
                 for i, (knn_labels, label_counts) in enumerate(
                     [(knn_labels1, label_counts1), (knn_labels2, label_counts2)]
                 ):
-                    init_kwargs: dict[str, Any] = {
-                        "exclude": ("NMI", "AMI"),
-                        "avg_of_avgs": avg_of_avgs,
-                        "return_per_class": return_per_class,
-                        "device": TEST_DEVICE,
-                    }
-
                     if avg_of_avgs and return_per_class:
-                        self.assertRaises(
-                            ValueError,
-                            accuracy_calculator.AccuracyCalculator,
-                            **init_kwargs,
-                        )
                         continue
-
-                    AC = accuracy_calculator.AccuracyCalculator(**init_kwargs)
+                    AC = accuracy_calculator.AccuracyCalculator(
+                        exclude=("NMI", "AMI"),
+                        avg_of_avgs=avg_of_avgs,
+                        device=TEST_DEVICE,
+                    )
                     for ecfss in [False, True]:
                         acc = metrics_from_knn(
                             AC,
@@ -169,6 +161,7 @@ class TestCalculateAccuracies(unittest.TestCase):
                             knn_labels[:, 1:] if ecfss else knn_labels,
                             dict(zip(*label_counts, strict=True)),
                             ecfss,
+                            return_per_class,
                         )
                         if i == 1:
                             self.assertTrue(nan_values(acc["precision_at_1"]))
@@ -842,15 +835,18 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
 
 
 class TestCalculateAccuraciesFaissKNN(unittest.TestCase):
-    def test_specify_gpu(self):
-        max_world_size = min(4, torch.cuda.device_count())
-        for i in range(1, max_world_size + 1):
-            for gpus in itertools.combinations(range(max_world_size), i):
-                knn_func = FaissKNN(gpus=gpus)
-                AC = accuracy_calculator.AccuracyCalculator(knn_func=knn_func)
-                embeddings = torch.randn(1000, 32)
-                labels = torch.randint(0, 10, size=(1000,))
-                AC.get_accuracy(embeddings, labels)
+    def test_gpu_selection_falls_back_to_cpu_faiss(self):
+        import faiss
+
+        self.assertFalse(hasattr(faiss, "GpuIndex"))
+        embeddings = torch.randn(200, 8)
+        labels = torch.randint(0, 10, size=(200,))
+        expected = accuracy_calculator.AccuracyCalculator(
+            knn_func=FaissKNN()
+        ).get_accuracy(embeddings, labels)
+        for gpus in ((0,), (0, 1)):
+            AC = accuracy_calculator.AccuracyCalculator(knn_func=FaissKNN(gpus=gpus))
+            self.assertEqual(AC.get_accuracy(embeddings, labels), expected)
 
     def test_index_type(self):
         import faiss
@@ -905,14 +901,16 @@ class TestCalculateAccuraciesCustomKNN(unittest.TestCase):
 
 
 class TestWithinAutocast(unittest.TestCase):
+    @pytest.mark.cuda
     def test_within_autocast(self):
-        if torch.device("cpu") == TEST_DEVICE:
-            return
         AC = accuracy_calculator.AccuracyCalculator()
-        embeddings = torch.randn(1000, 32)
-        labels = torch.randint(0, 10, size=(1000,))
+        embeddings = torch.randn(1000, 32, device=TEST_DEVICE)
+        labels = torch.randint(0, 10, size=(1000,), device=TEST_DEVICE)
+        expected = AC.get_accuracy(embeddings, labels)
         with torch.autocast(device_type="cuda", dtype=torch.float16):
-            AC.get_accuracy(embeddings, labels)
+            actual = AC.get_accuracy(embeddings, labels)
+        for name, value in expected.items():
+            self.assertAlmostEqual(actual[name], value, places=3)
 
 
 class TestMutualInformation(unittest.TestCase):

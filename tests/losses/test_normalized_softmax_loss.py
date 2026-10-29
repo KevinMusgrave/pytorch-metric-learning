@@ -5,7 +5,7 @@ import torch
 from pytorch_metric_learning.distances import DotProductSimilarity
 from pytorch_metric_learning.losses import NormalizedSoftmaxLoss
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 from ..helpers import angle_to_coord
 
 
@@ -35,7 +35,7 @@ class TestNormalizedSoftmaxLoss(unittest.TestCase):
             correct_loss = torch.nn.functional.cross_entropy(
                 logits / temperature, labels
             )
-            rtol = 1e-2 if dtype == torch.float16 else 1e-5
+            rtol = helpers.rtol(dtype)
             self.assertTrue(torch.isclose(loss, correct_loss, rtol=rtol))
 
             logits_out = loss_func.get_logits(embeddings)

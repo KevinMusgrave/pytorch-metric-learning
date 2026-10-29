@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 from pytorch_metric_learning.losses import VICRegLoss
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 
 HYPERPARAMETERS = [[25, 25, 1, 1e-4], [10, 10, 2, 1e-5], [5, 5, 5, 1e-6]]
 
@@ -59,6 +59,6 @@ class TestVICRegLoss(unittest.TestCase):
                         + hyp[2] * covariance_loss
                     )
 
-                    rtol = 1e-2 if dtype == torch.float16 else 1e-5
+                    rtol = helpers.rtol(dtype)
 
                     self.assertTrue(torch.isclose(loss, correct_loss, rtol=rtol))

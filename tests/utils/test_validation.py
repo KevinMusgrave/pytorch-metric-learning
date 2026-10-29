@@ -20,7 +20,7 @@ class InvalidMiner(BaseMiner):
         super().__init__()
         self.output = output
 
-    def mine(self, embeddings, labels, ref_emb, ref_labels):
+    def mine(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
         return self.output
 
 
@@ -35,14 +35,13 @@ class TestValidation(unittest.TestCase):
 
     def test_reducer_requires_vector_losses(self):
         index = torch.arange(2)
-        for reduction, indices in [
+        for kind, indices in [
             ("element", index),
-            ("pos_pair", (index, index)),
-            ("neg_pair", (index, index)),
+            ("pair", (index, index)),
             ("triplet", (index, index, index)),
         ]:
-            with self.subTest(reduction=reduction):
-                term = {"indices": indices, "reduction_type": reduction}
+            with self.subTest(kind=kind):
+                term = {"indices": indices}
                 with self.assertRaisesRegex(ValueError, "one-dimensional"):
                     MeanReducer()(
                         {"loss": {"losses": torch.tensor([[2.0], [4.0]]), **term}},
@@ -61,8 +60,8 @@ class TestValidation(unittest.TestCase):
         index = torch.arange(2)
         cases = [
             ((index, index), ValueError, "three triplet or four pair"),
-            ((index, index[:1], index), ValueError, "equal length"),
-            ((index, index, index, index[:1]), ValueError, "equal length"),
+            ((index, index[:1], index), ValueError, "equal-length"),
+            ((index, index, index, index[:1]), ValueError, "equal-length"),
             ((index, index, [0, 1]), TypeError, "index tensors"),
             ((index, index, index[:, None]), ValueError, "one-dimensional"),
         ]
@@ -74,26 +73,20 @@ class TestValidation(unittest.TestCase):
         values = torch.tensor([1.0, 2.0], requires_grad=True)
         index = torch.arange(2)
         cases = [
-            (values, index, "unknown", ValueError, "Unknown reduction_type"),
-            (values, index[:1], "element", ValueError, "equal lengths"),
-            (values, (index, index[:1]), "pos_pair", ValueError, "equal lengths"),
-            (values, (index, index, [0, 1]), "triplet", TypeError, "tensor"),
-            (values, None, "already_reduced", ValueError, "one value"),
-            (values, index[:, None], "element", ValueError, "one-dimensional"),
+            (values, index[:1], ValueError, "equal lengths"),
+            (values, (index, index[:1]), ValueError, "equal lengths"),
+            (values, (index, index, [0, 1]), TypeError, "tensor"),
+            (values, (index,) * 4, TypeError, "two or three tensors"),
+            (values, None, ValueError, "one value"),
+            (values, index[:, None], ValueError, "one-dimensional"),
         ]
-        for losses, indices, reduction, error, message in cases:
+        for losses, indices, error, message in cases:
             with (
-                self.subTest(reduction=reduction, indices=indices),
+                self.subTest(indices=indices),
                 self.assertRaisesRegex(error, message),
             ):
                 MeanReducer()(
-                    {
-                        "loss": {
-                            "losses": losses,
-                            "indices": indices,
-                            "reduction_type": reduction,
-                        }
-                    },
+                    {"loss": {"losses": losses, "indices": indices}},
                     torch.randn(2, 3),
                     torch.arange(2),
                 )

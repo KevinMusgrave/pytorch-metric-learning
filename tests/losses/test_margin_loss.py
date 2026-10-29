@@ -4,7 +4,7 @@ import torch
 
 from pytorch_metric_learning.losses import MarginLoss
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 from ..helpers import angle_to_coord
 from .utils import get_triplet_embeddings_with_ref
 
@@ -63,7 +63,7 @@ class TestMarginLoss(unittest.TestCase):
                         )
                     correct_total_loss += correct_beta_reg_loss.item()
 
-            rtol = 1e-2 if dtype == torch.float16 else 1e-5
+            rtol = helpers.rtol(dtype)
             self.assertTrue(torch.isclose(loss, correct_total_loss, rtol=rtol))
 
     def test_margin_loss(self):

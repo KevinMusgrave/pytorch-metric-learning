@@ -6,13 +6,13 @@ from pytorch_metric_learning.types import TripletIndices
 from pytorch_metric_learning.utils import _common as c_f
 from pytorch_metric_learning.utils import indexing
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 
 
 class TestLossAndMinerUtils(unittest.TestCase):
     def test_logsumexp(self):
         for dtype in TEST_DTYPES:
-            rtol = 1e-2 if dtype == torch.float16 else 1e-5
+            rtol = helpers.rtol(dtype)
             mat = torch.tensor(
                 [
                     [-1, 0, 1, 10, 50],

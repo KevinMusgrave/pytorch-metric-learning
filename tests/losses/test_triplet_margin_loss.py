@@ -6,7 +6,7 @@ from pytorch_metric_learning.distances import CosineSimilarity
 from pytorch_metric_learning.losses import TripletMarginLoss
 from pytorch_metric_learning.reducers import MeanReducer
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 from ..helpers import angle_to_coord
 from .utils import get_triplet_embeddings_with_ref
 
@@ -94,7 +94,7 @@ class TestTripletMarginLoss(unittest.TestCase):
                 num_non_zero_triplets_cosine += 1
             correct_loss += curr_loss
             correct_loss_cosine += curr_loss_cosine
-        rtol = 1e-2 if dtype == torch.float16 else 1e-5
+        rtol = helpers.rtol(dtype)
         self.assertTrue(
             torch.isclose(lossA, correct_loss / num_non_zero_triplets, rtol=rtol)
         )

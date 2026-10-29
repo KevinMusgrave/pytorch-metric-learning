@@ -5,6 +5,7 @@ from contextlib import contextmanager
 from datetime import timedelta
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from typing import Any
 
 import torch
 import torch.distributed as dist
@@ -189,7 +190,8 @@ class TestDistributedFallback(unittest.TestCase):
                 )
 
     def test_invalid_wrapped_objects_are_rejected(self):
+        invalid: Any = torch.nn.Identity()
         with self.assertRaises(TypeError):
-            DistributedLossWrapper(torch.nn.MSELoss())
+            DistributedLossWrapper(invalid)
         with self.assertRaises(TypeError):
-            DistributedMinerWrapper(torch.nn.Identity())
+            DistributedMinerWrapper(invalid)

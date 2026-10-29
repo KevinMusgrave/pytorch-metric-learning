@@ -113,7 +113,7 @@ def resolve_reference(
 
 
 def as_indices_tuple(
-    indices_tuple: Sequence[Tensor] | None, device: torch.device
+    indices_tuple: Sequence[Tensor] | None, device: torch.device | None = None
 ) -> IndicesTuple | None:
     if indices_tuple is None:
         return None
@@ -123,7 +123,7 @@ def as_indices_tuple(
         raise TypeError("indices_tuple must be a tuple of index tensors")
     if any(x.ndim != 1 for x in indices_tuple):
         raise ValueError("indices_tuple must contain one-dimensional tensors")
-    if any(x.device != device for x in indices_tuple):
+    if device is not None and any(x.device != device for x in indices_tuple):
         raise ValueError("indices_tuple tensors must be on the embeddings' device")
     if len(indices_tuple) == 3:
         if not len(indices_tuple[0]) == len(indices_tuple[1]) == len(indices_tuple[2]):

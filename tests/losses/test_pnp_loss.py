@@ -9,7 +9,7 @@ import torch.nn.functional as F
 from pytorch_metric_learning.losses import PNPLoss
 from pytorch_metric_learning.losses.pnp_loss import VARIANTS
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 
 
 class OriginalImplementationPNP(torch.nn.Module):
@@ -117,7 +117,7 @@ class TestPNPLoss(unittest.TestCase):
                 loss.backward()
                 correct_loss = original_loss_func(F.normalize(embeddings, dim=-1))
 
-                rtol = 1e-2 if dtype == torch.float16 else 1e-5
+                rtol = helpers.rtol(dtype)
                 self.assertTrue(torch.isclose(loss, correct_loss[0], rtol=rtol))
 
         invalid: Any = "PNP"

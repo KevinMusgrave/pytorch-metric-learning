@@ -5,7 +5,7 @@ from torch.nn import functional as F
 
 from pytorch_metric_learning.losses import ProxyNCALoss
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 from ..helpers import angle_to_coord
 
 
@@ -85,7 +85,7 @@ class TestProxyNCALoss(unittest.TestCase):
                 correct_loss += -torch.log(numerator / denominator)
 
             correct_loss /= len(embeddings)
-            rtol = 1e-2 if dtype == torch.float16 else 1e-5
+            rtol = helpers.rtol(dtype)
             self.assertTrue(torch.isclose(loss, correct_loss, rtol=rtol))
 
             if dtype != torch.float16:

@@ -1,7 +1,11 @@
+from collections.abc import Sequence
+from typing import overload
+
 import torch
 from torch import Tensor
 
 from ..types import IndicesTuple, PairIndices, TripletIndices, TripletsPerAnchor
+from . import _common
 
 __all__ = [
     "convert_to_pairs",
@@ -35,22 +39,23 @@ def get_all_pairs_indices(
 
 
 def convert_to_pairs(
-    indices_tuple: IndicesTuple | None,
+    indices_tuple: Sequence[Tensor] | None,
     labels: Tensor | None,
     ref_labels: Tensor | None = None,
 ) -> PairIndices:
-    if indices_tuple is None:
+    indices = _common.as_indices_tuple(indices_tuple)
+    if indices is None:
         if labels is None:
             raise ValueError("labels are required when indices_tuple is None")
         return get_all_pairs_indices(labels, ref_labels)
-    if isinstance(indices_tuple, PairIndices):
-        return indices_tuple
-    a, p, n = indices_tuple
+    if isinstance(indices, PairIndices):
+        return indices
+    a, p, n = indices
     return PairIndices(a, p, a, n)
 
 
 def convert_to_pos_pairs_with_unique_labels(
-    indices_tuple: IndicesTuple | None, labels: Tensor
+    indices_tuple: Sequence[Tensor] | None, labels: Tensor
 ) -> tuple[Tensor, Tensor]:
     a, p, _, _ = convert_to_pairs(indices_tuple, labels)
     anchor_labels = labels[a]
@@ -122,31 +127,33 @@ def sample_triplets(
 
 
 def convert_to_triplets(
-    indices_tuple: IndicesTuple | None,
+    indices_tuple: Sequence[Tensor] | None,
     labels: Tensor | None,
     ref_labels: Tensor | None = None,
     t_per_anchor: TripletsPerAnchor = "all",
 ) -> TripletIndices:
-    if indices_tuple is None:
+    indices = _common.as_indices_tuple(indices_tuple)
+    if indices is None:
         if labels is None:
             raise ValueError("labels are required when indices_tuple is None")
         if t_per_anchor == "all":
             return get_all_triplets_indices(labels, ref_labels)
         return get_random_triplet_indices(labels, ref_labels, t_per_anchor=t_per_anchor)
-    if isinstance(indices_tuple, TripletIndices):
-        return indices_tuple
-    return pairs_to_triplets(indices_tuple)
+    if isinstance(indices, TripletIndices):
+        return indices
+    return pairs_to_triplets(indices)
 
 
 def convert_to_weights(
-    indices_tuple: IndicesTuple | None,
+    indices_tuple: Sequence[Tensor] | None,
     labels: Tensor,
     dtype: torch.dtype,
     using_ref: bool = False,
 ) -> Tensor:
-    if indices_tuple is None or all(len(x) == 0 for x in indices_tuple):
+    tuples = _common.as_indices_tuple(indices_tuple)
+    if tuples is None or all(len(x) == 0 for x in tuples):
         return torch.ones(labels.shape[0], device=labels.device, dtype=dtype)
-    indices = get_anchors(indices_tuple) if using_ref else torch.cat(indices_tuple)
+    indices = get_anchors(tuples) if using_ref else torch.cat(tuples)
     counts = torch.bincount(indices, minlength=labels.shape[0])
     return counts.to(dtype) / counts.max()
 
@@ -161,6 +168,18 @@ def concatenate_indices_tuples(it1: IndicesTuple, it2: IndicesTuple) -> IndicesT
     if isinstance(it1, TripletIndices):
         return TripletIndices(*(torch.cat(x) for x in zip(it1, it2, strict=True)))
     return PairIndices(*(torch.cat(x) for x in zip(it1, it2, strict=True)))
+
+
+@overload
+def remove_self_comparisons(
+    indices_tuple: PairIndices, curr_batch_idx: Tensor
+) -> PairIndices: ...
+
+
+@overload
+def remove_self_comparisons(
+    indices_tuple: TripletIndices, curr_batch_idx: Tensor
+) -> TripletIndices: ...
 
 
 def remove_self_comparisons(

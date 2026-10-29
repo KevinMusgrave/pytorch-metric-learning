@@ -4,7 +4,7 @@ import torch
 
 from pytorch_metric_learning.losses import IntraPairVarianceLoss
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 from ..helpers import angle_to_coord
 
 
@@ -76,7 +76,7 @@ class TestIntraPairVarianceLoss(unittest.TestCase):
             pos_total /= len(pos_pairs)
             neg_total /= len(neg_pairs)
             correct_total = pos_total + neg_total
-            rtol = 1e-2 if dtype == torch.float16 else 1e-5
+            rtol = helpers.rtol(dtype)
             self.assertTrue(torch.isclose(loss, correct_total, rtol=rtol))
 
     def test_with_no_valid_pairs(self):

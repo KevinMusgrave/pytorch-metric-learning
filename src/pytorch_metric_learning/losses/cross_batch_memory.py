@@ -90,7 +90,9 @@ class CrossBatchMemory(torch.nn.Module):
             if enqueue_mask.dtype != torch.bool:
                 raise TypeError("enqueue_mask must be a boolean tensor")
             if enqueue_mask.ndim != 1 or len(enqueue_mask) != len(embeddings):
-                raise ValueError("enqueue_mask must contain one value per embedding")
+                raise ValueError(
+                    "enqueue_mask must be one-dimensional with one value per embedding"
+                )
             _common.check_device(enqueue_mask, embeddings, "enqueue_mask")
         _common.check_parameter_placement(self, self.embedding_memory, embeddings)
         embeddings = embeddings.to(dtype=self.embedding_memory.dtype)

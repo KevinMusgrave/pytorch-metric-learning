@@ -6,7 +6,7 @@ import torch
 
 from pytorch_metric_learning.losses import LargeMarginSoftmaxLoss, SphereFaceLoss
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 from ..helpers import angle_to_coord
 
 UNNORMALIZED_EMBEDDING_SCALE = 10
@@ -90,7 +90,7 @@ class TestLargeMarginSoftmaxLoss(unittest.TestCase):
             correct_lossA = torch.nn.functional.cross_entropy(cosinesA * scale, labels)
             correct_lossB = torch.nn.functional.cross_entropy(cosinesB * scale, labels)
 
-            rtol = 1e-2 if dtype == torch.float16 else 1e-5
+            rtol = helpers.rtol(dtype)
             self.assertTrue(torch.isclose(lossA, correct_lossA, rtol=rtol))
             self.assertTrue(torch.isclose(lossB, correct_lossB, rtol=rtol))
 

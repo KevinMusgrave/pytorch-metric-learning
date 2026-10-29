@@ -8,7 +8,7 @@ from torch.nn.modules.module import Module
 
 from pytorch_metric_learning.losses import ManifoldLoss
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 
 KERNEL_TEMPERATURE_MATCHING_LIBRARY = 0.5
 ORIGINAL_IMPLEMENTATION_MARGIN = 0.0
@@ -140,7 +140,7 @@ class TestManifoldLoss(unittest.TestCase):
             loss = loss_func(embeddings, labels)
             loss.backward()
 
-            rtol = 1e-2 if dtype == torch.float16 else 1e-5
+            rtol = helpers.rtol(dtype)
             self.assertTrue(torch.isclose(original_loss, loss, rtol=rtol))
 
     def test_with_original_implementation(self):
@@ -182,7 +182,7 @@ class TestManifoldLoss(unittest.TestCase):
             loss = loss_func(embeddings, labels)
             loss.backward()
 
-            rtol = 1e-2 if dtype == torch.float16 else 1e-5
+            rtol = helpers.rtol(dtype)
 
             self.assertTrue(torch.isclose(original_loss, loss, rtol=rtol))
 

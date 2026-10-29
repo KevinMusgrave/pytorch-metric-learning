@@ -10,7 +10,7 @@ from pytorch_metric_learning.losses import (
     ThresholdConsistentMarginLoss,
 )
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 
 
 class TestThresholdConsistentMarginLoss(unittest.TestCase):
@@ -54,7 +54,7 @@ class TestThresholdConsistentMarginLoss(unittest.TestCase):
 
             with torch.no_grad():
                 res = loss_func.forward(embs, labels)
-                rtol = 1e-2 if dtype == torch.float16 else 1e-5
+                rtol = helpers.rtol(dtype)
                 atol = 1e-4
                 self.assertTrue(torch.isclose(res, correct_loss, rtol=rtol, atol=atol))
 

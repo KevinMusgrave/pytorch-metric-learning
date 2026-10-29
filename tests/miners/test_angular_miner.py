@@ -8,14 +8,6 @@ from pytorch_metric_learning.miners import AngularMiner
 from .. import TEST_DEVICE, TEST_DTYPES, helpers
 
 
-def planar_embeddings(num_points, dtype):
-    return torch.tensor(
-        [helpers.angle_to_coord(a) for a in torch.arange(0, num_points)],
-        requires_grad=True,
-        dtype=dtype,
-    ).to(TEST_DEVICE)
-
-
 def anchor_positive_negative_triplets(labels):
     num_points = len(labels)
     for i in range(num_points):
@@ -42,7 +34,7 @@ def triplet_angles(embeddings, labels):
 class TestAngularMiner(unittest.TestCase):
     def test_angular_miner(self):
         for dtype in TEST_DTYPES:
-            embeddings = planar_embeddings(16, dtype)
+            embeddings = helpers.planar_embeddings(range(16), dtype)
             labels = torch.randint(low=0, high=2, size=(16,))
             angles = triplet_angles(embeddings, labels)
 

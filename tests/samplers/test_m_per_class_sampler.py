@@ -1,4 +1,5 @@
 import unittest
+from typing import Any
 
 import torch
 
@@ -50,7 +51,7 @@ class TestMPerClassSampler(unittest.TestCase):
         fake_embeddings = torch.randn(10000, 2)
         labels = torch.randint(low=0, high=num_labels, size=(10000,))
         dataset = torch.utils.data.TensorDataset(fake_embeddings, labels)
-        args = [labels, m, batch_size, length_before_new_iter]
+        args: list[Any] = [labels, m, batch_size, length_before_new_iter]
         if (
             (length_before_new_iter < batch_size)
             or (m * num_labels < batch_size)

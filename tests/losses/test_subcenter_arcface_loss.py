@@ -7,7 +7,7 @@ import torch.nn.functional as F
 
 from pytorch_metric_learning.losses import ArcFaceLoss, SubCenterArcFaceLoss
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 
 
 class TestSubCenterArcFaceLoss(unittest.TestCase):
@@ -51,7 +51,7 @@ class TestSubCenterArcFaceLoss(unittest.TestCase):
 
                 correct_loss = F.cross_entropy(logits * scale, labels.to(TEST_DEVICE))
 
-                rtol = 1e-2 if dtype == torch.float16 else 1e-5
+                rtol = helpers.rtol(dtype)
                 self.assertTrue(torch.isclose(loss, correct_loss, rtol=rtol))
 
                 if sub_centers == 1:

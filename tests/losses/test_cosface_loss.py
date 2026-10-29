@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 from pytorch_metric_learning.losses import CosFaceLoss
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 from ..helpers import angle_to_coord
 
 
@@ -36,7 +36,7 @@ class TestCosFaceLoss(unittest.TestCase):
                 logits[i, c] -= margin
 
             correct_loss = F.cross_entropy(logits * scale, labels.to(TEST_DEVICE))
-            rtol = 1e-2 if dtype == torch.float16 else 1e-5
+            rtol = helpers.rtol(dtype)
             self.assertTrue(torch.isclose(loss, correct_loss, rtol=rtol))
 
             logits_out = loss_func.get_logits(embeddings)

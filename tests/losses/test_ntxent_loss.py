@@ -6,7 +6,7 @@ from pytorch_metric_learning.distances import LpDistance
 from pytorch_metric_learning.losses import NTXentLoss, SupConLoss
 from pytorch_metric_learning.reducers import AvgNonZeroReducer, PerAnchorReducer
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 from ..helpers import angle_to_coord
 from .utils import get_pair_embeddings_with_ref
 
@@ -148,7 +148,7 @@ class TestNTXentLoss(unittest.TestCase):
             for x in [total_lossC, total_lossD, total_lossE]
         ]
 
-        rtol = 1e-2 if dtype == torch.float16 else 1e-5
+        rtol = helpers.rtol(dtype)
         self.assertTrue(torch.isclose(obtained_losses[0], total_lossA, rtol=rtol))
         self.assertTrue(torch.isclose(obtained_losses[1], total_lossB, rtol=rtol))
         self.assertTrue(torch.isclose(obtained_losses[2], total_lossC, rtol=rtol))
@@ -188,7 +188,7 @@ class TestNTXentLoss(unittest.TestCase):
                         torch.testing.assert_close(
                             loss.detach(),
                             torch.as_tensor(expected, dtype=dtype),
-                            rtol=1e-2 if dtype == torch.float16 else 1e-5,
+                            rtol=helpers.rtol(dtype),
                             atol=1e-6,
                         )
 
@@ -221,3 +221,44 @@ def supcon_without_negatives(embeddings, distance, temperature):
         if loss > 0:
             total, count = total + loss, count + 1
     return float(total / count) if count else 0.0
+
+
+def ntxent_reference(embeddings, labels, temperature):
+    normalized = torch.nn.functional.normalize(embeddings, dim=1)
+    logits = normalized @ normalized.T / temperature
+    losses = []
+    for anchor in range(len(labels)):
+        negatives = logits[anchor, labels != labels[anchor]]
+        for positive in range(len(labels)):
+            if positive != anchor and labels[positive] == labels[anchor]:
+                pos = logits[anchor, positive]
+                losses.append(
+                    torch.logsumexp(torch.cat([pos[None], negatives]), 0) - pos
+                )
+    return torch.stack(losses).mean()
+
+
+class TestNTXentPrecision(unittest.TestCase):
+    def test_hard_positive_matches_float64_in_low_precision(self):
+        labels = torch.tensor([0, 0, 1, 2], device=TEST_DEVICE)
+        embeddings = torch.tensor([[1.0, 0.0], [-1.0, 0.02], [1.0, 0.05], [1.0, -0.05]])
+        for dtype in {*TEST_DTYPES, torch.float16}:
+            loss = helpers.assert_matches_float64(
+                lambda x: NTXentLoss()(x, labels),
+                lambda x: ntxent_reference(x, labels, 0.07),
+                [embeddings],
+                dtype,
+                atol=1e-5,
+            )
+            self.assertGreater(loss.item(), 14)
+
+    def test_anchor_negatives_are_grouped_without_cartesian_products(self):
+        labels = torch.randint(0, 4, (24,), device=TEST_DEVICE)
+        embeddings = torch.randn(24, 5)
+        for dtype in TEST_DTYPES:
+            helpers.assert_matches_float64(
+                lambda x: NTXentLoss(temperature=0.2)(x, labels),
+                lambda x: ntxent_reference(x, labels, 0.2),
+                [embeddings],
+                dtype,
+            )

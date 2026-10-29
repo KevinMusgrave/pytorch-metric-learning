@@ -5,6 +5,7 @@ import torch
 
 from pytorch_metric_learning.distances import LpDistance
 from pytorch_metric_learning.losses import TripletMarginLoss
+from pytorch_metric_learning.types import PairIndices
 from pytorch_metric_learning.utils import indexing
 
 from .. import TEST_DEVICE
@@ -115,3 +116,27 @@ class TestTripletEnumeration(unittest.TestCase):
                 actual_gradients, expected_gradients, strict=True
             ):
                 torch.testing.assert_close(observed, wanted)
+
+
+class TestPairsToTriplets(unittest.TestCase):
+    def test_matches_cartesian_reference_with_duplicates(self) -> None:
+        for _ in range(20):
+            a1 = torch.randint(0, 6, (15,), device=TEST_DEVICE)
+            p = torch.randint(0, 9, (15,), device=TEST_DEVICE)
+            a2 = torch.randint(0, 6, (25,), device=TEST_DEVICE)
+            n = torch.randint(0, 9, (25,), device=TEST_DEVICE)
+            pos_idx, neg_idx = torch.where(a1[:, None] == a2[None, :])
+            expected = (a1[pos_idx], p[pos_idx], n[neg_idx])
+            actual = indexing.pairs_to_triplets(PairIndices(a1, p, a2, n))
+            for observed, wanted in zip(actual, expected, strict=True):
+                torch.testing.assert_close(observed, wanted)
+
+    def test_empty_pairs(self) -> None:
+        empty = torch.empty(0, dtype=torch.long, device=TEST_DEVICE)
+        some = torch.tensor([0, 1], device=TEST_DEVICE)
+        for pairs in (
+            PairIndices(empty, empty, some, some),
+            PairIndices(some, some, empty, empty),
+        ):
+            for indices in indexing.pairs_to_triplets(pairs):
+                self.assertEqual(len(indices), 0)

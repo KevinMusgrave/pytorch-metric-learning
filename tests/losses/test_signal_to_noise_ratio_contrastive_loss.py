@@ -5,7 +5,7 @@ import torch
 from pytorch_metric_learning.losses import SignalToNoiseRatioContrastiveLoss
 from pytorch_metric_learning.regularizers import ZeroMeanRegularizer
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 from ..helpers import angle_to_coord
 
 
@@ -83,7 +83,7 @@ class TestSNRContrastiveLoss(unittest.TestCase):
             correct_total = (
                 correct_pos_loss + correct_neg_loss + embedding_reg_weight * reg_loss
             )
-            rtol = 1e-2 if dtype == torch.float16 else 1e-5
+            rtol = helpers.rtol(dtype)
             self.assertTrue(torch.isclose(loss, correct_total, rtol=rtol))
 
     def test_with_no_valid_pairs(self):

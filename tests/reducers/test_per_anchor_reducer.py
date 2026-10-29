@@ -1,4 +1,5 @@
 import unittest
+from typing import Any
 
 import torch
 
@@ -10,7 +11,7 @@ from pytorch_metric_learning.reducers import (
 )
 from pytorch_metric_learning.utils import indexing
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 
 
 def per_anchor_reference(losses, anchors, aggregation, inner):
@@ -22,6 +23,10 @@ def per_anchor_reference(losses, anchors, aggregation, inner):
     if isinstance(inner, AvgNonZeroReducer):
         per_anchor = [x for x in per_anchor if x > 0]
     return sum(per_anchor) / len(per_anchor) if per_anchor else 0.0
+
+
+def anchors_of(indices):
+    return indices if isinstance(indices, torch.Tensor) else indices[0]
 
 
 class TestPerAnchorReducer(unittest.TestCase):
@@ -56,7 +61,7 @@ class TestPerAnchorReducer(unittest.TestCase):
                         expected = per_anchor_reference(
                             losses, anchors, aggregation, inner
                         )
-                        rtol = 1e-2 if dtype == torch.float16 else 1e-5
+                        rtol = helpers.rtol(dtype)
                         torch.testing.assert_close(
                             output.double().cpu(),
                             torch.tensor(expected, dtype=torch.float64),
@@ -75,7 +80,7 @@ class TestPerAnchorReducer(unittest.TestCase):
         )
         reference = sum(
             per_anchor_reference(
-                term["losses"], term["indices"][0], "mean", MeanReducer()
+                term["losses"], anchors_of(term["indices"]), "mean", MeanReducer()
             )
             for term in expected.values()
         )
@@ -102,7 +107,8 @@ class TestPerAnchorReducer(unittest.TestCase):
 
     def test_rejects_unknown_aggregation(self):
         with self.assertRaises(ValueError):
-            PerAnchorReducer(aggregation="max")  # type: ignore[arg-type]
+            invalid: Any = "max"
+            PerAnchorReducer(aggregation=invalid)
 
 
 if __name__ == "__main__":

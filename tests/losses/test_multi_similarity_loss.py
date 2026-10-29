@@ -4,7 +4,7 @@ import torch
 
 from pytorch_metric_learning.losses import MultiSimilarityLoss
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 from ..helpers import angle_to_coord
 from .utils import get_pair_embeddings_with_ref
 
@@ -98,7 +98,7 @@ class TestMultiSimilarityLoss(unittest.TestCase):
             correct_total += correct_pos_loss + correct_neg_loss
 
         correct_total /= embeddings.size(0)
-        rtol = 1e-2 if dtype == torch.float16 else 1e-5
+        rtol = helpers.rtol(dtype)
         self.assertTrue(torch.isclose(loss, correct_total, rtol=rtol))
 
     def test_with_no_valid_pairs(self):

@@ -1,28 +1,34 @@
+from collections.abc import Iterator
+
 import torch
 from torch.utils.data.sampler import Sampler
 
-from .sampling import as_label_list, choose, indices_by_label
+from .sampling import Labels, as_label_list, choose, indices_by_label
 
 
 class FixedSetOfTriplets(Sampler[int]):
     def __init__(
-        self, labels, num_triplets, *, generator: torch.Generator | None = None
-    ):
+        self,
+        labels: Labels,
+        num_triplets: int,
+        *,
+        generator: torch.Generator | None = None,
+    ) -> None:
         self.generator = generator
         self.labels_to_indices = indices_by_label(as_label_list(labels))
         self.num_triplets = int(num_triplets)
         self.create_fixed_set_of_triplets()
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.fixed_set_of_triplets.shape[0] * 3
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[int]:
         order = torch.randperm(
             len(self.fixed_set_of_triplets), generator=self.generator
         )
         return iter(self.fixed_set_of_triplets[order].flatten().tolist())
 
-    def create_fixed_set_of_triplets(self):
+    def create_fixed_set_of_triplets(self) -> None:
         if self.num_triplets <= 0:
             raise ValueError("num_triplets must be positive")
         label_list = list(self.labels_to_indices)

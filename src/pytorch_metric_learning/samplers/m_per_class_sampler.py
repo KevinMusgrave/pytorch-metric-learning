@@ -1,19 +1,21 @@
+from collections.abc import Iterator
+
 import torch
 from torch.utils.data.sampler import Sampler
 
-from .sampling import as_label_list, choose, indices_by_label, shuffled
+from .sampling import Labels, as_label_list, choose, indices_by_label, shuffled
 
 
 class MPerClassSampler(Sampler[int]):
     def __init__(
         self,
-        labels,
-        m,
-        batch_size=None,
-        length_before_new_iter=100000,
+        labels: Labels,
+        m: int,
+        batch_size: int | None = None,
+        length_before_new_iter: int = 100000,
         *,
         generator: torch.Generator | None = None,
-    ):
+    ) -> None:
         self.m_per_class = int(m)
         self.batch_size = int(batch_size) if batch_size is not None else batch_size
         if self.m_per_class <= 0:
@@ -31,7 +33,7 @@ class MPerClassSampler(Sampler[int]):
         self.list_size = length_before_new_iter
         self.adjust_list_size()
 
-    def adjust_list_size(self):
+    def adjust_list_size(self) -> None:
         if self.batch_size is None:
             if self.length_of_single_pass < self.list_size:
                 self.list_size -= (self.list_size) % (self.length_of_single_pass)
@@ -46,10 +48,10 @@ class MPerClassSampler(Sampler[int]):
                 )
             self.list_size -= self.list_size % self.batch_size
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.list_size
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[int]:
         idx_list = [0] * self.list_size
         i = 0
         for _ in range(self.calculate_num_iters()):
@@ -64,7 +66,7 @@ class MPerClassSampler(Sampler[int]):
                 i += self.m_per_class
         return iter(idx_list[: self.list_size])
 
-    def calculate_num_iters(self):
+    def calculate_num_iters(self) -> int:
         divisor = (
             self.length_of_single_pass if self.batch_size is None else self.batch_size
         )

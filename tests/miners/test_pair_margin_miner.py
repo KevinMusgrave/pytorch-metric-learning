@@ -5,16 +5,7 @@ import torch
 from pytorch_metric_learning.distances import CosineSimilarity, LpDistance
 from pytorch_metric_learning.miners import PairMarginMiner
 
-from .. import TEST_DEVICE, TEST_DTYPES
-from ..helpers import angle_to_coord
-
-
-def planar_embeddings(num_points, dtype):
-    return torch.tensor(
-        [angle_to_coord(a) for a in torch.arange(0, num_points)],
-        requires_grad=True,
-        dtype=dtype,
-    ).to(TEST_DEVICE)
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 
 
 def positive_and_negative_pairs(labels):
@@ -49,7 +40,7 @@ class TestPairMarginMiner(unittest.TestCase):
     def test_pair_margin_miner(self):
         for dtype in TEST_DTYPES:
             for distance in [LpDistance(), CosineSimilarity()]:
-                embeddings = planar_embeddings(16, dtype)
+                embeddings = helpers.planar_embeddings(range(16), dtype)
                 labels = torch.randint(low=0, high=2, size=(16,))
                 mat = distance(embeddings)
                 pos_pairs, neg_pairs = positive_and_negative_pairs(labels)

@@ -178,9 +178,7 @@ class TestLossComposition(unittest.TestCase):
         )
         output = loss_func.loss_terms(embeddings, labels)
         self.assertEqual(set(output), {"loss", "embedding_reg_loss"})
-        self.assertEqual(
-            output["embedding_reg_loss"]["reduction_type"], "already_reduced"
-        )
+        self.assertIsNone(output["embedding_reg_loss"]["indices"])
         torch.testing.assert_close(
             output["embedding_reg_loss"]["losses"], 0.5 * embeddings.norm(dim=1).mean()
         )

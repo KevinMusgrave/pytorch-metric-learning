@@ -4,7 +4,7 @@ import torch
 
 from pytorch_metric_learning.losses import RankedListLoss
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 
 
 def weighted_average(weights, values):
@@ -90,7 +90,7 @@ class TestRankedListLoss(unittest.TestCase):
                     correct_loss = torch.mean(L_RLL)
                     loss = loss_func(embeddings, labels)
 
-                    rtol = 1e-2 if dtype == torch.float16 else 1e-5
+                    rtol = helpers.rtol(dtype)
                     self.assertTrue(torch.isclose(loss, correct_loss, rtol=rtol))
 
                     loss.backward()
@@ -172,7 +172,7 @@ class TestRankedListLoss(unittest.TestCase):
                     correct_loss = torch.mean(L_RLL)
                     loss = loss_func(embeddings, labels)
 
-                    rtol = 1e-2 if dtype == torch.float16 else 1e-5
+                    rtol = helpers.rtol(dtype)
                     self.assertTrue(torch.isclose(loss, correct_loss, rtol=rtol))
 
                     loss.backward()

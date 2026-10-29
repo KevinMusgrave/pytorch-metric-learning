@@ -71,6 +71,7 @@ testpaths = ["tests"]
 pythonpath = ["src"]
 addopts = ["--strict-config", "--strict-markers", "--disable-plugin-autoload", "-ra"]
 xfail_strict = true
+markers = ["cuda: requires TEST_DEVICE=cuda; deselected on CPU runs"]
 
 [tool.uv]
 required-version = "==0.13.4"

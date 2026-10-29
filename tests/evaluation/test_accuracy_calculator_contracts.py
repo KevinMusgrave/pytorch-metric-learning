@@ -163,3 +163,93 @@ class TestEmbeddingsComeFromSameSource(unittest.TestCase):
             ref_labels,
             ref_includes_query=True,
         )
+
+
+def brute_force_retrieval(positions, labels, comparison):
+    r_precisions, maps_at_r, maps = [], [], []
+    for query in range(len(positions)):
+        others = [i for i in range(len(positions)) if i != query]
+        others.sort(key=lambda i: (abs(positions[i] - positions[query]), i))
+        hits = [bool(comparison(labels[query], labels[i])) for i in others]
+        relevant = sum(hits)
+        if relevant == 0:
+            continue
+        precisions = [sum(hits[: k + 1]) / (k + 1) for k in range(len(hits))]
+        r_precisions.append(sum(hits[:relevant]) / relevant)
+        maps_at_r.append(
+            sum(p for p, h in zip(precisions[:relevant], hits, strict=False) if h)
+            / relevant
+        )
+        maps.append(
+            sum(p for p, h in zip(precisions, hits, strict=True) if h) / relevant
+        )
+    return (np.mean(r_precisions), np.mean(maps_at_r), np.mean(maps))
+
+
+class TestComparatorAndPerClassResults(unittest.TestCase):
+    def test_custom_comparator_that_rejects_self_matches(self):
+        def comparison(x, y):
+            return (x[..., 0] == y[..., 0]) & (x[..., 1] != y[..., 1])
+
+        positions = [0.0, 0.1, 0.25, 0.5, 3.0, 3.2, 3.3, 9.0]
+        labels = torch.tensor(
+            [[0, 0], [0, 1], [0, 0], [1, 2], [1, 3], [1, 2], [2, 0], [2, 0]],
+            device=TEST_DEVICE,
+        )
+        embeddings = torch.tensor(positions, device=TEST_DEVICE).unsqueeze(1)
+        calculator = accuracy_calculator.AccuracyCalculator(
+            include=(
+                "r_precision",
+                "mean_average_precision_at_r",
+                "mean_average_precision",
+            ),
+            label_comparison_fn=comparison,
+            device=TEST_DEVICE,
+        )
+        result = calculator.get_accuracy(embeddings, labels)
+        expected = brute_force_retrieval(positions, labels.tolist(), comparison_python)
+        for name, value in zip(
+            ("r_precision", "mean_average_precision_at_r", "mean_average_precision"),
+            expected,
+            strict=True,
+        ):
+            self.assertTrue(np.isfinite(result[name]), name)
+            self.assertAlmostEqual(result[name], value, msg=name)
+
+    def test_per_class_results_are_keyed_by_label(self):
+        calculator = accuracy_calculator.AccuracyCalculator(
+            include=("precision_at_1",), device=TEST_DEVICE
+        )
+        query = torch.tensor([[0.0], [5.0], [5.1]], device=TEST_DEVICE)
+        reference = torch.tensor([[0.1], [10.0]], device=TEST_DEVICE)
+        result = calculator.get_accuracy_per_class(
+            query,
+            torch.tensor([3, 7, 7], device=TEST_DEVICE),
+            reference,
+            torch.tensor([3, 9], device=TEST_DEVICE),
+        )
+        values = result["precision_at_1"]
+        self.assertEqual(list(values), [3, 7])
+        self.assertEqual(values[3], 1.0)
+        self.assertTrue(np.isnan(values[7]))
+        none = calculator.get_accuracy_per_class(
+            query,
+            torch.tensor([3, 7, 7], device=TEST_DEVICE),
+            reference,
+            torch.tensor([1, 2], device=TEST_DEVICE),
+        )["precision_at_1"]
+        self.assertEqual(list(none), [3, 7])
+        self.assertTrue(all(np.isnan(v) for v in none.values()))
+
+    def test_repeated_calls_do_not_change_selected_metrics(self):
+        calculator = accuracy_calculator.AccuracyCalculator(device=TEST_DEVICE)
+        embeddings = torch.randn(10, 3, device=TEST_DEVICE)
+        labels = torch.randint(0, 3, (10,), device=TEST_DEVICE)
+        first = calculator.get_accuracy(embeddings, labels, include=("precision_at_1",))
+        second = calculator.get_accuracy(embeddings, labels)
+        self.assertEqual(list(first), ["precision_at_1"])
+        self.assertEqual(set(second), set(calculator.metrics))
+
+
+def comparison_python(x, y):
+    return x[0] == y[0] and x[1] != y[1]

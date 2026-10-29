@@ -4,7 +4,7 @@ import torch
 
 from pytorch_metric_learning.reducers import ClassWeightedReducer
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 
 
 class TestClassWeightedReducer(unittest.TestCase):
@@ -56,5 +56,5 @@ class TestClassWeightedReducer(unittest.TestCase):
                         * class_weights.type(dtype).to(TEST_DEVICE)[class_label]
                     )
                 correct_output /= len(losses)
-                rtol = 1e-2 if dtype == torch.float16 else 1e-5
+                rtol = helpers.rtol(dtype)
                 self.assertTrue(torch.isclose(output, correct_output, rtol=rtol))

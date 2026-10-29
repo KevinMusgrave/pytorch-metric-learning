@@ -5,18 +5,9 @@ import torch
 from pytorch_metric_learning.distances import CosineSimilarity, LpDistance
 from pytorch_metric_learning.miners import TripletMarginMiner
 
-from .. import TEST_DEVICE, TEST_DTYPES
-from ..helpers import angle_to_coord
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 
 TRIPLET_TYPES = ("all", "hard", "semihard", "easy")
-
-
-def planar_embeddings(num_points, dtype):
-    return torch.tensor(
-        [angle_to_coord(a) for a in torch.arange(0, num_points)],
-        requires_grad=True,
-        dtype=dtype,
-    ).to(TEST_DEVICE)
 
 
 def anchor_positive_negative_triplets(labels):
@@ -57,7 +48,7 @@ class TestTripletMarginMiner(unittest.TestCase):
     def test_triplet_margin_miner(self):
         for dtype in TEST_DTYPES:
             for distance in [LpDistance(), CosineSimilarity()]:
-                embeddings = planar_embeddings(16, dtype)
+                embeddings = helpers.planar_embeddings(range(16), dtype)
                 labels = torch.randint(low=0, high=2, size=(16,))
                 differences = triplet_distance_differences(
                     distance(embeddings), labels, distance.is_inverted

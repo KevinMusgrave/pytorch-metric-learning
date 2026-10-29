@@ -62,7 +62,7 @@ class TestTupletMarginLoss(unittest.TestCase):
                 correct_total += curr_total
 
             correct_total /= len(pos_pairs)
-            rtol = 1e-2 if dtype == torch.float16 else 1e-5
+            rtol = helpers.rtol(dtype)
             self.assertTrue(torch.isclose(loss, correct_total, rtol=rtol))
 
     def test_with_no_valid_pairs(self):

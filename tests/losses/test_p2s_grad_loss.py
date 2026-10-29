@@ -5,7 +5,7 @@ from torch import nn
 
 from pytorch_metric_learning.losses import P2SGradLoss
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 
 
 class TrustedImplementationP2SActivationLayer(nn.Module):
@@ -170,7 +170,7 @@ class TestP2SGradLoss(unittest.TestCase):
                 t_layer.weight.detach().t().contiguous()
             )
 
-            rtol = 1e-2 if dtype == torch.float16 else 1e-5
+            rtol = helpers.rtol(dtype)
 
             loss = loss_func(embeddings, labels)
             loss.backward()

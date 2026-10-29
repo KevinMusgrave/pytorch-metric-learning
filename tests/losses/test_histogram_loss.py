@@ -1,23 +1,21 @@
 import unittest
+from typing import Any
 
 import torch
 from numpy.testing import assert_almost_equal
 
 from pytorch_metric_learning.losses import HistogramLoss
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 
 
 class OriginalImplementationHistogramLoss(torch.nn.Module):
-    def __init__(self, num_steps, use_cuda=True):
+    def __init__(self, num_steps):
         super().__init__()
         self.step = 2 / (num_steps - 1)
         self.eps = 1 / num_steps
-        self.use_cuda = use_cuda
         self.t = torch.arange(-1, 1 + self.step, self.step).view(-1, 1)
         self.tsize = self.t.size()[0]
-        if self.use_cuda:
-            self.t = self.t.cuda()
 
     def forward(self, features, classes):
         def histogram(inds, size):
@@ -35,8 +33,6 @@ class OriginalImplementationHistogramLoss(torch.nn.Module):
             zeros = torch.zeros((1, indsa.size()[1])).to(
                 device=indsa.device, dtype=torch.uint8
             )
-            if self.use_cuda:
-                zeros = zeros.cuda()
             indsb = torch.cat((indsa, zeros))[1:, :].to(dtype=torch.bool)
             s_repeat_[~(indsb | indsa)] = 0
             self.t = self.t.to(dtype=s_repeat_.dtype)
@@ -54,9 +50,9 @@ class OriginalImplementationHistogramLoss(torch.nn.Module):
         assert (
             (dists > 1 + self.eps).sum().item() + (dists < -1 - self.eps).sum().item()
         ) == 0, "L2 normalization should be used"
-        s_inds = torch.triu(torch.ones(classes_eq.size(), dtype=torch.bool), 1)
-        if self.use_cuda:
-            s_inds = s_inds.cuda()
+        s_inds = torch.triu(
+            torch.ones(classes_eq.size(), dtype=torch.bool, device=features.device), 1
+        )
         classes_eq = classes_eq.to(device=s_inds.device)
         pos_inds = classes_eq[s_inds].repeat(self.tsize, 1)
         neg_inds = ~classes_eq[s_inds].repeat(self.tsize, 1)
@@ -90,8 +86,7 @@ class OriginalImplementationHistogramLoss(torch.nn.Module):
         histogram_pos_inds = torch.tril(
             torch.ones(histogram_pos_repeat.size()), -1
         ).bool()
-        if self.use_cuda:
-            histogram_pos_inds = histogram_pos_inds.cuda()
+        histogram_pos_inds = histogram_pos_inds.to(features.device)
         histogram_pos_repeat[histogram_pos_inds] = 0
         histogram_pos_cdf = histogram_pos_repeat.sum(0)
         loss = torch.sum(histogram_neg * histogram_pos_cdf)
@@ -108,7 +103,7 @@ class TestHistogramLoss(unittest.TestCase):
             num_bins = num_steps - 1
             loss_func = HistogramLoss(num_bins=num_bins)
             original_loss_func = OriginalImplementationHistogramLoss(
-                num_steps=num_steps, use_cuda=False
+                num_steps=num_steps
             )
 
             for _ in range(2):
@@ -125,7 +120,7 @@ class TestHistogramLoss(unittest.TestCase):
                     torch.nn.functional.normalize(embeddings), labels
                 )
 
-                rtol = 1e-2 if dtype == torch.float16 else 1e-5
+                rtol = helpers.rtol(dtype)
                 self.assertTrue(torch.isclose(loss, correct_loss, rtol=rtol))
 
                 loss.backward()
@@ -149,4 +144,5 @@ class TestHistogramLoss(unittest.TestCase):
             _ = HistogramLoss(num_bins=0)
 
         with self.assertRaises(ValueError):
-            _ = HistogramLoss(num_bins=2.5)  # type: ignore[arg-type]
+            fractional: Any = 2.5
+            _ = HistogramLoss(num_bins=fractional)

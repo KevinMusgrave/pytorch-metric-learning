@@ -114,8 +114,10 @@ class FaissKNN:
     def search(
         self, index: Any, query: Tensor, reference: Tensor | None, k: int
     ) -> tuple[Tensor, Tensor]:
-        use_gpu = (query.is_cuda or self.gpus is not None) and (
-            self.faiss.get_num_gpus() > 0
+        use_gpu = (
+            (query.is_cuda or self.gpus is not None)
+            and hasattr(self.faiss, "GpuIndex")
+            and self.faiss.get_num_gpus() > 0
         )
         if use_gpu and k <= FAISS_GPU_MAX_K:
             return add_to_index_and_search(

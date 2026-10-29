@@ -97,7 +97,7 @@ class TestContrastiveLoss(unittest.TestCase):
                 cos_pos.mean() + cos_neg.mean(),
             ]
 
-            rtol = 1e-2 if dtype == torch.float16 else 1e-5
+            rtol = helpers.rtol(dtype)
             self.assertTrue(torch.isclose(lossA, correct_losses[0], rtol=rtol))
             self.assertTrue(torch.isclose(lossB, correct_losses[1], rtol=rtol))
             self.assertTrue(torch.isclose(lossC, correct_losses[2], rtol=rtol))

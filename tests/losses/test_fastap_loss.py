@@ -4,7 +4,7 @@ import torch
 
 from pytorch_metric_learning.losses import FastAPLoss
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 from ..helpers import angle_to_coord
 
 
@@ -70,7 +70,7 @@ class TestFastAPLoss(unittest.TestCase):
             original_loss = original_implementation_fast_ap_loss(
                 torch.nn.functional.normalize(embeddings), labels, num_bins
             )
-            rtol = 1e-2 if dtype == torch.float16 else 1e-5
+            rtol = helpers.rtol(dtype)
             self.assertTrue(torch.isclose(loss, original_loss, rtol=rtol))
 
             with self.assertRaises(ValueError):

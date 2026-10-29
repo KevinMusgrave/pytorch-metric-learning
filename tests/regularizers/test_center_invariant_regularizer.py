@@ -5,7 +5,7 @@ import torch
 from pytorch_metric_learning.losses import NormalizedSoftmaxLoss
 from pytorch_metric_learning.regularizers import CenterInvariantRegularizer
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 
 
 class TestCenterInvariantRegularizer(unittest.TestCase):
@@ -55,5 +55,5 @@ class TestCenterInvariantRegularizer(unittest.TestCase):
             correct_reg_loss /= num_classes
 
             correct_total_loss = correct_class_loss + (correct_reg_loss * reg_weight)
-            rtol = 1e-2 if dtype == torch.float16 else 1e-5
+            rtol = helpers.rtol(dtype)
             self.assertTrue(torch.isclose(loss, correct_total_loss, rtol=rtol))

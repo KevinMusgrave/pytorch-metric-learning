@@ -25,7 +25,7 @@ class OriginalInstanceLoss(nn.Module):
         normed_feature = l2_norm(feature)
         sim1 = torch.mm(normed_feature * self.gamma, torch.t(normed_feature))
         if label is None:
-            sim_label = torch.arange(sim1.size(0)).cuda().detach()
+            sim_label = torch.arange(sim1.size(0), device=sim1.device)
         else:
             _, sim_label = torch.unique(label, return_inverse=True)
         loss = F.cross_entropy(sim1, sim_label)

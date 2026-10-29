@@ -6,8 +6,9 @@ from pytorch_metric_learning.losses import (
     GeneralizedLiftedStructureLoss,
     LiftedStructureLoss,
 )
+from pytorch_metric_learning.types import PairIndices
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 from ..helpers import angle_to_coord
 
 
@@ -73,7 +74,7 @@ class TestLiftedStructure(unittest.TestCase):
 
             total_loss /= 2 * len(pos_pairs)
 
-            rtol = 1e-2 if dtype == torch.float16 else 1e-5
+            rtol = helpers.rtol(dtype)
             self.assertTrue(torch.isclose(loss, total_loss, rtol=rtol))
 
     def test_with_no_valid_pairs(self):
@@ -155,7 +156,7 @@ class TestGeneralizedLiftedStructureLoss(unittest.TestCase):
 
             correct_total /= embeddings.size(0)
 
-            rtol = 1e-2 if dtype == torch.float16 else 1e-5
+            rtol = helpers.rtol(dtype)
             self.assertTrue(torch.isclose(loss, correct_total, rtol=rtol))
 
     def test_with_no_valid_pairs(self):
@@ -186,3 +187,19 @@ class TestLiftedStructureReferenceSet(unittest.TestCase):
                 ref_emb=torch.randn(5, 3),
                 ref_labels=torch.tensor([0, 1, 0, 1, 1]),
             )
+
+
+class TestLiftedStructureGrouping(unittest.TestCase):
+    def test_positive_pair_without_negatives_has_finite_zero_gradient(self):
+        embeddings = torch.randn(4, 3, device=TEST_DEVICE, requires_grad=True)
+        pairs = PairIndices(
+            torch.tensor([0, 2], device=TEST_DEVICE),
+            torch.tensor([1, 3], device=TEST_DEVICE),
+            torch.tensor([2], device=TEST_DEVICE),
+            torch.tensor([0], device=TEST_DEVICE),
+        )
+        terms = LiftedStructureLoss().loss_terms(embeddings, indices_tuple=pairs)
+        LiftedStructureLoss()(embeddings, indices_tuple=pairs).backward()
+        assert embeddings.grad is not None
+        self.assertTrue(torch.isfinite(embeddings.grad).all())
+        self.assertEqual(terms["loss"]["losses"][0].item(), 0)

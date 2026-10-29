@@ -1,7 +1,7 @@
 import importlib
 import logging
 from collections.abc import Callable, Hashable, Sequence
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 import numpy as np
 import torch
@@ -125,7 +125,6 @@ class AccuracyCalculator:
         include: Sequence[str] = (),
         exclude: Sequence[str] = (),
         avg_of_avgs: bool = False,
-        return_per_class: bool = False,
         k: KValue = None,
         label_comparison_fn: LabelComparison | None = None,
         device: torch.device | str | None = None,
@@ -140,10 +139,7 @@ class AccuracyCalculator:
                 if x not in self.requires_clustering()
             ]
         self.metrics = tuple(x for x in include if x not in exclude)
-        if avg_of_avgs and return_per_class:
-            raise ValueError("avg_of_avgs and return_per_class are mutually exclusive")
         self.avg_of_avgs = avg_of_avgs
-        self.return_per_class = return_per_class
         self.device = None if device is None else torch.device(device)
         self.knn_func: KNNFunction = (
             CustomKNN(
@@ -276,24 +272,25 @@ class AccuracyCalculator:
         not_lone_query_mask: Tensor,
         unique_query_labels: Tensor,
         query_label_index: Tensor,
+        per_class: bool = False,
         **kwargs,
     ) -> MetricValue:
         values = per_query.to(torch.float64)[not_lone_query_mask]
-        if not (self.avg_of_avgs or self.return_per_class):
+        if not (self.avg_of_avgs or per_class):
             return values.mean().item() if len(values) else float("nan")
         classes = query_label_index[not_lone_query_mask]
         num_classes = len(unique_query_labels)
         sums = values.new_zeros(num_classes).index_add(0, classes, values)
         counts = torch.bincount(classes, minlength=num_classes)
-        per_class = torch.where(counts > 0, sums / counts.clamp_min(1), torch.nan)
-        if self.return_per_class:
+        class_means = torch.where(counts > 0, sums / counts.clamp_min(1), torch.nan)
+        if per_class:
             return {
                 class_key(label): value
                 for label, value in zip(
-                    unique_query_labels.cpu(), per_class.cpu().tolist(), strict=True
+                    unique_query_labels.cpu(), class_means.cpu().tolist(), strict=True
                 )
             }
-        present = per_class[counts > 0]
+        present = class_means[counts > 0]
         return present.mean().item() if len(present) else float("nan")
 
     def get_accuracy(
@@ -305,6 +302,63 @@ class AccuracyCalculator:
         ref_includes_query: bool = False,
         include: Sequence[str] = (),
         exclude: Sequence[str] = (),
+    ) -> dict[str, float]:
+        results = self.compute_metrics(
+            query,
+            query_labels,
+            reference,
+            reference_labels,
+            ref_includes_query,
+            self.selected_metrics(include, exclude),
+            per_class=False,
+        )
+        return cast(dict[str, float], results)
+
+    def get_accuracy_per_class(
+        self,
+        query: ArrayLike,
+        query_labels: ArrayLike,
+        reference: ArrayLike | None = None,
+        reference_labels: ArrayLike | None = None,
+        ref_includes_query: bool = False,
+        include: Sequence[str] = (),
+        exclude: Sequence[str] = (),
+    ) -> dict[str, dict[Hashable, float]]:
+        names = [
+            name
+            for name in self.selected_metrics(include, exclude)
+            if name in self.requires_knn()
+        ]
+        results = self.compute_metrics(
+            query,
+            query_labels,
+            reference,
+            reference_labels,
+            ref_includes_query,
+            names,
+            per_class=True,
+        )
+        return cast(dict[str, dict[Hashable, float]], results)
+
+    def selected_metrics(
+        self, include: Sequence[str], exclude: Sequence[str]
+    ) -> list[str]:
+        self.check_metric_names(include, exclude)
+        if not set(include) <= set(self.metrics):
+            raise ValueError(
+                f"include must name metrics selected at construction: {self.metrics}"
+            )
+        return [name for name in (include or self.metrics) if name not in exclude]
+
+    def compute_metrics(
+        self,
+        query: ArrayLike,
+        query_labels: ArrayLike,
+        reference: ArrayLike | None,
+        reference_labels: ArrayLike | None,
+        ref_includes_query: bool,
+        names: Sequence[str],
+        per_class: bool,
     ) -> dict[str, MetricValue]:
         if reference is None:
             reference = query
@@ -336,12 +390,6 @@ class AccuracyCalculator:
                 "reference and reference_labels must equal query and query_labels."
             )
 
-        self.check_metric_names(include, exclude)
-        if not set(include) <= set(self.metrics):
-            raise ValueError(
-                f"include must name metrics selected at construction: {self.metrics}"
-            )
-        names = [name for name in (include or self.metrics) if name not in exclude]
         functions = {name: self.metric_functions()[name] for name in names}
         kwargs: dict[str, Any] = {
             "query": query_t,
@@ -350,6 +398,7 @@ class AccuracyCalculator:
             "reference_labels": reference_labels_t,
             "ref_includes_query": ref_includes_query,
             "label_comparison_fn": self.label_comparison_fn,
+            "per_class": per_class,
         }
         if any(x in self.requires_knn() for x in names):
             kwargs.update(

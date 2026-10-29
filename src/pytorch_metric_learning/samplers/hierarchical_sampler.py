@@ -1,8 +1,11 @@
 import itertools
 from collections import defaultdict
+from collections.abc import Iterator, Sequence
 from typing import Literal
 
+import numpy as np
 import torch
+from torch import Tensor
 from torch.utils.data.sampler import Sampler
 
 from .sampling import choose, shuffled
@@ -11,7 +14,7 @@ from .sampling import choose, shuffled
 class HierarchicalSampler(Sampler[list[int]]):
     def __init__(
         self,
-        labels,
+        labels: Tensor | np.ndarray | Sequence[Sequence[int]],
         batch_size: int,
         samples_per_class: int | Literal["all"],
         batches_per_super_tuple: int = 4,
@@ -62,24 +65,24 @@ class HierarchicalSampler(Sampler[list[int]]):
             itertools.combinations(self.super_image_lists, super_classes_per_batch)
         )
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[list[int]]:
         yield from self.batches()
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.super_pairs) * self.batches_per_super_tuple
 
-    def batches(self):
+    def batches(self) -> list[list[int]]:
         batches = []
         for combination in self.super_pairs:
             for _ in range(self.batches_per_super_tuple):
-                batch = []
+                batch: list[int] = []
                 for super_label in combination:
                     batch.extend(self.sub_batch(self.super_image_lists[super_label]))
                 batches.append(shuffled(batch, self.generator))
         return shuffled(batches, self.generator)
 
-    def sub_batch(self, classes):
-        sub_batch = []
+    def sub_batch(self, classes: dict[int, Tensor]) -> list[int]:
+        sub_batch: list[int] = []
         for label in shuffled(list(classes), self.generator):
             if len(sub_batch) >= self.sub_batch_len:
                 break

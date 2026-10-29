@@ -2,7 +2,14 @@ import unittest
 
 import torch
 
-from pytorch_metric_learning.reducers import DivisorReducer
+from pytorch_metric_learning.losses import ProxyAnchorLoss
+from pytorch_metric_learning.reducers import (
+    AvgNonZeroReducer,
+    DivisorReducer,
+    MeanReducer,
+    MultipleReducers,
+    SumReducer,
+)
 
 from .. import TEST_DEVICE, TEST_DTYPES
 
@@ -63,3 +70,22 @@ class TestDivisorReducer(unittest.TestCase):
             output = reducer(loss_dict, embeddings, labels)
             correct_output = losses[0]
             torch.testing.assert_close(output, correct_output.to(output.dtype))
+
+
+class TestReducerTermContracts(unittest.TestCase):
+    def test_divisors_require_divisor_reducer(self):
+        embeddings = torch.randn(4, 2, device=TEST_DEVICE)
+        labels = torch.tensor([0, 1, 0, 1], device=TEST_DEVICE)
+        for reducer in (MeanReducer(), SumReducer(), AvgNonZeroReducer()):
+            loss = ProxyAnchorLoss(2, 2, reducer=reducer).to(TEST_DEVICE)
+            with self.assertRaisesRegex(ValueError, "DivisorReducer"):
+                loss(embeddings, labels)
+
+    def test_empty_loss_dict_reduces_to_connected_zero(self):
+        embeddings = torch.randn(3, 2, device=TEST_DEVICE, requires_grad=True)
+        for reducer in (MeanReducer(), DivisorReducer(), MultipleReducers({})):
+            output = reducer({}, embeddings, None)
+            output.backward()
+            self.assertEqual(output.item(), 0)
+            self.assertIsNotNone(embeddings.grad)
+            embeddings.grad = None

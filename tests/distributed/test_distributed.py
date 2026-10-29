@@ -154,9 +154,10 @@ class ProxyModel(torch.nn.Module):
     def __init__(self) -> None:
         super().__init__()
         self.encoder = torch.nn.Linear(2, 2, bias=False)
-        self.objective = DistributedLossWrapper(
-            NormalizedSoftmaxLoss(num_classes=2, embedding_size=2, temperature=0.5)
+        self.proxy_loss = NormalizedSoftmaxLoss(
+            num_classes=2, embedding_size=2, temperature=0.5
         )
+        self.objective = DistributedLossWrapper(self.proxy_loss)
 
     def forward(self, inputs: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
         return self.objective(self.encoder(inputs), labels)
@@ -170,7 +171,7 @@ def check_trainable_loss(rank: int, device: torch.device, dtype: torch.dtype) ->
     )
     inputs, labels = make_inputs(device, dtype)
     encoder = model.encoder.weight.detach().clone().requires_grad_()
-    proxies = model.objective.loss.weight.detach().clone().requires_grad_()
+    proxies = model.proxy_loss.weight.detach().clone().requires_grad_()
     embedded = F.normalize(F.linear(inputs, encoder), dim=1)
     logits = embedded @ F.normalize(proxies, dim=1).t() / 0.5
     expected = -F.log_softmax(logits, dim=1)[
@@ -182,7 +183,7 @@ def check_trainable_loss(rank: int, device: torch.device, dtype: torch.dtype) ->
     actual.backward()
     assert_close(actual, expected)
     assert_close(observed_gradient(model.encoder.weight), encoder_gradient)
-    assert_close(observed_gradient(model.objective.loss.weight), proxy_gradient)
+    assert_close(observed_gradient(model.proxy_loss.weight), proxy_gradient)
 
 
 def check_memory(rank: int, device: torch.device, dtype: torch.dtype) -> None:
@@ -192,11 +193,9 @@ def check_memory(rank: int, device: torch.device, dtype: torch.dtype) -> None:
         reference = CrossBatchMemory(
             make_pair_loss(), embedding_size=2, memory_size=7
         ).to(TEST_DEVICE, dtype)
-        wrapped = DistributedLossWrapper(
-            CrossBatchMemory(make_pair_loss(), embedding_size=2, memory_size=7).to(
-                TEST_DEVICE, dtype
-            )
-        )
+        memory = CrossBatchMemory(make_pair_loss(), embedding_size=2, memory_size=7)
+        memory = memory.to(TEST_DEVICE, dtype)
+        wrapped = DistributedLossWrapper(memory)
         for step in range(4):
             query = (inputs + step * 0.2).requires_grad_()
             expected = reference(query, labels, enqueue_mask=mask)
@@ -207,10 +206,10 @@ def check_memory(rank: int, device: torch.device, dtype: torch.dtype) -> None:
             actual.backward()
             assert_close(actual, expected)
             assert_close(observed_gradient(local) / 2, expected_gradient[selected])
-            assert_close(wrapped.loss.embedding_memory, reference.embedding_memory)
-            assert_close(wrapped.loss.label_memory, reference.label_memory)
-            assert wrapped.loss.queue_idx == reference.queue_idx
-            assert wrapped.loss.has_been_filled == reference.has_been_filled
+            assert_close(memory.embedding_memory, reference.embedding_memory)
+            assert_close(memory.label_memory, reference.label_memory)
+            assert memory.queue_idx == reference.queue_idx
+            assert memory.has_been_filled == reference.has_been_filled
 
 
 def check_local_anchor_case(

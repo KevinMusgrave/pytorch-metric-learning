@@ -5,7 +5,11 @@ from typing import Any
 import torch
 
 from pytorch_metric_learning.distances import LpDistance
-from pytorch_metric_learning.losses import ContrastiveLoss, CrossBatchMemory
+from pytorch_metric_learning.losses import (
+    ContrastiveLoss,
+    CrossBatchMemory,
+    LiftedStructureLoss,
+)
 from pytorch_metric_learning.types import PairIndices, TripletIndices
 from pytorch_metric_learning.utils import indexing
 
@@ -267,3 +271,60 @@ class TestCrossBatchMemoryState(unittest.TestCase):
             actual = indexing.remove_self_comparisons(values, empty)
             for observed, wanted in zip(actual, values, strict=True):
                 torch.testing.assert_close(observed, wanted)
+
+
+class TestCrossBatchMemoryFailedCalls(unittest.TestCase):
+    def assert_unchanged(self, memory: CrossBatchMemory, before: tuple) -> None:
+        embeddings, labels, queue_idx, filled = before
+        torch.testing.assert_close(memory.embedding_memory, embeddings)
+        torch.testing.assert_close(memory.label_memory, labels)
+        self.assertEqual(memory.queue_idx, queue_idx)
+        self.assertEqual(memory.has_been_filled, filled)
+
+    def snapshot(self, memory: CrossBatchMemory) -> tuple:
+        return (
+            memory.embedding_memory.clone(),
+            memory.label_memory.clone(),
+            memory.queue_idx,
+            memory.has_been_filled,
+        )
+
+    def test_lossy_label_conversion_is_rejected_before_mutation(self) -> None:
+        memory = CrossBatchMemory(
+            ContrastiveLoss(), 2, memory_size=4, label_dtype=torch.int32
+        ).to(TEST_DEVICE)
+        before = self.snapshot(memory)
+        labels = torch.tensor([0, 2**32], device=TEST_DEVICE)
+        with self.assertRaisesRegex(ValueError, "label_dtype"):
+            memory(torch.randn(2, 2, device=TEST_DEVICE), labels)
+        self.assert_unchanged(memory, before)
+        memory(
+            torch.randn(2, 2, device=TEST_DEVICE),
+            torch.tensor([0, 2**31 - 1], device=TEST_DEVICE),
+        )
+        self.assertEqual(memory.label_memory.dtype, torch.int32)
+
+    def test_invalid_inputs_leave_queue_unchanged(self) -> None:
+        memory = CrossBatchMemory(ContrastiveLoss(), 2, memory_size=4).to(TEST_DEVICE)
+        memory(
+            torch.randn(1, 2, device=TEST_DEVICE),
+            torch.tensor([0], device=TEST_DEVICE),
+        )
+        before = self.snapshot(memory)
+        with self.assertRaises(ValueError):
+            memory(
+                torch.randn(2, 2, device=TEST_DEVICE),
+                torch.tensor([0], device=TEST_DEVICE),
+            )
+        self.assert_unchanged(memory, before)
+
+    def test_wrapped_loss_errors_leave_queue_unchanged(self) -> None:
+        memory = CrossBatchMemory(LiftedStructureLoss(), 2, memory_size=4)
+        memory = memory.to(TEST_DEVICE)
+        before = self.snapshot(memory)
+        with self.assertRaisesRegex(ValueError, "ref_emb"):
+            memory(
+                torch.randn(2, 2, device=TEST_DEVICE),
+                torch.tensor([0, 1], device=TEST_DEVICE),
+            )
+        self.assert_unchanged(memory, before)

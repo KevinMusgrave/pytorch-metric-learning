@@ -136,11 +136,11 @@ that accumulation dtype, so a float64 divisor such as `1e-50` keeps its value.
 
 These components emit divisor terms and use `DivisorReducer` by default:
 
-| Component                                                            | Terms with a divisor                                                       |
-| -------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| [MarginLoss](losses/margin_loss.md#marginloss)                       | `margin_loss`; `beta_reg_loss` with `learn_beta=True` and per-class `beta` |
-| [ProxyAnchorLoss](losses/proxy_anchor_loss.md#proxyanchorloss)       | `pos_loss`, `neg_loss`                                                     |
-| [SparseCentersRegularizer](regularizers.md#sparsecentersregularizer) | `loss`                                                                     |
+| Component                                                            | Terms with a divisor                                                |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| [MarginLoss](losses/margin_loss.md#marginloss)                       | `loss`; `beta_reg_loss` with `learn_beta=True` and per-class `beta` |
+| [ProxyAnchorLoss](losses/proxy_anchor_loss.md#proxyanchorloss)       | `pos_loss`, `neg_loss`                                              |
+| [SparseCentersRegularizer](regularizers.md#sparsecentersregularizer) | `loss`                                                              |
 
 Any other reducer raises `ValueError` for these terms. To combine a divisor
 term with a different reduction of other terms, route each divisor term to

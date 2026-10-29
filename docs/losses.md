@@ -151,8 +151,13 @@ list. Every other loss raises `ValueError` when `ref_emb` is supplied.
 
 ## Loss options
 
-Every loss signature ends with `**options`. The accepted options are declared
-by `pytorch_metric_learning.types.LossOptions` and are the same for every loss:
+Most loss signatures end with `**options`, declared by
+`pytorch_metric_learning.types.LossOptions`. Losses that return one
+already-reduced value (DynamicSoftMarginLoss, HistogramLoss, ManifoldLoss,
+P2SGradLoss, PNPLoss, ThresholdConsistentMarginLoss) list `distance` (except
+P2SGradLoss), `embedding_regularizer`, and `embedding_reg_weight` explicitly and
+take no `reducer`. Wrappers (CrossBatchMemory, MultipleLosses,
+SelfSupervisedLoss) take the losses they wrap instead. The options are:
 
 - **distance**: A [distance](distances.md) module. `None` selects the loss's
   default distance. A loss that supports only some distances raises `TypeError`

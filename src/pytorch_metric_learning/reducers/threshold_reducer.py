@@ -1,6 +1,7 @@
 import torch
 from torch import Tensor
 
+from ..utils._common import LOW_PRECISION
 from .base_reducer import BaseReducer
 
 
@@ -25,4 +26,6 @@ class ThresholdReducer(BaseReducer):
         if self.high is not None:
             keep &= losses < self.high
         kept = torch.where(keep, losses, torch.zeros_like(losses))
-        return kept.sum() / keep.sum().clamp_min(1)
+        dtype = torch.float32 if losses.dtype in LOW_PRECISION else losses.dtype
+        total = kept.sum(dtype=dtype) / keep.sum().clamp_min(1)
+        return total.to(losses.dtype)

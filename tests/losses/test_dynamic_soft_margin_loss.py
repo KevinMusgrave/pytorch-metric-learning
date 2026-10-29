@@ -173,7 +173,7 @@ class TestDynamicSoftMarginLoss(unittest.TestCase):
                     actual = torch.stack(actual_losses).sum()
                     expected_gradients = torch.autograd.grad(expected, variables)
                     gradients = torch.autograd.grad(actual, variables)
-                    torch.testing.assert_close(actual, expected)
+                    assert_numeric_close(actual, expected)
                     for observed, wanted in zip(
                         gradients, expected_gradients, strict=True
                     ):

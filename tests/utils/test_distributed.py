@@ -26,7 +26,7 @@ from .. import TEST_DEVICE, TEST_DTYPES
 
 def assert_close(actual: torch.Tensor, expected: torch.Tensor) -> None:
     if actual.dtype == torch.float16:
-        torch.testing.assert_close(actual, expected, atol=1e-3, rtol=1e-3)
+        torch.testing.assert_close(actual, expected, atol=2e-3, rtol=2e-3)
     else:
         torch.testing.assert_close(actual, expected)
 

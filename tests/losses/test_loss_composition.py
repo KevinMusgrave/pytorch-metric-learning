@@ -101,7 +101,7 @@ class TestLossComposition(unittest.TestCase):
             with self.subTest(wrapper=wrapper):
                 with self.assertRaises(TypeError):
                     wrapper(foreign, **kwargs)
-                wrapped = wrapper(losses.ProxyNCALoss(3, 3), **kwargs)
+                wrapped = wrapper(losses.ProxyNCALoss(3, 3), **kwargs).to(TEST_DEVICE)
                 with self.assertRaisesRegex(ValueError, "ref_emb"):
                     wrapped(*args)
 

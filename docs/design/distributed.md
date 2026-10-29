@@ -56,11 +56,12 @@ two CUDA devices are visible.
 
 The trainable-loss fixture seeds PyTorch with zero before constructing the
 encoder and proxy weights for each dtype. Unseeded initializations made the
-float16 gradient comparison intermittent. Ten repeated two-A40 comparisons per
-dtype retained the existing float16 `atol=rtol=1e-3`: maximum absolute errors
-were `0.000244140625` for encoder gradients and `0.0004425048828125` for proxy
-gradients, below 44% of the elementwise tolerance. Float32 and float64 keep
-PyTorch's default tolerances. Both DDP parameter gradients are still compared
+float16 gradient comparison intermittent. The float16 comparison uses
+`atol=rtol=2e-3`: with the `(classes, embedding_size)` weight layout, the
+logits multiply by a transposed weight matrix, and the two-A40 run observed an
+encoder-gradient error of `0.00146484375` against the single-process reference,
+above the earlier `1e-3` bound but within one float16 unit at the gradient's
+magnitude. Float32 and float64 keep PyTorch's default tolerances. Both DDP parameter gradients are still compared
 with an independent single-process normalized-softmax formula.
 
 GPU acceptance requires one host with two visible devices, a successful

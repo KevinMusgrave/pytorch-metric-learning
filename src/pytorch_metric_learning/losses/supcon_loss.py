@@ -29,9 +29,8 @@ class SupConLoss(GenericPairLoss):
             mat, keep_mask=pos_mask | neg_mask, add_one=False, dim=1
         )
         log_prob = mat - denominator
-        mean_log_prob_pos = (pos_mask * log_prob).sum(dim=1) / (
-            pos_mask.sum(dim=1) + _common.small_val(mat.dtype)
-        )
+        positives = pos_mask.sum(dim=1).clamp_min(1)
+        mean_log_prob_pos = (pos_mask * log_prob).sum(dim=1) / positives
         return {
             "loss": {
                 "losses": -mean_log_prob_pos,

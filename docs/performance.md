@@ -207,29 +207,74 @@ forward/backward takes 27.607 seconds using fresh `TORCHINDUCTOR_CACHE_DIR` and
 measurement. Compilation helps steady-state execution for this workload; its
 startup cost and workload dependence still require measurement before adoption.
 
+## Version 3.0.0 CUDA and NCCL acceptance
+
+Measured on 2026-10-29 UTC at clean revision
+`07bd988f3f26089c2f15428ebefbba52b8e41858`: Linux x86_64, Intel Xeon Gold 6342,
+two NVIDIA A40 GPUs (46,068 MiB each), NVIDIA driver 595.91.07, Python 3.12.13,
+PyTorch 2.14.0+cu130, CUDA 13.0, and NCCL 2.30.7, with the same float32
+workloads, seed, shapes, one CPU thread per rank, ten warmup steps, and fifty
+measured steps as the earlier CUDA reference. This rented host also required
+`NCCL_P2P_DISABLE=1`: the bare two-rank probe hung with direct peer-to-peer
+transport. Timings are median milliseconds; memory is peak additional allocated
+tensor memory in MiB.
+
+| Case                     | Batch | Forward | Backward | Peak MiB |
+| ------------------------ | ----: | ------: | -------: | -------: |
+| Contrastive              |   128 |   2.323 |    3.186 |    1.299 |
+| Contrastive              |   512 |   1.514 |    2.267 |   19.478 |
+| All-triplet margin       |   128 |   3.532 |    3.548 |    3.903 |
+| All-triplet margin       |   512 |   1.997 |    2.462 |   63.238 |
+| Pair-margin miner        |   128 |   0.890 |        — |    0.484 |
+| Pair-margin miner        |   512 |   1.048 |        — |    7.714 |
+| Normalized-softmax proxy |   128 |   1.424 |    2.787 |    0.331 |
+| Normalized-softmax proxy |   512 |   1.487 |    3.103 |    1.318 |
+
+Raw results: [batch 128](benchmarks/cuda-a40-v3-b128.json) and
+[batch 512](benchmarks/cuda-a40-v3-b512.json). These workloads are launch-bound
+at both batch sizes, so run-to-run spread on a shared host dominates the
+differences from the earlier reference; the median absolute deviations in the
+raw files are the right comparison unit. Peak memory is unchanged within
+rounding for every case, which confirms that the sync-free reductions and the
+`(classes, embedding_size)` weight layout add no intermediate storage.
+
+| Rows per rank | Global batch | Forward | Backward | Peak MiB per rank |
+| ------------: | -----------: | ------: | -------: | ----------------: |
+|            64 |          128 |   5.863 |    5.577 |             1.361 |
+|           256 |          512 |   4.744 |    5.315 |            19.728 |
+
+Raw results: [64 rows per rank](benchmarks/nccl-a40-v3-b64.json) and
+[256 rows per rank](benchmarks/nccl-a40-v3-b256.json). The
+[full-graph compiled proxy](benchmarks/compiled-proxy-a40-v3-b128.json) at
+batch 128 takes 0.264 ms forward and 0.297 ms backward with 0.174 MiB peak
+memory, versus 1.424 ms, 2.787 ms, and 0.331 MiB eager; its first step took
+9.705 seconds with a cold compiler cache.
+
 ## Sampling and half-precision distances
 
 The vectorized random triplet sampling and the float32 `cdist` path for
 low-precision `LpDistance` were compared with the preceding branch revision
-`83a9355` on the Apple M1 Pro described above, with one CPU thread, 128
-dimensions, four examples per class, three warmup calls, and twenty measured
-calls. Values are median milliseconds for one call.
+`83a9355` on both hosts above, with one CPU thread, 128 dimensions, four
+examples per class, three warmup calls, and twenty measured calls. Values are
+median milliseconds for one call; the CUDA column synchronizes after each call.
 
-| Case                                                 | Batch | Before | After |
-| ---------------------------------------------------- | ----: | -----: | ----: |
-| `get_random_triplet_indices(t_per_anchor=100)`       |   128 |  1.267 | 0.571 |
-| `get_random_triplet_indices(t_per_anchor=100)`       |   512 |  5.242 | 3.356 |
-| `DistanceWeightedMiner` (normalized, 128 dimensions) |   512 | 54.919 | 3.592 |
-| `LpDistance` matrix, bfloat16 inputs                 |   512 | 47.047 | 0.303 |
+| Case                                                 | Batch | M1 Pro before | M1 Pro after | A40 before | A40 after |
+| ---------------------------------------------------- | ----: | ------------: | -----------: | ---------: | --------: |
+| `get_random_triplet_indices(t_per_anchor=100)`       |   128 |         1.267 |        0.571 |     11.310 |     0.532 |
+| `get_random_triplet_indices(t_per_anchor=100)`       |   512 |         5.242 |        3.356 |     44.957 |     0.551 |
+| `DistanceWeightedMiner` (normalized, 128 dimensions) |   512 |        54.919 |        3.592 |     66.761 |     1.052 |
+| `LpDistance` matrix, half-precision inputs           |   512 |        47.047 |        0.303 |      1.266 |     0.202 |
 
-The previous sampler looped over labels with host random draws; the previous
-low-precision distance gathered every row pair, allocating memory proportional
-to queries times references times dimensions. Both paths now stay on the
-tensor's device with one host synchronization for the sampled count. Sampled
-triplets follow the same distributions as before, but seeded sequences differ.
-Reproduce the comparison with the public functions above and
-`time.perf_counter`; CUDA timings for these paths are recorded with the release
-acceptance run.
+The CPU rows use bfloat16 and the A40 rows use float16 for the distance case.
+On the A40, the old half-precision distance allocated 261.1 MiB of peak
+additional memory for the 512-by-512 matrix; the new path allocates 2.1 MiB.
+The previous sampler looped over labels with host random draws, which is why
+its CUDA cost grew with the number of classes; the previous low-precision
+distance gathered every row pair, allocating memory proportional to queries
+times references times dimensions. Both paths now stay on the tensor's device
+with one host synchronization for the sampled count. Sampled triplets follow
+the same distributions as before, but seeded sequences differ. Reproduce the
+comparison with the public functions above and `time.perf_counter`.
 
 ## Large batches and tuple memory
 

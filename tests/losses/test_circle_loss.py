@@ -48,8 +48,10 @@ class TestCircleLoss(unittest.TestCase):
                 (4, 3),
             ]
 
-            normalized_embeddings = torch.nn.functional.normalize(embeddings)
-            correct_total = torch.zeros((), dtype=dtype, device=TEST_DEVICE)
+            normalized_embeddings = torch.nn.functional.normalize(
+                embeddings.detach().double()
+            )
+            correct_total = torch.zeros((), dtype=torch.float64, device=TEST_DEVICE)
             for i in range(len(normalized_embeddings)):
                 pos_logits = []
                 neg_logits = []
@@ -93,7 +95,7 @@ class TestCircleLoss(unittest.TestCase):
 
             num_anchors_with_pos_and_neg_pairs = 4
             correct_total /= num_anchors_with_pos_and_neg_pairs
-            self.assertTrue(torch.isclose(loss, correct_total))
+            helpers.assert_close(loss, correct_total, dtype, atol=1e-8)
 
     def test_with_no_valid_pairs(self):
         margin, gamma = 0.4, 80

@@ -43,24 +43,25 @@ class TestLargeMarginSoftmaxLoss(unittest.TestCase):
             lossA = loss_funcA(embeddings, labels)
             lossB = loss_funcB(embeddings, labels)
 
-            weightsA = loss_funcA.weight.t()
-            weightsB = torch.nn.functional.normalize(loss_funcB.weight, dim=1).t()
+            exact = embeddings.detach().double()
+            weightsA = loss_funcA.weight.detach().double().t()
+            weightsB = F.normalize(loss_funcB.weight.detach().double(), dim=1).t()
 
             product_of_magnitudesA = torch.norm(weightsA, p=2, dim=0).unsqueeze(
                 0
-            ) * torch.norm(embeddings, p=2, dim=1).unsqueeze(1)
+            ) * torch.norm(exact, p=2, dim=1).unsqueeze(1)
             product_of_magnitudesB = torch.norm(weightsB, p=2, dim=0).unsqueeze(
                 0
-            ) * torch.norm(embeddings, p=2, dim=1).unsqueeze(1)
-            cosinesA = torch.matmul(embeddings, weightsA) / (product_of_magnitudesA)
-            cosinesB = torch.matmul(embeddings, weightsB) / (product_of_magnitudesB)
+            ) * torch.norm(exact, p=2, dim=1).unsqueeze(1)
+            cosinesA = torch.matmul(exact, weightsA) / (product_of_magnitudesA)
+            cosinesB = torch.matmul(exact, weightsB) / (product_of_magnitudesB)
             coefficients = [math.comb(margin, 2 * n) for n in range((margin // 2) + 1)]
 
             for i, j in enumerate(labels):
                 curr_cosineA = cosinesA[i, j]
                 curr_cosineB = cosinesB[i, j]
-                cos_with_marginA = torch.zeros(len(coefficients))
-                cos_with_marginB = torch.zeros(len(coefficients))
+                cos_with_marginA = torch.zeros(len(coefficients), dtype=torch.float64)
+                cos_with_marginB = torch.zeros(len(coefficients), dtype=torch.float64)
                 for z, c in enumerate(coefficients):
                     curr_valA = (
                         c
@@ -93,27 +94,21 @@ class TestLargeMarginSoftmaxLoss(unittest.TestCase):
             correct_lossA = torch.nn.functional.cross_entropy(cosinesA * scale, labels)
             correct_lossB = torch.nn.functional.cross_entropy(cosinesB * scale, labels)
 
-            rtol = helpers.rtol(dtype)
-            self.assertTrue(torch.isclose(lossA, correct_lossA, rtol=rtol))
-            self.assertTrue(torch.isclose(lossB, correct_lossB, rtol=rtol))
+            helpers.assert_close(lossA, correct_lossA, dtype, atol=1e-8)
+            helpers.assert_close(lossB, correct_lossB, dtype, atol=1e-8)
 
-            if dtype != torch.float16:
-                logits_outA = loss_funcA.get_logits(embeddings)
-                logits_outB = loss_funcB.get_logits(embeddings)
-                self.assertTrue(
-                    torch.allclose(
-                        logits_outA,
-                        torch.matmul(embeddings, weightsA) * scale,
-                        rtol=1e-2,
-                    )
-                )
-                self.assertTrue(
-                    torch.allclose(
-                        logits_outB,
-                        torch.matmul(embeddings, weightsB) * scale,
-                        rtol=1e-2,
-                    )
-                )
+            logits_outA = loss_funcA.get_logits(embeddings)
+            logits_outB = loss_funcB.get_logits(embeddings)
+            helpers.assert_close(
+                logits_outA / (scale * product_of_magnitudesA),
+                exact @ weightsA / product_of_magnitudesA,
+                dtype,
+            )
+            helpers.assert_close(
+                logits_outB / (scale * product_of_magnitudesB),
+                exact @ weightsB / product_of_magnitudesB,
+                dtype,
+            )
 
     def test_backward(self):
         generator = torch.Generator().manual_seed(5)

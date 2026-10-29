@@ -29,29 +29,19 @@ class TestArcFaceLoss(unittest.TestCase):
             loss = loss_func(embeddings, labels)
             loss.backward()
 
-            weights = F.normalize(loss_func.weight, p=2, dim=1).t()
-            logits = torch.matmul(F.normalize(embeddings), weights)
+            weights = F.normalize(loss_func.weight.detach().double(), p=2, dim=1).t()
+            cosines = torch.matmul(F.normalize(embeddings.detach().double()), weights)
+            logits = cosines.clone()
 
             for i, c in enumerate(labels):
                 acos = torch.acos(torch.clamp(logits[i, c], -1, 1))
                 if acos <= (np.pi - margin):
-                    logits[i, c] = torch.cos(
-                        acos + torch.tensor(margin, dtype=dtype).to(TEST_DEVICE)
-                    )
+                    logits[i, c] = torch.cos(acos + margin)
                 else:
-                    mg = margin
-                    logits[i, c] -= torch.tensor(mg * np.sin(mg), dtype=dtype).to(
-                        TEST_DEVICE
-                    )
+                    logits[i, c] -= margin * np.sin(margin)
 
-            correct_loss = F.cross_entropy(logits * scale, labels.to(TEST_DEVICE))
-
-            rtol = helpers.rtol(dtype)
-            self.assertTrue(torch.isclose(loss, correct_loss, rtol=rtol))
+            correct_loss = F.cross_entropy(logits * scale, labels)
+            helpers.assert_close(loss, correct_loss, dtype, atol=1e-8)
 
             logits_out = loss_func.get_logits(embeddings)
-            self.assertTrue(
-                torch.allclose(
-                    logits_out, torch.matmul(F.normalize(embeddings), weights) * scale
-                )
-            )
+            helpers.assert_close(logits_out / scale, cosines, dtype)

@@ -95,13 +95,16 @@ class TestNTXentLoss(unittest.TestCase):
             for x in [loss_funcA, loss_funcB, loss_funcC, loss_funcD, loss_funcE]
         ]
 
+        embeddings = torch.nn.functional.normalize(embeddings.detach().double())
+        if ref_emb is not None:
+            ref_emb = torch.nn.functional.normalize(ref_emb.detach().double())
         loss_len = 4 if ref_emb is not None else 5
         total_lossA, total_lossB, total_lossC, total_lossD, total_lossE = (
-            torch.zeros((), device=TEST_DEVICE, dtype=dtype),
-            torch.zeros((), device=TEST_DEVICE, dtype=dtype),
-            torch.zeros(loss_len, device=TEST_DEVICE, dtype=dtype),
-            torch.zeros(loss_len, device=TEST_DEVICE, dtype=dtype),
-            torch.zeros(loss_len, device=TEST_DEVICE, dtype=dtype),
+            torch.zeros((), device=TEST_DEVICE, dtype=torch.float64),
+            torch.zeros((), device=TEST_DEVICE, dtype=torch.float64),
+            torch.zeros(loss_len, device=TEST_DEVICE, dtype=torch.float64),
+            torch.zeros(loss_len, device=TEST_DEVICE, dtype=torch.float64),
+            torch.zeros(loss_len, device=TEST_DEVICE, dtype=torch.float64),
         )
         for a1, p in pos_pairs:
             anchor = embeddings[a1]
@@ -147,18 +150,15 @@ class TestNTXentLoss(unittest.TestCase):
             pos_pair_per_anchor = torch.tensor([1, 1, 1, 1])
         else:
             pos_pair_per_anchor = torch.tensor([2, 2, 2, 1, 1])
-        pos_pair_per_anchor = pos_pair_per_anchor.to(TEST_DEVICE).type(dtype)
+        pos_pair_per_anchor = pos_pair_per_anchor.to(TEST_DEVICE, torch.float64)
         total_lossC, total_lossD, total_lossE = [
             torch.mean(x / pos_pair_per_anchor)
             for x in [total_lossC, total_lossD, total_lossE]
         ]
 
-        rtol = helpers.rtol(dtype)
-        self.assertTrue(torch.isclose(obtained_losses[0], total_lossA, rtol=rtol))
-        self.assertTrue(torch.isclose(obtained_losses[1], total_lossB, rtol=rtol))
-        self.assertTrue(torch.isclose(obtained_losses[2], total_lossC, rtol=rtol))
-        self.assertTrue(torch.isclose(obtained_losses[3], total_lossD, rtol=rtol))
-        self.assertTrue(torch.isclose(obtained_losses[4], total_lossE, rtol=rtol))
+        expected = [total_lossA, total_lossB, total_lossC, total_lossD, total_lossE]
+        for obtained, correct in zip(obtained_losses, expected, strict=True):
+            helpers.assert_close(obtained, correct, dtype, atol=1e-8)
 
     def test_with_no_valid_pairs(self):
         all_embedding_angles = [[0], [0, 10, 20], [0, 40, 60]]

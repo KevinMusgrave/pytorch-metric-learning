@@ -17,64 +17,61 @@ def positive_and_negative_pairs(labels):
     return positive_pairs, negative_pairs
 
 
-def hardest_negative_similarity(mat, negative_pairs, anchor, dtype, is_inverted):
-    hardest = c_f.neg_inf(dtype) if is_inverted else c_f.pos_inf(dtype)
+def hardest_negative_similarity(mat, negative_pairs, anchor, is_inverted):
+    hardest = c_f.neg_inf(mat.dtype) if is_inverted else c_f.pos_inf(mat.dtype)
     for a, n in negative_pairs:
         if a != anchor:
             continue
-        an_sim = mat[a, n]
+        an_sim = mat[a, n].item()
         if (an_sim > hardest) if is_inverted else (an_sim < hardest):
             hardest = an_sim
     return hardest
 
 
-def hardest_positive_similarity(mat, positive_pairs, anchor, dtype, is_inverted):
-    hardest = c_f.pos_inf(dtype) if is_inverted else c_f.neg_inf(dtype)
+def hardest_positive_similarity(mat, positive_pairs, anchor, is_inverted):
+    hardest = c_f.pos_inf(mat.dtype) if is_inverted else c_f.neg_inf(mat.dtype)
     for a, p in positive_pairs:
         if a != anchor:
             continue
-        ap_sim = mat[a, p]
+        ap_sim = mat[a, p].item()
         if (ap_sim < hardest) if is_inverted else (ap_sim > hardest):
             hardest = ap_sim
     return hardest
 
 
-def expected_positive_pairs(mat, pairs, epsilon, dtype, is_inverted):
+def positive_pair_margins(mat, pairs, epsilon, is_inverted):
     positive_pairs, negative_pairs = pairs
-    expected = set()
+    margins = {}
     for a, p in positive_pairs:
-        hardest = hardest_negative_similarity(
-            mat, negative_pairs, a, dtype, is_inverted
+        hardest = hardest_negative_similarity(mat, negative_pairs, a, is_inverted)
+        ap_sim = mat[a, p].item()
+        margins[(a, p)] = (
+            hardest + epsilon - ap_sim if is_inverted else ap_sim - hardest + epsilon
         )
-        ap_sim = mat[a, p]
-        if (
-            (ap_sim < hardest + epsilon)
-            if is_inverted
-            else (ap_sim > hardest - epsilon)
-        ):
-            expected.add((a, p))
-    return expected
+    return margins
 
 
-def expected_negative_pairs(mat, pairs, epsilon, dtype, is_inverted):
+def negative_pair_margins(mat, pairs, epsilon, is_inverted):
     positive_pairs, negative_pairs = pairs
-    expected = set()
+    margins = {}
     for a, n in negative_pairs:
-        hardest = hardest_positive_similarity(
-            mat, positive_pairs, a, dtype, is_inverted
+        hardest = hardest_positive_similarity(mat, positive_pairs, a, is_inverted)
+        an_sim = mat[a, n].item()
+        margins[(a, n)] = (
+            an_sim - hardest + epsilon if is_inverted else hardest + epsilon - an_sim
         )
-        an_sim = mat[a, n]
-        if (
-            (an_sim > hardest - epsilon)
-            if is_inverted
-            else (an_sim < hardest + epsilon)
-        ):
-            expected.add((a, n))
-    return expected
+    return margins
 
 
 def mined_pairs(anchors, others):
     return {(a.item(), o.item()) for a, o in zip(anchors, others, strict=True)}
+
+
+def assert_mined_by_margin(mined, margins, dtype):
+    tolerance = 4 * torch.finfo(dtype).eps
+    decided = {pair for pair, margin in margins.items() if abs(margin) > tolerance}
+    assert mined <= margins.keys()
+    assert mined & decided == {pair for pair in decided if margins[pair] > 0}
 
 
 class TestMultiSimilarityMiner(unittest.TestCase):
@@ -86,18 +83,20 @@ class TestMultiSimilarityMiner(unittest.TestCase):
                 miner = MultiSimilarityMiner(epsilon, distance=distance)
                 embeddings = helpers.planar_embeddings(range(64), dtype)
                 labels = torch.randint(low=0, high=10, size=(64,)).to(TEST_DEVICE)
-                mat = distance(embeddings)
+                mat = distance(embeddings.detach().double())
                 pairs = positive_and_negative_pairs(labels)
-                correct_pos_pairs = expected_positive_pairs(
-                    mat, pairs, epsilon, dtype, distance.is_inverted
-                )
-                correct_neg_pairs = expected_negative_pairs(
-                    mat, pairs, epsilon, dtype, distance.is_inverted
-                )
 
                 a1, p1, a2, n2 = miner(embeddings, labels)
-                self.assertTrue(mined_pairs(a1, p1) == correct_pos_pairs)
-                self.assertTrue(mined_pairs(a2, n2) == correct_neg_pairs)
+                assert_mined_by_margin(
+                    mined_pairs(a1, p1),
+                    positive_pair_margins(mat, pairs, epsilon, distance.is_inverted),
+                    dtype,
+                )
+                assert_mined_by_margin(
+                    mined_pairs(a2, n2),
+                    negative_pair_margins(mat, pairs, epsilon, distance.is_inverted),
+                    dtype,
+                )
 
     def test_empty_output(self):
         miner = MultiSimilarityMiner(0.1)

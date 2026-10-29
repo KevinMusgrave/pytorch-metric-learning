@@ -39,21 +39,21 @@ class TestSubCenterArcFaceLoss(unittest.TestCase):
                 loss = loss_func(embeddings, labels)
                 loss.backward()
 
-                weights = F.normalize(loss_func.weight, p=2, dim=1).t()
-                logits = torch.matmul(F.normalize(embeddings), weights)
-                logits = logits.view(-1, num_classes, sub_centers)
-                logits, _ = logits.max(dim=2)
+                weights = F.normalize(
+                    loss_func.weight.detach().double(), p=2, dim=1
+                ).t()
+                cosines = torch.matmul(
+                    F.normalize(embeddings.detach().double()), weights
+                )
+                cosines, _ = cosines.view(-1, num_classes, sub_centers).max(dim=2)
+                logits = cosines.clone()
 
                 for i, c in enumerate(labels):
                     acos = torch.acos(torch.clamp(logits[i, c], -1, 1))
-                    logits[i, c] = torch.cos(
-                        acos + torch.tensor(margin, dtype=dtype).to(TEST_DEVICE)
-                    )
+                    logits[i, c] = torch.cos(acos + margin)
 
-                correct_loss = F.cross_entropy(logits * scale, labels.to(TEST_DEVICE))
-
-                rtol = helpers.rtol(dtype)
-                self.assertTrue(torch.isclose(loss, correct_loss, rtol=rtol))
+                correct_loss = F.cross_entropy(logits * scale, labels)
+                helpers.assert_close(loss, correct_loss, dtype, atol=1e-8)
 
                 if sub_centers == 1:
                     regular_arcface = ArcFaceLoss(
@@ -65,17 +65,16 @@ class TestSubCenterArcFaceLoss(unittest.TestCase):
                     regular_arcface.weight = loss_func.weight
                     regular_arcface_loss = regular_arcface(embeddings, labels)
                     self.assertTrue(
-                        torch.isclose(loss, regular_arcface_loss, rtol=rtol)
+                        torch.isclose(
+                            loss, regular_arcface_loss, rtol=helpers.rtol(dtype)
+                        )
                     )
 
                 logits_out = loss_func.get_logits(embeddings)
                 self.assertTrue(
                     logits_out.shape == torch.Size([batch_size, num_classes])
                 )
-                logits = torch.matmul(F.normalize(embeddings), weights)
-                logits = logits.view(-1, num_classes, sub_centers)
-                logits_target, _ = logits.max(dim=2)
-                self.assertTrue(torch.allclose(logits_out, logits_target * scale))
+                helpers.assert_close(logits_out / scale, cosines, dtype)
 
     def test_inference_subcenter_arcface(self):
         batch_size = 64

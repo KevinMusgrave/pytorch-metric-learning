@@ -81,20 +81,22 @@ class TestProxyAnchorLoss(unittest.TestCase):
         num_classes = 10
         embedding_size = 2
         margin = 0.5
+        alpha = 32
         cm = torch.amp.autocast("cuda") if use_autocast else nullcontext()
 
         for dtype in TEST_DTYPES:
-            alpha = 1 if dtype == torch.float16 else 32
             loss_func = ProxyAnchorLoss(
                 num_classes, embedding_size, margin=margin, alpha=alpha
             ).to(TEST_DEVICE)
             original_loss_func = OriginalImplementationProxyAnchor(
                 num_classes, embedding_size, mrg=margin, alpha=alpha
-            ).to(TEST_DEVICE)
+            ).to(TEST_DEVICE, torch.float64)
 
             if not use_autocast:
-                original_loss_func.to(dtype=dtype)
-            loss_func.weight = original_loss_func.proxies
+                loss_func.to(dtype=dtype)
+            with torch.no_grad():
+                loss_func.weight.copy_(original_loss_func.proxies)
+                original_loss_func.proxies.copy_(loss_func.weight)
 
             embedding_angles = list(range(180))
             embeddings = torch.tensor(
@@ -111,20 +113,18 @@ class TestProxyAnchorLoss(unittest.TestCase):
                 loss = loss_func(embeddings, labels)
 
             loss.backward()
-            correct_loss = original_loss_func(embeddings, labels)
-            rtol = 1e-2 if dtype == torch.float16 or use_autocast else 1e-5
-
-            self.assertTrue(torch.isclose(loss, correct_loss, rtol=rtol))
+            exact_embeddings = embeddings.detach().double()
+            correct_loss = original_loss_func(exact_embeddings, labels)
+            helpers.assert_close(
+                loss, correct_loss, torch.float16 if use_autocast else dtype, atol=1e-8
+            )
 
             logits_out = loss_func.get_logits(embeddings)
-            self.assertTrue(
-                torch.allclose(
-                    logits_out,
-                    torch.matmul(
-                        F.normalize(embeddings), F.normalize(loss_func.weight).t()
-                    ),
-                )
+            cosines = torch.matmul(
+                F.normalize(exact_embeddings),
+                F.normalize(original_loss_func.proxies).t(),
             )
+            helpers.assert_close(logits_out, cosines, logits_out.dtype)
 
 
 def weighted_proxy_anchor_reference(embeddings, labels, proxies, weights):

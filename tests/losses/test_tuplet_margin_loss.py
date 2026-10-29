@@ -45,10 +45,10 @@ class TestTupletMarginLoss(unittest.TestCase):
                 (4, 3),
             ]
 
-            correct_total = torch.zeros((), dtype=dtype, device=TEST_DEVICE)
-            embeddings = torch.nn.functional.normalize(embeddings)
+            correct_total = torch.zeros((), dtype=torch.float64, device=TEST_DEVICE)
+            embeddings = torch.nn.functional.normalize(embeddings.detach().double())
             for a1, p in pos_pairs:
-                curr_loss = torch.zeros((), dtype=dtype, device=TEST_DEVICE)
+                curr_loss = torch.zeros((), dtype=torch.float64, device=TEST_DEVICE)
                 anchor1, positive = embeddings[a1], embeddings[p]
                 ap_angle = torch.acos(torch.matmul(anchor1, positive))
                 ap_cos = torch.cos(ap_angle - np.radians(margin))
@@ -62,8 +62,7 @@ class TestTupletMarginLoss(unittest.TestCase):
                 correct_total += curr_total
 
             correct_total /= len(pos_pairs)
-            rtol = helpers.rtol(dtype)
-            self.assertTrue(torch.isclose(loss, correct_total, rtol=rtol))
+            helpers.assert_close(loss, correct_total, dtype, atol=1e-8)
 
     def test_with_no_valid_pairs(self):
         loss_func = TupletMarginLoss(0.1, 64)

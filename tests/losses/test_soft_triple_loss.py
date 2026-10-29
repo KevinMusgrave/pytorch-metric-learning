@@ -12,7 +12,7 @@ from pytorch_metric_learning.losses import SoftTripleLoss
 from pytorch_metric_learning.regularizers import SparseCentersRegularizer
 from pytorch_metric_learning.utils import _common as c_f
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 from ..helpers import angle_to_coord
 
 
@@ -59,10 +59,10 @@ class TestSoftTripleLoss(unittest.TestCase):
         num_classes = 11
         reg_weight = 0.2
         margin = 0.01
+        la = 20
+        gamma = 0.1
 
         for dtype in TEST_DTYPES:
-            la = 1 if dtype == torch.float16 else 20
-            gamma = 1 if dtype == torch.float16 else 0.1
             for centers_per_class in range(1, 12):
                 if centers_per_class > 1:
                     weight_regularizer = SparseCentersRegularizer(
@@ -88,12 +88,13 @@ class TestSoftTripleLoss(unittest.TestCase):
                     embedding_size,
                     num_classes,
                     centers_per_class,
-                ).to(TEST_DEVICE)
+                ).to(TEST_DEVICE, torch.float64)
 
-                original_loss_func.to(dtype=dtype)
                 loss_func.weight = torch.nn.Parameter(
-                    original_loss_func.fc.detach().t().contiguous()
+                    original_loss_func.fc.detach().t().to(dtype).contiguous()
                 )
+                with torch.no_grad():
+                    original_loss_func.fc.copy_(loss_func.weight.t())
 
                 embedding_angles = torch.arange(0, 180)
                 embeddings = torch.tensor(
@@ -105,8 +106,10 @@ class TestSoftTripleLoss(unittest.TestCase):
 
                 loss = loss_func(embeddings, labels)
                 loss.backward()
-                correct_loss = original_loss_func(F.normalize(embeddings), labels)
-                self.assertTrue(torch.isclose(loss, correct_loss))
+                correct_loss = original_loss_func(
+                    F.normalize(embeddings.detach().double()), labels
+                )
+                helpers.assert_close(loss, correct_loss, dtype, atol=1e-8)
 
     def test_distance_must_be_a_similarity(self):
         with self.assertRaises(TypeError):

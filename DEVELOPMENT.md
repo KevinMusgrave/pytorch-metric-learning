@@ -65,7 +65,7 @@ Each test starts with `torch.manual_seed(0)`. Skipped tests and expected
 failures fail the run, with a message explaining why; tests marked
 `@pytest.mark.cuda` are deselected, not skipped, on CPU runs.
 
-Tests default to CPU with float32 and float64:
+Tests default to CPU with float16, float32, and float64:
 
 ```sh
 .venv/bin/uv run --frozen --no-sync --env-file tests/cpu.env python -m pytest

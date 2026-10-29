@@ -30,19 +30,14 @@ class TestNormalizedSoftmaxLoss(unittest.TestCase):
             loss = loss_func(embeddings, labels)
             loss.backward()
 
-            weights = torch.nn.functional.normalize(loss_func.weight, p=2, dim=1).t()
-            logits = torch.matmul(embeddings, weights)
+            weights = torch.nn.functional.normalize(
+                loss_func.weight.detach().double(), p=2, dim=1
+            ).t()
+            similarities = torch.matmul(embeddings.detach().double(), weights)
             correct_loss = torch.nn.functional.cross_entropy(
-                logits / temperature, labels
+                similarities / temperature, labels
             )
-            rtol = helpers.rtol(dtype)
-            self.assertTrue(torch.isclose(loss, correct_loss, rtol=rtol))
+            helpers.assert_close(loss, correct_loss, dtype, atol=1e-8)
 
             logits_out = loss_func.get_logits(embeddings)
-            self.assertTrue(
-                torch.allclose(
-                    logits_out,
-                    torch.matmul(embeddings, weights) / temperature,
-                    rtol=1e-2,
-                )
-            )
+            helpers.assert_close(logits_out * temperature, similarities, dtype)

@@ -72,9 +72,11 @@ def histogram_reference(
 
 def assert_numeric_close(actual: torch.Tensor, expected: torch.Tensor) -> None:
     if actual.dtype == torch.float16:
-        torch.testing.assert_close(actual, expected, atol=5e-4, rtol=5e-3)
+        torch.testing.assert_close(
+            actual.double(), expected.double(), atol=5e-4, rtol=5e-3
+        )
     else:
-        torch.testing.assert_close(actual, expected)
+        torch.testing.assert_close(actual, expected.to(actual.dtype))
 
 
 class TestDynamicSoftMarginLoss(unittest.TestCase):
@@ -138,11 +140,12 @@ class TestDynamicSoftMarginLoss(unittest.TestCase):
                 previous = None
                 for count in (4, 6, 4):
                     embedding = inputs(dtype, count)
+                    exact = embedding.detach().double().requires_grad_()
                     labels = [i // 2 for i in range(count)]
                     expected, previous = histogram_reference(
-                        labeled_differences(embedding, labels), previous
+                        labeled_differences(exact, labels), previous
                     )
-                    expected_gradient = torch.autograd.grad(expected, embedding)[0]
+                    expected_gradient = torch.autograd.grad(expected, exact)[0]
                     actual = loss(embedding, torch.tensor(labels, device=TEST_DEVICE))
                     gradient = torch.autograd.grad(actual, embedding)[0]
                     assert_numeric_close(actual, expected)

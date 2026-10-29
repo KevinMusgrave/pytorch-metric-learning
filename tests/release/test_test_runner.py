@@ -1,3 +1,4 @@
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -51,7 +52,7 @@ def test_runner_exit_status(tmp_path, source, expected_exit):
             "-c",
             str(root / "pyproject.toml"),
             "-p",
-            "tests.conftest",
+            "conftest",
             str(candidate),
         ],
         cwd=root,
@@ -61,3 +62,26 @@ def test_runner_exit_status(tmp_path, source, expected_exit):
         timeout=60,
     )
     assert result.returncode == expected_exit, result.stdout + result.stderr
+
+
+def test_bare_pytest_runs_faiss_without_openmp_environment():
+    root = Path(__file__).resolve().parents[2]
+    environment = os.environ.copy()
+    environment.pop("KMP_DUPLICATE_LIB_OK", None)
+    environment.pop("OMP_NUM_THREADS", None)
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "-q",
+            "tests/utils/test_retrieval_backends.py::TestRetrievalBackends::test_faiss_index_persistence_and_incremental_add",
+        ],
+        cwd=root,
+        env=environment,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=60,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr

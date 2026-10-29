@@ -41,9 +41,12 @@ configuration. Third-party plugin autoloading is disabled so the frozen
 environment determines test behavior. Empty selections, skipped tests, and
 expected failures fail verification rather than silently reducing coverage.
 
-Tests default to CPU with float32 and float64. The CPU profile also limits
-numerical-library threads and sets the macOS OpenMP configuration. Run a
-specific test during development:
+Tests default to CPU with float32 and float64. On macOS, the root `conftest.py`
+sets `KMP_DUPLICATE_LIB_OK=TRUE` and `OMP_NUM_THREADS=1` before importing Torch
+when these variables are unset, so plain `.venv/bin/python -m pytest` works
+with the development wheels. Explicit environment settings take precedence.
+The CPU profile also limits numerical-library threads consistently across
+platforms. Run a specific test during development:
 
 ```sh
 .venv/bin/uv run --frozen --no-sync --env-file tests/cpu.env python -m pytest tests/losses/test_contrastive_loss.py

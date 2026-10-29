@@ -140,8 +140,13 @@ values, gradients, and sequential updates. Float16 histogram and gradient compar
 accumulation; float32 and float64 retain PyTorch's default comparison tolerances.
 
 Some implementation choices are numerical rather than mathematical.
-`LpDistance` computes float16 matrices from row pairs because `torch.cdist` has
-no float16 kernel. `ManifoldLoss` inverts its random-walk matrix in float32,
+`LpDistance` computes float16 and bfloat16 matrices from row pairs because
+`torch.cdist` lacks CPU kernels for those types. This preserves the input dtype
+and autograd outside autocast. Tests compare values and both input gradients
+against explicit float64 norms for normalized and unnormalized embeddings,
+L1 and L2 distances, and powers 1 and 2. Comparisons allow four machine epsilons
+of relative error and one of absolute error for low-precision rounding.
+`ManifoldLoss` inverts its random-walk matrix in float32,
 which half precision lacks, and masks excluded terms with $-\infty$ before
 log-sum-exp rather than subtracting margins, avoiding cancellation; a sample's
 correlation with its own proxy contributes no loss. `DistanceWeightedMiner`

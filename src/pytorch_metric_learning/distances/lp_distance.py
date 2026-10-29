@@ -9,7 +9,7 @@ class LpDistance(BaseDistance):
         dtype, device = query_emb.dtype, query_emb.device
         if ref_emb is None:
             ref_emb = query_emb
-        if dtype == torch.float16:
+        if dtype in (torch.float16, torch.bfloat16):
             rows, cols = lmu.meshgrid_from_sizes(query_emb, ref_emb, dim=0)
             output = torch.zeros(rows.size(), dtype=dtype, device=device)
             rows, cols = rows.flatten(), cols.flatten()

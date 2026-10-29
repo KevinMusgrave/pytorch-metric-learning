@@ -49,6 +49,12 @@ pin and still audits the entire frozen dependency graph.
 Local and CI numerical suites use the same pinned pytest runner. Existing
 unittest cases remain supported directly by pytest; its configuration owns
 source imports, strict markers, and disabled third-party plugin discovery.
+The root `conftest.py` sets macOS OpenMP defaults before importing Torch or the
+`tests` package, which itself imports Torch. This makes bare pytest safe with
+the pinned Faiss and Torch wheels when OpenMP variables are unset, while
+preserving explicit environment settings. A subprocess regression removes
+those variables and exercises Faiss indexing, search, and persistence through
+ordinary pytest discovery. The library does not set process-wide defaults.
 The shared session hook fails skipped and expected-failure cases. Runner tests
 execute temporary passing, failing, empty, skipped, and expected-failure suites
 to verify the exit codes consumed by CI. CPU and CUDA profiles select tensor

@@ -163,11 +163,13 @@ The macOS `faiss-cpu` and PyTorch wheels each bundle an OpenMP runtime. On the
 development Mac, loading both in one process aborts with `OMP: Error #15`;
 setting `KMP_DUPLICATE_LIB_OK=TRUE` alone avoids that abort but still crashes
 during multithreaded Faiss calls. Both `KMP_DUPLICATE_LIB_OK=TRUE` and
-`OMP_NUM_THREADS=1`, set before Python starts, let searches and k-means
+`OMP_NUM_THREADS=1`, set before importing either library, let searches and k-means
 complete, as in the repository's CPU test profile. Intel documents the
 duplicate-runtime setting as unsupported. Prefer `CustomKNN` on macOS, or
 install Faiss and PyTorch from one distribution that shares a single OpenMP
-runtime. Earlier releases imported scikit-learn eagerly, which sets
+runtime. The repository's pytest bootstrap also supplies these defaults on
+macOS before importing Torch when they are unset; the library itself does not
+change the environment. Earlier releases imported scikit-learn eagerly, which sets
 `KMP_DUPLICATE_LIB_OK` as a side effect; this release does not.
 
 ## Removed model wrapper

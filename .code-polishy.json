@@ -221,6 +221,7 @@
     }
   ],
   "tests": {
+    "paths": ["conftest.py"],
     "ownership": [
       {
         "paths": [
@@ -235,7 +236,8 @@
           "tests/docs/__init__.py",
           "tests/docs/test_documented_signatures.py",
           "tests/docs/test_documentation_paths.py",
-          "tests/utils/test_validation.py"
+          "tests/utils/test_validation.py",
+          "tests/distances/test_lp_distance.py"
         ],
         "module": "numerics",
         "focusedSuite": "numerics-focused"
@@ -307,7 +309,7 @@
           "tests/utils/test_common_functions.py",
           "tests/utils/test_loss_and_miner_utils.py",
           "tests/helpers.py",
-          "tests/conftest.py"
+          "conftest.py"
         ],
         "module": "numerics",
         "focusedSuite": "numerics-focused",
@@ -399,7 +401,8 @@
           "tests/losses/test_loss_composition.py",
           "tests/docs/**",
           "tests/utils/test_validation.py",
-          "tests/conftest.py"
+          "conftest.py",
+          "tests/distances/test_lp_distance.py"
         ],
         "argv": [
           ".venv/bin/uv",
@@ -421,7 +424,8 @@
           "tests/losses/test_loss_composition.py",
           "tests/docs/test_documented_signatures.py",
           "tests/docs/test_documentation_paths.py",
-          "tests/utils/test_validation.py"
+          "tests/utils/test_validation.py",
+          "tests/distances/test_lp_distance.py"
         ],
         "timeoutSeconds": 120
       },
@@ -437,7 +441,7 @@
           "tests/__init__.py",
           "tests/helpers.py",
           "tests/losses/utils.py",
-          "tests/conftest.py"
+          "conftest.py"
         ],
         "argv": [
           ".venv/bin/uv",
@@ -466,7 +470,7 @@
           "tests/helpers.py",
           "tests/losses/utils.py",
           "tests/samplers/test_sampler_contracts.py",
-          "tests/conftest.py"
+          "conftest.py"
         ],
         "argv": [
           ".venv/bin/uv",
@@ -496,7 +500,7 @@
           "tests/__init__.py",
           "tests/helpers.py",
           "tests/losses/utils.py",
-          "tests/conftest.py"
+          "conftest.py"
         ],
         "argv": [
           ".venv/bin/uv",
@@ -519,7 +523,8 @@
         "scope": "repository",
         "cost": "standard",
         "paths": [
-          "tests/**"
+          "tests/**",
+          "conftest.py"
         ],
         "argv": [
           ".venv/bin/uv",
@@ -580,7 +585,7 @@
         "paths": [
           "tests/recipes/**",
           "tests/__init__.py",
-          "tests/conftest.py"
+          "conftest.py"
         ],
         "argv": [
           ".venv/bin/uv",
@@ -607,7 +612,7 @@
         "paths": [
           "tests/release/**",
           "tests/__init__.py",
-          "tests/conftest.py"
+          "conftest.py"
         ],
         "argv": [
           ".venv/bin/uv",

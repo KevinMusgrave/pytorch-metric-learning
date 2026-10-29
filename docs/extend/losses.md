@@ -242,7 +242,9 @@ inside `forward`; that would silently change optimizer state.
 
 A loss with learnable parameters that are not one vector per class, such as a
 temperature, can declare them on a `BaseMetricLossFunction` subclass and add a
-penalty by overriding `regularization_terms(embeddings)`.
+penalty by overriding `regularization_terms(embeddings)`. Penalty term names
+must differ from the names `compute_loss` returns; a shared name raises
+`ValueError` from `forward` and `loss_terms`.
 
 ## More on distances
 
@@ -340,8 +342,10 @@ assert weights.shape == (5,) and weights.max() == 1
 negative pairs, or enumerates triplets from labels; its `t_per_anchor` defaults
 to `"all"`. With `indices_tuple=None`, both use labels, and `ref_labels=None`
 means self-comparison. `convert_to_weights` returns one weight per element:
-its count in the tuples divided by the largest count, or all ones without
-tuples. See [miner weights](../losses.md#miner-weights).
+its count in the tuples divided by the largest count. With
+`indices_tuple=None` every weight is 1; a tuple with no indices gives every
+element weight 0, so a loss that multiplies by the weights reduces to a
+differentiable zero. See [miner weights](../losses.md#miner-weights).
 
 ## Loss terms
 
@@ -362,7 +366,10 @@ be meaningful to the reducer in use. Reducers that look up labels, such as
 with the anchors. An empty `losses` tensor, and an empty `LossDict`, reduce to a
 differentiable zero. A term without indices must contain exactly one value, and
 a term with indices must have one-dimensional `losses` and index tensors of
-equal length; otherwise reducers raise `ValueError`.
+equal length; otherwise reducers raise `ValueError`. A tuple of indices holds
+two or three tensors; use a single tensor, not a one-element tuple, for
+per-element losses. Index tensors must be `int64` or `int32`, and reducers raise
+`TypeError` for other dtypes or structures.
 
 A term may also contain an optional `divisor`, a tensor or number. Only
 [DivisorReducer](../reducers.md#divisorreducer) applies it, by dividing the sum

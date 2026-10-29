@@ -105,8 +105,9 @@ Compute embeddings in caller code, mine tuples, then map per-subset occurrence
 weights to the full dataset before using `torch.utils.data.WeightedRandomSampler`.
 Weights are occurrence count divided by the maximum count. Subset indices must
 be unique dataset indices and align with the subset labels and mined embeddings.
-Unselected dataset rows receive zero weight; empty mined tuples give uniform
-weights within the selected subset. This is sampling with replacement, not an
+Unselected dataset rows receive zero weight. `convert_to_weights` gives zero
+weights for empty mined tuples, so the recipe passes `None` in that case to get
+uniform weights within the selected subset. This is sampling with replacement, not an
 epoch-coverage guarantee. The recipe uses a local seeded PyTorch generator and
 reports four batches of eight labels. The tests verify exact subset mapping and
 that sampling never selects a zero-weight row.

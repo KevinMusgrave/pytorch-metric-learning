@@ -30,6 +30,12 @@ $\frac{1}{2} d_p^2$ and $\frac{1}{2}[m - d_n]_+^2$. The default reducer averages
 the positive-pair losses greater than zero and, separately, the negative-pair
 losses greater than zero, then adds the two averages.
 
+**Paper settings**: The paper squares both hinges, $\frac{1}{2} d_p^2$ and
+$\frac{1}{2}[m - d_n]_+^2$, on Euclidean distances with `pos_margin=0`.
+`ContrastiveLoss` has no squared-hinge option, so the paper's objective cannot
+be reproduced through its arguments; its margin $m$ corresponds to
+`neg_margin`.
+
 **Example**:
 
 ```python

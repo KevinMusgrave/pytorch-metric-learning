@@ -1,5 +1,5 @@
 import math
-from typing import Unpack
+from typing import NamedTuple, Unpack
 
 import torch
 from torch import Tensor
@@ -7,6 +7,11 @@ from torch import Tensor
 from ..types import ProxyLossOptions
 from ..utils import _common
 from .arcface_loss import ArcFaceLoss
+
+
+class SubCenterOutliers(NamedTuple):
+    outliers: Tensor
+    dominant_centers: Tensor
 
 
 class SubCenterArcFaceLoss(ArcFaceLoss):
@@ -34,12 +39,11 @@ class SubCenterArcFaceLoss(ArcFaceLoss):
         self,
         embeddings: Tensor,
         labels: Tensor,
-        threshold: float = 75,
-        return_dominant_centers: bool = True,
-    ) -> Tensor | tuple[Tensor, Tensor]:
+        threshold_radians: float = math.radians(75),
+    ) -> SubCenterOutliers:
         _common.check_shapes(embeddings, labels)
         _common.check_parameter_placement(self, self.weight, embeddings)
-        cos_threshold = math.cos(math.radians(threshold))
+        cos_threshold = math.cos(threshold_radians)
         with torch.no_grad():
             centers = self.weight.view(self.num_classes, self.sub_centers, -1)
             similarities = self.distance(embeddings, self.weight)
@@ -60,6 +64,4 @@ class SubCenterArcFaceLoss(ArcFaceLoss):
                 torch.arange(len(labels)), labels, dominant[labels]
             ]
             outliers = torch.where(dominant_similarity < cos_threshold)[0]
-        if return_dominant_centers:
-            return outliers, dominant_centers
-        return outliers
+        return SubCenterOutliers(outliers, dominant_centers)

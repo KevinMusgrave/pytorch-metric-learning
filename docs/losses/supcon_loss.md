@@ -19,9 +19,14 @@ anchor $i$: every other embedding, every reference row with `ref_emb`, or the
 pairs of anchor $i$ in a supplied `indices_tuple`. The denominator is a masked
 log-sum-exp. An anchor with positives but no negatives has a nonzero loss, as
 in the paper, because its denominator still contains its positives. An anchor
-without positives contributes 0. The default reducer averages over the anchors
-with a positive loss instead of summing. With a distance where smaller means
+without positives has no loss term, so any reducer averages only anchors with
+positives. The default reducer averages over the anchors with a positive loss
+instead of summing as the paper does. With a distance where smaller means
 closer, the logits are negated distances.
+
+**Paper settings**: The paper sums the per-anchor losses; the default reducer
+averages the positive ones. Pass `reducer=reducers.SumReducer()` for the
+paper's sum. The default `temperature=0.1` is the paper's.
 
 **Example**:
 
@@ -50,4 +55,5 @@ loss.backward()
 
 **Reducer input**:
 
-- **loss**: One loss per anchor, indexed by anchor position in `embeddings`.
+- **loss**: One loss per anchor that has a positive, indexed by anchor position
+  in `embeddings`.

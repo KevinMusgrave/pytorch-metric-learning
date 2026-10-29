@@ -41,10 +41,17 @@ loss by world size.
 Gathered rows are ordered by rank, then by their original local order. Batch
 sizes may differ across ranks, including empty ranks, subject to the wrapped
 loss's own size requirements. The embedding width, dtype, gradient requirement,
-objective, and presence of each optional argument must agree across ranks;
-otherwise the wrapper raises `ValueError`. Labels contain one value per
+label dtype, objective, and presence of each optional argument must agree across
+ranks; otherwise the wrapper raises `ValueError`. Labels contain one value per
 embedding and must be on the embeddings' device; otherwise the wrapper raises
 `ValueError`. Every rank must call forward and backward in the same order.
+
+Each rank validates its own inputs (shapes, devices, index dtypes, and the
+enqueue mask) before any collective, and the ranks exchange the outcome in one
+metadata collective before any embeddings are gathered. If any rank's inputs
+are invalid, every rank raises: the invalid rank raises its own `TypeError` or
+`ValueError`, and the other ranks raise `ValueError` naming the invalid ranks.
+No rank is left waiting in a collective.
 
 Explicit reference embeddings, `ref_emb` and `ref_labels`, are gathered the same
 way and form a separate set: equal row positions do not identify
@@ -59,7 +66,8 @@ distributed.DistributedLossWrapper(loss, objective="global")
 
 **Parameters**:
 
-- **loss**: The loss to wrap, a `BaseMetricLossFunction` or a
+- **loss**: The loss to wrap, a `BaseMetricLossFunction`, a
+  [`MultipleLosses`](losses/multiple_losses.md), or a
   [`CrossBatchMemory`](losses/cross_batch_memory.md#crossbatchmemory). Another
   type raises `TypeError`.
 - **objective**: `"global"` or `"local_anchor"`; see [objectives](#objectives).

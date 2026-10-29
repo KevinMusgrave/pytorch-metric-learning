@@ -1,4 +1,5 @@
 import unittest
+from functools import partial
 from typing import Any
 
 import torch
@@ -131,3 +132,52 @@ class TestPNPLoss(unittest.TestCase):
             embeddings = torch.randn(3, 32, dtype=dtype, device=TEST_DEVICE)
             loss = loss_func(embeddings, labels)
             self.assertTrue(not torch.isnan(loss))
+
+    def test_anchors_without_other_positives_are_excluded(self):
+        labels = torch.tensor([1, 1, 2, 1, 3], device=TEST_DEVICE)
+        torch.manual_seed(4)
+        embeddings = torch.randn(5, 6)
+
+        def reference(x, variant, alpha):
+            x = F.normalize(x, dim=1)
+            sims = x @ x.T
+            per_anchor = []
+            for q in range(len(labels)):
+                positives = [i for i in range(len(labels)) if labels[i] == labels[q]]
+                if len(positives) == 1:
+                    continue
+                negatives = [k for k in range(len(labels)) if labels[k] != labels[q]]
+                ranks = [
+                    torch.sigmoid((sims[q, negatives] - sims[q, i]) / 0.1).sum()
+                    for i in positives
+                ]
+                if variant == "Dq":
+                    ranks = [1 / (1 + r) ** alpha for r in ranks]
+                per_anchor.append(torch.stack(ranks).mean())
+            loss = torch.stack(per_anchor).mean()
+            return 1 - loss if variant == "Dq" else loss
+
+        for variant in ("O", "Dq"):
+            loss_func = PNPLoss(alpha=2, anneal=0.1, variant=variant)
+            for dtype in TEST_DTYPES:
+                with self.subTest(variant=variant, dtype=dtype):
+                    helpers.assert_matches_float64(
+                        partial(loss_func, labels=labels),
+                        partial(reference, variant=variant, alpha=2),
+                        [embeddings],
+                        dtype,
+                    )
+
+    def test_batches_without_positive_pairs_give_differentiable_zero(self):
+        for labels in ([], [0], [0, 1]):
+            for dtype in TEST_DTYPES:
+                with self.subTest(labels=labels, dtype=dtype):
+                    embeddings = torch.randn(
+                        len(labels), 4, dtype=dtype, device=TEST_DEVICE
+                    ).requires_grad_()
+                    loss = PNPLoss()(
+                        embeddings, torch.tensor(labels, device=TEST_DEVICE).long()
+                    )
+                    loss.backward()
+                    self.assertEqual(loss.item(), 0)
+                    self.assertIsNotNone(embeddings.grad)

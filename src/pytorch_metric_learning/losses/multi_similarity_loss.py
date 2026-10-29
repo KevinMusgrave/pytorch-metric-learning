@@ -1,5 +1,6 @@
 from typing import Unpack
 
+import torch
 from torch import Tensor
 
 from ..distances import BaseDistance, CosineSimilarity
@@ -31,12 +32,9 @@ class MultiSimilarityLoss(GenericPairLoss):
         neg_loss = (1.0 / self.beta) * _common.logsumexp(
             self.beta * neg_exp, keep_mask=neg_mask, add_one=True
         )
-        return {
-            "loss": {
-                "losses": (pos_loss + neg_loss).squeeze(1),
-                "indices": _common.arange_like(mat),
-            }
-        }
+        losses = (pos_loss + neg_loss).squeeze(1)
+        rows = torch.where(pos_mask.any(dim=1) | neg_mask.any(dim=1))[0]
+        return {"loss": {"losses": losses[rows], "indices": rows}}
 
     def default_distance(self) -> BaseDistance:
         return CosineSimilarity()

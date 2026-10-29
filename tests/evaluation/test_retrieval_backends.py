@@ -178,7 +178,7 @@ class TestRetrievalBackends(unittest.TestCase):
             [[1.0, 0.1], [-1.0, 0.0], [0.1, 1.0]], device=TEST_DEVICE
         )
         finder = retrieval.MatchFinder(CosineSimilarity(), threshold=0.9)
-        matches = finder.get_matching_pairs(query, reference)
+        matches = finder.get_match_matrix(query, reference)
         self.assertEqual(matches.device, query.device)
         self.assertTrue(
             torch.equal(
@@ -186,16 +186,17 @@ class TestRetrievalBackends(unittest.TestCase):
                 torch.tensor([[True, False, False], [False, False, True]]),
             )
         )
-        self.assertEqual(
-            finder.get_matching_pairs(query, reference, return_tuples=True).tolist(),
-            [[0, 0], [1, 2]],
-        )
+        indices = finder.get_match_indices(query, reference)
+        self.assertEqual(indices.device, query.device)
+        self.assertEqual(indices.dtype, torch.long)
+        self.assertEqual(indices.tolist(), [[0, 0], [1, 2]])
+        self.assertEqual(finder.get_match_indices(query).tolist(), [[0, 0], [1, 1]])
         distance_finder = retrieval.MatchFinder(LpDistance(), threshold=0.5)
         self.assertEqual(
             distance_finder.is_match(query, reference[[0, 1]]).tolist(), [True, False]
         )
         with self.assertRaisesRegex(ValueError, "threshold"):
-            retrieval.MatchFinder(LpDistance()).get_matching_pairs(query)
+            retrieval.MatchFinder(LpDistance()).get_match_matrix(query)
 
     def test_row_matching_honors_distance_normalization_and_power(self):
         cases = (
@@ -220,7 +221,7 @@ class TestRetrievalBackends(unittest.TestCase):
                         finder.is_match(query, reference).tolist(), [expected]
                     )
                     self.assertEqual(
-                        finder.get_matching_pairs(query, reference).tolist(),
+                        finder.get_match_matrix(query, reference).tolist(),
                         [[expected]],
                     )
 

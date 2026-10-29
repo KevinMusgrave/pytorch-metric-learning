@@ -32,8 +32,9 @@ modes deliberately as well as controlling gradients.
 
 Mining-weighted sampling computes embeddings in caller code. Unique sampled
 dataset indices map tuple-frequency weights back to the original dataset;
-unselected rows receive zero. An empty mined tuple follows the existing utility
-contract of uniform weights over the selected subset. PyTorch's sampler owns
+unselected rows receive zero. `convert_to_weights` gives zero weights for an
+empty mined tuple, which a sampler cannot draw from, so the recipe passes `None`
+instead and samples the selected subset uniformly. PyTorch's sampler owns
 replacement and RNG state. Memory warmup trains against the current batch only,
 then starts filling the detached queue at the caller-selected step.
 

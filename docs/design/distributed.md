@@ -28,10 +28,21 @@ recommended by the deprecated `torch.distributed.nn.functional.all_gather`.
 The module is private to PyTorch and may move in a later release; there is no
 handwritten autograd collective or fallback. Batches
 are padded for the collective and sliced back to their actual lengths; uneven
-and empty ranks retain their gradient connection. Small metadata collectives
-establish sizes and reject mismatched schemas before payload communication.
-All ranks must enter the same operations in the same order and use consistent
-optional arguments, dimensions, dtypes, and gradient requirements.
+and empty ranks retain their gradient connection. All ranks must enter the
+same operations in the same order and use consistent optional arguments,
+dimensions, dtypes, and gradient requirements.
+
+Every check that can differ between ranks runs locally before any collective:
+embedding and label shapes and devices, reference inputs, index dtypes, and the
+enqueue mask. One fixed-width metadata collective then carries each rank's
+argument flags, its validation outcome, and the size, width, dtypes, and
+gradient requirement of its query and reference inputs, and every rank applies
+the same decision to the gathered rows: mismatched flags, an invalid rank, or a
+mismatched schema raise on all ranks together, the invalid rank with its own
+exception. A rank that raises between collectives leaves its peers blocked
+until the process-group timeout, which previously happened for labels on the
+wrong device. After the exchange, payload collectives see only inputs that
+every rank has accepted.
 
 Rank ordering also keeps every memory queue identical. Queue masks use the same
 lengths and ordering as embeddings and labels. Replicas must start with the same
@@ -55,8 +66,11 @@ Explicit reference tensors describe a separate set, so matching row positions
 are not self-pairs. Memory losses do not support this mode.
 
 Inputs must be on the embeddings' device on every rank; the wrappers never
-copy labels or masks across devices. Candidate `indices_tuple` arguments to the
-miner wrapper index one rank's batch and are rejected across ranks.
+copy labels or masks across devices. Ordinary losses are
+`BaseMetricLossFunction` or `MultipleLosses` instances (`types.MetricLoss`),
+which share the query/reference forward signature. Candidate `indices_tuple`
+arguments to the miner wrapper index one rank's batch and are rejected across
+ranks.
 
 The test process-group setup follows the
 [PyTorch DDP tutorial](https://pytorch.org/tutorials/intermediate/ddp_tutorial.html).

@@ -17,7 +17,7 @@ class DivisorReducer(BaseReducer):
 
     def sum_and_divide(self, losses: Tensor, divisor: Tensor | float) -> Tensor:
         dtype = accumulation_dtype(losses.dtype)
-        divisor = torch.as_tensor(divisor, device=losses.device).to(dtype)
+        divisor = torch.as_tensor(divisor, dtype=dtype, device=losses.device)
         total = losses.sum(dtype=dtype)
         safe = torch.where(divisor != 0, divisor, torch.ones_like(divisor))
         output = torch.where(divisor != 0, total / safe, torch.zeros_like(total))

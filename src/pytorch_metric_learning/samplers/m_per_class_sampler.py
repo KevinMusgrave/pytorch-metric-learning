@@ -12,7 +12,7 @@ class MPerClassSampler(Sampler[int]):
         labels: Labels,
         m: int,
         batch_size: int | None = None,
-        length_before_new_iter: int = 100000,
+        num_samples: int = 100000,
         *,
         generator: torch.Generator | None = None,
     ) -> None:
@@ -22,15 +22,15 @@ class MPerClassSampler(Sampler[int]):
             raise ValueError("m must be positive")
         if self.batch_size is not None and self.batch_size <= 0:
             raise ValueError("batch_size must be positive")
-        if length_before_new_iter < 0:
-            raise ValueError("length_before_new_iter must be nonnegative")
+        if num_samples < 0:
+            raise ValueError("num_samples must be nonnegative")
         self.generator = generator
         self.labels_to_indices = indices_by_label(as_label_list(labels))
         self.labels = list(self.labels_to_indices)
         if not self.labels:
             raise ValueError("labels must not be empty")
         self.length_of_single_pass = self.m_per_class * len(self.labels)
-        self.list_size = length_before_new_iter
+        self.list_size = num_samples
         self.adjust_list_size()
 
     def adjust_list_size(self) -> None:
@@ -39,7 +39,7 @@ class MPerClassSampler(Sampler[int]):
                 self.list_size -= (self.list_size) % (self.length_of_single_pass)
         else:
             if self.list_size < self.batch_size:
-                raise ValueError("length_before_new_iter must be at least batch_size")
+                raise ValueError("num_samples must be at least batch_size")
             if self.length_of_single_pass < self.batch_size:
                 raise ValueError("m * (number of unique labels) must be >= batch_size")
             if self.batch_size % self.m_per_class != 0:

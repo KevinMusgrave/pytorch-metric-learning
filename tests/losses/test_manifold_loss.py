@@ -213,3 +213,12 @@ class TestManifoldLossOptions(unittest.TestCase):
             ManifoldLoss(4, num_proxies=8).to(TEST_DEVICE)(
                 torch.randn(4, 4, device=TEST_DEVICE)
             )
+
+    def test_empty_labeled_batch_gives_differentiable_zero(self):
+        loss_func = ManifoldLoss(4, num_proxies=3).to(TEST_DEVICE)
+        embeddings = torch.randn(0, 4, device=TEST_DEVICE, requires_grad=True)
+        labels = torch.empty(0, dtype=torch.long, device=TEST_DEVICE)
+        loss = loss_func(embeddings, labels)
+        loss.backward()
+        self.assertEqual(loss.item(), 0)
+        torch.testing.assert_close(embeddings.grad, torch.zeros_like(embeddings))

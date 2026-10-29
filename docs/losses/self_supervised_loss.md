@@ -22,15 +22,16 @@ shape `(N, D)`. It assigns label `i` to `embeddings[i]` and `ref_emb[i]`.
 - With `symmetric=True`, it concatenates the two tensors into one batch of
   `2N` embeddings with labels `[0..N-1, 0..N-1]` and calls
   `loss(embeddings, labels)`, so every embedding of both views is an anchor.
-  Any `BaseMetricLossFunction` that uses labels works.
+  Any `BaseMetricLossFunction` that uses labels works, as does a
+  [MultipleLosses](multiple_losses.md) of such losses.
 - With `symmetric=False`, it calls
   `loss(embeddings, labels, ref_emb=ref_emb, ref_labels=labels)`, so only
   `embeddings` are anchors and the wrapped loss must
   [accept `ref_emb`](../losses.md#supported-arguments). A loss that rejects
   references raises `ValueError` on the first call.
 
-A `loss` that is not a `BaseMetricLossFunction` raises `TypeError` at
-construction.
+A `loss` that is not a `BaseMetricLossFunction` or `MultipleLosses` raises
+`TypeError` at construction.
 
 **Example**:
 

@@ -62,10 +62,21 @@ distances.BaseDistance(*, normalize_embeddings=True, p=2, power=1)
 **Parameters**:
 
 - **normalize_embeddings**: If `True`, embeddings are normalized to unit Lp norm
-  before values are computed.
+  before values are computed. See [normalization](#normalization).
 - **p**: The norm used for embedding normalization and, in `LpDistance`, for
   the distance itself. Similarities use it only for normalization.
 - **power**: If not 1, each computed value is raised to this power.
+
+### Normalization
+
+`distance.normalize(x, dim=1)` returns `x / max(norm_p(x), eps)` row by row,
+with the same dtype as `x`. `eps` is `1e-12` for float32, float64, and
+bfloat16, and `2**-14` (the smallest normal float16 value) for float16. Float16
+and bfloat16 inputs are normalized in float32 and cast back, so their norms do
+not underflow. A zero row normalizes to zero with finite gradients in every
+dtype. A row whose norm is below `eps` is divided by `eps` instead of being
+scaled to unit norm, so its gradient is the incoming gradient times `1 / eps`:
+16384 in float16, where `1e-12` would overflow.
 
 ### Calling a distance
 
@@ -78,7 +89,9 @@ distances.BaseDistance(*, normalize_embeddings=True, p=2, power=1)
   computes only the corresponding rows, without a full matrix.
 
 Both apply `normalize_embeddings` and `power` exactly as configured, so
-`distance.pairwise(x, y)` equals the diagonal of `distance(x, y)`. Inputs must be
+`distance.pairwise(x, y)` equals the diagonal of `distance(x, y)` up to
+floating-point rounding, and identical rows give exactly zero in both for
+`LpDistance`. Inputs must be
 two-dimensional `(batch_size, embedding_size)` tensors; otherwise both raise
 `ValueError`.
 
@@ -152,12 +165,17 @@ assert torch.cat(blocks).shape == (600, 100)
 ## CosineSimilarity
 
 ```python
-distances.CosineSimilarity(*, p=2, power=1)
+distances.CosineSimilarity()
 ```
 
-`mat[i, j]` is the cosine similarity between `query_emb[i]` and `ref_emb[j]`.
-Embeddings are always normalized, so this equals
+`mat[i, j]` is the cosine similarity between `query_emb[i]` and `ref_emb[j]`, a
+value in `[-1, 1]`. Embeddings are always L2-normalized and no power is
+applied, so this equals
 [`DotProductSimilarity(normalize_embeddings=True)`](#dotproductsimilarity).
+The class takes no options: losses that require `CosineSimilarity`, such as
+CircleLoss and LargeMarginSoftmaxLoss, rely on signed cosines (some take their
+`acos`). For a powered or Lp-normalized dot product, use `DotProductSimilarity`
+with `p` or `power`.
 
 ## DotProductSimilarity
 
@@ -181,6 +199,11 @@ with `torch.cdist` using its direct difference kernel and cast back, which keeps
 peak memory at the size of the output matrix on every device and preserves
 distances between nearby rows that the matrix-product formula would cancel to
 zero.
+
+`pairwise` computes `torch.linalg.vector_norm(x - y, ord=p, dim=-1)`, in float32
+for float16 and bfloat16 inputs. It adds no epsilon, so identical rows give
+exactly zero, as in the matrix, and the gradient at identical rows is zero, as
+`torch.cdist` defines it.
 
 ## SNRDistance
 

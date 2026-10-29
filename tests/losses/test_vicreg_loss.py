@@ -62,3 +62,10 @@ class TestVICRegLoss(unittest.TestCase):
                     rtol = helpers.rtol(dtype)
 
                     self.assertTrue(torch.isclose(loss, correct_loss, rtol=rtol))
+
+    def test_batches_smaller_than_two_rows_are_rejected(self):
+        for rows in (0, 1):
+            with self.subTest(rows=rows):
+                embeddings = torch.randn(rows, 4, device=TEST_DEVICE)
+                with self.assertRaisesRegex(ValueError, "at least 2 rows"):
+                    VICRegLoss()(embeddings, embeddings.clone())

@@ -2,7 +2,7 @@ import torch
 from torch import Tensor
 
 from ..types import LossDict, LossTerm
-from ..utils._common import zero_loss
+from ..utils._common import check_index_dtypes, zero_loss
 
 
 class BaseReducer(torch.nn.Module):
@@ -47,13 +47,17 @@ def validate_term(term: LossTerm) -> tuple[Tensor, Tensor | None]:
         if "divisor" in term:
             raise ValueError("An already reduced loss term cannot have a divisor")
         return losses.reshape(()), None
-    index_tensors = (indices,) if isinstance(indices, Tensor) else indices
-    if (
-        not isinstance(index_tensors, tuple)
-        or len(index_tensors) not in (1, 2, 3)
-        or not all(isinstance(x, Tensor) for x in index_tensors)
+    if isinstance(indices, Tensor):
+        index_tensors: tuple[Tensor, ...] = (indices,)
+    elif (
+        isinstance(indices, tuple)
+        and len(indices) in (2, 3)
+        and all(isinstance(x, Tensor) for x in indices)
     ):
+        index_tensors = indices
+    else:
         raise TypeError("indices must be a tensor or a tuple of two or three tensors")
+    check_index_dtypes(index_tensors, "loss term indices")
     if losses.ndim != 1 or any(x.ndim != 1 for x in index_tensors):
         raise ValueError("losses and indices must be one-dimensional")
     if any(len(x) != len(losses) for x in index_tensors):

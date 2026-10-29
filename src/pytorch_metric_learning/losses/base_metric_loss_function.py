@@ -57,8 +57,9 @@ class BaseMetricLossFunction(nn.Module):
         terms = self.objective_terms(
             embeddings, labels, indices_tuple, ref_emb, ref_labels
         )
+        penalties = distinct_penalties(self, terms, embeddings)
         loss = self.reducer(terms, embeddings, labels)
-        for term in self.regularization_terms(embeddings).values():
+        for term in penalties.values():
             loss = loss + term["losses"]
         return loss
 
@@ -73,7 +74,7 @@ class BaseMetricLossFunction(nn.Module):
         terms = self.objective_terms(
             embeddings, labels, indices_tuple, ref_emb, ref_labels
         )
-        return {**terms, **self.regularization_terms(embeddings)}
+        return {**terms, **distinct_penalties(self, terms, embeddings)}
 
     def objective_terms(
         self,
@@ -95,3 +96,16 @@ class BaseMetricLossFunction(nn.Module):
                 self.embedding_regularizer, self.embedding_reg_weight, embeddings
             )
         }
+
+
+def distinct_penalties(
+    loss: BaseMetricLossFunction, objective: LossDict, embeddings: Tensor
+) -> LossDict:
+    penalties = loss.regularization_terms(embeddings)
+    collisions = sorted(objective.keys() & penalties.keys())
+    if collisions:
+        raise ValueError(
+            f"{type(loss).__name__} objective terms {collisions} collide with "
+            "regularization term names; rename the objective terms"
+        )
+    return penalties

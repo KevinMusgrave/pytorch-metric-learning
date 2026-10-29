@@ -20,12 +20,17 @@ Here $m$ is the batch size, $S_{ik}$ is the similarity between embeddings $i$ an
 **Implementation notes**: $\mathcal{P}_i$ and $\mathcal{N}_i$ are all positive
 and negative pairs of anchor $i$ unless an `indices_tuple` supplies them; the
 paper mines them with [MultiSimilarityMiner](../miners.md#multisimilarityminer).
-An anchor without positives or negatives contributes 0 for that term. With a
+An anchor without positives or without negatives contributes 0 for that part,
+the value of $\log(1 + 0)$. An anchor without any pair has no loss term, so the
+default reducer averages over anchors that have pairs. With a
 distance where smaller means closer, $S_{ik} - \lambda$ becomes
 $\lambda - D_{ik}$.
 
 **Paper settings**: The paper uses $\lambda = 1$; the default `base=0.5`
-differs. Pass `base=1` for the paper's setting.
+differs. Pass `base=1` for the paper's setting. The paper divides the sum of
+per-anchor losses by the batch size, counting anchors without mined pairs; pass
+`reducer=reducers.SumReducer()` and divide the loss by the batch size for that
+normalization.
 
 **Example**:
 
@@ -57,4 +62,5 @@ loss.backward()
 
 **Reducer input**:
 
-- **loss**: One loss per anchor, indexed by anchor position in `embeddings`.
+- **loss**: One loss per anchor that has at least one pair, indexed by anchor
+  position in `embeddings`.

@@ -3,7 +3,16 @@
 [Rethinking the Optimization of Average Precision: Only Penalizing Negative Instances before Positive Ones is Enough](https://arxiv.org/abs/2102.04640)
 
 ```python
-losses.PNPLoss(b=2, alpha=1, anneal=0.01, variant="O", **options)
+losses.PNPLoss(
+    b=2,
+    alpha=1,
+    anneal=0.01,
+    variant="O",
+    *,
+    distance=None,
+    embedding_regularizer=None,
+    embedding_reg_weight=1.0,
+)
 ```
 
 **Equation**:
@@ -21,9 +30,12 @@ $$
 Here $R(i, S_N) = \sum_{j \in S_N} \sigma\left((s_j - s_i)/\tau\right)$, where $s_i$ is the cosine similarity between the query and element $i$, $\sigma$ is the sigmoid, and $\tau$ is `anneal`.
 
 **Implementation notes**: Each embedding is a query against the whole batch.
-The query is counted in its own $S_P$, as in the authors' implementation, so
-every query has at least one positive. The per-query values are averaged over
-the batch. Labels are required; `indices_tuple` and `ref_emb` raise
+The query is counted in its own $S_P$, as in the authors' implementation. The
+per-query values are averaged over the queries that have another positive in
+the batch; a query whose only positive is itself is excluded, and a batch
+without positive pairs, including an empty batch, gives a differentiable zero.
+The authors' batches give every query another positive, so this matches their
+average. Labels are required; `indices_tuple` and `ref_emb` raise
 `ValueError`. Memory grows with the cube of the batch size.
 
 **Paper settings**: The paper recommends PNP-Dq with $\alpha = 8$:
@@ -50,17 +62,20 @@ loss.backward()
 - **anneal**: The sigmoid temperature $\tau$ used for $R$. The paper uses 0.01.
 - **variant**: One of `"Ds"`, `"Dq"`, `"Iu"`, `"Ib"`, or `"O"`. Any other
   value raises `ValueError`.
+- **distance**, **embedding_regularizer**, **embedding_reg_weight**: See
+  [loss options](../losses.md#loss-options).
 
 **Default distance**:
 
 - [`CosineSimilarity()`](../distances.md#cosinesimilarity). This is the only
   compatible distance; another distance class raises `TypeError`.
 
-**Default reducer**:
+**Reducer**:
 
-- [MeanReducer](../reducers.md#meanreducer)
+- None. The loss reduces its own value, so it has no `reducer` option; passing
+  `reducer` raises `TypeError`.
 
-**Reducer input**:
+**Loss terms**:
 
-- **loss**: Already reduced: the batch average of the selected variant. Every
-  reducer returns it unchanged.
+- **loss**: The average of the selected variant over anchors that have another
+  positive, with `indices=None`.

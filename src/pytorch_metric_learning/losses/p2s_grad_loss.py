@@ -1,19 +1,26 @@
-from typing import Unpack
-
 import torch
 import torch.nn.functional as F
 from torch import Tensor, nn
 
-from ..types import IndicesTuple, LossDict, LossOptions
+from ..regularizers import BaseRegularizer
+from ..types import IndicesTuple, LossDict
 from ..utils import _common
 from .base_metric_loss_function import BaseMetricLossFunction
 
 
 class P2SGradLoss(BaseMetricLossFunction):
     def __init__(
-        self, num_classes: int, embedding_size: int, **options: Unpack[LossOptions]
+        self,
+        num_classes: int,
+        embedding_size: int,
+        *,
+        embedding_regularizer: BaseRegularizer | None = None,
+        embedding_reg_weight: float = 1.0,
     ) -> None:
-        super().__init__(**options)
+        super().__init__(
+            embedding_regularizer=embedding_regularizer,
+            embedding_reg_weight=embedding_reg_weight,
+        )
         self.num_classes = num_classes
         self.embedding_size = embedding_size
         weight = torch.empty(num_classes, embedding_size).uniform_(-1, 1)
@@ -31,6 +38,8 @@ class P2SGradLoss(BaseMetricLossFunction):
         _common.ref_not_supported(ref_emb)
         _common.indices_tuple_not_supported(indices_tuple)
         _common.check_parameter_placement(self, self.weight, embeddings)
+        if len(embeddings) == 0:
+            return {}
         with torch.no_grad():
             self.weight.copy_(F.normalize(self.weight, dim=1))
         weight = self.weight.clone()

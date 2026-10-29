@@ -147,10 +147,12 @@ class TestLossAndMinerUtils(unittest.TestCase):
                 labels=torch.arange(7).to(TEST_DEVICE),
                 dtype=dtype,
             )
-            correct_weights = torch.tensor([1, 1, 1, 1, 1, 1, 1], dtype=dtype).to(
-                TEST_DEVICE
+            self.assertTrue(torch.equal(weights, torch.zeros_like(weights)))
+            self.assertEqual(weights.shape, (7,))
+            unrestricted = indexing.convert_to_weights(
+                None, labels=torch.arange(7).to(TEST_DEVICE), dtype=dtype
             )
-            self.assertTrue(torch.all(weights == correct_weights))
+            self.assertTrue(torch.equal(unrestricted, torch.ones_like(unrestricted)))
 
         batch_size = 32
         labels = torch.randint(0, 10, size=(batch_size,)).to(TEST_DEVICE)

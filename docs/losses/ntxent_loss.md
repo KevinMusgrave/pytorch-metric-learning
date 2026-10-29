@@ -36,6 +36,10 @@ With a distance where smaller means closer, the logits are negated distances.
 For two augmented views of the same batch, wrap the loss in
 [SelfSupervisedLoss](self_supervised_loss.md) instead of building labels.
 
+**Paper settings**: The default `temperature=0.07` is MoCo's. SimCLR uses
+`temperature=0.5`, with the two augmented views passed through
+[SelfSupervisedLoss](self_supervised_loss.md) as in the example below.
+
 **Example**:
 
 ```python

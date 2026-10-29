@@ -1,11 +1,11 @@
 import math
-from typing import Unpack
 
 import torch
 from torch import Tensor, nn
 
 from ..distances import BaseDistance, CosineSimilarity
-from ..types import IndicesTuple, LossDict, LossOptions
+from ..regularizers import BaseRegularizer
+from ..types import IndicesTuple, LossDict
 from ..utils import _common
 from .base_metric_loss_function import BaseMetricLossFunction
 
@@ -18,9 +18,16 @@ class ManifoldLoss(BaseMetricLossFunction):
         lambda_c: float = 1.0,
         alpha: float = 0.8,
         margin: float = 5e-4,
-        **options: Unpack[LossOptions],
+        *,
+        distance: BaseDistance | None = None,
+        embedding_regularizer: BaseRegularizer | None = None,
+        embedding_reg_weight: float = 1.0,
     ) -> None:
-        super().__init__(**options)
+        super().__init__(
+            distance=distance,
+            embedding_regularizer=embedding_regularizer,
+            embedding_reg_weight=embedding_reg_weight,
+        )
         if lambda_c < 0:
             raise ValueError(f"lambda_c must be non-negative; got {lambda_c}")
         self.num_proxies = num_proxies
@@ -46,6 +53,8 @@ class ManifoldLoss(BaseMetricLossFunction):
 
         N = len(embeddings)
         device = embeddings.device
+        if labels is not None and N == 0:
+            return {}
         if labels is not None:
             meta_classes = labels
         elif self.num_proxies > N:

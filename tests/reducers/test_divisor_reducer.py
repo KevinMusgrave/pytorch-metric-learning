@@ -86,3 +86,45 @@ class TestReducerTermContracts(unittest.TestCase):
             self.assertEqual(output.item(), 0)
             self.assertIsNotNone(embeddings.grad)
             embeddings.grad = None
+
+
+class TestDivisorPrecision(unittest.TestCase):
+    def test_divisor_is_built_in_the_accumulation_dtype(self):
+        cases = [
+            (torch.float64, [3e-50, 1e-50], 1e-50, 4.0),
+            (torch.float64, [2.0, 4.0], torch.tensor(1e-50, dtype=torch.float64), 6e50),
+            (torch.float32, [1e-30, 1e-30], 1e-30, 2.0),
+            (torch.float16, [3.0, 5.0], 1e-3, 8e3),
+        ]
+        for dtype, values, divisor, expected in cases:
+            with self.subTest(dtype=dtype, divisor=divisor):
+                losses = torch.tensor(
+                    values, dtype=dtype, device=TEST_DEVICE, requires_grad=True
+                )
+                if isinstance(divisor, torch.Tensor):
+                    divisor = divisor.to(TEST_DEVICE)
+                output = DivisorReducer()(
+                    {
+                        "loss": {
+                            "losses": losses,
+                            "indices": torch.arange(2, device=TEST_DEVICE),
+                            "divisor": divisor,
+                        }
+                    },
+                    torch.zeros(2, 1, dtype=dtype, device=TEST_DEVICE),
+                    None,
+                )
+                (gradient,) = torch.autograd.grad(output, losses)
+                exact_divisor = float(divisor)
+                torch.testing.assert_close(
+                    output.double().cpu(),
+                    torch.tensor(expected, dtype=torch.float64),
+                    rtol=1e-3 if dtype == torch.float16 else 1e-12,
+                    atol=0,
+                )
+                torch.testing.assert_close(
+                    gradient.double().cpu(),
+                    torch.full((2,), 1 / exact_divisor, dtype=torch.float64),
+                    rtol=1e-3 if dtype == torch.float16 else 1e-6,
+                    atol=0,
+                )

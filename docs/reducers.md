@@ -48,6 +48,14 @@ names to `LossTerm` dictionaries with these keys:
   - A tuple `(anchors, others)`: one loss per pair.
   - A tuple `(anchors, positives, negatives)`, such as `TripletIndices`: one loss
     per triplet.
+
+  A tuple must hold two or three tensors; pass a single tensor, not a
+  one-element tuple, for per-element losses. Index tensors must be `int64` or
+  `int32`; other dtypes, including `bool` and `uint8`, raise `TypeError`.
+  Indices must be in range for the tensors they address. Reducers do not check
+  bounds, because that would synchronize the device; out-of-range or negative
+  indices are a caller error with undefined results.
+
 - **divisor** (optional): A normalizer for [DivisorReducer](#divisorreducer).
 
 For every kind except `None`, `losses` and each index tensor are
@@ -122,7 +130,9 @@ reducers.DivisorReducer()
 ```
 
 A term without a divisor uses 1, so its reduction is the sum. A zero divisor
-gives 0. Sums are accumulated in float32 for float16 and bfloat16 losses.
+gives 0. Sums are accumulated in float32 for float16 and bfloat16 losses, and in
+the losses' dtype otherwise. A Python or tensor divisor is converted directly to
+that accumulation dtype, so a float64 divisor such as `1e-50` keeps its value.
 
 These components emit divisor terms and use `DivisorReducer` by default:
 

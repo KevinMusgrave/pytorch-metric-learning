@@ -3,6 +3,7 @@ site_url: https://kevinmusgrave.github.io/pytorch-metric-learning/
 exclude_docs: |
   design/
   security/
+  recipes/__init__.py
   **/__pycache__/
 nav:
     - Home: index.md

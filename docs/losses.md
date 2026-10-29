@@ -78,11 +78,18 @@ return:
   `(anchors[i], positives[i], negatives[i])`.
 
 Plain tuples or lists of four or three tensors are accepted and converted to
-these named tuples. Every tensor must be one-dimensional, hold integer indices,
-and be on the embeddings' device. Anchors index `embeddings`; positives and
-negatives index `ref_emb`, or `embeddings` when `ref_emb` is `None`. A
-non-tensor entry raises `TypeError`; a wrong length, dimension, or device raises
-`ValueError`.
+these named tuples. Every tensor must be one-dimensional, have dtype `int64` or
+`int32`, and be on the embeddings' device. Anchors index `embeddings`;
+positives and negatives index `ref_emb`, or `embeddings` when `ref_emb` is
+`None`. A non-tensor entry or another index dtype, including `bool` and
+`uint8`, raises `TypeError`; a wrong length, dimension, or device raises
+`ValueError`. Indices must be in range: losses do not check bounds, because that
+would synchronize the device, so negative or out-of-range indices are a caller
+error with undefined results.
+
+`indices_tuple=None` means no restriction: the loss uses every pair or triplet
+its labels define. A supplied tuple whose tensors are empty means that nothing
+was selected, which gives a differentiable zero.
 
 Losses use the tuples in one of three ways:
 
@@ -194,7 +201,9 @@ reduction.
 `forward` and returns the `pytorch_metric_learning.types.LossDict` that the
 reducer would receive, plus the regularization terms `embedding_reg_loss` and
 `weight_reg_loss` when their regularizers are set. Regularization terms are
-already reduced and already multiplied by their weights. Use `loss_terms` to
+already reduced and already multiplied by their weights. An objective term
+with the same name as a regularization term raises `ValueError` from both
+`forward` and `loss_terms`. Use `loss_terms` to
 implement a custom aggregation or to inspect per-pair values:
 
 ```python
@@ -235,11 +244,13 @@ $$
 
 where $c_i$ counts the occurrences of embedding $i$ in the tuples. Embeddings
 absent from the tuples get weight 0, and the most frequent embedding gets
-weight 1. With `indices_tuple=None`, or with tuples that contain no indices,
-every weight is 1. NCALoss counts only anchors when `ref_emb` is supplied,
-because positives and negatives then index the reference set. ProxyAnchorLoss
-multiplies each exponential term by its weight; the other losses multiply each
-embedding's loss by its weight. These losses require `labels`.
+weight 1. With `indices_tuple=None`, every weight is 1. A supplied tuple that
+contains no indices, such as an empty miner result, gives every embedding
+weight 0, so the loss is a differentiable zero rather than the unmined loss.
+NCALoss counts only anchors when `ref_emb` is supplied, because positives and
+negatives then index the reference set. ProxyAnchorLoss multiplies each
+exponential term by its weight; the other losses multiply each embedding's loss
+by its weight. These losses require `labels`.
 
 ## Learnable weight arguments
 

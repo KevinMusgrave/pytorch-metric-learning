@@ -23,7 +23,7 @@ These samplers balance labels within batches. They sample classes and examples
 independently for each batch, with replacement across batches, so an iterator
 is not an epoch that visits every example or class exactly once. A class with
 fewer members than requested is sampled with replacement within its batch.
-Use `length_before_new_iter` to choose how many indices one `MPerClassSampler`
+Use `num_samples` to choose how many indices one `MPerClassSampler`
 iterator yields.
 
 ## MPerClassSampler
@@ -38,7 +38,7 @@ samplers.MPerClassSampler(
     labels: Tensor | np.ndarray | Iterable[Hashable],
     m: int,
     batch_size: int | None = None,
-    length_before_new_iter: int = 100000,
+    num_samples: int = 100000,
     *,
     generator: torch.Generator | None = None,
 )
@@ -52,9 +52,9 @@ samplers.MPerClassSampler(
 - **batch_size**: Optional. If given, every batch of this size has `m` samples
   per class. Construction raises `ValueError` unless:
   - `batch_size` is a multiple of `m`
-  - `length_before_new_iter >= batch_size`
+  - `num_samples >= batch_size`
   - `m * (number of unique labels) >= batch_size`
-- **length_before_new_iter**: The number of indices one iterator yields, rounded down to a multiple of `batch_size` (or of `m * number of classes` when that is smaller and `batch_size` is `None`). `len(sampler)` equals the number of indices yielded.
+- **num_samples**: The number of indices one iterator yields, rounded down to a multiple of `batch_size` (or of `m * number of classes` when that is smaller and `batch_size` is `None`). `len(sampler)` equals the number of indices yielded.
 - **generator**: Optional `torch.Generator`; see [randomness and coverage](#randomness-and-coverage).
 
 To keep the per-batch guarantee, give the `DataLoader` the same `batch_size`

@@ -4,7 +4,15 @@
 
 ```python
 losses.ManifoldLoss(
-    embedding_size, num_proxies=50, lambda_c=1.0, alpha=0.8, margin=5e-4, **options
+    embedding_size,
+    num_proxies=50,
+    lambda_c=1.0,
+    alpha=0.8,
+    margin=5e-4,
+    *,
+    distance=None,
+    embedding_regularizer=None,
+    embedding_reg_weight=1.0,
 )
 ```
 
@@ -31,12 +39,15 @@ in `0..num_proxies - 1`; they are not class labels. With `labels=None`, every
 proxy is assigned to at least one embedding and the remaining embeddings
 receive random proxies, which requires a batch of at least `num_proxies`
 embeddings; a smaller unlabeled batch raises `ValueError`. Labels must lie in
-`[0, num_proxies)`. `indices_tuple`, `ref_emb`, and `ref_labels` raise `ValueError`,
+`[0, num_proxies)`. An empty labeled batch gives a differentiable zero.
+`indices_tuple`, `ref_emb`, and `ref_labels` raise `ValueError`,
 as does an embedding dimension other than `embedding_size`. The matrix inverse
 is computed in float32.
 
 The proxies are the parameter `proxies`, shaped `(num_proxies, embedding_size)`
-and initialized with `torch.randn`. Include `loss_func.parameters()` in an
+and initialized with `torch.randn`. Unlike the class weights that other losses
+name `weight`, these rows are unlabeled points of the similarity graph, so the
+parameter keeps the paper's name. Include `loss_func.parameters()` in an
 optimizer. The [placement rule](../losses.md#learnable-weight-arguments) of
 learnable weights applies; this loss does not derive from BaseProxyLoss and has
 no weight regularization arguments.
@@ -68,15 +79,18 @@ optimizer.step()
 - **alpha**: The random-walk parameter $\alpha$, in the open interval `(0, 1)`.
   It controls how much similarity propagates between neighboring nodes.
 - **margin**: The margin $m$.
+- **distance**, **embedding_regularizer**, **embedding_reg_weight**: See
+  [loss options](../losses.md#loss-options).
 
 **Default distance**:
 
 - [`CosineSimilarity()`](../distances.md#cosinesimilarity)
 
-**Default reducer**:
+**Reducer**:
 
-- [MeanReducer](../reducers.md#meanreducer)
+- None. The loss reduces its own value, so it has no `reducer` option; passing
+  `reducer` raises `TypeError`.
 
-**Reducer input**:
+**Loss terms**:
 
-- **loss**: Already reduced: the value of $L$. Every reducer returns it unchanged.
+- **loss**: The value of $L$, with `indices=None`.

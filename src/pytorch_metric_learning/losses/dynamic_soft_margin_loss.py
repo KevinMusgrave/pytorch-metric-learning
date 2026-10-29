@@ -1,26 +1,33 @@
 import math
-from typing import Unpack
 
 import torch
 from torch import Tensor
 
-from ..distances import LpDistance
-from ..types import IndicesTuple, LossDict, LossOptions
+from ..distances import BaseDistance, LpDistance
+from ..regularizers import BaseRegularizer
+from ..types import IndicesTuple, LossDict
 from ..utils import _common, indexing
 from .base_metric_loss_function import BaseMetricLossFunction
 
 
 class DynamicSoftMarginLoss(BaseMetricLossFunction):
-    hist_: Tensor
+    hist: Tensor
 
     def __init__(
         self,
         min_val: float = -2.0,
         num_bins: int = 10,
         momentum: float = 0.01,
-        **options: Unpack[LossOptions],
+        *,
+        distance: BaseDistance | None = None,
+        embedding_regularizer: BaseRegularizer | None = None,
+        embedding_reg_weight: float = 1.0,
     ) -> None:
-        super().__init__(**options)
+        super().__init__(
+            distance=distance,
+            embedding_regularizer=embedding_regularizer,
+            embedding_reg_weight=embedding_reg_weight,
+        )
         _common.check_distance_type(
             self, LpDistance, normalize_embeddings=True, p=2, power=1
         )
@@ -34,7 +41,7 @@ class DynamicSoftMarginLoss(BaseMetricLossFunction):
         self.num_bins = num_bins
         self.delta = 2 * abs(min_val) / (num_bins - 1)
         self.momentum = momentum
-        self.register_buffer("hist_", torch.zeros(num_bins))
+        self.register_buffer("hist", torch.zeros(num_bins))
 
     def compute_loss(
         self,
@@ -44,7 +51,7 @@ class DynamicSoftMarginLoss(BaseMetricLossFunction):
         ref_emb: Tensor | None,
         ref_labels: Tensor | None,
     ) -> LossDict:
-        _common.check_parameter_placement(self, self.hist_, embeddings)
+        _common.check_parameter_placement(self, self.hist, embeddings)
         if labels is None and indices_tuple is None:
             if ref_emb is None:
                 raise ValueError(
@@ -96,7 +103,7 @@ class DynamicSoftMarginLoss(BaseMetricLossFunction):
         return mat[anchor, positive] - mat[anchor, negative]
 
     def bin_positions(self, data: Tensor) -> Tensor:
-        data = data.to(dtype=self.hist_.dtype)
+        data = data.to(dtype=self.hist.dtype)
         return ((data - self.min_val) / self.delta).clamp(0, self.num_bins - 1)
 
     @torch.no_grad()
@@ -105,13 +112,13 @@ class DynamicSoftMarginLoss(BaseMetricLossFunction):
         lower = positions.long()
         upper = (lower + 1).clamp_max(self.num_bins - 1)
         fraction = positions - lower
-        histogram = torch.zeros_like(self.hist_)
+        histogram = torch.zeros_like(self.hist)
         histogram.scatter_add_(0, lower, 1 - fraction)
         histogram.scatter_add_(0, upper, fraction)
         histogram /= data.numel()
-        momentum = torch.where(self.hist_.sum() > 0, self.momentum, 1.0)
-        self.hist_.lerp_(histogram, momentum)
+        momentum = torch.where(self.hist.sum() > 0, self.momentum, 1.0)
+        self.hist.lerp_(histogram, momentum)
 
     def weigh_loss(self, data: Tensor) -> Tensor:
         positions = self.bin_positions(data).long()
-        return self.hist_.cumsum(0)[positions] * data
+        return self.hist.cumsum(0)[positions] * data

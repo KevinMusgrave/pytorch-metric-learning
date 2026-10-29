@@ -15,8 +15,9 @@ def subset_weights(
     mined_tuples: Sequence[Tensor],
 ) -> Tensor:
     weights = torch.zeros(dataset_size, device=subset_labels.device)
+    selected = mined_tuples if any(len(x) for x in mined_tuples) else None
     weights[subset_indices] = indexing.convert_to_weights(
-        mined_tuples, subset_labels, dtype=weights.dtype
+        selected, subset_labels, dtype=weights.dtype
     )
     return weights
 

@@ -28,6 +28,12 @@ and its gradient stay finite when the individual $p_{ij}$ underflow. float16 and
 similarity distance, the exponents are $s \cdot \mathrm{sim}(\mathbf{x}_i,
 \mathbf{r}_j)$. The default distance L2-normalizes the embeddings.
 
+**Paper settings**: The paper uses squared Euclidean distances between
+unnormalized embeddings and sums $\log p_i$ over the points; the default
+distance normalizes the embeddings and the default reducer averages. Pass
+`distance=distances.LpDistance(normalize_embeddings=False, power=2)` and
+`reducer=reducers.SumReducer()` for the paper's objective.
+
 **Example**:
 
 ```python

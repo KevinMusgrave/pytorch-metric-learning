@@ -143,7 +143,7 @@ class TestHistogramLoss(unittest.TestCase):
         with self.assertRaises(ValueError):
             _ = HistogramLoss(num_bins=0)
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             fractional: Any = 2.5
             _ = HistogramLoss(num_bins=fractional)
 

@@ -25,7 +25,9 @@ Here $D_{ij} = s_j - s_i$, where $s_i$ is the cosine similarity between query $q
 **Implementation notes**: Each embedding is a query against the whole batch.
 The query is counted in its own $\mathcal{S}_P$, as in the authors'
 implementation. Positive sets come from the labels, so classes may appear in
-any order and with different counts. With an `indices_tuple`, each query's loss
+any order and with different counts. A query without another positive in the
+batch has no loss term, as in [FastAPLoss](fast_ap_loss.md); its average
+precision would be 1 by construction. With an `indices_tuple`, each query's loss
 is multiplied by its [miner weight](../losses.md#miner-weights). Labels are
 required, and `ref_emb` raises `ValueError`. Memory grows with the cube of the
 batch size.
@@ -58,5 +60,5 @@ loss.backward()
 
 **Reducer input**:
 
-- **loss**: One value $1 - AP_q$ per query, indexed by query position in
-  `embeddings`.
+- **loss**: One value $1 - AP_q$ per query that has another positive, indexed
+  by query position in `embeddings`.

@@ -22,8 +22,10 @@ matching the unit-length derivation of the equation. The loss is computed for
 every positive pair `(a, p)`, from labels or from `indices_tuple`, rather than
 one positive per anchor. The negatives of a pair are every reference with a
 label different from the anchor's, so `labels` are required even with
-`indices_tuple`. A pair without negatives contributes 0. With `ref_emb`,
-positives and negatives come from the reference set.
+`indices_tuple`; negative pairs in `indices_tuple` are not used, so a miner that
+returns only positive pairs still gives a loss. A pair without negatives
+contributes 0. With `ref_emb`, positives and negatives come from the reference
+set.
 
 **Example**:
 

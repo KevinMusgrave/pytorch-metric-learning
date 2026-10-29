@@ -1,10 +1,15 @@
 import unittest
+from functools import partial
 
 import torch
 
 from pytorch_metric_learning.distances import LpDistance
 from pytorch_metric_learning.losses import NTXentLoss, SupConLoss
-from pytorch_metric_learning.reducers import AvgNonZeroReducer, PerAnchorReducer
+from pytorch_metric_learning.reducers import (
+    AvgNonZeroReducer,
+    MeanReducer,
+    PerAnchorReducer,
+)
 
 from .. import TEST_DEVICE, TEST_DTYPES, helpers
 from ..helpers import angle_to_coord
@@ -194,22 +199,99 @@ class TestNTXentLoss(unittest.TestCase):
 
     def test_backward(self):
         temperature = 0.1
-        for loss_class in [NTXentLoss, SupConLoss]:
-            loss_funcA = loss_class(temperature)
-            loss_funcB = loss_class(temperature, distance=LpDistance())
-            for dtype in TEST_DTYPES:
-                for loss_func in [loss_funcA, loss_funcB]:
-                    embedding_angles = [0, 20, 40, 60, 80]
-                    embeddings = torch.tensor(
-                        [angle_to_coord(a) for a in embedding_angles],
-                        requires_grad=True,
-                        dtype=dtype,
-                    ).to(TEST_DEVICE)
-                    labels = torch.tensor([0, 0, 1, 1, 2], dtype=torch.long).to(
-                        TEST_DEVICE
-                    )
-                    loss = loss_func(embeddings, labels)
-                    loss.backward()
+        labels = torch.tensor([0, 0, 1, 1, 2], device=TEST_DEVICE)
+        coordinates = torch.tensor([angle_to_coord(a) for a in [0, 20, 40, 60, 80]])
+        for loss_class, reference in (
+            (NTXentLoss, ntxent_logits_reference),
+            (SupConLoss, supcon_logits_reference),
+        ):
+            for distance, similarity in (
+                (None, cosine_logits),
+                (LpDistance(), negative_euclidean_logits),
+            ):
+                loss_func = loss_class(temperature, distance=distance)
+                for dtype in TEST_DTYPES:
+                    with self.subTest(loss=loss_class.__name__, dtype=dtype):
+                        helpers.assert_matches_float64(
+                            partial(loss_func, labels=labels),
+                            partial(
+                                logits_reference,
+                                loss_reference=reference,
+                                similarity=similarity,
+                                temperature=temperature,
+                                labels=labels.tolist(),
+                            ),
+                            [coordinates],
+                            dtype,
+                        )
+
+    def test_supcon_excludes_anchors_without_positives(self):
+        labels = torch.tensor([0, 0, 1, 1, 2, 3], device=TEST_DEVICE)
+        torch.manual_seed(9)
+        embeddings = torch.randn(6, 3)
+        loss_func = SupConLoss(0.2, reducer=MeanReducer())
+        for dtype in TEST_DTYPES:
+            with self.subTest(dtype=dtype):
+                helpers.assert_matches_float64(
+                    lambda x: loss_func(x, labels),
+                    lambda x: supcon_logits_reference(
+                        cosine_logits(x) / 0.2, labels.tolist()
+                    ),
+                    [embeddings],
+                    dtype,
+                )
+
+
+def logits_reference(embeddings, loss_reference, similarity, temperature, labels):
+    return loss_reference(similarity(embeddings) / temperature, labels)
+
+
+def cosine_logits(embeddings):
+    normalized = torch.nn.functional.normalize(embeddings, dim=1)
+    return normalized @ normalized.T
+
+
+def negative_euclidean_logits(embeddings):
+    normalized = torch.nn.functional.normalize(embeddings, dim=1)
+    rows = len(normalized)
+    return -torch.stack(
+        [
+            torch.stack(
+                [
+                    torch.sqrt(torch.sum((normalized[i] - normalized[j]) ** 2))
+                    if i != j
+                    else normalized.new_zeros(())
+                    for j in range(rows)
+                ]
+            )
+            for i in range(rows)
+        ]
+    )
+
+
+def ntxent_logits_reference(logits, labels):
+    losses = []
+    for a, label in enumerate(labels):
+        negatives = [n for n, other in enumerate(labels) if other != label]
+        for p, other in enumerate(labels):
+            if p != a and other == label:
+                terms = torch.stack([logits[a, p], *[logits[a, n] for n in negatives]])
+                losses.append(torch.logsumexp(terms, 0) - logits[a, p])
+    return torch.stack(losses).mean()
+
+
+def supcon_logits_reference(logits, labels):
+    losses = []
+    for a, label in enumerate(labels):
+        others = [k for k in range(len(labels)) if k != a]
+        positives = [p for p in others if labels[p] == label]
+        if not positives:
+            continue
+        log_denominator = torch.logsumexp(logits[a, others], 0)
+        losses.append(
+            -torch.stack([logits[a, p] - log_denominator for p in positives]).mean()
+        )
+    return torch.stack(losses).mean()
 
 
 def supcon_without_negatives(embeddings, distance, temperature):

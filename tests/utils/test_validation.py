@@ -77,6 +77,15 @@ class TestValidation(unittest.TestCase):
             (values, (index, index[:1]), ValueError, "equal lengths"),
             (values, (index, index, [0, 1]), TypeError, "tensor"),
             (values, (index,) * 4, TypeError, "two or three tensors"),
+            (values, (index,), TypeError, "two or three tensors"),
+            (values, index.float(), TypeError, "int64 or int32"),
+            (values, (index, index.bool()), TypeError, "int64 or int32"),
+            (
+                values,
+                (index, index, index.to(torch.uint8)),
+                TypeError,
+                "int64 or int32",
+            ),
             (values, None, ValueError, "one value"),
             (values, index[:, None], ValueError, "one-dimensional"),
         ]
@@ -90,6 +99,42 @@ class TestValidation(unittest.TestCase):
                     torch.randn(2, 3),
                     torch.arange(2),
                 )
+
+    def test_reducer_accepts_int32_and_int64_indices(self):
+        values = torch.tensor([1.0, 3.0], requires_grad=True)
+        for dtype in (torch.int32, torch.int64):
+            index = torch.arange(2, dtype=dtype)
+            for indices in (index, (index, index), (index, index, index)):
+                with self.subTest(dtype=dtype, kind=len(indices)):
+                    loss = MeanReducer()(
+                        {"loss": {"losses": values, "indices": indices}},
+                        torch.randn(2, 3),
+                        torch.arange(2),
+                    )
+                    (gradient,) = torch.autograd.grad(loss, values)
+                    self.assertEqual(loss.item(), 2.0)
+                    torch.testing.assert_close(gradient, torch.full((2,), 0.5))
+
+    def test_indices_tuple_requires_integer_index_tensors(self):
+        embeddings, labels = torch.randn(3, 2), torch.tensor([0, 0, 1])
+        index = torch.tensor([0, 1])
+        for bad in (index.float(), index.bool(), index.to(torch.uint8)):
+            pairs = (index, index, index, bad)
+            with self.subTest(dtype=bad.dtype):
+                with self.assertRaisesRegex(TypeError, "int64 or int32"):
+                    ContrastiveLoss()(embeddings, labels, pairs)
+                with self.assertRaisesRegex(TypeError, "int64 or int32"):
+                    InvalidMiner(pairs)(embeddings, labels)
+                with self.assertRaisesRegex(TypeError, "int64 or int32"):
+                    InvalidMiner(None)(embeddings, labels, pairs)
+        small = torch.tensor([0, 1], dtype=torch.int32)
+        expected = ContrastiveLoss()(
+            embeddings, labels, (index, index + 1, index, index + 1)
+        )
+        actual = ContrastiveLoss()(
+            embeddings, labels, (small, small + 1, small, small + 1)
+        )
+        torch.testing.assert_close(actual, expected)
 
     def test_distance_contracts(self):
         with self.assertRaisesRegex(TypeError, "CosineSimilarity"):

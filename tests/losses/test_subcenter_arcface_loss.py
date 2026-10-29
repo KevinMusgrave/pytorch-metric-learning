@@ -6,6 +6,7 @@ import torch
 import torch.nn.functional as F
 
 from pytorch_metric_learning.losses import ArcFaceLoss, SubCenterArcFaceLoss
+from pytorch_metric_learning.losses.subcenter_arcface_loss import SubCenterOutliers
 
 from .. import TEST_DEVICE, TEST_DTYPES, helpers
 
@@ -103,9 +104,11 @@ class TestSubCenterArcFaceLoss(unittest.TestCase):
                     TEST_DEVICE
                 )
 
-                outliers, dominant_centers = loss_func.get_outliers(
-                    embeddings, labels, threshold=threshold
+                result = loss_func.get_outliers(
+                    embeddings, labels, threshold_radians=math.radians(threshold)
                 )
+                self.assertIsInstance(result, SubCenterOutliers)
+                outliers, dominant_centers = result.outliers, result.dominant_centers
 
                 if threshold == 180:
                     self.assertTrue(len(outliers) == 0)

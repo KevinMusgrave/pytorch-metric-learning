@@ -12,7 +12,8 @@ arguments to `mine` as follows:
   indices refer to these rows.
 - **indices_tuple**: `None`, or the caller's candidate pairs or triplets as a
   `PairIndices` or `TripletIndices`. A miner honors candidates by selecting only
-  from them.
+  from them; `None` means every pair is a candidate, and an empty tuple means
+  none is.
 - **ref_emb**, **ref_labels**: `None` for self-comparison, or a separate
   reference set. Positive and negative indices refer to the reference rows.
 
@@ -118,5 +119,8 @@ leave `ref_emb` as `None`.
 tensors are on the embeddings' device and that labels have one value per
 embedding, raising `ValueError` otherwise. After `mine` returns, it checks for
 three equal-length triplet tensors or four pair tensors whose anchor and partner
-lengths match, all one-dimensional and on the embeddings' device. Invalid types
+lengths match, all one-dimensional and on the embeddings' device. Candidate and
+output index tensors must be `int64` or `int32`. Invalid types or index dtypes
 raise `TypeError`; invalid shapes, lengths, or devices raise `ValueError`.
+Index values are not bounds-checked, so a miner must return indices within the
+query and reference rows.

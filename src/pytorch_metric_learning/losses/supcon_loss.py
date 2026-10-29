@@ -1,5 +1,6 @@
 from typing import Unpack
 
+import torch
 from torch import Tensor
 
 from ..distances import BaseDistance, CosineSimilarity
@@ -25,14 +26,10 @@ class SupConLoss(GenericPairLoss):
             mat, keep_mask=pos_mask | neg_mask, add_one=False, dim=1
         )
         log_prob = mat - denominator
-        positives = pos_mask.sum(dim=1).clamp_min(1)
-        mean_log_prob_pos = (pos_mask * log_prob).sum(dim=1) / positives
-        return {
-            "loss": {
-                "losses": -mean_log_prob_pos,
-                "indices": _common.arange_like(mat),
-            }
-        }
+        positives = pos_mask.sum(dim=1)
+        rows = torch.where(positives > 0)[0]
+        mean_log_prob_pos = (pos_mask * log_prob).sum(dim=1)[rows] / positives[rows]
+        return {"loss": {"losses": -mean_log_prob_pos, "indices": rows}}
 
     def default_reducer(self) -> BaseReducer:
         return AvgNonZeroReducer()

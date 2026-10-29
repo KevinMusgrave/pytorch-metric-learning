@@ -177,3 +177,12 @@ class TestP2SGradLoss(unittest.TestCase):
             t_loss = t_loss_func(t_layer(embeddings), labels)
             t_loss.backward()
             self.assertTrue(torch.isclose(loss, t_loss, rtol=rtol))
+
+    def test_empty_batch_gives_differentiable_zero(self):
+        loss_func = P2SGradLoss(3, 4).to(TEST_DEVICE)
+        embeddings = torch.randn(0, 4, device=TEST_DEVICE, requires_grad=True)
+        labels = torch.empty(0, dtype=torch.long, device=TEST_DEVICE)
+        loss = loss_func(embeddings, labels)
+        loss.backward()
+        self.assertEqual(loss.item(), 0)
+        torch.testing.assert_close(embeddings.grad, torch.zeros_like(embeddings))

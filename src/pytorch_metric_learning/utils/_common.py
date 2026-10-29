@@ -24,6 +24,18 @@ def accumulation_dtype(dtype: torch.dtype) -> torch.dtype:
     return torch.float32 if dtype in LOW_PRECISION else dtype
 
 
+def normalization_eps(dtype: torch.dtype) -> float:
+    return max(1e-12, torch.finfo(dtype).tiny)
+
+
+INDEX_DTYPES = (torch.int64, torch.int32)
+
+
+def check_index_dtypes(tensors: Sequence[Tensor], name: str) -> None:
+    if any(x.dtype not in INDEX_DTYPES for x in tensors):
+        raise TypeError(f"{name} must be int64 or int32 tensors")
+
+
 def zero_loss(embeddings: Tensor) -> Tensor:
     return embeddings.reshape(-1)[:0].sum()
 
@@ -121,6 +133,7 @@ def as_indices_tuple(
         isinstance(x, Tensor) for x in indices_tuple
     ):
         raise TypeError("indices_tuple must be a tuple of index tensors")
+    check_index_dtypes(indices_tuple, "indices_tuple")
     if any(x.ndim != 1 for x in indices_tuple):
         raise ValueError("indices_tuple must contain one-dimensional tensors")
     if device is not None and any(x.device != device for x in indices_tuple):

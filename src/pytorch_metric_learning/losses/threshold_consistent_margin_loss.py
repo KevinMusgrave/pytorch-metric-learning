@@ -1,10 +1,8 @@
-from typing import Unpack
-
-import torch.nn.functional as F
 from torch import Tensor
 
 from ..distances import BaseDistance, CosineSimilarity
-from ..types import IndicesTuple, LossDict, LossOptions
+from ..regularizers import BaseRegularizer
+from ..types import IndicesTuple, LossDict
 from ..utils import _common, indexing
 from .base_metric_loss_function import BaseMetricLossFunction
 
@@ -16,10 +14,21 @@ class ThresholdConsistentMarginLoss(BaseMetricLossFunction):
         lambda_minus: float = 1.0,
         margin_plus: float = 0.9,
         margin_minus: float = 0.5,
-        **options: Unpack[LossOptions],
+        *,
+        distance: BaseDistance | None = None,
+        embedding_regularizer: BaseRegularizer | None = None,
+        embedding_reg_weight: float = 1.0,
     ) -> None:
-        super().__init__(**options)
-        _common.check_distance_type(self, CosineSimilarity)
+        super().__init__(
+            distance=distance,
+            embedding_regularizer=embedding_regularizer,
+            embedding_reg_weight=embedding_reg_weight,
+        )
+        if not self.distance.is_inverted:
+            raise TypeError(
+                "ThresholdConsistentMarginLoss requires a similarity with "
+                "is_inverted=True"
+            )
         self.lambda_plus = lambda_plus
         self.lambda_minus = lambda_minus
         self.margin_plus = margin_plus
@@ -41,8 +50,8 @@ class ThresholdConsistentMarginLoss(BaseMetricLossFunction):
         reference, _ = _common.resolve_reference(
             embeddings, labels, ref_emb, ref_labels
         )
-        pos_sims = F.cosine_similarity(embeddings[ap], reference[p])
-        neg_sims = F.cosine_similarity(embeddings[an], reference[n])
+        pos_sims = self.distance.pairwise(embeddings[ap], reference[p])
+        neg_sims = self.distance.pairwise(embeddings[an], reference[n])
 
         s_lte_m = pos_sims <= self.margin_plus
         tcm_pos_num = ((self.margin_plus - pos_sims) * s_lte_m).sum()

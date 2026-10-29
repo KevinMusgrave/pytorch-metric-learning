@@ -3,7 +3,7 @@
 [Deep Metric Learning via Lifted Structured Feature Embedding](https://arxiv.org/abs/1511.06452)
 
 ```python
-losses.LiftedStructureLoss(neg_margin=1.0, pos_margin=0.0, **options)
+losses.LiftedStructureLoss(pos_margin=0.0, neg_margin=1.0, **options)
 ```
 
 **Equation**:
@@ -41,9 +41,9 @@ loss.backward()
 
 **Parameters**:
 
-- **neg_margin**: The margin $\alpha$. The paper uses 1.
 - **pos_margin**: A margin subtracted from $D_{i,j}$ in $\tilde{J}_{i,j}$. The
   paper uses 0, so it does not appear in the equation.
+- **neg_margin**: The margin $\alpha$. The paper uses 1.
 
 **Default distance**:
 

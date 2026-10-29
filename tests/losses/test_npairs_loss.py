@@ -1,11 +1,12 @@
 import unittest
+from functools import partial
 
 import torch
 
 from pytorch_metric_learning.losses import NPairsLoss
 from pytorch_metric_learning.regularizers import LpRegularizer
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 from ..helpers import angle_to_coord
 
 
@@ -71,20 +72,27 @@ class TestNPairsLoss(unittest.TestCase):
             self.assertEqual(loss, 0)
 
     def test_backward(self):
-        loss_funcA = NPairsLoss()
-        loss_funcB = NPairsLoss(embedding_regularizer=LpRegularizer())
+        labels = torch.tensor([0, 0, 1, 1, 1, 2, 3], device=TEST_DEVICE)
+        coordinates = 2.3 * torch.tensor([angle_to_coord(a) for a in range(0, 140, 20)])
 
-        for dtype in TEST_DTYPES:
-            for loss_func in [loss_funcA, loss_funcB]:
-                embedding_angles = list(range(0, 180, 20))[:7]
-                embeddings = torch.tensor(
-                    [angle_to_coord(a) for a in embedding_angles],
-                    requires_grad=True,
-                    dtype=dtype,
-                ).to(TEST_DEVICE)
-                labels = torch.tensor([0, 0, 1, 1, 1, 2, 3], dtype=torch.long).to(
-                    TEST_DEVICE
-                )
+        def reference(embeddings, with_regularizer):
+            x = torch.nn.functional.normalize(embeddings, dim=1)
+            similarities = x[[0, 2]] @ x[[1, 3]].T
+            loss = torch.mean(
+                torch.logsumexp(similarities, dim=1) - similarities.diagonal()
+            )
+            if with_regularizer:
+                loss = loss + torch.mean(torch.sum(embeddings**2, dim=1))
+            return loss
 
-                loss = loss_func(embeddings, labels)
-                loss.backward()
+        for with_regularizer in (False, True):
+            regularizer = LpRegularizer(power=2) if with_regularizer else None
+            loss_func = NPairsLoss(embedding_regularizer=regularizer)
+            for dtype in TEST_DTYPES:
+                with self.subTest(dtype=dtype, regularizer=with_regularizer):
+                    helpers.assert_matches_float64(
+                        partial(loss_func, labels=labels),
+                        partial(reference, with_regularizer=with_regularizer),
+                        [coordinates],
+                        dtype,
+                    )

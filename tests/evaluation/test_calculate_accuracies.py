@@ -36,17 +36,21 @@ def metrics_from_knn(
         device=query_labels.device,
     )
     counts = (counts - int(self_search)).clamp_min(0)[index]
-    kwargs = {
-        "knn_labels": knn_labels,
-        "query_labels": query_labels,
-        "relevant_counts": counts,
-        "not_lone_query_mask": counts > 0,
-        "unique_query_labels": unique,
-        "query_label_index": index,
-        "per_class": per_class,
-    }
-    functions = calculator.metric_functions()
-    return {name: functions[name](**kwargs) for name in calculator.metrics}
+    inputs = accuracy_calculator.RetrievalInputs(
+        query_labels=query_labels,
+        knn_labels=knn_labels,
+        matches=query_labels.unsqueeze(1) == knn_labels,
+        relevant_counts=counts,
+    )
+    groups = accuracy_calculator.QueryGroups(inputs, counts > 0, unique, index)
+    results = {}
+    for name in calculator.metrics:
+        values, defined = groups.values(name, calculator.available_metrics[name])
+        if per_class:
+            results[name] = groups.class_means(values, defined).tolist()
+        else:
+            results[name] = calculator.reduce(groups, values, defined)
+    return results
 
 
 def match_counts(query_labels, reference_labels, comparison_fn):

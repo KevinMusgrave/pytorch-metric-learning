@@ -10,15 +10,22 @@ losses.MultipleLosses(losses, miners=None, weights=None)
 is:
 
 ```python
-loss_func(embeddings, labels, indices_tuple=None)
+loss_func(embeddings, labels=None, indices_tuple=None, ref_emb=None, ref_labels=None)
 ```
 
-It returns $\sum_k w_k L_k$ over the named losses. A loss with a configured
-miner receives that miner's output for `(embeddings, labels)`; every other loss
+This is the [`BaseMetricLossFunction` forward signature](../losses.md#forward-arguments).
+It returns $\sum_k w_k L_k$ over the named losses, and passes `labels`,
+`ref_emb`, and `ref_labels` to every loss. A loss with a configured miner
+receives that miner's output for
+`(embeddings, labels, ref_emb=ref_emb, ref_labels=ref_labels)`; every other loss
 receives the `indices_tuple` given to `forward`. Supplying both a miner mapping
 and an `indices_tuple` raises `ValueError`. The losses and miners are
 registered as submodules, so `loss_func.to(...)` and `loss_func.parameters()`
-cover them.
+cover them. Because the signature matches, a `MultipleLosses` can be wrapped
+by [CrossBatchMemory](cross_batch_memory.md),
+[SelfSupervisedLoss](self_supervised_loss.md), and
+[DistributedLossWrapper](../distributed.md#distributedlosswrapper), and nested in
+another `MultipleLosses`.
 
 **Example**:
 
@@ -42,8 +49,10 @@ loss.backward()
 
 **Parameters**:
 
-- **losses**: A non-empty mapping from names to initialized loss modules, for
-  example `{"metric": loss_a, "tcm": loss_b}`. Anything else raises `TypeError`.
+- **losses**: A non-empty mapping from names to `BaseMetricLossFunction` or
+  `MultipleLosses` instances, for example `{"metric": loss_a, "tcm": loss_b}`.
+  Anything else, including `CrossBatchMemory` and `VICRegLoss`, raises
+  `TypeError`.
 - **miners**: Optional. A mapping from loss names to miners. A key that is not
   in `losses` raises `ValueError`.
 - **weights**: Optional. A mapping with exactly the same keys as `losses`,

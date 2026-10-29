@@ -7,6 +7,7 @@ from torch import Tensor
 
 if TYPE_CHECKING:
     from .distances import BaseDistance
+    from .losses import BaseMetricLossFunction, MultipleLosses
     from .reducers import BaseReducer
     from .regularizers import BaseRegularizer
 
@@ -31,11 +32,12 @@ type MiningStrategy = Literal["hard", "semihard", "easy", "all"]
 
 class LossTerm(TypedDict):
     losses: Tensor
-    indices: Tensor | tuple[Tensor, Tensor] | TripletIndices | None
+    indices: Tensor | tuple[Tensor, Tensor] | tuple[Tensor, Tensor, Tensor] | None
     divisor: NotRequired[Tensor | float | int]
 
 
 type LossDict = dict[str, LossTerm]
+type MetricLoss = BaseMetricLossFunction | MultipleLosses
 
 
 class LossOptions(TypedDict, total=False):

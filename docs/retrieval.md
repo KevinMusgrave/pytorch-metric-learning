@@ -37,6 +37,10 @@ removes each query's own index `i`; if row `i` does not appear in a row's
 results, the last neighbor is removed instead. This assumes the query is the
 first `len(query)` rows of `reference`, which
 [`AccuracyCalculator`](accuracy_calculation.md#getting-accuracy) validates.
+Every index must address a row of the `reference` passed to that call;
+`AccuracyCalculator` raises `ValueError` naming the returned index range
+otherwise. It calls `knn_func` under `torch.no_grad()` with the
+[number of neighbors its selected metrics need](accuracy_calculation.md#neighbors-retrieved).
 
 ## CustomKNN
 
@@ -53,9 +57,10 @@ evaluation.CustomKNN(distance, batch_size=None)
   `(len(query), len(reference))` matrix to one block plus the outputs.
 
 Distances have the query's dtype; indices are `torch.long`. Tied values are
-ordered by `torch.topk`, which does not guarantee index order.
-The backend retains no per-call result tensors or autograd graphs after results
-are discarded, including after a failed search. `AccuracyCalculator` releases
+ordered by `torch.topk`, which does not guarantee index order. The search runs
+under `torch.no_grad()`, so its outputs carry no autograd graph even when the
+inputs require gradients. The backend retains no per-call result tensors after
+results are discarded, including after a failed search. `AccuracyCalculator` releases
 the k-NN outputs before returning its metrics. With `k=None`, all neighbors are
 materialized during evaluation, so peak output storage is still quadratic when
 query and reference counts grow together.
@@ -89,15 +94,18 @@ is at least `threshold` for a distance with `is_inverted=True`. A threshold
 passed to a method overrides the constructor value; omitting both raises
 `ValueError`. Computations run under `torch.no_grad()` on the inputs' device.
 
-- `get_matching_pairs(query_emb, ref_emb=None, threshold=None, return_tuples=False)`
-  returns a boolean `(len(query_emb), len(ref_emb))` tensor. With
-  `return_tuples=True`, it returns the `(num_matches, 2)` index tensor from
-  `nonzero()`. `ref_emb=None` compares `query_emb` with itself, so the diagonal
-  matches whenever a row matches itself.
+- `get_match_matrix(query_emb, ref_emb=None, threshold=None)` returns a boolean
+  `(len(query_emb), len(ref_emb))` tensor.
+- `get_match_indices(query_emb, ref_emb=None, threshold=None)` returns a
+  `torch.long` tensor shaped `(num_matches, 2)`; each row is a
+  `(query index, reference index)` pair of the match matrix, in row-major order.
 - `is_match(x, y, threshold=None)` compares row `i` of `x` with row `i` of `y`
   and returns a boolean tensor shaped `(len(x),)`.
 
-Both methods honor the configured distance normalization and `power`, including
+For `get_match_matrix` and `get_match_indices`, `ref_emb=None` compares
+`query_emb` with itself, so the diagonal matches whenever a row matches itself.
+
+All three methods honor the configured distance normalization and `power`, including
 cosine similarity and squared Euclidean distance. `is_match` uses
 [`distance.pairwise`](distances.md#calling-a-distance), so it computes only
 corresponding pairs, without materializing a full matrix.
@@ -110,8 +118,9 @@ from pytorch_metric_learning.evaluation import MatchFinder
 query = torch.tensor([[1.0, 0.0], [0.0, 1.0]])
 reference = torch.tensor([[1.0, 0.1], [1.0, 1.0], [-1.0, 0.0]])
 finder = MatchFinder(CosineSimilarity(), threshold=0.9)
-matches = finder.get_matching_pairs(query, reference)
+matches = finder.get_match_matrix(query, reference)
 assert matches.tolist() == [[True, False, False], [False, False, False]]
+assert finder.get_match_indices(query, reference).tolist() == [[0, 0]]
 assert finder.is_match(query, reference[:2]).tolist() == [True, False]
 ```
 
@@ -134,7 +143,8 @@ evaluation.FaissKNN(reset_before=True, reset_after=True, index_init_fn=None, gpu
 ```
 
 - **reset_before**: Build a new index from `index_init_fn(dimension)` on every
-  call, adding `reference` before searching.
+  call, adding `reference` before searching. If `False`, the call searches the
+  existing index, and a `reference` passed to the call is appended to it first.
 - **reset_after**: Discard the index after every call.
 - **index_init_fn**: Callable returning a Faiss index for a dimension. Defaults to
   `faiss.IndexFlatL2`, whose distances are squared Euclidean.
@@ -148,6 +158,13 @@ device. A GPU search requires a GPU build of Faiss, one that provides
 The `faiss-cpu` package never searches on a GPU, even when Faiss reports one.
 A GPU search runs only when `k` is at most 2,048, the limit in Faiss's
 `DeviceDefs.cuh`; otherwise it logs a warning and uses the CPU index.
+
+With `reset_before=False`, the index accumulates: each call that passes
+`reference` appends those rows, and their indices continue after the rows already
+present, so repeated calls search duplicated rows. Search a persistent index by
+calling it without `reference`, as below. `AccuracyCalculator` always passes its
+reference set, so give it a `FaissKNN` with `reset_before=True`, the default;
+indices past its reference set raise `ValueError`.
 
 To keep a persistent index, disable both resets:
 

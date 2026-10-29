@@ -13,7 +13,7 @@ class RegularFaceRegularizer(BaseRegularizer):
     def __init__(self, **options: Unpack[RegularizerOptions]) -> None:
         super().__init__(**options)
         if not self.distance.is_inverted:
-            raise ValueError("distance must be a similarity with is_inverted=True")
+            raise TypeError("distance must be a similarity with is_inverted=True")
 
     def compute_loss(self, x: Tensor) -> LossDict:
         cos = self.distance(x)

@@ -3,7 +3,15 @@
 [Learning Local Descriptors With a CDF-Based Dynamic Soft Margin](https://openaccess.thecvf.com/content_ICCV_2019/papers/Zhang_Learning_Local_Descriptors_With_a_CDF-Based_Dynamic_Soft_Margin_ICCV_2019_paper.pdf)
 
 ```python
-losses.DynamicSoftMarginLoss(min_val=-2.0, num_bins=10, momentum=0.01, **options)
+losses.DynamicSoftMarginLoss(
+    min_val=-2.0,
+    num_bins=10,
+    momentum=0.01,
+    *,
+    distance=None,
+    embedding_regularizer=None,
+    embedding_reg_weight=1.0,
+)
 ```
 
 **Equation**:
@@ -37,7 +45,7 @@ batch initializes the histogram; batches without differences leave it
 unchanged. Histogram updates and weights are detached, so gradients flow only
 through the distances.
 
-The running histogram `hist_` is a buffer of the loss module and is saved in
+The running histogram `hist` is a buffer of the loss module and is saved in
 `state_dict`. Move the loss with `loss_func.to(device, dtype)`; outside
 autocast, a placement mismatch raises `ValueError`. Under autocast, bin
 coordinates and histogram contributions use the buffer's dtype, and updating
@@ -69,6 +77,8 @@ loss.backward()
   endpoints. Values below 2 raise `ValueError`.
 - **momentum**: The weight $\eta$ of the current batch's normalized histogram,
   between 0 and 1; other values raise `ValueError`.
+- **distance**, **embedding_regularizer**, **embedding_reg_weight**: See
+  [loss options](../losses.md#loss-options).
 
 **Default distance**:
 
@@ -76,11 +86,12 @@ loss.backward()
   This is the only compatible distance; another distance class raises
   `TypeError` and other settings raise `ValueError`.
 
-**Default reducer**:
+**Reducer**:
 
-- [MeanReducer](../reducers.md#meanreducer)
+- None. The loss reduces its own value, so it has no `reducer` option; passing
+  `reducer` raises `TypeError`.
 
-**Reducer input**:
+**Loss terms**:
 
-- **loss**: Already reduced: the mean of $\hat F(\Delta_t)\,\Delta_t$ over all
-  differences. Every reducer returns it unchanged.
+- **loss**: The mean of $\hat F(\Delta_t)\,\Delta_t$ over all differences,
+  with `indices=None`.

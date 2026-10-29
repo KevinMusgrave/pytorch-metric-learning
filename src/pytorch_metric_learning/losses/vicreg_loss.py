@@ -20,6 +20,10 @@ class VICRegLoss(torch.nn.Module):
     def forward(self, embeddings: Tensor, ref_emb: Tensor) -> Tensor:
         if embeddings.shape != ref_emb.shape or embeddings.ndim != 2:
             raise ValueError("embeddings and ref_emb must be 2D tensors of equal shape")
+        if len(embeddings) < 2:
+            raise ValueError(
+                "VICRegLoss needs at least 2 rows to estimate variance and covariance"
+            )
         return (
             self.invariance_lambda * self.invariance_loss(embeddings, ref_emb)
             + self.variance_mu * self.variance_loss(embeddings, ref_emb)

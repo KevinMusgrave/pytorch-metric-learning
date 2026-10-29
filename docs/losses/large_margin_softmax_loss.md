@@ -54,8 +54,9 @@ optimizer.step()
 - **num_classes**: The number of classes in the training set. Labels must be in
   `0..num_classes - 1`.
 - **embedding_size**: The size of the embeddings passed to the loss.
-- **margin**: The integer angular margin $m$. A value that is not a positive
-  `int` raises `ValueError`. The paper finds `m=4` works best.
+- **margin**: The integer angular margin $m$. A value that is not an `int`
+  raises `TypeError`, and a value below 1 raises `ValueError`. The paper finds
+  `m=4` works best.
 - **scale**: A multiplier of every logit. The paper uses 1, so it does not
   appear in the equation.
 - **weight_regularizer**, **weight_reg_weight**, **weight_init_func**: See

@@ -1,21 +1,24 @@
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
 import torch
 from torch import Tensor
 
-from ..types import IndicesTuple
+from ..types import MetricLoss
+from .base_metric_loss_function import BaseMetricLossFunction
 
 
 class MultipleLosses(torch.nn.Module):
     def __init__(
         self,
-        losses: Mapping[str, torch.nn.Module],
+        losses: Mapping[str, MetricLoss],
         miners: Mapping[str, torch.nn.Module] | None = None,
         weights: Mapping[str, float] | None = None,
     ) -> None:
         super().__init__()
         if not isinstance(losses, Mapping) or not losses:
             raise TypeError("losses must be a non-empty mapping from names to modules")
+        for loss in losses.values():
+            require_metric_loss(loss, "MultipleLosses")
         self.losses = torch.nn.ModuleDict(losses)
         miners = {} if miners is None else dict(miners)
         if not set(miners) <= set(losses):
@@ -30,8 +33,10 @@ class MultipleLosses(torch.nn.Module):
     def forward(
         self,
         embeddings: Tensor,
-        labels: Tensor,
-        indices_tuple: IndicesTuple | None = None,
+        labels: Tensor | None = None,
+        indices_tuple: Sequence[Tensor] | None = None,
+        ref_emb: Tensor | None = None,
+        ref_labels: Tensor | None = None,
     ) -> Tensor:
         if self.miners and indices_tuple is not None:
             raise ValueError("indices_tuple cannot be supplied with configured miners")
@@ -39,6 +44,17 @@ class MultipleLosses(torch.nn.Module):
         for name, loss_func in self.losses.items():
             current = indices_tuple
             if name in self.miners:
-                current = self.miners[name](embeddings, labels)
-            total = total + loss_func(embeddings, labels, current) * self.weights[name]
+                current = self.miners[name](
+                    embeddings, labels, ref_emb=ref_emb, ref_labels=ref_labels
+                )
+            loss = loss_func(embeddings, labels, current, ref_emb, ref_labels)
+            total = total + loss * self.weights[name]
         return total
+
+
+def require_metric_loss(loss: object, owner: str) -> None:
+    if not isinstance(loss, (BaseMetricLossFunction, MultipleLosses)):
+        raise TypeError(
+            f"{owner} requires a BaseMetricLossFunction or MultipleLosses, "
+            f"not {type(loss).__name__}"
+        )

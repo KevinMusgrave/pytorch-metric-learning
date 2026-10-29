@@ -2,10 +2,13 @@ import json
 import subprocess
 import sys
 import tempfile
+import tomllib
 import unittest
 from pathlib import Path
 
-SCRIPT = Path(__file__).resolve().parents[2] / "scripts" / "release.py"
+ROOT = Path(__file__).resolve().parents[2]
+SCRIPT = ROOT / "scripts" / "release.py"
+NOTES_SCRIPT = ROOT / "scripts" / "release_notes.py"
 
 
 class TestRelease(unittest.TestCase):
@@ -150,6 +153,49 @@ class TestRelease(unittest.TestCase):
         self.assert_rejected(
             runs=[{**self.ci_run, "conclusion": "failure"}, self.ci_run]
         )
+
+
+class TestReleaseNotes(unittest.TestCase):
+    def render(self, root, version):
+        output = root / "notes.md"
+        subprocess.run(
+            [sys.executable, "-I", str(NOTES_SCRIPT), version, str(output)],
+            cwd=root,
+            check=True,
+        )
+        return output.read_text()
+
+    def test_relative_links_become_published_site_urls(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "docs" / "release-notes").mkdir(parents=True)
+            (root / "mkdocs.yml").write_text(
+                "site_name: x\nsite_url: https://x.io/pml/\n"
+            )
+            (root / "docs" / "release-notes" / "1.0.0.md").write_text(
+                "[a](../migration.md) [b](../recipes/training.md#step) "
+                "[c](index.md) [d](#local) [e](https://example.com/page.md)\n"
+            )
+            self.assertEqual(
+                self.render(root, "1.0.0"),
+                "[a](https://x.io/pml/migration/) "
+                "[b](https://x.io/pml/recipes/training/#step) "
+                "[c](https://x.io/pml/release-notes/) [d](#local) "
+                "[e](https://example.com/page.md)\n",
+            )
+
+    def test_current_notes_have_no_relative_markdown_links(self):
+        version = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"][
+            "version"
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory) / "notes.md"
+            subprocess.run(
+                [sys.executable, "-I", str(NOTES_SCRIPT), version, str(output)],
+                cwd=ROOT,
+                check=True,
+            )
+            self.assertNotRegex(output.read_text(), r"\]\((?!https?:|#)[^)]*\.md")
 
 
 if __name__ == "__main__":

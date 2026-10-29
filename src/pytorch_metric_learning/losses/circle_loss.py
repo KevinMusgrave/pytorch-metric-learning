@@ -33,10 +33,8 @@ class CircleLoss(GenericPairLoss):
             neg_logits, keep_mask=neg_mask, add_one=False, dim=1
         )
         losses = torch.nn.functional.softplus(logsumexp_pos + logsumexp_neg).squeeze(1)
-        active = pos_mask.any(dim=1) & neg_mask.any(dim=1)
-        return {
-            "loss": {"losses": losses * active, "indices": _common.arange_like(mat)}
-        }
+        rows = torch.where(pos_mask.any(dim=1) & neg_mask.any(dim=1))[0]
+        return {"loss": {"losses": losses[rows], "indices": rows}}
 
     def default_reducer(self) -> BaseReducer:
         return AvgNonZeroReducer()

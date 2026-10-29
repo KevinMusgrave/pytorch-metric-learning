@@ -38,6 +38,11 @@ only when `learn_beta=True`. `beta` is a parameter when `learn_beta=True` and a
 buffer otherwise; either way it follows `loss_func.to(device, dtype)`, is saved
 in `state_dict`, and must match the embeddings' placement outside autocast.
 
+**Paper settings**: The paper learns $\beta$, while the default keeps it fixed
+at its initial value. Pass `learn_beta=True`, with `num_classes` for the
+class-specific $\beta^{(\mathrm{class})}$, and include `loss_func.parameters()`
+in the optimizer. The defaults `margin=0.2` and `beta=1.2` are the paper's.
+
 **Example**:
 
 ```python
@@ -79,9 +84,9 @@ optimizer.step()
 
 **Reducer input**:
 
-- **margin_loss**: One loss per triplet, indexed by
+- **loss**: One loss per triplet, indexed by
   `TripletIndices(anchors, positives, negatives)`, with `divisor` equal to the
   number of nonzero pair terms.
 - **beta_reg_loss**: Present only when `learn_beta=True`. With `num_classes=None`,
   already reduced: $\nu\beta$. Otherwise one value $\nu\beta_{c(a)}$ per triplet,
-  indexed by the triplet anchors, with the same `divisor` as `margin_loss`.
+  indexed by the triplet anchors, with the same `divisor` as `loss`.

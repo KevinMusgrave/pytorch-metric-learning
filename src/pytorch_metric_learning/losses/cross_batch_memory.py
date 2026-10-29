@@ -5,9 +5,9 @@ import torch
 from torch import Tensor
 
 from ..miners import BaseMiner
-from ..types import IndicesTuple, PairIndices
+from ..types import IndicesTuple, MetricLoss, PairIndices
 from ..utils import _common, indexing
-from .base_metric_loss_function import BaseMetricLossFunction
+from .multiple_losses import require_metric_loss
 
 QUEUE_STATE_KEY = "queue_state"
 
@@ -49,7 +49,7 @@ class CrossBatchMemory(torch.nn.Module):
 
     def __init__(
         self,
-        loss: BaseMetricLossFunction,
+        loss: MetricLoss,
         embedding_size: int,
         memory_size: int = 1024,
         miner: BaseMiner | None = None,
@@ -57,8 +57,7 @@ class CrossBatchMemory(torch.nn.Module):
         label_dtype: torch.dtype = torch.long,
     ) -> None:
         super().__init__()
-        if not isinstance(loss, BaseMetricLossFunction):
-            raise TypeError("CrossBatchMemory requires a BaseMetricLossFunction")
+        require_metric_loss(loss, "CrossBatchMemory")
         self.loss = loss
         self.miner = miner
         self.memory_size = memory_size

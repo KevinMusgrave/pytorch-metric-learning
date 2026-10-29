@@ -18,9 +18,7 @@ def hierarchical_labels():
 def make_samplers(generator):
     labels = torch.arange(10).repeat_interleave(4)
     return [
-        MPerClassSampler(
-            labels, 2, batch_size=8, length_before_new_iter=64, generator=generator
-        ),
+        MPerClassSampler(labels, 2, batch_size=8, num_samples=64, generator=generator),
         FixedSetOfTriplets(labels, 20, generator=generator),
         HierarchicalSampler(hierarchical_labels(), 12, 3, generator=generator),
     ]
@@ -53,19 +51,17 @@ class TestSamplerContracts(unittest.TestCase):
 
     def test_length_matches_yielded_items(self):
         labels = torch.arange(100).repeat(3)
-        for batch_size, length_before_new_iter in (
+        for batch_size, num_samples in (
             (None, 100),
             (None, 1999),
             (20, 100),
         ):
-            with self.subTest(
-                batch_size=batch_size, length_before_new_iter=length_before_new_iter
-            ):
+            with self.subTest(batch_size=batch_size, num_samples=num_samples):
                 sampler = MPerClassSampler(
                     labels,
                     5,
                     batch_size=batch_size,
-                    length_before_new_iter=length_before_new_iter,
+                    num_samples=num_samples,
                 )
                 indices = list(sampler)
                 self.assertEqual(len(indices), len(sampler))
@@ -77,7 +73,7 @@ class TestSamplerContracts(unittest.TestCase):
 
     def test_m_per_class_batches_in_a_dataloader(self):
         labels = torch.arange(10).repeat_interleave(4)
-        sampler = MPerClassSampler(labels, 2, batch_size=8, length_before_new_iter=64)
+        sampler = MPerClassSampler(labels, 2, batch_size=8, num_samples=64)
         loader = DataLoader(TensorDataset(labels), batch_size=8, sampler=sampler)
         batches = [batch_labels for (batch_labels,) in loader]
         self.assertEqual(len(batches), 8)
@@ -100,7 +96,7 @@ class TestSamplerContracts(unittest.TestCase):
 
     def test_small_classes_are_sampled_with_replacement(self):
         labels = torch.tensor([0, 1, 1, 1])
-        sampler = MPerClassSampler(labels, 3, batch_size=6, length_before_new_iter=6)
+        sampler = MPerClassSampler(labels, 3, batch_size=6, num_samples=6)
         indices = list(sampler)
         self.assertEqual(sorted(labels[indices].tolist()), [0, 0, 0, 1, 1, 1])
         self.assertEqual(sorted(i for i in indices if labels[i] == 1), [1, 2, 3])

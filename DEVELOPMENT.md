@@ -2,7 +2,9 @@
 
 This guide covers the maintainer workflow: environment, verification, and
 releases. [CONTRIBUTING.md](CONTRIBUTING.md) is the shorter guide for pull
-requests. Design rationale lives in `docs/design/`.
+requests. Design rationale lives in `docs/design/` and dependency assessments in
+`docs/security/`; both are maintainer records, so `mkdocs.yml` excludes them
+from the published site.
 
 The development baseline is Python 3.12.13 and uv 0.13.4. The exact
 environment is in `.python-version`, `pyproject.toml`, and `uv.lock`; the lock

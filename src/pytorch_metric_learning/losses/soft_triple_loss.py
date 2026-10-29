@@ -24,7 +24,7 @@ class SoftTripleLoss(BaseProxyLoss):
     ) -> None:
         super().__init__(num_classes * centers_per_class, embedding_size, **options)
         if not self.distance.is_inverted:
-            raise ValueError("distance must be a similarity with is_inverted=True")
+            raise TypeError("distance must be a similarity with is_inverted=True")
         self.la = la
         self.gamma = gamma
         self.margin = margin

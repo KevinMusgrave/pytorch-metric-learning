@@ -35,7 +35,9 @@ NamedTuples from `pytorch_metric_learning.types`:
 
 Each field is a one-dimensional `torch.long` tensor, and position `i` of every
 field describes the same pair or triplet. Losses and miners also accept plain
-tuples of three or four index tensors.
+tuples of three or four index tensors of dtype `int64` or `int32`; other dtypes
+raise `TypeError`. Indices are not bounds-checked, so out-of-range values are a
+caller error.
 
 ```python
 from pytorch_metric_learning.types import PairIndices
@@ -82,8 +84,9 @@ assert CosineSimilarity().is_inverted and not LpDistance().is_inverted
 
 A [miner](miners.md) selects informative pairs or triplets and returns their
 indices. Pass the result to a loss as `indices_tuple`; without it, the loss uses
-every pair or triplet that the labels define. A miner can also take candidate
-indices and select only from them, so miners compose in stages.
+every pair or triplet that the labels define. A miner result with no indices
+selects nothing, and the loss is a differentiable zero. A miner can also take
+candidate indices and select only from them, so miners compose in stages.
 
 ```python
 from pytorch_metric_learning import miners
@@ -140,7 +143,9 @@ loss_func = losses.ContrastiveLoss(
 
 ## Reference providers
 
-Two wrappers supply a larger reference set to a loss:
+Two wrappers supply a larger reference set to a loss, which may be a
+`BaseMetricLossFunction` or a [MultipleLosses](losses/multiple_losses.md)
+combination (`types.MetricLoss`):
 
 - [CrossBatchMemory](losses/cross_batch_memory.md#crossbatchmemory) keeps a queue
   of detached embeddings from earlier batches and passes it to the wrapped loss

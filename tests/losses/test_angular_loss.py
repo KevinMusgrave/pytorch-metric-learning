@@ -7,7 +7,7 @@ import torch.nn.functional as F
 
 from pytorch_metric_learning.losses import AngularLoss
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 from ..helpers import angle_to_coord
 from .utils import get_triplet_embeddings_with_ref
 
@@ -110,3 +110,38 @@ class TestAngularLossNormalization(unittest.TestCase):
                 terms.append(torch.log1p(torch.exp(torch.stack(f)).sum()))
         torch.testing.assert_close(loss, torch.stack(terms).mean())
         torch.testing.assert_close(AngularLoss(alpha=alpha)(x, labels), loss)
+
+
+class TestAngularLossMinedPairs(unittest.TestCase):
+    def test_positive_only_miner_uses_label_negatives(self):
+        torch.manual_seed(2)
+        embeddings = torch.randn(6, 4)
+        labels = torch.tensor([0, 0, 1, 1, 2, 0], device=TEST_DEVICE)
+        anchors = torch.tensor([0, 2, 5], device=TEST_DEVICE)
+        positives = torch.tensor([1, 3, 0], device=TEST_DEVICE)
+        empty = torch.empty(0, dtype=torch.long, device=TEST_DEVICE)
+        mined = (anchors, positives, empty, empty)
+        sq_tan = math.tan(math.radians(40)) ** 2
+
+        def reference(x):
+            x = F.normalize(x, dim=1)
+            losses = []
+            for a, p in zip(anchors.tolist(), positives.tolist(), strict=True):
+                exponents = [
+                    4 * sq_tan * torch.dot(x[a] + x[p], x[n])
+                    - 2 * (1 + sq_tan) * torch.dot(x[a], x[p])
+                    for n in range(len(x))
+                    if labels[n] != labels[a]
+                ]
+                losses.append(torch.log(1 + torch.exp(torch.stack(exponents)).sum()))
+            return torch.stack(losses).mean()
+
+        for dtype in TEST_DTYPES:
+            with self.subTest(dtype=dtype):
+                loss = helpers.assert_matches_float64(
+                    lambda x: AngularLoss(alpha=40)(x, labels, mined),
+                    reference,
+                    [embeddings],
+                    dtype,
+                )
+                self.assertGreater(loss.item(), 0)

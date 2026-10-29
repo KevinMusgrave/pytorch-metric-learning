@@ -24,14 +24,16 @@ over the closest sub-centers, shaped `(N, num_classes)`; see
 [classification logits](../losses.md#classification-logits). This loss derives
 from ArcFaceLoss and [BaseProxyLoss](base_proxy_loss.md).
 
-`get_outliers(embeddings, labels, threshold=75, return_dominant_centers=True)`
-finds outliers and dominant sub-centers as described in the paper. `outliers`
-holds the indices of embeddings whose similarity to their class's
-dominant sub-center is below `cos(threshold)`, with `threshold` in degrees.
-`dominant_centers` has shape `(num_classes, embedding_size)`; a class's dominant
-sub-center is the one nearest to the most of its embeddings in `embeddings`.
-With `return_dominant_centers=False`, only `outliers` is returned. The method
-runs without gradients.
+`get_outliers(embeddings, labels, threshold_radians=math.radians(75))` finds
+outliers and dominant sub-centers as described in the paper, whose drop
+threshold is 75 degrees. It returns the named tuple
+`losses.subcenter_arcface_loss.SubCenterOutliers(outliers, dominant_centers)`.
+`outliers` holds the indices of embeddings whose similarity to their class's
+dominant sub-center is below `cos(threshold_radians)`; the threshold is in
+radians, like `margin`. `dominant_centers` has shape
+`(num_classes, embedding_size)`; a class's dominant sub-center is the one
+nearest to the most of its embeddings in `embeddings`. The method runs without
+gradients.
 
 **Example**:
 

@@ -1,6 +1,8 @@
 # Versioning and support
 
-Releases follow [semantic versioning](https://semver.org/):
+Releases follow [semantic versioning](https://semver.org/) for the public API.
+Raising a minimum supported Python, PyTorch, or NumPy version is not treated as
+a breaking change; it happens only in minor or major releases:
 
 - **Major** versions may remove or rename public APIs and change default
   numerical behavior. There are no compatibility aliases or deprecation

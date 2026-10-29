@@ -119,6 +119,8 @@ def direct_smooth_ap(embeddings, labels, temperature):
     precisions = []
     for q in range(batch):
         positives = [i for i in range(batch) if labels[i] == labels[q]]
+        if len(positives) == 1:
+            continue
         total = sims.new_zeros(())
         for i in positives:
             all_rank = 1 + sum(

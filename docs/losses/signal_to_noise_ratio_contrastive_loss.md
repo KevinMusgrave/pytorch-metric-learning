@@ -20,6 +20,11 @@ replaces the Euclidean distance. The paper pairs it with
 [ZeroMeanRegularizer](../regularizers.md#zeromeanregularizer) as the
 `embedding_regularizer`.
 
+**Paper settings**: The paper adds the zero-mean regularizer, which is not
+enabled by default. Pass
+`embedding_regularizer=regularizers.ZeroMeanRegularizer()` for the paper's
+formulation.
+
 **Example**:
 
 ```python

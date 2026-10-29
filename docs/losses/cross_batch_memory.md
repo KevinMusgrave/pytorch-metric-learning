@@ -38,7 +38,8 @@ state changes, and a wrapped loss that raises leaves the queue unchanged.
   (`ValueError`).
 
 The wrapped loss receives the snapshot as `ref_emb`, so it must be a
-`BaseMetricLossFunction` that [accepts `ref_emb`](../losses.md#supported-arguments).
+`BaseMetricLossFunction` that [accepts `ref_emb`](../losses.md#supported-arguments),
+or a [MultipleLosses](multiple_losses.md) of such losses.
 Any other module raises `TypeError` at construction; a loss that rejects
 references raises `ValueError` on the first call.
 

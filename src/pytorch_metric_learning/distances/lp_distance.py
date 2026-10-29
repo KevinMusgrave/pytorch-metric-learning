@@ -1,7 +1,7 @@
 import torch
 from torch import Tensor
 
-from ..utils._common import LOW_PRECISION
+from ..utils._common import LOW_PRECISION, accumulation_dtype
 from .base_distance import BaseDistance
 
 
@@ -18,4 +18,7 @@ class LpDistance(BaseDistance):
         return torch.cdist(query_emb, ref_emb, p=self.p)
 
     def pairwise_distance(self, query_emb: Tensor, ref_emb: Tensor) -> Tensor:
-        return torch.nn.functional.pairwise_distance(query_emb, ref_emb, p=self.p)
+        dtype = accumulation_dtype(query_emb.dtype)
+        difference = query_emb.to(dtype) - ref_emb.to(dtype)
+        distances = torch.linalg.vector_norm(difference, ord=self.p, dim=-1)
+        return distances.to(query_emb.dtype)

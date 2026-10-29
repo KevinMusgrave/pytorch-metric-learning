@@ -2,6 +2,7 @@ import unittest
 
 import torch
 
+from pytorch_metric_learning.distances import LpDistance
 from pytorch_metric_learning.losses import NormalizedSoftmaxLoss
 from pytorch_metric_learning.regularizers import RegularFaceRegularizer
 from pytorch_metric_learning.utils import _common as c_f
@@ -50,3 +51,7 @@ class TestRegularFaceRegularizer(unittest.TestCase):
             correct_total_loss = correct_class_loss + (correct_reg_loss * reg_weight)
             rtol = helpers.rtol(dtype)
             self.assertTrue(torch.isclose(loss, correct_total_loss, rtol=rtol))
+
+    def test_distance_must_be_a_similarity(self):
+        with self.assertRaises(TypeError):
+            RegularFaceRegularizer(distance=LpDistance())

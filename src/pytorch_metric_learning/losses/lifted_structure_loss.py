@@ -11,13 +11,13 @@ from .generic_pair_loss import GenericPairLoss
 class LiftedStructureLoss(GenericPairLoss):
     def __init__(
         self,
-        neg_margin: float = 1.0,
         pos_margin: float = 0.0,
+        neg_margin: float = 1.0,
         **options: Unpack[LossOptions],
     ) -> None:
         super().__init__(**options)
-        self.neg_margin = neg_margin
         self.pos_margin = pos_margin
+        self.neg_margin = neg_margin
 
     def compute_loss(
         self,
@@ -49,13 +49,13 @@ class LiftedStructureLoss(GenericPairLoss):
 class GeneralizedLiftedStructureLoss(GenericPairLoss):
     def __init__(
         self,
-        neg_margin: float = 1.0,
         pos_margin: float = 0.0,
+        neg_margin: float = 1.0,
         **options: Unpack[LossOptions],
     ) -> None:
         super().__init__(**options)
-        self.neg_margin = neg_margin
         self.pos_margin = pos_margin
+        self.neg_margin = neg_margin
 
     def pair_loss(self, mat: Tensor, pairs: PairIndices) -> LossDict:
         pos_mask, neg_mask = self.pair_masks(mat, pairs)
@@ -67,9 +67,6 @@ class GeneralizedLiftedStructureLoss(GenericPairLoss):
         neg_loss = _common.logsumexp(
             remaining_neg_margin, keep_mask=neg_mask, add_one=False
         )
-        return {
-            "loss": {
-                "losses": torch.relu(pos_loss + neg_loss).squeeze(1),
-                "indices": _common.arange_like(mat),
-            }
-        }
+        losses = torch.relu(pos_loss + neg_loss).squeeze(1)
+        rows = torch.where(pos_mask.any(dim=1) & neg_mask.any(dim=1))[0]
+        return {"loss": {"losses": losses[rows], "indices": rows}}

@@ -27,8 +27,8 @@ class AngularLoss(BaseMetricLossFunction):
         ref_labels: Tensor | None,
     ) -> LossDict:
         labels = _common.labels_required(labels)
-        a1, p, a2, _ = indexing.convert_to_pairs(indices_tuple, labels, ref_labels)
-        if len(a1) == 0 or len(a2) == 0:
+        a1, p, _, _ = indexing.convert_to_pairs(indices_tuple, labels, ref_labels)
+        if len(a1) == 0:
             return {}
         reference, reference_labels = _common.resolve_reference(
             embeddings, labels, ref_emb, ref_labels

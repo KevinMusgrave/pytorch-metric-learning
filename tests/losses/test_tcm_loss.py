@@ -3,7 +3,11 @@ import unittest
 import torch
 import torch.nn.functional as F
 
-from pytorch_metric_learning.distances import CosineSimilarity
+from pytorch_metric_learning.distances import (
+    CosineSimilarity,
+    DotProductSimilarity,
+    LpDistance,
+)
 from pytorch_metric_learning.losses import (
     ContrastiveLoss,
     MultipleLosses,
@@ -93,3 +97,36 @@ class TestThresholdConsistentMarginReference(unittest.TestCase):
         neg_terms = (neg + 0.5)[neg >= -0.5]
         expected = pos_terms.mean() + neg_terms.mean()
         torch.testing.assert_close(loss, expected)
+
+    def test_configured_similarity_is_used(self):
+        torch.manual_seed(5)
+        embeddings = 0.6 * torch.randn(6, 3)
+        labels = torch.tensor([0, 0, 1, 1, 2, 0], device=TEST_DEVICE)
+        loss_func = ThresholdConsistentMarginLoss(
+            margin_plus=0.4,
+            margin_minus=-0.1,
+            distance=DotProductSimilarity(normalize_embeddings=False),
+        )
+
+        def reference(x):
+            sims = x @ x.T
+            same = labels[:, None] == labels[None, :]
+            others = ~torch.eye(len(labels), dtype=torch.bool, device=x.device)
+            pos, neg = sims[same & others], sims[~same]
+            pos_terms = (0.4 - pos)[pos <= 0.4]
+            neg_terms = (neg + 0.1)[neg >= -0.1]
+            return pos_terms.mean() + neg_terms.mean()
+
+        for dtype in TEST_DTYPES:
+            with self.subTest(dtype=dtype):
+                loss = helpers.assert_matches_float64(
+                    lambda x: loss_func(x, labels), reference, [embeddings], dtype
+                )
+                cosine_loss = ThresholdConsistentMarginLoss(
+                    margin_plus=0.4, margin_minus=-0.1
+                )(embeddings.to(TEST_DEVICE, dtype), labels)
+                self.assertNotAlmostEqual(loss.item(), cosine_loss.item(), places=3)
+
+    def test_distance_must_be_a_similarity(self):
+        with self.assertRaises(TypeError):
+            ThresholdConsistentMarginLoss(distance=LpDistance())

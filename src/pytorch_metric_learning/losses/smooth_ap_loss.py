@@ -42,10 +42,6 @@ class SmoothAPLoss(BaseMetricLossFunction):
         miner_weights = indexing.convert_to_weights(
             indices_tuple, labels, dtype=ap.dtype
         )
-        loss = (1 - ap) * miner_weights
-        return {
-            "loss": {
-                "losses": loss,
-                "indices": _common.arange_like(loss),
-            }
-        }
+        rows = torch.where(same.sum(dim=1) > 1)[0]
+        loss = (1 - ap[rows]) * miner_weights[rows]
+        return {"loss": {"losses": loss, "indices": rows}}

@@ -6,7 +6,7 @@ A modification of the original [LiftedStructureLoss](lifted_structure_loss.md)
 that supports a separate reference set.
 
 ```python
-losses.GeneralizedLiftedStructureLoss(neg_margin=1.0, pos_margin=0.0, **options)
+losses.GeneralizedLiftedStructureLoss(pos_margin=0.0, neg_margin=1.0, **options)
 ```
 
 **Equation**:
@@ -20,11 +20,14 @@ $$
 
 Here the batch has $P$ classes with $K$ samples each, $x_a^i$ is sample $a$ of class $i$, $f$ is the embedding network, and $D$ is the distance. The outer sums run over all anchors, the first inner sum over their positives, and the second over their negatives.
 
-**Implementation notes**: The loss is computed per anchor and averaged over the
-batch rather than summed. Both log-sum-exp terms run over the anchor's pairs,
-from labels or from `indices_tuple`. When an anchor has no positives or no
-negatives, that log-sum-exp term is 0, so the anchor's loss is the hinge of the
-remaining term.
+**Implementation notes**: The loss is computed per anchor and averaged over
+anchors rather than summed. Both log-sum-exp terms run over the anchor's pairs,
+from labels or from `indices_tuple`. An anchor without positives or without
+negatives has no loss term: the log-sum-exp of its empty set is $-\infty$, so
+the equation's hinge is 0 for it, and the mean runs over the other anchors.
+
+**Paper settings**: The paper sums the per-anchor losses; the default reducer
+averages them. Pass `reducer=reducers.SumReducer()` for the paper's sum.
 
 **Example**:
 
@@ -43,9 +46,9 @@ loss.backward()
 
 **Parameters**:
 
-- **neg_margin**: The margin $m$. The paper uses values between 0.1 and 1.
 - **pos_margin**: A margin subtracted inside the positive term, $e^{D - \text{pos\_margin}}$.
   The paper uses 0, so it does not appear in the equation.
+- **neg_margin**: The margin $m$. The paper uses values between 0.1 and 1.
 
 **Default distance**:
 
@@ -57,4 +60,5 @@ loss.backward()
 
 **Reducer input**:
 
-- **loss**: One loss per anchor, indexed by anchor position in `embeddings`.
+- **loss**: One loss per anchor that has a positive and a negative, indexed by
+  anchor position in `embeddings`.

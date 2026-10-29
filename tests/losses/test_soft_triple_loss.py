@@ -7,6 +7,7 @@ from torch import nn
 from torch.nn import init
 from torch.nn.parameter import Parameter
 
+from pytorch_metric_learning.distances import LpDistance
 from pytorch_metric_learning.losses import SoftTripleLoss
 from pytorch_metric_learning.regularizers import SparseCentersRegularizer
 from pytorch_metric_learning.utils import _common as c_f
@@ -106,3 +107,7 @@ class TestSoftTripleLoss(unittest.TestCase):
                 loss.backward()
                 correct_loss = original_loss_func(F.normalize(embeddings), labels)
                 self.assertTrue(torch.isclose(loss, correct_loss))
+
+    def test_distance_must_be_a_similarity(self):
+        with self.assertRaises(TypeError):
+            SoftTripleLoss(3, 4, distance=LpDistance())

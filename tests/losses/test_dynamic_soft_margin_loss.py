@@ -97,8 +97,8 @@ class TestDynamicSoftMarginLoss(unittest.TestCase):
                     with torch.autocast(TEST_DEVICE.type, dtype=dtype):
                         loss.update_histogram(data)
                         actual = loss.weigh_loss(data).mean()
-                    self.assertEqual(loss.hist_.dtype, torch.float32)
-                    torch.testing.assert_close(loss.hist_, previous)
+                    self.assertEqual(loss.hist.dtype, torch.float32)
+                    torch.testing.assert_close(loss.hist, previous)
                     torch.testing.assert_close(actual, expected)
                     torch.testing.assert_close(
                         torch.autograd.grad(actual, data)[0],
@@ -121,7 +121,7 @@ class TestDynamicSoftMarginLoss(unittest.TestCase):
                         value = loss(embeddings, labels)
                     value.backward()
                     self.assertTrue(torch.isfinite(value))
-                    self.assertEqual(loss.hist_.dtype, torch.float32)
+                    self.assertEqual(loss.hist.dtype, torch.float32)
                     for parameter in encoder.parameters():
                         gradient = parameter.grad
                         assert gradient is not None
@@ -147,7 +147,7 @@ class TestDynamicSoftMarginLoss(unittest.TestCase):
                     gradient = torch.autograd.grad(actual, embedding)[0]
                     assert_numeric_close(actual, expected)
                     assert_numeric_close(gradient, expected_gradient)
-                    assert_numeric_close(loss.hist_, previous)
+                    assert_numeric_close(loss.hist, previous)
 
     def test_paired_batches_and_accumulated_backward(self) -> None:
         for dtype in TEST_DTYPES:
@@ -192,7 +192,7 @@ class TestDynamicSoftMarginLoss(unittest.TestCase):
                 loss.update_histogram(data)
                 actual = loss.weigh_loss(data).mean()
                 expected, histogram = histogram_reference(data)
-                torch.testing.assert_close(loss.hist_, histogram)
+                torch.testing.assert_close(loss.hist, histogram)
                 torch.testing.assert_close(actual, expected)
                 torch.testing.assert_close(
                     torch.autograd.grad(actual, data)[0],
@@ -248,7 +248,7 @@ class TestDynamicSoftMarginLoss(unittest.TestCase):
     def test_empty_valid_sets_preserve_histogram(self) -> None:
         loss = DynamicSoftMarginLoss(num_bins=5).to(TEST_DEVICE)
         loss(inputs(torch.float32), torch.tensor([0, 0, 1, 1], device=TEST_DEVICE))
-        previous = loss.hist_.detach().clone()
+        previous = loss.hist.detach().clone()
         for query_count, reference_count in ((0, 2), (2, 0), (1, 1)):
             query = inputs(torch.float32, query_count)
             actual = loss(query, ref_emb=inputs(torch.float32, reference_count))
@@ -256,7 +256,7 @@ class TestDynamicSoftMarginLoss(unittest.TestCase):
             torch.testing.assert_close(
                 torch.autograd.grad(actual, query)[0], torch.zeros_like(query)
             )
-            torch.testing.assert_close(loss.hist_, previous)
+            torch.testing.assert_close(loss.hist, previous)
         for labels in ([0, 0, 0, 0], [0, 1, 2, 3]):
             query = inputs(torch.float32)
             actual = loss(query, torch.tensor(labels, device=TEST_DEVICE))
@@ -264,7 +264,7 @@ class TestDynamicSoftMarginLoss(unittest.TestCase):
             torch.testing.assert_close(
                 torch.autograd.grad(actual, query)[0], torch.zeros_like(query)
             )
-            torch.testing.assert_close(loss.hist_, previous)
+            torch.testing.assert_close(loss.hist, previous)
 
     def test_checkpoint_preserves_next_loss_and_gradient(self) -> None:
         labels = torch.tensor([0, 0, 1, 1], device=TEST_DEVICE)

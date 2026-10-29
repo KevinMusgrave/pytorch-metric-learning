@@ -86,8 +86,10 @@ class LargeMarginSoftmaxLoss(_CosineMarginSoftmaxLoss):
         scale: float = 1,
         **options: Unpack[ProxyLossOptions],
     ) -> None:
-        if not isinstance(margin, int) or margin < 1:
-            raise ValueError("margin must be a positive integer")
+        if not isinstance(margin, int):
+            raise TypeError("margin must be an integer")
+        if margin < 1:
+            raise ValueError("margin must be positive")
         super().__init__(num_classes, embedding_size, margin, scale, **options)
         n_range = torch.arange(margin // 2 + 1)
         coefficients = [float(math.comb(margin, 2 * n)) for n in n_range]

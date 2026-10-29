@@ -110,7 +110,7 @@ regularizers.RegularFaceRegularizer(**options)
 - [`CosineSimilarity()`](distances.md#cosinesimilarity)
   - Only similarities (`is_inverted=True`) are compatible. For example,
     [`DotProductSimilarity()`](distances.md#dotproductsimilarity) also works.
-    A distance raises `ValueError`.
+    A distance raises `TypeError`.
 
 **Default reducer**:
 

@@ -61,7 +61,7 @@ class MarginLoss(BaseMetricLossFunction):
         neg_loss = torch.relu(self.distance.margin(beta, d_an) + self.margin)
         divisor = torch.sum(pos_loss > 0.0) + torch.sum(neg_loss > 0.0)
         terms: LossDict = {
-            "margin_loss": {
+            "loss": {
                 "losses": pos_loss + neg_loss,
                 "indices": triplets,
                 "divisor": divisor,

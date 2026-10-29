@@ -3,7 +3,13 @@
 [Learning Deep Embeddings with Histogram Loss](https://arxiv.org/abs/1611.00822)
 
 ```python
-losses.HistogramLoss(num_bins=100, **options)
+losses.HistogramLoss(
+    num_bins=100,
+    *,
+    distance=None,
+    embedding_regularizer=None,
+    embedding_reg_weight=1.0,
+)
 ```
 
 **Equation**:
@@ -41,16 +47,19 @@ loss.backward()
 **Parameters**:
 
 - **num_bins**: $B$, the number of histogram intervals on $[-1, 1]$. A value
-  that is not a positive `int` raises `ValueError`.
+  that is not an `int` raises `TypeError`; a value below 1 raises `ValueError`.
+- **distance**, **embedding_regularizer**, **embedding_reg_weight**: See
+  [loss options](../losses.md#loss-options).
 
 **Default distance**:
 
 - [`CosineSimilarity()`](../distances.md#cosinesimilarity)
 
-**Default reducer**:
+**Reducer**:
 
-- [MeanReducer](../reducers.md#meanreducer)
+- None. The loss reduces its own value, so it has no `reducer` option; passing
+  `reducer` raises `TypeError`.
 
-**Reducer input**:
+**Loss terms**:
 
-- **loss**: Already reduced: the value of $L$. Every reducer returns it unchanged.
+- **loss**: The value of $L$, with `indices=None`.

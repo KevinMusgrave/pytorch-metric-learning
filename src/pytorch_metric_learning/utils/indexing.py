@@ -151,11 +151,13 @@ def convert_to_weights(
     using_ref: bool = False,
 ) -> Tensor:
     tuples = _common.as_indices_tuple(indices_tuple)
-    if tuples is None or all(len(x) == 0 for x in tuples):
+    if tuples is None:
         return torch.ones(labels.shape[0], device=labels.device, dtype=dtype)
     indices = get_anchors(tuples) if using_ref else torch.cat(tuples)
     counts = torch.bincount(indices, minlength=labels.shape[0]).float()
-    return (counts / counts.max()).to(dtype)
+    if len(counts) == 0:
+        return counts.to(dtype)
+    return (counts / counts.max().clamp_min(1)).to(dtype)
 
 
 def get_anchors(indices_tuple: IndicesTuple) -> Tensor:

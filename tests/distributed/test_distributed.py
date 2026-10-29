@@ -1,4 +1,5 @@
 import unittest
+from collections.abc import Callable
 from datetime import timedelta
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -322,6 +323,21 @@ def check_local_selecting_miner(
         assert_close(actual_indices, expected_indices)
 
 
+def assert_raises_on_all_ranks(
+    rank: int,
+    local_message: str,
+    call: Callable[[], object],
+    local_error: type[Exception] = ValueError,
+) -> None:
+    error, message = (
+        (local_error, local_message)
+        if rank == 1
+        else (ValueError, r"ranks \[1\] are invalid")
+    )
+    with unittest.TestCase().assertRaisesRegex(error, message):
+        call()
+
+
 def check_inconsistent_arguments(rank: int, device: torch.device) -> None:
     inputs, labels = make_inputs(device, torch.float32)
     local = inputs[:2].clone().requires_grad_()
@@ -331,18 +347,65 @@ def check_inconsistent_arguments(rank: int, device: torch.device) -> None:
     ):
         wrapper(local, labels[:2], ref_emb=local.detach() if rank else None)
     malformed_labels = labels[:1] if rank else labels[:2]
-    with unittest.TestCase().assertRaisesRegex(ValueError, "one label per embedding"):
-        wrapper(local, malformed_labels)
+    assert_raises_on_all_ranks(
+        rank,
+        "Number of embeddings must equal number of labels",
+        lambda: wrapper(local, malformed_labels),
+    )
+    misplaced_labels = labels[:2].to("meta") if rank else labels[:2]
+    assert_raises_on_all_ranks(
+        rank, "labels are on meta", lambda: wrapper(local, misplaced_labels)
+    )
+    reference_labels = labels[:2].to("meta") if rank else labels[:2]
+    assert_raises_on_all_ranks(
+        rank,
+        "ref_labels are on meta",
+        lambda: wrapper(
+            local, labels[:2], ref_emb=local.detach(), ref_labels=reference_labels
+        ),
+    )
+    index = torch.arange(2, device=device)
+    pairs = (index, index, index, index.float() if rank else index)
+    assert_raises_on_all_ranks(
+        rank,
+        "int64 or int32",
+        lambda: wrapper(local, labels[:2], indices_tuple=pairs),
+        TypeError,
+    )
+    miner = DistributedMinerWrapper(PairMarginMiner())
+    assert_raises_on_all_ranks(
+        rank, "labels are on meta", lambda: miner(local, misplaced_labels)
+    )
     mask = torch.ones(3 if rank else 2, device=device, dtype=torch.bool)
     memory = DistributedLossWrapper(
         CrossBatchMemory(make_pair_loss(), embedding_size=2).to(TEST_DEVICE)
     )
-    with unittest.TestCase().assertRaisesRegex(
-        ValueError, "same wrapper objective and optional arguments"
-    ):
-        memory(local, labels[:2], enqueue_mask=mask)
+    assert_raises_on_all_ranks(
+        rank,
+        "boolean vector",
+        lambda: memory(local, labels[:2], enqueue_mask=mask),
+    )
+    assert memory.loss.queue_idx == 0
     with unittest.TestCase().assertRaisesRegex(ValueError, "boolean vector"):
         memory(local, labels[:2], enqueue_mask=torch.ones(2, device=device))
+    with unittest.TestCase().assertRaisesRegex(
+        ValueError, "matching dimensions, dtypes"
+    ):
+        wrapper(local.double() if rank else local, labels[:2])
+
+
+def run_validation(rank: int, address: str) -> None:
+    dist.init_process_group(
+        "gloo",
+        init_method=address,
+        rank=rank,
+        world_size=2,
+        timeout=timedelta(seconds=10),
+    )
+    try:
+        check_inconsistent_arguments(rank, torch.device("cpu"))
+    finally:
+        dist.destroy_process_group()
 
 
 def run_references(rank: int, address: str, backend: str) -> None:
@@ -366,7 +429,6 @@ def run_references(rank: int, address: str, backend: str) -> None:
                 check_local_anchor_case(rank, device, dtype, sizes)
                 check_local_miner(rank, device, dtype, sizes)
                 check_local_selecting_miner(rank, device, dtype, sizes)
-        check_inconsistent_arguments(rank, device)
     finally:
         dist.destroy_process_group()
 
@@ -383,3 +445,8 @@ class TestDistributedReferences(unittest.TestCase):
         with TemporaryDirectory() as directory:
             address = (Path(directory) / "rendezvous").as_uri()
             mp.spawn(run_references, args=(address, backend), nprocs=2, join=True)
+
+    def test_two_rank_validation_raises_on_every_rank(self) -> None:
+        with TemporaryDirectory() as directory:
+            address = (Path(directory) / "rendezvous").as_uri()
+            mp.spawn(run_validation, args=(address,), nprocs=2, join=True)

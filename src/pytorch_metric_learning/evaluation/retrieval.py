@@ -42,20 +42,24 @@ class MatchFinder:
             return values >= threshold
         return values <= threshold
 
-    def get_matching_pairs(
+    def get_match_matrix(
         self,
         query_emb: Tensor,
         ref_emb: Tensor | None = None,
         threshold: float | None = None,
-        return_tuples: bool = False,
     ) -> Tensor:
         threshold = self._threshold(threshold)
         ref_emb = query_emb if ref_emb is None else ref_emb
         with torch.no_grad():
-            matches = self._compare(self.distance(query_emb, ref_emb), threshold)
-        if return_tuples:
-            return matches.nonzero()
-        return matches
+            return self._compare(self.distance(query_emb, ref_emb), threshold)
+
+    def get_match_indices(
+        self,
+        query_emb: Tensor,
+        ref_emb: Tensor | None = None,
+        threshold: float | None = None,
+    ) -> Tensor:
+        return self.get_match_matrix(query_emb, ref_emb, threshold).nonzero()
 
     def is_match(self, x: Tensor, y: Tensor, threshold: float | None = None) -> Tensor:
         threshold = self._threshold(threshold)
@@ -216,18 +220,21 @@ class CustomKNN:
         if ref_includes_query:
             k = k + 1
         largest = self.distance.is_inverted
-        if self.batch_size is None:
-            distances, indices = torch.topk(
-                self.distance(query, reference), k, largest=largest, dim=1
-            )
-        else:
-            distances = torch.empty(
-                len(query), k, device=query.device, dtype=query.dtype
-            )
-            indices = torch.empty(len(query), k, device=query.device, dtype=torch.long)
-            batched = BatchedDistance(self.distance, batch_size=self.batch_size)
-            for mat, start, end in batched(query, reference):
-                distances[start:end], indices[start:end] = torch.topk(
-                    mat, k, largest=largest, dim=1
+        with torch.no_grad():
+            if self.batch_size is None:
+                distances, indices = torch.topk(
+                    self.distance(query, reference), k, largest=largest, dim=1
                 )
-        return return_results(distances, indices, ref_includes_query)
+            else:
+                distances = torch.empty(
+                    len(query), k, device=query.device, dtype=query.dtype
+                )
+                indices = torch.empty(
+                    len(query), k, device=query.device, dtype=torch.long
+                )
+                batched = BatchedDistance(self.distance, batch_size=self.batch_size)
+                for mat, start, end in batched(query, reference):
+                    distances[start:end], indices[start:end] = torch.topk(
+                        mat, k, largest=largest, dim=1
+                    )
+            return return_results(distances, indices, ref_includes_query)

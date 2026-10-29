@@ -35,17 +35,30 @@ moves them without changing checkpoint contents.
 
 Validation uses explicit exceptions and remains active under `python -O`.
 Invalid argument types raise `TypeError`; invalid values, shapes, tuple
-lengths, and devices raise `ValueError`.
+lengths, and devices raise `ValueError`. Index tensors, in `indices_tuple` and
+in loss terms, must be `int64` or `int32`, the dtypes PyTorch indexing accepts
+as positions; a `bool` or `uint8` tensor would index as a mask, so those and
+non-integer dtypes raise `TypeError`. Index values are not bounds-checked,
+because a range check reads device values on the host; out-of-range indices are
+a caller error.
+
+`indices_tuple=None` means unrestricted: every pair or triplet the labels
+define. A supplied tuple with no indices means nothing was selected. Miner
+weights follow the same rule, so an empty miner result weights every embedding
+by zero and the loss reduces to a differentiable zero; treating it as
+unrestricted gave classification losses their unmined loss.
 
 ## Loss terms and reduction
 
 A loss returns a dictionary of terms. Each term holds a `losses` tensor,
 `indices`, and an optional `divisor`. The term kind follows from `indices`:
 `None` for one already reduced value, a tensor for per-element losses, an
-`(anchor, other)` pair, or a triplet. A separate `reduction_type` key could
-disagree with the index structure and distinguished pairs that every reducer
-treated alike. Reducers have one hook, `element_reduction(losses, anchors,
-embeddings, labels)`, and receive the anchor indices of any tuple term.
+`(anchor, other)` pair, or a triplet. A one-element tuple is rejected so that
+one per-element form exists and the `LossTerm` type matches the validator. A
+separate `reduction_type` key could disagree with the index structure and
+distinguished pairs that every reducer treated alike. Reducers have one hook,
+`element_reduction(losses, anchors, embeddings, labels)`, and receive the
+anchor indices of any tuple term.
 
 A loss with nothing valid to compute returns `{}` or terms with empty `losses`.
 `BaseReducer.forward` sums
@@ -64,7 +77,10 @@ outnumbered queries and let duplicate tuples overwrite each other.
 
 Regularization penalties are reduced by their regularizer and added after the
 objective's reduction; `loss_terms()` returns objective and penalty terms
-together for callers who aggregate themselves.
+together for callers who aggregate themselves. An objective term named like a
+penalty raises `ValueError` from both entry points, since merging the two
+dictionaries would otherwise drop one term and make `forward` and
+`loss_terms()` disagree.
 
 ## Composition
 
@@ -86,13 +102,24 @@ ArcFace, CosFace, and large-margin softmax is private.
 `pair_values` and `pair_masks` helpers. Miners accept optional candidate tuples
 through `indices_tuple`, like losses, and every built-in miner restricts its
 search to them, so cascaded mining composes without miner state.
-`CrossBatchMemory` and `SelfSupervisedLoss` accept any `BaseMetricLossFunction`
-and rely on the wrapped loss's own `ref_emb` validation.
+`CrossBatchMemory`, `SelfSupervisedLoss`, and `DistributedLossWrapper` accept
+`types.MetricLoss`: a `BaseMetricLossFunction` or a `MultipleLosses`, whose
+forward has the same signature and passes reference arguments to each loss.
+They check this union with `isinstance` and rely on the wrapped loss's own
+`ref_emb` validation. `MultipleLosses` accepts only the same union, because a
+module with another signature, such as `CrossBatchMemory`, would receive
+reference arguments in the wrong positions.
 
 Distances declare whether larger values mean greater similarity with the class
 attribute `is_inverted`. `BaseDistance.pairwise` applies normalization and the
 power to row-wise comparisons, so miners and threshold matching compute the
-same quantity as matrix comparisons.
+same quantity as matrix comparisons. `LpDistance.pairwise` uses
+`torch.linalg.vector_norm` of the difference, not `pairwise_distance`, whose
+`1e-6` offset made identical rows about `sqrt(d) * 1e-6` apart while the matrix
+gave zero. `CosineSimilarity` has no `p` or `power` options: several losses and
+regularizers require it and take `acos` of, or assume signed, unit-L2 cosines,
+which any other setting silently broke. `DotProductSimilarity` keeps both
+options.
 
 ## Index enumeration
 
@@ -126,6 +153,14 @@ negatives per anchor with a segment log-sum-exp (`scatter_reduce` maximum, then
 accumulating half precision in float32. Exponentiating probabilities and adding
 a small constant before the logarithm lost float16 hard positives entirely.
 
+Normalization divides by `max(norm, eps)` with `eps = max(1e-12,
+finfo(dtype).tiny)`, computing float16 and bfloat16 in float32 and casting
+back. `torch.nn.functional.normalize`'s `1e-12` underflows to zero in float16,
+so a zero row produced NaN; even computed in float32, the gradient of a row
+below `eps` is `1 / eps` times the incoming gradient and overflows float16.
+The float16 `eps` of `2**-14` keeps that factor at 16384, while every other
+dtype keeps the `1e-12` of float32.
+
 `LpDistance` computes float16 and bfloat16 matrices with `torch.cdist` in
 float32 and casts the result, because `torch.cdist` lacks CPU kernels for those
 types and expanding every row pair costs memory proportional to queries times
@@ -134,7 +169,9 @@ difference kernel: the default switches to $\|x\|^2 + \|y\|^2 - 2 x \cdot y$
 above 25 rows, which cancels to zero for nearby half-precision rows and erases
 their gradients. Default reductions avoid data-dependent shapes:
 `ThresholdReducer` masks and counts, and `DivisorReducer` selects with
-`torch.where`.
+`torch.where`. `DivisorReducer` builds the divisor directly in the accumulation
+dtype; converting through the default dtype first turned a float64 divisor of
+`1e-50` into zero.
 
 `ManifoldLoss` inverts its random-walk matrix in float32 and masks excluded
 terms with $-\infty$ before log-sum-exp. `DistanceWeightedMiner` clamps

@@ -32,8 +32,9 @@ $$
 
 **Implementation notes**: $\alpha_p$ and $\alpha_n$ are treated as constants
 for gradients. The two sums are computed per anchor with log-sum-exp. An anchor
-without a positive or without a negative contributes 0, and the default
-reducer averages the anchors whose loss is positive.
+without a positive or without a negative has no loss term, so any reducer
+averages only anchors that have both. The default reducer also skips anchors
+whose loss is 0.
 
 **Example**:
 
@@ -67,4 +68,5 @@ loss.backward()
 
 **Reducer input**:
 
-- **loss**: One loss per anchor, indexed by anchor position in `embeddings`.
+- **loss**: One loss per anchor that has a positive and a negative, indexed by
+  anchor position in `embeddings`.

@@ -1,14 +1,14 @@
 import torch
 from torch import Tensor
 
-from .base_metric_loss_function import BaseMetricLossFunction
+from ..types import MetricLoss
+from .multiple_losses import require_metric_loss
 
 
 class SelfSupervisedLoss(torch.nn.Module):
-    def __init__(self, loss: BaseMetricLossFunction, symmetric: bool = True) -> None:
+    def __init__(self, loss: MetricLoss, symmetric: bool = True) -> None:
         super().__init__()
-        if not isinstance(loss, BaseMetricLossFunction):
-            raise TypeError("SelfSupervisedLoss requires a BaseMetricLossFunction")
+        require_metric_loss(loss, "SelfSupervisedLoss")
         self.loss = loss
         self.symmetric = symmetric
 

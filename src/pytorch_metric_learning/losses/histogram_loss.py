@@ -1,10 +1,9 @@
-from typing import Unpack
-
 import torch
 from torch import Tensor
 
 from ..distances import BaseDistance, CosineSimilarity
-from ..types import IndicesTuple, LossDict, LossOptions
+from ..regularizers import BaseRegularizer
+from ..types import IndicesTuple, LossDict
 from ..utils import _common, indexing
 from .base_metric_loss_function import BaseMetricLossFunction
 
@@ -17,10 +16,23 @@ def unique_pairs(*tensors: Tensor) -> tuple[Tensor, ...]:
 
 
 class HistogramLoss(BaseMetricLossFunction):
-    def __init__(self, num_bins: int = 100, **options: Unpack[LossOptions]) -> None:
-        super().__init__(**options)
-        if not isinstance(num_bins, int) or num_bins < 1:
-            raise ValueError("num_bins must be a positive integer")
+    def __init__(
+        self,
+        num_bins: int = 100,
+        *,
+        distance: BaseDistance | None = None,
+        embedding_regularizer: BaseRegularizer | None = None,
+        embedding_reg_weight: float = 1.0,
+    ) -> None:
+        super().__init__(
+            distance=distance,
+            embedding_regularizer=embedding_regularizer,
+            embedding_reg_weight=embedding_reg_weight,
+        )
+        if not isinstance(num_bins, int):
+            raise TypeError("num_bins must be an integer")
+        if num_bins < 1:
+            raise ValueError("num_bins must be positive")
         self.num_bins = num_bins
         self.delta = 2 / num_bins
 

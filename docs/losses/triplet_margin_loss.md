@@ -32,6 +32,11 @@ swap distance is computed between the reference rows. Triplets come from labels
 or from the supplied `indices_tuple`; pairs are combined into every triplet
 that shares an anchor.
 
+**Paper settings**: FaceNet uses squared Euclidean distances between
+L2-normalized embeddings and a margin of 0.2; the default `margin=0.05` and
+unsquared distances differ. Pass
+`margin=0.2, distance=distances.LpDistance(power=2)` for FaceNet's setting.
+
 **Example**:
 
 ```python

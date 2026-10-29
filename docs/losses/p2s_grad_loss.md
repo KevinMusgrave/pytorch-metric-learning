@@ -3,7 +3,13 @@
 [P2SGrad: Refined Gradients for Optimizing Deep Face Models](https://arxiv.org/abs/1905.02479)
 
 ```python
-losses.P2SGradLoss(num_classes, embedding_size, **options)
+losses.P2SGradLoss(
+    num_classes,
+    embedding_size,
+    *,
+    embedding_regularizer=None,
+    embedding_reg_weight=1.0,
+)
 ```
 
 **Equation**:
@@ -17,10 +23,10 @@ Here $\cos\theta_{i,j}$ is the cosine between embedding $i$ and the unit-norm we
 **Implementation notes**: The paper specifies the gradient
 $\partial L / \partial \mathbf{x}_i$ directly; this mean squared error between
 the cosines and the one-hot target produces it. The cosines are computed
-directly from L2-normalized embeddings and weights, so the `distance` option
-has no effect. The weight rows are renormalized to unit length in place, under
-`torch.no_grad()`, at every forward pass. Labels are required; `indices_tuple`
-and `ref_emb` raise `ValueError`.
+directly from L2-normalized embeddings and weights. The weight rows are
+renormalized to unit length in place, under `torch.no_grad()`, at every forward
+pass. Labels are required; `indices_tuple` and `ref_emb` raise `ValueError`. An
+empty batch gives a differentiable zero.
 
 The class weights are the parameter `weight`, shaped
 `(num_classes, embedding_size)` and initialized uniformly in $[-1, 1]$, then
@@ -49,16 +55,19 @@ optimizer.step()
 - **num_classes**: The number of classes in the training set. Labels must be in
   `0..num_classes - 1`.
 - **embedding_size**: The size of the embeddings passed to the loss.
+- **embedding_regularizer**, **embedding_reg_weight**: See
+  [loss options](../losses.md#loss-options).
 
-**Default distance**:
+**Distance**:
 
-- Not used. The loss computes cosines directly, and a `distance` option has no
-  effect.
+- None. The loss computes cosines directly, so it has no `distance` option;
+  passing `distance` raises `TypeError`.
 
-**Default reducer**:
+**Reducer**:
 
-- [MeanReducer](../reducers.md#meanreducer)
+- None. The loss reduces its own value, so it has no `reducer` option; passing
+  `reducer` raises `TypeError`.
 
-**Reducer input**:
+**Loss terms**:
 
-- **loss**: Already reduced: the value of $L$. Every reducer returns it unchanged.
+- **loss**: The value of $L$, with `indices=None`.

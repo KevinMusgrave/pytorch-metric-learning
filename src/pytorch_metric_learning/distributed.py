@@ -1,13 +1,13 @@
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from typing import Literal, NamedTuple
 
 import torch
 from torch import Tensor
 from torch.distributed import _functional_collectives
 
-from .losses import BaseMetricLossFunction, CrossBatchMemory
+from .losses import BaseMetricLossFunction, CrossBatchMemory, MultipleLosses
 from .miners import BaseMiner
-from .types import IndicesTuple, PairIndices
+from .types import IndicesTuple, MetricLoss, PairIndices
 from .utils import _common, indexing
 
 __all__ = ["DistributedLossWrapper", "DistributedMinerWrapper"]
@@ -27,6 +27,10 @@ _DTYPES = (
     torch.int64,
     torch.bool,
 )
+
+
+_SCHEMA_WIDTH = 6
+_INVALID_SCHEMA = [-1] * _SCHEMA_WIDTH
 
 
 class Gathered(NamedTuple):
@@ -58,40 +62,75 @@ def _gather_metadata(metadata: Tensor) -> list[list[int]]:
     return torch.stack(rows).cpu().tolist()
 
 
-def _batch_sizes(emb: Tensor, labels: Tensor | None) -> list[int]:
-    label_shape_valid = labels is None or (
-        emb.ndim > 0
-        and labels.ndim == 1
-        and len(labels) == len(emb)
-        and labels.device == emb.device
-    )
+def _local_error(check: Callable[[], None]) -> Exception | None:
+    try:
+        check()
+    except (TypeError, ValueError) as error:
+        return error
+    return None
+
+
+def _check_embeddings(emb: Tensor, name: str) -> None:
+    if emb.ndim != 2:
+        raise ValueError(
+            f"{name} must be a 2D tensor of shape (batch_size, embedding_size)"
+        )
+
+
+def _schema(emb: Tensor | None, labels: Tensor | None) -> list[int]:
+    if emb is None:
+        return [0] * _SCHEMA_WIDTH
+    return [
+        emb.shape[0],
+        emb.shape[1],
+        _dtype_index(emb),
+        _dtype_index(labels) if labels is not None else -1,
+        int(labels is not None),
+        int(emb.requires_grad),
+    ]
+
+
+def _synchronize(
+    device: torch.device,
+    flags: list[bool],
+    error: Exception | None,
+    inputs: Sequence[tuple[Tensor | None, Tensor | None]],
+) -> list[list[int]]:
+    values = [
+        value
+        for emb, labels in inputs
+        for value in (_schema(emb, labels) if error is None else _INVALID_SCHEMA)
+    ]
     metadata = torch.tensor(
-        [
-            emb.shape[0] if emb.ndim else 0,
-            emb.shape[1] if emb.ndim == 2 else -1,
-            _dtype_index(emb),
-            _dtype_index(labels) if labels is not None else -1,
-            int(labels is not None),
-            int(emb.requires_grad),
-            int(label_shape_valid),
-        ],
-        device=emb.device,
+        [*flags, error is None, *values], dtype=torch.long, device=device
     )
     rows = _gather_metadata(metadata)
-    for row in rows:
-        if (
-            row[1] < 0
-            or row[2] not in range(4)
-            or row[6] == 0
-            or (row[4] and row[3] < 0)
-            or row[1:6] != rows[0][1:6]
+    count = len(flags)
+    if any(row[:count] != rows[0][:count] for row in rows):
+        raise ValueError(
+            "Ranks must use the same wrapper objective and optional arguments"
+        )
+    invalid = [rank for rank, row in enumerate(rows) if not row[count]]
+    if error is not None:
+        raise error
+    if invalid:
+        raise ValueError(f"Inputs on ranks {invalid} are invalid")
+    sizes = []
+    for index, (emb, _) in enumerate(inputs):
+        start = count + 1 + index * _SCHEMA_WIDTH
+        schemas = [row[start : start + _SCHEMA_WIDTH] for row in rows]
+        if emb is not None and any(
+            schema[2] not in range(4)
+            or (schema[4] and schema[3] < 0)
+            or schema[1:] != schemas[0][1:]
+            for schema in schemas
         ):
             raise ValueError(
-                "Ranks must provide 2D embeddings with matching dimensions, dtypes, "
-                "and requires_grad, and consistent labels with one label per "
-                "embedding on the embeddings' device"
+                "Ranks must provide embeddings with matching dimensions, dtypes, "
+                "and requires_grad, and labels with matching dtypes"
             )
-    return [row[0] for row in rows]
+        sizes.append([schema[0] for schema in schemas])
+    return sizes
 
 
 def _gather_tensor(
@@ -113,22 +152,13 @@ def _gather_tensor(
     return torch.cat([row[:size] for row, size in zip(rows, sizes, strict=True)])
 
 
-def _require_same_arguments(emb: Tensor, flags: list[bool]) -> None:
-    rows = _gather_metadata(torch.tensor(flags, device=emb.device, dtype=torch.long))
-    if any(row != rows[0] for row in rows):
-        raise ValueError(
-            "Ranks must use the same wrapper objective and optional arguments"
-        )
-
-
 def gather(
-    emb: Tensor, labels: Tensor | None, remote_gradients: bool = False
-) -> tuple[Gathered, list[int]]:
-    sizes = _batch_sizes(emb, labels)
+    emb: Tensor, labels: Tensor | None, sizes: list[int], remote_gradients: bool = False
+) -> Gathered:
     all_emb = _gather_tensor(emb, sizes, remote_gradients)
     all_labels = _gather_tensor(labels, sizes) if labels is not None else None
     offset = sum(sizes[: torch.distributed.get_rank()])
-    return Gathered(all_emb, all_labels, offset), sizes
+    return Gathered(all_emb, all_labels, offset)
 
 
 def local_anchor_pairs(
@@ -144,13 +174,16 @@ def local_anchor_pairs(
 class DistributedLossWrapper(torch.nn.Module):
     def __init__(
         self,
-        loss: BaseMetricLossFunction | CrossBatchMemory,
+        loss: MetricLoss | CrossBatchMemory,
         objective: Objective = "global",
     ) -> None:
         super().__init__()
-        if not isinstance(loss, (BaseMetricLossFunction, CrossBatchMemory)):
+        if not isinstance(
+            loss, (BaseMetricLossFunction, MultipleLosses, CrossBatchMemory)
+        ):
             raise TypeError(
-                "The input loss must extend BaseMetricLossFunction or CrossBatchMemory"
+                "The input loss must be a BaseMetricLossFunction, MultipleLosses, "
+                "or CrossBatchMemory"
             )
         check_objective(objective)
         if isinstance(loss, CrossBatchMemory) and objective == "local_anchor":
@@ -169,68 +202,98 @@ class DistributedLossWrapper(torch.nn.Module):
     ) -> Tensor:
         size = world_size()
         memory = isinstance(self.loss, CrossBatchMemory)
-        valid_mask = enqueue_mask is None or (
+        error = _local_error(
+            lambda: self.validate(
+                embeddings, labels, indices_tuple, ref_emb, ref_labels, enqueue_mask
+            )
+        )
+        if size <= 1:
+            if error is not None:
+                raise error
+            if isinstance(self.loss, CrossBatchMemory):
+                return self.loss(embeddings, labels, indices_tuple, enqueue_mask)
+            return self.loss(embeddings, labels, indices_tuple, ref_emb, ref_labels)
+        flags = [
+            self.objective == "local_anchor",
+            memory,
+            labels is not None,
+            indices_tuple is not None,
+            ref_emb is not None,
+            ref_labels is not None,
+            enqueue_mask is not None,
+        ]
+        sizes, ref_sizes = _synchronize(
+            embeddings.device,
+            flags,
+            error,
+            ((embeddings, labels), (ref_emb, ref_labels)),
+        )
+        if isinstance(self.loss, CrossBatchMemory):
+            return self.memory_loss(
+                self.loss, embeddings, labels, indices_tuple, enqueue_mask, sizes
+            )
+        return self.regular_loss(
+            self.loss,
+            embeddings,
+            labels,
+            indices_tuple,
+            ref_emb,
+            ref_labels,
+            sizes,
+            ref_sizes,
+        )
+
+    def validate(
+        self,
+        embeddings: Tensor,
+        labels: Tensor | None,
+        indices_tuple: Sequence[Tensor] | None,
+        ref_emb: Tensor | None,
+        ref_labels: Tensor | None,
+        enqueue_mask: Tensor | None,
+    ) -> None:
+        if not isinstance(self.loss, CrossBatchMemory):
+            if enqueue_mask is not None:
+                raise ValueError("enqueue_mask requires a CrossBatchMemory loss")
+        elif ref_emb is not None or ref_labels is not None:
+            raise ValueError(
+                "CrossBatchMemory is not compatible with ref_emb and ref_labels"
+            )
+        elif labels is None:
+            raise ValueError("CrossBatchMemory requires labels")
+        _check_embeddings(embeddings, "embeddings")
+        if ref_emb is not None:
+            _check_embeddings(ref_emb, "ref_emb")
+        _common.prepare_inputs(embeddings, labels, ref_emb, ref_labels)
+        _common.as_indices_tuple(indices_tuple, embeddings.device)
+        if enqueue_mask is not None and not (
             enqueue_mask.dtype == torch.bool
             and enqueue_mask.ndim == 1
-            and embeddings.ndim > 0
             and len(enqueue_mask) == len(embeddings)
             and enqueue_mask.device == embeddings.device
-        )
-        if size > 1:
-            _require_same_arguments(
-                embeddings,
-                [
-                    self.objective == "local_anchor",
-                    memory,
-                    labels is not None,
-                    indices_tuple is not None,
-                    ref_emb is not None,
-                    ref_labels is not None,
-                    enqueue_mask is not None,
-                    valid_mask,
-                ],
-            )
-        if not valid_mask:
+        ):
             raise ValueError(
                 "enqueue_mask must be a boolean vector with one entry per embedding "
                 "on the embeddings' device"
             )
-        if isinstance(self.loss, CrossBatchMemory):
-            if ref_emb is not None or ref_labels is not None:
-                raise ValueError(
-                    "CrossBatchMemory is not compatible with ref_emb and ref_labels"
-                )
-            if labels is None:
-                raise ValueError("CrossBatchMemory requires labels")
-            return self.memory_loss(
-                self.loss, embeddings, labels, indices_tuple, enqueue_mask, size
-            )
-        if enqueue_mask is not None:
-            raise ValueError("enqueue_mask requires a CrossBatchMemory loss")
-        return self.regular_loss(
-            self.loss, embeddings, labels, indices_tuple, ref_emb, ref_labels, size
-        )
 
     def regular_loss(
         self,
-        loss: BaseMetricLossFunction,
+        loss: MetricLoss,
         emb: Tensor,
         labels: Tensor | None,
         indices_tuple: Sequence[Tensor] | None,
         ref_emb: Tensor | None,
         ref_labels: Tensor | None,
-        size: int,
+        sizes: list[int],
+        ref_sizes: list[int],
     ) -> Tensor:
-        if size <= 1:
-            return loss(emb, labels, indices_tuple, ref_emb, ref_labels)
-        _common.check_device(labels, emb, "labels")
-        _common.check_device(ref_labels, emb, "ref_labels")
         local_anchor = self.objective == "local_anchor"
-        query, _ = gather(emb, labels, remote_gradients=not local_anchor)
+        query = gather(emb, labels, sizes, remote_gradients=not local_anchor)
         reference = None
         if ref_emb is not None:
-            reference, _ = gather(
-                ref_emb, ref_labels, remote_gradients=not local_anchor
+            reference = gather(
+                ref_emb, ref_labels, ref_sizes, remote_gradients=not local_anchor
             )
         if not local_anchor:
             return loss(
@@ -246,21 +309,18 @@ class DistributedLossWrapper(torch.nn.Module):
                 labels, all_ref.labels, query.offset, remove_self=reference is None
             )
         local = loss(emb, labels, indices_tuple, all_ref.embeddings, all_ref.labels)
-        return local * size
+        return local * len(sizes)
 
     def memory_loss(
         self,
         loss: CrossBatchMemory,
         emb: Tensor,
-        labels: Tensor,
+        labels: Tensor | None,
         indices_tuple: Sequence[Tensor] | None,
         enqueue_mask: Tensor | None,
-        size: int,
+        sizes: list[int],
     ) -> Tensor:
-        if size <= 1:
-            return loss(emb, labels, indices_tuple, enqueue_mask)
-        _common.check_device(labels, emb, "labels")
-        query, sizes = gather(emb, labels, remote_gradients=True)
+        query = gather(emb, labels, sizes, remote_gradients=True)
         if enqueue_mask is not None:
             enqueue_mask = _gather_tensor(enqueue_mask, sizes)
         if query.labels is None:
@@ -288,23 +348,27 @@ class DistributedMinerWrapper(torch.nn.Module):
         size = world_size()
         if size <= 1:
             return self.miner(embeddings, labels, indices_tuple, ref_emb, ref_labels)
-        _require_same_arguments(
-            embeddings,
-            [
-                self.objective == "local_anchor",
-                indices_tuple is not None,
-                ref_emb is not None,
-                ref_labels is not None,
-            ],
+        flags = [
+            self.objective == "local_anchor",
+            indices_tuple is not None,
+            ref_emb is not None,
+            ref_labels is not None,
+        ]
+        error = _local_error(
+            lambda: self.validate(
+                embeddings, labels, indices_tuple, ref_emb, ref_labels
+            )
         )
-        if indices_tuple is not None:
-            raise ValueError("Candidate indices_tuple is not supported across ranks")
-        _common.check_device(labels, embeddings, "labels")
-        _common.check_device(ref_labels, embeddings, "ref_labels")
-        query, _ = gather(embeddings, labels)
+        sizes, ref_sizes = _synchronize(
+            embeddings.device,
+            flags,
+            error,
+            ((embeddings, labels), (ref_emb, ref_labels)),
+        )
+        query = gather(embeddings, labels, sizes)
         reference = None
         if ref_emb is not None:
-            reference, _ = gather(ref_emb, ref_labels)
+            reference = gather(ref_emb, ref_labels, ref_sizes)
         if self.objective == "global":
             return self.miner(
                 query.embeddings,
@@ -323,3 +387,19 @@ class DistributedMinerWrapper(torch.nn.Module):
         return self.miner(
             embeddings, labels, candidates, all_ref.embeddings, all_ref.labels
         )
+
+    def validate(
+        self,
+        embeddings: Tensor,
+        labels: Tensor | None,
+        indices_tuple: Sequence[Tensor] | None,
+        ref_emb: Tensor | None,
+        ref_labels: Tensor | None,
+    ) -> None:
+        _check_embeddings(embeddings, "embeddings")
+        if ref_emb is not None:
+            _check_embeddings(ref_emb, "ref_emb")
+        _common.prepare_inputs(embeddings, labels, ref_emb, ref_labels)
+        _common.labels_required(labels)
+        if indices_tuple is not None:
+            raise ValueError("Candidate indices_tuple is not supported across ranks")

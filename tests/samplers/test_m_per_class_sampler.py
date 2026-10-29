@@ -18,15 +18,12 @@ class TestMPerClassSampler(unittest.TestCase):
     def test_mperclass_sampler(self):
         batch_size = 100
         m = 5
-        length_before_new_iter = 9999
+        num_samples = 9999
         num_labels = 100
         labels = torch.randint(low=0, high=num_labels, size=(10000,))
-        sampler = MPerClassSampler(
-            labels=labels, m=m, length_before_new_iter=length_before_new_iter
-        )
+        sampler = MPerClassSampler(labels=labels, m=m, num_samples=num_samples)
         self.assertTrue(
-            len(sampler)
-            == (m * num_labels) * (length_before_new_iter // (m * num_labels))
+            len(sampler) == (m * num_labels) * (num_samples // (m * num_labels))
         )
         iterable = iter(sampler)
         for _ in range(10):
@@ -40,20 +37,18 @@ class TestMPerClassSampler(unittest.TestCase):
         for batch_size in [4, 50, 99, 100, 1024]:
             for m in [1, 5, 10, 17, 50]:
                 for num_labels in [2, 10, 55]:
-                    for length_before_new_iter in [100, 999, 10000]:
+                    for num_samples in [100, 999, 10000]:
                         self.check_sampler_with_batch_size(
-                            batch_size, m, num_labels, length_before_new_iter
+                            batch_size, m, num_labels, num_samples
                         )
 
-    def check_sampler_with_batch_size(
-        self, batch_size, m, num_labels, length_before_new_iter
-    ):
+    def check_sampler_with_batch_size(self, batch_size, m, num_labels, num_samples):
         fake_embeddings = torch.randn(10000, 2)
         labels = torch.randint(low=0, high=num_labels, size=(10000,))
         dataset = torch.utils.data.TensorDataset(fake_embeddings, labels)
-        args: list[Any] = [labels, m, batch_size, length_before_new_iter]
+        args: list[Any] = [labels, m, batch_size, num_samples]
         if (
-            (length_before_new_iter < batch_size)
+            (num_samples < batch_size)
             or (m * num_labels < batch_size)
             or (batch_size % m != 0)
         ):

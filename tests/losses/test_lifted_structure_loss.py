@@ -131,7 +131,13 @@ class TestGeneralizedLiftedStructureLoss(unittest.TestCase):
 
             embeddings = torch.nn.functional.normalize(embeddings)
             correct_total = torch.zeros((), dtype=dtype, device=TEST_DEVICE)
+            anchors_with_both = 0
             for i in range(len(embeddings)):
+                if not any(a == i for a, _ in pos_pairs) or not any(
+                    a == i for a, _ in neg_pairs
+                ):
+                    continue
+                anchors_with_both += 1
                 correct_pos_loss = torch.zeros((), dtype=dtype, device=TEST_DEVICE)
                 correct_neg_loss = torch.zeros((), dtype=dtype, device=TEST_DEVICE)
                 for a, p in pos_pairs:
@@ -140,8 +146,7 @@ class TestGeneralizedLiftedStructureLoss(unittest.TestCase):
                         correct_pos_loss += torch.exp(
                             torch.sqrt(torch.sum((anchor - positive) ** 2))
                         )
-                if correct_pos_loss > 0:
-                    correct_pos_loss = torch.log(correct_pos_loss)
+                correct_pos_loss = torch.log(correct_pos_loss)
 
                 for a, n in neg_pairs:
                     if a == i:
@@ -149,12 +154,11 @@ class TestGeneralizedLiftedStructureLoss(unittest.TestCase):
                         correct_neg_loss += torch.exp(
                             neg_margin - torch.sqrt(torch.sum((anchor - negative) ** 2))
                         )
-                if correct_neg_loss > 0:
-                    correct_neg_loss = torch.log(correct_neg_loss)
+                correct_neg_loss = torch.log(correct_neg_loss)
 
                 correct_total += torch.relu(correct_pos_loss + correct_neg_loss)
 
-            correct_total /= embeddings.size(0)
+            correct_total /= anchors_with_both
 
             rtol = helpers.rtol(dtype)
             self.assertTrue(torch.isclose(loss, correct_total, rtol=rtol))

@@ -3,7 +3,15 @@
 [Sampling Matters in Deep Embedding Learning](https://arxiv.org/abs/1706.07567)
 
 ```python
-losses.MarginLoss(margin=0.2, nu=0, beta=1.2, triplets_per_anchor="all", learn_beta=False, num_classes=None, **options)
+losses.MarginLoss(
+    margin=0.2,
+    nu=0,
+    beta=1.2,
+    triplets_per_anchor="all",
+    learn_beta=False,
+    num_classes=None,
+    **options,
+)
 ```
 
 **Equation**:
@@ -30,6 +38,21 @@ only when `learn_beta=True`. `beta` is a parameter when `learn_beta=True` and a
 buffer otherwise; either way it follows `loss_func.to(device, dtype)`, is saved
 in `state_dict`, and must match the embeddings' placement outside autocast.
 
+**Example**:
+
+```python
+import torch
+from pytorch_metric_learning import losses
+
+loss_func = losses.MarginLoss(nu=0.1, learn_beta=True, num_classes=10)
+optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
+embeddings = torch.randn(32, 128, requires_grad=True)
+labels = torch.randint(0, 10, (32,))
+loss = loss_func(embeddings, labels)
+loss.backward()
+optimizer.step()
+```
+
 **Parameters**:
 
 - **margin**: The margin $\alpha$. The paper uses 0.2.
@@ -50,8 +73,9 @@ in `state_dict`, and must match the embeddings' placement outside autocast.
 
 **Default reducer**:
 
-- [DivisorReducer](../reducers.md#divisorreducer). Terms with a divisor make
-  any reducer other than DivisorReducer raise `ValueError`.
+- [DivisorReducer](../reducers.md#divisorreducer). Terms with a divisor must
+  reach DivisorReducer, directly or through MultipleReducers; any other reducer
+  raises `ValueError`.
 
 **Reducer input**:
 

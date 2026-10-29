@@ -34,6 +34,26 @@ $\tau = 0.2$. Reproduce it with
 and `weight_reg_weight=0.2`; it is not enabled by default. The other defaults
 are the paper's values.
 
+**Example**:
+
+```python
+import torch
+from pytorch_metric_learning import losses, regularizers
+
+loss_func = losses.SoftTripleLoss(
+    num_classes=10,
+    embedding_size=128,
+    weight_regularizer=regularizers.SparseCentersRegularizer(10, 10),
+    weight_reg_weight=0.2,
+)
+optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
+embeddings = torch.randn(32, 128, requires_grad=True)
+labels = torch.randint(0, 10, (32,))
+loss = loss_func(embeddings, labels)
+loss.backward()
+optimizer.step()
+```
+
 **Parameters**:
 
 - **num_classes**: The number of classes in the training set. Labels must be in

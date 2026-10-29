@@ -46,6 +46,19 @@ backward pass are supported. A new module starts a new histogram.
 
 **Paper settings**: The authors use 512 bins; pass `num_bins=512` to match.
 
+**Example**:
+
+```python
+import torch
+from pytorch_metric_learning import losses
+
+loss_func = losses.DynamicSoftMarginLoss(num_bins=512)
+anchors = torch.randn(32, 128, requires_grad=True)
+positives = torch.randn(32, 128, requires_grad=True)
+loss = loss_func(anchors, ref_emb=positives)
+loss.backward()
+```
+
 **Parameters**:
 
 - **min_val**: The finite negative lower bound of the histogram. Its upper

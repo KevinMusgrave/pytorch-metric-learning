@@ -22,8 +22,8 @@ uv sync --frozen --all-extras --no-build --no-install-project
 .venv/bin/uv run --frozen --no-sync mkdocs build --strict
 ```
 
-CI runs the same commands on Linux, macOS, and Windows, plus the maintainers'
-policy checks described in [DEVELOPMENT.md](DEVELOPMENT.md).
+CI runs these commands on Linux and the test suite on macOS and Windows, plus
+the maintainers' policy checks described in [DEVELOPMENT.md](DEVELOPMENT.md).
 
 ## What a change needs
 

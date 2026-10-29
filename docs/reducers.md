@@ -126,11 +126,11 @@ gives 0. Sums are accumulated in float32 for float16 and bfloat16 losses.
 
 These components emit divisor terms and use `DivisorReducer` by default:
 
-| Component                                                            | Terms with a divisor                                 |
-| -------------------------------------------------------------------- | ---------------------------------------------------- |
-| [MarginLoss](losses/margin_loss.md#marginloss)                       | `margin_loss`; `beta_reg_loss` with per-class `beta` |
-| [ProxyAnchorLoss](losses/proxy_anchor_loss.md#proxyanchorloss)       | `pos_loss`, `neg_loss`                               |
-| [SparseCentersRegularizer](regularizers.md#sparsecentersregularizer) | `loss`                                               |
+| Component                                                            | Terms with a divisor                                                       |
+| -------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| [MarginLoss](losses/margin_loss.md#marginloss)                       | `margin_loss`; `beta_reg_loss` with `learn_beta=True` and per-class `beta` |
+| [ProxyAnchorLoss](losses/proxy_anchor_loss.md#proxyanchorloss)       | `pos_loss`, `neg_loss`                                                     |
+| [SparseCentersRegularizer](regularizers.md#sparsecentersregularizer) | `loss`                                                                     |
 
 Any other reducer raises `ValueError` for these terms. To combine a divisor
 term with a different reduction of other terms, route each divisor term to
@@ -163,7 +163,7 @@ reducers.MultipleReducers(reducers, default_reducer=None)
 
 `MultipleReducers` routes terms only when it is the reducer of a loss or
 regularizer. Used as the inner reducer of `PerAnchorReducer` or as a value inside
-another `MultipleReducers`, it raises `NotImplementedError`.
+another `MultipleReducers`, it raises `TypeError`.
 
 **Example usage**:
 
@@ -173,7 +173,11 @@ for `pos_loss` and a [MeanReducer](#meanreducer) for `neg_loss`:
 
 ```python
 from pytorch_metric_learning.losses import ContrastiveLoss
-from pytorch_metric_learning.reducers import MeanReducer, MultipleReducers, ThresholdReducer
+from pytorch_metric_learning.reducers import (
+    MeanReducer,
+    MultipleReducers,
+    ThresholdReducer,
+)
 
 reducer = MultipleReducers(
     {"pos_loss": ThresholdReducer(low=0.1), "neg_loss": MeanReducer()}

@@ -25,6 +25,19 @@ label different from the anchor's, so `labels` are required even with
 `indices_tuple`. A pair without negatives contributes 0. With `ref_emb`,
 positives and negatives come from the reference set.
 
+**Example**:
+
+```python
+import torch
+from pytorch_metric_learning import losses
+
+loss_func = losses.AngularLoss(alpha=45)
+embeddings = torch.randn(32, 128, requires_grad=True)
+labels = torch.randint(0, 8, (32,))
+loss = loss_func(embeddings, labels)
+loss.backward()
+```
+
 **Parameters**:
 
 - **alpha**: The angle $\alpha$ in degrees. The paper uses values between 36 and 55.

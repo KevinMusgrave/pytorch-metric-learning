@@ -5,8 +5,7 @@ and clustering backends they use. It operates on embedding tensors supplied by
 the caller. It does not own models, model modes, data loaders, dataset
 acquisition, split orchestration, dimensionality reduction, logging,
 checkpoints, or optimizer scheduling. Those application concerns are shown in
-the [evaluation recipe](../recipes/evaluation.md), which is tested with fixtures
-carried over from the version 2 testers.
+the [evaluation recipe](../recipes/evaluation.md).
 
 Labels keep the dtype the caller supplies, and floating embeddings keep their
 dtype, promoted to a common one when query and reference differ; integer or
@@ -69,8 +68,7 @@ profile sets both.
 Faiss runs on CPU copies with `faiss-cpu`, including when embeddings originate
 on CUDA. GPU search requires a GPU build, detected by its `GpuIndex` type:
 `faiss-cpu` on macOS reports a GPU through `get_num_gpus()` without providing
-GPU indexes. CUDA tensor tests and two-device collective tests therefore do not
-require a `faiss-gpu` wheel. Backend-specific GPU acceleration is distinct from
+GPU indexes. Backend-specific GPU acceleration is distinct from
 PyTorch CUDA support. The Faiss GPU path is limited to `k <= 2048`, the maximum
 in Faiss's [`DeviceDefs.cuh`](https://github.com/facebookresearch/faiss/blob/main/faiss/gpu/utils/DeviceDefs.cuh).
 

@@ -3,7 +3,9 @@
 [Ensemble Deep Manifold Similarity Learning using Hard Proxies](https://openaccess.thecvf.com/content_CVPR_2019/papers/Aziere_Ensemble_Deep_Manifold_Similarity_Learning_Using_Hard_Proxies_CVPR_2019_paper.pdf)
 
 ```python
-losses.ManifoldLoss(embedding_size, num_proxies=50, lambda_c=1.0, alpha=0.8, margin=5e-4, **options)
+losses.ManifoldLoss(
+    embedding_size, num_proxies=50, lambda_c=1.0, alpha=0.8, margin=5e-4, **options
+)
 ```
 
 **Equation**:
@@ -39,6 +41,23 @@ optimizer. The [placement rule](../losses.md#learnable-weight-arguments) of
 learnable weights applies; this loss does not derive from BaseProxyLoss and has
 no weight regularization arguments.
 
+**Example**:
+
+```python
+import torch
+from pytorch_metric_learning import losses
+
+loss_func = losses.ManifoldLoss(embedding_size=128, num_proxies=10)
+optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
+embeddings = torch.randn(32, 128, requires_grad=True)
+loss = loss_func(embeddings)
+loss.backward()
+proxy_ids = torch.randint(0, 10, (32,))
+loss = loss_func(embeddings, proxy_ids)
+loss.backward()
+optimizer.step()
+```
+
 **Parameters**:
 
 - **embedding_size**: The embedding size, $l$ in the paper.
@@ -61,12 +80,3 @@ no weight regularization arguments.
 **Reducer input**:
 
 - **loss**: Already reduced: the value of $L$. Every reducer returns it unchanged.
-
-```python
-loss_func = losses.ManifoldLoss(embedding_size=128, num_proxies=10)
-
-# assign proxies at random
-loss = loss_func(embeddings)
-# or assign proxy proxy_ids[i] to embeddings[i]
-loss = loss_func(embeddings, proxy_ids)
-```

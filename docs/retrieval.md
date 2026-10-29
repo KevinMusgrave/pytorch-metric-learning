@@ -8,7 +8,12 @@ operate on embedding tensors the caller has already computed; the
 PyTorch extraction loop.
 
 ```python
-from pytorch_metric_learning.evaluation import CustomKNN, FaissKMeans, FaissKNN, MatchFinder
+from pytorch_metric_learning.evaluation import (
+    CustomKNN,
+    FaissKMeans,
+    FaissKNN,
+    MatchFinder,
+)
 ```
 
 | Backend       | Dependency    | Default for                                    |
@@ -153,10 +158,14 @@ import tempfile
 import torch
 from pytorch_metric_learning.evaluation import FaissKNN
 
-reference, more_reference, query = torch.randn(50, 8), torch.randn(20, 8), torch.randn(5, 8)
+reference, more_reference, query = (
+    torch.randn(50, 8),
+    torch.randn(20, 8),
+    torch.randn(5, 8),
+)
 knn = FaissKNN(reset_before=False, reset_after=False)
-knn.train(reference)        # new index containing reference
-knn.add(more_reference)     # append rows; indices continue at 50
+knn.train(reference)  # new index containing reference
+knn.add(more_reference)  # append rows; indices continue at 50
 distances, indices = knn(query, 10)
 assert indices.shape == (5, 10)
 

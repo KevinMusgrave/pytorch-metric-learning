@@ -4,9 +4,8 @@ The benchmark runner exercises public loss, miner, and distributed APIs. It is
 development tooling, separate from the installable library. It depends on the
 numerical and distributed modules; neither module imports the runner.
 The runner imports the sibling `src` directory directly, so measurements use
-that checkout even when another version is installed. This also lets the quick
-boundary command run after CI's frozen dependency-only installation, without
-an editable install or a caller-provided `PYTHONPATH`.
+that source even when another version is installed, and the runner needs no
+project installation.
 
 Measure autograd-enabled forward and backward separately on fresh graphs. Clear
 gradients before each step, warm up before sampling, and synchronize CUDA at
@@ -29,7 +28,7 @@ aggregate comparisons must use the slowest rank. Barriers align samples outside
 the timing window. Run this case with torchrun; correctness tests launch their
 own workers and remain a separate command.
 
-The quick boundary command executes small real workloads and checks finite
+Short runs execute small real workloads and checks finite
 losses, gradients, and valid miner indices before reporting measurements. It
 does not assert machine-dependent timing thresholds. Longer measurements and
 GPU runs are deliberate experiments, not an implicit part of ordinary tests.

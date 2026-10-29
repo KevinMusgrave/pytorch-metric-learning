@@ -28,6 +28,19 @@ and its gradient stay finite when the individual $p_{ij}$ underflow. float16 and
 similarity distance, the exponents are $s \cdot \mathrm{sim}(\mathbf{x}_i,
 \mathbf{r}_j)$. The default distance L2-normalizes the embeddings.
 
+**Example**:
+
+```python
+import torch
+from pytorch_metric_learning import losses
+
+loss_func = losses.NCALoss()
+embeddings = torch.randn(32, 128, requires_grad=True)
+labels = torch.randint(0, 8, (32,))
+loss = loss_func(embeddings, labels)
+loss.backward()
+```
+
 **Parameters**:
 
 - **softmax_scale**: The multiplier $s$ of the distances in the softmax. The

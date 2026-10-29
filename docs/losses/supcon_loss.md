@@ -23,6 +23,19 @@ without positives contributes 0. The default reducer averages over the anchors
 with a positive loss instead of summing. With a distance where smaller means
 closer, the logits are negated distances.
 
+**Example**:
+
+```python
+import torch
+from pytorch_metric_learning import losses
+
+loss_func = losses.SupConLoss()
+embeddings = torch.randn(32, 128, requires_grad=True)
+labels = torch.randint(0, 8, (32,))
+loss = loss_func(embeddings, labels)
+loss.backward()
+```
+
 **Parameters**:
 
 - **temperature**: The temperature $\tau$. The paper uses 0.1.

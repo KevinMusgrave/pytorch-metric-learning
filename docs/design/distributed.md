@@ -22,12 +22,11 @@ parameters even though the encoder's DDP average canceled the embedding scale.
 Trainable losses must participate in DDP synchronization with the encoder or
 through their own DDP wrapper.
 
-The gather uses the current pinned PyTorch's
+The gather uses
 `torch.distributed._functional_collectives.all_gather_single`, the replacement
-recommended by its deprecated `torch.distributed.nn.functional.all_gather`.
-The module is private to PyTorch, so a PyTorch upgrade must re-run the
-distributed tests and, if the function moves, switch to its public successor.
-There is no handwritten autograd collective or old-version fallback. Batches
+recommended by the deprecated `torch.distributed.nn.functional.all_gather`.
+The module is private to PyTorch and may move in a later release; there is no
+handwritten autograd collective or fallback. Batches
 are padded for the collective and sliced back to their actual lengths; uneven
 and empty ranks retain their gradient connection. Small metadata collectives
 establish sizes and reject mismatched schemas before payload communication.
@@ -40,13 +39,18 @@ queue state and receive the same global inputs. The underlying memory loss still
 owns capacity, detached references, wraparound, and index semantics.
 
 Wrappers take `objective="global"` (the default) or `objective="local_anchor"`.
-A boolean `efficient` flag described a speed tradeoff, but the two settings
-optimize different objectives with different gradients, so the argument names
-the objective. The local-anchor objective: each
+The two settings optimize different objectives with different gradients, so the
+argument names the objective rather than a speed tradeoff. The local-anchor
+objective: each
 rank uses its local anchors and detached remote references, and returns world
 size times its local loss. DDP therefore sums the per-rank surrogate gradients;
 it does not recover full-batch reference gradients or a sample-weighted global
 mean. Self-pair exclusion uses the rank's offset in the gathered reference set.
+The miner wrapper removes self-pairs from the candidates it passes to the miner,
+so a miner that selects one pair per anchor chooses among valid pairs instead of
+losing a self-pair selection afterward. The loss wrapper passes the gathered
+batch as `ref_emb` with a self-free pair tuple; losses that use `indices_tuple`
+only as weights, such as `NCALoss`, still see each anchor's own row.
 Explicit reference tensors describe a separate set, so matching row positions
 are not self-pairs. Memory losses do not support this mode.
 

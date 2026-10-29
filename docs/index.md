@@ -58,8 +58,19 @@ verification command. They use synthetic tensors and download nothing.
 ## Imports
 
 ```python
-from pytorch_metric_learning import distances, losses, miners, reducers, regularizers, samplers
-from pytorch_metric_learning.evaluation import AccuracyCalculator, CustomKNN, MatchFinder
+from pytorch_metric_learning import (
+    distances,
+    losses,
+    miners,
+    reducers,
+    regularizers,
+    samplers,
+)
+from pytorch_metric_learning.evaluation import (
+    AccuracyCalculator,
+    CustomKNN,
+    MatchFinder,
+)
 from pytorch_metric_learning.distributed import DistributedLossWrapper
 from pytorch_metric_learning.utils import indexing
 from pytorch_metric_learning.types import PairIndices, TripletIndices

@@ -27,6 +27,20 @@ $\lambda - D_{ik}$.
 **Paper settings**: The paper uses $\lambda = 1$; the default `base=0.5`
 differs. Pass `base=1` for the paper's setting.
 
+**Example**:
+
+```python
+import torch
+from pytorch_metric_learning import losses, miners
+
+loss_func = losses.MultiSimilarityLoss(alpha=2, beta=50, base=1)
+miner = miners.MultiSimilarityMiner(epsilon=0.1)
+embeddings = torch.randn(32, 128, requires_grad=True)
+labels = torch.randint(0, 8, (32,))
+loss = loss_func(embeddings, labels, miner(embeddings, labels))
+loss.backward()
+```
+
 **Parameters**:
 
 - **alpha**: The scale $\alpha$ of positive pairs. The paper uses 2.

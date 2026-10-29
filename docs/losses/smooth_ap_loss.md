@@ -30,6 +30,19 @@ is multiplied by its [miner weight](../losses.md#miner-weights). Labels are
 required, and `ref_emb` raises `ValueError`. Memory grows with the cube of the
 batch size.
 
+**Example**:
+
+```python
+import torch
+from pytorch_metric_learning import losses
+
+loss_func = losses.SmoothAPLoss()
+embeddings = torch.randn(32, 128, requires_grad=True)
+labels = torch.arange(8).repeat_interleave(4)
+loss = loss_func(embeddings, labels)
+loss.backward()
+```
+
 **Parameters**:
 
 - **temperature**: The sigmoid temperature $\tau$. The paper uses 0.01.

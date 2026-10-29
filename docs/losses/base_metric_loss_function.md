@@ -15,7 +15,9 @@ losses.BaseMetricLossFunction(*, distance=None, reducer=None, embedding_regulari
 
 ```python
 loss_func(embeddings, labels=None, indices_tuple=None, ref_emb=None, ref_labels=None)
-loss_func.loss_terms(embeddings, labels=None, indices_tuple=None, ref_emb=None, ref_labels=None)
+loss_func.loss_terms(
+    embeddings, labels=None, indices_tuple=None, ref_emb=None, ref_labels=None
+)
 ```
 
 Both call `objective_terms`, which validates shapes, devices, and the
@@ -26,20 +28,35 @@ Both call `objective_terms`, which validates shapes, devices, and the
 returns the objective and regularization terms unreduced; see
 [unreduced loss terms](../losses.md#unreduced-loss-terms).
 
-Subclasses implement:
-
-```python
-def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
-    raise NotImplementedError
-```
-
-`compute_loss` receives validated inputs. `labels` and `ref_labels` may be
+Subclasses implement
+`compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels)`,
+which receives validated inputs. `labels` and `ref_labels` may be
 `None`; `indices_tuple` is `None`, a `PairIndices`, or a `TripletIndices`; and
 `ref_emb` is `None` for self-comparison. It returns a `types.LossDict`, or `{}`
 when there is nothing to compute. Override `default_distance()` and
 `default_reducer()` to change the defaults, and `regularization_terms` to add a
 penalty that is applied after reduction. See
 [custom losses](../extend/losses.md).
+
+**Example**:
+
+```python
+import torch
+from pytorch_metric_learning import losses
+
+
+class UnitNormLoss(losses.BaseMetricLossFunction):
+    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+        values = (embeddings.norm(dim=1) - 1).square()
+        indices = torch.arange(len(embeddings), device=embeddings.device)
+        return {"loss": {"losses": values, "indices": indices}}
+
+
+loss_func = UnitNormLoss()
+embeddings = torch.randn(32, 128, requires_grad=True)
+loss = loss_func(embeddings)
+loss.backward()
+```
 
 **Parameters**:
 

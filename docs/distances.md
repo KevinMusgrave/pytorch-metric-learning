@@ -1,7 +1,7 @@
 # Distances
 
 Distance modules compute distances or similarities between embeddings.
-Consider TripletMarginLoss in its default form:
+Consider TripletMarginLoss with a margin of 0.2:
 
 ```python
 from pytorch_metric_learning.losses import TripletMarginLoss
@@ -102,6 +102,7 @@ A subclass implements two hooks on already-normalized embeddings. `forward` and
 # between query_emb[j] and ref_emb[k].
 def compute_mat(self, query_emb, ref_emb):
     raise NotImplementedError
+
 
 # Return a vector where output[j] is the distance or similarity
 # between query_emb[j] and ref_emb[j].

@@ -23,6 +23,21 @@ the logits with $\cos\theta_j$ in place of $\psi$; see
 [classification logits](../losses.md#classification-logits). This loss derives
 from LargeMarginSoftmaxLoss and [BaseProxyLoss](base_proxy_loss.md).
 
+**Example**:
+
+```python
+import torch
+from pytorch_metric_learning import losses
+
+loss_func = losses.SphereFaceLoss(num_classes=10, embedding_size=128)
+optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
+embeddings = torch.randn(32, 128, requires_grad=True)
+labels = torch.randint(0, 10, (32,))
+loss = loss_func(embeddings, labels)
+loss.backward()
+optimizer.step()
+```
+
 **Parameters**:
 
 - **num_classes**: The number of classes in the training set. Labels must be in

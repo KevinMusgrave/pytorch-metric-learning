@@ -30,6 +30,21 @@ $\frac{1}{2} d_p^2$ and $\frac{1}{2}[m - d_n]_+^2$. The default reducer averages
 the positive-pair losses greater than zero and, separately, the negative-pair
 losses greater than zero, then adds the two averages.
 
+**Example**:
+
+```python
+import torch
+from pytorch_metric_learning import distances, losses
+
+loss_func = losses.ContrastiveLoss(
+    pos_margin=1, neg_margin=0, distance=distances.CosineSimilarity()
+)
+embeddings = torch.randn(32, 128, requires_grad=True)
+labels = torch.randint(0, 8, (32,))
+loss = loss_func(embeddings, labels)
+loss.backward()
+```
+
 **Parameters**:
 
 - **pos_margin**: The distance (or similarity) over (under) which positive

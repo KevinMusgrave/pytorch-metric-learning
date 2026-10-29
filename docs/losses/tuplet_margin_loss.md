@@ -22,6 +22,26 @@ has no negatives contributes 0. Cosines are clamped just inside $[-1, 1]$
 before $\arccos$, so identical anchor-positive pairs, such as duplicates from
 sampling with replacement, have finite values and gradients.
 
+The paper combines this loss with
+[IntraPairVarianceLoss](intra_pair_variance_loss.md) through
+[MultipleLosses](multiple_losses.md).
+
+**Example**:
+
+```python
+import torch
+from pytorch_metric_learning import losses
+
+loss_func = losses.MultipleLosses(
+    {"tuplet": losses.TupletMarginLoss(), "variance": losses.IntraPairVarianceLoss()},
+    weights={"tuplet": 1.0, "variance": 0.5},
+)
+embeddings = torch.randn(32, 128, requires_grad=True)
+labels = torch.randint(0, 8, (32,))
+loss = loss_func(embeddings, labels)
+loss.backward()
+```
+
 **Parameters**:
 
 - **margin**: The angular margin $\beta$ in degrees, applied to positive pairs.
@@ -40,14 +60,3 @@ sampling with replacement, have finite values and gradients.
 **Reducer input**:
 
 - **loss**: One loss per (anchor, positive) pair, indexed by `(anchors, positives)`.
-
-The paper combines this loss with
-[IntraPairVarianceLoss](intra_pair_variance_loss.md). Use
-[MultipleLosses](multiple_losses.md):
-
-```python
-complete_loss = losses.MultipleLosses(
-    {"tuplet": losses.TupletMarginLoss(), "variance": losses.IntraPairVarianceLoss()},
-    weights={"tuplet": 1.0, "variance": 0.5},
-)
-```

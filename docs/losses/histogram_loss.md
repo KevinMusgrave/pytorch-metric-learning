@@ -25,6 +25,19 @@ the supplied `indices_tuple`. Each unordered pair is counted once, so duplicate
 pairs from triplet enumeration do not change the histograms. Similarities must
 lie in $[-1, 1]$. Similarities are clamped to $[-1, 1]$, so identical or opposite embeddings fall in the end bins.
 
+**Example**:
+
+```python
+import torch
+from pytorch_metric_learning import losses
+
+loss_func = losses.HistogramLoss()
+embeddings = torch.randn(32, 128, requires_grad=True)
+labels = torch.randint(0, 8, (32,))
+loss = loss_func(embeddings, labels)
+loss.backward()
+```
+
 **Parameters**:
 
 - **num_bins**: $B$, the number of histogram intervals on $[-1, 1]$. A value

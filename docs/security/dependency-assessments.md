@@ -78,26 +78,28 @@ permissions.
 The library, tests, and recipes do not call filelock directly. Installed
 callers are PyTorch's compiler cache and debug code, which select `FileLock`,
 not the SQLite, strict-soft, or soft-reader/writer classes. The reviewed
-macOS and Linux filesystems support native `flock`; the `ENOSYS` soft fallback
-is not selected. Ordinary tests and CI benchmarks use eager execution.
+macOS and Linux filesystems support native `flock`, and Windows uses
+`WindowsFileLock`; the `ENOSYS` soft fallback is not selected. Ordinary tests
+and CI benchmarks use eager execution and create no filelock lock files.
 Compiled benchmarks on the reviewed Mac use the default Inductor cache below
 the user's mode-0700 temporary directory. Other local accounts cannot replace
-its lock paths. CI uses an isolated GitHub-hosted Linux runner; GPU acceptance
-uses a disposable Linux pod with no untrusted local accounts.
+its lock paths. CI uses ephemeral single-tenant GitHub-hosted Linux, macOS,
+and Windows runners; GPU acceptance uses a disposable Linux pod with no
+untrusted local accounts.
 
-| Advisory            | Affected API or prerequisite absent from this environment                                                                              |
-| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| GHSA-fj95-fr6c-h845 | `SoftReadWriteLock` holder-record refresh; this API is not called.                                                                     |
-| GHSA-j8f7-rjxc-mr56 | SQLite `ReadWriteLock` symlink resolution; this API is not called.                                                                     |
-| GHSA-m462-7rxw-wvpg | `StrictSoftFileLock` protocol-directory traversal; this API is not called.                                                             |
-| GHSA-9j6q-wvj5-jgjg | Soft-lock writability checks under attacker-controlled paths; no soft-lock caller or fallback is enabled.                              |
-| GHSA-69hj-f68j-2879 | Native Unix locks can truncate a file planted at the lock path. The reviewed cache directories are not writable by untrusted accounts. |
-| GHSA-8mx5-7m5m-r77g | Windows lock ACL inheritance; no Windows execution or SQLite lock is enabled in this development baseline.                             |
-| GHSA-6627-m3xw-93mp | Writable strict-soft claim directories; this API is not called.                                                                        |
-| GHSA-fq56-3cx3-fjxp | Soft-lock stale-record inode reuse; no soft-lock caller or fallback is enabled.                                                        |
-| GHSA-9c4x-gm8v-wgc4 | Adoption of attacker-owned strict-soft or soft-reader/writer protocol directories; neither API is called.                              |
-| GHSA-rfpc-qcw5-3pc4 | Forged soft-lock holder records; no soft-lock caller or fallback is enabled.                                                           |
-| GHSA-cwqr-hh33-gh44 | Crafted SQLite lock databases; this API is not called.                                                                                 |
+| Advisory            | Affected API or prerequisite absent from this environment                                                                                        |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| GHSA-fj95-fr6c-h845 | `SoftReadWriteLock` holder-record refresh; this API is not called.                                                                               |
+| GHSA-j8f7-rjxc-mr56 | SQLite `ReadWriteLock` symlink resolution; this API is not called.                                                                               |
+| GHSA-m462-7rxw-wvpg | `StrictSoftFileLock` protocol-directory traversal; this API is not called.                                                                       |
+| GHSA-9j6q-wvj5-jgjg | Soft-lock writability checks under attacker-controlled paths; no soft-lock caller or fallback is enabled.                                        |
+| GHSA-69hj-f68j-2879 | Native Unix locks can truncate a file planted at the lock path. The reviewed cache directories are not writable by untrusted accounts.           |
+| GHSA-8mx5-7m5m-r77g | Windows lock ACL inheritance; the Windows CI suite creates no lock file, its runner has no other local account, and SQLite locks are not called. |
+| GHSA-6627-m3xw-93mp | Writable strict-soft claim directories; this API is not called.                                                                                  |
+| GHSA-fq56-3cx3-fjxp | Soft-lock stale-record inode reuse; no soft-lock caller or fallback is enabled.                                                                  |
+| GHSA-9c4x-gm8v-wgc4 | Adoption of attacker-owned strict-soft or soft-reader/writer protocol directories; neither API is called.                                        |
+| GHSA-rfpc-qcw5-3pc4 | Forged soft-lock holder records; no soft-lock caller or fallback is enabled.                                                                     |
+| GHSA-cwqr-hh33-gh44 | Crafted SQLite lock databases; this API is not called.                                                                                           |
 
 The exact advisory URLs are retained with each assessment in
 `.code-polishy.json`. Additional source references are PyTorch's
@@ -106,9 +108,9 @@ and [cache paths](https://github.com/pytorch/pytorch/blob/v2.14.0/torch/_inducto
 and filelock's [native Unix implementation](https://github.com/tox-dev/filelock/blob/4.0.3/src/filelock/_unix.py).
 
 These findings are not a claim that filelock 4.0.3 is safe in arbitrary consumer
-applications. Reassess before enabling Windows verification, soft-lock APIs,
-compiler caches writable by untrusted users, shared-user GPU hosts, or a
-filesystem without native `flock`. Keep compilation caches private on such
+applications. Reassess before enabling compiled execution on Windows or shared
+hosts, soft-lock APIs, compiler caches writable by untrusted users, shared-user
+GPU hosts, or a filesystem without native `flock`. Keep compilation caches private on such
 hosts. Filelock 4.2.1 fixes this set and was published on 2026-10-17; review
 that release or a later aged fix from 2026-11-16. No early-release admission is
 needed while the affected inputs and APIs remain absent.

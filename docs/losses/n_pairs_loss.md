@@ -29,6 +29,19 @@ unnormalized inner products and penalizes the squared embedding norms. Pass
 `embedding_regularizer` such as `regularizers.LpRegularizer(power=2)` for the
 paper's formulation.
 
+**Example**:
+
+```python
+import torch
+from pytorch_metric_learning import losses
+
+loss_func = losses.NPairsLoss()
+embeddings = torch.randn(32, 128, requires_grad=True)
+labels = torch.arange(16).repeat_interleave(2)
+loss = loss_func(embeddings, labels)
+loss.backward()
+```
+
 **Default distance**:
 
 - [`DotProductSimilarity()`](../distances.md#dotproductsimilarity), which

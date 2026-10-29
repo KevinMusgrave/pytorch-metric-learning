@@ -36,6 +36,19 @@ With a distance where smaller means closer, the logits are negated distances.
 For two augmented views of the same batch, wrap the loss in
 [SelfSupervisedLoss](self_supervised_loss.md) instead of building labels.
 
+**Example**:
+
+```python
+import torch
+from pytorch_metric_learning import losses
+
+loss_func = losses.SelfSupervisedLoss(losses.NTXentLoss(temperature=0.5))
+embeddings = torch.randn(32, 128, requires_grad=True)
+ref_emb = torch.randn(32, 128, requires_grad=True)
+loss = loss_func(embeddings, ref_emb)
+loss.backward()
+```
+
 **Parameters**:
 
 - **temperature**: The temperature $\tau$. MoCo uses 0.07; SimCLR uses 0.5.

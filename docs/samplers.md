@@ -154,7 +154,9 @@ triples. Use a `DataLoader` batch size divisible by 3 and recover the tuple
 indices directly from each embedding batch:
 
 ```python
-indices_tuple = torch.arange(len(embeddings), device=embeddings.device).reshape(-1, 3).unbind(1)
+indices_tuple = (
+    torch.arange(len(embeddings), device=embeddings.device).reshape(-1, 3).unbind(1)
+)
 loss = loss_func(embeddings, labels, indices_tuple=indices_tuple)
 ```
 

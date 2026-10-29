@@ -7,7 +7,9 @@ large-margin nearest-neighbor objective of
 (Weinberger and Saul, 2009).
 
 ```python
-losses.TripletMarginLoss(margin=0.05, swap=False, smooth_loss=False, triplets_per_anchor="all", **options)
+losses.TripletMarginLoss(
+    margin=0.05, swap=False, smooth_loss=False, triplets_per_anchor="all", **options
+)
 ```
 
 **Equation**:
@@ -29,6 +31,20 @@ With `ref_emb`, positives and negatives come from the reference set, and the
 swap distance is computed between the reference rows. Triplets come from labels
 or from the supplied `indices_tuple`; pairs are combined into every triplet
 that shares an anchor.
+
+**Example**:
+
+```python
+import torch
+from pytorch_metric_learning import losses, miners
+
+loss_func = losses.TripletMarginLoss(margin=0.2)
+miner = miners.TripletMarginMiner(margin=0.2, type_of_triplets="semihard")
+embeddings = torch.randn(32, 128, requires_grad=True)
+labels = torch.randint(0, 8, (32,))
+loss = loss_func(embeddings, labels, miner(embeddings, labels))
+loss.backward()
+```
 
 **Parameters**:
 

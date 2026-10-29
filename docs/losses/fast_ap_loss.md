@@ -28,6 +28,19 @@ where the product $h_q^+ H_q^+$ or $H_q$ is zero contribute 0. With an
 `indices_tuple`, each query's loss is multiplied by its
 [miner weight](../losses.md#miner-weights).
 
+**Example**:
+
+```python
+import torch
+from pytorch_metric_learning import losses
+
+loss_func = losses.FastAPLoss()
+embeddings = torch.randn(32, 128, requires_grad=True)
+labels = torch.randint(0, 8, (32,))
+loss = loss_func(embeddings, labels)
+loss.backward()
+```
+
 **Parameters**:
 
 - **num_bins**: $L$, the number of soft histogram bins. The paper suggests 10.

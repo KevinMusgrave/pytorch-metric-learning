@@ -35,6 +35,19 @@ for gradients. The two sums are computed per anchor with log-sum-exp. An anchor
 without a positive or without a negative contributes 0, and the default
 reducer averages the anchors whose loss is positive.
 
+**Example**:
+
+```python
+import torch
+from pytorch_metric_learning import losses
+
+loss_func = losses.CircleLoss(margin=0.25, gamma=256)
+embeddings = torch.randn(32, 128, requires_grad=True)
+labels = torch.randint(0, 8, (32,))
+loss = loss_func(embeddings, labels)
+loss.backward()
+```
+
 **Parameters**:
 
 - **margin**: The relaxation factor $m$, which controls the radius of the

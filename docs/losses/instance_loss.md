@@ -23,6 +23,19 @@ the paper. With other labels, the target column is not necessarily an
 embedding with the same label. `indices_tuple` and `ref_emb` raise
 `ValueError`.
 
+**Example**:
+
+```python
+import torch
+from pytorch_metric_learning import losses
+
+loss_func = losses.InstanceLoss()
+embeddings = torch.randn(32, 128, requires_grad=True)
+labels = torch.arange(32)
+loss = loss_func(embeddings, labels)
+loss.backward()
+```
+
 **Parameters**:
 
 - **gamma**: $\gamma$, the scale applied to the cosine similarity matrix. The

@@ -26,6 +26,21 @@ from labels or from `indices_tuple`. When an anchor has no positives or no
 negatives, that log-sum-exp term is 0, so the anchor's loss is the hinge of the
 remaining term.
 
+**Example**:
+
+```python
+import torch
+from pytorch_metric_learning import losses
+
+loss_func = losses.GeneralizedLiftedStructureLoss(neg_margin=0.5)
+embeddings = torch.randn(32, 128, requires_grad=True)
+labels = torch.randint(0, 8, (32,))
+ref_emb = torch.randn(64, 128)
+ref_labels = torch.randint(0, 8, (64,))
+loss = loss_func(embeddings, labels, ref_emb=ref_emb, ref_labels=ref_labels)
+loss.backward()
+```
+
 **Parameters**:
 
 - **neg_margin**: The margin $m$. The paper uses values between 0.1 and 1.

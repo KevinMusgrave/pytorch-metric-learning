@@ -2,8 +2,8 @@
 
 Run benchmarks from the repository's frozen development environment. These
 measurements establish a reference for changes; they do not impose a universal
-speed requirement across machines. The runner imports this checkout's `src`
-directory directly; an editable project install is optional.
+speed requirement across machines. The runner imports the library from the
+repository's `src` directory.
 
 ```sh
 uv run --frozen --no-sync python -m benchmarks.run \
@@ -87,13 +87,10 @@ sampling; mathematical correctness is established by the reference tests.
 
 Measured on 2026-10-29 UTC with Python 3.12.13, PyTorch 2.14.0, float32, 128
 dimensions, seed 17, and one CPU thread per rank. CPU rows ran on an Apple M1
-Pro at revision `e25aba5` with ten warmup and fifty measured steps. CUDA rows
-ran on a rented host with two NVIDIA A40s (driver 595.91.07, CUDA 13.0, NCCL
-2.30.7) at revision `01bf1da`, whose library source is identical to `e25aba5`.
-Values are median milliseconds; peak is the additional allocated CUDA memory in
-MiB. These are a shared laptop and a rented host, not isolated performance labs:
-use the raw sample spread and repeat on the target hardware before setting a
-budget.
+Pro with ten warmup and fifty measured steps. CUDA rows ran on NVIDIA A40s with
+CUDA 13.0. Values are median milliseconds; peak is the additional allocated
+CUDA memory in MiB. Neither machine was isolated for benchmarking: use the raw
+sample spread and repeat on the target hardware before setting a budget.
 
 | Case          | M1 Pro b128 fwd / bwd | M1 Pro b512 fwd / bwd | A40 b128 fwd / bwd | A40 b512 fwd / bwd | A40 b512 peak |
 | ------------- | --------------------: | --------------------: | -----------------: | -----------------: | ------------: |
@@ -121,7 +118,7 @@ The distributed case, a linear encoder with the global-objective contrastive
 loss and DDP, took 1.315 ms forward and 0.980 ms backward on the slower of two
 Gloo ranks on the M1 Pro with 64 rows per rank
 ([raw](benchmarks/gloo-m1-pro-v3-b64.json)). With two A40s and NCCL
-(`NCCL_P2P_DISABLE=1`, required on that host), the slower rank took 5.360 ms and
+with peer-to-peer transport disabled (`NCCL_P2P_DISABLE=1`), the slower rank took 5.360 ms and
 4.849 ms with 64 rows per rank and 5.104 ms and 4.623 ms with 256
 ([64 rows](benchmarks/nccl-a40-v3-b64.json),
 [256 rows](benchmarks/nccl-a40-v3-b256.json)). Disabling peer-to-peer
@@ -156,10 +153,7 @@ v2.9.0 on the A40 [batch 128](benchmarks/cuda-a40-v2-b128.json),
 [NT-Xent](benchmarks/cuda-a40-v2-ntxent-b512-spc16.json), and
 [mined triplet](benchmarks/cuda-a40-v2-mined-triplet-b512-spc16.json); v3 on the
 A40 [NT-Xent](benchmarks/cuda-a40-v3-ntxent-b512-spc16.json) and
-[mined triplet](benchmarks/cuda-a40-v3-mined-triplet-b512-spc16.json). The
-v2.9.0 reports record the release commit `bee27da` as dirty because the
-version 3 runner was copied into that checkout; v2.9.0's import of tqdm was
-satisfied by a no-op stub, which the measured code does not call.
+[mined triplet](benchmarks/cuda-a40-v3-mined-triplet-b512-spc16.json).
 
 ## Large batches and tuple memory
 

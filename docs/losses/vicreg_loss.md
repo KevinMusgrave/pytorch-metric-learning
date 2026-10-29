@@ -49,14 +49,22 @@ implementation; $\gamma$ is fixed at 1.
 **Paper settings**: The defaults $\lambda = 25$, $\mu = 25$, $\nu = 1$ are the
 paper's.
 
+**Example**:
+
+```python
+import torch
+from pytorch_metric_learning import losses
+
+loss_func = losses.VICRegLoss()
+embeddings = torch.randn(32, 128, requires_grad=True)
+ref_emb = torch.randn(32, 128, requires_grad=True)
+loss = loss_func(embeddings, ref_emb)
+loss.backward()
+```
+
 **Parameters**:
 
 - **invariance_lambda**: The weight $\lambda$ of the invariance term.
 - **variance_mu**: The weight $\mu$ of the variance term.
 - **covariance_v**: The weight $\nu$ of the covariance term.
 - **eps**: The constant $\epsilon$ added to the variance for numerical stability.
-
-```python
-loss_func = losses.VICRegLoss()
-loss = loss_func(embeddings, ref_emb)
-```

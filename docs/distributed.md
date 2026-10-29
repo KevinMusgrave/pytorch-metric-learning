@@ -6,7 +6,10 @@ Wrap a loss or miner with these classes when training with PyTorch's
 rank.
 
 ```python
-from pytorch_metric_learning.distributed import DistributedLossWrapper, DistributedMinerWrapper
+from pytorch_metric_learning.distributed import (
+    DistributedLossWrapper,
+    DistributedMinerWrapper,
+)
 ```
 
 Without an initialized process group, or with a group of one rank, both wrappers
@@ -63,7 +66,14 @@ distributed.DistributedLossWrapper(loss, objective="global")
   Another value raises `ValueError`.
 
 ```python
-wrapper(embeddings, labels=None, indices_tuple=None, ref_emb=None, ref_labels=None, enqueue_mask=None)
+wrapper(
+    embeddings,
+    labels=None,
+    indices_tuple=None,
+    ref_emb=None,
+    ref_labels=None,
+    enqueue_mask=None,
+)
 ```
 
 A supplied `indices_tuple` uses these coordinates:
@@ -73,6 +83,14 @@ A supplied `indices_tuple` uses these coordinates:
   same objective produces these coordinates.
 - With `"local_anchor"`, anchor indices refer to the local batch, and positive
   and negative indices refer to the gathered reference batch.
+
+With `"local_anchor"` and no `ref_emb`, the loss receives the gathered batch as
+`ref_emb`, so it cannot exclude self-pairs on its own. Without a supplied
+`indices_tuple`, the wrapper passes every pair except each anchor's own gathered
+row. Losses that take their pairs from `indices_tuple` honor that exclusion.
+`NCALoss` uses `indices_tuple` only as miner weights, so under
+`"local_anchor"` it counts each anchor as its own zero-distance positive; use
+`"global"` with `NCALoss`.
 
 `CrossBatchMemory` supports only the `"global"` objective; `"local_anchor"`
 raises `ValueError` at construction. Pass `enqueue_mask` by keyword to select
@@ -111,8 +129,9 @@ distributed.DistributedMinerWrapper(miner, objective="global")
   receives the mined indices.
   - `"global"`: mines the gathered batch and returns indices in gathered
     coordinates.
-  - `"local_anchor"`: mines local anchors against the gathered reference batch
-    and removes each anchor's pairing with its own gathered row.
+  - `"local_anchor"`: mines local anchors against the gathered reference batch.
+    Without `ref_emb`, each anchor's own gathered row is excluded from the
+    candidates before mining.
 
 ```python
 wrapper(embeddings, labels, indices_tuple=None, ref_emb=None, ref_labels=None)
@@ -126,7 +145,10 @@ Example usage:
 ```python
 import torch
 from pytorch_metric_learning import losses, miners
-from pytorch_metric_learning.distributed import DistributedLossWrapper, DistributedMinerWrapper
+from pytorch_metric_learning.distributed import (
+    DistributedLossWrapper,
+    DistributedMinerWrapper,
+)
 
 miner = DistributedMinerWrapper(miners.MultiSimilarityMiner())
 loss_func = DistributedLossWrapper(losses.MultiSimilarityLoss())

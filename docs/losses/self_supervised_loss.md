@@ -32,13 +32,21 @@ shape `(N, D)`. It assigns label `i` to `embeddings[i]` and `ref_emb[i]`.
 A `loss` that is not a `BaseMetricLossFunction` raises `TypeError` at
 construction.
 
+**Example**:
+
+```python
+import torch
+from pytorch_metric_learning import losses
+
+loss_func = losses.SelfSupervisedLoss(losses.TripletMarginLoss())
+embeddings = torch.randn(32, 128, requires_grad=True)
+ref_emb = torch.randn(32, 128, requires_grad=True)
+loss = loss_func(embeddings, ref_emb)
+loss.backward()
+```
+
 **Parameters**:
 
 - **loss**: The loss function to wrap.
 - **symmetric**: If `True`, the embeddings in both `embeddings` and `ref_emb`
   are anchors. If `False`, only the embeddings in `embeddings` are anchors.
-
-```python
-loss_func = losses.SelfSupervisedLoss(losses.TripletMarginLoss())
-loss = loss_func(embeddings, ref_emb)
-```

@@ -47,7 +47,8 @@ disagree with the index structure and distinguished pairs that every reducer
 treated alike. Reducers have one hook, `element_reduction(losses, anchors,
 embeddings, labels)`, and receive the anchor indices of any tuple term.
 
-A loss with nothing valid to compute returns `{}`. `BaseReducer.forward` sums
+A loss with nothing valid to compute returns `{}` or terms with empty `losses`.
+`BaseReducer.forward` sums
 term reductions starting from a zero connected to the embeddings, so empty
 batches yield a differentiable zero without per-loss zero-term helpers.
 

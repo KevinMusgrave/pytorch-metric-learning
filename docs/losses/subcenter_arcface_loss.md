@@ -24,20 +24,30 @@ over the closest sub-centers, shaped `(N, num_classes)`; see
 [classification logits](../losses.md#classification-logits). This loss derives
 from ArcFaceLoss and [BaseProxyLoss](base_proxy_loss.md).
 
-`get_outliers` finds outliers and dominant sub-centers as described in the paper:
-
-```python
-outliers, dominant_centers = loss_func.get_outliers(
-    embeddings, labels, threshold=75, return_dominant_centers=True
-)
-```
-
-`outliers` holds the indices of embeddings whose similarity to their class's
+`get_outliers(embeddings, labels, threshold=75, return_dominant_centers=True)`
+finds outliers and dominant sub-centers as described in the paper. `outliers`
+holds the indices of embeddings whose similarity to their class's
 dominant sub-center is below `cos(threshold)`, with `threshold` in degrees.
 `dominant_centers` has shape `(num_classes, embedding_size)`; a class's dominant
 sub-center is the one nearest to the most of its embeddings in `embeddings`.
 With `return_dominant_centers=False`, only `outliers` is returned. The method
 runs without gradients.
+
+**Example**:
+
+```python
+import torch
+from pytorch_metric_learning import losses
+
+loss_func = losses.SubCenterArcFaceLoss(num_classes=10, embedding_size=128)
+optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
+embeddings = torch.randn(32, 128, requires_grad=True)
+labels = torch.randint(0, 10, (32,))
+loss = loss_func(embeddings, labels)
+loss.backward()
+optimizer.step()
+outliers, dominant_centers = loss_func.get_outliers(embeddings, labels)
+```
 
 **Parameters**:
 

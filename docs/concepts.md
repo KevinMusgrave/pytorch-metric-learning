@@ -103,7 +103,8 @@ computes loss terms: a dictionary from term names to entries with these keys:
 - `divisor` (optional): a normalizer that only
   [DivisorReducer](reducers.md#divisorreducer) applies.
 
-A batch with no valid pair or triplet produces an empty dictionary.
+A batch with no valid pair or triplet produces no terms or terms with empty
+`losses`.
 `loss_func.loss_terms(...)` returns the terms without reducing them.
 
 ```python
@@ -119,8 +120,8 @@ loss.backward()
 ## Reducers
 
 A [reducer](reducers.md) turns loss terms into one scalar: it reduces each term,
-for example with a mean, and sums the results. An empty dictionary reduces to a
-differentiable zero. Each loss has a default reducer, and the `reducer` option
+for example with a mean, and sums the results. No terms, or terms
+with empty `losses`, reduce to a differentiable zero. Each loss has a default reducer, and the `reducer` option
 replaces it.
 
 ## Regularizers
@@ -149,7 +150,9 @@ Two wrappers supply a larger reference set to a loss:
   global batch.
 
 ```python
-memory = losses.CrossBatchMemory(losses.ContrastiveLoss(), embedding_size=4, memory_size=32)
+memory = losses.CrossBatchMemory(
+    losses.ContrastiveLoss(), embedding_size=4, memory_size=32
+)
 loss = memory(embeddings, labels)
 assert memory.queue_idx == 8
 ```

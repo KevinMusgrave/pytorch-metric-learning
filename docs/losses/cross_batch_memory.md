@@ -60,6 +60,26 @@ retain the saved tensor dtypes, and construct optimizers after loading. A state
 dict without `queue_state` is reported as a missing key under strict loading.
 `loss_fn.reset_queue()` empties the queue.
 
+**Example**:
+
+```python
+import torch
+from pytorch_metric_learning import losses, miners
+
+loss_func = losses.CrossBatchMemory(
+    losses.ContrastiveLoss(),
+    embedding_size=128,
+    memory_size=1024,
+    miner=miners.MultiSimilarityMiner(),
+)
+for _ in range(3):
+    embeddings = torch.randn(32, 128, requires_grad=True)
+    labels = torch.randint(0, 8, (32,))
+    loss = loss_func(embeddings, labels)
+    loss.backward()
+loss_func.reset_queue()
+```
+
 **Parameters**:
 
 - **loss**: The loss function to wrap, for example `ContrastiveLoss()`.
@@ -78,9 +98,3 @@ dict without `queue_state` is reported as a missing key under strict loading.
   [memory recipe](../recipes/training.md#memory-warmup-contract) for
   caller-controlled queue filling. A non-boolean mask raises `TypeError`; a
   wrong shape or device raises `ValueError`.
-
-```python
-loss_fn = losses.CrossBatchMemory(losses.ContrastiveLoss(), embedding_size=128, memory_size=4096)
-loss = loss_fn(embeddings, labels)
-loss_fn.reset_queue()
-```

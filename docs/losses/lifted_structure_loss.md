@@ -26,6 +26,19 @@ positives must come from the same set. Passing `ref_emb` raises `ValueError`;
 use [GeneralizedLiftedStructureLoss](generalized_lifted_structure_loss.md) for
 separate query and reference sets.
 
+**Example**:
+
+```python
+import torch
+from pytorch_metric_learning import losses
+
+loss_func = losses.LiftedStructureLoss()
+embeddings = torch.randn(32, 128, requires_grad=True)
+labels = torch.randint(0, 8, (32,))
+loss = loss_func(embeddings, labels)
+loss.backward()
+```
+
 **Parameters**:
 
 - **neg_margin**: The margin $\alpha$. The paper uses 1.

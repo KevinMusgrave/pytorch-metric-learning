@@ -1,9 +1,8 @@
 # Executable metric-learning recipes
 
 The executable recipes are ordinary PyTorch application code beside their
-canonical documentation, outside the distributed package. They retain
-algorithm-specific composition previously embedded in
-trainers without introducing a new training framework. The library does not
+canonical documentation, outside the distributed package. They show
+algorithm-specific composition without introducing a training framework. The library does not
 own optimizers, model modes, data loading, schedules, checkpointing, or logging.
 Each recipe runs on small synthetic tensors without network access. There is no
 standalone example gallery, tutorial collection, or Jupyter notebook surface.
@@ -42,8 +41,7 @@ The evaluation recipe extracts embeddings in caller code and composes
 explicit query/reference sets for `AccuracyCalculator`. Split composition places
 a query first when it belongs to the reference; two-stream evaluation never
 removes self-matches; parent-conditioned metrics are unweighted means over
-parent groups, then over levels. Its tests reuse the removed testers' fixtures
-and expected values. Published dataset splits are documentation, not code.
+parent groups, then over levels. Published dataset splits are documentation, not code.
 
 Reference tests verify objective values and gradients, candidate-set nesting,
 gradient ownership, parameter updates, subset mapping, and queue progression.

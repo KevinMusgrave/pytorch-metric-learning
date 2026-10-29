@@ -20,6 +20,26 @@ and an `indices_tuple` raises `ValueError`. The losses and miners are
 registered as submodules, so `loss_func.to(...)` and `loss_func.parameters()`
 cover them.
 
+**Example**:
+
+```python
+import torch
+from pytorch_metric_learning import losses, miners
+
+loss_func = losses.MultipleLosses(
+    losses={
+        "tuplet": losses.TupletMarginLoss(),
+        "variance": losses.IntraPairVarianceLoss(),
+    },
+    miners={"tuplet": miners.MultiSimilarityMiner()},
+    weights={"tuplet": 1.0, "variance": 0.5},
+)
+embeddings = torch.randn(32, 128, requires_grad=True)
+labels = torch.randint(0, 8, (32,))
+loss = loss_func(embeddings, labels)
+loss.backward()
+```
+
 **Parameters**:
 
 - **losses**: A non-empty mapping from names to initialized loss modules, for
@@ -29,14 +49,3 @@ cover them.
 - **weights**: Optional. A mapping with exactly the same keys as `losses`,
   giving the weight of each loss; other keys raise `ValueError`. The default
   weight is 1.0.
-
-```python
-from pytorch_metric_learning import losses, miners
-
-loss_func = losses.MultipleLosses(
-    losses={"tuplet": losses.TupletMarginLoss(), "variance": losses.IntraPairVarianceLoss()},
-    weights={"tuplet": 1.0, "variance": 0.5},
-    miners={"tuplet": miners.MultiSimilarityMiner()},
-)
-loss = loss_func(embeddings, labels)
-```

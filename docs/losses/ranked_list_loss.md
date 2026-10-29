@@ -3,7 +3,9 @@
 [Ranked List Loss for Deep Metric Learning](https://arxiv.org/abs/1903.03238)
 
 ```python
-losses.RankedListLoss(margin, neg_temperature, imbalance=0.5, alpha=None, pos_temperature=0, **options)
+losses.RankedListLoss(
+    margin, neg_temperature, imbalance=0.5, alpha=None, pos_temperature=0, **options
+)
 ```
 
 **Equation**:
@@ -35,6 +37,19 @@ against the rest of the batch. Labels are required; `indices_tuple` and
 correspond to the paper's RLL-Simpler variant, which it recommends for
 exploratory analysis: positives are weighted uniformly and
 $\alpha = 1 + m/2$.
+
+**Example**:
+
+```python
+import torch
+from pytorch_metric_learning import losses
+
+loss_func = losses.RankedListLoss(margin=0.4, neg_temperature=10)
+embeddings = torch.randn(32, 128, requires_grad=True)
+labels = torch.randint(0, 8, (32,))
+loss = loss_func(embeddings, labels)
+loss.backward()
+```
 
 **Parameters**:
 

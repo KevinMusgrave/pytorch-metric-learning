@@ -72,7 +72,7 @@ nav:
       - Retrieval evaluation: recipes/evaluation.md
     - Performance: performance.md
     - Release notes:
-      - release-notes/index.md
+      - All releases: release-notes/index.md
       - 3.0.0: release-notes/3.0.0.md
     - Migrating from version 2: migration-2-to-3.md
     - Versioning and support: versioning.md

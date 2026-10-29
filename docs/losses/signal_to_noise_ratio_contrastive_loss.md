@@ -20,6 +20,21 @@ replaces the Euclidean distance. The paper pairs it with
 [ZeroMeanRegularizer](../regularizers.md#zeromeanregularizer) as the
 `embedding_regularizer`.
 
+**Example**:
+
+```python
+import torch
+from pytorch_metric_learning import losses, regularizers
+
+loss_func = losses.SignalToNoiseRatioContrastiveLoss(
+    embedding_regularizer=regularizers.ZeroMeanRegularizer()
+)
+embeddings = torch.randn(32, 128, requires_grad=True)
+labels = torch.randint(0, 8, (32,))
+loss = loss_func(embeddings, labels)
+loss.backward()
+```
+
 **Parameters**:
 
 - **pos_margin**: The noise-to-signal ratio over which positive pairs

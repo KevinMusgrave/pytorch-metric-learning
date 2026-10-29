@@ -3,7 +3,9 @@
 [Threshold-Consistent Margin Loss for Open-World Deep Metric Learning](https://arxiv.org/abs/2307.04047)
 
 ```python
-losses.ThresholdConsistentMarginLoss(lambda_plus=1.0, lambda_minus=1.0, margin_plus=0.9, margin_minus=0.5, **options)
+losses.ThresholdConsistentMarginLoss(
+    lambda_plus=1.0, lambda_minus=1.0, margin_plus=0.9, margin_minus=0.5, **options
+)
 ```
 
 **Equation**:
@@ -21,6 +23,24 @@ supplied `indices_tuple`; with `ref_emb`, positives and negatives come from the
 reference set. The similarities are computed with
 `torch.nn.functional.cosine_similarity`, so the distance's `power` has no
 effect.
+
+**Example**:
+
+```python
+import torch
+from pytorch_metric_learning import losses
+
+loss_func = losses.MultipleLosses(
+    {
+        "metric": losses.MultiSimilarityLoss(),
+        "tcm": losses.ThresholdConsistentMarginLoss(),
+    }
+)
+embeddings = torch.randn(32, 128, requires_grad=True)
+labels = torch.randint(0, 8, (32,))
+loss = loss_func(embeddings, labels)
+loss.backward()
+```
 
 **Parameters**:
 

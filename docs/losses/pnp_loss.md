@@ -30,6 +30,19 @@ the batch. Labels are required; `indices_tuple` and `ref_emb` raise
 `PNPLoss(variant="Dq", alpha=8)`. The default `variant="O"` is the plain
 PNP loss of equation 5.
 
+**Example**:
+
+```python
+import torch
+from pytorch_metric_learning import losses
+
+loss_func = losses.PNPLoss(variant="Dq", alpha=8)
+embeddings = torch.randn(32, 128, requires_grad=True)
+labels = torch.randint(0, 8, (32,))
+loss = loss_func(embeddings, labels)
+loss.backward()
+```
+
 **Parameters**:
 
 - **b**: The boundary $b$ of PNP-Ib (equation 9). The paper uses 2.

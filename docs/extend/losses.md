@@ -14,7 +14,9 @@ from pytorch_metric_learning.types import LossDict
 
 
 class BarebonesLoss(BaseMetricLossFunction):
-    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels) -> LossDict:
+    def compute_loss(
+        self, embeddings, labels, indices_tuple, ref_emb, ref_labels
+    ) -> LossDict:
         return {"loss": {"losses": embeddings.mean(), "indices": None}}
 
 
@@ -59,7 +61,9 @@ class FullFeaturedLoss(BaseMetricLossFunction):
         super().__init__(**options)
         self.margin = margin
 
-    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels) -> LossDict:
+    def compute_loss(
+        self, embeddings, labels, indices_tuple, ref_emb, ref_labels
+    ) -> LossDict:
         if labels is None and indices_tuple is None:
             raise ValueError("FullFeaturedLoss requires labels or indices_tuple")
         triplets = indexing.convert_to_triplets(indices_tuple, labels, ref_labels)
@@ -163,7 +167,12 @@ loss_func = HingePairLoss()
 embeddings = torch.randn(16, 8)
 labels = torch.randint(0, 3, (16,))
 loss = loss_func(embeddings, labels)
-loss = loss_func(embeddings, labels, ref_emb=torch.randn(10, 8), ref_labels=torch.randint(0, 3, (10,)))
+loss = loss_func(
+    embeddings,
+    labels,
+    ref_emb=torch.randn(10, 8),
+    ref_labels=torch.randint(0, 3, (10,)),
+)
 ```
 
 ## Losses with learnable parameters
@@ -271,7 +280,9 @@ class NearestNeighborLoss(BaseMetricLossFunction):
     def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
         if ref_emb is None:
             mat = self.distance(embeddings)
-            mat = mat.masked_fill(torch.eye(len(mat), dtype=torch.bool, device=mat.device), -torch.inf)
+            mat = mat.masked_fill(
+                torch.eye(len(mat), dtype=torch.bool, device=mat.device), -torch.inf
+            )
         else:
             mat = self.distance(embeddings, ref_emb)
         closest = torch.amax if self.distance.is_inverted else torch.amin

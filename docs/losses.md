@@ -4,6 +4,7 @@ Every loss takes embeddings and labels and returns a scalar tensor:
 
 ```python
 from pytorch_metric_learning import losses
+
 loss_func = losses.SomeLoss()
 loss = loss_func(embeddings, labels)
 ```
@@ -12,6 +13,7 @@ With a [miner](miners.md), pass the mined pairs or triplets as the third argumen
 
 ```python
 from pytorch_metric_learning import miners
+
 miner_func = miners.SomeMiner()
 loss_func = losses.SomeLoss()
 miner_output = miner_func(embeddings, labels)
@@ -215,8 +217,8 @@ a `divisor`. Such a term must be reduced by
 [DivisorReducer](reducers.md#divisorreducer), directly or through
 [MultipleReducers](reducers.md#multiplereducers); any other reducer raises
 `ValueError`. A loss with no valid pairs, triplets, or queries returns `{}`
-from `loss_terms`, and every reducer turns an empty dictionary into a
-differentiable zero. See [custom losses](extend/losses.md#loss-terms) for the
+or terms with empty `losses` from `loss_terms`, and every reducer turns either
+into a differentiable zero; an embedding regularizer still adds its penalty. See [custom losses](extend/losses.md#loss-terms) for the
 full contract.
 
 ## Miner weights

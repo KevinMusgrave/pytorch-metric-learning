@@ -8,7 +8,7 @@ center: [ArcFaceLoss](arcface_loss.md), [CosFaceLoss](cosface_loss.md),
 [SoftTripleLoss](soft_triple_loss.md), [SphereFaceLoss](sphereface_loss.md), and
 [SubCenterArcFaceLoss](subcenter_arcface_loss.md).
 
-```python
+```python {.signature}
 losses.BaseProxyLoss(num_weights, embedding_size,
     *, weight_regularizer=None, weight_reg_weight=1.0, weight_init_func=None, **options)
 ```

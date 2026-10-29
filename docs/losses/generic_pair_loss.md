@@ -2,7 +2,7 @@
 
 A base class for losses over positive and negative pairs.
 
-```python
+```python {.signature}
 losses.GenericPairLoss(**options)
 ```
 
@@ -18,8 +18,8 @@ is `None`, or the `(N, M)` matrix between `embeddings` and `ref_emb`. Without
 `(a1, p, a2, n)`. Two static helpers extract the common views:
 `self.pair_values(mat, pairs)` returns the positive-pair and negative-pair
 distances, and `self.pair_masks(mat, pairs)` returns boolean positive and
-negative masks over `mat`. `pair_loss` returns a `types.LossDict`; see
-[pair-based losses](../extend/losses.md#pair-based-losses) for an example.
+negative masks over `mat`. `pair_loss` returns a
+[`types.LossDict`](../types.md#lossdict), as in this example.
 
 **Example**:
 
@@ -45,6 +45,10 @@ embeddings = torch.randn(32, 128, requires_grad=True)
 labels = torch.randint(0, 8, (32,))
 loss = loss_func(embeddings, labels)
 loss.backward()
+
+ref_emb = torch.randn(10, 128)
+ref_labels = torch.randint(0, 8, (10,))
+loss = loss_func(embeddings, labels, ref_emb=ref_emb, ref_labels=ref_labels)
 ```
 
 **Parameters**:

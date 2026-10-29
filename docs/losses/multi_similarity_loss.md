@@ -2,7 +2,7 @@
 
 [Multi-Similarity Loss with General Pair Weighting for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf)
 
-```python
+```python {.signature}
 losses.MultiSimilarityLoss(alpha=2, beta=50, base=0.5, **options)
 ```
 

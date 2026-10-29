@@ -3,14 +3,21 @@ import logging
 from collections.abc import Callable, Hashable, Mapping, Sequence
 from dataclasses import dataclass
 from types import MappingProxyType
-from typing import Any, Literal
+from typing import Any
 
 import numpy as np
 import torch
 from torch import Tensor
 
 from ..distances import LpDistance
-from ..types import KMeansFunction, KNNFunction, LabelComparison
+from ..types import (
+    ArrayLike,
+    KMeansFunction,
+    KNNFunction,
+    LabelComparison,
+    MetricNeighbors,
+    NeighborLimit,
+)
 from .retrieval import CustomKNN
 
 __all__ = [
@@ -18,17 +25,20 @@ __all__ = [
     "ClusteringMetric",
     "RetrievalInputs",
     "RetrievalMetric",
+    "mean_average_precision",
+    "mean_average_precision_at_r",
+    "mean_reciprocal_rank",
+    "precision_at_1",
+    "precision_at_k",
+    "r_precision",
 ]
-LOGGER = logging.getLogger(__name__)
-DEFAULT_KNN_BATCH_SIZE = 256
-KMEANS_REQUIRED = (
+_LOGGER = logging.getLogger(__name__)
+_DEFAULT_KNN_BATCH_SIZE = 256
+_KMEANS_REQUIRED = (
     "Clustering metrics such as NMI and AMI require kmeans_func, for example "
     "FaissKMeans() from the faiss extra or a function returning one cluster "
     "index per row"
 )
-type KValue = int | Literal["max_bin_count"] | None
-type NeighborCount = int | Literal["relevant", "all"]
-type ArrayLike = Tensor | np.ndarray
 
 
 @dataclass(frozen=True)
@@ -42,7 +52,7 @@ class RetrievalInputs:
 @dataclass(frozen=True)
 class RetrievalMetric:
     function: Callable[[RetrievalInputs], Tensor]
-    neighbors: NeighborCount = "all"
+    neighbors: MetricNeighbors = "all"
 
     def __post_init__(self) -> None:
         valid_count = (
@@ -61,10 +71,10 @@ class ClusteringMetric:
     function: Callable[[Tensor, Tensor], float]
 
 
-type Metric = RetrievalMetric | ClusteringMetric
+type _Metric = RetrievalMetric | ClusteringMetric
 
 
-def mutual_information_scores() -> Any:
+def _mutual_information_scores() -> Any:
     try:
         return importlib.import_module("sklearn.metrics")
     except ModuleNotFoundError as error:
@@ -74,7 +84,7 @@ def mutual_information_scores() -> Any:
         ) from error
 
 
-def equal_label_counts(labels: Tensor, reference_labels: Tensor) -> Tensor:
+def _equal_label_counts(labels: Tensor, reference_labels: Tensor) -> Tensor:
     dtype = torch.promote_types(labels.dtype, reference_labels.dtype)
     labels, reference_labels = labels.to(dtype), reference_labels.to(dtype)
     values, counts = torch.unique(reference_labels, return_counts=True)
@@ -84,14 +94,14 @@ def equal_label_counts(labels: Tensor, reference_labels: Tensor) -> Tensor:
     return torch.where(values[positions] == labels, counts[positions], 0)
 
 
-def relevant_counts(
+def _relevant_counts(
     unique_labels: Tensor,
     reference_labels: Tensor,
     ref_includes_query: bool,
     label_comparison_fn: LabelComparison | None,
 ) -> Tensor:
     if label_comparison_fn is None:
-        counts = equal_label_counts(unique_labels, reference_labels)
+        counts = _equal_label_counts(unique_labels, reference_labels)
     else:
         counts = torch.stack(
             [
@@ -105,7 +115,7 @@ def relevant_counts(
     return counts
 
 
-def relevance_mask(counts_per_query: Tensor, num_k: int) -> Tensor:
+def _relevance_mask(counts_per_query: Tensor, num_k: int) -> Tensor:
     positions = torch.arange(num_k, device=counts_per_query.device)
     return positions < counts_per_query.unsqueeze(1)
 
@@ -119,12 +129,12 @@ def precision_at_1(inputs: RetrievalInputs) -> Tensor:
 
 
 def r_precision(inputs: RetrievalInputs) -> Tensor:
-    mask = relevance_mask(inputs.relevant_counts, inputs.matches.shape[1])
+    mask = _relevance_mask(inputs.relevant_counts, inputs.matches.shape[1])
     hits = (inputs.matches & mask).sum(dim=1, dtype=torch.float64)
     return hits / inputs.relevant_counts
 
 
-def average_precision(matches: Tensor, counts: Tensor) -> Tensor:
+def _average_precision(matches: Tensor, counts: Tensor) -> Tensor:
     ranks = torch.arange(
         1, matches.shape[1] + 1, device=matches.device, dtype=torch.float64
     )
@@ -133,12 +143,12 @@ def average_precision(matches: Tensor, counts: Tensor) -> Tensor:
 
 
 def mean_average_precision(inputs: RetrievalInputs) -> Tensor:
-    return average_precision(inputs.matches, inputs.relevant_counts)
+    return _average_precision(inputs.matches, inputs.relevant_counts)
 
 
 def mean_average_precision_at_r(inputs: RetrievalInputs) -> Tensor:
-    mask = relevance_mask(inputs.relevant_counts, inputs.matches.shape[1])
-    return average_precision(inputs.matches & mask, inputs.relevant_counts)
+    mask = _relevance_mask(inputs.relevant_counts, inputs.matches.shape[1])
+    return _average_precision(inputs.matches & mask, inputs.relevant_counts)
 
 
 def mean_reciprocal_rank(inputs: RetrievalInputs) -> Tensor:
@@ -149,28 +159,28 @@ def mean_reciprocal_rank(inputs: RetrievalInputs) -> Tensor:
     return torch.where(matches.any(dim=1), 1 / first_match, 0.0)
 
 
-def normalized_mutual_information(
+def _normalized_mutual_information(
     query_labels: Tensor, cluster_labels: Tensor
 ) -> float:
     return float(
-        mutual_information_scores().normalized_mutual_info_score(
-            *host_arrays(query_labels, cluster_labels)
+        _mutual_information_scores().normalized_mutual_info_score(
+            *_host_arrays(query_labels, cluster_labels)
         )
     )
 
 
-def adjusted_mutual_information(query_labels: Tensor, cluster_labels: Tensor) -> float:
+def _adjusted_mutual_information(query_labels: Tensor, cluster_labels: Tensor) -> float:
     return float(
-        mutual_information_scores().adjusted_mutual_info_score(
-            *host_arrays(query_labels, cluster_labels)
+        _mutual_information_scores().adjusted_mutual_info_score(
+            *_host_arrays(query_labels, cluster_labels)
         )
     )
 
 
-BUILTIN_METRICS: Mapping[str, Metric] = MappingProxyType(
+_BUILTIN_METRICS: Mapping[str, _Metric] = MappingProxyType(
     {
-        "AMI": ClusteringMetric(adjusted_mutual_information),
-        "NMI": ClusteringMetric(normalized_mutual_information),
+        "AMI": ClusteringMetric(_adjusted_mutual_information),
+        "NMI": ClusteringMetric(_normalized_mutual_information),
         "mean_average_precision": RetrievalMetric(mean_average_precision),
         "mean_average_precision_at_r": RetrievalMetric(
             mean_average_precision_at_r, "relevant"
@@ -182,12 +192,12 @@ BUILTIN_METRICS: Mapping[str, Metric] = MappingProxyType(
 )
 
 
-def class_key(label: Tensor) -> Hashable:
+def _class_key(label: Tensor) -> Hashable:
     return label.item() if label.ndim == 0 else tuple(label.tolist())
 
 
 @dataclass(frozen=True)
-class QueryGroups:
+class _QueryGroups:
     inputs: RetrievalInputs
     has_relevant: Tensor
     classes: Tensor
@@ -214,7 +224,7 @@ class QueryGroups:
         return sums / counts
 
 
-def check_neighbor_indices(indices: Tensor, num_reference: int) -> None:
+def _check_neighbor_indices(indices: Tensor, num_reference: int) -> None:
     if indices.numel() == 0:
         return
     low, high = torch.stack(torch.aminmax(indices)).tolist()
@@ -233,15 +243,15 @@ class AccuracyCalculator:
         include: Sequence[str] = (),
         exclude: Sequence[str] = (),
         avg_of_avgs: bool = False,
-        k: KValue = None,
+        k: NeighborLimit = None,
         label_comparison_fn: LabelComparison | None = None,
         device: torch.device | str | None = None,
         knn_func: KNNFunction | None = None,
         kmeans_func: KMeansFunction | None = None,
-        custom_metrics: Mapping[str, Metric] | None = None,
+        custom_metrics: Mapping[str, RetrievalMetric | ClusteringMetric] | None = None,
     ) -> None:
         custom = dict(custom_metrics or {})
-        replaced = sorted(custom.keys() & BUILTIN_METRICS.keys())
+        replaced = sorted(custom.keys() & _BUILTIN_METRICS.keys())
         if replaced:
             raise ValueError(
                 f"custom_metrics cannot replace built-in metrics: {replaced}"
@@ -252,8 +262,8 @@ class AccuracyCalculator:
                     f"custom metric {name!r} must be a RetrievalMetric or "
                     "ClusteringMetric"
                 )
-        self.available_metrics: Mapping[str, Metric] = MappingProxyType(
-            {**BUILTIN_METRICS, **custom}
+        self.available_metrics: Mapping[str, _Metric] = MappingProxyType(
+            {**_BUILTIN_METRICS, **custom}
         )
         self.check_metric_names(include, exclude)
         if len(include) == 0:
@@ -268,7 +278,7 @@ class AccuracyCalculator:
         self.knn_func: KNNFunction = (
             CustomKNN(
                 LpDistance(normalize_embeddings=False, power=2),
-                batch_size=DEFAULT_KNN_BATCH_SIZE,
+                batch_size=_DEFAULT_KNN_BATCH_SIZE,
             )
             if knn_func is None
             else knn_func
@@ -285,7 +295,7 @@ class AccuracyCalculator:
         if label_comparison_fn is not None and uses_clustering:
             raise ValueError("Clustering metrics require the default label comparison")
         if self.kmeans_func is None and uses_clustering:
-            raise ValueError(KMEANS_REQUIRED)
+            raise ValueError(_KMEANS_REQUIRED)
 
     def clustering_names(self, names: Sequence[str]) -> list[str]:
         return [
@@ -303,7 +313,7 @@ class AccuracyCalculator:
 
     def get_cluster_labels(self, query: Tensor, query_labels: Tensor) -> Tensor:
         if self.kmeans_func is None:
-            raise ValueError(KMEANS_REQUIRED)
+            raise ValueError(_KMEANS_REQUIRED)
         num_clusters = len(torch.unique(query_labels, dim=0))
         return self.kmeans_func(query, num_clusters)
 
@@ -364,7 +374,7 @@ class AccuracyCalculator:
             if not retrieval:
                 return {}
             groups = self.retrieve(*tensors, retrieval)
-            classes = [class_key(label) for label in groups.classes.cpu()]
+            classes = [_class_key(label) for label in groups.classes.cpu()]
             return {
                 name: dict(
                     zip(
@@ -376,7 +386,7 @@ class AccuracyCalculator:
                 for name, metric in retrieval.items()
             }
 
-    def reduce(self, groups: QueryGroups, values: Tensor, defined: Tensor) -> float:
+    def reduce(self, groups: _QueryGroups, values: Tensor, defined: Tensor) -> float:
         if self.avg_of_avgs:
             return torch.nanmean(groups.class_means(values, defined)).item()
         total = torch.where(defined, values, 0.0).sum()
@@ -405,7 +415,7 @@ class AccuracyCalculator:
         if reference_labels is None:
             raise ValueError("reference_labels are required with reference")
         device = self.device or torch.as_tensor(query).device
-        query_t, reference_t = embedding_pair(query, reference, device)
+        query_t, reference_t = _embedding_pair(query, reference, device)
         query_labels_t, reference_labels_t = (
             torch.as_tensor(x).to(device) for x in (query_labels, reference_labels)
         )
@@ -441,7 +451,7 @@ class AccuracyCalculator:
             raise ValueError("query and reference embeddings must be finite")
         if ref_includes_query and not (
             torch.allclose(query, reference[: len(query)])
-            and labels_equal(query_labels, reference_labels[: len(query_labels)])
+            and _labels_equal(query_labels, reference_labels[: len(query_labels)])
         ):
             raise ValueError(
                 "When ref_includes_query is True, the first len(query) rows of "
@@ -456,18 +466,18 @@ class AccuracyCalculator:
         reference_labels: Tensor,
         ref_includes_query: bool,
         metrics: Mapping[str, RetrievalMetric],
-    ) -> QueryGroups:
+    ) -> _QueryGroups:
         classes, class_index = torch.unique(query_labels, dim=0, return_inverse=True)
-        counts = relevant_counts(
+        counts = _relevant_counts(
             classes, reference_labels, ref_includes_query, self.custom_comparison
         )
         counts_per_query = counts[class_index]
         has_relevant = counts_per_query > 0
         if not torch.any(has_relevant):
-            LOGGER.warning("None of the query labels are in the reference set.")
+            _LOGGER.warning("None of the query labels are in the reference set.")
         num_k = self.determine_k(counts, len(reference), ref_includes_query, metrics)
         _, knn_indices = self.knn_func(query, num_k, reference, ref_includes_query)
-        check_neighbor_indices(knn_indices, len(reference))
+        _check_neighbor_indices(knn_indices, len(reference))
         knn_labels = reference_labels[knn_indices]
         matches = self.label_comparison_fn(query_labels.unsqueeze(1), knn_labels)
         inputs = RetrievalInputs(
@@ -476,7 +486,7 @@ class AccuracyCalculator:
             matches=matches.to(torch.bool),
             relevant_counts=counts_per_query,
         )
-        return QueryGroups(inputs, has_relevant, classes, class_index)
+        return _QueryGroups(inputs, has_relevant, classes, class_index)
 
     def check_metric_names(
         self, include: Sequence[str], exclude: Sequence[str]
@@ -505,7 +515,7 @@ class AccuracyCalculator:
             limit = self.k
             at_r = sorted(n for n, m in metrics.items() if m.neighbors == "relevant")
             if self.k < max_relevant and at_r:
-                LOGGER.warning(
+                _LOGGER.warning(
                     "You are computing %s, but k (%s) is less than the largest "
                     "number of relevant references (%s), so these metrics will be "
                     "incorrect. Set k='max_bin_count'. For MAP@%s instead of MAP@R, "
@@ -517,13 +527,15 @@ class AccuracyCalculator:
                     self.k,
                 )
         needed = max(
-            neighbors_needed(metric, max_relevant, available)
+            _neighbors_needed(metric, max_relevant, available)
             for metric in metrics.values()
         )
         return min(limit, needed, available)
 
 
-def neighbors_needed(metric: RetrievalMetric, max_relevant: int, available: int) -> int:
+def _neighbors_needed(
+    metric: RetrievalMetric, max_relevant: int, available: int
+) -> int:
     if isinstance(metric.neighbors, int):
         return metric.neighbors
     if metric.neighbors == "relevant":
@@ -531,7 +543,7 @@ def neighbors_needed(metric: RetrievalMetric, max_relevant: int, available: int)
     return available
 
 
-def embedding_pair(
+def _embedding_pair(
     query: ArrayLike, reference: ArrayLike, device: torch.device
 ) -> tuple[Tensor, Tensor]:
     query_t, reference_t = (torch.as_tensor(x).to(device) for x in (query, reference))
@@ -541,11 +553,11 @@ def embedding_pair(
     return query_t.to(dtype), reference_t.to(dtype)
 
 
-def host_arrays(*values: ArrayLike) -> list[np.ndarray]:
+def _host_arrays(*values: ArrayLike) -> list[np.ndarray]:
     return [torch.as_tensor(value).cpu().numpy() for value in values]
 
 
-def labels_equal(x: Tensor, y: Tensor) -> bool:
+def _labels_equal(x: Tensor, y: Tensor) -> bool:
     if x.is_floating_point() or y.is_floating_point():
         dtype = torch.promote_types(x.dtype, y.dtype)
         return torch.allclose(x.to(dtype), y.to(dtype))

@@ -2,7 +2,7 @@
 
 [Signal-to-Noise Ratio: A Robust Distance Metric for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Yuan_Signal-To-Noise_Ratio_A_Robust_Distance_Metric_for_Deep_Metric_Learning_CVPR_2019_paper.pdf)
 
-```python
+```python {.signature}
 losses.SignalToNoiseRatioContrastiveLoss(pos_margin=0.0, neg_margin=1.0, **options)
 ```
 

@@ -17,7 +17,7 @@ loss_func = losses.ArcFaceLoss(
 
 ## BaseRegularizer
 
-```python
+```python {.signature}
 regularizers.BaseRegularizer(*, distance=None, reducer=None)
 ```
 
@@ -54,7 +54,7 @@ Subclasses implement `compute_loss(x)` and return a
 
 This encourages unnormalized embeddings or weights to all have the same Lp norm.
 
-```python
+```python {.signature}
 regularizers.CenterInvariantRegularizer(**options)
 ```
 
@@ -74,7 +74,7 @@ regularizers.CenterInvariantRegularizer(**options)
 This encourages embeddings or weights to have a small Lp norm. The loss for
 row `i` is `torch.norm(x[i], p=p) ** power`.
 
-```python
+```python {.signature}
 regularizers.LpRegularizer(p=2, power=1, **options)
 ```
 
@@ -101,7 +101,7 @@ This should be applied as a weight regularizer. It penalizes class vectors that
 are very close together: the loss for class `i` is its largest similarity to
 another class vector.
 
-```python
+```python {.signature}
 regularizers.RegularFaceRegularizer(**options)
 ```
 
@@ -122,7 +122,7 @@ regularizers.RegularFaceRegularizer(**options)
 
 This should be applied as a weight regularizer. It encourages multiple class centers to "merge", i.e. group together.
 
-```python
+```python {.signature}
 regularizers.SparseCentersRegularizer(num_classes, centers_per_class, **options)
 ```
 
@@ -150,7 +150,7 @@ it requires [DivisorReducer](reducers.md#divisorreducer), the default.
 
 [Signal-to-Noise Ratio: A Robust Distance Metric for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Yuan_Signal-To-Noise_Ratio_A_Robust_Distance_Metric_for_Deep_Metric_Learning_CVPR_2019_paper.pdf)
 
-```python
+```python {.signature}
 regularizers.ZeroMeanRegularizer(**options)
 ```
 

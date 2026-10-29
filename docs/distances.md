@@ -55,7 +55,7 @@ is farther than `y` under either orientation.
 
 All distances extend this class. Its options are keyword-only.
 
-```python
+```python {.signature}
 distances.BaseDistance(*, normalize_embeddings=True, p=2, power=1)
 ```
 
@@ -110,17 +110,28 @@ assert torch.allclose(distance.pairwise(x, y), distance(x, y).diagonal(), atol=1
 A subclass implements two hooks on already-normalized embeddings. `forward` and
 `pairwise` call them and then apply `power`:
 
+- `compute_mat(query_emb, ref_emb)` returns the matrix whose entry `[j, k]` is
+  the distance or similarity between `query_emb[j]` and `ref_emb[k]`.
+- `pairwise_distance(query_emb, ref_emb)` returns the vector whose entry `j` is
+  the distance or similarity between `query_emb[j]` and `ref_emb[j]`.
+
 ```python
-# Return a matrix where mat[j, k] is the distance or similarity
-# between query_emb[j] and ref_emb[k].
-def compute_mat(self, query_emb, ref_emb):
-    raise NotImplementedError
+import torch
+from pytorch_metric_learning.distances import BaseDistance
 
 
-# Return a vector where output[j] is the distance or similarity
-# between query_emb[j] and ref_emb[j].
-def pairwise_distance(self, query_emb, ref_emb):
-    raise NotImplementedError
+class ChebyshevDistance(BaseDistance):
+    def compute_mat(self, query_emb, ref_emb):
+        return torch.cdist(query_emb, ref_emb, p=float("inf"))
+
+    def pairwise_distance(self, query_emb, ref_emb):
+        return (query_emb - ref_emb).abs().amax(dim=1)
+
+
+distance = ChebyshevDistance(normalize_embeddings=False)
+x, y = torch.randn(4, 8), torch.randn(4, 8)
+assert distance(x, y).shape == (4, 4)
+assert torch.allclose(distance.pairwise(x, y), distance(x, y).diagonal())
 ```
 
 `compute_mat` must return shape `(len(query_emb), len(ref_emb))`; another shape
@@ -133,7 +144,7 @@ application code, so normalization and `power` apply. Custom similarities set
 Computes a distance matrix in blocks of query rows, so peak memory is one
 `(batch_size, len(ref_emb))` block instead of the full matrix.
 
-```python
+```python {.signature}
 distances.BatchedDistance(distance, batch_size=32)
 ```
 
@@ -164,7 +175,7 @@ assert torch.cat(blocks).shape == (600, 100)
 
 ## CosineSimilarity
 
-```python
+```python {.signature}
 distances.CosineSimilarity()
 ```
 
@@ -179,7 +190,7 @@ with `p` or `power`.
 
 ## DotProductSimilarity
 
-```python
+```python {.signature}
 distances.DotProductSimilarity(*, normalize_embeddings=True, p=2, power=1)
 ```
 
@@ -188,7 +199,7 @@ normalization.
 
 ## LpDistance
 
-```python
+```python {.signature}
 distances.LpDistance(*, normalize_embeddings=True, p=2, power=1)
 ```
 
@@ -209,12 +220,20 @@ exactly zero, as in the matrix, and the gradient at identical rows is zero, as
 
 [Signal-to-Noise Ratio: A Robust Distance Metric for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Yuan_Signal-To-Noise_Ratio_A_Robust_Distance_Metric_for_Deep_Metric_Learning_CVPR_2019_paper.pdf)
 
-```python
+```python {.signature}
 distances.SNRDistance(*, normalize_embeddings=True, p=2, power=1)
 ```
 
-`mat[i, j]` equals:
+`mat[i, j]` is the variance of `query_emb[i] - ref_emb[j]` divided by the
+variance of `query_emb[i]`, computed after normalization when
+`normalize_embeddings=True`:
 
 ```python
-torch.var(query_emb[i] - ref_emb[j]) / torch.var(query_emb[i])
+import torch
+
+query_emb, ref_emb = torch.randn(3, 8), torch.randn(5, 8)
+mat = SNRDistance(normalize_embeddings=False)(query_emb, ref_emb)
+i, j = 1, 4
+expected = torch.var(query_emb[i] - ref_emb[j]) / torch.var(query_emb[i])
+assert torch.allclose(mat[i, j], expected)
 ```

@@ -2,7 +2,7 @@
 
 [CosFace: Large Margin Cosine Loss for Deep Face Recognition](https://arxiv.org/abs/1801.09414)
 
-```python
+```python {.signature}
 losses.CosFaceLoss(num_classes, embedding_size, margin=0.35, scale=64,
     *, weight_regularizer=None, weight_reg_weight=1.0, weight_init_func=None, **options)
 ```

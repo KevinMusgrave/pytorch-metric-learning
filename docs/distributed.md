@@ -60,7 +60,7 @@ that otherwise rejects it.
 
 ## DistributedLossWrapper
 
-```python
+```python {.signature}
 distributed.DistributedLossWrapper(loss, objective="global")
 ```
 
@@ -70,10 +70,11 @@ distributed.DistributedLossWrapper(loss, objective="global")
   [`MultipleLosses`](losses/multiple_losses.md), or a
   [`CrossBatchMemory`](losses/cross_batch_memory.md#crossbatchmemory). Another
   type raises `TypeError`.
-- **objective**: `"global"` or `"local_anchor"`; see [objectives](#objectives).
-  Another value raises `ValueError`.
+- **objective**: `"global"` or `"local_anchor"`, typed as
+  [`types.DistributedObjective`](types.md#distributedobjective); see
+  [objectives](#objectives). Another value raises `ValueError`.
 
-```python
+```python {.signature}
 wrapper(
     embeddings,
     labels=None,
@@ -126,7 +127,7 @@ loss.backward()
 
 ## DistributedMinerWrapper
 
-```python
+```python {.signature}
 distributed.DistributedMinerWrapper(miner, objective="global")
 ```
 
@@ -141,7 +142,7 @@ distributed.DistributedMinerWrapper(miner, objective="global")
     Without `ref_emb`, each anchor's own gathered row is excluded from the
     candidates before mining.
 
-```python
+```python {.signature}
 wrapper(embeddings, labels, indices_tuple=None, ref_emb=None, ref_labels=None)
 ```
 

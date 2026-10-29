@@ -2,7 +2,7 @@
 
 [Smooth-AP: Smoothing the Path Towards Large-Scale Image Retrieval](https://arxiv.org/abs/2007.12163)
 
-```python
+```python {.signature}
 losses.SmoothAPLoss(temperature=0.01, **options)
 ```
 

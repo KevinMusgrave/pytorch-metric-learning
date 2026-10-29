@@ -36,7 +36,7 @@ assert torch.equal(labels[pairs.pos_anchors], labels[pairs.positives])
 
 All miners extend this class and accept its keyword-only `distance` option.
 
-```python
+```python {.signature}
 miners.BaseMiner(*, distance=None)
 ```
 
@@ -51,7 +51,7 @@ miners.BaseMiner(*, distance=None)
 
 ### Calling a miner
 
-```python
+```python {.signature}
 miner(embeddings, labels, indices_tuple=None, ref_emb=None, ref_labels=None)
 ```
 
@@ -60,12 +60,9 @@ miner(embeddings, labels, indices_tuple=None, ref_emb=None, ref_labels=None)
 - **indices_tuple**: Optional candidate pairs or triplets. When given, the miner
   selects only from these candidates; see [candidates](#candidates).
 - **ref_emb**, **ref_labels**: Optional reference set of shape `(M, D)` and
-  `(M,)`. Positive and negative indices refer to these rows. When `ref_emb` is
-  `None`, the miner compares `embeddings` with themselves and excludes each
-  row's pairing with itself from the positives. When `ref_emb` is given, it is
-  a separate set, even if it is the same tensor as `embeddings`, and no pair is
-  treated as a self-comparison. `ref_labels` is required with `ref_emb`, and
-  passing `ref_labels` without `ref_emb` raises `ValueError`.
+  `(M,)`, following the [reference-set rule](concepts.md#reference-sets).
+  Positive and negative indices refer to these rows. Miners require labels, so
+  `ref_labels` is required with `ref_emb`.
 
 Pass `indices_tuple`, `ref_emb`, and `ref_labels` by keyword. `labels`,
 `ref_emb`, `ref_labels`, and candidate tensors must be on the embeddings'
@@ -119,7 +116,7 @@ Returns triplets whose angle at the negative, as defined in
 [Deep Metric Learning with Angular Loss](https://arxiv.org/abs/1708.01682), is
 greater than `alpha`.
 
-```python
+```python {.signature}
 miners.AngularMiner(alpha=20, *, distance=None)
 ```
 
@@ -144,7 +141,7 @@ Returns positive and negative pairs according to `pos_strategy` and
 `neg_strategy`. To implement the loss function described in the paper, use this
 miner with [`NTXentLoss(temperature=0.1)`](losses/ntxent_loss.md#ntxentloss).
 
-```python
+```python {.signature}
 miners.BatchEasyHardMiner(
     pos_strategy="easy",
     neg_strategy="semihard",
@@ -203,7 +200,7 @@ Anchors without a positive or a negative are omitted.
 This miner equals `BatchEasyHardMiner(pos_strategy="hard", neg_strategy="hard")`
 with its pairs combined into triplets.
 
-```python
+```python {.signature}
 miners.BatchHardMiner(*, distance=None)
 ```
 
@@ -215,7 +212,7 @@ miners.BatchHardMiner(*, distance=None)
 
 Implementation of the miner from [Sampling Matters in Deep Embedding Learning](https://arxiv.org/pdf/1706.07567.pdf).
 
-```python
+```python {.signature}
 miners.DistanceWeightedMiner(cutoff=0.5, nonzero_loss_cutoff=1.4, *, distance=None)
 ```
 
@@ -244,7 +241,7 @@ distance range with any dimensionality and any distance.
 
 [Hard-Aware Deeply Cascaded Embedding](http://openaccess.thecvf.com/content_ICCV_2017/papers/Yuan_Hard-Aware_Deeply_Cascaded_ICCV_2017_paper.pdf)
 
-```python
+```python {.signature}
 miners.HDCMiner(filter_percentage=0.5, *, distance=None)
 ```
 
@@ -268,7 +265,7 @@ they are the given [candidates](#candidates). Chaining HDC miners through
 
 [Multi-Similarity Loss with General Pair Weighting for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf)
 
-```python
+```python {.signature}
 miners.MultiSimilarityMiner(epsilon=0.1, *, distance=None)
 ```
 
@@ -290,7 +287,7 @@ With a distance instead of a similarity, the comparisons are reversed.
 
 Returns positive and negative pairs that violate the specified margins.
 
-```python
+```python {.signature}
 miners.PairMarginMiner(pos_margin=0.2, neg_margin=0.8, *, distance=None)
 ```
 
@@ -309,7 +306,7 @@ miners.PairMarginMiner(pos_margin=0.2, neg_margin=0.8, *, distance=None)
 
 Returns hard, semihard, easy, or all margin-violating triplets.
 
-```python
+```python {.signature}
 miners.TripletMarginMiner(margin=0.2, type_of_triplets="all", *, distance=None)
 ```
 
@@ -337,7 +334,7 @@ Like [DistanceWeightedMiner](#distanceweightedminer), it avoids concentrating on
 one distance band, but it works with high-dimensional embeddings and any
 distance.
 
-```python
+```python {.signature}
 miners.UniformHistogramMiner(
     num_bins=100,
     pos_per_bin=10,

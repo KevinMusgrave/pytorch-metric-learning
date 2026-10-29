@@ -1,16 +1,13 @@
-from typing import Literal
-
 import torch
 from torch import Tensor
 
 from ..distances import BaseDistance, CosineSimilarity
 from ..regularizers import BaseRegularizer
-from ..types import IndicesTuple, LossDict
+from ..types import IndicesTuple, LossDict, PNPVariant
 from ..utils import _common, indexing
 from .base_metric_loss_function import BaseMetricLossFunction
 
-type PNPVariant = Literal["Ds", "Dq", "Iu", "Ib", "O"]
-VARIANTS: tuple[PNPVariant, ...] = ("Ds", "Dq", "Iu", "Ib", "O")
+_VARIANTS: tuple[PNPVariant, ...] = ("Ds", "Dq", "Iu", "Ib", "O")
 
 
 class PNPLoss(BaseMetricLossFunction):
@@ -31,8 +28,8 @@ class PNPLoss(BaseMetricLossFunction):
             embedding_reg_weight=embedding_reg_weight,
         )
         _common.check_distance_type(self, CosineSimilarity)
-        if variant not in VARIANTS:
-            raise ValueError(f"variant={variant} but must be one of {VARIANTS}")
+        if variant not in _VARIANTS:
+            raise ValueError(f"variant={variant} but must be one of {_VARIANTS}")
         self.b = b
         self.alpha = alpha
         self.anneal = anneal
@@ -50,7 +47,7 @@ class PNPLoss(BaseMetricLossFunction):
         labels = _common.labels_required(labels)
         _common.ref_not_supported(ref_emb)
         dtype = embeddings.dtype
-        matches, diffs = indexing.get_matches_and_diffs(labels)
+        matches, diffs = indexing._get_matches_and_diffs(labels)
         rows = matches.any(dim=1)
         if not rows.any():
             return {}

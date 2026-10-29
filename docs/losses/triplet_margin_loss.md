@@ -6,7 +6,7 @@ large-margin nearest-neighbor objective of
 [Distance Metric Learning for Large Margin Nearest Neighbor Classification](https://jmlr.org/papers/v10/weinberger09a.html)
 (Weinberger and Saul, 2009).
 
-```python
+```python {.signature}
 losses.TripletMarginLoss(
     margin=0.05, swap=False, smooth_loss=False, triplets_per_anchor="all", **options
 )

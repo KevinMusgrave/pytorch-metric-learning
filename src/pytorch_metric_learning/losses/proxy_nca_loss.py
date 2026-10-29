@@ -7,7 +7,7 @@ from ..distances import BaseDistance, LpDistance
 from ..types import IndicesTuple, LossDict, ProxyLossOptions
 from ..utils import _common, indexing
 from .base_proxy_loss import BaseProxyLoss
-from .nca_loss import nca_terms
+from .nca_loss import _nca_terms
 
 
 class ProxyNCALoss(BaseProxyLoss):
@@ -39,7 +39,7 @@ class ProxyNCALoss(BaseProxyLoss):
         weights = indexing.convert_to_weights(
             indices_tuple, labels, dtype=_common.accumulation_dtype(embeddings.dtype)
         )
-        return nca_terms(
+        return _nca_terms(
             self.get_logits(embeddings),
             labels,
             self.proxy_labels,

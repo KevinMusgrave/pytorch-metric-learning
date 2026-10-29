@@ -8,7 +8,7 @@ from ..types import IndicesTuple, MiningStrategy, PairIndices
 from ..utils import _common, indexing
 from .base_miner import BaseMiner
 
-STRATEGIES = ("hard", "semihard", "easy", "all")
+_STRATEGIES = ("hard", "semihard", "easy", "all")
 
 
 class BatchEasyHardMiner(BaseMiner):
@@ -22,8 +22,8 @@ class BatchEasyHardMiner(BaseMiner):
         distance: BaseDistance | None = None,
     ) -> None:
         super().__init__(distance=distance)
-        if pos_strategy not in STRATEGIES or neg_strategy not in STRATEGIES:
-            choices = '" or "'.join(STRATEGIES)
+        if pos_strategy not in _STRATEGIES or neg_strategy not in _STRATEGIES:
+            choices = '" or "'.join(_STRATEGIES)
             raise ValueError(
                 f'pos_strategy and neg_strategy must each be one of "{choices}"'
             )

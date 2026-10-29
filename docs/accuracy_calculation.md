@@ -4,7 +4,7 @@
 embeddings against reference embeddings. Additional metrics are registered with
 `custom_metrics`; see [adding custom accuracy metrics](#adding-custom-accuracy-metrics).
 
-```python
+```python {.signature}
 evaluation.AccuracyCalculator(
     include=(),
     exclude=(),
@@ -30,7 +30,8 @@ Import it with `from pytorch_metric_learning.evaluation import AccuracyCalculato
 - **avg_of_avgs**: If `True`, each k-NN metric is averaged per query class, and
   the result is the mean of those class averages, which gives every class equal
   weight. If `False`, the result is the mean over queries.
-- **k**: The largest number of nearest neighbors k-NN metrics may use:
+- **k**: The largest number of nearest neighbors k-NN metrics may use, typed as
+  [`types.NeighborLimit`](types.md#neighborlimit):
   - `None`: retrieve every reference, excluding the query's own row when
     `ref_includes_query=True`.
   - An integer greater than 0: retrieve at most this many neighbors, capped at
@@ -93,7 +94,7 @@ assert calculator.metrics == ("precision_at_1", "r_precision")
 
 ### Getting accuracy
 
-```python
+```python {.signature}
 calculator.get_accuracy(
     query,
     query_labels,
@@ -109,7 +110,8 @@ It returns a `dict[str, float]` from metric names to values. A k-NN metric is
 NaN when no query has a relevant reference. Metrics are computed under
 `torch.no_grad()`, so inputs that require gradients build no autograd graph.
 
-- **query**: A 2D torch tensor or NumPy array of shape `(Nq, D)`. Nearest
+- **query**: A 2D torch tensor or NumPy array
+  ([`types.ArrayLike`](types.md#arraylike)) of shape `(Nq, D)`. Nearest
   neighbors are retrieved for each query row.
 - **query_labels**: Labels of shape `(Nq,)`, or `(Nq, L)` with a
   [custom label comparison](#using-a-custom-label-comparison-function). Labels
@@ -138,7 +140,7 @@ integer embeddings are converted to float32.
 
 ### Per-class accuracy
 
-```python
+```python {.signature}
 calculator.get_accuracy_per_class(
     query,
     query_labels,
@@ -258,11 +260,11 @@ Register each metric under a new name in `custom_metrics`. The calculator owns
 selection, retrieval, clustering, lone-query handling, and reduction; a metric
 only computes values.
 
-```python
+```python {.signature}
 evaluation.RetrievalMetric(function, neighbors="all")
 ```
 
-```python
+```python {.signature}
 evaluation.ClusteringMetric(function)
 ```
 
@@ -272,7 +274,8 @@ Import them, and the `RetrievalInputs` type they receive, from
 A **retrieval metric** is `function(inputs: RetrievalInputs) -> Tensor` that
 returns one value per query: a one-dimensional tensor of length `Nq`, NaN where
 the metric is undefined for that query. Any other shape raises `ValueError`.
-`neighbors` declares how many ranked neighbors the function reads: a positive
+`neighbors`, typed as [`types.MetricNeighbors`](types.md#metricneighbors),
+declares how many ranked neighbors the function reads: a positive
 integer, `"relevant"` for the largest number of relevant references of any
 query, or `"all"` (the default) for every neighbor allowed by `k`. The calculator
 may pass fewer columns when the gallery or `k` is smaller. Other values raise
@@ -280,6 +283,10 @@ may pass fewer columns when the gallery or `k` is smaller. Other values raise
 `r_precision` when an integer `k` is smaller than the largest relevant count.
 
 `RetrievalInputs` is a frozen dataclass with these fields:
+
+```python {.signature}
+evaluation.RetrievalInputs(query_labels, knn_labels, matches, relevant_counts)
+```
 
 | Field             | Value                                                                                       |
 | ----------------- | ------------------------------------------------------------------------------------------- |
@@ -304,20 +311,21 @@ query labels. Like NMI and AMI, a clustering metric is computed only when named
 in `include`, requires a `kmeans_func`, cannot be combined with a custom
 `label_comparison_fn`, and has no per-class value.
 
-This example adds precision at 2 and cluster purity. `nearest_seed_clusters` is
-a small deterministic stand-in for a k-means function such as `FaissKMeans()`:
+This example adds precision at 2, built from the exported
+[`precision_at_k`](#built-in-retrieval-metric-functions), and cluster purity.
+`nearest_seed_clusters` is a small deterministic stand-in for a k-means function
+such as `FaissKMeans()`:
 
 ```python
+from functools import partial
+
 import torch
 from pytorch_metric_learning.evaluation import (
     AccuracyCalculator,
     ClusteringMetric,
     RetrievalMetric,
+    precision_at_k,
 )
-
-
-def precision_at_2(inputs):
-    return inputs.matches[:, :2].sum(dim=1, dtype=torch.float64) / 2
 
 
 def cluster_purity(query_labels, cluster_labels):
@@ -341,7 +349,7 @@ calculator = AccuracyCalculator(
     include=("precision_at_1", "precision_at_2", "cluster_purity"),
     kmeans_func=nearest_seed_clusters,
     custom_metrics={
-        "precision_at_2": RetrievalMetric(precision_at_2, neighbors=2),
+        "precision_at_2": RetrievalMetric(partial(precision_at_k, k=2), neighbors=2),
         "cluster_purity": ClusteringMetric(cluster_purity),
     },
 )
@@ -355,12 +363,56 @@ assert set(per_class) == {"precision_at_1", "precision_at_2"}
 assert set(per_class["precision_at_2"]) == {0, 1, 2}
 ```
 
-The built-in retrieval metrics are module functions of
-`pytorch_metric_learning.evaluation.accuracy_calculator` with the same
-contract: `precision_at_1`, `r_precision`, `mean_average_precision`,
-`mean_average_precision_at_r`, and `mean_reciprocal_rank` each take
-`RetrievalInputs` and return per-query float64 values, and
-`precision_at_k(inputs, k)` computes precision at any `k`.
+### Built-in retrieval metric functions
+
+The built-in retrieval metrics are exported from
+`pytorch_metric_learning.evaluation` as functions with the retrieval-metric
+contract, so custom metrics can reuse them:
+
+```python {.signature}
+evaluation.precision_at_k(inputs, k)
+```
+
+```python {.signature}
+evaluation.precision_at_1(inputs)
+```
+
+```python {.signature}
+evaluation.r_precision(inputs)
+```
+
+```python {.signature}
+evaluation.mean_average_precision(inputs)
+```
+
+```python {.signature}
+evaluation.mean_average_precision_at_r(inputs)
+```
+
+```python {.signature}
+evaluation.mean_reciprocal_rank(inputs)
+```
+
+Each takes a `RetrievalInputs` and returns a `(Nq,)` float64 tensor computed as
+defined in [default accuracy metrics](#default-accuracy-metrics).
+`precision_at_k` counts relevant neighbors among the first `k` columns of
+`matches` and divides by `k`, so register it with `neighbors=k`. The functions
+do not validate their inputs. For a lone query, whose `relevant_counts` is 0,
+`r_precision`, `mean_average_precision`, and `mean_average_precision_at_r`
+return NaN; the calculator excludes lone queries before reducing.
+
+```python
+from pytorch_metric_learning.evaluation import RetrievalInputs, r_precision
+
+inputs = RetrievalInputs(
+    query_labels=torch.tensor([0, 1]),
+    knn_labels=torch.tensor([[0, 1, 0], [0, 0, 0]]),
+    matches=torch.tensor([[True, False, True], [False, False, False]]),
+    relevant_counts=torch.tensor([2, 0]),
+)
+assert precision_at_k(inputs, 2).tolist() == [0.5, 0.0]
+assert r_precision(inputs)[0] == 0.5 and r_precision(inputs)[1].isnan()
+```
 
 The [evaluation recipe](recipes/evaluation.md) passes any calculator to its
 split, two-stream, and hierarchical helpers.

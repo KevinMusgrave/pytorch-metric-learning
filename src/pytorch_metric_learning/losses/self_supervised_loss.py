@@ -2,13 +2,13 @@ import torch
 from torch import Tensor
 
 from ..types import MetricLoss
-from .multiple_losses import require_metric_loss
+from .multiple_losses import _require_metric_loss
 
 
 class SelfSupervisedLoss(torch.nn.Module):
     def __init__(self, loss: MetricLoss, symmetric: bool = True) -> None:
         super().__init__()
-        require_metric_loss(loss, "SelfSupervisedLoss")
+        _require_metric_loss(loss, "SelfSupervisedLoss")
         self.loss = loss
         self.symmetric = symmetric
 

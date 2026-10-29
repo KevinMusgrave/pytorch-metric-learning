@@ -40,12 +40,12 @@ class RankedListLoss(BaseMetricLossFunction):
         _common.ref_not_supported(ref_emb)
         _common.indices_tuple_not_supported(indices_tuple)
         mat = self.distance(embeddings)
-        matches, diffs = indexing.get_matches_and_diffs(labels)
+        matches, diffs = indexing._get_matches_and_diffs(labels)
         boundary = self.alpha - self.margin
         positive = matches & (mat > boundary)
         negative = diffs & (mat < self.alpha)
-        loss_p = weighted_mean(mat - boundary, positive, self.pos_temperature)
-        loss_n = weighted_mean(self.alpha - mat, negative, self.neg_temperature)
+        loss_p = _weighted_mean(mat - boundary, positive, self.pos_temperature)
+        loss_n = _weighted_mean(self.alpha - mat, negative, self.neg_temperature)
         losses = (1 - self.imbalance) * loss_p + self.imbalance * loss_n
         return {"loss": {"losses": losses, "indices": _common.arange_like(losses)}}
 
@@ -53,7 +53,7 @@ class RankedListLoss(BaseMetricLossFunction):
         return LpDistance()
 
 
-def weighted_mean(violations: Tensor, mask: Tensor, temperature: float) -> Tensor:
+def _weighted_mean(violations: Tensor, mask: Tensor, temperature: float) -> Tensor:
     logits = (temperature * violations).masked_fill(
         ~mask, _common.neg_inf(violations.dtype)
     )

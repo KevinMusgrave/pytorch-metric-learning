@@ -6,7 +6,7 @@ import torch
 import torch.nn.functional as F
 
 from pytorch_metric_learning.losses import ArcFaceLoss, SubCenterArcFaceLoss
-from pytorch_metric_learning.losses.subcenter_arcface_loss import SubCenterOutliers
+from pytorch_metric_learning.types import SubCenterOutliers
 
 from .. import TEST_DEVICE, TEST_DTYPES, helpers
 

@@ -15,7 +15,7 @@ class BaseReducer(torch.nn.Module):
     def reduce(
         self, term: LossTerm, embeddings: Tensor, labels: Tensor | None
     ) -> Tensor:
-        losses, anchors = validate_term(term)
+        losses, anchors = _validate_term(term)
         if "divisor" in term:
             raise ValueError(
                 f"{type(self).__name__} cannot apply a loss term's divisor; "
@@ -37,7 +37,7 @@ class BaseReducer(torch.nn.Module):
         raise NotImplementedError
 
 
-def validate_term(term: LossTerm) -> tuple[Tensor, Tensor | None]:
+def _validate_term(term: LossTerm) -> tuple[Tensor, Tensor | None]:
     losses, indices = term["losses"], term["indices"]
     if not isinstance(losses, Tensor):
         raise TypeError("losses must be a tensor")

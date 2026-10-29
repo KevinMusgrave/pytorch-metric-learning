@@ -2,7 +2,7 @@
 
 [Neighbourhood Components Analysis](https://www.cs.toronto.edu/~hinton/absps/nca.pdf)
 
-```python
+```python {.signature}
 losses.NCALoss(softmax_scale=1, **options)
 ```
 

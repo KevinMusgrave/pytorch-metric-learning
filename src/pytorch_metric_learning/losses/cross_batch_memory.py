@@ -7,9 +7,9 @@ from torch import Tensor
 from ..miners import BaseMiner
 from ..types import IndicesTuple, MetricLoss, PairIndices
 from ..utils import _common, indexing
-from .multiple_losses import require_metric_loss
+from .multiple_losses import _require_metric_loss
 
-QUEUE_STATE_KEY = "queue_state"
+_QUEUE_STATE_KEY = "queue_state"
 
 
 class _MemoryState(TypedDict):
@@ -17,15 +17,15 @@ class _MemoryState(TypedDict):
     has_been_filled: bool
 
 
-def save_queue_state(module, state_dict, prefix, _local_metadata) -> None:
+def _save_queue_state(module, state_dict, prefix, _local_metadata) -> None:
     state: _MemoryState = {
         "queue_idx": module.queue_idx,
         "has_been_filled": module.has_been_filled,
     }
-    state_dict[prefix + QUEUE_STATE_KEY] = state
+    state_dict[prefix + _QUEUE_STATE_KEY] = state
 
 
-def load_queue_state(
+def _load_queue_state(
     module,
     state_dict,
     prefix,
@@ -35,9 +35,9 @@ def load_queue_state(
     _unexpected_keys,
     _error_msgs,
 ) -> None:
-    state = state_dict.pop(prefix + QUEUE_STATE_KEY, None)
+    state = state_dict.pop(prefix + _QUEUE_STATE_KEY, None)
     if state is None:
-        missing_keys.append(prefix + QUEUE_STATE_KEY)
+        missing_keys.append(prefix + _QUEUE_STATE_KEY)
         return
     module.queue_idx = state["queue_idx"]
     module.has_been_filled = state["has_been_filled"]
@@ -57,7 +57,7 @@ class CrossBatchMemory(torch.nn.Module):
         label_dtype: torch.dtype = torch.long,
     ) -> None:
         super().__init__()
-        require_metric_loss(loss, "CrossBatchMemory")
+        _require_metric_loss(loss, "CrossBatchMemory")
         self.loss = loss
         self.miner = miner
         self.memory_size = memory_size
@@ -68,8 +68,8 @@ class CrossBatchMemory(torch.nn.Module):
             "label_memory", torch.zeros(memory_size, dtype=label_dtype)
         )
         self.reset_queue()
-        self.register_state_dict_post_hook(save_queue_state)
-        self.register_load_state_dict_pre_hook(load_queue_state)
+        self.register_state_dict_post_hook(_save_queue_state)
+        self.register_load_state_dict_pre_hook(_load_queue_state)
 
     def forward(
         self,
@@ -164,7 +164,7 @@ class CrossBatchMemory(torch.nn.Module):
         else:
             indices_tuple = indexing.get_all_pairs_indices(labels, L_mem)
             if curr_batch_idx is not None:
-                indices_tuple = indexing.remove_self_comparisons(
+                indices_tuple = indexing._remove_self_comparisons(
                     indices_tuple, curr_batch_idx
                 )
             if self.miner:
@@ -179,7 +179,7 @@ class CrossBatchMemory(torch.nn.Module):
             input_indices_tuple = indexing.convert_to_triplets(
                 input_indices_tuple, labels
             )
-        return indexing.concatenate_indices_tuples(indices_tuple, input_indices_tuple)
+        return indexing._concatenate_indices_tuples(indices_tuple, input_indices_tuple)
 
     def reset_queue(self) -> None:
         self.embedding_memory.zero_()

@@ -43,10 +43,11 @@ because a range check reads device values on the host; out-of-range indices are
 a caller error.
 
 `indices_tuple=None` means unrestricted: every pair or triplet the labels
-define. A supplied tuple with no indices means nothing was selected. Miner
-weights follow the same rule, so an empty miner result weights every embedding
-by zero and the loss reduces to a differentiable zero; treating it as
-unrestricted gave classification losses their unmined loss.
+define. A supplied tuple with no indices, such as an empty miner result, means
+nothing was selected, for losses and for miner candidates alike; it is never
+reinterpreted as `None`. Miner weights follow the same rule, so an empty miner
+result weights every embedding by zero and the loss reduces to a differentiable
+zero; treating it as unrestricted gave classification losses their unmined loss.
 
 ## Loss terms and reduction
 
@@ -64,6 +65,20 @@ A loss with nothing valid to compute returns `{}` or terms with empty `losses`.
 `BaseReducer.forward` sums
 term reductions starting from a zero connected to the embeddings, so empty
 batches yield a differentiable zero without per-loss zero-term helpers.
+
+Per-anchor terms contain only anchors for which the objective is defined. An
+anchor that lacks the pairs its objective needs, such as a positive for SupCon
+or a positive and a negative for generalized lifted structure, emits no loss
+value rather than a zero or a masked placeholder. Mean reducers then average
+over the anchors that define the objective, independent of how many others the
+batch holds, and a batch with no such anchor reduces to a differentiable zero.
+Each loss page states which anchors it excludes.
+
+Losses whose paper defines one batch-level value (DynamicSoftMarginLoss,
+HistogramLoss, ManifoldLoss, P2SGradLoss, PNPLoss, and
+ThresholdConsistentMarginLoss) return a single term with `indices=None` and
+take no `reducer` option. A reducer could only pass such a term through, so
+accepting one would advertise a configuration with no effect.
 
 A `divisor` states a paper-defined normalization, such as ProxyAnchor's number
 of proxies with positives. Only `DivisorReducer` can apply it; other reducers
@@ -83,6 +98,14 @@ dictionaries would otherwise drop one term and make `forward` and
 `loss_terms()` disagree.
 
 ## Composition
+
+The public surface is each public module's `__all__`, as stated in
+`docs/versioning.md`. Implementation submodules define only the classes their
+package exports and underscored helpers, and every type alias or result tuple
+that appears in a public signature, such as `PNPVariant` or
+`SubCenterOutliers`, lives in `types`. Literal aliases defined beside one class
+were importable only through implementation paths, so annotating a call meant
+depending on a module layout outside the versioning guarantee.
 
 `BaseMetricLossFunction`, `BaseMiner`, and `BaseRegularizer` extend
 `torch.nn.Module` directly and declare keyword-only options typed by

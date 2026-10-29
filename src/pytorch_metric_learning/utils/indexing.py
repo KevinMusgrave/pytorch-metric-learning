@@ -18,7 +18,7 @@ __all__ = [
 ]
 
 
-def get_matches_and_diffs(
+def _get_matches_and_diffs(
     labels: Tensor, ref_labels: Tensor | None = None
 ) -> tuple[Tensor, Tensor]:
     reference = labels if ref_labels is None else ref_labels
@@ -32,7 +32,7 @@ def get_matches_and_diffs(
 def get_all_pairs_indices(
     labels: Tensor, ref_labels: Tensor | None = None
 ) -> PairIndices:
-    matches, diffs = get_matches_and_diffs(labels, ref_labels)
+    matches, diffs = _get_matches_and_diffs(labels, ref_labels)
     a1_idx, p_idx = torch.where(matches)
     a2_idx, n_idx = torch.where(diffs)
     return PairIndices(a1_idx, p_idx, a2_idx, n_idx)
@@ -54,7 +54,7 @@ def convert_to_pairs(
     return PairIndices(a, p, a, n)
 
 
-def convert_to_pos_pairs_with_unique_labels(
+def _convert_to_pos_pairs_with_unique_labels(
     indices_tuple: Sequence[Tensor] | None, labels: Tensor
 ) -> tuple[Tensor, Tensor]:
     a, p, _, _ = convert_to_pairs(indices_tuple, labels)
@@ -66,7 +66,14 @@ def convert_to_pos_pairs_with_unique_labels(
     return a[first], p[first]
 
 
-def pairs_to_triplets(pairs: PairIndices) -> TripletIndices:
+def pairs_to_triplets(pairs: Sequence[Tensor]) -> TripletIndices:
+    indices = _common.as_indices_tuple(pairs)
+    if not isinstance(indices, PairIndices):
+        raise ValueError("pairs_to_triplets requires four pair tensors")
+    return _pairs_to_triplets(indices)
+
+
+def _pairs_to_triplets(pairs: PairIndices) -> TripletIndices:
     a1, p, a2, n = pairs
     sorted_a2, order = torch.sort(a2, stable=True)
     starts = torch.searchsorted(sorted_a2, a1, side="left")
@@ -83,7 +90,7 @@ def pairs_to_triplets(pairs: PairIndices) -> TripletIndices:
 def get_all_triplets_indices(
     labels: Tensor, ref_labels: Tensor | None = None
 ) -> TripletIndices:
-    return pairs_to_triplets(get_all_pairs_indices(labels, ref_labels))
+    return _pairs_to_triplets(get_all_pairs_indices(labels, ref_labels))
 
 
 def get_random_triplet_indices(
@@ -92,11 +99,11 @@ def get_random_triplet_indices(
     t_per_anchor: int | None = None,
     weights: Tensor | None = None,
 ) -> TripletIndices:
-    matches, diffs = get_matches_and_diffs(labels, ref_labels)
-    return sample_triplets(matches, diffs, t_per_anchor, weights)
+    matches, diffs = _get_matches_and_diffs(labels, ref_labels)
+    return _sample_triplets(matches, diffs, t_per_anchor, weights)
 
 
-def sample_triplets(
+def _sample_triplets(
     pos_mask: Tensor,
     neg_mask: Tensor,
     t_per_anchor: int | None = None,
@@ -141,7 +148,7 @@ def convert_to_triplets(
         return get_random_triplet_indices(labels, ref_labels, t_per_anchor=t_per_anchor)
     if isinstance(indices, TripletIndices):
         return indices
-    return pairs_to_triplets(indices)
+    return _pairs_to_triplets(indices)
 
 
 def convert_to_weights(
@@ -153,38 +160,38 @@ def convert_to_weights(
     tuples = _common.as_indices_tuple(indices_tuple)
     if tuples is None:
         return torch.ones(labels.shape[0], device=labels.device, dtype=dtype)
-    indices = get_anchors(tuples) if using_ref else torch.cat(tuples)
+    indices = _get_anchors(tuples) if using_ref else torch.cat(tuples)
     counts = torch.bincount(indices, minlength=labels.shape[0]).float()
     if len(counts) == 0:
         return counts.to(dtype)
     return (counts / counts.max().clamp_min(1)).to(dtype)
 
 
-def get_anchors(indices_tuple: IndicesTuple) -> Tensor:
+def _get_anchors(indices_tuple: IndicesTuple) -> Tensor:
     if isinstance(indices_tuple, TripletIndices):
         return indices_tuple.anchors
     return torch.cat([indices_tuple.pos_anchors, indices_tuple.neg_anchors], dim=0)
 
 
-def concatenate_indices_tuples(it1: IndicesTuple, it2: IndicesTuple) -> IndicesTuple:
+def _concatenate_indices_tuples(it1: IndicesTuple, it2: IndicesTuple) -> IndicesTuple:
     if isinstance(it1, TripletIndices):
         return TripletIndices(*(torch.cat(x) for x in zip(it1, it2, strict=True)))
     return PairIndices(*(torch.cat(x) for x in zip(it1, it2, strict=True)))
 
 
 @overload
-def remove_self_comparisons(
+def _remove_self_comparisons(
     indices_tuple: PairIndices, curr_batch_idx: Tensor
 ) -> PairIndices: ...
 
 
 @overload
-def remove_self_comparisons(
+def _remove_self_comparisons(
     indices_tuple: TripletIndices, curr_batch_idx: Tensor
 ) -> TripletIndices: ...
 
 
-def remove_self_comparisons(
+def _remove_self_comparisons(
     indices_tuple: IndicesTuple, curr_batch_idx: Tensor
 ) -> IndicesTuple:
     if len(curr_batch_idx) == 0:
@@ -197,7 +204,7 @@ def remove_self_comparisons(
     return PairIndices(a1[keep], p[keep], a2, n)
 
 
-def pair_masks(
+def _pair_masks(
     pairs: PairIndices, shape: tuple[int, int], device: torch.device
 ) -> tuple[Tensor, Tensor]:
     a1, p, a2, n = pairs

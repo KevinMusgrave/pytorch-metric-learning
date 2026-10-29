@@ -2,7 +2,7 @@
 
 [Sub-center ArcFace: Boosting Face Recognition by Large-scale Noisy Web Faces](https://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123560715.pdf)
 
-```python
+```python {.signature}
 losses.SubCenterArcFaceLoss(num_classes, embedding_size, margin=0.5, scale=64, sub_centers=3,
     *, weight_regularizer=None, weight_reg_weight=1.0, weight_init_func=None, **options)
 ```
@@ -27,7 +27,7 @@ from ArcFaceLoss and [BaseProxyLoss](base_proxy_loss.md).
 `get_outliers(embeddings, labels, threshold_radians=math.radians(75))` finds
 outliers and dominant sub-centers as described in the paper, whose drop
 threshold is 75 degrees. It returns the named tuple
-`losses.subcenter_arcface_loss.SubCenterOutliers(outliers, dominant_centers)`.
+[`types.SubCenterOutliers(outliers, dominant_centers)`](../types.md#subcenteroutliers).
 `outliers` holds the indices of embeddings whose similarity to their class's
 dominant sub-center is below `cos(threshold_radians)`; the threshold is in
 radians, like `margin`. `dominant_centers` has shape

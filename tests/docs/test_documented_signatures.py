@@ -8,20 +8,21 @@ from pathlib import Path
 import torch
 
 DOCS = Path(__file__).resolve().parents[2] / "docs"
-MODULES = (
-    "distances",
-    "losses",
-    "miners",
-    "reducers",
-    "regularizers",
-    "samplers",
-    "evaluation",
-    "distributed",
-)
+MODULES = {
+    "distances": "distances",
+    "losses": "losses",
+    "miners": "miners",
+    "reducers": "reducers",
+    "regularizers": "regularizers",
+    "samplers": "samplers",
+    "evaluation": "evaluation",
+    "distributed": "distributed",
+    "indexing": "utils.indexing",
+}
 BLOCK = re.compile(
-    r"```python\n("
+    r"```python \{\.signature\}\n("
     + "|".join(re.escape(module) for module in MODULES)
-    + r")\.(\w+)\(((?:.|\n)*?)\)\s*:?\s*\n```"
+    + r")\.(\w+)\(((?:.|\n)*?)\)\s*(?:->[^\n]*)?:?\s*\n```"
 )
 MISSING = object()
 OPTIONS = {
@@ -72,6 +73,8 @@ def explicit_parameters(cls):
 
 
 def accepted_parameters(cls):
+    if not isinstance(cls, type):
+        return explicit_parameters(cls)
     accepted = {}
     for base in reversed(cls.__mro__):
         init = base.__dict__.get("__init__")
@@ -89,7 +92,7 @@ class TestDocumentedSignatures(unittest.TestCase):
         for page, module_name, class_name, arguments in signatures:
             with self.subTest(page=page, cls=f"{module_name}.{class_name}"):
                 module = importlib.import_module(
-                    f"pytorch_metric_learning.{module_name}"
+                    f"pytorch_metric_learning.{MODULES[module_name]}"
                 )
                 self.assertIn(class_name, module.__all__)
                 cls = getattr(module, class_name)

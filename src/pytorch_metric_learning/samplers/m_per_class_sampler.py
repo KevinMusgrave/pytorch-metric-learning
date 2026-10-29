@@ -3,13 +3,14 @@ from collections.abc import Iterator
 import torch
 from torch.utils.data.sampler import Sampler
 
-from .sampling import Labels, as_label_list, choose, indices_by_label, shuffled
+from ..types import DatasetLabels
+from ._sampling import as_label_list, choose, indices_by_label, shuffled
 
 
 class MPerClassSampler(Sampler[int]):
     def __init__(
         self,
-        labels: Labels,
+        labels: DatasetLabels,
         m: int,
         batch_size: int | None = None,
         num_samples: int = 100000,

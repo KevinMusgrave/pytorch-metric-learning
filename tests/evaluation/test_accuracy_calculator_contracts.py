@@ -573,7 +573,7 @@ class TestRelevantCounts(unittest.TestCase):
                     dtypes=(query_dtype, reference_dtype),
                     self_search=ref_includes_query,
                 ):
-                    counts = accuracy_calculator.relevant_counts(
+                    counts = accuracy_calculator._relevant_counts(
                         query.to(query_dtype).to(TEST_DEVICE),
                         reference.to(reference_dtype).to(TEST_DEVICE),
                         ref_includes_query,
@@ -586,7 +586,7 @@ class TestRelevantCounts(unittest.TestCase):
                     ]
                     self.assertEqual(counts.dtype, torch.long)
                     self.assertEqual(counts.cpu().double().tolist(), expected)
-        empty = accuracy_calculator.relevant_counts(
+        empty = accuracy_calculator._relevant_counts(
             query.to(TEST_DEVICE), query[:0].to(TEST_DEVICE), False, None
         )
         self.assertEqual(empty.tolist(), [0] * len(query))

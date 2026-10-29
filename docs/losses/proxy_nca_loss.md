@@ -2,7 +2,7 @@
 
 [No Fuss Distance Metric Learning using Proxies](https://arxiv.org/abs/1703.07464)
 
-```python
+```python {.signature}
 losses.ProxyNCALoss(num_classes, embedding_size, softmax_scale=1,
     *, weight_regularizer=None, weight_reg_weight=1.0, weight_init_func=None, **options)
 ```

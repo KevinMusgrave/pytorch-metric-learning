@@ -88,10 +88,6 @@ def arange_like(x: Tensor, dim: int = 0) -> Tensor:
     return torch.arange(x.size(dim), device=x.device)
 
 
-def all_from_dim(x: Tensor, dim: int) -> Tensor:
-    return torch.all(x.reshape(*x.shape[:dim], -1), dim=-1)
-
-
 def prepare_inputs(
     embeddings: Tensor,
     labels: Tensor | None,

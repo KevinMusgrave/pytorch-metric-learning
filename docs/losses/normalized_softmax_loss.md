@@ -2,7 +2,7 @@
 
 [Classification is a Strong Baseline for Deep Metric Learning](https://arxiv.org/abs/1811.12649)
 
-```python
+```python {.signature}
 losses.NormalizedSoftmaxLoss(num_classes, embedding_size, temperature=0.05,
     *, weight_regularizer=None, weight_reg_weight=1.0, weight_init_func=None, **options)
 ```

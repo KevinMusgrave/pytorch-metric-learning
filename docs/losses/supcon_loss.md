@@ -2,7 +2,7 @@
 
 [Supervised Contrastive Learning](https://arxiv.org/abs/2004.11362)
 
-```python
+```python {.signature}
 losses.SupConLoss(temperature=0.1, **options)
 ```
 

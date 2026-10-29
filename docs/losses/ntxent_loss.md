@@ -4,7 +4,7 @@ Also known as InfoNCE, a generalization of [NPairsLoss](n_pairs_loss.md) used in
 [CPC](https://arxiv.org/abs/1807.03748), [MoCo](https://arxiv.org/abs/1911.05722),
 and [SimCLR](https://arxiv.org/abs/2002.05709).
 
-```python
+```python {.signature}
 losses.NTXentLoss(temperature=0.07, **options)
 ```
 

@@ -268,7 +268,7 @@ class TestCrossBatchMemoryState(unittest.TestCase):
             (PairIndices, ([0], [1], [0], [2])),
         ):
             values: Any = kind(*(torch.tensor(x, device=TEST_DEVICE) for x in indices))
-            actual = indexing.remove_self_comparisons(values, empty)
+            actual = indexing._remove_self_comparisons(values, empty)
             for observed, wanted in zip(actual, values, strict=True):
                 torch.testing.assert_close(observed, wanted)
 

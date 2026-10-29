@@ -44,7 +44,7 @@ otherwise. It calls `knn_func` under `torch.no_grad()` with the
 
 ## CustomKNN
 
-```python
+```python {.signature}
 evaluation.CustomKNN(distance, batch_size=None)
 ```
 
@@ -85,7 +85,7 @@ assert distances.tolist() == [[1.0], [0.25]]
 
 ## MatchFinder
 
-```python
+```python {.signature}
 evaluation.MatchFinder(distance, threshold=None)
 ```
 
@@ -138,7 +138,7 @@ logging.getLogger("pytorch_metric_learning").setLevel(logging.INFO)
 
 ## FaissKNN
 
-```python
+```python {.signature}
 evaluation.FaissKNN(reset_before=True, reset_after=True, index_init_fn=None, gpus=None)
 ```
 
@@ -196,7 +196,7 @@ with tempfile.TemporaryDirectory() as directory:
 
 ## FaissKMeans
 
-```python
+```python {.signature}
 evaluation.FaissKMeans(**kwargs)
 ```
 

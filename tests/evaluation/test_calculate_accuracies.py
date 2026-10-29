@@ -42,7 +42,7 @@ def metrics_from_knn(
         matches=query_labels.unsqueeze(1) == knn_labels,
         relevant_counts=counts,
     )
-    groups = accuracy_calculator.QueryGroups(inputs, counts > 0, unique, index)
+    groups = accuracy_calculator._QueryGroups(inputs, counts > 0, unique, index)
     results = {}
     for name in calculator.metrics:
         values, defined = groups.values(name, calculator.available_metrics[name])
@@ -55,7 +55,7 @@ def metrics_from_knn(
 
 def match_counts(query_labels, reference_labels, comparison_fn):
     unique = torch.unique(query_labels, dim=0)
-    counts = accuracy_calculator.relevant_counts(
+    counts = accuracy_calculator._relevant_counts(
         unique, reference_labels, False, comparison_fn
     )
     return unique, counts
@@ -63,7 +63,7 @@ def match_counts(query_labels, reference_labels, comparison_fn):
 
 def lone_labels(query_labels, reference_labels, same_source, comparison_fn):
     unique, index = torch.unique(query_labels, dim=0, return_inverse=True)
-    counts = accuracy_calculator.relevant_counts(
+    counts = accuracy_calculator._relevant_counts(
         unique, reference_labels, same_source, comparison_fn
     )
     return unique[counts <= 0], counts[index] > 0

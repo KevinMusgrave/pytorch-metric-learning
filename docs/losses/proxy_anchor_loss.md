@@ -2,7 +2,7 @@
 
 [Proxy Anchor Loss for Deep Metric Learning](https://arxiv.org/abs/2003.13911)
 
-```python
+```python {.signature}
 losses.ProxyAnchorLoss(num_classes, embedding_size, margin=0.1, alpha=32,
     *, weight_regularizer=None, weight_reg_weight=1.0, weight_init_func=None, **options)
 ```

@@ -2,7 +2,7 @@
 
 [Ranked List Loss for Deep Metric Learning](https://arxiv.org/abs/1903.03238)
 
-```python
+```python {.signature}
 losses.RankedListLoss(
     margin, neg_temperature, imbalance=0.5, alpha=None, pos_temperature=0, **options
 )

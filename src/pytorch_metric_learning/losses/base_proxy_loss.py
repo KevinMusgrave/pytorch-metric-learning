@@ -6,7 +6,7 @@ from torch import Tensor
 
 from ..regularizers import BaseRegularizer
 from ..types import LossDict, LossOptions
-from .base_metric_loss_function import BaseMetricLossFunction, regularization_term
+from .base_metric_loss_function import BaseMetricLossFunction, _regularization_term
 
 
 class BaseProxyLoss(BaseMetricLossFunction):
@@ -32,7 +32,7 @@ class BaseProxyLoss(BaseMetricLossFunction):
     def regularization_terms(self, embeddings: Tensor) -> LossDict:
         terms = super().regularization_terms(embeddings)
         if self.weight_regularizer is not None:
-            terms["weight_reg_loss"] = regularization_term(
+            terms["weight_reg_loss"] = _regularization_term(
                 self.weight_regularizer, self.weight_reg_weight, self.weight
             )
         return terms

@@ -4,7 +4,7 @@ import torch
 from torch import Tensor, nn
 from torch.utils.data import DataLoader, TensorDataset
 
-from pytorch_metric_learning.evaluation.accuracy_calculator import AccuracyCalculator
+from pytorch_metric_learning.evaluation import AccuracyCalculator
 
 
 @torch.inference_mode()

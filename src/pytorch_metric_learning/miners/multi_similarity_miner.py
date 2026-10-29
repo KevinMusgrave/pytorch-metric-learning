@@ -24,7 +24,7 @@ class MultiSimilarityMiner(BaseMiner):
     ) -> IndicesTuple:
         mat = self.distance(embeddings, ref_emb)
         pairs = indexing.convert_to_pairs(indices_tuple, labels, ref_labels)
-        pos_mask, neg_mask = indexing.pair_masks(
+        pos_mask, neg_mask = indexing._pair_masks(
             pairs, (mat.shape[0], mat.shape[1]), mat.device
         )
         high, low = _common.pos_inf(mat.dtype), _common.neg_inf(mat.dtype)

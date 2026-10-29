@@ -1,14 +1,14 @@
 from collections import defaultdict
-from collections.abc import Hashable, Iterable, Sequence
+from collections.abc import Hashable, Sequence
 
 import numpy as np
 import torch
 from torch import Tensor
 
-type Labels = Tensor | np.ndarray | Iterable[Hashable]
+from ..types import DatasetLabels
 
 
-def as_label_list(labels: Labels) -> list[Hashable]:
+def as_label_list(labels: DatasetLabels) -> list[Hashable]:
     if isinstance(labels, (Tensor, np.ndarray)):
         return torch.as_tensor(labels).tolist()
     return list(labels)

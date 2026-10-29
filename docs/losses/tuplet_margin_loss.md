@@ -2,7 +2,7 @@
 
 [Deep Metric Learning with Tuplet Margin Loss](http://openaccess.thecvf.com/content_ICCV_2019/papers/Yu_Deep_Metric_Learning_With_Tuplet_Margin_Loss_ICCV_2019_paper.pdf)
 
-```python
+```python {.signature}
 losses.TupletMarginLoss(margin=5.73, scale=64, **options)
 ```
 

@@ -9,7 +9,7 @@ from ..utils import _common, indexing
 from .base_metric_loss_function import BaseMetricLossFunction
 
 
-def nca_terms(
+def _nca_terms(
     mat: Tensor,
     labels: Tensor,
     reference_labels: Tensor,
@@ -57,7 +57,7 @@ class NCALoss(BaseMetricLossFunction):
             dtype=_common.accumulation_dtype(embeddings.dtype),
             using_ref=ref_emb is not None,
         )
-        return nca_terms(
+        return _nca_terms(
             self.distance(embeddings, ref_emb),
             labels,
             _common.labels_required(reference_labels),

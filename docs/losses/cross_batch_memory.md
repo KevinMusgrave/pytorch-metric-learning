@@ -6,14 +6,14 @@ A wrapper that stores embeddings from previous iterations in a queue and uses
 them as references for the current iteration's embeddings, forming more pairs
 or triplets than one batch provides.
 
-```python
+```python {.signature}
 losses.CrossBatchMemory(loss, embedding_size, memory_size=1024, miner=None, *, label_dtype=torch.long)
 ```
 
 **Implementation notes**: `CrossBatchMemory` is a `torch.nn.Module` whose
 forward is:
 
-```python
+```python {.signature}
 loss_fn(embeddings, labels, indices_tuple=None, enqueue_mask=None)
 ```
 

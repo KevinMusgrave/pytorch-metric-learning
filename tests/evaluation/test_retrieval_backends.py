@@ -6,6 +6,7 @@ import tempfile
 import unittest
 import weakref
 from pathlib import Path
+from typing import Any
 from unittest import mock
 
 import torch
@@ -243,6 +244,18 @@ class TestRetrievalBackends(unittest.TestCase):
             labels = torch.tensor([0, 0, 1, 1], device=TEST_DEVICE)
             with self.assertRaisesRegex(ModuleNotFoundError, r"\[clustering\]"):
                 calculator.get_accuracy(embeddings, labels)
+
+    @unittest.skipUnless(HAS_FAISS, "requires the faiss extra")
+    def test_faiss_gpus_must_be_a_nonempty_sequence(self):
+        invalid: list[Any] = [0, "0", {0}]
+        for gpus in invalid:
+            with self.subTest(gpus=gpus), self.assertRaisesRegex(TypeError, "gpus"):
+                retrieval.FaissKNN(gpus=gpus)
+        for gpus in ([], ()):
+            with self.subTest(gpus=gpus), self.assertRaisesRegex(ValueError, "gpus"):
+                retrieval.FaissKNN(gpus=gpus)
+        for gpus in ([0], (0, 1)):
+            self.assertEqual(retrieval.FaissKNN(gpus=gpus).gpus, gpus)
 
     @unittest.skipUnless(HAS_FAISS, "requires the faiss extra")
     def test_faiss_index_persistence_and_incremental_add(self):

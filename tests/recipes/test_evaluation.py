@@ -11,7 +11,7 @@ from docs.recipes.evaluation import (
     split_accuracy,
     two_stream_accuracy,
 )
-from pytorch_metric_learning.evaluation.accuracy_calculator import AccuracyCalculator
+from pytorch_metric_learning.evaluation import AccuracyCalculator
 
 from .. import TEST_DEVICE
 

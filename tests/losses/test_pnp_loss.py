@@ -1,6 +1,6 @@
 import unittest
 from functools import partial
-from typing import Any
+from typing import Any, get_args
 
 import torch
 import torch.nn
@@ -8,7 +8,7 @@ import torch.nn.functional
 import torch.nn.functional as F
 
 from pytorch_metric_learning.losses import PNPLoss
-from pytorch_metric_learning.losses.pnp_loss import VARIANTS
+from pytorch_metric_learning.types import PNPVariant
 
 from .. import TEST_DEVICE, TEST_DTYPES, helpers
 
@@ -91,7 +91,7 @@ class TestPNPLoss(unittest.TestCase):
         torch.manual_seed(30293)
         bs = 180
         classes = 30
-        for variant in VARIANTS:
+        for variant in get_args(PNPVariant.__value__):
             original_variant = {
                 "Ds": "PNP-D_s",
                 "Dq": "PNP-D_q",

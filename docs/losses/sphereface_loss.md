@@ -2,7 +2,7 @@
 
 [SphereFace: Deep Hypersphere Embedding for Face Recognition](https://arxiv.org/abs/1704.08063)
 
-```python
+```python {.signature}
 losses.SphereFaceLoss(num_classes, embedding_size, margin=4, scale=1,
     *, weight_regularizer=None, weight_reg_weight=1.0, weight_init_func=None, **options)
 ```

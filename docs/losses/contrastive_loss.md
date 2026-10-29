@@ -3,7 +3,7 @@
 [Dimensionality Reduction by Learning an Invariant Mapping](http://yann.lecun.com/exdb/publis/pdf/hadsell-chopra-lecun-06.pdf)
 (Hadsell, Chopra, and LeCun, 2006)
 
-```python
+```python {.signature}
 losses.ContrastiveLoss(pos_margin=0.0, neg_margin=1.0, **options)
 ```
 

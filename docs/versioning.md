@@ -12,10 +12,28 @@ a breaking change; it happens only in minor or major releases:
 - **Patch** versions fix bugs without changing public signatures. A fix that
   changes a loss value is described in the release notes.
 
-The public API is everything documented on this site: the `distances`,
-`losses`, `miners`, `reducers`, `regularizers`, `samplers`, `evaluation`,
-`distributed`, `types`, and `utils.indexing` modules. Names starting with an
-underscore and other `utils` modules are private and can change in any release.
+## Public API
+
+The public API is the set of names listed in `__all__` of these modules of
+`pytorch_metric_learning`: `distances`, `losses`, `miners`, `reducers`,
+`regularizers`, `samplers`, `evaluation`, `distributed`, `types`, and
+`utils.indexing`. Import public names from those modules, as this
+documentation does. Each exported name has a reference entry on this site. For
+an exported class, the documented constructor arguments, methods, attributes,
+and extension hooks are public.
+
+Everything else is private and can change in any release:
+
+- Names and modules that start with an underscore.
+- Submodules of the public packages, such as `losses.triplet_margin_loss` or
+  `evaluation.accuracy_calculator`. They hold the implementation; importing a
+  public name from them works but is not covered by these guarantees.
+- The `utils` package other than `utils.indexing`.
+- Undocumented members of public classes.
+
+The test suite checks that every public module declares `__all__`, that every
+name it defines without an underscore is exported, and that every export is
+documented.
 
 ## Supported environments
 

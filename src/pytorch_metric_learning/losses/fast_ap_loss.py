@@ -28,7 +28,7 @@ class FastAPLoss(BaseMetricLossFunction):
         _common.ref_not_supported(ref_emb)
         dtype, device = embeddings.dtype, embeddings.device
         miner_weights = indexing.convert_to_weights(indices_tuple, labels, dtype=dtype)
-        matches, diffs = indexing.get_matches_and_diffs(labels)
+        matches, diffs = indexing._get_matches_and_diffs(labels)
         I_pos = matches.to(dtype)
         I_neg = diffs.to(dtype)
         N_pos = torch.sum(I_pos, dim=1)

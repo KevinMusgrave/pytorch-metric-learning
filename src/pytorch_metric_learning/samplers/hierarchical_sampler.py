@@ -8,7 +8,7 @@ import torch
 from torch import Tensor
 from torch.utils.data.sampler import Sampler
 
-from .sampling import choose, shuffled
+from ._sampling import choose, shuffled
 
 
 class HierarchicalSampler(Sampler[list[int]]):

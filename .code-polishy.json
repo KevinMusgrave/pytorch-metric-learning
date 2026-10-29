@@ -242,8 +242,8 @@
           "tests/docs/test_documentation_paths.py",
           "tests/utils/test_validation.py",
           "tests/distances/test_lp_distance.py",
-          "tests/docs/test_migration_examples.py",
-          "tests/docs/test_loss_examples.py"
+          "tests/docs/test_documented_examples.py",
+          "tests/docs/test_public_surface.py"
         ],
         "module": "numerics",
         "focusedSuite": "numerics-focused"
@@ -254,6 +254,8 @@
           "tests/distances/__init__.py",
           "tests/distances/test_batched_distance.py",
           "tests/distances/test_custom_check_shape.py",
+          "tests/distances/test_similarities.py",
+          "tests/distances/test_normalization.py",
           "tests/losses/__init__.py",
           "tests/losses/test_angular_loss.py",
           "tests/losses/test_arcface_loss.py",
@@ -280,6 +282,7 @@
           "tests/losses/test_proxy_anchor_loss.py",
           "tests/losses/test_proxy_nca_loss.py",
           "tests/losses/test_ranked_list_loss.py",
+          "tests/losses/test_reduced_loss_options.py",
           "tests/losses/test_self_supervised_loss.py",
           "tests/losses/test_signal_to_noise_ratio_contrastive_loss.py",
           "tests/losses/test_smooth_ap_loss.py",
@@ -310,6 +313,7 @@
           "tests/reducers/test_threshold_reducer.py",
           "tests/regularizers/__init__.py",
           "tests/regularizers/test_regular_face_regularizer.py",
+          "tests/regularizers/test_lp_and_sparse_centers_regularizers.py",
           "tests/utils/__init__.py",
           "tests/utils/test_common_functions.py",
           "tests/utils/test_indexing.py",
@@ -434,8 +438,8 @@
           "tests/docs/test_documentation_paths.py",
           "tests/utils/test_validation.py",
           "tests/distances/test_lp_distance.py",
-          "tests/docs/test_migration_examples.py",
-          "tests/docs/test_loss_examples.py"
+          "tests/docs/test_documented_examples.py",
+          "tests/docs/test_public_surface.py"
         ],
         "timeoutSeconds": 120
       },

@@ -2,7 +2,7 @@
 
 [Threshold-Consistent Margin Loss for Open-World Deep Metric Learning](https://arxiv.org/abs/2307.04047)
 
-```python
+```python {.signature}
 losses.ThresholdConsistentMarginLoss(
     lambda_plus=1.0,
     lambda_minus=1.0,

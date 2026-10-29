@@ -65,6 +65,8 @@ nav:
       - Accuracy calculation: accuracy_calculation.md
       - Retrieval backends: retrieval.md
     - Distributed: distributed.md
+    - Types: types.md
+    - Index utilities: indexing.md
     - How to extend this library:
       - Custom losses: extend/losses.md
       - Custom miners: extend/miners.md

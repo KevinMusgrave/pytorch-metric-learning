@@ -2,7 +2,7 @@
 
 [P2SGrad: Refined Gradients for Optimizing Deep Face Models](https://arxiv.org/abs/1905.02479)
 
-```python
+```python {.signature}
 losses.P2SGradLoss(
     num_classes,
     embedding_size,

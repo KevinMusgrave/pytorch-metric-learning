@@ -2,7 +2,7 @@
 
 [Deep Metric Learning with Angular Loss](https://arxiv.org/abs/1708.01682)
 
-```python
+```python {.signature}
 losses.AngularLoss(alpha=40, **options)
 ```
 

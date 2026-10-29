@@ -3,13 +3,14 @@ from collections.abc import Iterator
 import torch
 from torch.utils.data.sampler import Sampler
 
-from .sampling import Labels, as_label_list, choose, indices_by_label
+from ..types import DatasetLabels
+from ._sampling import as_label_list, choose, indices_by_label
 
 
 class FixedSetOfTriplets(Sampler[int]):
     def __init__(
         self,
-        labels: Labels,
+        labels: DatasetLabels,
         num_triplets: int,
         *,
         generator: torch.Generator | None = None,

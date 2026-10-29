@@ -20,7 +20,7 @@ FENCE = re.compile(r"```.*?```", re.DOTALL)
 
 
 def anchor(heading):
-    text = re.sub(r"[`*_]", "", heading).strip().lower()
+    text = re.sub(r"[`*]", "", heading).strip().lower()
     text = re.sub(r"[^\w\s-]", "", text)
     return re.sub(r"\s+", "-", text)
 

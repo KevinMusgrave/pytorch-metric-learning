@@ -2,7 +2,7 @@
 
 [Ensemble Deep Manifold Similarity Learning using Hard Proxies](https://openaccess.thecvf.com/content_CVPR_2019/papers/Aziere_Ensemble_Deep_Manifold_Similarity_Learning_Using_Hard_Proxies_CVPR_2019_paper.pdf)
 
-```python
+```python {.signature}
 losses.ManifoldLoss(
     embedding_size,
     num_proxies=50,

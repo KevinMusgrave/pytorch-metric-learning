@@ -36,7 +36,7 @@ class DistanceWeightedMiner(BaseMiner):
             1.0 - 0.25 * (mat**2.0)
         )
         pairs = indexing.convert_to_pairs(indices_tuple, labels, ref_labels)
-        pos_mask, neg_mask = indexing.pair_masks(
+        pos_mask, neg_mask = indexing._pair_masks(
             pairs, (mat.shape[0], mat.shape[1]), mat.device
         )
         eligible = (
@@ -47,4 +47,4 @@ class DistanceWeightedMiner(BaseMiner):
         )
         row_max = log_weights.max(dim=1, keepdim=True).values
         weights = torch.exp(log_weights - row_max) * eligible
-        return indexing.sample_triplets(pos_mask, eligible, weights=weights)
+        return indexing._sample_triplets(pos_mask, eligible, weights=weights)

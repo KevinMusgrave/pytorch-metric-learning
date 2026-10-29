@@ -1,17 +1,12 @@
 import math
-from typing import NamedTuple, Unpack
+from typing import Unpack
 
 import torch
 from torch import Tensor
 
-from ..types import ProxyLossOptions
+from ..types import ProxyLossOptions, SubCenterOutliers
 from ..utils import _common
 from .arcface_loss import ArcFaceLoss
-
-
-class SubCenterOutliers(NamedTuple):
-    outliers: Tensor
-    dominant_centers: Tensor
 
 
 class SubCenterArcFaceLoss(ArcFaceLoss):

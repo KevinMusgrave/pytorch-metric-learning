@@ -1,18 +1,17 @@
-from typing import Literal
-
 import torch
 from torch import Tensor
 
+from ..types import AnchorAggregation
 from ..utils._common import accumulation_dtype
 from .base_reducer import BaseReducer
 from .mean_reducer import MeanReducer
 
-type Aggregation = Literal["mean", "sum"]
-
 
 class PerAnchorReducer(BaseReducer):
     def __init__(
-        self, reducer: BaseReducer | None = None, aggregation: Aggregation = "mean"
+        self,
+        reducer: BaseReducer | None = None,
+        aggregation: AnchorAggregation = "mean",
     ) -> None:
         super().__init__()
         if aggregation not in ("mean", "sum"):

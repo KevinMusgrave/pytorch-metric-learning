@@ -2,7 +2,7 @@
 
 [Improved Deep Metric Learning with Multi-class N-pair Loss Objective](http://www.nec-labs.com/uploads/images/Department-Images/MediaAnalytics/papers/nips16_npairmetriclearning.pdf)
 
-```python
+```python {.signature}
 losses.NPairsLoss(**options)
 ```
 

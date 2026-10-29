@@ -2,7 +2,7 @@
 
 [SoftTriple Loss: Deep Metric Learning Without Triplet Sampling](http://openaccess.thecvf.com/content_ICCV_2019/papers/Qian_SoftTriple_Loss_Deep_Metric_Learning_Without_Triplet_Sampling_ICCV_2019_paper.pdf)
 
-```python
+```python {.signature}
 losses.SoftTripleLoss(num_classes, embedding_size, centers_per_class=10, la=20, gamma=0.1, margin=0.01,
     *, weight_regularizer=None, weight_reg_weight=1.0, weight_init_func=None, **options)
 ```

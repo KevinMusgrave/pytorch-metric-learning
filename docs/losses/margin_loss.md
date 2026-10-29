@@ -2,7 +2,7 @@
 
 [Sampling Matters in Deep Embedding Learning](https://arxiv.org/abs/1706.07567)
 
-```python
+```python {.signature}
 losses.MarginLoss(
     margin=0.2,
     nu=0,

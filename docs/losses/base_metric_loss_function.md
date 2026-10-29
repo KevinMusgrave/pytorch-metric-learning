@@ -4,7 +4,7 @@ The base class of every loss that accepts the
 [loss options](../losses.md#loss-options). Its keyword-only parameters are the
 options that every loss accepts as `**options`.
 
-```python
+```python {.signature}
 losses.BaseMetricLossFunction(*, distance=None, reducer=None, embedding_regularizer=None, embedding_reg_weight=1.0)
 ```
 
@@ -13,7 +13,7 @@ losses.BaseMetricLossFunction(*, distance=None, reducer=None, embedding_regulari
 `forward` and `loss_terms` take the
 [forward arguments](../losses.md#forward-arguments):
 
-```python
+```python {.signature}
 loss_func(embeddings, labels=None, indices_tuple=None, ref_emb=None, ref_labels=None)
 loss_func.loss_terms(
     embeddings, labels=None, indices_tuple=None, ref_emb=None, ref_labels=None

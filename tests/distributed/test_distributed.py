@@ -376,6 +376,10 @@ def check_inconsistent_arguments(rank: int, device: torch.device) -> None:
     assert_raises_on_all_ranks(
         rank, "labels are on meta", lambda: miner(local, misplaced_labels)
     )
+    with unittest.TestCase().assertRaisesRegex(
+        ValueError, "not supported across ranks"
+    ):
+        miner(local, labels[:2], indices_tuple=(index, index, index, index))
     mask = torch.ones(3 if rank else 2, device=device, dtype=torch.bool)
     memory = DistributedLossWrapper(
         CrossBatchMemory(make_pair_loss(), embedding_size=2).to(TEST_DEVICE)

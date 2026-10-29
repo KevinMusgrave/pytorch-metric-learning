@@ -140,3 +140,16 @@ class TestPairsToTriplets(unittest.TestCase):
         ):
             for indices in indexing.pairs_to_triplets(pairs):
                 self.assertEqual(len(indices), 0)
+
+    def test_plain_pairs_are_validated(self) -> None:
+        a = torch.tensor([0, 0], device=TEST_DEVICE)
+        p = torch.tensor([1, 1], device=TEST_DEVICE)
+        n = torch.tensor([2, 3], device=TEST_DEVICE)
+        triplets = indexing.pairs_to_triplets((a, p, a, n))
+        self.assertEqual(triplets.negatives.tolist(), [2, 3, 2, 3])
+        with self.assertRaises(ValueError):
+            indexing.pairs_to_triplets((a, p, n))
+        with self.assertRaises(ValueError):
+            indexing.pairs_to_triplets((a, p[:1], a, n))
+        with self.assertRaises(TypeError):
+            indexing.pairs_to_triplets((a, p.float(), a, n))

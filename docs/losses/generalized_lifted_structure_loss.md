@@ -5,7 +5,7 @@
 A modification of the original [LiftedStructureLoss](lifted_structure_loss.md)
 that supports a separate reference set.
 
-```python
+```python {.signature}
 losses.GeneralizedLiftedStructureLoss(pos_margin=0.0, neg_margin=1.0, **options)
 ```
 

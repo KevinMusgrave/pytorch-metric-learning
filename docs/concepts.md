@@ -58,11 +58,14 @@ positives and negatives:
   own positive.
 - With an explicit `ref_emb` and `ref_labels`, the reference is a separate set.
   Anchor indices refer to `embeddings`, and positive and negative indices refer
-  to `ref_emb`. No pair is treated as a self-comparison, even when `ref_emb` is
-  the same tensor as `embeddings`.
+  to `ref_emb`. Every reference row is a candidate, and no pair is treated as a
+  self-comparison, even when `ref_emb` is the same tensor as `embeddings`.
 
-With `ref_emb`, pass both `labels` and `ref_labels` or neither. Passing
-`ref_labels` without `ref_emb` raises `ValueError`. The
+With `ref_emb`, pass both `labels` and `ref_labels` or neither; passing only one
+raises `ValueError`. Passing `ref_labels` without `ref_emb` also raises
+`ValueError`. The same rule holds for losses, miners, `compute_loss` and `mine`
+in custom components, and the [index utilities](indexing.md), where
+`ref_labels=None` means self-comparison. The
 [losses overview](losses.md#supported-arguments) lists which losses accept a
 reference set.
 
@@ -98,16 +101,10 @@ pairs = miners.PairMarginMiner(pos_margin=0.2, neg_margin=0.8)(embeddings, label
 
 A [loss](losses.md) takes `embeddings`, `labels`, an optional `indices_tuple`,
 and an optional reference set, and returns a scalar tensor. Internally, it first
-computes loss terms: a dictionary from term names to entries with these keys:
-
-- `losses`: a tensor of loss values.
-- `indices`: what the values belong to. `None` for an already-reduced value, a
-  tensor of element indices, a pair `(anchors, others)`, or triplet indices.
-- `divisor` (optional): a normalizer that only
-  [DivisorReducer](reducers.md#divisorreducer) applies.
-
-A batch with no valid pair or triplet produces no terms or terms with empty
-`losses`.
+computes loss terms: a dictionary from term names to a tensor of `losses`, the
+`indices` those values belong to, and an optional `divisor`, as defined by the
+[`LossTerm` contract](types.md#lossterm). A batch with no valid pair or triplet
+produces no terms or terms with empty `losses`.
 `loss_func.loss_terms(...)` returns the terms without reducing them.
 
 ```python
@@ -123,9 +120,9 @@ loss.backward()
 ## Reducers
 
 A [reducer](reducers.md) turns loss terms into one scalar: it reduces each term,
-for example with a mean, and sums the results. No terms, or terms
-with empty `losses`, reduce to a differentiable zero. Each loss has a default reducer, and the `reducer` option
-replaces it.
+for example with a mean, and sums the results. No terms, or terms with empty
+`losses`, [reduce](reducers.md#reduction) to a differentiable zero. Each loss
+has a default reducer, and the `reducer` option replaces it.
 
 ## Regularizers
 

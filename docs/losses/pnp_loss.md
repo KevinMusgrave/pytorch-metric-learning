@@ -2,7 +2,7 @@
 
 [Rethinking the Optimization of Average Precision: Only Penalizing Negative Instances before Positive Ones is Enough](https://arxiv.org/abs/2102.04640)
 
-```python
+```python {.signature}
 losses.PNPLoss(
     b=2,
     alpha=1,
@@ -60,8 +60,9 @@ loss.backward()
 - **b**: The boundary $b$ of PNP-Ib (equation 9). The paper uses 2.
 - **alpha**: The power $\alpha$ of PNP-Dq (equation 13). The paper uses 8.
 - **anneal**: The sigmoid temperature $\tau$ used for $R$. The paper uses 0.01.
-- **variant**: One of `"Ds"`, `"Dq"`, `"Iu"`, `"Ib"`, or `"O"`. Any other
-  value raises `ValueError`.
+- **variant**: One of `"Ds"`, `"Dq"`, `"Iu"`, `"Ib"`, or `"O"`, typed as
+  [`types.PNPVariant`](../types.md#pnpvariant). Any other value raises
+  `ValueError`.
 - **distance**, **embedding_regularizer**, **embedding_reg_weight**: See
   [loss options](../losses.md#loss-options).
 

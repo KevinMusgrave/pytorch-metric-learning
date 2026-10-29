@@ -2,7 +2,7 @@
 
 [Deep Metric Learning to Rank](http://openaccess.thecvf.com/content_CVPR_2019/papers/Cakir_Deep_Metric_Learning_to_Rank_CVPR_2019_paper.pdf)
 
-```python
+```python {.signature}
 losses.FastAPLoss(num_bins=10, **options)
 ```
 

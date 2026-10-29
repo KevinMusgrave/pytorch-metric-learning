@@ -2,7 +2,7 @@
 
 [Dual-Path Convolutional Image-Text Embeddings with Instance Loss](https://arxiv.org/abs/1711.05535)
 
-```python
+```python {.signature}
 losses.InstanceLoss(gamma=64, **options)
 ```
 

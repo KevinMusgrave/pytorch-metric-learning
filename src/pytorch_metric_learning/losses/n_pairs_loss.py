@@ -24,7 +24,7 @@ class NPairsLoss(BaseMetricLossFunction):
     ) -> LossDict:
         labels = _common.labels_required(labels)
         _common.ref_not_supported(ref_emb)
-        anchor_idx, positive_idx = indexing.convert_to_pos_pairs_with_unique_labels(
+        anchor_idx, positive_idx = indexing._convert_to_pos_pairs_with_unique_labels(
             indices_tuple, labels
         )
         num_pairs = len(anchor_idx)

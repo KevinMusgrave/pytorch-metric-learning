@@ -24,9 +24,10 @@ The `utils.indexing` helpers handle all of these cases:
 - `convert_to_triplets(indices_tuple, labels, ref_labels)` does the same for
   triplets.
 
-With `ref_labels=None`, both helpers exclude each row's pairing with itself from
-the positives. `self.distance(embeddings, ref_emb)` likewise compares the
-embeddings with themselves when `ref_emb` is `None`.
+Both follow the [reference-set rule](../concepts.md#reference-sets), as does
+`self.distance(embeddings, ref_emb)`, so `mine` handles self-comparison and a
+separate reference set with the same code. See the
+[index utilities](../indexing.md) for their defaults and errors.
 
 ## An example pair miner
 
@@ -109,9 +110,9 @@ a1, p, a2, n = miner(embeddings, labels, ref_emb=ref_emb, ref_labels=ref_labels)
 assert a1.max() < len(embeddings) and p.max() < len(ref_emb)
 ```
 
-A reference set is never treated as the query set, even when it is the same
-tensor, so no pair is excluded as a self-comparison. To mine within one batch,
-leave `ref_emb` as `None`.
+No pair is excluded as a self-comparison with a supplied reference set; see
+[reference sets](../concepts.md#reference-sets). To mine within one batch, leave
+`ref_emb` as `None`.
 
 ## Validation
 

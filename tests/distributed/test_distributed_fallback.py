@@ -195,3 +195,10 @@ class TestDistributedFallback(unittest.TestCase):
             DistributedLossWrapper(invalid)
         with self.assertRaises(TypeError):
             DistributedMinerWrapper(invalid)
+
+    def test_invalid_objective_is_rejected(self):
+        objective: Any = "local"
+        with self.assertRaisesRegex(ValueError, "objective"):
+            DistributedLossWrapper(ContrastiveLoss(), objective=objective)
+        with self.assertRaisesRegex(ValueError, "objective"):
+            DistributedMinerWrapper(PairMarginMiner(), objective=objective)

@@ -3,14 +3,14 @@ from torch import Tensor
 
 from ..types import LossTerm
 from ..utils._common import accumulation_dtype
-from .base_reducer import BaseReducer, validate_term
+from .base_reducer import BaseReducer, _validate_term
 
 
 class DivisorReducer(BaseReducer):
     def reduce(
         self, term: LossTerm, embeddings: Tensor, labels: Tensor | None
     ) -> Tensor:
-        losses, anchors = validate_term(term)
+        losses, anchors = _validate_term(term)
         if anchors is None:
             return losses
         return self.sum_and_divide(losses, term.get("divisor", 1))

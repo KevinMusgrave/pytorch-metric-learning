@@ -2,7 +2,7 @@
 
 [Learning Deep Embeddings with Histogram Loss](https://arxiv.org/abs/1611.00822)
 
-```python
+```python {.signature}
 losses.HistogramLoss(
     num_bins=100,
     *,

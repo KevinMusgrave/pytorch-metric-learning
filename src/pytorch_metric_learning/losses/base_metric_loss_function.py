@@ -9,7 +9,7 @@ from ..types import IndicesTuple, LossDict, LossTerm
 from ..utils import _common
 
 
-def regularization_term(
+def _regularization_term(
     regularizer: BaseRegularizer, weight: float, x: Tensor
 ) -> LossTerm:
     return {"losses": regularizer(x) * weight, "indices": None}
@@ -57,7 +57,7 @@ class BaseMetricLossFunction(nn.Module):
         terms = self.objective_terms(
             embeddings, labels, indices_tuple, ref_emb, ref_labels
         )
-        penalties = distinct_penalties(self, terms, embeddings)
+        penalties = _distinct_penalties(self, terms, embeddings)
         loss = self.reducer(terms, embeddings, labels)
         for term in penalties.values():
             loss = loss + term["losses"]
@@ -74,7 +74,7 @@ class BaseMetricLossFunction(nn.Module):
         terms = self.objective_terms(
             embeddings, labels, indices_tuple, ref_emb, ref_labels
         )
-        return {**terms, **distinct_penalties(self, terms, embeddings)}
+        return {**terms, **_distinct_penalties(self, terms, embeddings)}
 
     def objective_terms(
         self,
@@ -92,13 +92,13 @@ class BaseMetricLossFunction(nn.Module):
         if self.embedding_regularizer is None:
             return {}
         return {
-            "embedding_reg_loss": regularization_term(
+            "embedding_reg_loss": _regularization_term(
                 self.embedding_regularizer, self.embedding_reg_weight, embeddings
             )
         }
 
 
-def distinct_penalties(
+def _distinct_penalties(
     loss: BaseMetricLossFunction, objective: LossDict, embeddings: Tensor
 ) -> LossDict:
     penalties = loss.regularization_terms(embeddings)

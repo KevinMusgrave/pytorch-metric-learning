@@ -31,37 +31,16 @@ returns a tensor. To get the unreduced terms instead, call
 
 All reducers extend this class.
 
-```python
+```python {.signature}
 reducers.BaseReducer()
 ```
 
 ### Loss terms
 
-A loss returns a `pytorch_metric_learning.types.LossDict`: a dictionary from term
-names to `LossTerm` dictionaries with these keys:
-
-- **losses**: A tensor of loss values.
-- **indices**: Determines the kind of term:
-  - `None`: the term is already reduced; `losses` holds one value.
-  - A tensor: one loss per element, and the tensor holds each element's anchor
-    index.
-  - A tuple `(anchors, others)`: one loss per pair.
-  - A tuple `(anchors, positives, negatives)`, such as `TripletIndices`: one loss
-    per triplet.
-
-  A tuple must hold two or three tensors; pass a single tensor, not a
-  one-element tuple, for per-element losses. Index tensors must be `int64` or
-  `int32`; other dtypes, including `bool` and `uint8`, raise `TypeError`.
-  Indices must be in range for the tensors they address. Reducers do not check
-  bounds, because that would synchronize the device; out-of-range or negative
-  indices are a caller error with undefined results.
-
-- **divisor** (optional): A normalizer for [DivisorReducer](#divisorreducer).
-
-For every kind except `None`, `losses` and each index tensor are
-one-dimensional with equal lengths. Anchor indices are rows of the `embeddings`
-passed to the reducer: the query embeddings for a loss, and the regularized
-tensor for a regularizer. ProxyAnchorLoss terms index its proxies instead.
+A reducer receives a [`types.LossDict`](types.md#lossdict): term names mapped to
+terms that follow the [`LossTerm` contract](types.md#lossterm), which defines
+the `losses`, `indices`, and `divisor` keys, the anchors each kind of term is
+grouped by, and the errors raised for malformed terms.
 
 ### Reduction
 
@@ -82,9 +61,8 @@ triplets, reduces to a differentiable zero connected to `embeddings`.
 
 Subclasses implement the one reduction hook:
 
-```python
-def element_reduction(self, losses, anchors, embeddings, labels):
-    raise NotImplementedError
+```python {.signature}
+def element_reduction(self, losses, anchors, embeddings, labels): ...
 ```
 
 `labels` is `None` when the reducer belongs to a
@@ -95,7 +73,7 @@ def element_reduction(self, losses, anchors, embeddings, labels):
 The average of the losses that are greater than 0. For losses `[0, 2, 0, 3]`, it
 returns `2.5`. It is `ThresholdReducer(low=0)`.
 
-```python
+```python {.signature}
 reducers.AvgNonZeroReducer()
 ```
 
@@ -104,7 +82,7 @@ reducers.AvgNonZeroReducer()
 Multiplies each loss by the weight of its anchor's class, then takes the mean:
 `torch.mean(losses * weights[labels[anchors]])`.
 
-```python
+```python {.signature}
 reducers.ClassWeightedReducer(weights)
 ```
 
@@ -125,7 +103,7 @@ Divides the sum of each term by a divisor that the loss supplies, so a loss can
 apply its paper's normalization while the caller can still choose another
 reducer for terms without divisors.
 
-```python
+```python {.signature}
 reducers.DivisorReducer()
 ```
 
@@ -150,7 +128,7 @@ term with a different reduction of other terms, route each divisor term to
 
 The mean of the losses.
 
-```python
+```python {.signature}
 reducers.MeanReducer()
 ```
 
@@ -158,7 +136,7 @@ reducers.MeanReducer()
 
 Applies a different reducer to each named term and sums the results.
 
-```python
+```python {.signature}
 reducers.MultipleReducers(reducers, default_reducer=None)
 ```
 
@@ -203,7 +181,7 @@ loss per positive pair; with `PerAnchorReducer`, each anchor's pair losses are
 averaged first, so every anchor has equal weight regardless of its number of
 positives.
 
-```python
+```python {.signature}
 reducers.PerAnchorReducer(reducer=None, aggregation="mean")
 ```
 
@@ -211,8 +189,9 @@ reducers.PerAnchorReducer(reducer=None, aggregation="mean")
 
 - **reducer**: The reducer that receives the per-anchor losses. If `None`,
   [MeanReducer](#meanreducer) is used.
-- **aggregation**: `"mean"` or `"sum"` of each anchor's losses. Other values
-  raise `ValueError`.
+- **aggregation**: `"mean"` or `"sum"` of each anchor's losses, typed as
+  [`types.AnchorAggregation`](types.md#anchoraggregation). Other values raise
+  `ValueError`.
 
 Aggregation works the same for element, pair, and triplet terms, using the
 term's anchor indices:
@@ -233,7 +212,7 @@ Sums are accumulated in float32 for float16 and bfloat16 losses.
 
 The sum of the losses.
 
-```python
+```python {.signature}
 reducers.SumReducer()
 ```
 
@@ -241,7 +220,7 @@ reducers.SumReducer()
 
 The mean of the losses that fall strictly within a range.
 
-```python
+```python {.signature}
 reducers.ThresholdReducer(low=None, high=None)
 ```
 

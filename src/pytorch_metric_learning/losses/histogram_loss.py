@@ -8,7 +8,7 @@ from ..utils import _common, indexing
 from .base_metric_loss_function import BaseMetricLossFunction
 
 
-def unique_pairs(*tensors: Tensor) -> tuple[Tensor, ...]:
+def _unique_pairs(*tensors: Tensor) -> tuple[Tensor, ...]:
     t = torch.stack(tensors)
     t, _ = torch.sort(t, dim=0)
     t = torch.unique(t, dim=1)
@@ -52,8 +52,8 @@ class HistogramLoss(BaseMetricLossFunction):
         if len(anchor_idx) == 0:
             return {}
         mat = self.distance(embeddings)
-        ap_dists = mat[unique_pairs(anchor_idx, positive_idx)]
-        an_dists = mat[unique_pairs(anchor_idx, negative_idx)]
+        ap_dists = mat[_unique_pairs(anchor_idx, positive_idx)]
+        an_dists = mat[_unique_pairs(anchor_idx, negative_idx)]
         p_pos = self.compute_density(ap_dists)
         phi = torch.cumsum(p_pos, dim=0)
         p_neg = self.compute_density(an_dists)

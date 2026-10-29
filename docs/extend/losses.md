@@ -30,12 +30,10 @@ loss = loss_func(torch.randn(8, 16))
 - `indices_tuple` is `None`, a `types.PairIndices`, or a `types.TripletIndices`.
   Callers may pass plain tuples; they are validated and converted before
   `compute_loss` runs.
-- `ref_emb` is `None` when the caller supplied no reference set. `None` means
-  self-comparison: compare `embeddings` with themselves and never treat an
-  embedding as its own positive. A tensor means a separate reference set, even
-  when it is the same object as `embeddings`.
-- `ref_labels` is `None` whenever `ref_emb` is `None`. With `ref_emb`, `labels`
-  and `ref_labels` are both tensors or both `None`.
+- `ref_emb` and `ref_labels` follow the
+  [reference-set rule](../concepts.md#reference-sets): `ref_emb` is `None` for
+  self-comparison, `ref_labels` is `None` whenever `ref_emb` is, and with
+  `ref_emb`, `labels` and `ref_labels` are both tensors or both `None`.
 
 `compute_loss` returns a `types.LossDict`, a dictionary from term names to loss
 terms. The base class reduces the terms with the reducer, adds the
@@ -120,9 +118,9 @@ Here are a few details about this loss function:
 - `self.distance(embeddings, ref_emb)` returns the `(N, N)` matrix of
   `embeddings` with themselves when `ref_emb` is `None`, or the `(N, M)` matrix
   against `ref_emb`.
-- When there are no triplets, it returns `{}`. Every reducer turns an empty
-  dictionary into a differentiable zero, so the call with all-distinct labels,
-  which have no positive pairs, returns zero.
+- When there are no triplets, it returns `{}`, which
+  [reduces](../reducers.md#reduction) to a differentiable zero, so the call with
+  all-distinct labels returns zero.
 - Each term's `indices` tell the reducer what one value of `losses` is; see
   [loss terms](#loss-terms). Regularization penalties are not objective terms;
   the base class adds them after reduction.
@@ -138,42 +136,10 @@ Here are a few details about this loss function:
 
 [GenericPairLoss](../losses/generic_pair_loss.md) converts labels or mined
 indices into pairs, returns `{}` when there are none, computes the distance
-matrix, and calls `pair_loss(mat, pairs)`. Use `pair_values` for the distances
-of the selected pairs or `pair_masks` for boolean positive and negative masks
-over the whole matrix:
-
-```python
-import torch
-from pytorch_metric_learning.losses import GenericPairLoss
-
-
-class HingePairLoss(GenericPairLoss):
-    def pair_loss(self, mat, pairs):
-        pos_pairs, neg_pairs = self.pair_values(mat, pairs)
-        a1, p, a2, n = pairs
-        return {
-            "pos_loss": {
-                "losses": torch.relu(self.distance.margin(pos_pairs, 0.2)),
-                "indices": (a1, p),
-            },
-            "neg_loss": {
-                "losses": torch.relu(self.distance.margin(0.8, neg_pairs)),
-                "indices": (a2, n),
-            },
-        }
-
-
-loss_func = HingePairLoss()
-embeddings = torch.randn(16, 8)
-labels = torch.randint(0, 3, (16,))
-loss = loss_func(embeddings, labels)
-loss = loss_func(
-    embeddings,
-    labels,
-    ref_emb=torch.randn(10, 8),
-    ref_labels=torch.randint(0, 3, (10,)),
-)
-```
+matrix, and calls `pair_loss(mat, pairs)`. Subclass it and implement only
+`pair_loss`, using `pair_values` for the distances of the selected pairs or
+`pair_masks` for boolean masks over the whole matrix. Its page has a complete
+`HingePairLoss` example, including a separate reference set.
 
 ## Losses with learnable parameters
 
@@ -338,51 +304,22 @@ assert weights.shape == (5,) and weights.max() == 1
 ```
 
 `convert_to_pairs` reads a triplet `(a, p, n)` as the pairs `(a, p)` and
-`(a, n)`. `convert_to_triplets` combines each anchor's positive pairs with its
-negative pairs, or enumerates triplets from labels; its `t_per_anchor` defaults
-to `"all"`. With `indices_tuple=None`, both use labels, and `ref_labels=None`
-means self-comparison. `convert_to_weights` returns one weight per element:
-its count in the tuples divided by the largest count. With
-`indices_tuple=None` every weight is 1; a tuple with no indices gives every
-element weight 0, so a loss that multiplies by the weights reduces to a
-differentiable zero. See [miner weights](../losses.md#miner-weights).
+`(a, n)`, and `convert_to_triplets` combines each anchor's positive pairs with
+its negative pairs. With `indices_tuple=None`, both use labels.
+`convert_to_weights` returns the [miner weights](../losses.md#miner-weights).
+The [index utilities](../indexing.md) page documents each function's defaults
+and errors.
 
 ## Loss terms
 
-`compute_loss` returns `types.LossDict`, a dictionary from term names to
-`types.LossTerm` dictionaries. Each term has `losses`, always a tensor, and
-`indices`, whose form tells the reducer what one value of `losses` is:
-
-| `indices`                                                        | `losses`                                   | Reducers group by |
-| ---------------------------------------------------------------- | ------------------------------------------ | ----------------- |
-| `None`                                                           | One value; the term is already reduced     | Not reduced       |
-| A tensor of shape `(n,)`                                         | `(n,)`, one value per element              | That tensor       |
-| `(anchors, others)`, two tensors of shape `(n,)`                 | `(n,)`, one value per (anchor, other) pair | `anchors`         |
-| `TripletIndices(anchors, positives, negatives)` or three tensors | `(n,)`, one value per triplet              | `anchors`         |
-
-An element can be an embedding, a query, or a proxy; the indices only need to
-be meaningful to the reducer in use. Reducers that look up labels, such as
-[ClassWeightedReducer](../reducers.md#classweightedreducer), index `labels`
-with the anchors. An empty `losses` tensor, and an empty `LossDict`, reduce to a
-differentiable zero. A term without indices must contain exactly one value, and
-a term with indices must have one-dimensional `losses` and index tensors of
-equal length; otherwise reducers raise `ValueError`. A tuple of indices holds
-two or three tensors; use a single tensor, not a one-element tuple, for
-per-element losses. Index tensors must be `int64` or `int32`, and reducers raise
-`TypeError` for other dtypes or structures.
-
-A term may also contain an optional `divisor`, a tensor or number. Only
-[DivisorReducer](../reducers.md#divisorreducer) applies it, by dividing the sum
-of the term's losses by the divisor; every other reducer raises `ValueError`
-for such a term. Pass a [MultipleReducers](../reducers.md#multiplereducers) to
-use DivisorReducer for some terms and another reducer for the rest.
+`compute_loss` returns a [`types.LossDict`](../types.md#lossdict): term names
+mapped to terms that follow the [`LossTerm` contract](../types.md#lossterm).
+Each term's `indices` tell the reducer whether its `losses` are already reduced
+or belong to elements, pairs, or triplets, and an optional `divisor` requires
+[DivisorReducer](../reducers.md#divisorreducer), as in
 [ProxyAnchorLoss](../losses/proxy_anchor_loss.md) and
-[MarginLoss](../losses/margin_loss.md) use divisors.
-
-`PairIndices`, `TripletIndices`, `LossTerm`, and `LossDict` describe ordinary
-tuples and dictionaries; there is no runtime wrapper. `forward` returns a
-tensor, and `loss_terms` returns the `LossDict` before reduction, including
-regularization terms, for custom aggregation; see
+[MarginLoss](../losses/margin_loss.md). `loss_terms` returns the `LossDict`
+before reduction, including regularization terms; see
 [unreduced loss terms](../losses.md#unreduced-loss-terms).
 
 ## Some useful examples to look at

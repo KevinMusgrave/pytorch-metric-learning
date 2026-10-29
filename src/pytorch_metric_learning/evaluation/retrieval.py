@@ -8,12 +8,12 @@ from torch import Tensor
 
 from ..distances import BaseDistance, BatchedDistance
 
-FAISS_GPU_MAX_K = 2048
-LOGGER = logging.getLogger(__name__)
+_FAISS_GPU_MAX_K = 2048
+_LOGGER = logging.getLogger(__name__)
 __all__ = ["CustomKNN", "FaissKMeans", "FaissKNN", "MatchFinder"]
 
 
-def import_faiss() -> Any:
+def _import_faiss() -> Any:
     try:
         faiss = importlib.import_module("faiss")
         importlib.import_module("faiss.contrib.torch_utils")
@@ -75,7 +75,7 @@ class FaissKNN:
         index_init_fn: Callable[[int], Any] | None = None,
         gpus: list[int] | tuple[int, ...] | None = None,
     ) -> None:
-        self.faiss = import_faiss()
+        self.faiss = _import_faiss()
         self.reset()
         self.reset_before = reset_before
         self.reset_after = reset_after
@@ -100,8 +100,8 @@ class FaissKNN:
             k = k + 1
         device = query.device
         d = query.shape[1]
-        LOGGER.info("running k-nn with k=%d", k)
-        LOGGER.info("embedding dimensionality is %d", d)
+        _LOGGER.info("running k-nn with k=%d", k)
+        _LOGGER.info("embedding dimensionality is %d", d)
         if self.reset_before:
             self.index = self.index_init_fn(d)
         if self.index is None:
@@ -113,7 +113,7 @@ class FaissKNN:
         indices = indices.to(device=device)
         if self.reset_after:
             self.reset()
-        return return_results(distances, indices, ref_includes_query)
+        return _return_results(distances, indices, ref_includes_query)
 
     def search(
         self, index: Any, query: Tensor, reference: Tensor | None, k: int
@@ -123,18 +123,18 @@ class FaissKNN:
             and hasattr(self.faiss, "GpuIndex")
             and self.faiss.get_num_gpus() > 0
         )
-        if use_gpu and k <= FAISS_GPU_MAX_K:
-            return add_to_index_and_search(
+        if use_gpu and k <= _FAISS_GPU_MAX_K:
+            return _add_to_index_and_search(
                 self.to_gpu_index(index), query, reference, k
             )
         if use_gpu:
-            LOGGER.warning(
+            _LOGGER.warning(
                 "Using CPU for k-nn search because k = %d > %d, "
                 "which is the maximum allowable on GPU.",
                 k,
-                FAISS_GPU_MAX_K,
+                _FAISS_GPU_MAX_K,
             )
-        return add_to_index_and_search(self.to_cpu_index(index), query, reference, k)
+        return _add_to_index_and_search(self.to_cpu_index(index), query, reference, k)
 
     def to_gpu_index(self, index: Any) -> Any:
         if isinstance(index, self.faiss.GpuIndex):
@@ -169,22 +169,22 @@ class FaissKNN:
 
 class FaissKMeans:
     def __init__(self, **kwargs) -> None:
-        self.faiss = import_faiss()
+        self.faiss = _import_faiss()
         self.kwargs = kwargs
 
     def __call__(self, x: Tensor, num_clusters: int) -> Tensor:
         device = x.device
         data = x.detach().float().cpu().numpy()
         d = data.shape[1]
-        LOGGER.info("running k-means clustering with k=%d", num_clusters)
-        LOGGER.info("embedding dimensionality is %d", d)
+        _LOGGER.info("running k-means clustering with k=%d", num_clusters)
+        _LOGGER.info("embedding dimensionality is %d", d)
         kmeans = self.faiss.Kmeans(d, num_clusters, **self.kwargs)
         kmeans.train(data)
         _, idxs = kmeans.index.search(data, 1)
         return torch.as_tensor(idxs[:, 0], dtype=torch.long, device=device)
 
 
-def add_to_index_and_search(
+def _add_to_index_and_search(
     index: Any, query: Tensor, reference: Tensor | None, k: int
 ) -> tuple[Tensor, Tensor]:
     if reference is not None:
@@ -192,7 +192,7 @@ def add_to_index_and_search(
     return index.search(query.float().cpu(), k)
 
 
-def return_results(
+def _return_results(
     distances: Tensor, indices: Tensor, ref_includes_query: bool
 ) -> tuple[Tensor, Tensor]:
     if ref_includes_query:
@@ -237,4 +237,4 @@ class CustomKNN:
                     distances[start:end], indices[start:end] = torch.topk(
                         mat, k, largest=largest, dim=1
                     )
-            return return_results(distances, indices, ref_includes_query)
+            return _return_results(distances, indices, ref_includes_query)

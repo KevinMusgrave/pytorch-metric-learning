@@ -7,7 +7,17 @@ it as `DataLoader(..., batch_sampler=...)` and omit `batch_size` and `shuffle`.
 
 Labels describe the whole dataset: `labels[i]` is the label of dataset item `i`.
 `MPerClassSampler` and `FixedSetOfTriplets` accept a one-dimensional tensor, a
-NumPy array, or any iterable of hashable labels, such as a list of strings.
+NumPy array, or any iterable of hashable labels, such as a list of strings
+([`types.DatasetLabels`](types.md#datasetlabels)).
+The examples on this page use this dataset of 64 items in 16 classes:
+
+```python
+import torch
+from pytorch_metric_learning import samplers
+
+labels = torch.arange(64) // 4
+dataset = torch.utils.data.TensorDataset(torch.randn(64, 8), labels)
+```
 
 ## Randomness and coverage
 
@@ -33,7 +43,7 @@ Yields `m` indices per class in consecutive groups. For example, with a
 samples each. If `batch_size` is not given, most batches have `m` samples per
 class, but a batch can span the boundary between two passes over the classes.
 
-```python
+```python {.signature}
 samplers.MPerClassSampler(
     labels: Tensor | np.ndarray | Iterable[Hashable],
     m: int,
@@ -79,11 +89,15 @@ X is `super_classes_per_batch` and Y is `samples_per_class`. The sampler yields
 lists of dataset indices, so pass it as the `batch_sampler` argument:
 
 ```python
-sampler = samplers.HierarchicalSampler(labels, batch_size=32, samples_per_class=4)
+hierarchical_labels = torch.stack([labels, labels // 4], dim=1)
+sampler = samplers.HierarchicalSampler(
+    hierarchical_labels, batch_size=32, samples_per_class=4
+)
 loader = torch.utils.data.DataLoader(dataset, batch_sampler=sampler)
+assert all(len(batch) == 32 for batch in sampler)
 ```
 
-```python
+```python {.signature}
 samplers.HierarchicalSampler(
     labels: Tensor | np.ndarray | Sequence[Sequence[int]],
     batch_size: int,
@@ -134,7 +148,7 @@ shows embedding extraction, subset-index mapping, and seeded sampling.
 Creates a fixed set of triplets at construction. Use it when the only ground
 truth for evaluating an algorithm is a set of triplets.
 
-```python
+```python {.signature}
 samplers.FixedSetOfTriplets(
     labels: Tensor | np.ndarray | Iterable[Hashable],
     num_triplets: int,
@@ -154,10 +168,19 @@ triples. Use a `DataLoader` batch size divisible by 3 and recover the tuple
 indices directly from each embedding batch:
 
 ```python
+from pytorch_metric_learning import losses
+
+sampler = samplers.FixedSetOfTriplets(labels, num_triplets=30)
+loader = torch.utils.data.DataLoader(dataset, batch_size=9, sampler=sampler)
+model = torch.nn.Linear(8, 4)
+loss_func = losses.TripletMarginLoss()
+
+data, batch_labels = next(iter(loader))
+embeddings = model(data)
 indices_tuple = (
     torch.arange(len(embeddings), device=embeddings.device).reshape(-1, 3).unbind(1)
 )
-loss = loss_func(embeddings, labels, indices_tuple=indices_tuple)
+loss = loss_func(embeddings, batch_labels, indices_tuple=indices_tuple)
 ```
 
 **Parameters**:

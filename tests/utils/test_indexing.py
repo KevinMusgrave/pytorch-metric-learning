@@ -288,7 +288,7 @@ class TestLossAndMinerUtils(unittest.TestCase):
                 correct_p = torch.tensor([1, 5, 6, 0, 5, 6, 3, 4])
 
             indices_tuple = indexing.get_all_pairs_indices(labels, all_labels)
-            indices_tuple = indexing.remove_self_comparisons(
+            indices_tuple = indexing._remove_self_comparisons(
                 indices_tuple, curr_batch_idx
             )
             a1, p, _, _ = indices_tuple
@@ -301,7 +301,9 @@ class TestLossAndMinerUtils(unittest.TestCase):
         curr_batch_idx = torch.tensor([3, 4, 0])
         memory_labels[curr_batch_idx] = labels
         a, p, n = indexing.get_all_triplets_indices(labels, memory_labels)
-        kept = indexing.remove_self_comparisons(TripletIndices(a, p, n), curr_batch_idx)
+        kept = indexing._remove_self_comparisons(
+            TripletIndices(a, p, n), curr_batch_idx
+        )
         self.assertTrue(torch.all(kept.positives != curr_batch_idx[kept.anchors]))
         removed = set(zip(a.tolist(), p.tolist(), strict=True)) - set(
             zip(kept.anchors.tolist(), kept.positives.tolist(), strict=True)
@@ -319,7 +321,7 @@ class TestUniqueLabelPositivePairs(unittest.TestCase):
             for anchor, positive in zip(a.tolist(), p.tolist(), strict=True):
                 expected.setdefault(labels[anchor].item(), (anchor, positive))
             ordered = [expected[label] for label in sorted(expected)]
-            actual_a, actual_p = indexing.convert_to_pos_pairs_with_unique_labels(
+            actual_a, actual_p = indexing._convert_to_pos_pairs_with_unique_labels(
                 None, labels
             )
             self.assertEqual(

@@ -4,14 +4,14 @@ A wrapper for the common case where `embeddings` and `ref_emb` are augmented
 views of each other. It creates the labels that pair them, so the wrapped loss
 can be used without labels.
 
-```python
+```python {.signature}
 losses.SelfSupervisedLoss(loss, symmetric=True)
 ```
 
 **Implementation notes**: `SelfSupervisedLoss` is a `torch.nn.Module` whose
 forward is:
 
-```python
+```python {.signature}
 loss_func(embeddings, ref_emb)
 ```
 

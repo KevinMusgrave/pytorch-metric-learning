@@ -30,4 +30,4 @@ class GenericPairLoss(BaseMetricLossFunction):
 
     @staticmethod
     def pair_masks(mat: Tensor, pairs: PairIndices) -> tuple[Tensor, Tensor]:
-        return indexing.pair_masks(pairs, (mat.shape[0], mat.shape[1]), mat.device)
+        return indexing._pair_masks(pairs, (mat.shape[0], mat.shape[1]), mat.device)

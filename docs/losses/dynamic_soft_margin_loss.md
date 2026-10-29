@@ -2,7 +2,7 @@
 
 [Learning Local Descriptors With a CDF-Based Dynamic Soft Margin](https://openaccess.thecvf.com/content_ICCV_2019/papers/Zhang_Learning_Local_Descriptors_With_a_CDF-Based_Dynamic_Soft_Margin_ICCV_2019_paper.pdf)
 
-```python
+```python {.signature}
 losses.DynamicSoftMarginLoss(
     min_val=-2.0,
     num_bins=10,

@@ -2,14 +2,14 @@
 
 A weighted sum of several losses.
 
-```python
+```python {.signature}
 losses.MultipleLosses(losses, miners=None, weights=None)
 ```
 
 **Implementation notes**: `MultipleLosses` is a `torch.nn.Module` whose forward
 is:
 
-```python
+```python {.signature}
 loss_func(embeddings, labels=None, indices_tuple=None, ref_emb=None, ref_labels=None)
 ```
 

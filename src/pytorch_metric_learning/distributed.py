@@ -1,5 +1,5 @@
 from collections.abc import Callable, Sequence
-from typing import Literal, NamedTuple
+from typing import NamedTuple
 
 import torch
 from torch import Tensor
@@ -7,13 +7,12 @@ from torch.distributed import _functional_collectives
 
 from .losses import BaseMetricLossFunction, CrossBatchMemory, MultipleLosses
 from .miners import BaseMiner
-from .types import IndicesTuple, MetricLoss, PairIndices
+from .types import DistributedObjective, IndicesTuple, MetricLoss, PairIndices
 from .utils import _common, indexing
 
 __all__ = ["DistributedLossWrapper", "DistributedMinerWrapper"]
 
-type Objective = Literal["global", "local_anchor"]
-OBJECTIVES = ("global", "local_anchor")
+_OBJECTIVES: tuple[DistributedObjective, ...] = ("global", "local_anchor")
 
 _DTYPES = (
     torch.float16,
@@ -33,20 +32,20 @@ _SCHEMA_WIDTH = 6
 _INVALID_SCHEMA = [-1] * _SCHEMA_WIDTH
 
 
-class Gathered(NamedTuple):
+class _Gathered(NamedTuple):
     embeddings: Tensor
     labels: Tensor | None
     offset: int
 
 
-def world_size() -> int:
+def _world_size() -> int:
     if torch.distributed.is_available() and torch.distributed.is_initialized():
         return torch.distributed.get_world_size()
     return 1
 
 
-def check_objective(objective: str) -> None:
-    if objective not in OBJECTIVES:
+def _check_objective(objective: str) -> None:
+    if objective not in _OBJECTIVES:
         raise ValueError('objective must be "global" or "local_anchor"')
 
 
@@ -152,30 +151,30 @@ def _gather_tensor(
     return torch.cat([row[:size] for row, size in zip(rows, sizes, strict=True)])
 
 
-def gather(
+def _gather(
     emb: Tensor, labels: Tensor | None, sizes: list[int], remote_gradients: bool = False
-) -> Gathered:
+) -> _Gathered:
     all_emb = _gather_tensor(emb, sizes, remote_gradients)
     all_labels = _gather_tensor(labels, sizes) if labels is not None else None
     offset = sum(sizes[: torch.distributed.get_rank()])
-    return Gathered(all_emb, all_labels, offset)
+    return _Gathered(all_emb, all_labels, offset)
 
 
-def local_anchor_pairs(
+def _local_anchor_pairs(
     labels: Tensor, ref_labels: Tensor, offset: int, remove_self: bool
 ) -> PairIndices:
     pairs = indexing.get_all_pairs_indices(labels, ref_labels)
     if not remove_self:
         return pairs
     curr_batch_idx = torch.arange(len(labels), device=labels.device) + offset
-    return indexing.remove_self_comparisons(pairs, curr_batch_idx)
+    return indexing._remove_self_comparisons(pairs, curr_batch_idx)
 
 
 class DistributedLossWrapper(torch.nn.Module):
     def __init__(
         self,
         loss: MetricLoss | CrossBatchMemory,
-        objective: Objective = "global",
+        objective: DistributedObjective = "global",
     ) -> None:
         super().__init__()
         if not isinstance(
@@ -185,7 +184,7 @@ class DistributedLossWrapper(torch.nn.Module):
                 "The input loss must be a BaseMetricLossFunction, MultipleLosses, "
                 "or CrossBatchMemory"
             )
-        check_objective(objective)
+        _check_objective(objective)
         if isinstance(loss, CrossBatchMemory) and objective == "local_anchor":
             raise ValueError("CrossBatchMemory supports only the global objective")
         self.loss = loss
@@ -200,7 +199,7 @@ class DistributedLossWrapper(torch.nn.Module):
         ref_labels: Tensor | None = None,
         enqueue_mask: Tensor | None = None,
     ) -> Tensor:
-        size = world_size()
+        size = _world_size()
         memory = isinstance(self.loss, CrossBatchMemory)
         error = _local_error(
             lambda: self.validate(
@@ -289,10 +288,10 @@ class DistributedLossWrapper(torch.nn.Module):
         ref_sizes: list[int],
     ) -> Tensor:
         local_anchor = self.objective == "local_anchor"
-        query = gather(emb, labels, sizes, remote_gradients=not local_anchor)
+        query = _gather(emb, labels, sizes, remote_gradients=not local_anchor)
         reference = None
         if ref_emb is not None:
-            reference = gather(
+            reference = _gather(
                 ref_emb, ref_labels, ref_sizes, remote_gradients=not local_anchor
             )
         if not local_anchor:
@@ -305,7 +304,7 @@ class DistributedLossWrapper(torch.nn.Module):
             )
         all_ref = query if reference is None else reference
         if indices_tuple is None and labels is not None and all_ref.labels is not None:
-            indices_tuple = local_anchor_pairs(
+            indices_tuple = _local_anchor_pairs(
                 labels, all_ref.labels, query.offset, remove_self=reference is None
             )
         local = loss(emb, labels, indices_tuple, all_ref.embeddings, all_ref.labels)
@@ -320,7 +319,7 @@ class DistributedLossWrapper(torch.nn.Module):
         enqueue_mask: Tensor | None,
         sizes: list[int],
     ) -> Tensor:
-        query = gather(emb, labels, sizes, remote_gradients=True)
+        query = _gather(emb, labels, sizes, remote_gradients=True)
         if enqueue_mask is not None:
             enqueue_mask = _gather_tensor(enqueue_mask, sizes)
         if query.labels is None:
@@ -329,11 +328,13 @@ class DistributedLossWrapper(torch.nn.Module):
 
 
 class DistributedMinerWrapper(torch.nn.Module):
-    def __init__(self, miner: BaseMiner, objective: Objective = "global") -> None:
+    def __init__(
+        self, miner: BaseMiner, objective: DistributedObjective = "global"
+    ) -> None:
         super().__init__()
         if not isinstance(miner, BaseMiner):
             raise TypeError("The input miner must extend BaseMiner")
-        check_objective(objective)
+        _check_objective(objective)
         self.miner = miner
         self.objective = objective
 
@@ -345,7 +346,7 @@ class DistributedMinerWrapper(torch.nn.Module):
         ref_emb: Tensor | None = None,
         ref_labels: Tensor | None = None,
     ) -> IndicesTuple:
-        size = world_size()
+        size = _world_size()
         if size <= 1:
             return self.miner(embeddings, labels, indices_tuple, ref_emb, ref_labels)
         flags = [
@@ -365,10 +366,10 @@ class DistributedMinerWrapper(torch.nn.Module):
             error,
             ((embeddings, labels), (ref_emb, ref_labels)),
         )
-        query = gather(embeddings, labels, sizes)
+        query = _gather(embeddings, labels, sizes)
         reference = None
         if ref_emb is not None:
-            reference = gather(ref_emb, ref_labels, ref_sizes)
+            reference = _gather(ref_emb, ref_labels, ref_sizes)
         if self.objective == "global":
             return self.miner(
                 query.embeddings,
@@ -381,7 +382,7 @@ class DistributedMinerWrapper(torch.nn.Module):
             raise ValueError("Mining requires labels")
         candidates = None
         if reference is None:
-            candidates = local_anchor_pairs(
+            candidates = _local_anchor_pairs(
                 labels, all_ref.labels, query.offset, remove_self=True
             )
         return self.miner(

@@ -1,4 +1,5 @@
 import unittest
+from typing import Any
 
 import torch
 from torch.utils.data import DataLoader, TensorDataset
@@ -32,6 +33,42 @@ class TestSamplerContracts(unittest.TestCase):
             MPerClassSampler([], m=2)
         with self.assertRaisesRegex(ValueError, "at least two classes"):
             FixedSetOfTriplets([0, 0], num_triplets=2)
+        for num_triplets in (0, -1):
+            with self.assertRaisesRegex(ValueError, "num_triplets"):
+                FixedSetOfTriplets([0, 0, 1, 1], num_triplets=num_triplets)
+
+    def test_hierarchical_sampler_rejects_invalid_batches(self):
+        labels = hierarchical_labels()
+        cases: list[tuple[dict[str, Any], str]] = [
+            ({"batch_size": 0, "samples_per_class": 3}, "must be positive"),
+            (
+                {
+                    "batch_size": 12,
+                    "samples_per_class": 3,
+                    "super_classes_per_batch": 0,
+                },
+                "must be positive",
+            ),
+            (
+                {
+                    "batch_size": 12,
+                    "samples_per_class": 3,
+                    "batches_per_super_tuple": -1,
+                },
+                "nonnegative",
+            ),
+            (
+                {"batch_size": 13, "samples_per_class": 3},
+                "multiple of 2",
+            ),
+            ({"batch_size": 12, "samples_per_class": 0}, "positive or"),
+            ({"batch_size": 12, "samples_per_class": 4}, "samples_per_class"),
+        ]
+        for arguments, message in cases:
+            with self.subTest(**arguments), self.assertRaisesRegex(ValueError, message):
+                HierarchicalSampler(labels, **arguments)
+        sampler = HierarchicalSampler(labels, batch_size=12, samples_per_class="all")
+        self.assertTrue(all(len(batch) <= 12 for batch in sampler))
 
     def test_explicit_generator_reproduces_every_iteration(self):
         first = make_samplers(torch.Generator().manual_seed(3))

@@ -3,9 +3,13 @@
 Every loss takes embeddings and labels and returns a scalar tensor:
 
 ```python
+import torch
 from pytorch_metric_learning import losses
 
-loss_func = losses.SomeLoss()
+embeddings = torch.randn(32, 128, requires_grad=True)
+labels = torch.randint(0, 8, (32,))
+
+loss_func = losses.TripletMarginLoss()
 loss = loss_func(embeddings, labels)
 ```
 
@@ -14,17 +18,23 @@ With a [miner](miners.md), pass the mined pairs or triplets as the third argumen
 ```python
 from pytorch_metric_learning import miners
 
-miner_func = miners.SomeMiner()
-loss_func = losses.SomeLoss()
+miner_func = miners.MultiSimilarityMiner()
 miner_output = miner_func(embeddings, labels)
 loss = loss_func(embeddings, labels, miner_output)
 ```
 
-Tuple losses accept pair or triplet indices without labels:
+Tuple losses accept pair or triplet indices without labels. With `ref_emb`,
+positives and negatives index the reference set:
 
 ```python
+ref_emb = torch.randn(16, 128)
+ref_labels = torch.randint(0, 8, (16,))
+miner_func = miners.PairMarginMiner()
+pairs = miner_func(embeddings, labels)
+ref_pairs = miner_func(embeddings, labels, ref_emb=ref_emb, ref_labels=ref_labels)
+
 loss = loss_func(embeddings, indices_tuple=pairs)
-loss = loss_func(embeddings, indices_tuple=pairs, ref_emb=ref_emb)
+loss = loss_func(embeddings, indices_tuple=ref_pairs, ref_emb=ref_emb)
 ```
 
 Tuple losses also accept a separate reference set. Anchors come from
@@ -36,7 +46,7 @@ loss = loss_func(embeddings, labels, ref_emb=ref_emb, ref_labels=ref_labels)
 
 ## Forward arguments
 
-```python
+```python {.signature}
 loss_func(embeddings, labels=None, indices_tuple=None, ref_emb=None, ref_labels=None)
 ```
 
@@ -56,15 +66,10 @@ result is a differentiable zero.
 
 ### Reference embeddings
 
-`ref_emb=None` means self-comparison: each embedding is compared with the other
-embeddings in the batch, and an embedding is never its own positive.
-
-Passing `ref_emb` means a separate reference set, even when it is the same
-tensor as `embeddings`. Anchors come from `embeddings`; positives and negatives
-come from `ref_emb`, and every reference row is a candidate, including a row
-that holds the same values as the anchor. With `ref_emb`, `labels` and
-`ref_labels` must both be supplied or both be omitted; supplying only one raises
-`ValueError`.
+`ref_emb=None` compares the embeddings with each other, and a supplied `ref_emb`
+is a separate reference set, even when it is the same tensor. See
+[reference sets](concepts.md#reference-sets) for the indexing rule and the
+`labels`/`ref_labels` combinations that raise `ValueError`.
 
 ### Index tuples
 
@@ -216,24 +221,14 @@ terms = loss_func.loss_terms(embeddings, labels)
 pos_pair_losses = terms["pos_loss"]["losses"]
 ```
 
-Each term is a dictionary with `losses`, a tensor, and `indices`, which says
-what one value of `losses` is and how reducers index it:
-
-| `indices`                                        | One value of `losses` per            | Reducers group values by |
-| ------------------------------------------------ | ------------------------------------ | ------------------------ |
-| `None`                                           | Nothing; `losses` is already reduced | Not reduced further      |
-| A tensor of shape `(n,)`                         | Element, such as an embedding        | That tensor              |
-| `(anchors, positives)` or `(anchors, negatives)` | Pair                                 | `anchors`                |
-| `TripletIndices(anchors, positives, negatives)`  | Triplet                              | `anchors`                |
-
-Each loss page lists its terms under **Reducer input**. A term may also contain
-a `divisor`. Such a term must be reduced by
-[DivisorReducer](reducers.md#divisorreducer), directly or through
-[MultipleReducers](reducers.md#multiplereducers); any other reducer raises
-`ValueError`. A loss with no valid pairs, triplets, or queries returns `{}`
-or terms with empty `losses` from `loss_terms`, and every reducer turns either
-into a differentiable zero; an embedding regularizer still adds its penalty. See [custom losses](extend/losses.md#loss-terms) for the
-full contract.
+Each term follows the [`LossTerm` contract](types.md#lossterm): its `indices`
+say whether one value of `losses` is already reduced or belongs to an element, a
+pair, or a triplet, and a term with a `divisor` requires
+[DivisorReducer](reducers.md#divisorreducer). Each loss page lists its terms
+under **Reducer input**. A loss with no valid pairs, triplets, or queries
+returns `{}` or terms with empty `losses`, which
+[reduce](reducers.md#reduction) to a differentiable zero; an embedding
+regularizer still adds its penalty.
 
 ## Miner weights
 
@@ -343,60 +338,116 @@ ManifoldLoss do not provide `get_logits`.
 
 Each loss has a separate contract page with its signature, equation, default
 distance and reducer, the arguments it supports, and the paper's settings when
-the library default differs.
+the library default differs. Use the guidance below to pick a starting point.
 
 ### Pair and triplet objectives
 
-- [AngularLoss](losses/angular_loss.md)
-- [CircleLoss](losses/circle_loss.md)
-- [ContrastiveLoss](losses/contrastive_loss.md)
-- [DynamicSoftMarginLoss](losses/dynamic_soft_margin_loss.md)
-- [GeneralizedLiftedStructureLoss](losses/generalized_lifted_structure_loss.md)
-- [HistogramLoss](losses/histogram_loss.md)
-- [IntraPairVarianceLoss](losses/intra_pair_variance_loss.md)
-- [LiftedStructureLoss](losses/lifted_structure_loss.md)
-- [MarginLoss](losses/margin_loss.md)
-- [MultiSimilarityLoss](losses/multi_similarity_loss.md)
-- [NCALoss](losses/nca_loss.md)
-- [NPairsLoss](losses/n_pairs_loss.md)
-- [RankedListLoss](losses/ranked_list_loss.md)
-- [SignalToNoiseRatioContrastiveLoss](losses/signal_to_noise_ratio_contrastive_loss.md)
-- [TripletMarginLoss](losses/triplet_margin_loss.md)
-- [TupletMarginLoss](losses/tuplet_margin_loss.md)
+These compare embeddings with each other and need several examples per class in
+each batch, such as batches from [MPerClassSampler](samplers.md#mperclasssampler).
+
+- [AngularLoss](losses/angular_loss.md): triplets constrained by the angle at
+  the negative, which is invariant to the scale of the distances.
+- [CircleLoss](losses/circle_loss.md): pairs weighted by how far each
+  similarity is from its optimum, with one margin and one scale.
+- [ContrastiveLoss](losses/contrastive_loss.md): the simplest pair objective;
+  pull positives within one margin and push negatives beyond another.
+- [DynamicSoftMarginLoss](losses/dynamic_soft_margin_loss.md): local
+  descriptors and patch matching, where the margin adapts to a running
+  histogram of distances.
+- [GeneralizedLiftedStructureLoss](losses/generalized_lifted_structure_loss.md):
+  lifted structure per anchor, with support for a separate reference set.
+- [HistogramLoss](losses/histogram_loss.md): no margin to tune; it penalizes the
+  overlap of the positive and negative similarity distributions.
+- [IntraPairVarianceLoss](losses/intra_pair_variance_loss.md): an auxiliary term
+  that reduces the variance of pair similarities, combined with TupletMarginLoss
+  through [MultipleLosses](losses/multiple_losses.md) as in its paper.
+- [LiftedStructureLoss](losses/lifted_structure_loss.md): each positive pair
+  against every negative of both of its members in the batch.
+- [MarginLoss](losses/margin_loss.md): a boundary between positive and negative
+  distances, optionally learned per class, from the same paper as
+  [DistanceWeightedMiner](miners.md#distanceweightedminer).
+- [MultiSimilarityLoss](losses/multi_similarity_loss.md): a strong pair
+  baseline that weights pairs by their relative similarities; pair it with
+  [MultiSimilarityMiner](miners.md#multisimilarityminer).
+- [NCALoss](losses/nca_loss.md): a softmax over distances to every reference,
+  with no margin.
+- [NPairsLoss](losses/n_pairs_loss.md): batches of one positive pair per class,
+  scored as classification among the batch's positives.
+- [RankedListLoss](losses/ranked_list_loss.md): each anchor's ranked list of
+  references, separating positives from negatives by a margin.
+- [SignalToNoiseRatioContrastiveLoss](losses/signal_to_noise_ratio_contrastive_loss.md):
+  the contrastive objective measured with the signal-to-noise ratio distance.
+- [TripletMarginLoss](losses/triplet_margin_loss.md): the standard triplet
+  baseline; combine it with a miner such as
+  [TripletMarginMiner](miners.md#tripletmarginminer).
+- [TupletMarginLoss](losses/tuplet_margin_loss.md): one positive against all
+  negatives of an anchor with scaled angular margins.
 
 ### Classification and proxy objectives
 
-- [ArcFaceLoss](losses/arcface_loss.md)
-- [CosFaceLoss](losses/cosface_loss.md)
-- [LargeMarginSoftmaxLoss](losses/large_margin_softmax_loss.md)
-- [ManifoldLoss](losses/manifold_loss.md)
-- [NormalizedSoftmaxLoss](losses/normalized_softmax_loss.md)
-- [P2SGradLoss](losses/p2s_grad_loss.md)
-- [ProxyAnchorLoss](losses/proxy_anchor_loss.md)
-- [ProxyNCALoss](losses/proxy_nca_loss.md)
-- [SoftTripleLoss](losses/soft_triple_loss.md)
-- [SphereFaceLoss](losses/sphereface_loss.md)
-- [SubCenterArcFaceLoss](losses/subcenter_arcface_loss.md)
+These learn one vector per class, or per class center, so they need only labels
+and work with ordinary random batches. Train their parameters with the model;
+see [learnable weight arguments](#learnable-weight-arguments).
+
+- [ArcFaceLoss](losses/arcface_loss.md): an additive angular margin, widely
+  used for face recognition and other tasks with many classes.
+- [CosFaceLoss](losses/cosface_loss.md): an additive cosine margin.
+- [LargeMarginSoftmaxLoss](losses/large_margin_softmax_loss.md): a
+  multiplicative angular margin that keeps the weight and embedding norms.
+- [ManifoldLoss](losses/manifold_loss.md): proxies compared through a
+  random-walk similarity over the batch and the proxies.
+- [NormalizedSoftmaxLoss](losses/normalized_softmax_loss.md): a cosine softmax
+  with a temperature and no margin; a strong, simple baseline.
+- [P2SGradLoss](losses/p2s_grad_loss.md): cosine classification without margin
+  or scale hyperparameters.
+- [ProxyAnchorLoss](losses/proxy_anchor_loss.md): proxies as anchors against all
+  embeddings of the batch; fast to converge.
+- [ProxyNCALoss](losses/proxy_nca_loss.md): NCA against one learned proxy per
+  class.
+- [SoftTripleLoss](losses/soft_triple_loss.md): several centers per class, for
+  classes with multiple modes.
+- [SphereFaceLoss](losses/sphereface_loss.md): a multiplicative angular margin
+  on normalized weights.
+- [SubCenterArcFaceLoss](losses/subcenter_arcface_loss.md): ArcFace with
+  sub-centers per class, for noisy labels; it can report outliers.
 
 ### Ranking objectives
 
-- [FastAPLoss](losses/fast_ap_loss.md)
-- [PNPLoss](losses/pnp_loss.md)
-- [SmoothAPLoss](losses/smooth_ap_loss.md)
-- [ThresholdConsistentMarginLoss](losses/threshold_consistent_margin_loss.md)
+These optimize a retrieval ranking measure directly and benefit from large
+batches with several positives per class.
+
+- [FastAPLoss](losses/fast_ap_loss.md): average precision through a histogram
+  of distances.
+- [PNPLoss](losses/pnp_loss.md): average precision that penalizes only negatives
+  ranked before positives, with paper variants.
+- [SmoothAPLoss](losses/smooth_ap_loss.md): average precision with a sigmoid
+  relaxation of the ranking.
+- [ThresholdConsistentMarginLoss](losses/threshold_consistent_margin_loss.md):
+  an auxiliary term that makes one similarity threshold work across classes;
+  add it to another loss with [MultipleLosses](losses/multiple_losses.md).
 
 ### Self-supervised and supervised contrastive objectives
 
-- [InstanceLoss](losses/instance_loss.md)
-- [NTXentLoss](losses/ntxent_loss.md)
-- [SupConLoss](losses/supcon_loss.md)
-- [VICRegLoss](losses/vicreg_loss.md)
+- [InstanceLoss](losses/instance_loss.md): classification of each instance
+  against the batch, as in image-text instance retrieval.
+- [NTXentLoss](losses/ntxent_loss.md): the InfoNCE objective of SimCLR and MoCo;
+  use [SelfSupervisedLoss](losses/self_supervised_loss.md) for unlabeled views.
+- [SupConLoss](losses/supcon_loss.md): the contrastive objective with every
+  same-label sample as a positive.
+- [VICRegLoss](losses/vicreg_loss.md): two views without negatives, regularized
+  by variance and covariance terms.
 
 ### Composition and extension
 
-- [BaseMetricLossFunction](losses/base_metric_loss_function.md)
-- [BaseProxyLoss](losses/base_proxy_loss.md)
-- [CrossBatchMemory](losses/cross_batch_memory.md)
-- [GenericPairLoss](losses/generic_pair_loss.md)
-- [MultipleLosses](losses/multiple_losses.md)
-- [SelfSupervisedLoss](losses/self_supervised_loss.md)
+- [BaseMetricLossFunction](losses/base_metric_loss_function.md): subclass it to
+  write a [custom loss](extend/losses.md).
+- [BaseProxyLoss](losses/base_proxy_loss.md): subclass it for a custom loss with
+  one learnable vector per class.
+- [CrossBatchMemory](losses/cross_batch_memory.md): more references than one
+  batch holds, from a queue of earlier embeddings.
+- [GenericPairLoss](losses/generic_pair_loss.md): subclass it for a custom loss
+  over positive and negative pairs.
+- [MultipleLosses](losses/multiple_losses.md): a weighted sum of losses, each
+  with an optional miner.
+- [SelfSupervisedLoss](losses/self_supervised_loss.md): two augmented views
+  without labels, with any loss that uses labels.

@@ -2,7 +2,7 @@
 
 [Large-Margin Softmax Loss for Convolutional Neural Networks](https://arxiv.org/abs/1612.02295)
 
-```python
+```python {.signature}
 losses.LargeMarginSoftmaxLoss(num_classes, embedding_size, margin=4, scale=1,
     *, weight_regularizer=None, weight_reg_weight=1.0, weight_init_func=None, **options)
 ```

@@ -18,7 +18,7 @@ class MultipleLosses(torch.nn.Module):
         if not isinstance(losses, Mapping) or not losses:
             raise TypeError("losses must be a non-empty mapping from names to modules")
         for loss in losses.values():
-            require_metric_loss(loss, "MultipleLosses")
+            _require_metric_loss(loss, "MultipleLosses")
         self.losses = torch.nn.ModuleDict(losses)
         miners = {} if miners is None else dict(miners)
         if not set(miners) <= set(losses):
@@ -52,7 +52,7 @@ class MultipleLosses(torch.nn.Module):
         return total
 
 
-def require_metric_loss(loss: object, owner: str) -> None:
+def _require_metric_loss(loss: object, owner: str) -> None:
     if not isinstance(loss, (BaseMetricLossFunction, MultipleLosses)):
         raise TypeError(
             f"{owner} requires a BaseMetricLossFunction or MultipleLosses, "

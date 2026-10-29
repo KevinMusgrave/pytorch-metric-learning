@@ -2,7 +2,7 @@
 
 [Deep Metric Learning via Lifted Structured Feature Embedding](https://arxiv.org/abs/1511.06452)
 
-```python
+```python {.signature}
 losses.LiftedStructureLoss(pos_margin=0.0, neg_margin=1.0, **options)
 ```
 

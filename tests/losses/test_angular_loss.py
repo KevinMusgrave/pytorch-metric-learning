@@ -19,7 +19,7 @@ class TestAngularLoss(unittest.TestCase):
                 5, 32, requires_grad=True, device=TEST_DEVICE, dtype=dtype
             )
             embeddings = torch.nn.functional.normalize(embeddings)
-            labels = torch.tensor([0, 0, 1, 1, 2], dtype=torch.long)
+            labels = torch.tensor([0, 0, 1, 1, 2], dtype=torch.long).to(TEST_DEVICE)
 
             triplets = [
                 (0, 1, 2),
@@ -82,7 +82,7 @@ class TestAngularLoss(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(TEST_DEVICE)
-            labels = torch.tensor([0, 1, 2, 3, 4], dtype=torch.long)
+            labels = torch.tensor([0, 1, 2, 3, 4], dtype=torch.long).to(TEST_DEVICE)
             loss = loss_func(embeddings, labels)
             loss.backward()
             self.assertEqual(loss, 0)
@@ -92,7 +92,7 @@ class TestAngularLossNormalization(unittest.TestCase):
     def test_negatives_are_normalized_like_anchors_and_positives(self):
         torch.manual_seed(5)
         embeddings = 3 * torch.randn(6, 4, dtype=torch.float64)
-        labels = torch.tensor([0, 0, 1, 1, 2, 2])
+        labels = torch.tensor([0, 0, 1, 1, 2, 2]).to(TEST_DEVICE)
         alpha = 40
         loss = AngularLoss(alpha=alpha)(embeddings, labels)
         x = F.normalize(embeddings, dim=1)

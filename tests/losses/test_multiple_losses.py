@@ -32,7 +32,7 @@ class TestMultipleLosses(unittest.TestCase):
                     requires_grad=True,
                     dtype=dtype,
                 ).to(TEST_DEVICE)
-                labels = torch.randint(low=0, high=10, size=(180,))
+                labels = torch.randint(low=0, high=10, size=(180,)).to(TEST_DEVICE)
 
                 loss = loss_func(embeddings, labels)
                 loss.backward()
@@ -62,7 +62,7 @@ class TestMultipleLosses(unittest.TestCase):
                     requires_grad=True,
                     dtype=dtype,
                 ).to(TEST_DEVICE)
-                labels = torch.randint(low=0, high=10, size=(180,))
+                labels = torch.randint(low=0, high=10, size=(180,)).to(TEST_DEVICE)
                 indices_tuple = miner(embeddings, labels)
 
                 loss = loss_func(embeddings, labels, indices_tuple)

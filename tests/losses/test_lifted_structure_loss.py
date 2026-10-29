@@ -24,7 +24,7 @@ class TestLiftedStructure(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(TEST_DEVICE)
-            labels = torch.tensor([0, 0, 1, 1, 2], dtype=torch.long)
+            labels = torch.tensor([0, 0, 1, 1, 2], dtype=torch.long).to(TEST_DEVICE)
 
             loss = loss_func(embeddings, labels)
             loss.backward()
@@ -86,7 +86,7 @@ class TestLiftedStructure(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(TEST_DEVICE)
-            labels = torch.tensor([0], dtype=torch.long)
+            labels = torch.tensor([0], dtype=torch.long).to(TEST_DEVICE)
             loss = loss_func(embeddings, labels)
             loss.backward()
             self.assertEqual(loss, 0)
@@ -104,7 +104,7 @@ class TestGeneralizedLiftedStructureLoss(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(TEST_DEVICE)
-            labels = torch.tensor([0, 0, 1, 1, 2], dtype=torch.long)
+            labels = torch.tensor([0, 0, 1, 1, 2], dtype=torch.long).to(TEST_DEVICE)
 
             loss = loss_func(embeddings, labels)
             loss.backward()
@@ -168,7 +168,7 @@ class TestGeneralizedLiftedStructureLoss(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(TEST_DEVICE)
-            labels = torch.tensor([0], dtype=torch.long)
+            labels = torch.tensor([0], dtype=torch.long).to(TEST_DEVICE)
             loss = loss_func(embeddings, labels)
             loss.backward()
             self.assertEqual(loss, 0)
@@ -177,7 +177,7 @@ class TestGeneralizedLiftedStructureLoss(unittest.TestCase):
 class TestLiftedStructureReferenceSet(unittest.TestCase):
     def test_separate_reference_set_is_rejected(self):
         embeddings = torch.randn(4, 3)
-        labels = torch.tensor([0, 0, 1, 1])
+        labels = torch.tensor([0, 0, 1, 1]).to(TEST_DEVICE)
         loss_func = LiftedStructureLoss()
         self.assertTrue(torch.isfinite(loss_func(embeddings, labels)))
         with self.assertRaisesRegex(ValueError, "ref_emb"):

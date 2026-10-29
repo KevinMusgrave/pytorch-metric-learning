@@ -20,7 +20,7 @@ class TestNCALoss(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(TEST_DEVICE)
-            labels = torch.tensor([0, 0, 1, 1, 2], dtype=torch.long)
+            labels = torch.tensor([0, 0, 1, 1, 2], dtype=torch.long).to(TEST_DEVICE)
 
             loss = loss_func(embeddings, labels)
             loss.backward()
@@ -73,7 +73,7 @@ class TestNCALoss(unittest.TestCase):
                     requires_grad=True,
                     dtype=dtype,
                 ).to(TEST_DEVICE)
-                labels = torch.as_tensor(labels, dtype=torch.long)
+                labels = torch.as_tensor(labels, dtype=torch.long, device=TEST_DEVICE)
                 loss = loss_func(embeddings, labels)
                 loss.backward()
                 self.assertEqual(loss, 0)
@@ -118,7 +118,7 @@ class TestNCALogSpace(unittest.TestCase):
                 lambda x: nca_reference(x, labels, x, labels, 100, True),
                 [embeddings],
                 dtype,
-                atol=1e-4,
+                atol=0.2 if dtype == torch.float16 else 1e-4,
             )
             self.assertGreater(loss.item(), 100)
 

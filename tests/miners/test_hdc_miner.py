@@ -23,7 +23,9 @@ class TestHDCMiner(unittest.TestCase):
             distance=LpDistance(normalize_embeddings=True, power=2),
         )
         self.sim_miner = HDCMiner(filter_percentage=0.3, distance=CosineSimilarity())
-        self.labels = torch.tensor([0, 0, 1, 1, 1, 0], dtype=torch.long)
+        self.labels = torch.tensor(
+            [0, 0, 1, 1, 1, 0], dtype=torch.long, device=TEST_DEVICE
+        )
         correct_a1 = torch.tensor([0, 5, 1, 5], dtype=torch.long)
         correct_p = torch.tensor([5, 0, 5, 1], dtype=torch.long)
         self.correct_pos_pairs = torch.stack([correct_a1, correct_p], dim=1).to(
@@ -96,7 +98,7 @@ class TestHDCMiner(unittest.TestCase):
         for dtype in TEST_DTYPES:
             batch_size = 32
             embeddings = torch.randn(batch_size, 64).type(dtype).to(TEST_DEVICE)
-            labels = torch.arange(batch_size)
+            labels = torch.arange(batch_size).to(TEST_DEVICE)
             for miner in [
                 self.dist_miner,
                 self.normalized_dist_miner,

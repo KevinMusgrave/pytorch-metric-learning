@@ -25,7 +25,7 @@ class TestRankedListLoss(unittest.TestCase):
                     requires_grad=True,
                     dtype=dtype,
                 ).to(TEST_DEVICE)
-                labels = torch.randint(0, 5, size=(batch_size,))
+                labels = torch.randint(0, 5, size=(batch_size,)).to(TEST_DEVICE)
 
                 normalized_embeddings = torch.nn.functional.normalize(
                     embeddings, p=2, dim=1
@@ -107,7 +107,7 @@ class TestRankedListLoss(unittest.TestCase):
                     requires_grad=True,
                     dtype=dtype,
                 ).to(TEST_DEVICE)
-                labels = torch.randint(0, 5, size=(batch_size,))
+                labels = torch.randint(0, 5, size=(batch_size,)).to(TEST_DEVICE)
 
                 normalized_embeddings = torch.nn.functional.normalize(
                     embeddings, p=2, dim=1

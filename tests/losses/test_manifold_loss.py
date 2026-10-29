@@ -210,4 +210,6 @@ class TestManifoldLossOptions(unittest.TestCase):
 
     def test_small_unlabeled_batch_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "num_proxies"):
-            ManifoldLoss(4, num_proxies=8)(torch.randn(4, 4, device=TEST_DEVICE))
+            ManifoldLoss(4, num_proxies=8).to(TEST_DEVICE)(
+                torch.randn(4, 4, device=TEST_DEVICE)
+            )

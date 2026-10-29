@@ -49,7 +49,7 @@ class TestTripletMarginMiner(unittest.TestCase):
         for dtype in TEST_DTYPES:
             for distance in [LpDistance(), CosineSimilarity()]:
                 embeddings = helpers.planar_embeddings(range(16), dtype)
-                labels = torch.randint(low=0, high=2, size=(16,))
+                labels = torch.randint(low=0, high=2, size=(16,)).to(TEST_DEVICE)
                 differences = triplet_distance_differences(
                     distance(embeddings), labels, distance.is_inverted
                 )
@@ -76,7 +76,7 @@ class TestTripletMarginMiner(unittest.TestCase):
         for dtype in TEST_DTYPES:
             batch_size = 32
             embeddings = torch.randn(batch_size, 64).type(dtype).to(TEST_DEVICE)
-            labels = torch.arange(batch_size)
+            labels = torch.arange(batch_size).to(TEST_DEVICE)
             a, p, n = miner(embeddings, labels)
             self.assertTrue(len(a) == 0)
             self.assertTrue(len(p) == 0)

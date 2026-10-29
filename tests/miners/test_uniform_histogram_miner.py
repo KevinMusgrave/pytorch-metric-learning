@@ -70,6 +70,6 @@ class TestUniformHistogramMiner(unittest.TestCase):
         batch_size = 32
         for dtype in TEST_DTYPES:
             embeddings = torch.randn(batch_size, 64).type(dtype).to(TEST_DEVICE)
-            labels = torch.arange(batch_size)
+            labels = torch.arange(batch_size).to(TEST_DEVICE)
             a1, p, _, _ = miner(embeddings, labels)
             self.assertTrue(len(a1) == len(p) == 0)

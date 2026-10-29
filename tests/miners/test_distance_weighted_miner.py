@@ -36,9 +36,11 @@ class TestDistanceWeightedMiner(unittest.TestCase):
         for dtype in TEST_DTYPES:
             embeddings = normalized_planar_embeddings(256, dtype)
             ref_embeddings = embeddings.clone() if with_ref_labels else None
-            labels = torch.randint(low=0, high=2, size=(256,))
+            labels = torch.randint(low=0, high=2, size=(256,)).to(TEST_DEVICE)
             ref_labels = (
-                torch.randint(low=0, high=2, size=(256,)) if with_ref_labels else None
+                torch.randint(low=0, high=2, size=(256,)).to(TEST_DEVICE)
+                if with_ref_labels
+                else None
             )
             pair_embeddings = embeddings if ref_embeddings is None else ref_embeddings
 
@@ -77,7 +79,7 @@ class TestDistanceWeightedMiner(unittest.TestCase):
         batch_size = 32
         for dtype in TEST_DTYPES:
             embeddings = torch.randn(batch_size, 64).type(dtype).to(TEST_DEVICE)
-            labels = torch.arange(batch_size)
+            labels = torch.arange(batch_size).to(TEST_DEVICE)
             a, p, n = miner(embeddings, labels)
             self.assertTrue(len(a) == 0)
             self.assertTrue(len(p) == 0)

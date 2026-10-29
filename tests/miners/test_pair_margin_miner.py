@@ -41,7 +41,7 @@ class TestPairMarginMiner(unittest.TestCase):
         for dtype in TEST_DTYPES:
             for distance in [LpDistance(), CosineSimilarity()]:
                 embeddings = helpers.planar_embeddings(range(16), dtype)
-                labels = torch.randint(low=0, high=2, size=(16,))
+                labels = torch.randint(low=0, high=2, size=(16,)).to(TEST_DEVICE)
                 mat = distance(embeddings)
                 pos_pairs, neg_pairs = positive_and_negative_pairs(labels)
                 for pos_margin_int in range(-1, 4):
@@ -66,7 +66,7 @@ class TestPairMarginMiner(unittest.TestCase):
         batch_size = 32
         for dtype in TEST_DTYPES:
             embeddings = torch.randn(batch_size, 64).type(dtype).to(TEST_DEVICE)
-            labels = torch.arange(batch_size)
+            labels = torch.arange(batch_size).to(TEST_DEVICE)
             a, p, _, _ = miner(embeddings, labels)
             self.assertTrue(len(a) == 0)
             self.assertTrue(len(p) == 0)

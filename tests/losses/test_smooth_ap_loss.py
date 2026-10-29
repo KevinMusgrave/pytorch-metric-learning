@@ -80,7 +80,7 @@ class SmoothAP(torch.nn.Module):
 
 def contiguous_equal_size_class_labels(num_classes, batch_size):
     group = batch_size // num_classes
-    return torch.arange(num_classes).repeat_interleave(group)
+    return torch.arange(num_classes, device=TEST_DEVICE).repeat_interleave(group)
 
 
 class TestSmoothAPLoss(unittest.TestCase):

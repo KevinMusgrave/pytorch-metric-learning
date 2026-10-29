@@ -21,7 +21,7 @@ class TestTripletMarginLoss(unittest.TestCase):
                 dtype=dtype,
             ).to(TEST_DEVICE)
             embeddings = torch.nn.functional.normalize(embeddings)
-            labels = torch.tensor([0, 0, 1, 1, 2], dtype=torch.long)
+            labels = torch.tensor([0, 0, 1, 1, 2], dtype=torch.long).to(TEST_DEVICE)
 
             triplets = [
                 (0, 1, 2),
@@ -121,7 +121,7 @@ class TestTripletMarginLoss(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(TEST_DEVICE)
-            labels = torch.tensor([0, 1, 2, 3, 4], dtype=torch.long)
+            labels = torch.tensor([0, 1, 2, 3, 4], dtype=torch.long).to(TEST_DEVICE)
             lossA = loss_funcA(embeddings, labels)
             lossB = loss_funcB(embeddings, labels)
             self.assertEqual(lossA, 0)
@@ -140,7 +140,7 @@ class TestTripletMarginLoss(unittest.TestCase):
                     requires_grad=True,
                     dtype=dtype,
                 ).to(TEST_DEVICE)
-                labels = torch.tensor([0, 0, 1, 1, 2], dtype=torch.long)
+                labels = torch.tensor([0, 0, 1, 1, 2], dtype=torch.long).to(TEST_DEVICE)
 
                 loss = loss_func(embeddings, labels)
                 loss.backward()

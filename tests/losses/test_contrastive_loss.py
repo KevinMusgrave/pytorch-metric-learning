@@ -45,7 +45,7 @@ class TestContrastiveLoss(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(TEST_DEVICE)
-            labels = torch.tensor([0, 0, 1, 1, 2], dtype=torch.long)
+            labels = torch.tensor([0, 0, 1, 1, 2], dtype=torch.long).to(TEST_DEVICE)
 
             lossA = loss_funcA(embeddings, labels)
             lossB = loss_funcB(embeddings, labels)
@@ -113,7 +113,7 @@ class TestContrastiveLoss(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(TEST_DEVICE)
-            labels = torch.tensor([0], dtype=torch.long)
+            labels = torch.tensor([0], dtype=torch.long).to(TEST_DEVICE)
             lossA = loss_funcA(embeddings, labels)
             lossB = loss_funcB(embeddings, labels)
             self.assertEqual(lossA, 0)
@@ -130,6 +130,6 @@ class TestContrastiveLoss(unittest.TestCase):
                     requires_grad=True,
                     dtype=dtype,
                 ).to(TEST_DEVICE)
-                labels = torch.tensor([0], dtype=torch.long)
+                labels = torch.tensor([0], dtype=torch.long).to(TEST_DEVICE)
                 loss = loss_func(embeddings, labels)
                 loss.backward()

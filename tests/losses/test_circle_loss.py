@@ -22,7 +22,7 @@ class TestCircleLoss(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(TEST_DEVICE)
-            labels = torch.tensor([0, 0, 1, 1, 2], dtype=torch.long)
+            labels = torch.tensor([0, 0, 1, 1, 2], dtype=torch.long).to(TEST_DEVICE)
 
             loss = loss_func(embeddings, labels)
             loss.backward()
@@ -104,7 +104,7 @@ class TestCircleLoss(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(TEST_DEVICE)
-            labels = torch.tensor([0], dtype=torch.long)
+            labels = torch.tensor([0], dtype=torch.long).to(TEST_DEVICE)
             loss = loss_func(embeddings, labels)
             loss.backward()
             self.assertEqual(loss, 0)
@@ -119,7 +119,7 @@ class TestCircleLoss(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(TEST_DEVICE)
-            labels = torch.randint(low=0, high=10, size=(180,))
+            labels = torch.randint(low=0, high=10, size=(180,)).to(TEST_DEVICE)
             loss = loss_func(embeddings, labels)
             loss.backward()
             self.assertTrue(not torch.isnan(loss) and not torch.isinf(loss))

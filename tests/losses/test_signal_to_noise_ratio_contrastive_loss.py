@@ -26,7 +26,7 @@ class TestSNRContrastiveLoss(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(TEST_DEVICE)
-            labels = torch.tensor([0, 0, 1, 1, 2], dtype=torch.long)
+            labels = torch.tensor([0, 0, 1, 1, 2], dtype=torch.long).to(TEST_DEVICE)
 
             loss = loss_func(embeddings, labels)
             loss.backward()
@@ -101,7 +101,7 @@ class TestSNRContrastiveLoss(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(TEST_DEVICE)
-            labels = torch.tensor([0], dtype=torch.long)
+            labels = torch.tensor([0], dtype=torch.long).to(TEST_DEVICE)
             reg_loss = (
                 torch.mean(torch.abs(torch.sum(embeddings, dim=1)))
                 * embedding_reg_weight

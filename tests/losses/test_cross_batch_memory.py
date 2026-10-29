@@ -153,7 +153,9 @@ class TestCrossBatchMemory(unittest.TestCase):
                     ).to(TEST_DEVICE, dtype)
                     for _ in range(10):
                         if test_enqueue_mask:
-                            enqueue_mask = torch.zeros(memory_size * 2).bool()
+                            enqueue_mask = torch.zeros(
+                                memory_size * 2, dtype=torch.bool, device=TEST_DEVICE
+                            )
                             enqueue_mask[memory_size:] = True
                             batch_size = memory_size * 2
                         else:
@@ -261,7 +263,7 @@ class TestCrossBatchMemory(unittest.TestCase):
                     loss = self.loss(embeddings, labels)
                     loss_with_miner = self.loss_with_miner(embeddings, labels)
                     all_embeddings = torch.cat([all_embeddings, embeddings])
-                    all_labels = torch.cat([all_labels, labels])
+                    all_labels = torch.cat([all_labels, labels]).to(TEST_DEVICE)
 
                     indices_tuple = indexing.get_all_pairs_indices(labels, all_labels)
                     a1, p, a2, n = indexing.remove_self_comparisons(
@@ -316,7 +318,9 @@ class TestCrossBatchMemory(unittest.TestCase):
                     q = self.loss.queue_idx
                     B = enqueue_batch_size if test_enqueue_mask else batch_size
                     if test_enqueue_mask:
-                        enqueue_mask = torch.zeros(batch_size).bool()
+                        enqueue_mask = torch.zeros(
+                            batch_size, dtype=torch.bool, device=TEST_DEVICE
+                        )
                         enqueue_mask[:-2:2] = True
                     else:
                         enqueue_mask = None
@@ -369,7 +373,7 @@ class TestCrossBatchMemory(unittest.TestCase):
                                 self.loss.label_memory[:end_idx],
                             ],
                             dim=0,
-                        )
+                        ).to(TEST_DEVICE)
                         if test_enqueue_mask:
                             self.assertTrue(
                                 torch.equal(
@@ -516,7 +520,7 @@ class TestCrossBatchMemory(unittest.TestCase):
                     loss = self.loss(embeddings, labels)
 
                     all_embeddings = torch.cat([all_embeddings, embeddings])
-                    all_labels = torch.cat([all_labels, labels])
+                    all_labels = torch.cat([all_labels, labels]).to(TEST_DEVICE)
 
                     indices_tuple = indexing.get_all_pairs_indices(labels, all_labels)
                     a1, p, a2, n = indexing.remove_self_comparisons(

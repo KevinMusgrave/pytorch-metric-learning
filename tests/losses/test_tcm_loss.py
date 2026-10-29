@@ -38,7 +38,7 @@ class TestThresholdConsistentMarginLoss(unittest.TestCase):
                 dtype=dtype,
                 requires_grad=True,
             )
-            labels = torch.tensor([0, 0, 1, 1])
+            labels = torch.tensor([0, 0, 1, 1]).to(TEST_DEVICE)
 
             contrastive_loss = 0.4866
             margin_plus, margin_minus = 0.9, 0.5
@@ -81,8 +81,8 @@ class TestThresholdConsistentMarginReference(unittest.TestCase):
         torch.manual_seed(7)
         query = torch.randn(4, 3, dtype=torch.float64)
         reference = torch.randn(6, 3, dtype=torch.float64)
-        labels = torch.tensor([0, 1, 0, 1])
-        ref_labels = torch.tensor([0, 0, 1, 1, 2, 1])
+        labels = torch.tensor([0, 1, 0, 1]).to(TEST_DEVICE)
+        ref_labels = torch.tensor([0, 0, 1, 1, 2, 1]).to(TEST_DEVICE)
         loss = ThresholdConsistentMarginLoss(margin_plus=0.5, margin_minus=-0.5)(
             query, labels, ref_emb=reference, ref_labels=ref_labels
         )

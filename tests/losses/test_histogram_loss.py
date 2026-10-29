@@ -113,7 +113,7 @@ class TestHistogramLoss(unittest.TestCase):
                     requires_grad=True,
                     dtype=dtype,
                 ).to(TEST_DEVICE)
-                labels = torch.randint(0, 5, size=(batch_size,))
+                labels = torch.randint(0, 5, size=(batch_size,)).to(TEST_DEVICE)
 
                 loss = loss_func(embeddings, labels)
                 correct_loss = original_loss_func(
@@ -134,7 +134,7 @@ class TestHistogramLoss(unittest.TestCase):
                 requires_grad=True,
                 dtype=dtype,
             ).to(TEST_DEVICE)
-            labels = torch.tensor([0, 1, 2, 3, 4], dtype=torch.long)
+            labels = torch.tensor([0, 1, 2, 3, 4], dtype=torch.long).to(TEST_DEVICE)
             loss = loss_func(embeddings, labels)
             self.assertEqual(loss, 0)
             loss.backward()
@@ -159,5 +159,7 @@ class TestHistogramEndpoints(unittest.TestCase):
         loss = HistogramLoss(num_bins=4)(embeddings, labels)
         loss.backward()
         self.assertEqual(loss.item(), 0)
-        loss = HistogramLoss(num_bins=4)(embeddings, torch.tensor([0, 1, 0, 1]))
+        loss = HistogramLoss(num_bins=4)(
+            embeddings, torch.tensor([0, 1, 0, 1], device=TEST_DEVICE)
+        )
         self.assertEqual(loss.item(), 1)

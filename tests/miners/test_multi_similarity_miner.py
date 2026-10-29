@@ -85,7 +85,7 @@ class TestMultiSimilarityMiner(unittest.TestCase):
             for distance in [CosineSimilarity(), LpDistance()]:
                 miner = MultiSimilarityMiner(epsilon, distance=distance)
                 embeddings = helpers.planar_embeddings(range(64), dtype)
-                labels = torch.randint(low=0, high=10, size=(64,))
+                labels = torch.randint(low=0, high=10, size=(64,)).to(TEST_DEVICE)
                 mat = distance(embeddings)
                 pairs = positive_and_negative_pairs(labels)
                 correct_pos_pairs = expected_positive_pairs(
@@ -104,7 +104,7 @@ class TestMultiSimilarityMiner(unittest.TestCase):
         batch_size = 32
         for dtype in TEST_DTYPES:
             embeddings = torch.randn(batch_size, 64).type(dtype).to(TEST_DEVICE)
-            labels = torch.arange(batch_size)
+            labels = torch.arange(batch_size).to(TEST_DEVICE)
             a1, p, _, _ = miner(embeddings, labels)
             self.assertTrue(len(a1) == 0)
             self.assertTrue(len(p) == 0)

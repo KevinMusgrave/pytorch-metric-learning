@@ -22,7 +22,9 @@ class TestBatchHardMiner(unittest.TestCase):
             distance=LpDistance(normalize_embeddings=True, power=2)
         )
         self.sim_miner = BatchHardMiner(distance=CosineSimilarity())
-        self.labels = torch.tensor([0, 0, 1, 1, 0, 2, 1, 1, 1], dtype=torch.long)
+        self.labels = torch.tensor(
+            [0, 0, 1, 1, 0, 2, 1, 1, 1], dtype=torch.long, device=TEST_DEVICE
+        )
         self.correct_a = torch.tensor([0, 1, 2, 3, 4, 6, 7, 8], dtype=torch.long).to(
             TEST_DEVICE
         )
@@ -80,7 +82,7 @@ class TestBatchHardMiner(unittest.TestCase):
         batch_size = 32
         for dtype in TEST_DTYPES:
             embeddings = torch.randn(batch_size, 64).type(dtype).to(TEST_DEVICE)
-            labels = torch.arange(batch_size)
+            labels = torch.arange(batch_size).to(TEST_DEVICE)
             for miner in [
                 self.dist_miner,
                 self.normalized_dist_miner,

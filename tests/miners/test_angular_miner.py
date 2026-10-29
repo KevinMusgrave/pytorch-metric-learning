@@ -35,7 +35,7 @@ class TestAngularMiner(unittest.TestCase):
     def test_angular_miner(self):
         for dtype in TEST_DTYPES:
             embeddings = helpers.planar_embeddings(range(16), dtype)
-            labels = torch.randint(low=0, high=2, size=(16,))
+            labels = torch.randint(low=0, high=2, size=(16,)).to(TEST_DEVICE)
             angles = triplet_angles(embeddings, labels)
 
             for angle_in_degrees in range(0, 70, 10):
@@ -56,7 +56,7 @@ class TestAngularMiner(unittest.TestCase):
             miner = AngularMiner(35)
             batch_size = 32
             embeddings = torch.randn(batch_size, 64).to(TEST_DEVICE).type(dtype)
-            labels = torch.arange(batch_size)
+            labels = torch.arange(batch_size).to(TEST_DEVICE)
             a, p, n = miner(embeddings, labels)
             self.assertTrue(len(a) == 0)
             self.assertTrue(len(p) == 0)

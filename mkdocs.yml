@@ -68,7 +68,9 @@ nav:
     - Recipes:
       - Training: recipes/training.md
       - Retrieval evaluation: recipes/evaluation.md
-    - Version 3.0.0: release-notes-3.md
+    - Version 3.0.0:
+      - Release notes: release-notes-3.md
+      - Migrating from version 2: migration-2-to-3.md
     - Performance: performance.md
 theme:
   name: 'material'

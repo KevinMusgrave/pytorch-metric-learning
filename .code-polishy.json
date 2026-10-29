@@ -15,7 +15,10 @@
     ]
   },
   "quality": {
-    "allowComments": false
+    "allowComments": false,
+    "lineBudget": {
+      "production": 7000
+    }
   },
   "portability": {},
   "modules": [
@@ -237,7 +240,8 @@
           "tests/docs/test_documented_signatures.py",
           "tests/docs/test_documentation_paths.py",
           "tests/utils/test_validation.py",
-          "tests/distances/test_lp_distance.py"
+          "tests/distances/test_lp_distance.py",
+          "tests/docs/test_migration_examples.py"
         ],
         "module": "numerics",
         "focusedSuite": "numerics-focused"
@@ -425,7 +429,8 @@
           "tests/docs/test_documented_signatures.py",
           "tests/docs/test_documentation_paths.py",
           "tests/utils/test_validation.py",
-          "tests/distances/test_lp_distance.py"
+          "tests/distances/test_lp_distance.py",
+          "tests/docs/test_migration_examples.py"
         ],
         "timeoutSeconds": 120
       },

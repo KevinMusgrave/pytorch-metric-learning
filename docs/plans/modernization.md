@@ -1,10 +1,10 @@
 # PyTorch Metric Learning modernization plan
 
-Status: all five phases are implemented. The CPU follow-up passes 274 tests
-and 587 subtests under bare pytest on macOS. The preceding pytest candidate
-passed 257 CUDA/NCCL tests on two A40s, all seven affected boundary suites,
-the strict documentation build, and an isolated wheel check at the supported
-runtime minimums. CUDA evidence remains tied to that preceding candidate.
+Status: all five phases are implemented. The verified library candidate passes
+274 tests on CPU and CUDA/NCCL, including the bfloat16 distance regression.
+Bare pytest passes on macOS; the two-A40 run passes with default NCCL transport
+settings. All seven affected boundary suites pass. The strict documentation
+build and isolated wheel check at the supported runtime minimums have passed.
 Code Polishy 0.31.6 supports the published Python compatibility ranges with
 exact development pins. Policy and online dependency checks pass. The CI-owned
 final merge gate, publisher/Pages setup, and visual math verification remain open.
@@ -312,7 +312,8 @@ mathematical decisions are documented in `docs/design/`; public changes are
 listed in the version 3 release notes. Git history records the implementation
 sequence and earlier verification measurements.
 
-The CPU follow-up adds bfloat16 support to `LpDistance` outside autocast and
+The verified library candidate is
+`be87eecda60e93e6cb3c414663d7041dbbe4c68b`. It adds bfloat16 support to `LpDistance` outside autocast and
 initializes macOS OpenMP defaults before Torch imports during pytest startup.
 Sixteen low-precision cases verify distance values and both input gradients;
 a fresh-process regression verifies Faiss search with the OpenMP variables unset.
@@ -320,21 +321,23 @@ Bare pytest passes 274 tests and 587 subtests in 189.47 s without the CPU
 environment profile, failures, or skips. The log and JUnit results are retained
 under `.code-polishy-artifacts/reviews/cpu-followup/`.
 
-The preceding verified source candidate is
-`08b8ed6a4303c611943d0ab0b284c9f0b9e14620`. Pytest 9.1.1 runs the existing
-unittest cases and new runner-contract tests: 257 CPU tests pass in 186.92 s,
-and 257 CUDA/NCCL tests pass in 286.22 s, with no failures or skips. The CUDA
-run used Python 3.12.13, PyTorch 2.14.0+cu130, CUDA 13.0, NCCL 2.30.7,
-driver 595.91.07, and two A40s in EU-SE-1 with `NCCL_P2P_DISABLE=1`.
+The same candidate passes 274 CUDA/NCCL tests and 625 subtests in 278.36 s,
+with no failures or skips. The run used Python 3.12.13, PyTorch 2.14.0+cu130,
+CUDA 13.0, NCCL 2.30.7, driver 595.91.07, and two A40s in EU-SE-1.
+`NCCL_P2P_DISABLE` was unset: a separate bare PyTorch two-rank all-reduce probe
+passed first with the default transport settings. The full suite uses float16,
+float32, and float64; the sixteen distance cases also exercise bfloat16.
 The temporary pod was terminated after collecting results; the original pod
 and its workspace remain stopped and retained.
+CUDA logs, JUnit results, installation evidence, and termination confirmation
+are retained under `.code-polishy-artifacts/reviews/cuda-be87eec/`.
 
 Code Polishy 0.31.6 accepts the published compatibility ranges with exact
 development pins. Its branch checkpoint passes with zero policy findings and
 seven affected boundary suites. The online dependency check passes with the
-dated assessments in `docs/security/dependency-assessments.md`. The strict
-website build and isolated wheel check at supported runtime minimums pass.
-Evidence is retained under `.code-polishy-artifacts/reviews/pytest-08b8ed6/`.
+dated assessments in `docs/security/dependency-assessments.md`. The preceding
+candidate's strict website build and isolated wheel check at supported runtime
+minimums are retained under `.code-polishy-artifacts/reviews/pytest-08b8ed6/`.
 Earlier acceptance evidence, including 56 mixed-precision cases at `5f35f13`,
 remains under `.code-polishy-artifacts/reviews/release-5f35f13/`.
 

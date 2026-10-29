@@ -93,13 +93,16 @@ fails when fewer than two GPUs are available. Record the device/driver versions,
 counts, failures, and skips. GPU provisioning and Linux/CUDA acceptance remain
 separate from local Mac verification.
 
-On the two-A40 host with driver 595.91.07, direct GPU-to-GPU transfers hung
+On one two-A40 host with driver 595.91.07, direct GPU-to-GPU transfers hung
 even in a bare PyTorch/NCCL probe without library code. For this host, set
 `export NCCL_P2P_DISABLE=1` before the CUDA tests and distributed benchmarks.
 This disables NCCL's direct peer-to-peer transport while retaining two-device
 NCCL execution. Record the setting with results: they do not establish direct
 peer-to-peer transport correctness or its performance. Do not apply this
 workaround to other hosts unless a separate transport probe shows the same issue.
+A later two-A40 host with the same driver passed both a bare two-rank NCCL
+probe and the complete CUDA suite with `NCCL_P2P_DISABLE` unset. The need for
+this setting depends on the host, not just the GPU model and driver version.
 
 ### Rented GPU hosts
 

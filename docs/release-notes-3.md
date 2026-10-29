@@ -3,6 +3,8 @@
 Version 3 focuses the library on composable metric-learning components and
 explicit PyTorch training and evaluation. It removes training orchestration,
 simplifies extension contracts, and fixes numerical and distributed behavior.
+Use the [v2-to-v3 migration lookup](migration-2-to-3.md) to find replacements
+for removed imports and changed calls.
 
 ## Supported environment
 

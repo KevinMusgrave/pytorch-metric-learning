@@ -18,7 +18,8 @@ NMI/AMI clustering metrics, `pytorch-metric-learning[clustering]`.
 
 Version 3 requires Python 3.12 or newer, PyTorch 2.14.0 or newer, and NumPy
 2.5.3 or newer. Development and CI use exact versions from the frozen lockfile.
-See the [release notes](https://kevinmusgrave.github.io/pytorch-metric-learning/release-notes-3/) for breaking changes and
+See the [release notes](https://kevinmusgrave.github.io/pytorch-metric-learning/release-notes-3/) for breaking changes,
+the [v2-to-v3 migration guide](https://kevinmusgrave.github.io/pytorch-metric-learning/migration-2-to-3/) for replacement imports and calls, and
 [development setup](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/DEVELOPMENT.md) to run this checkout.
 
 ## A minimal training step

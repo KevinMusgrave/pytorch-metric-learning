@@ -53,6 +53,12 @@ queue. Distance orientation is a class property: similarities declare
 `is_inverted = True`, while distance classes inherit `False`. The normalization
 norm `p` still applies to similarities that normalize embeddings.
 
+The version 2-to-3 migration guide indexes removed exports, moved utilities,
+and changed calls beside their replacements. It links to the canonical API
+contracts and recipes instead of introducing compatibility code. Its standalone
+Python examples include observable value, shape, or gradient checks and run in
+the numerical boundary suite; signature declarations remain covered separately.
+
 Learnable loss parameters follow ordinary PyTorch module placement. A forward
 pass never moves, casts, or reallocates parameters to match the embeddings.
 Doing so changed `state_dict` dtypes and broke optimizer state after a single

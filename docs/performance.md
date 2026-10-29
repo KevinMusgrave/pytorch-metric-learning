@@ -11,12 +11,16 @@ uv run --frozen --no-sync python -m benchmarks.run \
   --output /tmp/pml-cpu.json
 ```
 
-The default run measures contrastive loss, all-triplet margin loss, pair-margin
-mining, and normalized-softmax proxy loss. Inputs are standard-normal tensors
-with balanced contiguous labels, four examples per class. Distances normalize
-embeddings inside the measured call. The contrastive negative margin is 1.4,
-triplet margin is 0.2, miner margins are 0.2 and 1.4, and proxy temperature is
-0.1. The proxy benchmark includes gradients for its learnable weights.
+The default run measures contrastive loss, all-triplet margin loss, NT-Xent
+loss, pair-margin mining, pair-margin mining followed by triplet margin loss
+(`mined-triplet`, which converts mined pairs to triplets), and
+normalized-softmax proxy loss. Inputs are standard-normal tensors with
+balanced contiguous labels, four examples per class unless
+`--samples-per-class` says otherwise. Distances normalize embeddings inside the
+measured call. The contrastive negative margin is 1.4, triplet margin is 0.2,
+NT-Xent temperature is 0.07, miner margins are 0.2 and 1.4, and proxy
+temperature is 0.1. The proxy benchmark includes gradients for its learnable
+weights.
 
 Change `--batch-size`, `--dimensions`, `--samples-per-class`, `--dtype`, and
 `--threads` to describe the intended workload. Batch size must contain at least
@@ -79,209 +83,83 @@ memory or total device usage. CPU peak tensor memory is reported as null.
 The runner verifies finite losses/gradients or valid miner indices before
 sampling; mathematical correctness is established by the reference tests.
 
-## Initial CPU reference
+## Version 3.0.0 reference
 
-Measured on 2026-10-27 UTC at clean revision
-`f8186f88d475ca90905a45a7fca191ffcfb2be16`: Apple M1 Pro, macOS 26.7.1,
-Python 3.12.13, PyTorch 2.14.0, float32, one thread per rank, 128 dimensions,
-four examples per class, seed 17, ten warmup steps after the first call, and
-fifty measured steps. Values below are median milliseconds. This is a shared
-development laptop, not an isolated performance lab; use the raw sample spread
-and repeat on the target hardware before setting a performance budget.
+Measured on 2026-10-29 UTC with Python 3.12.13, PyTorch 2.14.0, float32, 128
+dimensions, seed 17, and one CPU thread per rank. CPU rows ran on an Apple M1
+Pro at revision `e25aba5` with ten warmup and fifty measured steps. CUDA rows
+ran on a rented host with two NVIDIA A40s (driver 595.91.07, CUDA 13.0, NCCL
+2.30.7) at revision `01bf1da`, whose library source is identical to `e25aba5`.
+Values are median milliseconds; peak is the additional allocated CUDA memory in
+MiB. These are a shared laptop and a rented host, not isolated performance labs:
+use the raw sample spread and repeat on the target hardware before setting a
+budget.
 
-| Case                     | Batch 128 forward | Batch 128 backward | Batch 512 forward | Batch 512 backward |
-| ------------------------ | ----------------: | -----------------: | ----------------: | -----------------: |
-| Contrastive              |             0.353 |              0.293 |             3.846 |              2.667 |
-| All-triplet margin       |             6.076 |              0.682 |           341.808 |              8.841 |
-| Pair-margin miner        |             0.367 |                  — |             4.784 |                  — |
-| Normalized-softmax proxy |             0.092 |              0.134 |             0.252 |              0.343 |
+| Case          | M1 Pro b128 fwd / bwd | M1 Pro b512 fwd / bwd | A40 b128 fwd / bwd | A40 b512 fwd / bwd | A40 b512 peak |
+| ------------- | --------------------: | --------------------: | -----------------: | -----------------: | ------------: |
+| Contrastive   |         0.291 / 0.196 |         2.888 / 1.473 |      2.026 / 2.901 |      1.994 / 2.439 |          19.5 |
+| All-triplet   |         1.197 / 0.446 |        19.489 / 5.879 |      3.810 / 3.241 |      3.841 / 3.312 |          63.2 |
+| NT-Xent       |         0.463 / 0.240 |         6.131 / 1.984 |      2.974 / 3.867 |      2.973 / 3.888 |          18.5 |
+| Mined triplet |         0.909 / 0.265 |        12.285 / 2.808 |      5.606 / 3.249 |      4.562 / 3.261 |          27.6 |
+| Pair miner    |             0.361 / — |             4.635 / — |          0.857 / — |          0.832 / — |           7.7 |
+| Proxy         |         0.073 / 0.136 |         0.184 / 0.342 |      1.538 / 3.152 |      1.517 / 3.142 |           1.6 |
 
-Raw results: [batch 128](benchmarks/cpu-m1-pro-b128.json) and
-[batch 512](benchmarks/cpu-m1-pro-b512.json). The large triplet forward cost was
-a concrete optimization target: the baseline enumeration constructed a cubic
-candidate mask even though this balanced label distribution produces only
-quadratically many valid triplets.
+Raw results: M1 Pro [batch 128](benchmarks/cpu-m1-pro-v3-b128.json) and
+[batch 512](benchmarks/cpu-m1-pro-v3-b512.json); A40
+[batch 128](benchmarks/cuda-a40-v3-b128.json) and
+[batch 512](benchmarks/cuda-a40-v3-b512.json). The A40 timings at these sizes
+are dominated by kernel launches, so they barely change with batch size.
 
-The [two-rank Gloo measurement](benchmarks/gloo-m1-pro-b128.json) uses 64 rows
-per rank, 128 globally. The slower median rank took 1.491 ms forward and
-1.129 ms backward. This includes the encoder and communication, unlike the
-single-process contrastive row above.
+The full-graph compiled proxy at batch 128 took 0.064 ms forward and 0.067 ms
+backward on the M1 Pro and 0.331 ms and 0.576 ms on the A40, after first steps
+of 3.3 s and 9.9 s
+([M1 Pro](benchmarks/compiled-proxy-m1-pro-v3-b128.json),
+[A40](benchmarks/compiled-proxy-a40-v3-b128.json)). This workload does not
+justify compiling by default.
 
-The [full-graph compiled proxy measurement](benchmarks/compiled-proxy-m1-pro-b128.json)
-succeeded at batch 128: 0.127 ms forward and 0.130 ms backward, versus 0.092 ms
-and 0.134 ms eager. Its first forward/backward took 9.467 seconds; compiler
-registration and import costs are additional and were not timed. Compiler-cache
-state was not isolated. This workload does not justify enabling compilation by
-default. CUDA timing and peak tensor memory measurements appear below.
+The distributed case, a linear encoder with the global-objective contrastive
+loss and DDP, took 1.315 ms forward and 0.980 ms backward on the slower of two
+Gloo ranks on the M1 Pro with 64 rows per rank
+([raw](benchmarks/gloo-m1-pro-v3-b64.json)). With two A40s and NCCL
+(`NCCL_P2P_DISABLE=1`, required on that host), the slower rank took 5.360 ms and
+4.849 ms with 64 rows per rank and 5.104 ms and 4.623 ms with 256
+([64 rows](benchmarks/nccl-a40-v3-b64.json),
+[256 rows](benchmarks/nccl-a40-v3-b256.json)). Disabling peer-to-peer
+transport means these numbers do not measure direct GPU-to-GPU transfers.
 
-## Valid-triplet expansion
+## Comparison with version 2.9.0
 
-The clean-revision follow-up at `24cef70da287973ed41e09ed26616e2b03b083d9`
-uses the same hardware, float32 inputs, seed, shapes, one CPU thread, ten warmup
-steps, and fifty measured steps. Only actual positive pairs are expanded by
-their anchors' negative counts; ordered indices, values, and gradients remain
-covered by the independent numerical references.
+The same runner measured the v2.9.0 release on the same machines. Losses agree
+to float32 rounding for every case except the proxy loss, whose weights are
+initialized with a different layout. Composition paths changed the most:
+version 2 compared every positive pair with every negative pair when it turned
+mined pairs into triplets and when it computed NT-Xent, while version 3 groups
+negatives by anchor. The table uses 512 samples with sixteen per class, where
+those Cartesian intermediates are largest.
 
-| Batch | Baseline forward | Expanded forward | Baseline backward | Expanded backward |
-| ----- | ---------------: | ---------------: | ----------------: | ----------------: |
-| 128   |         6.076 ms |         1.032 ms |          0.682 ms |          0.658 ms |
-| 512   |       341.808 ms |        15.358 ms |          8.841 ms |          9.052 ms |
+| Case, 512 × 16 per class  | M1 Pro v2.9.0 fwd / bwd | M1 Pro v3 fwd / bwd | A40 v2.9.0 fwd / bwd | A40 v3 fwd / bwd | A40 peak v2.9.0 → v3 |
+| ------------------------- | ----------------------: | ------------------: | -------------------: | ---------------: | -------------------: |
+| NT-Xent                   |      15,202 / 15,781 ms |    6.149 / 2.046 ms |     185.5 / 143.7 ms | 1.692 / 1.782 ms |    31,627 → 18.4 MiB |
+| Pair miner → triplet loss |         2,262 / 16.6 ms |    30.91 / 10.99 ms |      11.69 / 4.65 ms | 2.521 / 3.106 ms |        801 → 123 MiB |
 
-The batch-512 forward is about 22.3 times faster on this workload; backward is
-roughly unchanged. This removes the unconditional cubic candidate allocation,
-but materialized valid triplets still consume memory proportional to their
-count. CPU peak tensor memory remains unmeasured, and these timings do not
-establish a CUDA result. Raw results: [batch 128](benchmarks/triplet-expanded-m1-pro-b128.json)
-and [batch 512](benchmarks/triplet-expanded-m1-pro-b512.json).
-
-## Explicit loss composition
-
-The explicit regularization and parameter-placement change at
-`190a39a06e2ab5cb6d1623a341cda8cede4da560` was compared with its parent,
-`31f7e1e`, on the same hardware and settings as above: float32, one thread, 128
-dimensions, four examples per class, seed 17, ten warmup steps, and fifty
-measured steps. Validation losses are identical between revisions. Values are
-median milliseconds.
-
-| Case                     | Batch | Before forward | After forward | Before backward | After backward |
-| ------------------------ | ----- | -------------: | ------------: | --------------: | -------------: |
-| Contrastive              | 128   |          0.361 |         0.359 |           0.304 |          0.297 |
-| Contrastive              | 512   |          3.802 |         3.678 |           2.672 |          2.576 |
-| Normalized-softmax proxy | 128   |          0.092 |         0.088 |           0.131 |          0.131 |
-| Normalized-softmax proxy | 512   |          0.252 |         0.242 |           0.340 |          0.332 |
-
-The differences are within run-to-run variation on this laptop; the change
-neither adds nor removes measurable cost on these workloads. Raw results are
-`docs/benchmarks/composition-{before,after}-{contrastive,proxy}-b{128,512}.json`.
-
-## CUDA and NCCL reference
-
-Measured on 2026-10-28 UTC at clean revision
-`0616ea964cc6b87dc8a8c0abcb562204b16bf1a3`: Linux x86_64, Intel Xeon Gold 6342,
-two NVIDIA A40 GPUs (46,068 MiB each), NVIDIA driver 595.91.07, Python 3.12.13,
-PyTorch 2.14.0+cu130, CUDA 13.0, and NCCL 2.30.7. Each workload uses float32,
-128 dimensions, four examples per class, seed 17, one CPU thread per rank,
-ten warmup steps after the first call, and fifty measured steps. Timings are
-median milliseconds; memory is peak additional allocated tensor memory in MiB.
-
-This host requires `NCCL_P2P_DISABLE=1`: direct GPU-to-GPU transfers hang even
-in a bare PyTorch/NCCL probe. Distributed results therefore include NCCL's
-alternative transport and cannot establish direct peer-to-peer performance.
-See the [host workaround](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/DEVELOPMENT.md#cuda-and-distributed-verification).
-These measurements are specific to this shared rented host; retain the raw
-sample spread when comparing later runs.
-
-| Case                     | Batch | Forward | Backward | Peak MiB |
-| ------------------------ | ----: | ------: | -------: | -------: |
-| Contrastive              |   128 |   2.787 |    3.890 |    1.299 |
-| Contrastive              |   512 |   3.339 |    5.119 |   19.478 |
-| All-triplet margin       |   128 |   3.138 |    3.218 |    4.045 |
-| All-triplet margin       |   512 |   3.686 |    4.347 |   65.729 |
-| Pair-margin miner        |   128 |   0.763 |        — |    0.546 |
-| Pair-margin miner        |   512 |   0.919 |        — |    8.712 |
-| Normalized-softmax proxy |   128 |   1.228 |    2.322 |    0.331 |
-| Normalized-softmax proxy |   512 |   1.582 |    3.205 |    1.318 |
-
-Raw results: [batch 128](benchmarks/cuda-a40-b128.json) and
-[batch 512](benchmarks/cuda-a40-b512.json).
-
-The distributed workload includes the encoder and full-batch contrastive loss.
-Each timing below is the slower per-rank median for that interval; memory is
-the maximum across ranks.
-
-| Rows per rank | Global batch | Forward | Backward | Peak MiB per rank |
-| ------------: | -----------: | ------: | -------: | ----------------: |
-|            64 |          128 |   7.184 |    6.626 |             1.361 |
-|           256 |          512 |   7.086 |    6.306 |            19.728 |
-
-Raw results: [64 rows per rank](benchmarks/nccl-a40-b64.json) and
-[256 rows per rank](benchmarks/nccl-a40-b256.json). Reproduce the eager runs
-with the commands above, adding `--warmup 10 --repeats 50`, and set
-`NCCL_P2P_DISABLE=1` on this host before running `torchrun`.
-
-The [full-graph compiled proxy](benchmarks/compiled-proxy-a40-b128.json) at
-batch 128 takes 0.475 ms forward and 1.118 ms backward, versus 1.228 ms and
-2.322 ms eager. Peak additional memory is 0.174 MiB versus 0.331 MiB. Its first
-forward/backward takes 27.607 seconds using fresh `TORCHINDUCTOR_CACHE_DIR` and
-`TRITON_CACHE_DIR` directories. Compiler registration and import precede that
-measurement. Compilation helps steady-state execution for this workload; its
-startup cost and workload dependence still require measurement before adoption.
-
-## Version 3.0.0 CUDA and NCCL acceptance
-
-Measured on 2026-10-29 UTC at clean revision
-`07bd988f3f26089c2f15428ebefbba52b8e41858`: Linux x86_64, Intel Xeon Gold 6342,
-two NVIDIA A40 GPUs (46,068 MiB each), NVIDIA driver 595.91.07, Python 3.12.13,
-PyTorch 2.14.0+cu130, CUDA 13.0, and NCCL 2.30.7, with the same float32
-workloads, seed, shapes, one CPU thread per rank, ten warmup steps, and fifty
-measured steps as the earlier CUDA reference. This rented host also required
-`NCCL_P2P_DISABLE=1`: the bare two-rank probe hung with direct peer-to-peer
-transport. Timings are median milliseconds; memory is peak additional allocated
-tensor memory in MiB. The full CUDA suite was rerun on an identical rented
-configuration at revision `56d459d`, which fixed the distance-weighted sampling
-and half-precision distance regressions described below; the loss, miner, and
-distributed benchmark cases in these tables do not exercise those paths.
-
-| Case                     | Batch | Forward | Backward | Peak MiB |
-| ------------------------ | ----: | ------: | -------: | -------: |
-| Contrastive              |   128 |   2.323 |    3.186 |    1.299 |
-| Contrastive              |   512 |   1.514 |    2.267 |   19.478 |
-| All-triplet margin       |   128 |   3.532 |    3.548 |    3.903 |
-| All-triplet margin       |   512 |   1.997 |    2.462 |   63.238 |
-| Pair-margin miner        |   128 |   0.890 |        — |    0.484 |
-| Pair-margin miner        |   512 |   1.048 |        — |    7.714 |
-| Normalized-softmax proxy |   128 |   1.424 |    2.787 |    0.331 |
-| Normalized-softmax proxy |   512 |   1.487 |    3.103 |    1.318 |
-
-Raw results: [batch 128](benchmarks/cuda-a40-v3-b128.json) and
-[batch 512](benchmarks/cuda-a40-v3-b512.json). These workloads are launch-bound
-at both batch sizes, so run-to-run spread on a shared host dominates the
-differences from the earlier reference; the median absolute deviations in the
-raw files are the right comparison unit. Peak memory is unchanged within
-rounding for every case, which confirms that the sync-free reductions and the
-`(classes, embedding_size)` weight layout add no intermediate storage.
-
-| Rows per rank | Global batch | Forward | Backward | Peak MiB per rank |
-| ------------: | -----------: | ------: | -------: | ----------------: |
-|            64 |          128 |   5.863 |    5.577 |             1.361 |
-|           256 |          512 |   4.744 |    5.315 |            19.728 |
-
-Raw results: [64 rows per rank](benchmarks/nccl-a40-v3-b64.json) and
-[256 rows per rank](benchmarks/nccl-a40-v3-b256.json). The
-[full-graph compiled proxy](benchmarks/compiled-proxy-a40-v3-b128.json) at
-batch 128 takes 0.264 ms forward and 0.297 ms backward with 0.174 MiB peak
-memory, versus 1.424 ms, 2.787 ms, and 0.331 MiB eager; its first step took
-9.705 seconds with a cold compiler cache.
-
-## Sampling and half-precision distances
-
-The vectorized random triplet sampling and the float32 `cdist` path for
-low-precision `LpDistance` were compared with the preceding branch revision
-`83a9355` at revision `56d459d` on both hosts above, with one CPU thread, 128 dimensions, four
-examples per class, three warmup calls, and twenty measured calls. Values are
-median milliseconds for one call; the CUDA column synchronizes after each call.
-
-| Case                                                 | Batch | M1 Pro before | M1 Pro after | A40 before | A40 after |
-| ---------------------------------------------------- | ----: | ------------: | -----------: | ---------: | --------: |
-| `get_random_triplet_indices(t_per_anchor=100)`       |   128 |         1.268 |        0.581 |      9.374 |     0.533 |
-| `get_random_triplet_indices(t_per_anchor=100)`       |   512 |         5.216 |        3.281 |     37.591 |     0.530 |
-| `DistanceWeightedMiner` (normalized, 128 dimensions) |   512 |        54.846 |        3.516 |     66.215 |     1.006 |
-| `LpDistance` matrix, half-precision inputs           |   512 |        46.967 |       16.643 |      1.263 |     0.686 |
-
-The CPU rows use bfloat16 and the A40 rows use float16 for the distance case.
-On the A40, the old half-precision distance allocated 261.1 MiB of peak
-additional memory for the 512-by-512 matrix; the new path allocates 1.6 MiB.
-The low-precision distance uses `torch.cdist`'s direct difference kernel rather
-than its matrix-product formula, which cancels nearby rows to zero; on CPU that
-kernel is a scalar loop, so the CPU gain is limited to the removed expansion,
-while the CUDA kernel keeps the full gain.
-The previous sampler looped over labels with host random draws, which is why
-its CUDA cost grew with the number of classes; the previous low-precision
-distance gathered every row pair, allocating memory proportional to queries
-times references times dimensions. Both paths now stay on the tensor's device
-with one host synchronization for the sampled count. Sampled triplets follow
-the same distributions as before, but seeded sequences differ. Reproduce the
-comparison with the public functions above and `time.perf_counter`.
+With four samples per class, all-triplet enumeration at batch 512 took 331.6 ms
+forward on the M1 Pro in v2.9.0 and 19.5 ms in v3, and its A40 peak fell from
+148 MiB to 63 MiB; NT-Xent's A40 peak fell from 6,485 MiB to 18.5 MiB. Raw
+results: v2.9.0 on the M1 Pro [batch 128](benchmarks/cpu-m1-pro-v2-b128.json),
+[batch 512](benchmarks/cpu-m1-pro-v2-b512.json),
+[NT-Xent](benchmarks/cpu-m1-pro-v2-ntxent-b512-spc16.json), and
+[mined triplet](benchmarks/cpu-m1-pro-v2-mined-triplet-b512-spc16.json); v3 on
+the M1 Pro [NT-Xent](benchmarks/cpu-m1-pro-v3-ntxent-b512-spc16.json) and
+[mined triplet](benchmarks/cpu-m1-pro-v3-mined-triplet-b512-spc16.json);
+v2.9.0 on the A40 [batch 128](benchmarks/cuda-a40-v2-b128.json),
+[batch 512](benchmarks/cuda-a40-v2-b512.json),
+[NT-Xent](benchmarks/cuda-a40-v2-ntxent-b512-spc16.json), and
+[mined triplet](benchmarks/cuda-a40-v2-mined-triplet-b512-spc16.json); v3 on the
+A40 [NT-Xent](benchmarks/cuda-a40-v3-ntxent-b512-spc16.json) and
+[mined triplet](benchmarks/cuda-a40-v3-mined-triplet-b512-spc16.json). The
+v2.9.0 reports record the release commit `bee27da` as dirty because the
+version 3 runner was copied into that checkout; v2.9.0's import of tqdm was
+satisfied by a no-op stub, which the measured code does not call.
 
 ## Large batches and tuple memory
 

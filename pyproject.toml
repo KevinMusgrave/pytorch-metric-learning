@@ -9,7 +9,7 @@ description = "Composable metric learning losses, miners, distances, samplers, a
 readme = "README.md"
 requires-python = ">=3.12"
 license = "MIT"
-license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md", "CREDITS.md"]
+license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
 authors = [{ name = "Kevin Musgrave" }]
 keywords = ["metric learning", "deep learning", "pytorch", "embeddings", "retrieval"]
 classifiers = [
@@ -32,7 +32,9 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/KevinMusgrave/pytorch-metric-learning"
 Documentation = "https://kevinmusgrave.github.io/pytorch-metric-learning/"
+Source = "https://github.com/KevinMusgrave/pytorch-metric-learning"
 Issues = "https://github.com/KevinMusgrave/pytorch-metric-learning/issues"
+Changelog = "https://kevinmusgrave.github.io/pytorch-metric-learning/release-notes/"
 
 [project.optional-dependencies]
 faiss = ["faiss-cpu>=1.15.1"]
@@ -46,9 +48,11 @@ dev = [
     "numpy==2.5.3",
     "packaging==26.3",
     "pytest==9.1.1",
+    "ruff==0.16.0",
     "scikit-learn==1.9.1",
     "setuptools==84.0.0",
     "torch==2.14.0",
+    "ty==0.0.65",
     "uv==0.13.4",
 ]
 

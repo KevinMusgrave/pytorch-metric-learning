@@ -1,6 +1,6 @@
 # PNPLoss
 
-[Rethinking the Optimization of Average Precision: Only Penalizing Negative Instances before Positive Ones is Enough](https://arxiv.org/pdf/2102.04640.pdf){target=_blank}
+[Rethinking the Optimization of Average Precision: Only Penalizing Negative Instances before Positive Ones is Enough](https://arxiv.org/abs/2102.04640)
 
 ```python
 losses.PNPLoss(b=2, alpha=1, anneal=0.01, variant="O", **options)
@@ -20,19 +20,28 @@ $$
 
 Here $R(i, S_N) = \sum_{j \in S_N} \sigma\left((s_j - s_i)/\tau\right)$, where $s_i$ is the cosine similarity between the query and element $i$, $\sigma$ is the sigmoid, and $\tau$ is `anneal`.
 
-**Implementation notes**: The query is counted in its own $S_P$, as in the authors' implementation.
+**Implementation notes**: Each embedding is a query against the whole batch.
+The query is counted in its own $S_P$, as in the authors' implementation, so
+every query has at least one positive. The per-query values are averaged over
+the batch. Labels are required; `indices_tuple` and `ref_emb` raise
+`ValueError`. Memory grows with the cube of the batch size.
+
+**Paper settings**: The paper recommends PNP-Dq with $\alpha = 8$:
+`PNPLoss(variant="Dq", alpha=8)`. The default `variant="O"` is the plain
+PNP loss of equation 5.
 
 **Parameters**:
 
-- **b**: The boundary of PNP-Ib (see equation 9 above). The paper uses 2.
-- **alpha**: The power of PNP-Dq (see equation 13 above). The paper uses 8.
-- **anneal**: The temperature of the sigmoid function. (The sigmoid function is used for `R` in the equations above.) The paper uses 0.01.
-- **variant**: The name of the variant. The options are {"Ds", "Dq", "Iu", "Ib", "O"}. The paper uses "Dq".
+- **b**: The boundary $b$ of PNP-Ib (equation 9). The paper uses 2.
+- **alpha**: The power $\alpha$ of PNP-Dq (equation 13). The paper uses 8.
+- **anneal**: The sigmoid temperature $\tau$ used for $R$. The paper uses 0.01.
+- **variant**: One of `"Ds"`, `"Dq"`, `"Iu"`, `"Ib"`, or `"O"`. Any other
+  value raises `ValueError`.
 
 **Default distance**:
 
-- [`CosineSimilarity()`](../distances.md#cosinesimilarity)
-  - This is the only compatible distance.
+- [`CosineSimilarity()`](../distances.md#cosinesimilarity). This is the only
+  compatible distance; another distance class raises `TypeError`.
 
 **Default reducer**:
 
@@ -40,4 +49,5 @@ Here $R(i, S_N) = \sum_{j \in S_N} \sigma\left((s_j - s_i)/\tau\right)$, where $
 
 **Reducer input**:
 
-- **loss**: The loss averaged over elements that have at least 1 other positive in the batch. Reduction type is `"already_reduced"`, so the reducer does not change it.
+- **loss**: Already reduced: the batch average of the selected variant. Every
+  reducer returns it unchanged.

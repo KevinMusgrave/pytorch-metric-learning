@@ -20,7 +20,10 @@ optimizers, data loading, logging, and checkpoints.
 | Mining-weighted dataset sampling                           | [mining_weights.py](mining_weights.py)                           | `uv run --frozen --no-sync python -m docs.recipes.mining_weights`              |
 | Caller-controlled memory warmup                            | [memory_warmup.py](memory_warmup.py)                             | `uv run --frozen --no-sync python -m docs.recipes.memory_warmup`               |
 
-Verify the contracts and optimization behavior together:
+The commands import the installed package, so install the checkout as described
+in the [development guide](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/DEVELOPMENT.md#set-up-a-checkout),
+or prefix them with `PYTHONPATH=src`. Verify the contracts and optimization
+behavior together:
 
 ```sh
 uv run --frozen --no-sync --env-file tests/cpu.env python -m pytest tests/recipes/test_training.py
@@ -55,24 +58,25 @@ and dtype; these functions do not move or change the mode of caller models.
 
 The recipe follows the composition from Yuan et al.,
 [Hard-Aware Deeply Cascaded Embedding](https://openaccess.thecvf.com/content_ICCV_2017/papers/Yuan_Hard-Aware_Deeply_Cascaded_ICCV_2017_paper.pdf).
-Split `(N, D)` embeddings into three slices with sizes summing to `D`. Each HDC
-stage retains the hardest fraction of its incoming positive and negative pairs;
-later stages cannot introduce pairs rejected earlier. The executable uses
-fractions `(1, 0.5, 0.5)` and sums three contrastive losses. The output reports
-a finite loss and positive-pair counts `24, 12, 6` on the supplied fixture.
+Split `(N, D)` embeddings into three slices with sizes summing to `D`. Each
+[HDCMiner](../miners.md#hdcminer) stage receives the previous stage's pairs as
+its `indices_tuple` candidates and retains the hardest fraction of the positive
+and negative pairs; later stages cannot introduce pairs rejected earlier. The
+executable uses fractions `(1, 0.5, 0.5)` and sums three contrastive losses. The
+output reports a finite loss and positive-pair counts `24, 12, 6` on the
+supplied fixture.
 
-The historical trainer generalized the paper to arbitrary slices, losses, and
-optional classifier terms. This recipe preserves that progressive candidate
-filtering; it is not a reproduction of the paper's architecture or results.
-Changing slice count requires a matching number of miners. Sizes must sum to
-the embedding dimension; PyTorch and strict iteration report invalid inputs.
+The recipe applies the paper's progressive candidate filtering to arbitrary
+embedding slices and losses; it is not a reproduction of the paper's
+architecture or results. The number of miners must equal the number of slices,
+and the sizes must sum to the embedding dimension; `torch.split` and
+`zip(..., strict=True)` raise on mismatches.
 
 ## Adversarial objectives and gradient ownership
 
 The recipe derives from Duan et al.,
 [Deep Adversarial Metric Learning](https://openaccess.thecvf.com/content_cvpr_2018/papers/Duan_Deep_Adversarial_Metric_CVPR_2018_paper.pdf),
-and preserves the three numerical objectives of the removed trainer. Let
-`a`, `p`, `n` be trunk features and `s = G([a,p,n])` the generated negative.
+and computes three objectives. Let `a`, `p`, `n` be trunk features and `s = G([a,p,n])` the generated negative.
 Let `u(x)` L2-normalize a feature and `e(x)` L2-normalize its embedder output.
 
 - Adversarial: positive-violation mean of

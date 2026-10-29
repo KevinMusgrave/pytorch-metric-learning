@@ -34,27 +34,24 @@ class TestDivisorReducer(unittest.TestCase):
             )
             losses = torch.randn(batch_size).type(dtype).to(TEST_DEVICE)
 
-            for indices, reduction_type in [
-                (torch.arange(batch_size), "element"),
-                (pair_indices, "pos_pair"),
-                (pair_indices, "neg_pair"),
-                (triplet_indices, "triplet"),
-                (None, "already_reduced"),
-            ]:
+            with self.assertRaisesRegex(ValueError, "divisor"):
+                reducer(
+                    {"loss": {"losses": losses[0], "indices": None, "divisor": 2}},
+                    embeddings,
+                    labels,
+                )
+            for indices in [torch.arange(batch_size), pair_indices, triplet_indices]:
                 for partA, partB in [(0, 0), (32, 15)]:
-                    L = losses[0] if reduction_type == "already_reduced" else losses
+                    L = losses
                     loss_dict = {
                         "loss": {
                             "losses": L,
                             "indices": indices,
-                            "reduction_type": reduction_type,
                             "divisor": partA + partB,
                         }
                     }
                     output = reducer(loss_dict, embeddings, labels)
-                    if reduction_type == "already_reduced":
-                        correct_output = L
-                    elif partA + partB == 0:
+                    if partA + partB == 0:
                         correct_output = torch.sum(L) * 0
                     else:
                         correct_output = torch.sum(L) / (32 + 15)

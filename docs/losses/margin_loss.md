@@ -1,15 +1,9 @@
 # MarginLoss
 
-[Sampling Matters in Deep Embedding Learning](https://arxiv.org/pdf/1706.07567.pdf){target=_blank}
+[Sampling Matters in Deep Embedding Learning](https://arxiv.org/abs/1706.07567)
 
 ```python
-losses.MarginLoss(margin=0.2,
-                nu=0,
-                beta=1.2,
-                triplets_per_anchor="all",
-                learn_beta=False,
-                num_classes=None,
-                **options)
+losses.MarginLoss(margin=0.2, nu=0, beta=1.2, triplets_per_anchor="all", learn_beta=False, num_classes=None, **options)
 ```
 
 **Equation**:
@@ -26,16 +20,29 @@ $$
 
 Here $y_{ij}$ is $1$ for positive pairs and $-1$ for negative pairs, $D_{ij}$ is the distance between embeddings $i$ and $j$, and $c(i)$ is the class of sample $i$.
 
-**Implementation notes**: The loss is computed over triplets, all of them by default, so each pair term repeats once per triplet that contains it. Positive and negative terms are divided by the number of nonzero terms. $\beta$ is either a single value or one value per class indexed by the anchor's class; the per-image $\beta^{(\mathrm{img})}$ is not supported.
+**Implementation notes**: The loss is computed over triplets, all of them by
+default, so each pair term repeats once per triplet that contains it. Each
+triplet's value is its positive-pair term plus its negative-pair term, and the
+sum over triplets is divided by the number of nonzero pair terms. $\beta$ is
+either a single value or one value per class indexed by the anchor's class; the
+per-image $\beta^{(\mathrm{img})}$ is not supported. The $\nu$ penalty is added
+only when `learn_beta=True`. `beta` is a parameter when `learn_beta=True` and a
+buffer otherwise; either way it follows `loss_func.to(device, dtype)`, is saved
+in `state_dict`, and must match the embeddings' placement outside autocast.
 
 **Parameters**:
 
-- **margin**: This is alpha in the above equation. The paper uses 0.2.
-- **nu**: The regularization weight for the magnitude of beta.
-- **beta**: This is beta in the above equation. The paper uses 1.2 as the initial value.
-- **triplets_per_anchor**: The number of triplets per element to sample within a batch. Can be an integer or the string "all". For example, if your batch size is 128, and triplets_per_anchor is 100, then 12800 triplets will be sampled. If triplets_per_anchor is "all", then all possible triplets in the batch will be used.
-- **learn_beta**: If True, beta will be a torch.nn.Parameter, which can be optimized using any PyTorch optimizer.
-- **num_classes**: If not None, then beta will be of size `num_classes`, so that a separate beta is used for each class during training.
+- **margin**: The margin $\alpha$. The paper uses 0.2.
+- **nu**: The weight $\nu$ of the $\beta$ penalty.
+- **beta**: The initial $\beta$. The paper uses 1.2.
+- **triplets_per_anchor**: The number of triplets per anchor sampled within a
+  batch, an integer or `"all"`. For example, a batch of 128 with
+  `triplets_per_anchor=100` samples 12800 triplets. With `"all"`, every triplet
+  in the batch is used.
+- **learn_beta**: If `True`, `beta` is a `torch.nn.Parameter`; include
+  `loss_func.parameters()` in an optimizer.
+- **num_classes**: If not `None`, `beta` has one value per class, and labels
+  are required.
 
 **Default distance**:
 
@@ -43,9 +50,14 @@ Here $y_{ij}$ is $1$ for positive pairs and $-1$ for negative pairs, $D_{ij}$ is
 
 **Default reducer**:
 
-- [DivisorReducer](../reducers.md#divisorreducer)
+- [DivisorReducer](../reducers.md#divisorreducer). Terms with a divisor make
+  any reducer other than DivisorReducer raise `ValueError`.
 
 **Reducer input**:
 
-- **margin_loss**: The loss per triplet in the batch. Reduction type is `"triplet"`.
-- **beta_reg_loss**: The regularization loss per element in `self.beta`. Reduction type is `"already_reduced"` if `self.num_classes = None`. Otherwise it is `"element"`.
+- **margin_loss**: One loss per triplet, indexed by
+  `TripletIndices(anchors, positives, negatives)`, with `divisor` equal to the
+  number of nonzero pair terms.
+- **beta_reg_loss**: Present only when `learn_beta=True`. With `num_classes=None`,
+  already reduced: $\nu\beta$. Otherwise one value $\nu\beta_{c(a)}$ per triplet,
+  indexed by the triplet anchors, with the same `divisor` as `margin_loss`.

@@ -48,6 +48,16 @@ class DistributedContrastive(nn.Module):
         return self.loss(self.encoder(inputs), labels)
 
 
+class MinedLoss(nn.Module):
+    def __init__(self, miner: miners.BaseMiner, loss: nn.Module) -> None:
+        super().__init__()
+        self.miner = miner
+        self.loss = loss
+
+    def forward(self, embeddings: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
+        return self.loss(embeddings, labels, self.miner(embeddings, labels))
+
+
 def synchronize(device: torch.device) -> None:
     if device.type == "cuda":
         torch.cuda.synchronize(device)
@@ -110,6 +120,11 @@ def make_workload(
     factories = {
         "contrastive": lambda: losses.ContrastiveLoss(neg_margin=1.4),
         "triplet": lambda: losses.TripletMarginLoss(margin=0.2),
+        "ntxent": lambda: losses.NTXentLoss(temperature=0.07),
+        "mined-triplet": lambda: MinedLoss(
+            miners.PairMarginMiner(pos_margin=0.2, neg_margin=1.4),
+            losses.TripletMarginLoss(margin=0.2),
+        ),
         "miner": lambda: miners.PairMarginMiner(pos_margin=0.2, neg_margin=1.4),
         "proxy": lambda: losses.NormalizedSoftmaxLoss(
             num_classes=args.batch_size // args.samples_per_class,
@@ -238,7 +253,16 @@ def arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--case",
-        choices=("all", "contrastive", "triplet", "miner", "proxy", "distributed"),
+        choices=(
+            "all",
+            "contrastive",
+            "triplet",
+            "ntxent",
+            "mined-triplet",
+            "miner",
+            "proxy",
+            "distributed",
+        ),
         default="all",
     )
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
@@ -292,7 +316,7 @@ def main() -> None:
         )
     try:
         cases = (
-            ("contrastive", "triplet", "miner", "proxy")
+            ("contrastive", "triplet", "ntxent", "mined-triplet", "miner", "proxy")
             if args.case == "all"
             else (args.case,)
         )

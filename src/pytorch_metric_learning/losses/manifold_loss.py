@@ -48,6 +48,10 @@ class ManifoldLoss(BaseMetricLossFunction):
         device = embeddings.device
         if labels is not None:
             meta_classes = labels
+        elif self.num_proxies > N:
+            raise ValueError(
+                "Without labels, the batch must contain at least num_proxies rows"
+            )
         else:
             extra = torch.randint(
                 0, self.num_proxies, (N - self.num_proxies,), device=device
@@ -70,19 +74,15 @@ class ManifoldLoss(BaseMetricLossFunction):
         F_p = F[N:, :]
         F_e = F[:N, :]
 
-        loss_int = torch.zeros((), device=device, dtype=embeddings.dtype)
-        if self.lambda_c != math.inf:
-            F_ep = F[:N, N:]
-            loss_int = self.ranking_term(F_ep, rows, meta_classes)
         loss_ctx = torch.nn.functional.cosine_similarity(
             F_e, F_p.unsqueeze(1), dim=-1
         ).t()
         loss_ctx = self.ranking_term(loss_ctx, rows, meta_classes)
+        if self.lambda_c == math.inf:
+            return {"loss": {"losses": loss_ctx, "indices": None}}
+        loss_int = self.ranking_term(F[:N, N:], rows, meta_classes)
         return {
-            "loss": {
-                "losses": loss_int + self.lambda_c * loss_ctx,
-                "indices": None,
-            }
+            "loss": {"losses": loss_int + self.lambda_c * loss_ctx, "indices": None}
         }
 
     def ranking_term(

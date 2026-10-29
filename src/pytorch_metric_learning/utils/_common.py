@@ -139,11 +139,6 @@ def as_indices_tuple(
     raise ValueError("indices_tuple must contain three triplet or four pair tensors")
 
 
-def labels_not_supported(labels: Tensor | None, ref_labels: Tensor | None) -> None:
-    if labels is not None or ref_labels is not None:
-        raise ValueError("labels and ref_labels are not supported for this loss")
-
-
 def ref_not_supported(ref_emb: Tensor | None) -> None:
     if ref_emb is not None:
         raise ValueError("ref_emb is not supported for this loss function")

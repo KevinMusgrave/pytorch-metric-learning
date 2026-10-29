@@ -23,7 +23,7 @@ Their consecutive triples map directly to an `indices_tuple` through
 `torch.arange(batch_size).reshape(-1, 3).unbind(1)` on the embeddings' device;
 there is no miner class for recovering already supplied triplets.
 
-Mining-weighted sampling belongs to the agent-facing recipe in
+Mining-weighted sampling belongs to the executable recipe in
 `docs/recipes/mining_weights.py`: callers compute embeddings, the numerical
 tuple utility derives weights, and PyTorch's WeightedRandomSampler draws
 dataset indices. The library has no model-aware sampler or tester dependency.

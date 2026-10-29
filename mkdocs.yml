@@ -6,6 +6,7 @@ exclude_docs: |
   **/__pycache__/
 nav:
     - Home: index.md
+    - Concepts: concepts.md
     - Distances: distances.md
     - Losses:
       - Overview: losses.md
@@ -41,8 +42,8 @@ nav:
       - Ranking objectives:
         - FastAPLoss: losses/fast_ap_loss.md
         - PNPLoss: losses/pnp_loss.md
-        - SmoothAPLoss: losses/smooth_ap.md
-        - ThresholdConsistentMarginLoss: losses/tcm_loss.md
+        - SmoothAPLoss: losses/smooth_ap_loss.md
+        - ThresholdConsistentMarginLoss: losses/threshold_consistent_margin_loss.md
       - Self-supervised and supervised contrastive objectives:
         - InstanceLoss: losses/instance_loss.md
         - NTXentLoss: losses/ntxent_loss.md
@@ -50,6 +51,7 @@ nav:
         - VICRegLoss: losses/vicreg_loss.md
       - Composition and extension:
         - BaseMetricLossFunction: losses/base_metric_loss_function.md
+        - BaseProxyLoss: losses/base_proxy_loss.md
         - CrossBatchMemory: losses/cross_batch_memory.md
         - GenericPairLoss: losses/generic_pair_loss.md
         - MultipleLosses: losses/multiple_losses.md
@@ -58,20 +60,24 @@ nav:
     - Reducers: reducers.md
     - Regularizers: regularizers.md
     - Samplers: samplers.md
-    - Utils:
-      - Accuracy Calculation: accuracy_calculation.md
-      - Retrieval Backends: retrieval.md
-      - Distributed: distributed.md
+    - Evaluation:
+      - Accuracy calculation: accuracy_calculation.md
+      - Retrieval backends: retrieval.md
+    - Distributed: distributed.md
     - How to extend this library:
       - Custom losses: extend/losses.md
       - Custom miners: extend/miners.md
     - Recipes:
       - Training: recipes/training.md
       - Retrieval evaluation: recipes/evaluation.md
-    - Version 3.0.0:
-      - Release notes: release-notes-3.md
-      - Migrating from version 2: migration-2-to-3.md
     - Performance: performance.md
+    - Release notes:
+      - release-notes/index.md
+      - 3.0.0: release-notes/3.0.0.md
+    - Migrating from version 2: migration-2-to-3.md
+    - Versioning and support: versioning.md
+    - How to cite: citing.md
+    - Version 2 documentation: https://kevinmusgrave.github.io/pytorch-metric-learning/v2/
 theme:
   name: 'material'
   custom_dir: overrides

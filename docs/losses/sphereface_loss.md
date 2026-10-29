@@ -1,10 +1,10 @@
 # SphereFaceLoss
 
-[SphereFace: Deep Hypersphere Embedding for Face Recognition](https://arxiv.org/pdf/1704.08063.pdf){target=_blank}
+[SphereFace: Deep Hypersphere Embedding for Face Recognition](https://arxiv.org/abs/1704.08063)
 
 ```python
 losses.SphereFaceLoss(num_classes, embedding_size, margin=4, scale=1,
-    *, weight_regularizer=None, weight_reg_weight=1, weight_init_func=None, **options)
+    *, weight_regularizer=None, weight_reg_weight=1.0, weight_init_func=None, **options)
 ```
 
 **Equation**:
@@ -13,31 +13,34 @@ $$
 L_i = -\log\left(\frac{e^{\lVert \mathbf{x}_i \rVert \psi(\theta_{y_i})}}{e^{\lVert \mathbf{x}_i \rVert \psi(\theta_{y_i})} + \sum_{j \neq y_i} e^{\lVert \mathbf{x}_i \rVert \cos(\theta_j)}}\right)
 $$
 
-with $\psi$ as in [LargeMarginSoftmaxLoss](large_margin_softmax_loss.md#largemarginsoftmaxloss). The weight vectors are L2-normalized, so only the embedding norm scales the logits.
+with $\psi$ as in [LargeMarginSoftmaxLoss](large_margin_softmax_loss.md). The weight vectors are L2-normalized, so only the embedding norm scales the logits.
 
-**Implementation notes**: The paper's annealing with a decreasing $\lambda$ is not implemented.
+**Implementation notes**: The paper's annealing with a decreasing $\lambda$ is
+not implemented. Every logit is multiplied by `scale`. With an `indices_tuple`,
+each embedding's loss is multiplied by its
+[miner weight](../losses.md#miner-weights). `get_logits(embeddings)` returns
+the logits with $\cos\theta_j$ in place of $\psi$; see
+[classification logits](../losses.md#classification-logits). This loss derives
+from LargeMarginSoftmaxLoss and [BaseProxyLoss](base_proxy_loss.md).
 
 **Parameters**:
 
-See [LargeMarginSoftmaxLoss](large_margin_softmax_loss.md#largemarginsoftmaxloss). `margin` must be a positive integer; the paper uses 4.
-
-**Other info**
-
-- Accepts the keyword-only [learnable weight arguments](../losses.md#learnable-weight-arguments) `weight_regularizer`, `weight_reg_weight`, and `weight_init_func`.
-- This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
-
-```python
-loss_func = losses.SphereFaceLoss(...).to(torch.device('cuda'))
-loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
-# then during training:
-loss_optimizer.step()
-```
+- **num_classes**: The number of classes in the training set. Labels must be in
+  `0..num_classes - 1`.
+- **embedding_size**: The size of the embeddings passed to the loss.
+- **margin**: The integer angular margin $m$. A value that is not a positive
+  `int` raises `ValueError`. The paper uses 4.
+- **scale**: A multiplier of every logit. The paper uses 1.
+- **weight_regularizer**, **weight_reg_weight**, **weight_init_func**: See
+  [learnable weight arguments](../losses.md#learnable-weight-arguments). The
+  class weights are `weight`, shaped `(num_classes, embedding_size)` and
+  initialized with `torch.nn.init.normal_`. Include `loss_func.parameters()` in
+  an optimizer.
 
 **Default distance**:
 
-- [`CosineSimilarity()`](../distances.md#cosinesimilarity)
-
-  - This is the only compatible distance.
+- [`CosineSimilarity()`](../distances.md#cosinesimilarity). This is the only
+  compatible distance; another distance class raises `TypeError`.
 
 **Default reducer**:
 
@@ -45,4 +48,4 @@ loss_optimizer.step()
 
 **Reducer input**:
 
-- **loss**: The loss per element in the batch. Reduction type is `"element"`.
+- **loss**: One loss per embedding, indexed by embedding position.

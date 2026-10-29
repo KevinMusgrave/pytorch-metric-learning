@@ -13,7 +13,7 @@ def main():
         (Path(__file__).resolve().parents[1] / "pyproject.toml").read_text()
     )["project"]
     installed = version("pytorch-metric-learning")
-    if installed != project["version"] or installed != pml.__version__:
+    if installed != project["version"]:
         raise RuntimeError("Installed wheel and source metadata versions must match")
     requirements = requires("pytorch-metric-learning")
     if requirements is None:

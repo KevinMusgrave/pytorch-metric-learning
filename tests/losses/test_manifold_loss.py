@@ -1,3 +1,4 @@
+import math
 import unittest
 
 import numpy as np
@@ -189,3 +190,24 @@ class TestManifoldLoss(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestManifoldLossOptions(unittest.TestCase):
+    def test_infinite_lambda_uses_only_the_context_term(self):
+        embeddings = torch.randn(12, 4, device=TEST_DEVICE)
+        labels = torch.arange(3, device=TEST_DEVICE).repeat(4)
+        torch.manual_seed(1)
+        context_only = ManifoldLoss(4, num_proxies=3, lambda_c=math.inf).to(TEST_DEVICE)
+        torch.manual_seed(1)
+        weighted = ManifoldLoss(4, num_proxies=3, lambda_c=1.0).to(TEST_DEVICE)
+        torch.manual_seed(1)
+        intrinsic = ManifoldLoss(4, num_proxies=3, lambda_c=0.0).to(TEST_DEVICE)
+        value = context_only(embeddings, labels)
+        self.assertTrue(torch.isfinite(value))
+        torch.testing.assert_close(
+            value, weighted(embeddings, labels) - intrinsic(embeddings, labels)
+        )
+
+    def test_small_unlabeled_batch_is_rejected(self):
+        with self.assertRaisesRegex(ValueError, "num_proxies"):
+            ManifoldLoss(4, num_proxies=8)(torch.randn(4, 4, device=TEST_DEVICE))

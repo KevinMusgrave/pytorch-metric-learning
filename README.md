@@ -18,10 +18,10 @@ retrieval backend, `pytorch-metric-learning[faiss]`, and scikit-learn for the
 NMI/AMI clustering metrics, `pytorch-metric-learning[clustering]`.
 
 Version 3 requires Python 3.12 or newer, PyTorch 2.14.0 or newer, and NumPy
-2.5.3 or newer. Development and CI use exact versions from the frozen lockfile.
-See the [release notes](https://kevinmusgrave.github.io/pytorch-metric-learning/release-notes-3/) for breaking changes,
-the [v2-to-v3 migration guide](https://kevinmusgrave.github.io/pytorch-metric-learning/migration-2-to-3/) for replacement imports and calls, and
-[development setup](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/DEVELOPMENT.md) to run this checkout.
+2.5.3 or newer. Upgrading from version 2? Read the
+[release notes](https://kevinmusgrave.github.io/pytorch-metric-learning/release-notes/3.0.0/) and look up old names in the
+[migration guide](https://kevinmusgrave.github.io/pytorch-metric-learning/migration-2-to-3/). The
+[version 2 documentation](https://kevinmusgrave.github.io/pytorch-metric-learning/v2/) remains available.
 
 ## A minimal training step
 
@@ -52,44 +52,25 @@ negative pair penalties separately, then adds them. See the
 [contrastive-loss contract](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/contrastive_loss/#contrastiveloss) for distances,
 margins, and reduction options.
 
-## How it fits together
+## Learn more
 
-[![Your PyTorch code computes embeddings and calls the library's miner and loss to get a scalar loss, then calls backward and steps its optimizer. For evaluation, your code extracts embeddings and AccuracyCalculator retrieves nearest neighbors to compute metrics.](https://raw.githubusercontent.com/KevinMusgrave/pytorch-metric-learning/master/docs/imgs/architecture.svg)](https://raw.githubusercontent.com/KevinMusgrave/pytorch-metric-learning/master/docs/imgs/architecture.svg)
+The [documentation](https://kevinmusgrave.github.io/pytorch-metric-learning/) starts with a task index and a
+[concepts overview](https://kevinmusgrave.github.io/pytorch-metric-learning/concepts/) of embeddings, tuples, distances, loss
+terms, and reducers. Every component page states its signature, defaults,
+tensor contract, and paper, and the [recipes](https://kevinmusgrave.github.io/pytorch-metric-learning/recipes/training/) show
+complete training and evaluation code.
 
-Your code keeps the training loop. The library turns embeddings and labels
-into a differentiable loss, and turns query and reference embeddings into
-retrieval metrics.
+## Contributing
 
-## Find the right component
-
-Start with the [task and component index](https://kevinmusgrave.github.io/pytorch-metric-learning/). It links to public
-signatures, defaults, tensor contracts, paper references, and small runnable
-recipes using ordinary PyTorch code.
-
-- [Losses](https://kevinmusgrave.github.io/pytorch-metric-learning/losses/) define the training objective.
-- [Miners](https://kevinmusgrave.github.io/pytorch-metric-learning/miners/) select pairs or triplets within a batch.
-- [Distances](https://kevinmusgrave.github.io/pytorch-metric-learning/distances/), [reducers](https://kevinmusgrave.github.io/pytorch-metric-learning/reducers/), and
-  [regularizers](https://kevinmusgrave.github.io/pytorch-metric-learning/regularizers/) customize the computation.
-- [Samplers](https://kevinmusgrave.github.io/pytorch-metric-learning/samplers/) construct batches with useful label structure.
-- [Retrieval metrics](https://kevinmusgrave.github.io/pytorch-metric-learning/accuracy_calculation/) measure embedding quality.
-- [Distributed support](https://kevinmusgrave.github.io/pytorch-metric-learning/distributed/) documents multi-device gradients
-  and supported combinations.
-
-The [documentation website](https://kevinmusgrave.github.io/pytorch-metric-learning/)
-resides alongside the Markdown sources in this repository. For timing and memory
-measurements, see [performance](https://kevinmusgrave.github.io/pytorch-metric-learning/performance/).
-
-## Contributing and credit
-
-See [DEVELOPMENT.md](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/DEVELOPMENT.md) for environment setup and verification,
-and [AGENTS.md](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/AGENTS.md) for repository maintenance rules. Thanks to all
-[contributors, upstream projects, and supporters](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/CREDITS.md).
+See [CONTRIBUTING.md](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/CONTRIBUTING.md).
+Thanks to all [contributors, upstream projects, and supporters](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/CREDITS.md).
 
 ## Citing this library
 
-If you'd like to cite pytorch-metric-learning in your paper, you can use this bibtex:
+If you use this library in your research, please cite the
+[PyTorch Metric Learning paper](https://arxiv.org/abs/2008.09164):
 
-```latex
+```bibtex
 @article{Musgrave2020PyTorchML,
   title={PyTorch Metric Learning},
   author={Kevin Musgrave and Serge J. Belongie and Ser-Nam Lim},

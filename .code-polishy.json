@@ -222,7 +222,9 @@
     }
   ],
   "tests": {
-    "paths": ["conftest.py"],
+    "paths": [
+      "conftest.py"
+    ],
     "ownership": [
       {
         "paths": [
@@ -503,6 +505,7 @@
         "paths": [
           "tests/distributed/test_distributed_fallback.py",
           "tests/distributed/test_distributed.py",
+          "tests/distributed/__init__.py",
           "tests/__init__.py",
           "tests/helpers.py",
           "tests/losses/utils.py",
@@ -673,9 +676,9 @@
         "reason": "PyTorch uses FileLock, resolved to UnixFileLock on the Mac/Linux development hosts and WindowsFileLock on Windows. Neither this project nor its enabled PyTorch callers use ReadWriteLock or SoftFileLock. See docs/security/dependency-assessments.md#retained-aged-dependencies.",
         "impact": "The advisory-specific vulnerable API is not reached by the supported build, test, or library execution paths. Reassess before enabling the affected feature.",
         "evidence": "https://osv.dev/vulnerability/GHSA-9vhv-jxww-xfm5",
-        "owner": "Codex",
-        "reviewed": "2026-10-26",
-        "expires": "2026-11-25"
+        "owner": "Claude",
+        "reviewed": "2026-10-29",
+        "expires": "2027-01-27"
       },
       {
         "id": "ghsa-v4x8-3wr5-3wq8",
@@ -690,9 +693,9 @@
         "reason": "PyTorch uses FileLock, resolved to UnixFileLock on the Mac/Linux development hosts and WindowsFileLock on Windows. Neither this project nor its enabled PyTorch callers use ReadWriteLock or SoftFileLock. See docs/security/dependency-assessments.md#retained-aged-dependencies.",
         "impact": "The advisory-specific vulnerable API is not reached by the supported build, test, or library execution paths. Reassess before enabling the affected feature.",
         "evidence": "https://osv.dev/vulnerability/GHSA-v4x8-3wr5-3wq8",
-        "owner": "Codex",
-        "reviewed": "2026-10-26",
-        "expires": "2026-11-25"
+        "owner": "Claude",
+        "reviewed": "2026-10-29",
+        "expires": "2026-11-28"
       },
       {
         "id": "ghsa-xmj3-9gf7-h52w",
@@ -707,9 +710,9 @@
         "reason": "Builds use build_meta; uv installs wheels. No setup_requires or install_as_egg path consumes namespace_packages.txt. See docs/security/dependency-assessments.md#retained-aged-dependencies.",
         "impact": "The advisory-specific vulnerable API is not reached by the supported build, test, or library execution paths. Reassess before enabling the affected feature.",
         "evidence": "https://osv.dev/vulnerability/GHSA-xmj3-9gf7-h52w",
-        "owner": "Codex",
-        "reviewed": "2026-10-26",
-        "expires": "2026-11-25"
+        "owner": "Claude",
+        "reviewed": "2026-10-29",
+        "expires": "2027-01-27"
       },
       {
         "id": "ghsa-567q-5qvw-pf92",
@@ -724,9 +727,9 @@
         "reason": "PyTorch uses FileLock, resolved to UnixFileLock on the Mac/Linux development hosts and WindowsFileLock on Windows. Neither this project nor its enabled PyTorch callers use ReadWriteLock or SoftFileLock. See docs/security/dependency-assessments.md#retained-aged-dependencies.",
         "impact": "The advisory-specific vulnerable API is not reached by the supported build, test, or library execution paths. Reassess before enabling the affected feature.",
         "evidence": "https://osv.dev/vulnerability/GHSA-567q-5qvw-pf92",
-        "owner": "Codex",
-        "reviewed": "2026-10-26",
-        "expires": "2026-11-25"
+        "owner": "Claude",
+        "reviewed": "2026-10-29",
+        "expires": "2027-01-27"
       },
       {
         "id": "certifi-disabled-documentation-clients",
@@ -741,9 +744,9 @@
         "reason": "MkDocs Material uses Requests only in its info, privacy, and social plugins, none enabled in mkdocs.yml. The library makes no network requests and acquisition uses patched uv. See docs/security/dependency-assessments.md#retained-aged-dependencies.",
         "impact": "No enabled HTTPS client uses the affected certifi trust bundle. Review before enabling a Requests caller or these plugins; update once the fix ages in.",
         "evidence": "https://github.com/certifi/python-certifi/security/advisories/GHSA-6q48-6c7w-9gw2",
-        "owner": "Codex",
-        "reviewed": "2026-10-28",
-        "expires": "2026-11-04"
+        "owner": "Claude",
+        "reviewed": "2026-10-29",
+        "expires": "2026-11-05"
       },
       {
         "id": "ghsa-6627-m3xw-93mp",
@@ -757,9 +760,9 @@
         "basis": "unreachable",
         "evidence": "https://github.com/advisories/GHSA-6627-m3xw-93mp",
         "reason": "No project or installed dependency caller selects StrictSoftFileLock, SoftReadWriteLock or SQLite ReadWriteLock; PyTorch selects native UnixFileLock. See docs/security/dependency-assessments.md#filelock-local-filesystem-advisories.",
-        "owner": "Codex",
-        "reviewed": "2026-10-28",
-        "expires": "2026-11-25",
+        "owner": "Claude",
+        "reviewed": "2026-10-29",
+        "expires": "2026-11-28",
         "impact": "The advisory cannot cross its local-file trust boundary in the reviewed development and verification environments. Reassess before enabling affected APIs, Windows verification, untrusted shared caches or soft-lock fallback; review an aged fixed release from 2026-11-16."
       },
       {
@@ -774,9 +777,9 @@
         "basis": "unreachable",
         "evidence": "https://github.com/advisories/GHSA-69hj-f68j-2879",
         "reason": "PyTorch compiler locks are in the private per-user macOS temporary tree; CI and GPU checks use isolated Linux hosts and eager execution. No untrusted account can replace lock paths in the reviewed environments. See docs/security/dependency-assessments.md#filelock-local-filesystem-advisories.",
-        "owner": "Codex",
-        "reviewed": "2026-10-28",
-        "expires": "2026-11-25",
+        "owner": "Claude",
+        "reviewed": "2026-10-29",
+        "expires": "2026-11-28",
         "impact": "The advisory cannot cross its local-file trust boundary in the reviewed development and verification environments. Reassess before enabling affected APIs, Windows verification, untrusted shared caches or soft-lock fallback; review an aged fixed release from 2026-11-16."
       },
       {
@@ -791,9 +794,9 @@
         "basis": "unreachable",
         "evidence": "https://github.com/advisories/GHSA-8mx5-7m5m-r77g",
         "reason": "The reviewed development, CI and GPU environments are macOS/Linux; WindowsFileLock and SQLite ReadWriteLock are not enabled. See docs/security/dependency-assessments.md#filelock-local-filesystem-advisories.",
-        "owner": "Codex",
-        "reviewed": "2026-10-28",
-        "expires": "2026-11-25",
+        "owner": "Claude",
+        "reviewed": "2026-10-29",
+        "expires": "2026-11-28",
         "impact": "The advisory cannot cross its local-file trust boundary in the reviewed development and verification environments. Reassess before enabling affected APIs, Windows verification, untrusted shared caches or soft-lock fallback; review an aged fixed release from 2026-11-16."
       },
       {
@@ -808,9 +811,9 @@
         "basis": "unreachable",
         "evidence": "https://github.com/advisories/GHSA-9c4x-gm8v-wgc4",
         "reason": "No project or installed dependency caller selects StrictSoftFileLock, SoftReadWriteLock or SQLite ReadWriteLock; PyTorch selects native UnixFileLock. See docs/security/dependency-assessments.md#filelock-local-filesystem-advisories.",
-        "owner": "Codex",
-        "reviewed": "2026-10-28",
-        "expires": "2026-11-25",
+        "owner": "Claude",
+        "reviewed": "2026-10-29",
+        "expires": "2026-11-28",
         "impact": "The advisory cannot cross its local-file trust boundary in the reviewed development and verification environments. Reassess before enabling affected APIs, Windows verification, untrusted shared caches or soft-lock fallback; review an aged fixed release from 2026-11-16."
       },
       {
@@ -825,9 +828,9 @@
         "basis": "unreachable",
         "evidence": "https://github.com/advisories/GHSA-9j6q-wvj5-jgjg",
         "reason": "PyTorch selects native UnixFileLock on the reviewed macOS/Linux local filesystems. SoftFileLock, leases and ENOSYS soft-lock fallback are not enabled. See docs/security/dependency-assessments.md#filelock-local-filesystem-advisories.",
-        "owner": "Codex",
-        "reviewed": "2026-10-28",
-        "expires": "2026-11-25",
+        "owner": "Claude",
+        "reviewed": "2026-10-29",
+        "expires": "2027-01-27",
         "impact": "The advisory cannot cross its local-file trust boundary in the reviewed development and verification environments. Reassess before enabling affected APIs, Windows verification, untrusted shared caches or soft-lock fallback; review an aged fixed release from 2026-11-16."
       },
       {
@@ -842,9 +845,9 @@
         "basis": "unreachable",
         "evidence": "https://github.com/advisories/GHSA-cwqr-hh33-gh44",
         "reason": "No project or installed dependency caller selects StrictSoftFileLock, SoftReadWriteLock or SQLite ReadWriteLock; PyTorch selects native UnixFileLock. See docs/security/dependency-assessments.md#filelock-local-filesystem-advisories.",
-        "owner": "Codex",
-        "reviewed": "2026-10-28",
-        "expires": "2026-11-25",
+        "owner": "Claude",
+        "reviewed": "2026-10-29",
+        "expires": "2026-11-28",
         "impact": "The advisory cannot cross its local-file trust boundary in the reviewed development and verification environments. Reassess before enabling affected APIs, Windows verification, untrusted shared caches or soft-lock fallback; review an aged fixed release from 2026-11-16."
       },
       {
@@ -859,9 +862,9 @@
         "basis": "unreachable",
         "evidence": "https://github.com/advisories/GHSA-fj95-fr6c-h845",
         "reason": "No project or installed dependency caller selects StrictSoftFileLock, SoftReadWriteLock or SQLite ReadWriteLock; PyTorch selects native UnixFileLock. See docs/security/dependency-assessments.md#filelock-local-filesystem-advisories.",
-        "owner": "Codex",
-        "reviewed": "2026-10-28",
-        "expires": "2026-11-25",
+        "owner": "Claude",
+        "reviewed": "2026-10-29",
+        "expires": "2026-11-28",
         "impact": "The advisory cannot cross its local-file trust boundary in the reviewed development and verification environments. Reassess before enabling affected APIs, Windows verification, untrusted shared caches or soft-lock fallback; review an aged fixed release from 2026-11-16."
       },
       {
@@ -876,9 +879,9 @@
         "basis": "unreachable",
         "evidence": "https://github.com/advisories/GHSA-fq56-3cx3-fjxp",
         "reason": "PyTorch selects native UnixFileLock on the reviewed macOS/Linux local filesystems. SoftFileLock, leases and ENOSYS soft-lock fallback are not enabled. See docs/security/dependency-assessments.md#filelock-local-filesystem-advisories.",
-        "owner": "Codex",
-        "reviewed": "2026-10-28",
-        "expires": "2026-11-25",
+        "owner": "Claude",
+        "reviewed": "2026-10-29",
+        "expires": "2026-11-28",
         "impact": "The advisory cannot cross its local-file trust boundary in the reviewed development and verification environments. Reassess before enabling affected APIs, Windows verification, untrusted shared caches or soft-lock fallback; review an aged fixed release from 2026-11-16."
       },
       {
@@ -893,9 +896,9 @@
         "basis": "unreachable",
         "evidence": "https://github.com/advisories/GHSA-j8f7-rjxc-mr56",
         "reason": "No project or installed dependency caller selects StrictSoftFileLock, SoftReadWriteLock or SQLite ReadWriteLock; PyTorch selects native UnixFileLock. See docs/security/dependency-assessments.md#filelock-local-filesystem-advisories.",
-        "owner": "Codex",
-        "reviewed": "2026-10-28",
-        "expires": "2026-11-25",
+        "owner": "Claude",
+        "reviewed": "2026-10-29",
+        "expires": "2026-11-28",
         "impact": "The advisory cannot cross its local-file trust boundary in the reviewed development and verification environments. Reassess before enabling affected APIs, Windows verification, untrusted shared caches or soft-lock fallback; review an aged fixed release from 2026-11-16."
       },
       {
@@ -910,9 +913,9 @@
         "basis": "unreachable",
         "evidence": "https://github.com/advisories/GHSA-m462-7rxw-wvpg",
         "reason": "No project or installed dependency caller selects StrictSoftFileLock, SoftReadWriteLock or SQLite ReadWriteLock; PyTorch selects native UnixFileLock. See docs/security/dependency-assessments.md#filelock-local-filesystem-advisories.",
-        "owner": "Codex",
-        "reviewed": "2026-10-28",
-        "expires": "2026-11-25",
+        "owner": "Claude",
+        "reviewed": "2026-10-29",
+        "expires": "2026-11-28",
         "impact": "The advisory cannot cross its local-file trust boundary in the reviewed development and verification environments. Reassess before enabling affected APIs, Windows verification, untrusted shared caches or soft-lock fallback; review an aged fixed release from 2026-11-16."
       },
       {
@@ -927,9 +930,9 @@
         "basis": "unreachable",
         "evidence": "https://github.com/advisories/GHSA-rfpc-qcw5-3pc4",
         "reason": "PyTorch selects native UnixFileLock on the reviewed macOS/Linux local filesystems. SoftFileLock, leases and ENOSYS soft-lock fallback are not enabled. See docs/security/dependency-assessments.md#filelock-local-filesystem-advisories.",
-        "owner": "Codex",
-        "reviewed": "2026-10-28",
-        "expires": "2026-11-25",
+        "owner": "Claude",
+        "reviewed": "2026-10-29",
+        "expires": "2026-11-28",
         "impact": "The advisory cannot cross its local-file trust boundary in the reviewed development and verification environments. Reassess before enabling affected APIs, Windows verification, untrusted shared caches or soft-lock fallback; review an aged fixed release from 2026-11-16."
       }
     ]

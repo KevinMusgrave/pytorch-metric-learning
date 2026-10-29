@@ -1,6 +1,6 @@
 # Executable metric-learning recipes
 
-The agent-facing recipes are ordinary PyTorch application code beside their
+The executable recipes are ordinary PyTorch application code beside their
 canonical documentation, outside the distributed package. They retain
 algorithm-specific composition previously embedded in
 trainers without introducing a new training framework. The library does not
@@ -16,7 +16,7 @@ Separate reference tensors remain attached to autograd. Scalar conversion in
 example history is an explicit diagnostic, not part of the library hot path.
 
 Cascaded mining filters each embedding slice using the previous stage's pairs,
-passed to `HDCMiner` as explicit `candidates`; the miner keeps no state that
+passed to `HDCMiner` as its `indices_tuple`; the miner keeps no state that
 could leak into later batches. Stage losses are summed with equal weights in the
 example; applications can choose weights and classifier heads explicitly.
 

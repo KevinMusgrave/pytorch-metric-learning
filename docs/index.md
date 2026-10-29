@@ -4,9 +4,19 @@ Choose a loss for embeddings produced by your PyTorch model, then add mining,
 custom distances, reduction, or regularization as needed. Applications own
 training loops, data loading, optimizers, and logging.
 
-For a complete first training step and PyPI installation with uv or pip, start
-at the [repository README](https://github.com/KevinMusgrave/pytorch-metric-learning#readme).
-See the [version 3.0.0 release notes](release-notes-3.md) for requirements and breaking changes.
+## Install
+
+```sh
+pip install pytorch-metric-learning
+pip install "pytorch-metric-learning[faiss]"       # Faiss retrieval backends
+pip install "pytorch-metric-learning[clustering]"  # NMI and AMI metrics
+```
+
+Version 3 requires Python 3.12 or newer, PyTorch 2.14.0 or newer, and NumPy
+2.5.3 or newer. See the [release notes](release-notes/3.0.0.md), the
+[migration guide](migration-2-to-3.md), and the
+[version 2 documentation](https://kevinmusgrave.github.io/pytorch-metric-learning/v2/).
+New to the library? Read the [concepts overview](concepts.md).
 
 [![Your PyTorch code computes embeddings and calls the library's miner and loss to get a scalar loss, then calls backward and steps its optimizer. For evaluation, your code extracts embeddings and AccuracyCalculator retrieves nearest neighbors to compute metrics.](imgs/architecture.svg)](imgs/architecture.svg)
 
@@ -23,48 +33,39 @@ See the [version 3.0.0 release notes](release-notes-3.md) for requirements and b
 | Reuse detached embeddings                   | `losses.CrossBatchMemory`                                   | [Memory contract](losses/cross_batch_memory.md#crossbatchmemory), [warmup](recipes/training.md#memory-warmup-contract)                               |
 | Balance batches by label                    | `samplers.MPerClassSampler`, `samplers.HierarchicalSampler` | [Samplers](samplers.md)                                                                                                                              |
 | Sample from mined tuple frequency           | `utils.indexing.convert_to_weights`                         | [Weighted sampling](recipes/training.md#mining-weighted-sampling-contract)                                                                           |
-| Evaluate retrieval                          | `utils.accuracy_calculator.AccuracyCalculator`              | [Metrics and query/reference rules](accuracy_calculation.md), [evaluation recipe](recipes/evaluation.md)                                             |
+| Evaluate retrieval                          | `evaluation.AccuracyCalculator`                             | [Metrics and query/reference rules](accuracy_calculation.md), [evaluation recipe](recipes/evaluation.md)                                             |
 | Evaluate hierarchical or two-stream labels  | `AccuracyCalculator` with explicit subsets                  | [Parent-conditioned and two-stream evaluation](recipes/evaluation.md#parent-conditioned-hierarchical-retrieval)                                      |
-| Find nearest neighbors or threshold matches | `utils.retrieval.CustomKNN`, `utils.retrieval.MatchFinder`  | [Retrieval backends](retrieval.md)                                                                                                                   |
-| Train across devices                        | `utils.distributed.DistributedLossWrapper`                  | [Distributed values and gradients](distributed.md)                                                                                                   |
+| Find nearest neighbors or threshold matches | `evaluation.CustomKNN`, `evaluation.MatchFinder`            | [Retrieval backends](retrieval.md)                                                                                                                   |
+| Train across devices                        | `distributed.DistributedLossWrapper`                        | [Distributed values and gradients](distributed.md)                                                                                                   |
 | Generate hard negatives                     | Ordinary PyTorch modules and triplet loss                   | [Adversarial objectives](recipes/training.md#adversarial-objectives-and-gradient-ownership)                                                          |
 
 ## Component references
 
-- [Losses](losses.md): objectives, defaults, supported arguments, and papers.
-- [Miners](miners.md): candidate selection and index conventions.
-- [Distances](distances.md): normalization, distance, and similarity orientation.
-- [Reducers](reducers.md): filtering and aggregation of per-tuple penalties.
-- [Regularizers](regularizers.md): embedding and learnable-weight penalties.
-- [Samplers](samplers.md): label structure and PyTorch data-loader integration.
+- [Concepts](concepts.md): how embeddings, tuples, distances, loss terms, and reducers fit together.
+- [Losses](losses.md), [miners](miners.md), [distances](distances.md),
+  [reducers](reducers.md), [regularizers](regularizers.md), and [samplers](samplers.md).
 - [Retrieval metrics](accuracy_calculation.md) and [retrieval backends](retrieval.md).
 - [Distributed execution](distributed.md) and [measured performance](performance.md).
 - [Custom losses](extend/losses.md) and [custom miners](extend/miners.md).
+- [Versioning and support](versioning.md) and [how to cite](citing.md).
 
 ## Execute a recipe
 
-The small [training](recipes/training.md) and [evaluation](recipes/evaluation.md)
-recipes sit beside their contracts.
-Each lists its inputs, expected results, supported composition, and exact
-verification command. They use synthetic tensors and no downloads. There is no
-separate tutorial gallery or notebook environment to set up.
+The [training](recipes/training.md) and [evaluation](recipes/evaluation.md)
+recipes list their inputs, expected results, supported composition, and exact
+verification command. They use synthetic tensors and download nothing.
 
-The repository's frozen environment and test commands are documented in the
-[development guide](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/DEVELOPMENT.md).
-
-## Utility imports
-
-Public utilities are imported from their documented submodules:
+## Imports
 
 ```python
-from pytorch_metric_learning.utils.accuracy_calculator import AccuracyCalculator
-from pytorch_metric_learning.utils.retrieval import CustomKNN, MatchFinder
-from pytorch_metric_learning.utils.distributed import DistributedLossWrapper
+from pytorch_metric_learning import distances, losses, miners, reducers, regularizers, samplers
+from pytorch_metric_learning.evaluation import AccuracyCalculator, CustomKNN, MatchFinder
+from pytorch_metric_learning.distributed import DistributedLossWrapper
 from pytorch_metric_learning.utils import indexing
+from pytorch_metric_learning.types import PairIndices, TripletIndices
 ```
 
-The `utils` package does not re-export these classes. This keeps evaluation and
-distributed imports separate from the numerical core. `utils.indexing` holds the
-public pair, triplet, and weight utilities used by custom losses and miners.
-Shared type annotations are available from `pytorch_metric_learning.types`.
-Modules and names starting with an underscore are private.
+`utils.indexing` holds the public pair, triplet, and weight utilities used by
+custom losses and miners; other modules under `utils` are private. Shared type
+annotations live in `pytorch_metric_learning.types`. Names starting with an
+underscore are private.

@@ -22,6 +22,7 @@ LEARNABLE = {
 CONSTRUCTOR_ARGUMENTS = {"RankedListLoss": (0.5, 1.0)}
 NOT_PROBED = {
     "BaseMetricLossFunction",
+    "BaseProxyLoss",
     "ManifoldLoss",
     "CrossBatchMemory",
     "GenericPairLoss",

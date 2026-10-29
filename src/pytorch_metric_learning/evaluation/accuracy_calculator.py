@@ -361,35 +361,17 @@ class AccuracyCalculator:
         per_class: bool,
     ) -> dict[str, MetricValue]:
         if reference is None:
-            reference = query
-            reference_labels = query_labels
-            ref_includes_query = True
+            reference, reference_labels, ref_includes_query = query, query_labels, True
         if reference_labels is None:
             raise ValueError("reference_labels are required with reference")
-
-        device = self.device
-        if device is None:
-            device = torch.as_tensor(query).device
+        device = self.device or torch.as_tensor(query).device
         query_t, reference_t = embedding_pair(query, reference, device)
         query_labels_t, reference_labels_t = (
             torch.as_tensor(x).to(device) for x in (query_labels, reference_labels)
         )
-
-        if len(query_t) != len(query_labels_t) or len(reference_t) != len(
-            reference_labels_t
-        ):
-            raise ValueError("embeddings and labels must have the same length")
-        if not (torch.isfinite(query_t).all() and torch.isfinite(reference_t).all()):
-            raise ValueError("query and reference embeddings must be finite")
-        if ref_includes_query and not (
-            torch.allclose(query_t, reference_t[: len(query_t)])
-            and labels_equal(query_labels_t, reference_labels_t[: len(query_labels_t)])
-        ):
-            raise ValueError(
-                "When ref_includes_query is True, the first len(query) rows of "
-                "reference and reference_labels must equal query and query_labels."
-            )
-
+        self.check_inputs(
+            query_t, query_labels_t, reference_t, reference_labels_t, ref_includes_query
+        )
         functions = {name: self.metric_functions()[name] for name in names}
         kwargs: dict[str, Any] = {
             "query": query_t,
@@ -414,6 +396,34 @@ class AccuracyCalculator:
         if any(x in self.requires_clustering() for x in names):
             kwargs["cluster_labels"] = self.get_cluster_labels(query_t, query_labels_t)
         return {name: function(**kwargs) for name, function in functions.items()}
+
+    def check_inputs(
+        self,
+        query: Tensor,
+        query_labels: Tensor,
+        reference: Tensor,
+        reference_labels: Tensor,
+        ref_includes_query: bool,
+    ) -> None:
+        if len(query) != len(query_labels) or len(reference) != len(reference_labels):
+            raise ValueError("embeddings and labels must have the same length")
+        if self.custom_comparison is None and (
+            query_labels.ndim != 1 or reference_labels.ndim != 1
+        ):
+            raise ValueError(
+                "Multi-column labels require a label_comparison_fn; the default "
+                "comparison supports one label per row"
+            )
+        if not (torch.isfinite(query).all() and torch.isfinite(reference).all()):
+            raise ValueError("query and reference embeddings must be finite")
+        if ref_includes_query and not (
+            torch.allclose(query, reference[: len(query)])
+            and labels_equal(query_labels, reference_labels[: len(query_labels)])
+        ):
+            raise ValueError(
+                "When ref_includes_query is True, the first len(query) rows of "
+                "reference and reference_labels must equal query and query_labels."
+            )
 
     def knn_inputs(
         self,

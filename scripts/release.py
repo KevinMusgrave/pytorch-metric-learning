@@ -18,6 +18,8 @@ def validate_release(root, tag, ci_runs):
     project = tomllib.loads((root / "pyproject.toml").read_text())["project"]
     if tag != f"v{project['version']}":
         raise ValueError("Release tag must match the version in pyproject.toml")
+    if not (root / "docs" / "release-notes" / f"{project['version']}.md").is_file():
+        raise ValueError("Release notes must exist at docs/release-notes/VERSION.md")
     if git(root, "status", "--porcelain"):
         raise ValueError("Release checkout must be clean")
     reference = f"refs/tags/{tag}"

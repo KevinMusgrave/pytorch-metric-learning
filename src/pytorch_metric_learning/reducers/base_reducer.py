@@ -44,6 +44,8 @@ def validate_term(term: LossTerm) -> tuple[Tensor, Tensor | None]:
     if indices is None:
         if losses.numel() != 1:
             raise ValueError("A loss term without indices must contain one value")
+        if "divisor" in term:
+            raise ValueError("An already reduced loss term cannot have a divisor")
         return losses.reshape(()), None
     index_tensors = (indices,) if isinstance(indices, Tensor) else indices
     if (

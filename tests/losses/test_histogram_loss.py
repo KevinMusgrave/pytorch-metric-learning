@@ -146,3 +146,18 @@ class TestHistogramLoss(unittest.TestCase):
         with self.assertRaises(ValueError):
             fractional: Any = 2.5
             _ = HistogramLoss(num_bins=fractional)
+
+
+class TestHistogramEndpoints(unittest.TestCase):
+    def test_identical_and_opposite_embeddings(self):
+        embeddings = torch.tensor(
+            [[1.0, 0.0], [1.0, 0.0], [-1.0, 0.0], [-1.0, 0.0]],
+            device=TEST_DEVICE,
+            requires_grad=True,
+        )
+        labels = torch.tensor([0, 0, 1, 1], device=TEST_DEVICE)
+        loss = HistogramLoss(num_bins=4)(embeddings, labels)
+        loss.backward()
+        self.assertEqual(loss.item(), 0)
+        loss = HistogramLoss(num_bins=4)(embeddings, torch.tensor([0, 1, 0, 1]))
+        self.assertEqual(loss.item(), 1)

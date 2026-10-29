@@ -1,13 +1,38 @@
 # How to write custom mining functions
 
-1. Extend `BaseMiner`
-2. Implement the `mine` method
-3. Inside `mine`, return a tuple of index tensors
+1. Extend [`BaseMiner`](../miners.md#baseminer).
+2. Implement `mine(embeddings, labels, indices_tuple, ref_emb, ref_labels)`.
+3. Return a `PairIndices` or `TripletIndices` from `pytorch_metric_learning.types`.
+
+`BaseMiner.forward` validates the inputs, calls `mine` under `torch.no_grad()`,
+and [validates its output](../miners.md#output-validation). It passes the
+arguments to `mine` as follows:
+
+- **embeddings**, **labels**: The query embeddings and their labels. Anchor
+  indices refer to these rows.
+- **indices_tuple**: `None`, or the caller's candidate pairs or triplets as a
+  `PairIndices` or `TripletIndices`. A miner honors candidates by selecting only
+  from them.
+- **ref_emb**, **ref_labels**: `None` for self-comparison, or a separate
+  reference set. Positive and negative indices refer to the reference rows.
+
+The `utils.indexing` helpers handle all of these cases:
+
+- `convert_to_pairs(indices_tuple, labels, ref_labels)` returns the candidate
+  pairs, or all positive and negative pairs when `indices_tuple` is `None`.
+- `convert_to_triplets(indices_tuple, labels, ref_labels)` does the same for
+  triplets.
+
+With `ref_labels=None`, both helpers exclude each row's pairing with itself from
+the positives. `self.distance(embeddings, ref_emb)` likewise compares the
+embeddings with themselves when `ref_emb` is `None`.
 
 ## An example pair miner
 
 ```python
+import torch
 from pytorch_metric_learning.miners import BaseMiner
+from pytorch_metric_learning.types import PairIndices
 from pytorch_metric_learning.utils import indexing
 
 
@@ -16,36 +41,37 @@ class ExamplePairMiner(BaseMiner):
         super().__init__(distance=distance)
         self.margin = margin
 
-    def mine(self, embeddings, labels, ref_emb, ref_labels):
+    def mine(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
         mat = self.distance(embeddings, ref_emb)
-        a1, p, a2, n = indexing.get_all_pairs_indices(labels, ref_labels)
+        a1, p, a2, n = indexing.convert_to_pairs(indices_tuple, labels, ref_labels)
         pos_mask = self.distance.margin(mat[a1, p], self.margin) > 0
         neg_mask = self.distance.margin(self.margin, mat[a2, n]) > 0
-        return a1[pos_mask], p[pos_mask], a2[neg_mask], n[neg_mask]
+        return PairIndices(a1[pos_mask], p[pos_mask], a2[neg_mask], n[neg_mask])
 ```
 
 The `ExamplePairMiner` does the following:
 
-- Computes the distance matrix between `embeddings` and `ref_emb`.
-- Finds the indices of all positive and negative pairs.
-- Returns the indices of pairs that violate the margin. `distance.margin(x, y)`
-  is `x - y` for distances and `y - x` for similarities, so the same code works
-  for both orientations.
+- Computes the distance matrix between `embeddings` and the reference set.
+- Takes the candidate positive and negative pairs.
+- Returns the pairs that violate the margin. `distance.margin(x, y)` is `x - y`
+  for distances and `y - x` for similarities, so the same code works for both
+  orientations.
 
 Example usage:
 
 ```python
-miner = ExamplePairMiner()
 embeddings = torch.randn(128, 512)
 labels = torch.randint(0, 10, size=(128,))
+miner = ExamplePairMiner()
 pairs = miner(embeddings, labels)
+assert isinstance(pairs, PairIndices)
+assert torch.all(pairs.pos_anchors != pairs.positives)
 ```
 
 ## An example triplet miner
 
 ```python
-from pytorch_metric_learning.miners import BaseMiner
-from pytorch_metric_learning.utils import indexing
+from pytorch_metric_learning.types import TripletIndices
 
 
 class ExampleTripletMiner(BaseMiner):
@@ -53,39 +79,44 @@ class ExampleTripletMiner(BaseMiner):
         super().__init__(distance=distance)
         self.margin = margin
 
-    def mine(self, embeddings, labels, ref_emb, ref_labels):
+    def mine(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
         mat = self.distance(embeddings, ref_emb)
-        a, p, n = indexing.get_all_triplets_indices(labels, ref_labels)
+        a, p, n = indexing.convert_to_triplets(indices_tuple, labels, ref_labels)
         triplet_margin = self.distance.margin(mat[a, n], mat[a, p])
-        triplet_mask = triplet_margin <= self.margin
-        return a[triplet_mask], p[triplet_mask], n[triplet_mask]
+        keep = triplet_margin <= self.margin
+        return TripletIndices(a[keep], p[keep], n[keep])
 ```
 
-This miner works like `ExamplePairMiner`, but finds triplets instead of pairs.
+This miner works like `ExamplePairMiner`, but selects triplets. Because both
+miners start from their candidates, they compose with other miners:
+
+```python
+candidates = ExamplePairMiner(margin=0.5)(embeddings, labels)
+triplets = ExampleTripletMiner()(embeddings, labels, indices_tuple=candidates)
+assert isinstance(triplets, TripletIndices)
+```
+
+## Reference embeddings
+
+With `ref_emb` and `ref_labels`, the miner returns anchors from `embeddings` and
+positives and negatives from `ref_emb`:
+
+```python
+ref_emb = torch.randn(32, 512)
+ref_labels = torch.randint(0, 10, size=(32,))
+a1, p, a2, n = miner(embeddings, labels, ref_emb=ref_emb, ref_labels=ref_labels)
+assert a1.max() < len(embeddings) and p.max() < len(ref_emb)
+```
+
+A reference set is never treated as the query set, even when it is the same
+tensor, so no pair is excluded as a self-comparison. To mine within one batch,
+leave `ref_emb` as `None`.
 
 ## Validation
 
-`BaseMiner.forward` runs `mine` under `torch.no_grad()` and then validates the
-output: three equal-length triplet tensors or four pair tensors whose anchor
-and partner lengths match, all one-dimensional. Invalid types raise
-`TypeError` and invalid shapes raise `ValueError`.
-
-## What is `ref_emb`?
-
-The forward function of `BaseMiner` has optional `ref_emb` and `ref_labels`
-arguments. The miner returns anchors from `embeddings` and positives and
-negatives from `ref_emb`:
-
-```python
-miner = ExamplePairMiner()
-embeddings = torch.randn(128, 512)
-labels = torch.randint(0, 10, size=(128,))
-ref_emb = torch.randn(32, 512)
-ref_labels = torch.randint(0, 10, size=(32,))
-a1, p, a2, n = miner(embeddings, labels, ref_emb, ref_labels)
-# a1 and a2 index "embeddings"; p and n index "ref_emb"
-```
-
-When `ref_emb` and `ref_labels` are `None`, they are set to `embeddings` and
-`labels` before `mine` is called, and self-comparisons are excluded from the
-positive pairs.
+`BaseMiner.forward` checks that `labels`, `ref_emb`, `ref_labels`, and candidate
+tensors are on the embeddings' device and that labels have one value per
+embedding, raising `ValueError` otherwise. After `mine` returns, it checks for
+three equal-length triplet tensors or four pair tensors whose anchor and partner
+lengths match, all one-dimensional and on the embeddings' device. Invalid types
+raise `TypeError`; invalid shapes, lengths, or devices raise `ValueError`.

@@ -1,12 +1,15 @@
 # ContrastiveLoss
 
+[Dimensionality Reduction by Learning an Invariant Mapping](http://yann.lecun.com/exdb/publis/pdf/hadsell-chopra-lecun-06.pdf)
+(Hadsell, Chopra, and LeCun, 2006)
+
 ```python
-losses.ContrastiveLoss(pos_margin=0, neg_margin=1, **options):
+losses.ContrastiveLoss(pos_margin=0.0, neg_margin=1.0, **options)
 ```
 
 **Equation**:
 
-If using a distance metric like [LpDistance](../distances.md#lpdistance), the loss is:
+With a distance such as [LpDistance](../distances.md#lpdistance), the loss is:
 
 $$
 L_{contrastive} = \left[d_p - m_{pos}\right]_+ + \left[m_{neg} - d_n\right]_+
@@ -14,7 +17,7 @@ $$
 
 Here $d_p$ and $d_n$ are positive-pair and negative-pair distances, $m_{pos}$ and $m_{neg}$ are `pos_margin` and `neg_margin`, and $[x]_+ = \max(0, x)$.
 
-If using a similarity metric like [CosineSimilarity](../distances.md#cosinesimilarity), the loss is:
+With a similarity such as [CosineSimilarity](../distances.md#cosinesimilarity), the loss is:
 
 $$
 L_{contrastive} = \left[m_{pos} - s_p\right]_+ + \left[s_n - m_{neg}\right]_+
@@ -22,14 +25,20 @@ $$
 
 Here $s_p$ and $s_n$ are positive-pair and negative-pair similarities.
 
-**Implementation notes**: The hinges are not squared. The default reducer averages the positive-pair losses greater than zero and, separately, the negative-pair losses greater than zero, then adds the two averages.
+**Implementation notes**: The hinges are not squared, unlike the paper's
+$\frac{1}{2} d_p^2$ and $\frac{1}{2}[m - d_n]_+^2$. The default reducer averages
+the positive-pair losses greater than zero and, separately, the negative-pair
+losses greater than zero, then adds the two averages.
 
 **Parameters**:
 
-- **pos_margin**: The distance (or similarity) over (under) which positive pairs will contribute to the loss.
-- **neg_margin**: The distance (or similarity) under (over) which negative pairs will contribute to the loss.
+- **pos_margin**: The distance (or similarity) over (under) which positive
+  pairs contribute to the loss.
+- **neg_margin**: The distance (or similarity) under (over) which negative
+  pairs contribute to the loss.
 
-Note that the default values for `pos_margin` and `neg_margin` are suitable if you are using a non-inverted distance measure, like [LpDistance](../distances.md#lpdistance). If you use an inverted distance measure like [CosineSimilarity](../distances.md#cosinesimilarity), then more appropriate values would be `pos_margin = 1` and `neg_margin = 0`.
+The defaults suit a distance such as LpDistance. With a similarity such as
+CosineSimilarity, use values such as `pos_margin=1` and `neg_margin=0`.
 
 **Default distance**:
 
@@ -41,5 +50,5 @@ Note that the default values for `pos_margin` and `neg_margin` are suitable if y
 
 **Reducer input**:
 
-- **pos_loss**: The loss per positive pair in the batch. Reduction type is `"pos_pair"`.
-- **neg_loss**: The loss per negative pair in the batch. Reduction type is `"neg_pair"`.
+- **pos_loss**: One loss per (anchor, positive) pair, indexed by `(anchors, positives)`.
+- **neg_loss**: One loss per (anchor, negative) pair, indexed by `(anchors, negatives)`.

@@ -1,10 +1,15 @@
 # Retrieval backends
 
-`utils.retrieval` provides nearest-neighbor search, threshold matching, and
-k-means clustering for [`AccuracyCalculator`](accuracy_calculation.md) and
-application code. These operate on embedding tensors the caller has already
-computed; see the [evaluation recipe](recipes/evaluation.md#extract-embeddings)
-for an ordinary PyTorch extraction loop.
+`pytorch_metric_learning.evaluation` provides nearest-neighbor search,
+threshold matching, and k-means clustering for
+[`AccuracyCalculator`](accuracy_calculation.md) and application code. These
+operate on embedding tensors the caller has already computed; the
+[evaluation recipe](recipes/evaluation.md#extract-embeddings) shows an ordinary
+PyTorch extraction loop.
+
+```python
+from pytorch_metric_learning.evaluation import CustomKNN, FaissKMeans, FaissKNN, MatchFinder
+```
 
 | Backend       | Dependency    | Default for                                    |
 | ------------- | ------------- | ---------------------------------------------- |
@@ -13,8 +18,8 @@ for an ordinary PyTorch extraction loop.
 | `FaissKNN`    | `faiss` extra | None; pass it as `knn_func`                    |
 | `FaissKMeans` | `faiss` extra | None; pass it as `kmeans_func` for NMI and AMI |
 
-Importing `utils.retrieval` or `utils.accuracy_calculator` does not import Faiss
-or scikit-learn. Constructing a Faiss backend without the extra raises
+Importing `pytorch_metric_learning.evaluation` does not import Faiss or
+scikit-learn. Constructing a Faiss backend without the extra raises
 `ModuleNotFoundError` naming `pytorch-metric-learning[faiss]`.
 
 ## k-NN function contract
@@ -25,12 +30,13 @@ query's device. Rows are ordered from nearest to farthest. When
 `ref_includes_query` is true, the backend searches for `k + 1` neighbors and
 removes each query's own index `i`; if row `i` does not appear in a row's
 results, the last neighbor is removed instead. This assumes the query is the
-first `len(query)` rows of `reference`.
+first `len(query)` rows of `reference`, which
+[`AccuracyCalculator`](accuracy_calculation.md#getting-accuracy) validates.
 
 ## CustomKNN
 
 ```python
-utils.retrieval.CustomKNN(distance, batch_size=None)
+evaluation.CustomKNN(distance, batch_size=None)
 ```
 
 - **distance**: A [distance](distances.md). Similarities such as
@@ -57,7 +63,7 @@ Normalize embeddings before evaluation when cosine geometry is intended.
 ```python
 import torch
 from pytorch_metric_learning.distances import LpDistance
-from pytorch_metric_learning.utils.retrieval import CustomKNN
+from pytorch_metric_learning.evaluation import CustomKNN
 
 query = torch.tensor([[0.0, 0.0], [3.0, 0.0]])
 reference = torch.tensor([[0.0, 1.0], [3.0, 0.5], [9.0, 9.0]])
@@ -70,7 +76,7 @@ assert distances.tolist() == [[1.0], [0.25]]
 ## MatchFinder
 
 ```python
-utils.retrieval.MatchFinder(distance, threshold=None)
+evaluation.MatchFinder(distance, threshold=None)
 ```
 
 A pair matches when its distance is at most `threshold`, or when its similarity
@@ -87,14 +93,21 @@ passed to a method overrides the constructor value; omitting both raises
   and returns a boolean tensor shaped `(len(x),)`.
 
 Both methods honor the configured distance normalization and `power`, including
-cosine similarity and squared Euclidean distance. Row matching computes only
+cosine similarity and squared Euclidean distance. `is_match` uses
+[`distance.pairwise`](distances.md#calling-a-distance), so it computes only
 corresponding pairs, without materializing a full matrix.
 
 ```python
+import torch
 from pytorch_metric_learning.distances import CosineSimilarity
+from pytorch_metric_learning.evaluation import MatchFinder
 
+query = torch.tensor([[1.0, 0.0], [0.0, 1.0]])
+reference = torch.tensor([[1.0, 0.1], [1.0, 1.0], [-1.0, 0.0]])
 finder = MatchFinder(CosineSimilarity(), threshold=0.9)
-matches = finder.get_matching_pairs(query + 1e-3, reference)
+matches = finder.get_matching_pairs(query, reference)
+assert matches.tolist() == [[True, False, False], [False, False, False]]
+assert finder.is_match(query, reference[:2]).tolist() == [True, False]
 ```
 
 ## Logging
@@ -112,7 +125,7 @@ logging.getLogger("pytorch_metric_learning").setLevel(logging.INFO)
 ## FaissKNN
 
 ```python
-utils.retrieval.FaissKNN(reset_before=True, reset_after=True, index_init_fn=None, gpus=None)
+evaluation.FaissKNN(reset_before=True, reset_after=True, index_init_fn=None, gpus=None)
 ```
 
 - **reset_before**: Build a new index from `index_init_fn(dimension)` on every
@@ -120,30 +133,45 @@ utils.retrieval.FaissKNN(reset_before=True, reset_after=True, index_init_fn=None
 - **reset_after**: Discard the index after every call.
 - **index_init_fn**: Callable returning a Faiss index for a dimension. Defaults to
   `faiss.IndexFlatL2`, whose distances are squared Euclidean.
-- **gpus**: Faiss GPU indices for the search. Without it, CUDA queries use all
-  GPUs visible to a GPU-enabled Faiss build.
+- **gpus**: A non-empty list or tuple of Faiss GPU indices for the search.
+  Without it, CUDA queries use all GPUs visible to Faiss. A value that is not a
+  list or tuple raises `TypeError`; an empty one raises `ValueError`.
 
-Faiss searches CPU float32 copies of the inputs; results return to the query's
-device. A GPU-enabled Faiss build searches on GPU only when `k` is at most 2,048,
-the limit in Faiss's `DeviceDefs.cuh`, and otherwise logs a warning and uses
-the CPU index.
+Faiss searches float32 CPU copies of the inputs; results return to the query's
+device. A GPU search requires a GPU build of Faiss, one that provides
+`faiss.GpuIndex`, with at least one visible GPU, and a CUDA query or `gpus`.
+The `faiss-cpu` package never searches on a GPU, even when Faiss reports one.
+A GPU search runs only when `k` is at most 2,048, the limit in Faiss's
+`DeviceDefs.cuh`; otherwise it logs a warning and uses the CPU index.
 
 To keep a persistent index, disable both resets:
 
 ```python
+import os
+import tempfile
+
+import torch
+from pytorch_metric_learning.evaluation import FaissKNN
+
+reference, more_reference, query = torch.randn(50, 8), torch.randn(20, 8), torch.randn(5, 8)
 knn = FaissKNN(reset_before=False, reset_after=False)
 knn.train(reference)        # new index containing reference
-knn.add(more_reference)     # append rows
+knn.add(more_reference)     # append rows; indices continue at 50
 distances, indices = knn(query, 10)
-knn.save("reference.index")
-restored = FaissKNN(reset_before=False, reset_after=False)
-restored.load("reference.index")
+assert indices.shape == (5, 10)
+
+with tempfile.TemporaryDirectory() as directory:
+    path = os.path.join(directory, "reference.index")
+    knn.save(path)
+    restored = FaissKNN(reset_before=False, reset_after=False)
+    restored.load(path)
+    assert torch.equal(restored(query, 10)[1], indices)
 ```
 
 ## FaissKMeans
 
 ```python
-utils.retrieval.FaissKMeans(**kwargs)
+evaluation.FaissKMeans(**kwargs)
 ```
 
 Keyword arguments go to `faiss.Kmeans`. Calling `kmeans(x, num_clusters)` trains
@@ -152,28 +180,10 @@ on `x`'s device.
 
 ## macOS OpenMP runtimes
 
-The macOS `faiss-cpu` and PyTorch wheels each bundle an OpenMP runtime. On the
-development Mac, loading both in one process aborts with `OMP: Error #15`;
-setting `KMP_DUPLICATE_LIB_OK=TRUE` alone avoids that abort but still crashes
-during multithreaded Faiss calls. Both `KMP_DUPLICATE_LIB_OK=TRUE` and
-`OMP_NUM_THREADS=1`, set before importing either library, let searches and k-means
-complete, as in the repository's CPU test profile. Intel documents the
-duplicate-runtime setting as unsupported. Prefer `CustomKNN` on macOS, or
-install Faiss and PyTorch from one distribution that shares a single OpenMP
-runtime. The repository's pytest bootstrap also supplies these defaults on
-macOS before importing Torch when they are unset; the library itself does not
-change the environment. Earlier releases imported scikit-learn eagerly, which sets
-`KMP_DUPLICATE_LIB_OK` as a side effect; this release does not.
-
-## Removed model wrapper
-
-`InferenceModel` and the PCA helper were removed. Extract embeddings in
-application code, then call a backend directly:
-
-```python
-model.eval()
-with torch.inference_mode():
-    reference = torch.cat([model(batch) for batch, _ in reference_loader])
-    query = model(query_batch)
-distances, indices = knn(query, 10, reference)
-```
+The macOS `faiss-cpu` and PyTorch wheels each bundle an OpenMP runtime, and
+loading both in one process can abort with `OMP: Error #15` or crash in
+multithreaded Faiss calls. Setting both `KMP_DUPLICATE_LIB_OK=TRUE` and
+`OMP_NUM_THREADS=1` before importing either library lets searches and k-means
+complete; Intel documents the duplicate-runtime setting as unsupported. Prefer
+`CustomKNN` on macOS, or install Faiss and PyTorch from one distribution that
+shares a single OpenMP runtime. The library does not change the environment.

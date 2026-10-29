@@ -1,10 +1,10 @@
 # NormalizedSoftmaxLoss
 
-[Classification is a Strong Baseline for Deep Metric Learning](https://arxiv.org/pdf/1811.12649.pdf){target=_blank}
+[Classification is a Strong Baseline for Deep Metric Learning](https://arxiv.org/abs/1811.12649)
 
 ```python
 losses.NormalizedSoftmaxLoss(num_classes, embedding_size, temperature=0.05,
-    *, weight_regularizer=None, weight_reg_weight=1, weight_init_func=None, **options)
+    *, weight_regularizer=None, weight_reg_weight=1.0, weight_init_func=None, **options)
 ```
 
 **Equation**:
@@ -15,27 +15,31 @@ $$
 
 Here $x$ is the L2-normalized embedding with label $y$, $p_z$ is the L2-normalized weight vector of class $z$, and $Z$ is the set of all classes.
 
+**Implementation notes**: The class weights are L2-normalized at every forward
+pass; the embeddings are normalized by the default distance. With a distance
+where smaller means closer, the logits are negated distances. With an
+`indices_tuple`, each embedding's loss is multiplied by its
+[miner weight](../losses.md#miner-weights). `get_logits(embeddings)` returns
+the logits $x^T p_z / \sigma$; see
+[classification logits](../losses.md#classification-logits). This loss derives
+from [BaseProxyLoss](base_proxy_loss.md).
+
 **Parameters**:
 
-- **num_classes**: The number of classes in your training dataset.
-- **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set `embedding_size` to 512.
-- **temperature**: This is sigma in the above equation. The paper uses 0.05.
-
-**Other info**
-
-- Accepts the keyword-only [learnable weight arguments](../losses.md#learnable-weight-arguments) `weight_regularizer`, `weight_reg_weight`, and `weight_init_func`.
-- This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
-
-```python
-loss_func = losses.NormalizedSoftmaxLoss(...).to(torch.device('cuda'))
-loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
-# then during training:
-loss_optimizer.step()
-```
+- **num_classes**: The number of classes in the training set. Labels must be in
+  `0..num_classes - 1`.
+- **embedding_size**: The size of the embeddings passed to the loss.
+- **temperature**: The temperature $\sigma$. The paper uses 0.05.
+- **weight_regularizer**, **weight_reg_weight**, **weight_init_func**: See
+  [learnable weight arguments](../losses.md#learnable-weight-arguments). The
+  class weights are `weight`, shaped `(num_classes, embedding_size)` and
+  initialized with `torch.nn.init.normal_`. Include `loss_func.parameters()` in
+  an optimizer.
 
 **Default distance**:
 
-- [`DotProductSimilarity()`](../distances.md#dotproductsimilarity)
+- [`DotProductSimilarity()`](../distances.md#dotproductsimilarity), which
+  L2-normalizes the embeddings.
 
 **Default reducer**:
 
@@ -43,4 +47,4 @@ loss_optimizer.step()
 
 **Reducer input**:
 
-- **loss**: The loss per element in the batch. Reduction type is `"element"`.
+- **loss**: One loss per embedding, indexed by embedding position.

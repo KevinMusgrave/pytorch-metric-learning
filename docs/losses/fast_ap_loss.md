@@ -1,6 +1,6 @@
 # FastAPLoss
 
-[Deep Metric Learning to Rank](http://openaccess.thecvf.com/content_CVPR_2019/papers/Cakir_Deep_Metric_Learning_to_Rank_CVPR_2019_paper.pdf){target=_blank}
+[Deep Metric Learning to Rank](http://openaccess.thecvf.com/content_CVPR_2019/papers/Cakir_Deep_Metric_Learning_to_Rank_CVPR_2019_paper.pdf)
 
 ```python
 losses.FastAPLoss(num_bins=10, **options)
@@ -22,14 +22,22 @@ $$
 
 Here $d_{qj}$ is the squared Euclidean distance between normalized embeddings, binned into $L$ bins over $[0, 2^{\text{power}}]$ with the triangular kernel $\delta(d, z) = \left[1 - |d - z| / \Delta\right]_+$; $h_q$ and $H_q$ are the soft histogram and cumulative histogram over all retrieved items, and $h_q^+$, $H_q^+$ over the positives of query $q$. $Q$ is the set of batch elements with at least one positive.
 
+**Implementation notes**: Each embedding is a query against the rest of the
+batch; the query itself is excluded from its positives and negatives. Bins
+where the product $h_q^+ H_q^+$ or $H_q$ is zero contribute 0. With an
+`indices_tuple`, each query's loss is multiplied by its
+[miner weight](../losses.md#miner-weights).
+
 **Parameters**:
 
-- **num_bins**: $L$, the number of soft histogram bins for calculating average precision. The paper suggests 10.
+- **num_bins**: $L$, the number of soft histogram bins. The paper suggests 10.
 
 **Default distance**:
 
-- [`LpDistance(normalize_embeddings=True, p=2, power=2)`](../distances.md#lpdistance)
-  - The only compatible distance is `LpDistance(normalize_embeddings=True, p=2)`. However, the `power` value can be changed.
+- [`LpDistance(normalize_embeddings=True, p=2, power=2)`](../distances.md#lpdistance).
+  The distance must be `LpDistance(normalize_embeddings=True, p=2)` with any
+  `power`; another distance class raises `TypeError` and other settings raise
+  `ValueError`.
 
 **Default reducer**:
 
@@ -37,4 +45,5 @@ Here $d_{qj}$ is the squared Euclidean distance between normalized embeddings, b
 
 **Reducer input**:
 
-- **loss**: The loss per element that has at least 1 positive in the batch. Reduction type is `"element"`.
+- **loss**: One loss per query with at least one positive, indexed by those
+  queries' positions in `embeddings`.

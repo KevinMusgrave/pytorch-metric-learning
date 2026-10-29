@@ -1,31 +1,44 @@
 # SelfSupervisedLoss
 
-A common use case is to have `embeddings` and `ref_emb` be augmented versions of each other. For most losses, you have to create labels to indicate which `embeddings` correspond with which `ref_emb`.
-
-`SelfSupervisedLoss` is a wrapper that takes care of this by creating labels internally. It assumes that:
-
-- `ref_emb[i]` is an augmented version of `embeddings[i]`.
-- `ref_emb[i]` is the only augmented version of `embeddings[i]` in the batch.
+A wrapper for the common case where `embeddings` and `ref_emb` are augmented
+views of each other. It creates the labels that pair them, so the wrapped loss
+can be used without labels.
 
 ```python
 losses.SelfSupervisedLoss(loss, symmetric=True)
 ```
 
-**Parameters**:
-
-- **loss**: The loss function to be wrapped.
-- **symmetric**: If `True`, then the embeddings in both `embeddings` and `ref_emb` are used as anchors. If `False`, then only the embeddings in `embeddings` are used as anchors.
-
-Example usage:
+**Implementation notes**: `SelfSupervisedLoss` is a `torch.nn.Module` whose
+forward is:
 
 ```python
-loss_fn = losses.SelfSupervisedLoss(losses.TripletMarginLoss())
-loss = loss_fn(embeddings, ref_emb)
+loss_func(embeddings, ref_emb)
 ```
 
-**Supported Loss Functions**
+It assumes that `ref_emb[i]` is an augmented view of `embeddings[i]` and is the
+only augmented view of `embeddings[i]` in the batch, so both tensors have
+shape `(N, D)`. It assigns label `i` to `embeddings[i]` and `ref_emb[i]`.
 
-Any `BaseMetricLossFunction` that uses labels. With `symmetric=False`, the loss
-also receives `ref_emb`, so it must [accept `ref_emb`](../losses.md#supported-arguments).
-Other modules raise `TypeError` at construction; a loss that rejects references
-raises `ValueError` on the first asymmetric call.
+- With `symmetric=True`, it concatenates the two tensors into one batch of
+  `2N` embeddings with labels `[0..N-1, 0..N-1]` and calls
+  `loss(embeddings, labels)`, so every embedding of both views is an anchor.
+  Any `BaseMetricLossFunction` that uses labels works.
+- With `symmetric=False`, it calls
+  `loss(embeddings, labels, ref_emb=ref_emb, ref_labels=labels)`, so only
+  `embeddings` are anchors and the wrapped loss must
+  [accept `ref_emb`](../losses.md#supported-arguments). A loss that rejects
+  references raises `ValueError` on the first call.
+
+A `loss` that is not a `BaseMetricLossFunction` raises `TypeError` at
+construction.
+
+**Parameters**:
+
+- **loss**: The loss function to wrap.
+- **symmetric**: If `True`, the embeddings in both `embeddings` and `ref_emb`
+  are anchors. If `False`, only the embeddings in `embeddings` are anchors.
+
+```python
+loss_func = losses.SelfSupervisedLoss(losses.TripletMarginLoss())
+loss = loss_func(embeddings, ref_emb)
+```

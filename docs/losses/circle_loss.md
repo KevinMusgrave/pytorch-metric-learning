@@ -1,9 +1,9 @@
 # CircleLoss
 
-[Circle Loss: A Unified Perspective of Pair Similarity Optimization](https://arxiv.org/pdf/2002.10857.pdf){target=_blank}
+[Circle Loss: A Unified Perspective of Pair Similarity Optimization](https://arxiv.org/abs/2002.10857)
 
 ```python
-losses.CircleLoss(m=0.4, gamma=80, **options)
+losses.CircleLoss(margin=0.4, gamma=80, **options)
 ```
 
 **Equation**:
@@ -30,18 +30,23 @@ O_p &= 1 + m, & O_n &= -m, \\
 \end{aligned}
 $$
 
-**Implementation notes**: $\alpha_p$ and $\alpha_n$ are treated as constants for gradients. Anchors without a positive or a negative contribute 0; the default reducer averages the anchors whose loss is positive.
+**Implementation notes**: $\alpha_p$ and $\alpha_n$ are treated as constants
+for gradients. The two sums are computed per anchor with log-sum-exp. An anchor
+without a positive or without a negative contributes 0, and the default
+reducer averages the anchors whose loss is positive.
 
 **Parameters**:
 
-- **m**: The relaxation factor that controls the radius of the decision boundary. The paper uses 0.25 for face recognition, and 0.4 for fine-grained image retrieval (images of birds, cars, and online products).
-- **gamma**: The scale factor that determines the largest scale of each similarity score. The paper uses 256 for face recognition, and 80 for fine-grained image retrieval.
+- **margin**: The relaxation factor $m$, which controls the radius of the
+  decision boundary. The paper uses 0.25 for face recognition and 0.4 for
+  fine-grained image retrieval (birds, cars, and online products).
+- **gamma**: The scale factor $\gamma$. The paper uses 256 for face recognition
+  and 80 for fine-grained image retrieval.
 
 **Default distance**:
 
-- [`CosineSimilarity()`](../distances.md#cosinesimilarity)
-
-  - This is the only compatible distance.
+- [`CosineSimilarity()`](../distances.md#cosinesimilarity). This is the only
+  compatible distance; another distance class raises `TypeError`.
 
 **Default reducer**:
 
@@ -49,4 +54,4 @@ $$
 
 **Reducer input**:
 
-- **loss**: The loss per element in the batch. Reduction type is `"element"`.
+- **loss**: One loss per anchor, indexed by anchor position in `embeddings`.

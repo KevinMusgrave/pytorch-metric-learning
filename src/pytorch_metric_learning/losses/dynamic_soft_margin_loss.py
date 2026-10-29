@@ -46,6 +46,11 @@ class DynamicSoftMarginLoss(BaseMetricLossFunction):
     ) -> LossDict:
         _common.check_parameter_placement(self, self.hist_, embeddings)
         if labels is None and indices_tuple is None:
+            if ref_emb is None:
+                raise ValueError(
+                    "Without labels or indices_tuple, ref_emb must hold the matching "
+                    "row for each embedding"
+                )
             differences = self.compute_loss_without_labels(embeddings, ref_emb)
         else:
             differences = self.compute_loss_with_labels(
@@ -62,7 +67,7 @@ class DynamicSoftMarginLoss(BaseMetricLossFunction):
         }
 
     def compute_loss_without_labels(
-        self, embeddings: Tensor, ref_emb: Tensor | None
+        self, embeddings: Tensor, ref_emb: Tensor
     ) -> Tensor:
         mat = self.distance(embeddings, ref_emb)
         rows, columns = mat.shape

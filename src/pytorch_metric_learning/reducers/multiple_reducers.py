@@ -33,6 +33,18 @@ class MultipleReducers(BaseReducer):
         )
         return sum(reduced, start=zero_loss(embeddings))
 
+    def element_reduction(
+        self,
+        losses: Tensor,
+        anchors: Tensor,
+        embeddings: Tensor,
+        labels: Tensor | None,
+    ) -> Tensor:
+        raise TypeError(
+            "MultipleReducers selects reducers by term name and cannot reduce an "
+            "unnamed term; nest the per-term reducers instead"
+        )
+
     def reducer_for(self, name: str) -> BaseReducer:
         if name in self.reducers:
             return cast(BaseReducer, self.reducers[name])

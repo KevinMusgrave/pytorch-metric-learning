@@ -1,39 +1,36 @@
 # Miners
 
-Miners select which pairs or triplets in a batch contribute to the loss:
+Miners select which pairs or triplets in a batch contribute to a loss. They
+operate on the embeddings of the current batch; offline selection of which
+examples form a batch belongs in a [sampler](samplers.md). Without a miner, a
+loss uses every pair or triplet that the labels define.
 
-- Pair miners return a tuple of four index tensors: (anchors, positives, anchors, negatives).
-- Triplet miners return a tuple of three index tensors: (anchors, positives, negatives).
-- Without a miner, losses use all possible pairs or triplets in the batch.
+Every miner returns one of the NamedTuples in `pytorch_metric_learning.types`:
 
-These are online miners: they operate on the embeddings of the current batch.
-Offline selection belongs in a [PyTorch sampler](samplers.md).
+- Pair miners return `PairIndices(pos_anchors, positives, neg_anchors, negatives)`.
+- Triplet miners return `TripletIndices(anchors, positives, negatives)`.
 
-Miners are used with loss functions as follows:
-
-```python
-from pytorch_metric_learning import miners, losses
-miner_func = miners.SomeMiner()
-loss_func = losses.SomeLoss()
-miner_output = miner_func(embeddings, labels)
-losses = loss_func(embeddings, labels, miner_output)
-```
-
-## AngularMiner
+Each field is a one-dimensional `torch.long` tensor on the embeddings' device.
+Losses accept these tuples, or plain tuples of three or four index tensors, as
+their `indices_tuple` argument:
 
 ```python
-miners.AngularMiner(angle=20, *, distance=None)
+import torch
+from pytorch_metric_learning import losses, miners
+from pytorch_metric_learning.types import PairIndices
+
+embeddings = torch.randn(32, 16, requires_grad=True)
+labels = torch.randint(0, 4, (32,))
+
+miner = miners.MultiSimilarityMiner(epsilon=0.1)
+loss_func = losses.MultiSimilarityLoss()
+pairs = miner(embeddings, labels)
+loss = loss_func(embeddings, labels, pairs)
+loss.backward()
+
+assert isinstance(pairs, PairIndices)
+assert torch.equal(labels[pairs.pos_anchors], labels[pairs.positives])
 ```
-
-**Parameters**
-
-- **angle**: The miner will return triplets that form an angle greater than this input angle. The angle is computed as defined in the [angular loss paper](https://arxiv.org/abs/1708.01682)
-
-**Default distance**:
-
-- [`LpDistance(p=2, power=1, normalize_embeddings=True)`](distances.md#lpdistance)
-
-  - This is the only compatible distance.
 
 ## BaseMiner
 
@@ -43,38 +40,109 @@ All miners extend this class and accept its keyword-only `distance` option.
 miners.BaseMiner(*, distance=None)
 ```
 
-Every miner outputs a tuple of indices:
-
-- Pair miners output a tuple of size 4: (anchors, positives, anchors, negatives)
-- Triplet miners output a tuple of size 3: (anchors, positives, negatives)
-
-See [custom miners](extend/miners.md) for details on how to write your own miner.
-
 **Parameters**:
 
-- **distance**: A [distance](distances.md) object. If None, then the default distance will be used.
+- **distance**: A [distance](distances.md) object. If `None`, the miner's
+  default distance is used.
 
 **Default distance**:
 
 - [`LpDistance(normalize_embeddings=True, p=2, power=1)`](distances.md#lpdistance)
 
-**Required Implementations**:
+### Calling a miner
 
 ```python
-def mine(self, embeddings, labels, ref_emb, ref_labels):
-    raise NotImplementedError
+miner(embeddings, labels, indices_tuple=None, ref_emb=None, ref_labels=None)
 ```
 
-By default, `ref_emb` is `embeddings` and `ref_labels` is `labels`. `forward`
-runs `mine` under `torch.no_grad()` and validates its output.
+- **embeddings**: `(N, D)` query embeddings. Anchor indices refer to these rows.
+- **labels**: `(N,)` labels. Miners require labels.
+- **indices_tuple**: Optional candidate pairs or triplets. When given, the miner
+  selects only from these candidates; see [candidates](#candidates).
+- **ref_emb**, **ref_labels**: Optional reference set of shape `(M, D)` and
+  `(M,)`. Positive and negative indices refer to these rows. When `ref_emb` is
+  `None`, the miner compares `embeddings` with themselves and excludes each
+  row's pairing with itself from the positives. When `ref_emb` is given, it is
+  a separate set, even if it is the same tensor as `embeddings`, and no pair is
+  treated as a self-comparison. `ref_labels` is required with `ref_emb`, and
+  passing `ref_labels` without `ref_emb` raises `ValueError`.
+
+Pass `indices_tuple`, `ref_emb`, and `ref_labels` by keyword. `labels`,
+`ref_emb`, `ref_labels`, and candidate tensors must be on the embeddings'
+device; otherwise the miner raises `ValueError`. Mining runs under
+`torch.no_grad()`, so the returned indices carry no autograd graph.
+
+### Candidates
+
+Every built-in miner restricts its search to `indices_tuple` when it is given:
+
+- Pair miners use pair candidates as given. Triplet candidates
+  `(a, p, n)` become the pairs `(a, p)` and `(a, n)`, one of each per triplet,
+  so a pair shared by several triplets is a candidate once per triplet.
+- Triplet miners use triplet candidates as given. Pair candidates become every
+  combination of a positive pair and a negative pair with the same anchor.
+
+Candidates are per call; a miner keeps no candidate state between calls. Passing
+one miner's output to another narrows the selection in stages:
+
+```python
+import torch
+from pytorch_metric_learning import miners
+
+embeddings = torch.randn(32, 16)
+labels = torch.randint(0, 4, (32,))
+
+hard_pairs = miners.MultiSimilarityMiner(epsilon=0.1)(embeddings, labels)
+hardest = miners.HDCMiner(filter_percentage=0.25)(
+    embeddings, labels, indices_tuple=hard_pairs
+)
+assert len(hardest.pos_anchors) <= len(hard_pairs.pos_anchors)
+```
+
+The [cascaded mining recipe](recipes/training.md#cascaded-mining-contract)
+applies this to successive embedding slices.
+
+### Output validation
+
+`forward` validates the indices returned by `mine`: three triplet index tensors
+or four pair index tensors, each one-dimensional, on the embeddings' device, with
+matching anchor and partner lengths. A non-tuple output or non-tensor elements
+raise `TypeError`; wrong dimensions, lengths, devices, or tuple sizes raise
+`ValueError`. The checks also run when Python optimizations are enabled.
+Candidate `indices_tuple` inputs are validated the same way.
+
+See [custom miners](extend/miners.md) to write your own miner.
+
+## AngularMiner
+
+Returns triplets whose angle at the negative, as defined in
+[Deep Metric Learning with Angular Loss](https://arxiv.org/abs/1708.01682), is
+greater than `alpha`.
+
+```python
+miners.AngularMiner(alpha=20, *, distance=None)
+```
+
+**Parameters**
+
+- **alpha**: The angle threshold in degrees. It has the same meaning as the
+  `alpha` of [AngularLoss](losses/angular_loss.md#angularloss).
+
+Embeddings are L2-normalized before angles are computed, as in AngularLoss.
+
+**Default distance**:
+
+- [`LpDistance(normalize_embeddings=True, p=2, power=1)`](distances.md#lpdistance)
+  - This is the only compatible distance. Another distance class raises
+    `TypeError`; other settings raise `ValueError`.
 
 ## BatchEasyHardMiner
 
 [Improved Embeddings with Easy Positive Triplet Mining](http://openaccess.thecvf.com/content_WACV_2020/papers/Xuan_Improved_Embeddings_with_Easy_Positive_Triplet_Mining_WACV_2020_paper.pdf)
 
-Returns positive and negative pairs according to the specified `pos_strategy` and `neg_strategy`.
-
-To implement the loss function described in the paper, use this miner in combination with [`NTXentLoss(temperature=0.1)`](losses/ntxent_loss.md#ntxentloss).
+Returns positive and negative pairs according to `pos_strategy` and
+`neg_strategy`. To implement the loss function described in the paper, use this
+miner with [`NTXentLoss(temperature=0.1)`](losses/ntxent_loss.md#ntxentloss).
 
 ```python
 miners.BatchEasyHardMiner(
@@ -89,23 +157,36 @@ miners.BatchEasyHardMiner(
 
 **Parameters**
 
-- **pos_strategy**: one of the following:
-  - `"hard"`: returns the hardest positive sample per anchor.
-  - `"semihard"`: returns the hardest positive sample per anchor, such that it is closer than the selected negative.
-  - `"easy"`: returns the easiest positive sample per anchor
-  - `"all"`: returns all possible positive pairs
-- **neg_strategy**: one of the following:
-  - `"hard"`: returns the hardest negative sample per anchor.
-  - `"semihard"`: returns the hardest negative sample per anchor, such that it is further than the selected positive.
-  - `"easy"`: returns the easiest negative sample per anchor
-  - `"all"`: returns all possible negative pairs
-- **allowed_pos_range**: Optional `(low, high)` pair bounding the anchor-positive distances or similarities, for example `(0.2, 1)`. If `None`, no range is applied.
-- **allowed_neg_range**: Optional `(low, high)` pair bounding the anchor-negative distances or similarities. If `None`, no range is applied.
+- **pos_strategy**: One of the `pytorch_metric_learning.types.MiningStrategy`
+  values:
+  - `"hard"`: the hardest positive per anchor.
+  - `"semihard"`: the hardest positive per anchor that is closer than the
+    selected negative.
+  - `"easy"`: the easiest positive per anchor.
+  - `"all"`: every positive candidate.
+- **neg_strategy**: One of:
+  - `"hard"`: the hardest negative per anchor.
+  - `"semihard"`: the hardest negative per anchor that is farther than the
+    selected positive.
+  - `"easy"`: the easiest negative per anchor.
+  - `"all"`: every negative candidate.
+- **allowed_pos_range**: Optional inclusive `(low, high)` bounds on
+  anchor-positive values, in the distance's units, for example `(0.2, 1)`.
+  `None` applies no bound.
+- **allowed_neg_range**: Optional inclusive `(low, high)` bounds on
+  anchor-negative values. `None` applies no bound.
+
+When neither strategy is `"all"`, the miner returns one positive pair and one
+negative pair for each anchor that has both a selected positive and a selected
+negative.
 
 **Restrictions**
 
-- `pos_strategy` and `neg_strategy` cannot both be set to `"semihard"`
-- If `pos_strategy` is set to `"semihard"`, then `neg_strategy` cannot be set to `"all"`, and vice versa.
+These raise `ValueError` at construction:
+
+- A strategy outside `"hard"`, `"semihard"`, `"easy"`, `"all"`.
+- Both strategies set to `"semihard"`.
+- `"semihard"` combined with `"all"`.
 
 **Default distance**:
 
@@ -115,9 +196,12 @@ miners.BatchEasyHardMiner(
 
 [In Defense of the Triplet Loss for Person Re-Identification](https://arxiv.org/pdf/1703.07737.pdf)
 
-For each element in the batch, this miner will find the hardest positive and hardest negative, and use those to form a single triplet. So for a batch size of N, this miner will output N triplets.
+For each anchor, finds the hardest positive and the hardest negative and returns
+them as one triplet, so a batch of `N` anchors yields at most `N` triplets.
+Anchors without a positive or a negative are omitted.
 
-This miner is equivalent to using `miners.BatchEasyHardMiner(pos_strategy="hard", neg_strategy="hard")`, and converting the output pairs to triplets.
+This miner equals `BatchEasyHardMiner(pos_strategy="hard", neg_strategy="hard")`
+with its pairs combined into triplets.
 
 ```python
 miners.BatchHardMiner(*, distance=None)
@@ -137,17 +221,24 @@ miners.DistanceWeightedMiner(cutoff=0.5, nonzero_loss_cutoff=1.4, *, distance=No
 
 **Parameters**
 
-- **cutoff**: Pairwise distances are clipped to this value if they fall below it.
-- **nonzero_loss_cutoff**: Pairs that have distance greater than this are discarded.
+- **cutoff**: Distances below this value are raised to it before weighting.
+- **nonzero_loss_cutoff**: Negatives at this distance or farther are discarded.
+
+Each anchor with a positive and an eligible negative receives as many triplets
+as it has positive candidates. Positives are sampled uniformly and negatives in
+proportion to the inverse of the distance density on the unit sphere, both with
+replacement. Sampling weights are normalized per anchor over its eligible
+negatives, so any embedding dimension produces triplets. The density still
+concentrates on a narrow distance band as dimensionality grows, so the
+weighting is most informative for low-dimensional embeddings, such as 64
+dimensions. [UniformHistogramMiner](#uniformhistogramminer) samples across the
+distance range with any dimensionality and any distance.
 
 **Default distance**:
 
 - [`LpDistance(normalize_embeddings=True, p=2, power=1)`](distances.md#lpdistance)
-  - This is the only compatible distance.
-
-**Important note**:
-
-Sampling weights are normalized per anchor over its eligible negatives, so a batch of a few hundred rows produces triplets at any embedding dimension. The paper's weighting still concentrates on a narrow distance band as dimensionality grows, so this miner works best with low dimensionality embeddings (e.g 64-dim) and L2-normalized distances. Check out [UniformHistogramMiner](#uniformhistogramminer) for a miner that is roughly equivalent, but works with embeddings of any dimensionality and any distance metric.
+  - This is the only compatible distance. Another distance class raises
+    `TypeError`; other settings raise `ValueError`.
 
 ## HDCMiner
 
@@ -159,33 +250,19 @@ miners.HDCMiner(filter_percentage=0.5, *, distance=None)
 
 **Parameters**:
 
-- **filter_percentage**: The percentage of pairs that will be returned. For example, if filter_percentage is 0.25, then the hardest 25% of pairs will be returned. The pool of pairs is either externally or internally set. See the important methods below for details.
+- **filter_percentage**: The fraction of candidate pairs to keep, in `(0, 1]`.
+  Values outside this range raise `ValueError`.
+
+Each call keeps the hardest `ceil(filter_percentage * n)` of the `n` positive
+candidates and, separately, of the negative candidates. Without
+`indices_tuple`, the candidates are all positive and negative pairs; with it,
+they are the given [candidates](#candidates). Chaining HDC miners through
+`indices_tuple` reproduces the paper's cascade; see the
+[cascaded mining recipe](recipes/training.md#cascaded-mining-contract).
 
 **Default distance**:
 
 - [`LpDistance(normalize_embeddings=True, p=2, power=1)`](distances.md#lpdistance)
-
-**Candidate pairs**:
-
-```python
-miner(embeddings, labels, ref_emb=None, ref_labels=None, candidates=None)
-```
-
-With `candidates=None`, the miner considers every positive and negative pair.
-Pass the output of another miner, pairs or triplets, to restrict the selection
-to those candidates; triplets are converted to pairs. Each call keeps the
-hardest `filter_percentage` of the positive and of the negative candidates,
-rounding up. The miner keeps no candidate state between calls.
-
-**Example of passing another miner output to HDCMiner**:
-
-```python
-minerA = miners.MultiSimilarityMiner(epsilon=0.1)
-minerB = miners.HDCMiner(filter_percentage=0.25)
-
-hard_pairs = minerA(embeddings, labels)
-very_hard_pairs = minerB(embeddings, labels, candidates=hard_pairs)
-```
 
 ## MultiSimilarityMiner
 
@@ -198,8 +275,12 @@ miners.MultiSimilarityMiner(epsilon=0.1, *, distance=None)
 **Parameters**
 
 - **epsilon**:
-  - Negative pairs are chosen if they have similarity greater than the hardest positive pair, minus this margin (epsilon).
-  - Positive pairs are chosen if they have similarity less than the hardest negative pair, plus this margin (epsilon).
+  - Negative pairs are chosen if their similarity is greater than that of the
+    hardest positive pair, minus `epsilon`.
+  - Positive pairs are chosen if their similarity is less than that of the
+    hardest negative pair, plus `epsilon`.
+
+With a distance instead of a similarity, the comparisons are reversed.
 
 **Default distance**:
 
@@ -215,8 +296,10 @@ miners.PairMarginMiner(pos_margin=0.2, neg_margin=0.8, *, distance=None)
 
 **Parameters**
 
-- **pos_margin**: The distance (or similarity) over (under) which positive pairs will be chosen.
-- **neg_margin**: The distance (or similarity) under (over) which negative pairs will be chosen.
+- **pos_margin**: Positive pairs with a distance above (similarity below) this
+  value are chosen.
+- **neg_margin**: Negative pairs with a distance below (similarity above) this
+  value are chosen.
 
 **Default distance**:
 
@@ -224,7 +307,7 @@ miners.PairMarginMiner(pos_margin=0.2, neg_margin=0.8, *, distance=None)
 
 ## TripletMarginMiner
 
-Returns hard, semihard, or all triplets.
+Returns hard, semihard, easy, or all margin-violating triplets.
 
 ```python
 miners.TripletMarginMiner(margin=0.2, type_of_triplets="all", *, distance=None)
@@ -232,12 +315,16 @@ miners.TripletMarginMiner(margin=0.2, type_of_triplets="all", *, distance=None)
 
 **Parameters**
 
-- **margin**: The difference between the anchor-positive distance and the anchor-negative distance.
-- **type_of_triplets**: one of `"all"`, `"hard"`, `"semihard"`, or `"easy"`.
-  - `"all"`: all triplets that violate the margin
-  - `"hard"`: the subset of `"all"` where the negative is closer to the anchor than the positive
-  - `"semihard"`: the subset of `"all"` where the negative is farther from the anchor than the positive
-  - `"easy"`: all triplets that do **not** violate the margin
+- **margin**: The required difference between the anchor-negative and the
+  anchor-positive distance.
+- **type_of_triplets**: One of `"all"`, `"hard"`, `"semihard"`, or `"easy"`;
+  other values raise `ValueError`.
+  - `"all"`: all triplets that violate the margin.
+  - `"hard"`: the subset of `"all"` where the negative is at least as close to
+    the anchor as the positive.
+  - `"semihard"`: the subset of `"all"` where the negative is farther from the
+    anchor than the positive.
+  - `"easy"`: all triplets that do **not** violate the margin.
 
 **Default distance**:
 
@@ -245,20 +332,32 @@ miners.TripletMarginMiner(margin=0.2, type_of_triplets="all", *, distance=None)
 
 ## UniformHistogramMiner
 
-Returns pairs that have uniformly distributed distances. This is like [DistanceWeightedMiner](#distanceweightedminer), except that it works well with high dimension embeddings, and works with any distance metric (not just L2 normalized distance).
+Returns pairs whose distances are spread uniformly over the observed range.
+Like [DistanceWeightedMiner](#distanceweightedminer), it avoids concentrating on
+one distance band, but it works with high-dimensional embeddings and any
+distance.
 
 ```python
-miners.UniformHistogramMiner(num_bins=100,
-                            pos_per_bin=10,
-                            neg_per_bin=10,
-                            *, distance=None):
+miners.UniformHistogramMiner(
+    num_bins=100,
+    pos_per_bin=10,
+    neg_per_bin=10,
+    *,
+    distance=None,
+)
 ```
 
 **Parameters**
 
-- **num_bins**: The number of bins to divide the distances into. For example, if the distances for the current batch range from 0 to 2, and num_bins = 100, then each bin will have a width of 0.02.
-- **pos_per_bin**: The number of positive pairs to mine for each bin.
-- **neg_per_bin**: The number of negative pairs to mine for each bin.
+- **num_bins**: The number of equal-width bins between the smallest and largest
+  candidate value. For example, if the positive distances range from 0 to 2 and
+  `num_bins=100`, each bin has width 0.02.
+- **pos_per_bin**: The number of positive pairs drawn from each occupied bin.
+- **neg_per_bin**: The number of negative pairs drawn from each occupied bin.
+
+Positive and negative candidates are binned separately. Draws within a bin are
+uniform with replacement, so a bin with fewer pairs than requested contributes
+duplicates, and empty bins contribute nothing.
 
 **Default distance**:
 
@@ -267,8 +366,8 @@ miners.UniformHistogramMiner(num_bins=100,
 **Example**:
 
 ```python
-from pytorch_metric_learning.miners import UniformHistogramMiner
 from pytorch_metric_learning.distances import SNRDistance
+from pytorch_metric_learning.miners import UniformHistogramMiner
 
 miner = UniformHistogramMiner(
     num_bins=100,
@@ -278,12 +377,6 @@ miner = UniformHistogramMiner(
 )
 ```
 
-In a given batch, this will:
-
-- Divide up the positive distances into 100 bins, and return 25 positive pairs per bin, or 0 if no pairs exist in that bin
-- Divide up the negative distances into 100 bins, and return 33 negative pairs per bin, or 0 if no pairs exist in that bin
-
-Every miner's output is validated: three triplet index tensors or four pair
-index tensors, each one-dimensional, with matching anchor and partner lengths.
-Invalid types raise `TypeError`; invalid shapes or lengths raise `ValueError`,
-including when Python optimizations are enabled.
+In each batch, this miner returns 25 positive pairs from each occupied
+positive-distance bin and 33 negative pairs from each occupied negative-distance
+bin.

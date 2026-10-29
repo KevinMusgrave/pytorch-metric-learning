@@ -1,70 +1,86 @@
 # CrossBatchMemory
 
-This wraps a loss function, and implements [Cross-Batch Memory for Embedding Learning](https://arxiv.org/pdf/1912.06798.pdf){target=_blank}. It stores embeddings from previous iterations in a queue, and uses them to form more pairs/triplets with the current iteration's embeddings.
+[Cross-Batch Memory for Embedding Learning](https://arxiv.org/abs/1912.06798)
 
-**Mathematical reference**: The paper linked above defines the objective and derivation. This page specifies the library interface and its settings.
+A wrapper that stores embeddings from previous iterations in a queue and uses
+them as references for the current iteration's embeddings, forming more pairs
+or triplets than one batch provides.
 
 ```python
 losses.CrossBatchMemory(loss, embedding_size, memory_size=1024, miner=None, *, label_dtype=torch.long)
 ```
 
-**Parameters**:
-
-- **loss**: The loss function to be wrapped. For example, you could pass in `ContrastiveLoss()`.
-- **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set `embedding_size` to 512.
-- **memory_size**: The size of the memory queue.
-- **miner**: An optional [tuple miner](../miners.md), which will be used to mine pairs/triplets from the memory queue.
-- **label_dtype**: The dtype of the label queue. Incoming labels are cast to it when the cast is safe under `torch.can_cast`; otherwise the call raises `ValueError`. Use a floating dtype for non-integer labels.
-
-The queue buffers belong to the module. Move it with `loss_fn.to(device, dtype)`
-so the embedding queue matches the embeddings; outside autocast a mismatch
-raises `ValueError`. Forward never moves or casts the queue.
-Under autocast, the incoming embeddings are converted to the queue's dtype for
-mining and loss computation. Anchor gradients flow through this conversion;
-enqueued embeddings are detached, and the queue keeps its configured precision.
-
-**Forward function**
+**Implementation notes**: `CrossBatchMemory` is a `torch.nn.Module` whose
+forward is:
 
 ```python
 loss_fn(embeddings, labels, indices_tuple=None, enqueue_mask=None)
 ```
 
-As shown above, CrossBatchMemory comes with a 4th argument in its `forward` function:
+Each call builds a snapshot of the occupied queue with the new rows written in,
+mines pairs or triplets between `embeddings` and the snapshot, calls
+`loss(embeddings, labels, indices_tuple, ref_emb=snapshot, ref_labels=...)`, and
+then commits the new rows to the queue. All inputs are validated before any
+state changes, and a wrapped loss that raises leaves the queue unchanged.
 
-- **enqueue_mask**: A boolean tensor where `enqueue_mask[i]` is True if `embeddings[i]` should be added to the memory queue. This enables CrossBatchMemory to be used in self-supervision frameworks like [MoCo](https://arxiv.org/pdf/1911.05722.pdf). See the [memory recipe](../recipes/training.md#memory-warmup-contract) for caller-controlled queue filling.
+- Without `enqueue_mask`, every row is enqueued and is also an anchor; pairs of
+  an anchor with its own enqueued copy are removed.
+- With `enqueue_mask`, the selected rows are enqueued as references and the
+  other rows are anchors.
+- The number of enqueued rows must not exceed `memory_size`; otherwise the call
+  raises `ValueError`. An empty enqueue preserves the queue. An empty batch, or
+  a batch with no references, gives a differentiable zero.
+- Without a miner, all pairs between anchors and the snapshot are used. A
+  supplied `indices_tuple` is added to those pairs or to the miner's tuples; its
+  anchors index `embeddings` and its positives and negatives index rows of the
+  snapshot. `indices_tuple` and `enqueue_mask` cannot be combined
+  (`ValueError`).
 
-With an enqueue mask, selected rows become detached references and unselected
-rows are anchors. Without a mask, all rows are enqueued and used as anchors,
-with self-comparisons excluded. The number of enqueued rows must not exceed
-`memory_size`. An empty enqueue preserves the existing queue; an empty batch
-returns a differentiable zero. If no references have been enqueued, the loss is
-also zero.
+The wrapped loss receives the snapshot as `ref_emb`, so it must be a
+`BaseMetricLossFunction` that [accepts `ref_emb`](../losses.md#supported-arguments).
+Any other module raises `TypeError` at construction; a loss that rejects
+references raises `ValueError` on the first call.
 
-Each forward snapshots the occupied references, so accumulating multiple forward
-losses before calling backward does not let later queue writes change an earlier
-loss's gradients. This copies the occupied queue and costs memory proportional
-to its size; queued embeddings never retain their original computation graphs.
+The queue buffers `embedding_memory` and `label_memory` belong to the module.
+Move it with `loss_fn.to(device, dtype)` so the embedding queue matches the
+embeddings; outside autocast a mismatch raises `ValueError`, and forward never
+moves or casts the queue. Under autocast, the incoming embeddings are converted
+to the queue's dtype for mining and loss computation. Anchor gradients flow
+through this conversion; enqueued embeddings are detached, and the queue keeps
+its configured precision. Each snapshot copies the occupied queue, so memory
+grows with its size, and accumulating several forward losses before one
+backward pass does not let later queue writes change an earlier loss's
+gradients.
 
-Save the loss module's `state_dict` to resume the queue. It includes the memory
-buffers, queue cursor, and filled flag, and supports loading with
-`torch.load(..., weights_only=True)`. Construct the same loss and queue dimensions
-before loading. Use `load_state_dict(state, assign=True)` to retain the saved
-tensor dtypes, and construct optimizers after loading. Older checkpoints that
-contain only the buffers lack the `queue_state` entry, which strict loading
-reports as a missing key.
+Save the module's `state_dict` to resume the queue. It holds the memory
+buffers and a `queue_state` entry with the queue cursor and filled flag, and it
+loads with `torch.load(..., weights_only=True)`. Construct the same loss and
+queue dimensions before loading, use `load_state_dict(state, assign=True)` to
+retain the saved tensor dtypes, and construct optimizers after loading. A state
+dict without `queue_state` is reported as a missing key under strict loading.
+`loss_fn.reset_queue()` empties the queue.
 
-**Supported Loss Functions**
+**Parameters**:
 
-The wrapped loss receives the current batch as `embeddings` and the queue as
-`ref_emb`, so it must be a `BaseMetricLossFunction` that
-[accepts `ref_emb`](../losses.md#supported-arguments). Any other module raises
-`TypeError` at construction; a loss that rejects references raises `ValueError`
-on the first call.
-
-**Reset queue**
-
-The queue can be cleared like this:
+- **loss**: The loss function to wrap, for example `ContrastiveLoss()`.
+- **embedding_size**: The size of the embeddings passed to the loss. Other
+  sizes raise `ValueError`.
+- **memory_size**: The number of rows in the queue.
+- **miner**: An optional [miner](../miners.md) that mines pairs or triplets
+  between the anchors and the snapshot.
+- **label_dtype**: The dtype of the label queue. Incoming labels are converted
+  to it only when the conversion round-trips exactly; otherwise the call raises
+  `ValueError`. Use a floating dtype for non-integer labels.
+- **enqueue_mask** (forward argument): A boolean tensor of shape `(N,)` on the
+  embeddings' device, where `enqueue_mask[i]` is `True` if `embeddings[i]`
+  should be added to the queue. This supports self-supervision frameworks such
+  as [MoCo](https://arxiv.org/abs/1911.05722); see the
+  [memory recipe](../recipes/training.md#memory-warmup-contract) for
+  caller-controlled queue filling. A non-boolean mask raises `TypeError`; a
+  wrong shape or device raises `ValueError`.
 
 ```python
+loss_fn = losses.CrossBatchMemory(losses.ContrastiveLoss(), embedding_size=128, memory_size=4096)
+loss = loss_fn(embeddings, labels)
 loss_fn.reset_queue()
 ```

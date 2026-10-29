@@ -29,11 +29,9 @@ together. Published versions and tags remain immutable; source corrections
 receive a new version. These rules preserve recovery from a partial upload
 without mixing artifacts from different builds.
 
-The quick release suite exercises the read-only preflight against temporary
-Git repositories and recorded GitHub API responses. Real CI identity, artifact
-transfer, and PyPI OIDC exchange are verified only by the hosted workflow.
-The one-time account configuration and release steps are in
-[Development](../../DEVELOPMENT.md#publishing-to-pypi).
+Real CI identity, artifact transfer, and PyPI OIDC exchange are verified only
+by the hosted workflow. The release steps and one-time account configuration
+are in [Development](../../DEVELOPMENT.md#releases).
 
 Published Python requirements declare compatibility bounds, while development,
 build, and release environments remain exactly pinned and frozen. Current
@@ -48,29 +46,30 @@ pin and still audits the entire frozen dependency graph.
 
 CI runs on pull requests, `master` pushes, and a weekly schedule, so expiring
 dependency assessments fail before a release attempt discovers them. The policy
-gate runs once on the locked Python 3.12 development environment; a second job
-syncs the same lockfile under Python 3.13 and 3.14 and runs the CPU suite, so
-the published `requires-python` range is exercised without a second policy
-installation. The policy tool's installation directory is cached by the lock
-digest. Local and CI numerical suites use the same pinned pytest runner. Existing
-unittest cases remain supported directly by pytest; its configuration owns
-source imports, strict markers, and disabled third-party plugin discovery.
-The root `conftest.py` sets macOS OpenMP defaults before importing Torch or the
-`tests` package, which itself imports Torch. This makes bare pytest safe with
-the pinned Faiss and Torch wheels when OpenMP variables are unset, while
-preserving explicit environment settings. A subprocess regression removes
-those variables and exercises Faiss indexing, search, and persistence through
-ordinary pytest discovery. The library does not set process-wide defaults.
-The shared session hook fails skipped and expected-failure cases. Runner tests
-execute temporary passing, failing, empty, skipped, and expected-failure suites
-to verify the exit codes consumed by CI. CPU and CUDA profiles select tensor
-devices and dtypes, while distributed tests continue spawning their own ranks.
+gate runs once on the locked Python 3.12 development environment. Before it,
+plain `ruff`, `ty`, and a strict MkDocs build run as separate steps with the
+same pinned tools, so contributors without the policy tool get readable
+failures, and documentation errors surface in pull requests rather than at
+release time. Further jobs run the CPU suite under Python 3.13 and 3.14 and on
+macOS and Windows, so the published Python range and the supported CPU
+platforms are exercised without a second policy installation. The shared test
+session fails skipped and expected-failure cases and prints why; CUDA-only
+tests are deselected on CPU runs instead of returning early.
 
 The build job also builds the tagged MkDocs site with the pinned development
-environment and retains a Pages artifact. After PyPI publication succeeds, a
+environment, adds the final version 2 documentation (tag `v2.9.0`) under `/v2/`
+so existing users keep a stable destination after the site moves to version 3,
+and retains a Pages artifact. After PyPI publication succeeds, a
 separate job deploys that artifact through GitHub Pages with `pages: write` and
 OIDC permission in the `github-pages` environment. It has no repository-content
 write permission and does not rebuild the site. Documentation therefore describes
 the released API; a deployment failure can be retried independently. The Pages
 source must be GitHub Actions because a `GITHUB_TOKEN` push to a branch does
 not trigger another workflow or the legacy Pages build.
+
+The preflight requires `docs/release-notes/VERSION.md`. After publication, a
+job with `contents: write` creates the GitHub release for the tag with those
+notes and the verified distributions attached, marking PEP 440 prereleases as
+prereleases. The version is declared once, in `pyproject.toml`; the package
+does not repeat it in `__version__`, because a dynamic version would require
+running the build backend while locking.

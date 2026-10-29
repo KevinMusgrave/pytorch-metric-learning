@@ -1,6 +1,7 @@
 # Development dependency assessments
 
-Assessor: Codex. Reviewed: 2026-10-26. Scope: the exact versions in `uv.lock`.
+Assessors: Codex (2026-10-26 and 2026-10-28) and Claude (2026-10-29 re-review).
+Scope: the exact versions in `uv.lock`.
 These assessments do not authorize publication or establish CUDA acceptance.
 
 ## Certificate trust
@@ -31,13 +32,17 @@ executable dependencies is the greater risk during the remaining 24 days.
 
 ## Retained aged dependencies
 
-The following advisories remain visible under exact `not-affected` assessments
-expiring 2026-11-25, except certifi's critical-severity assessment, which the
-policy limits to seven days per review: it was re-verified on 2026-10-28 and
-expires on 2026-11-04. `mkdocs.yml` still enables no plugins and no repository
-source imports Requests. Repeat that check weekly until 2026-11-19, when the
-fixed release reaches 30 days and should replace the aged one. Reassess before
-adding the affected APIs or deployment modes.
+The following advisories remain visible under exact `not-affected` assessments.
+Claude re-verified every row on 2026-10-29 against the unchanged lock: no
+repository source calls filelock, Requests, or setuptools' egg installer;
+`mkdocs.yml` enables no plugins; PyTorch 2.14.0 callers are unchanged. Expiry
+follows the policy's severity limits from that review: low findings 2027-01-27,
+moderate and high findings 2026-11-28, and certifi's critical finding
+2026-11-05. Repeat the certifi check weekly, and within seven days before a
+release tag, until 2026-11-19. On that date the fixed certifi release and uv
+0.13.4 both reach 30 days: update the lock to certifi 2026.10.19 and remove the
+certifi and uv assessments, because unused assessments fail the policy check.
+Reassess before adding the affected APIs or deployment modes.
 
 | Dependency        | Advisory                                 | Enabled path and absent prerequisite                                                                                                                                                                                                                                                                                                         |
 | ----------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -62,8 +67,9 @@ assessment and requires review before use.
 
 ## Filelock local filesystem advisories
 
-Assessor: Codex. Reviewed: 2026-10-28. These additional assessments cover
-`filelock==4.0.3` in the frozen development environment and expire on 2026-11-25.
+Assessor: Codex. Reviewed: 2026-10-28; re-reviewed by Claude on 2026-10-29.
+These additional assessments cover `filelock==4.0.3` in the frozen development
+environment and expire on the severity-limited dates above.
 The advisories were published on 2026-10-28; the resolved dependency did not
 change. Their prerequisites were checked against the installed filelock and
 PyTorch 2.14.0 sources, repository callers, CI configuration, and local cache

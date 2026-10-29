@@ -14,26 +14,41 @@ $$
 
 Here $\cos\theta_{i,j}$ is the cosine between embedding $i$ and the unit-norm weight vector of class $j$, and $C$ is `num_classes`.
 
-**Implementation notes**: The paper specifies the gradient $\partial L / \partial \mathbf{x}_i$ directly; this mean squared error between the cosines and the one-hot target produces it. The weight rows are renormalized to unit length under `torch.no_grad()` at every forward.
+**Implementation notes**: The paper specifies the gradient
+$\partial L / \partial \mathbf{x}_i$ directly; this mean squared error between
+the cosines and the one-hot target produces it. The cosines are computed
+directly from L2-normalized embeddings and weights, so the `distance` option
+has no effect. The weight rows are renormalized to unit length in place, under
+`torch.no_grad()`, at every forward pass. Labels are required; `indices_tuple`
+and `ref_emb` raise `ValueError`.
 
-**Parameters**
+The class weights are the parameter `weight`, shaped
+`(num_classes, embedding_size)` and initialized uniformly in $[-1, 1]$, then
+normalized. Include `loss_func.parameters()` in an optimizer. The
+[placement rule](../losses.md#learnable-weight-arguments) of learnable weights
+applies; this loss does not derive from BaseProxyLoss, has no weight
+regularization arguments, and has no `get_logits`.
 
-- **num_classes**: The number of classes in your training dataset.
-- **embedding_size**: The size of the embeddings that you pass into the loss function.
+**Parameters**:
 
-Example usage:
+- **num_classes**: The number of classes in the training set. Labels must be in
+  `0..num_classes - 1`.
+- **embedding_size**: The size of the embeddings passed to the loss.
 
-```python
-loss_fn = P2SGradLoss(10, 128)
-loss = loss_fn(embeddings, labels)
-```
+**Default distance**:
 
-The class weights are the `weight` parameter, shaped `(num_classes, embedding_size)`. This loss **requires an optimizer** that includes `loss_fn.parameters()`.
-
-**Important notes**
-
-`indices_tuple`, `ref_emb`, and `ref_labels` are not supported for this loss function.
+- Not used. The loss computes cosines directly, and a `distance` option has no
+  effect.
 
 **Default reducer**:
 
-- This loss returns an **already reduced** loss.
+- [MeanReducer](../reducers.md#meanreducer)
+
+**Reducer input**:
+
+- **loss**: Already reduced: the value of $L$. Every reducer returns it unchanged.
+
+```python
+loss_func = losses.P2SGradLoss(num_classes=10, embedding_size=128)
+loss = loss_func(embeddings, labels)
+```

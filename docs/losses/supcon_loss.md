@@ -1,6 +1,6 @@
 # SupConLoss
 
-Described in [Supervised Contrastive Learning](https://arxiv.org/abs/2004.11362){target=_blank}.
+[Supervised Contrastive Learning](https://arxiv.org/abs/2004.11362)
 
 ```python
 losses.SupConLoss(temperature=0.1, **options)
@@ -14,11 +14,18 @@ $$
 
 Here $I$ indexes the batch, $A(i)$ is every index except $i$, and $P(i) \subseteq A(i)$ holds the indices that share $i$'s label.
 
-**Implementation notes**: The default reducer averages over anchors with a positive loss instead of summing. A batch without both a positive and a negative pair yields 0.
+**Implementation notes**: $A(i)$ is the set of positives and negatives of
+anchor $i$: every other embedding, every reference row with `ref_emb`, or the
+pairs of anchor $i$ in a supplied `indices_tuple`. The denominator is a masked
+log-sum-exp. An anchor with positives but no negatives has a nonzero loss, as
+in the paper, because its denominator still contains its positives. An anchor
+without positives contributes 0. The default reducer averages over the anchors
+with a positive loss instead of summing. With a distance where smaller means
+closer, the logits are negated distances.
 
 **Parameters**:
 
-- **temperature**: This is tau in the above equation. The paper uses 0.1.
+- **temperature**: The temperature $\tau$. The paper uses 0.1.
 
 **Default distance**:
 
@@ -30,4 +37,4 @@ Here $I$ indexes the batch, $A(i)$ is every index except $i$, and $P(i) \subsete
 
 **Reducer input**:
 
-- **loss**: The loss per element in the batch. If an element has only negative pairs or no pairs, it's ignored thanks to `AvgNonZeroReducer`. Reduction type is `"element"`.
+- **loss**: One loss per anchor, indexed by anchor position in `embeddings`.

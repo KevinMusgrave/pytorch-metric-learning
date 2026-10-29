@@ -1,0 +1,43 @@
+# Contributing
+
+Bug reports, fixes, documentation improvements, and new losses or miners with
+a published reference are welcome. For a larger change, open an issue first so
+the design can be agreed before you write code.
+
+## Set up
+
+Install [uv](https://docs.astral.sh/uv/) 0.13.4, then from the repository root:
+
+```sh
+uv sync --frozen --all-extras --no-build --no-install-project
+```
+
+## Before opening a pull request
+
+```sh
+.venv/bin/uv run --frozen --no-sync ruff format
+.venv/bin/uv run --frozen --no-sync ruff check
+.venv/bin/uv run --frozen --no-sync ty check src tests docs/recipes benchmarks scripts
+.venv/bin/uv run --frozen --no-sync --env-file tests/cpu.env python -m pytest
+.venv/bin/uv run --frozen --no-sync mkdocs build --strict
+```
+
+CI runs the same commands on Linux, macOS, and Windows, plus the maintainers'
+policy checks described in [DEVELOPMENT.md](DEVELOPMENT.md).
+
+## What a change needs
+
+- Tests that check observable behavior against an independent reference, such
+  as a float64 formula or the paper authors' code, including gradients and
+  edge cases like empty tuples or missing positives.
+- Documentation updated in the same pull request: the component's page under
+  `docs/`, and the release notes for user-visible changes.
+- A paper citation for a new loss or miner, and the license notice in
+  `THIRD_PARTY_NOTICES.md` if you adapted code from another project.
+- No comments or docstrings in library source; explain design decisions in the
+  pull request or `docs/design/`.
+
+Contributors are credited in [CREDITS.md](CREDITS.md) and keep authorship of
+their commits.
+
+Automated coding agents should also follow [AGENTS.md](AGENTS.md).

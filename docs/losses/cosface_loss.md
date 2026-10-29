@@ -1,10 +1,10 @@
 # CosFaceLoss
 
-[CosFace: Large Margin Cosine Loss for Deep Face Recognition](https://arxiv.org/pdf/1801.09414.pdf){target=_blank}
+[CosFace: Large Margin Cosine Loss for Deep Face Recognition](https://arxiv.org/abs/1801.09414)
 
 ```python
 losses.CosFaceLoss(num_classes, embedding_size, margin=0.35, scale=64,
-    *, weight_regularizer=None, weight_reg_weight=1, weight_init_func=None, **options)
+    *, weight_regularizer=None, weight_reg_weight=1.0, weight_init_func=None, **options)
 ```
 
 **Equation**:
@@ -15,30 +15,29 @@ $$
 
 Here $N$ is the batch size and $\theta_{j,i}$ is the angle between embedding $i$ and the weight vector of class $j$.
 
+**Implementation notes**: With an `indices_tuple`, each embedding's loss is
+multiplied by its [miner weight](../losses.md#miner-weights).
+`get_logits(embeddings)` returns $s \cos\theta_{j,i}$ without the margin; see
+[classification logits](../losses.md#classification-logits). This loss derives
+from [BaseProxyLoss](base_proxy_loss.md).
+
 **Parameters**:
 
-- **num_classes**: The number of classes in your training dataset.
-- **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set `embedding_size` to 512.
-- **margin**: The cosine margin penalty (m in the above equation). The paper used values between 0.25 and 0.45.
-- **scale**: This is `s` in the above equation. The paper uses 64.
-
-**Other info**:
-
-- Accepts the keyword-only [learnable weight arguments](../losses.md#learnable-weight-arguments) `weight_regularizer`, `weight_reg_weight`, and `weight_init_func`.
-- This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
-
-```python
-loss_func = losses.CosFaceLoss(...).to(torch.device('cuda'))
-loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
-# then during training:
-loss_optimizer.step()
-```
+- **num_classes**: The number of classes in the training set. Labels must be in
+  `0..num_classes - 1`.
+- **embedding_size**: The size of the embeddings passed to the loss.
+- **margin**: The cosine margin $m$. The paper uses values between 0.25 and 0.45.
+- **scale**: The scale $s$. The paper uses 64.
+- **weight_regularizer**, **weight_reg_weight**, **weight_init_func**: See
+  [learnable weight arguments](../losses.md#learnable-weight-arguments). The
+  class weights are `weight`, shaped `(num_classes, embedding_size)` and
+  initialized with `torch.nn.init.normal_`. Include `loss_func.parameters()` in
+  an optimizer.
 
 **Default distance**:
 
-- [`CosineSimilarity()`](../distances.md#cosinesimilarity)
-
-  - This is the only compatible distance.
+- [`CosineSimilarity()`](../distances.md#cosinesimilarity). This is the only
+  compatible distance; another distance class raises `TypeError`.
 
 **Default reducer**:
 
@@ -46,4 +45,4 @@ loss_optimizer.step()
 
 **Reducer input**:
 
-- **loss**: The loss per element in the batch. Reduction type is `"element"`.
+- **loss**: One loss per embedding, indexed by embedding position.

@@ -1,20 +1,9 @@
 # VICRegLoss
 
-[VICReg: Variance-Invariance-Covariance Regularization for Self-Supervised Learning](https://arxiv.org/pdf/2105.04906.pdf){target=_blank}
+[VICReg: Variance-Invariance-Covariance Regularization for Self-Supervised Learning](https://arxiv.org/abs/2105.04906)
 
 ```python
 losses.VICRegLoss(invariance_lambda=25, variance_mu=25, covariance_v=1, eps=1e-4)
-```
-
-**Usage**:
-
-`VICRegLoss` is a plain `torch.nn.Module` that takes two embedding batches of
-equal shape, where `ref_emb[i]` is a second view of `embeddings[i]`. It has no
-labels, indices, distance, reducer, or regularizer options:
-
-```python
-loss_fn = VICRegLoss()
-loss = loss_fn(embeddings, ref_emb)
 ```
 
 **Equation**:
@@ -47,13 +36,27 @@ $$
 
 Here $C(Z)$ is the covariance matrix of $Z$, normalized by $n - 1$.
 
-**Implementation notes**: The invariance term is a mean squared error over both rows and dimensions, $\frac{1}{nd}\sum_i \lVert z_i - z'_i \rVert_2^2$, as in the paper's pseudocode and the authors' implementation. The variance term is $\frac{\mu}{2}\left[v(Z) + v(Z')\right]$, also following the authors' implementation; $\gamma$ is fixed at 1.
+**Implementation notes**: `VICRegLoss` is a plain `torch.nn.Module` that takes
+two embedding batches of equal shape `(n, d)`, where `ref_emb[i]` is a second
+view of `embeddings[i]`. It has no labels, indices, distance, reducer, or
+regularizer options. Inputs that are not two-dimensional or that differ in
+shape raise `ValueError`. The invariance term is a mean squared error over both
+rows and dimensions, $\frac{1}{nd}\sum_i \lVert z_i - z'_i \rVert_2^2$, as in
+the paper's pseudocode and the authors' implementation. The variance term is
+$\frac{\mu}{2}\left[v(Z) + v(Z')\right]$, also following the authors'
+implementation; $\gamma$ is fixed at 1.
+
+**Paper settings**: The defaults $\lambda = 25$, $\mu = 25$, $\nu = 1$ are the
+paper's.
 
 **Parameters**:
 
-- **invariance_lambda**: The weight of the invariance term.
-- **variance_mu**: The weight of the variance term.
-- **covariance_v**: The weight of the covariance term.
-- **eps**: Small scalar to prevent numerical instability.
+- **invariance_lambda**: The weight $\lambda$ of the invariance term.
+- **variance_mu**: The weight $\mu$ of the variance term.
+- **covariance_v**: The weight $\nu$ of the covariance term.
+- **eps**: The constant $\epsilon$ added to the variance for numerical stability.
 
-**Paper settings**: The defaults $\lambda = 25$, $\mu = 25$, $\nu = 1$ are the paper's.
+```python
+loss_func = losses.VICRegLoss()
+loss = loss_func(embeddings, ref_emb)
+```

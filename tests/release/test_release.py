@@ -40,10 +40,14 @@ class TestRelease(unittest.TestCase):
             text=True,
         ).stdout.strip()
 
-    def write_version(self, version):
+    def write_version(self, version, notes=True):
         (self.root / "pyproject.toml").write_text(
             f'[project]\nname = "pytorch-metric-learning"\nversion = "{version}"\n'
         )
+        if notes:
+            notes_dir = self.root / "docs" / "release-notes"
+            notes_dir.mkdir(parents=True, exist_ok=True)
+            (notes_dir / f"{version}.md").write_text(f"# {version}\n")
 
     def commit(self):
         self.git("add", ".")
@@ -90,6 +94,13 @@ class TestRelease(unittest.TestCase):
 
     def test_rejects_version_mismatch(self):
         self.assert_rejected(tag="v3.0.1")
+
+    def test_requires_release_notes_for_the_version(self):
+        (self.root / "docs" / "release-notes" / "3.0.0.md").unlink()
+        self.commit()
+        self.git("update-ref", "refs/remotes/origin/master", "HEAD")
+        self.git("tag", "-f", "-a", "v3.0.0", "-m", "Release 3.0.0")
+        self.assert_rejected()
 
     def test_rejects_lightweight_tags(self):
         self.git("tag", "-d", "v3.0.0")

@@ -6,7 +6,8 @@ loss or miner. They depend on numerical components and process-group state,
 not on the training orchestration classes.
 
 Without a process group, or with an initialized one-rank group, wrappers delegate
-to the wrapped component without gathering or scaling. Memory losses receive
+to the wrapped component without gathering or scaling, and without warnings:
+single-process debugging and evaluation are ordinary uses. Memory losses receive
 `indices_tuple` and `enqueue_mask` through their own forward signature; ordinary
 losses receive the query/reference arguments. Memory losses reject explicit
 reference arguments, and ordinary losses reject enqueue masks. Validation precedes
@@ -38,7 +39,10 @@ lengths and ordering as embeddings and labels. Replicas must start with the same
 queue state and receive the same global inputs. The underlying memory loss still
 owns capacity, detached references, wraparound, and index semantics.
 
-The local-anchor mode (`efficient=True`) retains the distinct objective: each
+Wrappers take `objective="global"` (the default) or `objective="local_anchor"`.
+A boolean `efficient` flag described a speed tradeoff, but the two settings
+optimize different objectives with different gradients, so the argument names
+the objective. The local-anchor objective: each
 rank uses its local anchors and detached remote references, and returns world
 size times its local loss. DDP therefore sums the per-rank surrogate gradients;
 it does not recover full-batch reference gradients or a sample-weighted global
@@ -46,28 +50,9 @@ mean. Self-pair exclusion uses the rank's offset in the gathered reference set.
 Explicit reference tensors describe a separate set, so matching row positions
 are not self-pairs. Memory losses do not support this mode.
 
-CPU regression tests use real one-rank and two-rank Gloo groups. Independent
-contrastive and normalized-softmax formulas check values and gradients, including
-an actual DDP model with a trainable encoder and loss. They cover uneven and
-empty ranks, explicit references, supplied mined indices, local-anchor behavior,
-queue wraparound with masks, and collective argument failures. A requested CUDA
-run executes the same reference cases with NCCL and must fail when fewer than
-two CUDA devices are visible.
-
-The trainable-loss fixture seeds PyTorch with zero before constructing the
-encoder and proxy weights for each dtype. Unseeded initializations made the
-float16 gradient comparison intermittent. The float16 comparison uses
-`atol=rtol=2e-3`: with the `(classes, embedding_size)` weight layout, the
-logits multiply by a transposed weight matrix, and the two-A40 run observed an
-encoder-gradient error of `0.00146484375` against the single-process reference,
-above the earlier `1e-3` bound but within one float16 unit at the gradient's
-magnitude. Float32 and float64 keep PyTorch's default tolerances. Both DDP parameter gradients are still compared
-with an independent single-process normalized-softmax formula.
-
-GPU acceptance requires one host with two visible devices, a successful
-two-rank NCCL collective, and executed distributed tests with their counts and
-skip reasons recorded. These tests create their own worker processes; they must
-not be wrapped in `torchrun`. Four-device cases can extend coverage later.
+Inputs must be on the embeddings' device on every rank; the wrappers never
+copy labels or masks across devices. Candidate `indices_tuple` arguments to the
+miner wrapper index one rank's batch and are rejected across ranks.
 
 The test process-group setup follows the
 [PyTorch DDP tutorial](https://pytorch.org/tutorials/intermediate/ddp_tutorial.html).

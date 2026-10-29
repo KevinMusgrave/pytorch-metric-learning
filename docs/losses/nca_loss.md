@@ -1,6 +1,6 @@
 # NCALoss
 
-[Neighbourhood Components Analysis](https://www.cs.toronto.edu/~hinton/absps/nca.pdf){target=_blank}
+[Neighbourhood Components Analysis](https://www.cs.toronto.edu/~hinton/absps/nca.pdf)
 
 ```python
 losses.NCALoss(softmax_scale=1, **options)
@@ -9,28 +9,29 @@ losses.NCALoss(softmax_scale=1, **options)
 **Equation**:
 
 $$
-g(A) = \sum_i \log\left(\sum_{j \in C_i} p_{ij}\right) = \sum_i \log(p_i)
+L = -\frac{1}{|V|} \sum_{i \in V} w_i \log p_i,
+\qquad
+p_i = \sum_{j \in C_i} p_{ij},
+\qquad
+p_{ij} = \frac{\exp\left(-s \lVert \mathbf{x}_i - \mathbf{r}_j \rVert^2\right)}{\sum_{k \in R_i} \exp\left(-s \lVert \mathbf{x}_i - \mathbf{r}_k \rVert^2\right)}
 $$
 
-where
+Here $\mathbf{r}_j$ are the reference embeddings, $R_i$ is the set of references compared with query $i$, $C_i \subseteq R_i$ holds the references with the same label as $i$, $s$ is `softmax_scale`, $V$ is the set of valid queries, and $w_i$ is the [miner weight](../losses.md#miner-weights) of query $i$, 1 without an `indices_tuple`. The paper maximizes $\sum_i p_i$ or $\sum_i \log p_i$ with a linear map $A$, $\mathbf{x}_i = A\mathbf{z}_i$; this loss is the negated, averaged log form.
 
-$$
-p_i = \sum_{j \in C_i} p_{ij}
-$$
-
-$$
-p_{ij} = \frac{\exp\left(-\lVert A x_i - A x_j \rVert^2\right)}{\sum_{k \neq i} \exp\left(-\lVert A x_i - A x_k \rVert^2\right)}
-$$
-
-Here $A x_i$ is the embedding of element $i$, $C_i$ is the set of elements with the same label as $i$, and $p_{ii} = 0$.
-
-In this implementation, we use `-g(A)` as the loss.
-
-**Implementation notes**: The loss is averaged over elements with $p_i > 0$; elements with no same-label reference are skipped. The default distance L2-normalizes embeddings, unlike the paper's linear map.
+**Implementation notes**: Without `ref_emb`, the references are the other
+embeddings in the batch, so $R_i$ excludes $i$ itself, as in the paper's
+$p_{ii} = 0$. With `ref_emb`, $R_i$ is every reference row. A query is valid
+when it has at least one positive reference; other queries are skipped. The
+loss is computed in log space as
+$\log \sum_{k \in R_i} e^{\cdot} - \log \sum_{j \in C_i} e^{\cdot}$, so the loss
+and its gradient stay finite when the individual $p_{ij}$ underflow. float16 and bfloat16 inputs accumulate in float32. With a
+similarity distance, the exponents are $s \cdot \mathrm{sim}(\mathbf{x}_i,
+\mathbf{r}_j)$. The default distance L2-normalizes the embeddings.
 
 **Parameters**:
 
-- **softmax_scale**: The exponent multiplier in the loss's softmax expression. The paper uses `softmax_scale = 1 `, which is why it does not appear in the above equations.
+- **softmax_scale**: The multiplier $s$ of the distances in the softmax. The
+  paper uses 1.
 
 **Default distance**:
 
@@ -42,4 +43,5 @@ In this implementation, we use `-g(A)` as the loss.
 
 **Reducer input**:
 
-- **loss**: The loss per element in the batch, that results in a non zero exponent in the cross entropy expression. Reduction type is `"element"`.
+- **loss**: One loss per valid query, indexed by the query's position in
+  `embeddings`.

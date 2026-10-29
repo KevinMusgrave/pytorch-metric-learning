@@ -49,7 +49,9 @@ class HistogramLoss(BaseMetricLossFunction):
 
     def compute_density(self, distances: Tensor) -> Tensor:
         size = distances.size(0)
+        distances = distances.clamp(-1, 1)
         r_star = torch.floor((distances.float() + 1) / self.delta).to(dtype=torch.long)
+        r_star = r_star.clamp(0, self.num_bins - 1)
         delta_ijr_a = (distances + 1 - r_star * self.delta) / self.delta
         delta_ijr_b = ((r_star + 1) * self.delta - 1 - distances) / self.delta
         density = distances.new_zeros(self.num_bins + 1)

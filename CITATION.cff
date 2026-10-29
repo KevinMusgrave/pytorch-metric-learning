@@ -1,6 +1,7 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite the paper below."
 title: "PyTorch Metric Learning"
+version: "3.0.0"
 authors:
   - family-names: Musgrave
     given-names: Kevin
@@ -20,4 +21,5 @@ preferred-citation:
   journal: "arXiv"
   year: 2020
   volume: "abs/2008.09164"
+  doi: "10.48550/arXiv.2008.09164"
   url: "https://arxiv.org/abs/2008.09164"

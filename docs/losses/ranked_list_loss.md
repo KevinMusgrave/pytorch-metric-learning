@@ -3,7 +3,7 @@
 [Ranked List Loss for Deep Metric Learning](https://arxiv.org/abs/1903.03238)
 
 ```python
-losses.RankedListLoss(margin, Tn, imbalance=0.5, alpha=None, Tp=0, **options)
+losses.RankedListLoss(margin, neg_temperature, imbalance=0.5, alpha=None, pos_temperature=0, **options)
 ```
 
 **Equation**:
@@ -22,16 +22,37 @@ $$
 w_{ij} = e^{T_p \left(d_{ij} - (\alpha - m)\right)}, \qquad w_{ik} = e^{T_n \left(\alpha - d_{ik}\right)}
 $$
 
-Here $d$ is the Euclidean distance between normalized embeddings, $P^*_i$ holds the positives of $\mathbf{x}_i$ with $d_{ij} > \alpha - m$, $N^*_i$ holds the negatives with $d_{ik} < \alpha$, $\lambda$ is `imbalance`, and $m$ is `margin`.
+Here $d$ is the Euclidean distance between normalized embeddings, $P^*_i$ holds the positives of $\mathbf{x}_i$ with $d_{ij} > \alpha - m$, $N^*_i$ holds the negatives with $d_{ik} < \alpha$, $\lambda$ is `imbalance`, $m$ is `margin`, and $T_p$ and $T_n$ are `pos_temperature` and `neg_temperature`.
 
-**Implementation notes**: Weight sums are offset by `1e-5` so anchors without violating pairs contribute 0.
+**Implementation notes**: $L_P$ and $L_N$ are exact weighted averages,
+computed as softmax-weighted sums over the violating pairs, so large
+temperatures do not overflow. An anchor without violating positives or without
+violating negatives contributes 0 for that part. Each embedding is an anchor
+against the rest of the batch. Labels are required; `indices_tuple` and
+`ref_emb` raise `ValueError`.
+
+**Paper settings**: The defaults `pos_temperature=0` and `alpha=None`
+correspond to the paper's RLL-Simpler variant, which it recommends for
+exploratory analysis: positives are weighted uniformly and
+$\alpha = 1 + m/2$.
 
 **Parameters**:
 
-The defaults correspond to the paper's RLL-Simpler variant, which it recommends for exploratory analysis: `Tp=0` weights positives uniformly, and `alpha=None` sets $\alpha = 1 + m/2$ for margin $m$.
+- **margin**: The margin $m$ between the positive and negative boundaries.
+- **neg_temperature**: The temperature $T_n$ that weights negative pairs.
+- **imbalance**: The tradeoff $\lambda$ between the positive and negative
+  parts, between 0 and 1; other values raise `ValueError`.
+- **alpha**: The negative boundary $\alpha$. `None` sets $\alpha = 1 + m/2$.
+- **pos_temperature**: The temperature $T_p$ that weights positive pairs.
 
-- **margin** (float): margin between positive and negative set
-- **imbalance** (float): tradeoff between positive and negative sets. As the name suggests this takes into account
-  the imbalance between positive and negative samples in the dataset
-- **alpha** (float): smallest distance between negative points
-- **Tp & Tn** (float): temperatures for, respectively, positive and negative pairs weighting.
+**Default distance**:
+
+- [`LpDistance(normalize_embeddings=True, p=2, power=1)`](../distances.md#lpdistance)
+
+**Default reducer**:
+
+- [MeanReducer](../reducers.md#meanreducer)
+
+**Reducer input**:
+
+- **loss**: One loss per anchor, indexed by anchor position in `embeddings`.

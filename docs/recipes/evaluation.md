@@ -12,7 +12,9 @@ library API.
 | ---------------------------------------------------------------------------- | ------------------------------ | ------------------------------------------------------------- |
 | Extract embeddings and evaluate split, two-stream, or hierarchical retrieval | [evaluation.py](evaluation.py) | `uv run --frozen --no-sync python -m docs.recipes.evaluation` |
 
-Verify the contracts with the same fixtures the removed testers used:
+The command imports the installed package, so install the checkout as
+described in the [development guide](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/DEVELOPMENT.md#set-up-a-checkout),
+or prefix it with `PYTHONPATH=src`. Verify the contracts:
 
 ```sh
 uv run --frozen --no-sync --env-file tests/cpu.env python -m pytest tests/recipes/test_evaluation.py
@@ -41,9 +43,9 @@ integers before evaluation, for example with
 `split_accuracy(calculator, query, references, query_in_reference)` takes
 `(embeddings, labels)` pairs. When `query_in_reference` is true, it places the
 query first in the reference tensor and passes `ref_includes_query=True`, so
-each query's own row is excluded from its neighbors. Additional reference splits
-follow in the given order. When it is false, the reference is only the given
-splits and no row is treated as a self-match.
+each query's own row is excluded from its neighbors and from its relevant
+count. Additional reference splits follow in the given order. When it is false,
+the reference is only the given splits and no row is treated as a self-match.
 
 | Query | References | Query in reference | Meaning                                           |
 | ----- | ---------- | ------------------ | ------------------------------------------------- |
@@ -58,9 +60,7 @@ describes how the reference was assembled.
 
 `two_stream_accuracy(calculator, anchors, references, labels)` evaluates
 anchors against a separate reference stream whose row `i` shares label `i` with
-anchor `i`. The reference never includes the anchors, so no row is removed. This
-replaces `GlobalTwoStreamEmbeddingSpaceTester`, which concatenated both streams
-and then split them in half.
+anchor `i`. The reference never includes the anchors, so no row is removed.
 
 ## Parent-conditioned hierarchical retrieval
 
@@ -71,17 +71,17 @@ references with that parent. The result for a level is the unweighted mean over
 parent groups present in the query, under the key `<metric>_level<l>`. With more
 than one evaluated level, `AVERAGE_<metric>` is the unweighted mean over levels.
 For example, a cat query is ranked only against other animals, and a truck query
-only against other vehicles. This replaces `WithSameParentLabelTester`.
+only against other vehicles.
 
 For global, unconditioned evaluation of one label level, pass that column to
 `split_accuracy` directly.
 
 ## Published benchmark splits
 
-The library no longer downloads or parses datasets. The splits below are the
-conventional metric-learning protocols the removed adapters implemented.
-Applications load images with their own data pipeline and must respect each
-dataset's license and terms.
+The library does not download or parse datasets. The splits below are the
+conventional metric-learning protocols for common benchmarks. Applications load
+images with their own data pipeline and must respect each dataset's license and
+terms.
 
 | Dataset                                                                                                                                          | Training split                  | Test split                     |
 | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------- | ------------------------------ |

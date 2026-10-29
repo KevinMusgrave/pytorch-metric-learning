@@ -1,6 +1,6 @@
 # AngularLoss
 
-[Deep Metric Learning with Angular Loss](https://arxiv.org/pdf/1708.01682.pdf){target=_blank}
+[Deep Metric Learning with Angular Loss](https://arxiv.org/abs/1708.01682)
 
 ```python
 losses.AngularLoss(alpha=40, **options)
@@ -17,17 +17,23 @@ $$
 
 Here $N$ is the batch size. Terms that depend only on $\lVert \mathbf{x} \rVert$ are dropped from $f_{a,p,n}$, as in the N-pair loss.
 
-**Implementation notes**: Anchors, positives, and negatives are L2-normalized, matching the unit-length derivation of the equation. The loss is averaged over all ordered positive pairs rather than one positive per anchor; pairs without negatives contribute 0.
+**Implementation notes**: Anchors, positives, and negatives are L2-normalized,
+matching the unit-length derivation of the equation. The loss is computed for
+every positive pair `(a, p)`, from labels or from `indices_tuple`, rather than
+one positive per anchor. The negatives of a pair are every reference with a
+label different from the anchor's, so `labels` are required even with
+`indices_tuple`. A pair without negatives contributes 0. With `ref_emb`,
+positives and negatives come from the reference set.
 
 **Parameters**:
 
-- **alpha**: The angle specified in degrees. The paper uses values between 36 and 55.
+- **alpha**: The angle $\alpha$ in degrees. The paper uses values between 36 and 55.
 
 **Default distance**:
 
-- [`LpDistance(p=2, power=1, normalize_embeddings=True)`](../distances.md#lpdistance)
-
-  - This is the only compatible distance.
+- [`LpDistance(normalize_embeddings=True, p=2, power=1)`](../distances.md#lpdistance).
+  This is the only compatible distance; another distance class raises
+  `TypeError` and other settings raise `ValueError`.
 
 **Default reducer**:
 
@@ -35,4 +41,4 @@ Here $N$ is the batch size. Terms that depend only on $\lVert \mathbf{x} \rVert$
 
 **Reducer input**:
 
-- **loss**: The loss for every `a1`, where `(a1,p)` represents every positive pair in the batch. Reduction type is `"pos_pair"`.
+- **loss**: One loss per (anchor, positive) pair, indexed by `(anchors, positives)`.

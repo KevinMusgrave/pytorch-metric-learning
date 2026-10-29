@@ -3,14 +3,7 @@
 [Ensemble Deep Manifold Similarity Learning using Hard Proxies](https://openaccess.thecvf.com/content_CVPR_2019/papers/Aziere_Ensemble_Deep_Manifold_Similarity_Learning_Using_Hard_Proxies_CVPR_2019_paper.pdf)
 
 ```python
-losses.ManifoldLoss(
-        embedding_size: int,
-        num_proxies: int = 50,
-        lambda_c: float = 1.0,
-        alpha: float = 0.8,
-        margin: float = 5e-4,
-        **options
-    )
+losses.ManifoldLoss(embedding_size, num_proxies=50, lambda_c=1.0, alpha=0.8, margin=5e-4, **options)
 ```
 
 **Equation**:
@@ -31,37 +24,49 @@ $$
 
 Here $S$ is the similarity graph over the $N$ embeddings and $K$ proxies, $D$ is its degree matrix, $F_{i,k}$ is the random-walk affinity between embedding $i$ and proxy $k$, $c(i)$ is the proxy assigned to embedding $i$, and only violating terms with $[\cdot]_+ > 0$ enter the sums.
 
-**Implementation notes**: The matrix inverse is computed in float32. With `indices_tuple=None`, every proxy is assigned to at least one embedding and the remaining embeddings receive random proxies.
+**Implementation notes**: `labels` holds the proxy assignments $c(i)$, integers
+in `0..num_proxies - 1`; they are not class labels. With `labels=None`, every
+proxy is assigned to at least one embedding and the remaining embeddings
+receive random proxies, which requires a batch of at least `num_proxies`
+embeddings; a smaller unlabeled batch raises `ValueError`. Labels must lie in
+`[0, num_proxies)`. `indices_tuple`, `ref_emb`, and `ref_labels` raise `ValueError`,
+as does an embedding dimension other than `embedding_size`. The matrix inverse
+is computed in float32.
 
-**Parameters**
+The proxies are the parameter `proxies`, shaped `(num_proxies, embedding_size)`
+and initialized with `torch.randn`. Include `loss_func.parameters()` in an
+optimizer. The [placement rule](../losses.md#learnable-weight-arguments) of
+learnable weights applies; this loss does not derive from BaseProxyLoss and has
+no weight regularization arguments.
 
-- **embedding_size**: embedding size, $l$ in the paper.
+**Parameters**:
 
-- **num_proxies**: number of proxies, $K$ in the paper.
+- **embedding_size**: The embedding size, $l$ in the paper.
+- **num_proxies**: The number of proxies, $K$ in the paper.
+- **lambda_c**: The weight $\lambda_C$ of the context loss. It must be
+  non-negative; a negative value raises `ValueError`. `lambda_c=0` uses only the
+  intrinsic loss, and `lambda_c=math.inf` uses only the context loss.
+- **alpha**: The random-walk parameter $\alpha$, in the open interval `(0, 1)`.
+  It controls how much similarity propagates between neighboring nodes.
+- **margin**: The margin $m$.
 
-- **lambda_c**: regularization weight $\lambda_C$ in `loss = intrinsic_loss + lambda_c * context_loss`. `lambda_c=0` uses only the intrinsic loss, and `lambda_c=math.inf` uses only the context loss.
+**Default distance**:
 
-- **alpha**: parameter of the Random Walk. Must be in the range `(0,1)`. It specifies the amount of similarity between neighboring nodes.
-
-- **margin**: margin used in the calculation of the loss.
-
-Example usage:
-
-```python
-loss_fn = ManifoldLoss(128)
-
-# use random cluster centers
-loss = loss_fn(embeddings)
-# or specify indices of embeddings to use as cluster centers
-loss = loss_fn(embeddings, indices_tuple=indices)
-```
-
-**Important notes**
-
-`labels`, `ref_emb`, and `ref_labels` are not supported for this loss function.
-
-In addition, `indices_tuple` is **not** for the output of miners. Instead, it is for a list of indices of embeddings to be used as cluster centers.
+- [`CosineSimilarity()`](../distances.md#cosinesimilarity)
 
 **Default reducer**:
 
-- This loss returns an **already reduced** loss.
+- [MeanReducer](../reducers.md#meanreducer)
+
+**Reducer input**:
+
+- **loss**: Already reduced: the value of $L$. Every reducer returns it unchanged.
+
+```python
+loss_func = losses.ManifoldLoss(embedding_size=128, num_proxies=10)
+
+# assign proxies at random
+loss = loss_func(embeddings)
+# or assign proxy proxy_ids[i] to embeddings[i]
+loss = loss_func(embeddings, proxy_ids)
+```

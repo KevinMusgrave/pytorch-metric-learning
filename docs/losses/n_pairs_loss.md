@@ -1,8 +1,6 @@
 # NPairsLoss
 
-[Improved Deep Metric Learning with Multi-class N-pair Loss Objective](http://www.nec-labs.com/uploads/images/Department-Images/MediaAnalytics/papers/nips16_npairmetriclearning.pdf){target=_blank}
-
-If your batch has more than 2 samples per label, then you should use [NTXentLoss](ntxent_loss.md#ntxentloss).
+[Improved Deep Metric Learning with Multi-class N-pair Loss Objective](http://www.nec-labs.com/uploads/images/Department-Images/MediaAnalytics/papers/nips16_npairmetriclearning.pdf)
 
 ```python
 losses.NPairsLoss(**options)
@@ -14,13 +12,27 @@ $$
 L = \frac{1}{N} \sum_{i=1}^{N} \log\left(1 + \sum_{j \neq i} \exp\left(\mathbf{x}_i^\top \mathbf{x}_j^+ - \mathbf{x}_i^\top \mathbf{x}_i^+\right)\right)
 $$
 
-Here the batch provides $N$ pairs $(\mathbf{x}_i, \mathbf{x}_i^+)$ with distinct labels, and the loss is the cross entropy of classifying anchor $i$'s positive among all $N$ positives using dot-product similarity.
+Here the batch provides $N$ pairs $(\mathbf{x}_i, \mathbf{x}_i^+)$ with distinct labels, and the loss is the cross entropy of classifying anchor $i$'s positive among all $N$ positives.
 
-**Implementation notes**: For each label, the first positive pair in index order forms the $(\mathbf{x}_i, \mathbf{x}_i^+)$ pair; other samples of that label are ignored. Embeddings are not normalized by default, as in the paper, which regularizes their norms separately.
+**Implementation notes**: For each label, the first positive pair in index
+order, from labels or from `indices_tuple`, forms the
+$(\mathbf{x}_i, \mathbf{x}_i^+)$ pair; other samples of that label are ignored.
+For batches with more than two samples per label, use
+[NTXentLoss](ntxent_loss.md), which uses every positive pair. With a distance
+where smaller means closer, the logits are negated distances. Labels are
+required, and `ref_emb` raises `ValueError`.
+
+**Paper settings**: The default distance L2-normalizes the embeddings, so
+$\mathbf{x}_i^\top \mathbf{x}_j^+$ is a cosine similarity. The paper uses
+unnormalized inner products and penalizes the squared embedding norms. Pass
+`distance=distances.DotProductSimilarity(normalize_embeddings=False)` and an
+`embedding_regularizer` such as `regularizers.LpRegularizer(power=2)` for the
+paper's formulation.
 
 **Default distance**:
 
-- [`DotProductSimilarity()`](../distances.md#dotproductsimilarity)
+- [`DotProductSimilarity()`](../distances.md#dotproductsimilarity), which
+  L2-normalizes the embeddings.
 
 **Default reducer**:
 
@@ -28,4 +40,5 @@ Here the batch provides $N$ pairs $(\mathbf{x}_i, \mathbf{x}_i^+)$ with distinct
 
 **Reducer input**:
 
-- **loss**: The loss per element in the batch. Reduction type is `"element"`.
+- **loss**: One loss per selected pair, indexed by its anchor's position in
+  `embeddings`.

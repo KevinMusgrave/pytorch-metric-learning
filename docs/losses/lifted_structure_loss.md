@@ -1,9 +1,9 @@
 # LiftedStructureLoss
 
-The original lifted structure loss as presented in [Deep Metric Learning via Lifted Structured Feature Embedding](https://arxiv.org/pdf/1511.06452.pdf){target=_blank}
+[Deep Metric Learning via Lifted Structured Feature Embedding](https://arxiv.org/abs/1511.06452)
 
 ```python
-losses.LiftedStructureLoss(neg_margin=1, pos_margin=0, **options):
+losses.LiftedStructureLoss(neg_margin=1.0, pos_margin=0.0, **options)
 ```
 
 **Equation**:
@@ -17,12 +17,20 @@ $$
 
 Here $\mathcal{P}$ and $\mathcal{N}$ are the positive and negative pairs in the batch, and $D_{i,j}$ is the distance between embeddings $i$ and $j$.
 
-**Implementation notes**: $\tilde{J}_{i,j}$ uses the negatives of both $i$ and $j$, so the anchors and positives must come from the same set. Passing a separate `ref_emb` raises `ValueError`; use [GeneralizedLiftedStructureLoss](generalized_lifted_structure_loss.md#generalizedliftedstructureloss) for separate query and reference sets.
+**Implementation notes**: The negatives of each element are combined with a
+per-anchor log-sum-exp; float16 and bfloat16 inputs accumulate in float32. A
+positive pair whose two elements have no negatives contributes 0: the sum is
+empty, its logarithm is $-\infty$, and the hinge is 0, as in the paper.
+$\tilde{J}_{i,j}$ uses the negatives of both $i$ and $j$, so anchors and
+positives must come from the same set. Passing `ref_emb` raises `ValueError`;
+use [GeneralizedLiftedStructureLoss](generalized_lifted_structure_loss.md) for
+separate query and reference sets.
 
 **Parameters**:
 
-- **pos_margin**: The margin in the expression `D_(i,j) - margin`. The paper uses `pos_margin = 0 `, which is why it does not appear in the above equation.
-- **neg_margin**: This is `alpha` in the above equation. The paper uses 1.
+- **neg_margin**: The margin $\alpha$. The paper uses 1.
+- **pos_margin**: A margin subtracted from $D_{i,j}$ in $\tilde{J}_{i,j}$. The
+  paper uses 0, so it does not appear in the equation.
 
 **Default distance**:
 
@@ -34,4 +42,5 @@ Here $\mathcal{P}$ and $\mathcal{N}$ are the positive and negative pairs in the 
 
 **Reducer input**:
 
-- **loss**: The loss per positive pair in the batch. Reduction type is `"pos_pair"`.
+- **loss**: One value $\frac{1}{2}\max(0, \tilde{J}_{i,j})^2$ per (anchor,
+  positive) pair, indexed by `(anchors, positives)`.

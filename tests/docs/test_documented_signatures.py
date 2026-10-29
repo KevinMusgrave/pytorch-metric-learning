@@ -15,9 +15,8 @@ MODULES = (
     "reducers",
     "regularizers",
     "samplers",
-    "utils.accuracy_calculator",
-    "utils.retrieval",
-    "utils.distributed",
+    "evaluation",
+    "distributed",
 )
 BLOCK = re.compile(
     r"```python\n("

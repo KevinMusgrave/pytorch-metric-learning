@@ -18,4 +18,4 @@ class SelfSupervisedLoss(torch.nn.Module):
             embeddings = torch.cat([embeddings, ref_emb], dim=0)
             labels = torch.cat([labels, labels], dim=0)
             return self.loss(embeddings, labels)
-        return self.loss(embeddings, labels, ref_emb=ref_emb, ref_labels=labels.clone())
+        return self.loss(embeddings, labels, ref_emb=ref_emb, ref_labels=labels)

@@ -1,12 +1,10 @@
 import math
-from collections.abc import Callable
 from typing import Unpack
 
 import torch
 from torch import Tensor
 
-from ..regularizers import BaseRegularizer
-from ..types import LossOptions
+from ..types import ProxyLossOptions
 from ..utils import _common
 from .arcface_loss import ArcFaceLoss
 
@@ -19,21 +17,10 @@ class SubCenterArcFaceLoss(ArcFaceLoss):
         margin: float = 0.5,
         scale: float = 64,
         sub_centers: int = 3,
-        *,
-        weight_regularizer: BaseRegularizer | None = None,
-        weight_reg_weight: float = 1.0,
-        weight_init_func: Callable[[Tensor], object] | None = None,
-        **options: Unpack[LossOptions],
+        **options: Unpack[ProxyLossOptions],
     ) -> None:
         super().__init__(
-            num_classes * sub_centers,
-            embedding_size,
-            margin,
-            scale,
-            weight_regularizer=weight_regularizer,
-            weight_reg_weight=weight_reg_weight,
-            weight_init_func=weight_init_func,
-            **options,
+            num_classes * sub_centers, embedding_size, margin, scale, **options
         )
         self.sub_centers = sub_centers
         self.num_classes = num_classes

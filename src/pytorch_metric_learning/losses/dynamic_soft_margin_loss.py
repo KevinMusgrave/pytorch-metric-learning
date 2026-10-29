@@ -41,7 +41,7 @@ class DynamicSoftMarginLoss(BaseMetricLossFunction):
         embeddings: Tensor,
         labels: Tensor | None,
         indices_tuple: IndicesTuple | None,
-        ref_emb: Tensor,
+        ref_emb: Tensor | None,
         ref_labels: Tensor | None,
     ) -> LossDict:
         _common.check_parameter_placement(self, self.hist_, embeddings)
@@ -52,18 +52,17 @@ class DynamicSoftMarginLoss(BaseMetricLossFunction):
                 embeddings, labels, indices_tuple, ref_emb, ref_labels
             )
         if len(differences) == 0:
-            return self.zero_losses(embeddings)
+            return {}
         self.update_histogram(differences)
         return {
             "loss": {
                 "losses": self.weigh_loss(differences).mean(),
                 "indices": None,
-                "reduction_type": "already_reduced",
             }
         }
 
     def compute_loss_without_labels(
-        self, embeddings: Tensor, ref_emb: Tensor
+        self, embeddings: Tensor, ref_emb: Tensor | None
     ) -> Tensor:
         mat = self.distance(embeddings, ref_emb)
         rows, columns = mat.shape
@@ -82,7 +81,7 @@ class DynamicSoftMarginLoss(BaseMetricLossFunction):
         embeddings: Tensor,
         labels: Tensor | None,
         indices_tuple: IndicesTuple | None,
-        ref_emb: Tensor,
+        ref_emb: Tensor | None,
         ref_labels: Tensor | None,
     ) -> Tensor:
         anchor, positive, negative = indexing.convert_to_triplets(
@@ -106,7 +105,7 @@ class DynamicSoftMarginLoss(BaseMetricLossFunction):
         histogram.scatter_add_(0, upper, fraction)
         histogram /= data.numel()
         momentum = torch.where(self.hist_.sum() > 0, self.momentum, 1.0)
-        self.hist_ = (1 - momentum) * self.hist_ + momentum * histogram
+        self.hist_.lerp_(histogram, momentum)
 
     def weigh_loss(self, data: Tensor) -> Tensor:
         positions = self.bin_positions(data).long()

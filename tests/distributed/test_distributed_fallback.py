@@ -1,4 +1,5 @@
 import unittest
+import warnings
 from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import timedelta
@@ -9,12 +10,12 @@ import torch
 import torch.distributed as dist
 
 from pytorch_metric_learning.distances import LpDistance
-from pytorch_metric_learning.losses import ContrastiveLoss, CrossBatchMemory
-from pytorch_metric_learning.miners import PairMarginMiner
-from pytorch_metric_learning.utils.distributed import (
+from pytorch_metric_learning.distributed import (
     DistributedLossWrapper,
     DistributedMinerWrapper,
 )
+from pytorch_metric_learning.losses import ContrastiveLoss, CrossBatchMemory
+from pytorch_metric_learning.miners import PairMarginMiner
 
 
 @contextmanager
@@ -48,7 +49,8 @@ class TestDistributedFallback(unittest.TestCase):
         wrapped = inputs.clone().requires_grad_()
         loss = ContrastiveLoss(distance=LpDistance(normalize_embeddings=False))
         expected = loss(direct, labels)
-        with self.assertWarnsRegex(UserWarning, "non-distributed setting"):
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
             actual = DistributedLossWrapper(loss)(wrapped, labels)
         expected.backward()
         actual.backward()
@@ -74,11 +76,11 @@ class TestDistributedFallback(unittest.TestCase):
                 self.subTest(initialized=initialized),
                 single_process_group(initialized),
             ):
-                for efficient in (False, True):
-                    wrapped = DistributedMinerWrapper(miner, efficient=efficient)
+                for objective in ("global", "local_anchor"):
+                    wrapped = DistributedMinerWrapper(miner, objective=objective)
                     for refs in ((None, None), (reference, reference_labels)):
-                        expected = miner(inputs, labels, *refs)
-                        actual = wrapped(inputs, labels, *refs)
+                        expected = miner(inputs, labels, None, *refs)
+                        actual = wrapped(inputs, labels, None, *refs)
                         self.assertGreater(len(actual[0]), 0)
                         self.assertGreater(len(actual[2]), 0)
                         for observed, wanted in zip(actual, expected, strict=True):

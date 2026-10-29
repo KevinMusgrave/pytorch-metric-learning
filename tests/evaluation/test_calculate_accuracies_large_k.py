@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 import torch
 
-from pytorch_metric_learning.utils import accuracy_calculator, retrieval
+from pytorch_metric_learning.evaluation import accuracy_calculator, retrieval
 
 from .. import TEST_DEVICE
 

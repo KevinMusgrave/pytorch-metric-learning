@@ -4,13 +4,12 @@ import torch
 from torch import Tensor
 
 from ..reducers import BaseReducer, DivisorReducer
-from ..types import IndicesTuple, LossDict, LossOptions, LossTerm, TripletsPerAnchor
+from ..types import IndicesTuple, LossDict, LossOptions, TripletsPerAnchor
 from ..utils import _common, indexing
-from .base_metric_loss_function import BaseMetricLossFunction, zero_term
+from .base_metric_loss_function import BaseMetricLossFunction
 
 
 class MarginLoss(BaseMetricLossFunction):
-    sub_loss_names = ("margin_loss", "beta_reg_loss")
     beta: Tensor
 
     def __init__(
@@ -39,7 +38,7 @@ class MarginLoss(BaseMetricLossFunction):
         embeddings: Tensor,
         labels: Tensor | None,
         indices_tuple: IndicesTuple | None,
-        ref_emb: Tensor,
+        ref_emb: Tensor | None,
         ref_labels: Tensor | None,
     ) -> LossDict:
         _common.labels_or_indices_tuple_required(labels, indices_tuple)
@@ -48,7 +47,7 @@ class MarginLoss(BaseMetricLossFunction):
         )
         anchor_idx, positive_idx, negative_idx = triplets
         if len(anchor_idx) == 0:
-            return self.zero_losses(embeddings)
+            return {}
         _common.check_parameter_placement(self, self.beta, embeddings)
         if len(self.beta) == 1:
             beta = self.beta
@@ -61,36 +60,22 @@ class MarginLoss(BaseMetricLossFunction):
         pos_loss = torch.relu(self.distance.margin(d_ap, beta) + self.margin)
         neg_loss = torch.relu(self.distance.margin(beta, d_an) + self.margin)
         divisor = torch.sum(pos_loss > 0.0) + torch.sum(neg_loss > 0.0)
-        return {
+        terms: LossDict = {
             "margin_loss": {
                 "losses": pos_loss + neg_loss,
                 "indices": triplets,
-                "reduction_type": "triplet",
                 "divisor": divisor,
-            },
-            "beta_reg_loss": self.compute_reg_loss(
-                beta, anchor_idx, divisor, embeddings
-            ),
-        }
-
-    def compute_reg_loss(
-        self, beta: Tensor, anchor_idx: Tensor, divisor: Tensor, embeddings: Tensor
-    ) -> LossTerm:
-        if not self.learn_beta:
-            return zero_term(embeddings)
-        loss = beta * self.nu
-        if len(self.beta) == 1:
-            return {
-                "losses": loss.squeeze(),
-                "indices": None,
-                "reduction_type": "already_reduced",
             }
-        return {
-            "losses": loss,
-            "indices": anchor_idx,
-            "reduction_type": "element",
-            "divisor": divisor,
         }
+        if self.learn_beta and len(self.beta) == 1:
+            terms["beta_reg_loss"] = {"losses": beta * self.nu, "indices": None}
+        elif self.learn_beta:
+            terms["beta_reg_loss"] = {
+                "losses": beta * self.nu,
+                "indices": anchor_idx,
+                "divisor": divisor,
+            }
+        return terms
 
     def default_reducer(self) -> BaseReducer:
         return DivisorReducer()

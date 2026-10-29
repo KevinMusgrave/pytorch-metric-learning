@@ -4,8 +4,8 @@ import numpy as np
 import torch
 
 from pytorch_metric_learning.distances import LpDistance
-from pytorch_metric_learning.utils import accuracy_calculator
-from pytorch_metric_learning.utils.retrieval import CustomKNN
+from pytorch_metric_learning.evaluation import accuracy_calculator
+from pytorch_metric_learning.evaluation.retrieval import CustomKNN
 
 from .. import TEST_DEVICE
 
@@ -32,7 +32,7 @@ class TestAccuracyCalculatorContracts(unittest.TestCase):
     def test_default_metrics_and_backend(self):
         AC = accuracy_calculator.AccuracyCalculator()
         self.assertEqual(
-            set(AC.get_curr_metrics()),
+            set(AC.metrics),
             {
                 "mean_average_precision",
                 "mean_average_precision_at_r",

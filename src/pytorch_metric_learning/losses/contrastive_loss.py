@@ -9,8 +9,6 @@ from .generic_pair_loss import GenericPairLoss
 
 
 class ContrastiveLoss(GenericPairLoss):
-    sub_loss_names = ("pos_loss", "neg_loss")
-
     def __init__(
         self,
         pos_margin: float = 0.0,
@@ -28,12 +26,10 @@ class ContrastiveLoss(GenericPairLoss):
             "pos_loss": {
                 "losses": torch.relu(self.distance.margin(pos_pairs, self.pos_margin)),
                 "indices": (a1, p),
-                "reduction_type": "pos_pair",
             },
             "neg_loss": {
                 "losses": torch.relu(self.distance.margin(self.neg_margin, neg_pairs)),
                 "indices": (a2, n),
-                "reduction_type": "neg_pair",
             },
         }
 

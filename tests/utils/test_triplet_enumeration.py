@@ -30,7 +30,7 @@ class TestTripletEnumeration(unittest.TestCase):
     ) -> None:
         other = labels if reference is None else reference
         expected = torch.tensor(
-            reference_triplets(labels.tolist(), other.tolist(), other is labels),
+            reference_triplets(labels.tolist(), other.tolist(), reference is None),
             device=TEST_DEVICE,
             dtype=torch.long,
         ).reshape(-1, 3)

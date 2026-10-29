@@ -35,23 +35,27 @@ class ManifoldLoss(BaseMetricLossFunction):
         embeddings: Tensor,
         labels: Tensor | None,
         indices_tuple: IndicesTuple | None,
-        ref_emb: Tensor,
+        ref_emb: Tensor | None,
         ref_labels: Tensor | None,
     ) -> LossDict:
-        _common.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
-        _common.labels_not_supported(labels, ref_labels)
+        _common.ref_not_supported(ref_emb)
+        _common.indices_tuple_not_supported(indices_tuple)
         if embeddings.shape[1] != self.embedding_size:
             raise ValueError("Embedding dimension must match embedding_size")
         _common.check_parameter_placement(self, self.proxies, embeddings)
 
         N = len(embeddings)
         device = embeddings.device
-        if indices_tuple is not None:
-            meta_classes = torch.as_tensor(indices_tuple, device=device)
+        if labels is not None:
+            meta_classes = labels
         else:
-            meta_classes = torch.randint(0, self.num_proxies, (N - self.num_proxies,))
-            meta_classes = torch.cat((torch.arange(self.num_proxies), meta_classes))
-            meta_classes = meta_classes[torch.randperm(N)].to(device)
+            extra = torch.randint(
+                0, self.num_proxies, (N - self.num_proxies,), device=device
+            )
+            meta_classes = torch.cat(
+                (torch.arange(self.num_proxies, device=device), extra)
+            )
+            meta_classes = meta_classes[torch.randperm(N, device=device)]
         rows = torch.arange(N, device=device)
 
         embs_and_proxies = torch.cat([embeddings, self.proxies], dim=0)
@@ -78,7 +82,6 @@ class ManifoldLoss(BaseMetricLossFunction):
             "loss": {
                 "losses": loss_int + self.lambda_c * loss_ctx,
                 "indices": None,
-                "reduction_type": "already_reduced",
             }
         }
 

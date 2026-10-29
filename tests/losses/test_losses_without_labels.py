@@ -61,8 +61,12 @@ class TestLossesWithoutLabels(unittest.TestCase):
             for loss_fn in compatible_losses:
                 loss_with_labels = loss_fn(emb, labels, p)
                 loss_without_labels1 = loss_fn(emb, indices_tuple=p)
-                loss_without_labels2 = loss_fn(emb, indices_tuple=p, ref_emb=emb)
                 self.assertEqual(loss_with_labels.item(), loss_without_labels1.item())
+                if isinstance(loss_fn, losses.LiftedStructureLoss):
+                    with self.assertRaises(ValueError):
+                        loss_fn(emb, indices_tuple=p, ref_emb=emb)
+                    continue
+                loss_without_labels2 = loss_fn(emb, indices_tuple=p, ref_emb=emb)
                 self.assertEqual(loss_with_labels.item(), loss_without_labels2.item())
 
             for loss_fn in compatible_losses:

@@ -35,7 +35,6 @@ class MultiSimilarityLoss(GenericPairLoss):
             "loss": {
                 "losses": (pos_loss + neg_loss).squeeze(1),
                 "indices": _common.arange_like(mat),
-                "reduction_type": "element",
             }
         }
 

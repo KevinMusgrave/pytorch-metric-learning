@@ -9,8 +9,6 @@ from .generic_pair_loss import GenericPairLoss
 
 
 class IntraPairVarianceLoss(GenericPairLoss):
-    sub_loss_names = ("pos_loss", "neg_loss")
-
     def __init__(
         self,
         pos_eps: float = 0.01,
@@ -31,12 +29,10 @@ class IntraPairVarianceLoss(GenericPairLoss):
             "pos_loss": {
                 "losses": torch.relu(pos_var) ** 2,
                 "indices": (a1, p),
-                "reduction_type": "pos_pair",
             },
             "neg_loss": {
                 "losses": torch.relu(neg_var) ** 2,
                 "indices": (a2, n),
-                "reduction_type": "neg_pair",
             },
         }
 

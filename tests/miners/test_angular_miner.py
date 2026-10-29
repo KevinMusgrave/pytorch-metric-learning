@@ -28,16 +28,13 @@ def anchor_positive_negative_triplets(labels):
 
 
 def triplet_angles(embeddings, labels):
+    embeddings = torch.nn.functional.normalize(embeddings.detach().double(), dim=1)
     angles = []
     for i, j, k in anchor_positive_negative_triplets(labels):
         anchor, positive, negative = embeddings[i], embeddings[j], embeddings[k]
         center = (anchor + positive) / 2
-        ap_dist = torch.nn.functional.pairwise_distance(
-            anchor.unsqueeze(0), positive.unsqueeze(0), 2
-        )
-        nc_dist = torch.nn.functional.pairwise_distance(
-            center.unsqueeze(0), negative.unsqueeze(0), 2
-        )
+        ap_dist = torch.linalg.vector_norm(anchor - positive)
+        nc_dist = torch.linalg.vector_norm(center - negative)
         angles.append((i, j, k, torch.atan(ap_dist / (2 * nc_dist))))
     return angles
 

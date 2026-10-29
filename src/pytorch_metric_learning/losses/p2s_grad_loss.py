@@ -24,11 +24,11 @@ class P2SGradLoss(BaseMetricLossFunction):
         embeddings: Tensor,
         labels: Tensor | None,
         indices_tuple: IndicesTuple | None,
-        ref_emb: Tensor,
+        ref_emb: Tensor | None,
         ref_labels: Tensor | None,
     ) -> LossDict:
         labels = _common.labels_required(labels)
-        _common.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
+        _common.ref_not_supported(ref_emb)
         _common.indices_tuple_not_supported(indices_tuple)
         _common.check_parameter_placement(self, self.weight, embeddings)
         with torch.no_grad():
@@ -41,6 +41,5 @@ class P2SGradLoss(BaseMetricLossFunction):
             "loss": {
                 "losses": F.mse_loss(cos_theta, target),
                 "indices": None,
-                "reduction_type": "already_reduced",
             }
         }

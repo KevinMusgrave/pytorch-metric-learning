@@ -2,7 +2,7 @@ import torch
 from torch import Tensor
 
 from ..distances import BaseDistance
-from ..types import IndicesTuple
+from ..types import IndicesTuple, PairIndices
 from ..utils import _common, indexing
 from .base_miner import BaseMiner
 
@@ -22,10 +22,15 @@ class UniformHistogramMiner(BaseMiner):
         self.neg_per_bin = neg_per_bin
 
     def mine(
-        self, embeddings: Tensor, labels: Tensor, ref_emb: Tensor, ref_labels: Tensor
+        self,
+        embeddings: Tensor,
+        labels: Tensor,
+        indices_tuple: IndicesTuple | None,
+        ref_emb: Tensor | None,
+        ref_labels: Tensor | None,
     ) -> IndicesTuple:
         mat = self.distance(embeddings, ref_emb)
-        a1, p, a2, n = indexing.get_all_pairs_indices(labels, ref_labels)
+        a1, p, a2, n = indexing.convert_to_pairs(indices_tuple, labels, ref_labels)
         if len(a1) > 0:
             a1, p = self.uniformly_distributed_pairs(
                 mat[a1, p], a1, p, self.pos_per_bin
@@ -34,7 +39,7 @@ class UniformHistogramMiner(BaseMiner):
             a2, n = self.uniformly_distributed_pairs(
                 mat[a2, n], a2, n, self.neg_per_bin
             )
-        return a1, p, a2, n
+        return PairIndices(a1, p, a2, n)
 
     def uniformly_distributed_pairs(
         self, distances: Tensor, anchors: Tensor, others: Tensor, num_pairs: int

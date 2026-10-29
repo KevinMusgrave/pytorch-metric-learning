@@ -24,6 +24,5 @@ class LpRegularizer(BaseRegularizer):
             "loss": {
                 "losses": reg,
                 "indices": arange_like(x),
-                "reduction_type": "element",
             }
         }

@@ -33,13 +33,16 @@ class ThresholdConsistentMarginLoss(BaseMetricLossFunction):
         embeddings: Tensor,
         labels: Tensor | None,
         indices_tuple: IndicesTuple | None,
-        ref_emb: Tensor,
+        ref_emb: Tensor | None,
         ref_labels: Tensor | None,
     ) -> LossDict:
         _common.labels_or_indices_tuple_required(labels, indices_tuple)
         ap, p, an, n = indexing.convert_to_pairs(indices_tuple, labels, ref_labels)
-        pos_sims = F.cosine_similarity(embeddings[ap], ref_emb[p])
-        neg_sims = F.cosine_similarity(embeddings[an], ref_emb[n])
+        reference, _ = _common.resolve_reference(
+            embeddings, labels, ref_emb, ref_labels
+        )
+        pos_sims = F.cosine_similarity(embeddings[ap], reference[p])
+        neg_sims = F.cosine_similarity(embeddings[an], reference[n])
 
         s_lte_m = pos_sims <= self.margin_plus
         tcm_pos_num = ((self.margin_plus - pos_sims) * s_lte_m).sum()
@@ -54,6 +57,5 @@ class ThresholdConsistentMarginLoss(BaseMetricLossFunction):
             "loss": {
                 "losses": tcm_loss,
                 "indices": None,
-                "reduction_type": "already_reduced",
             }
         }

@@ -11,8 +11,6 @@ from .base_metric_loss_function import BaseMetricLossFunction
 
 
 class SmoothAPLoss(BaseMetricLossFunction):
-    sub_loss_names = ("ap_loss",)
-
     def __init__(
         self, temperature: float = 0.01, **options: Unpack[LossOptions]
     ) -> None:
@@ -28,11 +26,11 @@ class SmoothAPLoss(BaseMetricLossFunction):
         embeddings: Tensor,
         labels: Tensor | None,
         indices_tuple: IndicesTuple | None,
-        ref_emb: Tensor,
+        ref_emb: Tensor | None,
         ref_labels: Tensor | None,
     ) -> LossDict:
         labels = _common.labels_required(labels)
-        _common.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
+        _common.ref_not_supported(ref_emb)
         sims = self.distance(embeddings)
         others = ~torch.eye(len(labels), dtype=torch.bool, device=labels.device)
         same = (labels.unsqueeze(0) == labels.unsqueeze(1)).to(sims.dtype)
@@ -46,9 +44,8 @@ class SmoothAPLoss(BaseMetricLossFunction):
         )
         loss = (1 - ap) * miner_weights
         return {
-            "ap_loss": {
+            "loss": {
                 "losses": loss,
                 "indices": _common.arange_like(loss),
-                "reduction_type": "element",
             }
         }

@@ -10,16 +10,16 @@ from torch.nn import functional as F
 from torch.nn.parallel import DistributedDataParallel
 
 from pytorch_metric_learning.distances import LpDistance
+from pytorch_metric_learning.distributed import (
+    DistributedLossWrapper,
+    DistributedMinerWrapper,
+)
 from pytorch_metric_learning.losses import (
     ContrastiveLoss,
     CrossBatchMemory,
     NormalizedSoftmaxLoss,
 )
 from pytorch_metric_learning.miners import PairMarginMiner
-from pytorch_metric_learning.utils.distributed import (
-    DistributedLossWrapper,
-    DistributedMinerWrapper,
-)
 
 from .. import TEST_DEVICE, TEST_DTYPES
 
@@ -120,7 +120,10 @@ def check_reference_pairs(rank: int, device: torch.device, dtype: torch.dtype) -
         )
     )
     pairs = miner(
-        local, labels[query_slice], local_reference, reference_labels[reference_slice]
+        local,
+        labels[query_slice],
+        ref_emb=local_reference,
+        ref_labels=reference_labels[reference_slice],
     )
     distances = torch.linalg.vector_norm(query[:, None] - reference[None, :], dim=-1)
     matches = labels[:, None] == reference_labels[None, :]
@@ -238,7 +241,7 @@ def check_local_anchor_case(
         expected_gradient = torch.autograd.grad(expected, query)[0]
         local = query.detach().clone().requires_grad_()
         ref_emb = references.detach()[selected] if use_reference else None
-        actual = DistributedLossWrapper(make_pair_loss(), efficient=True)(
+        actual = DistributedLossWrapper(make_pair_loss(), objective="local_anchor")(
             local,
             labels[selected],
             ref_emb=ref_emb,
@@ -260,7 +263,7 @@ def check_local_miner(
             neg_margin=0.9,
             distance=LpDistance(normalize_embeddings=False),
         ),
-        efficient=True,
+        objective="local_anchor",
     )
     for use_reference in (False, True):
         references = inputs + 0.15 if use_reference else inputs
@@ -294,7 +297,7 @@ def check_inconsistent_arguments(rank: int, device: torch.device) -> None:
     local = inputs[:2].clone().requires_grad_()
     wrapper = DistributedLossWrapper(make_pair_loss())
     with unittest.TestCase().assertRaisesRegex(
-        ValueError, "same wrapper mode and optional arguments"
+        ValueError, "same wrapper objective and optional arguments"
     ):
         wrapper(local, labels[:2], ref_emb=local.detach() if rank else None)
     malformed_labels = labels[:1] if rank else labels[:2]
@@ -305,7 +308,7 @@ def check_inconsistent_arguments(rank: int, device: torch.device) -> None:
         CrossBatchMemory(make_pair_loss(), embedding_size=2).to(TEST_DEVICE)
     )
     with unittest.TestCase().assertRaisesRegex(
-        ValueError, "same wrapper mode and optional arguments"
+        ValueError, "same wrapper objective and optional arguments"
     ):
         memory(local, labels[:2], enqueue_mask=mask)
     with unittest.TestCase().assertRaisesRegex(ValueError, "boolean vector"):

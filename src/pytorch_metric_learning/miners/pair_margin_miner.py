@@ -1,7 +1,7 @@
 from torch import Tensor
 
 from ..distances import BaseDistance
-from ..types import IndicesTuple
+from ..types import IndicesTuple, PairIndices
 from ..utils import indexing
 from .base_miner import BaseMiner
 
@@ -19,10 +19,15 @@ class PairMarginMiner(BaseMiner):
         self.neg_margin = neg_margin
 
     def mine(
-        self, embeddings: Tensor, labels: Tensor, ref_emb: Tensor, ref_labels: Tensor
+        self,
+        embeddings: Tensor,
+        labels: Tensor,
+        indices_tuple: IndicesTuple | None,
+        ref_emb: Tensor | None,
+        ref_labels: Tensor | None,
     ) -> IndicesTuple:
         mat = self.distance(embeddings, ref_emb)
-        a1, p, a2, n = indexing.get_all_pairs_indices(labels, ref_labels)
+        a1, p, a2, n = indexing.convert_to_pairs(indices_tuple, labels, ref_labels)
         pos_mask = self.distance.margin(mat[a1, p], self.pos_margin) > 0
         neg_mask = self.distance.margin(self.neg_margin, mat[a2, n]) > 0
-        return a1[pos_mask], p[pos_mask], a2[neg_mask], n[neg_mask]
+        return PairIndices(a1[pos_mask], p[pos_mask], a2[neg_mask], n[neg_mask])

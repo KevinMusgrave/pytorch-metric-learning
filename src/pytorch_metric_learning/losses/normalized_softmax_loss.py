@@ -1,66 +1,40 @@
-from collections.abc import Callable
 from typing import Unpack
 
-import torch
+import torch.nn.functional as F
 from torch import Tensor
 
 from ..distances import BaseDistance, DotProductSimilarity
-from ..regularizers import BaseRegularizer
-from ..types import IndicesTuple, LossDict, LossOptions
+from ..types import IndicesTuple, LossDict, ProxyLossOptions
 from ..utils import _common, indexing
-from .base_metric_loss_function import BaseMetricLossFunction, regularization_term
+from .base_proxy_loss import BaseProxyLoss
 
 
-class NormalizedSoftmaxLoss(BaseMetricLossFunction):
+class NormalizedSoftmaxLoss(BaseProxyLoss):
     def __init__(
         self,
         num_classes: int,
         embedding_size: int,
         temperature: float = 0.05,
-        *,
-        weight_regularizer: BaseRegularizer | None = None,
-        weight_reg_weight: float = 1.0,
-        weight_init_func: Callable[[Tensor], object] | None = None,
-        **options: Unpack[LossOptions],
+        **options: Unpack[ProxyLossOptions],
     ) -> None:
-        super().__init__(**options)
+        super().__init__(num_classes, embedding_size, **options)
         self.temperature = temperature
-        self.weight_regularizer = weight_regularizer
-        self.weight_reg_weight = weight_reg_weight
-        self.weight = torch.nn.Parameter(torch.empty(num_classes, embedding_size))
-        (weight_init_func or torch.nn.init.normal_)(self.weight)
-        self.cross_entropy = torch.nn.CrossEntropyLoss(reduction="none")
 
     def compute_loss(
         self,
         embeddings: Tensor,
         labels: Tensor | None,
         indices_tuple: IndicesTuple | None,
-        ref_emb: Tensor,
+        ref_emb: Tensor | None,
         ref_labels: Tensor | None,
     ) -> LossDict:
         labels = _common.labels_required(labels)
-        _common.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
+        _common.ref_not_supported(ref_emb)
         _common.check_parameter_placement(self, self.weight, embeddings)
-        miner_weights = indexing.convert_to_weights(
-            indices_tuple, labels, dtype=embeddings.dtype
-        )
-        loss = self.cross_entropy(self.get_logits(embeddings), labels) * miner_weights
-        return {
-            "loss": {
-                "losses": loss,
-                "indices": _common.arange_like(embeddings),
-                "reduction_type": "element",
-            }
-        }
-
-    def regularization_terms(self, embeddings: Tensor) -> LossDict:
-        terms = super().regularization_terms(embeddings)
-        if self.weight_regularizer is not None:
-            terms["weight_reg_loss"] = regularization_term(
-                self.weight_regularizer, self.weight_reg_weight, self.weight
-            )
-        return terms
+        logits = self.get_logits(embeddings)
+        weights = indexing.convert_to_weights(indices_tuple, labels, dtype=logits.dtype)
+        loss = F.cross_entropy(logits, labels, reduction="none") * weights
+        return {"loss": {"losses": loss, "indices": _common.arange_like(embeddings)}}
 
     def default_distance(self) -> BaseDistance:
         return DotProductSimilarity()

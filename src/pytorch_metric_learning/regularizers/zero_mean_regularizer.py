@@ -12,6 +12,5 @@ class ZeroMeanRegularizer(BaseRegularizer):
             "loss": {
                 "losses": torch.abs(torch.sum(x, dim=1)),
                 "indices": arange_like(x),
-                "reduction_type": "element",
             }
         }

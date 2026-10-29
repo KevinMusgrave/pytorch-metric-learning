@@ -137,7 +137,7 @@ class TestManifoldLoss(unittest.TestCase):
             loss_func.to(device=proxies.device, dtype=proxies.dtype)
             with torch.no_grad():
                 loss_func.proxies.copy_(proxies)
-            loss = loss_func(embeddings, indices_tuple=labels)
+            loss = loss_func(embeddings, labels)
             loss.backward()
 
             rtol = 1e-2 if dtype == torch.float16 else 1e-5
@@ -179,7 +179,7 @@ class TestManifoldLoss(unittest.TestCase):
             loss_func.to(device=proxies.device, dtype=proxies.dtype)
             with torch.no_grad():
                 loss_func.proxies.copy_(proxies)
-            loss = loss_func(embeddings, indices_tuple=labels)
+            loss = loss_func(embeddings, labels)
             loss.backward()
 
             rtol = 1e-2 if dtype == torch.float16 else 1e-5

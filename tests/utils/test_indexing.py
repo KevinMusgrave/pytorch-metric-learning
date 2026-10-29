@@ -2,6 +2,7 @@ import unittest
 
 import torch
 
+from pytorch_metric_learning.types import TripletIndices
 from pytorch_metric_learning.utils import _common as c_f
 from pytorch_metric_learning.utils import indexing
 
@@ -128,7 +129,9 @@ class TestLossAndMinerUtils(unittest.TestCase):
         n = torch.tensor([5, 5, 6, 6], dtype=torch.long).to(TEST_DEVICE)
         for dtype in TEST_DTYPES:
             weights = indexing.convert_to_weights(
-                (a, p, n), labels=torch.arange(7).to(TEST_DEVICE), dtype=dtype
+                TripletIndices(a, p, n),
+                labels=torch.arange(7).to(TEST_DEVICE),
+                dtype=dtype,
             )
             correct_weights = torch.tensor(
                 [0.25, 0.25, 0.25, 0.25, 1, 0.5, 0.5], dtype=dtype
@@ -140,7 +143,9 @@ class TestLossAndMinerUtils(unittest.TestCase):
         n = torch.tensor([], dtype=torch.long).to(TEST_DEVICE)
         for dtype in TEST_DTYPES:
             weights = indexing.convert_to_weights(
-                (a, p, n), labels=torch.arange(7).to(TEST_DEVICE), dtype=dtype
+                TripletIndices(a, p, n),
+                labels=torch.arange(7).to(TEST_DEVICE),
+                dtype=dtype,
             )
             correct_weights = torch.tensor([1, 1, 1, 1, 1, 1, 1], dtype=dtype).to(
                 TEST_DEVICE
@@ -154,7 +159,7 @@ class TestLossAndMinerUtils(unittest.TestCase):
         n = torch.randint(0, batch_size * 2, size=(256,)).to(TEST_DEVICE)
         for dtype in TEST_DTYPES:
             weights = indexing.convert_to_weights(
-                (a, p, n), labels=labels, dtype=dtype, using_ref=True
+                TripletIndices(a, p, n), labels=labels, dtype=dtype, using_ref=True
             )
 
             _, counts = torch.unique(a, return_counts=True, sorted=True)
@@ -269,30 +274,25 @@ class TestLossAndMinerUtils(unittest.TestCase):
                 correct_p = torch.tensor([1, 5, 6, 0, 5, 6, 3, 4])
 
             indices_tuple = indexing.get_all_pairs_indices(labels, all_labels)
-            ref_size = len(all_labels)
             indices_tuple = indexing.remove_self_comparisons(
-                indices_tuple, curr_batch_idx, ref_size
+                indices_tuple, curr_batch_idx
             )
             a1, p, _, _ = indices_tuple
             self.assertTrue(torch.equal(a1, correct_a1))
             self.assertTrue(torch.equal(p, correct_p))
 
-    def test_remove_self_comparisons_small_ref(self):
-        labels = torch.tensor([0, 0, 1])
-        labels2 = torch.tensor([1, 1, 0, 0])
-        all_labels = torch.cat([labels, labels2])
-        curr_batch_idx = torch.arange(3, 7)
-        correct_a1 = torch.tensor([0, 0, 1, 1, 2, 2, 3, 4, 5, 6])
-        correct_p = torch.tensor([2, 3, 2, 3, 0, 1, 1, 0, 3, 2])
-
-        indices_tuple = indexing.get_all_pairs_indices(all_labels, labels2)
-        ref_size = len(labels2)
-        indices_tuple = indexing.remove_self_comparisons(
-            indices_tuple, curr_batch_idx, ref_size, ref_is_subset=True
+    def test_remove_self_comparisons_with_wrapped_queue_slots(self):
+        labels = torch.tensor([0, 1, 0])
+        memory_labels = torch.tensor([0, 0, 1, 7, 0])
+        curr_batch_idx = torch.tensor([3, 4, 0])
+        memory_labels[curr_batch_idx] = labels
+        a, p, n = indexing.get_all_triplets_indices(labels, memory_labels)
+        kept = indexing.remove_self_comparisons(TripletIndices(a, p, n), curr_batch_idx)
+        self.assertTrue(torch.all(kept.positives != curr_batch_idx[kept.anchors]))
+        removed = set(zip(a.tolist(), p.tolist(), strict=True)) - set(
+            zip(kept.anchors.tolist(), kept.positives.tolist(), strict=True)
         )
-        a1, p, _, _ = indices_tuple
-        self.assertTrue(torch.equal(a1, correct_a1))
-        self.assertTrue(torch.equal(p, correct_p))
+        self.assertEqual(removed, {(0, 3), (1, 4), (2, 0)})
 
 
 class TestUniqueLabelPositivePairs(unittest.TestCase):

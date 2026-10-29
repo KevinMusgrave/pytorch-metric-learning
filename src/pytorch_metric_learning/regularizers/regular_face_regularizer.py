@@ -16,21 +16,12 @@ class RegularFaceRegularizer(BaseRegularizer):
             raise ValueError("distance must be a similarity with is_inverted=True")
 
     def compute_loss(self, x: Tensor) -> LossDict:
-        num_classes = x.size(0)
         cos = self.distance(x)
         with torch.no_grad():
-            cos1 = cos.clone()
-            cos1.fill_diagonal_(_common.neg_inf(x.dtype))
-            _, indices = self.distance.smallest_dist(cos1, dim=1)
-            mask = torch.zeros_like(cos)
-            mask[torch.arange(num_classes, device=x.device), indices] = 1
-        return {
-            "loss": {
-                "losses": torch.sum(cos * mask, dim=1),
-                "indices": _common.arange_like(x),
-                "reduction_type": "element",
-            }
-        }
+            others = cos.detach().clone().fill_diagonal_(_common.neg_inf(x.dtype))
+            nearest = others.argmax(dim=1, keepdim=True)
+        losses = cos.gather(1, nearest).squeeze(1)
+        return {"loss": {"losses": losses, "indices": _common.arange_like(x)}}
 
     def default_distance(self) -> BaseDistance:
         return CosineSimilarity()

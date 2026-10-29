@@ -106,7 +106,7 @@ class TestHistogramLoss(unittest.TestCase):
         for dtype in TEST_DTYPES:
             num_steps = 5 if dtype == torch.float16 else 21
             num_bins = num_steps - 1
-            loss_func = HistogramLoss(n_bins=num_bins)
+            loss_func = HistogramLoss(num_bins=num_bins)
             original_loss_func = OriginalImplementationHistogramLoss(
                 num_steps=num_steps, use_cuda=False
             )
@@ -131,7 +131,7 @@ class TestHistogramLoss(unittest.TestCase):
                 loss.backward()
 
     def test_with_no_valid_triplets(self):
-        loss_func = HistogramLoss(n_bins=4)
+        loss_func = HistogramLoss(num_bins=4)
         for dtype in TEST_DTYPES:
             embeddings = torch.randn(
                 5,
@@ -146,7 +146,7 @@ class TestHistogramLoss(unittest.TestCase):
 
     def test_assertion_raises(self):
         with self.assertRaises(ValueError):
-            _ = HistogramLoss(n_bins=1, delta=0.5)
+            _ = HistogramLoss(num_bins=0)
 
         with self.assertRaises(ValueError):
-            _ = HistogramLoss(n_bins=10, delta=0.4)
+            _ = HistogramLoss(num_bins=2.5)  # type: ignore[arg-type]

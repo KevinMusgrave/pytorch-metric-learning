@@ -1,3 +1,5 @@
+from collections.abc import Sequence
+
 from torch import Tensor, nn
 
 from ..distances import BaseDistance, LpDistance
@@ -7,17 +9,13 @@ from ..types import IndicesTuple, LossDict, LossTerm
 from ..utils import _common
 
 
-def regularization_term(regularizer: nn.Module, weight: float, x: Tensor) -> LossTerm:
-    return {
-        "losses": regularizer(x) * weight,
-        "indices": None,
-        "reduction_type": "already_reduced",
-    }
+def regularization_term(
+    regularizer: BaseRegularizer, weight: float, x: Tensor
+) -> LossTerm:
+    return {"losses": regularizer(x) * weight, "indices": None}
 
 
 class BaseMetricLossFunction(nn.Module):
-    sub_loss_names: tuple[str, ...] = ("loss",)
-
     def __init__(
         self,
         *,
@@ -43,7 +41,7 @@ class BaseMetricLossFunction(nn.Module):
         embeddings: Tensor,
         labels: Tensor | None,
         indices_tuple: IndicesTuple | None,
-        ref_emb: Tensor,
+        ref_emb: Tensor | None,
         ref_labels: Tensor | None,
     ) -> LossDict:
         raise NotImplementedError
@@ -52,14 +50,11 @@ class BaseMetricLossFunction(nn.Module):
         self,
         embeddings: Tensor,
         labels: Tensor | None = None,
-        indices_tuple: IndicesTuple | None = None,
+        indices_tuple: Sequence[Tensor] | None = None,
         ref_emb: Tensor | None = None,
         ref_labels: Tensor | None = None,
     ) -> Tensor:
-        embeddings, labels, ref_emb, ref_labels = _common.prepare_inputs(
-            embeddings, labels, ref_emb, ref_labels
-        )
-        terms = self.compute_loss(
+        terms = self.objective_terms(
             embeddings, labels, indices_tuple, ref_emb, ref_labels
         )
         loss = self.reducer(terms, embeddings, labels)
@@ -71,17 +66,26 @@ class BaseMetricLossFunction(nn.Module):
         self,
         embeddings: Tensor,
         labels: Tensor | None = None,
-        indices_tuple: IndicesTuple | None = None,
+        indices_tuple: Sequence[Tensor] | None = None,
         ref_emb: Tensor | None = None,
         ref_labels: Tensor | None = None,
     ) -> LossDict:
-        embeddings, labels, ref_emb, ref_labels = _common.prepare_inputs(
-            embeddings, labels, ref_emb, ref_labels
-        )
-        terms = self.compute_loss(
+        terms = self.objective_terms(
             embeddings, labels, indices_tuple, ref_emb, ref_labels
         )
         return {**terms, **self.regularization_terms(embeddings)}
+
+    def objective_terms(
+        self,
+        embeddings: Tensor,
+        labels: Tensor | None,
+        indices_tuple: Sequence[Tensor] | None,
+        ref_emb: Tensor | None,
+        ref_labels: Tensor | None,
+    ) -> LossDict:
+        _common.prepare_inputs(embeddings, labels, ref_emb, ref_labels)
+        indices = _common.as_indices_tuple(indices_tuple, embeddings.device)
+        return self.compute_loss(embeddings, labels, indices, ref_emb, ref_labels)
 
     def regularization_terms(self, embeddings: Tensor) -> LossDict:
         if self.embedding_regularizer is None:
@@ -91,14 +95,3 @@ class BaseMetricLossFunction(nn.Module):
                 self.embedding_regularizer, self.embedding_reg_weight, embeddings
             )
         }
-
-    def zero_losses(self, embeddings: Tensor) -> LossDict:
-        return {name: zero_term(embeddings) for name in self.sub_loss_names}
-
-
-def zero_term(embeddings: Tensor) -> LossTerm:
-    return {
-        "losses": _common.zero_loss(embeddings),
-        "indices": None,
-        "reduction_type": "already_reduced",
-    }

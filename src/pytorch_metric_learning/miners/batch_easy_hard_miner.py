@@ -1,15 +1,13 @@
 from collections.abc import Sequence
-from typing import Literal
 
 import torch
 from torch import Tensor
 
 from ..distances import BaseDistance
-from ..types import IndicesTuple
+from ..types import IndicesTuple, MiningStrategy, PairIndices
 from ..utils import _common, indexing
 from .base_miner import BaseMiner
 
-type MiningStrategy = Literal["hard", "semihard", "easy", "all"]
 STRATEGIES = ("hard", "semihard", "easy", "all")
 
 
@@ -42,11 +40,16 @@ class BatchEasyHardMiner(BaseMiner):
         self.allowed_neg_range = allowed_neg_range
 
     def mine(
-        self, embeddings: Tensor, labels: Tensor, ref_emb: Tensor, ref_labels: Tensor
+        self,
+        embeddings: Tensor,
+        labels: Tensor,
+        indices_tuple: IndicesTuple | None,
+        ref_emb: Tensor | None,
+        ref_labels: Tensor | None,
     ) -> IndicesTuple:
         mat = self.distance(embeddings, ref_emb)
-        a1_idx, p_idx, a2_idx, n_idx = indexing.get_all_pairs_indices(
-            labels, ref_labels
+        a1_idx, p_idx, a2_idx, n_idx = indexing.convert_to_pairs(
+            indices_tuple, labels, ref_labels
         )
         a = torch.arange(mat.size(0), device=mat.device)
         pos_all, neg_all = self.pos_strategy == "all", self.neg_strategy == "all"
@@ -77,12 +80,14 @@ class BatchEasyHardMiner(BaseMiner):
 
         if not pos_all and not neg_all:
             keep = a1p_keep & a2n_keep
-            return a[keep], positive_indices[keep], a[keep], negative_indices[keep]
+            return PairIndices(
+                a[keep], positive_indices[keep], a[keep], negative_indices[keep]
+            )
         if pos_all and not neg_all:
-            return a1_idx, p_idx, a[a2n_keep], negative_indices[a2n_keep]
+            return PairIndices(a1_idx, p_idx, a[a2n_keep], negative_indices[a2n_keep])
         if not pos_all and neg_all:
-            return a[a1p_keep], positive_indices[a1p_keep], a2_idx, n_idx
-        return a1_idx, p_idx, a2_idx, n_idx
+            return PairIndices(a[a1p_keep], positive_indices[a1p_keep], a2_idx, n_idx)
+        return PairIndices(a1_idx, p_idx, a2_idx, n_idx)
 
     def get_positives(
         self,

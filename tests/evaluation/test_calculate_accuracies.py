@@ -7,8 +7,12 @@ import numpy as np
 import torch
 
 from pytorch_metric_learning.distances import LpDistance
-from pytorch_metric_learning.utils import accuracy_calculator
-from pytorch_metric_learning.utils.retrieval import CustomKNN, FaissKMeans, FaissKNN
+from pytorch_metric_learning.evaluation import accuracy_calculator
+from pytorch_metric_learning.evaluation.retrieval import (
+    CustomKNN,
+    FaissKMeans,
+    FaissKNN,
+)
 
 from .. import TEST_DEVICE
 
@@ -16,9 +20,53 @@ from .. import TEST_DEVICE
 def isclose(x, y, many=False):
     rtol = 1e-6
     atol = 0
+    if isinstance(x, dict):
+        x = list(x.values())
     if many:
         return np.allclose(x, y, atol=atol, rtol=rtol)
     return np.isclose(x, y, atol=atol, rtol=rtol)
+
+
+def metrics_from_knn(
+    calculator, query_labels, knn_labels, counts_by_label, self_search
+):
+    unique, index = torch.unique(query_labels, return_inverse=True)
+    counts = torch.tensor(
+        [counts_by_label.get(int(label), 0) for label in unique.tolist()],
+        device=query_labels.device,
+    )
+    counts = (counts - int(self_search)).clamp_min(0)[index]
+    kwargs = {
+        "knn_labels": knn_labels,
+        "query_labels": query_labels,
+        "relevant_counts": counts,
+        "not_lone_query_mask": counts > 0,
+        "unique_query_labels": unique,
+        "query_label_index": index,
+    }
+    functions = calculator.metric_functions()
+    return {name: functions[name](**kwargs) for name in calculator.metrics}
+
+
+def match_counts(query_labels, reference_labels, comparison_fn):
+    unique = torch.unique(query_labels, dim=0)
+    counts = accuracy_calculator.relevant_counts(
+        unique, reference_labels, False, comparison_fn
+    )
+    return unique, counts
+
+
+def lone_labels(query_labels, reference_labels, same_source, comparison_fn):
+    unique, index = torch.unique(query_labels, dim=0, return_inverse=True)
+    counts = accuracy_calculator.relevant_counts(
+        unique, reference_labels, same_source, comparison_fn
+    )
+    return unique[counts <= 0], counts[index] > 0
+
+
+def nan_values(value):
+    values = list(value.values()) if isinstance(value, dict) else [value]
+    return np.all(np.isnan(values))
 
 
 class TestCalculateAccuracies(unittest.TestCase):
@@ -114,35 +162,22 @@ class TestCalculateAccuracies(unittest.TestCase):
                         continue
 
                     AC = accuracy_calculator.AccuracyCalculator(**init_kwargs)
-                    not_lone_query_mask = (
-                        torch.ones(6, dtype=torch.bool)
-                        if i == 0
-                        else torch.zeros(6, dtype=torch.bool)
-                    )
-
-                    function_dict = AC.get_function_dict()
-
                     for ecfss in [False, True]:
-                        acc = AC._get_accuracy(
-                            function_dict,
-                            query_labels=query_labels,
-                            label_counts=label_counts,
-                            knn_labels=knn_labels[:, 1:] if ecfss else knn_labels,
-                            not_lone_query_mask=not_lone_query_mask,
-                            ref_includes_query=ecfss,
+                        acc = metrics_from_knn(
+                            AC,
+                            query_labels,
+                            knn_labels[:, 1:] if ecfss else knn_labels,
+                            dict(zip(*label_counts, strict=True)),
+                            ecfss,
                         )
                         if i == 1:
-                            self.assertTrue(np.all(np.isnan(acc["precision_at_1"])))
-                            self.assertTrue(np.all(np.isnan(acc["r_precision"])))
+                            self.assertTrue(nan_values(acc["precision_at_1"]))
+                            self.assertTrue(nan_values(acc["r_precision"]))
                             self.assertTrue(
-                                np.all(np.isnan(acc["mean_average_precision_at_r"]))
+                                nan_values(acc["mean_average_precision_at_r"])
                             )
-                            self.assertTrue(
-                                np.all(np.isnan(acc["mean_average_precision"]))
-                            )
-                            self.assertTrue(
-                                np.all(np.isnan(acc["mean_reciprocal_rank"]))
-                            )
+                            self.assertTrue(nan_values(acc["mean_average_precision"]))
+                            self.assertTrue(nan_values(acc["mean_reciprocal_rank"]))
                         else:
                             self.assertTrue(
                                 isclose(
@@ -367,21 +402,14 @@ class TestCalculateAccuracies(unittest.TestCase):
                     device=TEST_DEVICE,
                 )
 
-            label_counts = accuracy_calculator.get_label_match_counts(
-                query_labels,
-                query_labels,
-                comparison_fn,
-            )
+            label_counts = match_counts(query_labels, query_labels, comparison_fn)
             unique_labels, counts = label_counts
 
             self.assertTrue(torch.all(unique_labels == correct_unique_labels))
             self.assertTrue(torch.all(counts == correct_counts))
 
-            (
-                lone_query_labels,
-                not_lone_query_mask,
-            ) = accuracy_calculator.get_lone_query_labels(
-                query_labels, label_counts, True, comparison_fn
+            lone_query_labels, not_lone_query_mask = lone_labels(
+                query_labels, query_labels, True, comparison_fn
             )
 
             self.assertTrue(torch.all(lone_query_labels == correct_lone_query_labels))
@@ -409,11 +437,7 @@ class TestCalculateAccuracies(unittest.TestCase):
         )
 
         for comparison_fn in [equality2D, custom_label_comparison_fn]:
-            label_counts = accuracy_calculator.get_label_match_counts(
-                query_labels,
-                query_labels,
-                comparison_fn,
-            )
+            label_counts = match_counts(query_labels, query_labels, comparison_fn)
 
             unique_labels, counts = label_counts
             correct_unique_labels = torch.tensor(
@@ -463,11 +487,8 @@ class TestCalculateAccuracies(unittest.TestCase):
                 ]
 
             for same_source, correct_lone, correct_mask in correct:
-                (
-                    lone_query_labels,
-                    not_lone_query_mask,
-                ) = accuracy_calculator.get_lone_query_labels(
-                    query_labels, label_counts, same_source, comparison_fn
+                lone_query_labels, not_lone_query_mask = lone_labels(
+                    query_labels, query_labels, same_source, comparison_fn
                 )
                 if correct_lone.numel() == 0:
                     self.assertTrue(lone_query_labels.numel() == 0)
@@ -479,21 +500,13 @@ class TestCalculateAccuracies(unittest.TestCase):
     def test_get_lone_query_labels(self):
         query_labels = torch.tensor([0, 1, 2, 3, 4, 5, 6], device=TEST_DEVICE)
         reference_labels = torch.tensor([0, 0, 0, 1, 2, 2, 3, 4, 5], device=TEST_DEVICE)
-        label_counts = accuracy_calculator.get_label_match_counts(
-            query_labels,
-            reference_labels,
-            accuracy_calculator.EQUALITY,
-        )
 
         for same_source, correct in [
             (True, torch.tensor([1, 3, 4, 5, 6], device=TEST_DEVICE)),
             (False, torch.tensor([6], device=TEST_DEVICE)),
         ]:
-            lone_query_labels, _ = accuracy_calculator.get_lone_query_labels(
-                query_labels,
-                label_counts,
-                same_source,
-                accuracy_calculator.EQUALITY,
+            lone_query_labels, _ = lone_labels(
+                query_labels, reference_labels, same_source, None
             )
             self.assertTrue(torch.all(lone_query_labels == correct))
 
@@ -621,7 +634,7 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
             return (x[..., 0] == y[..., 0]) & (x[..., 1] != y[..., 1])
 
         self.assertRaises(
-            NotImplementedError,
+            ValueError,
             lambda: accuracy_calculator.AccuracyCalculator(
                 include=("NMI", "AMI"),
                 avg_of_avgs=False,
@@ -750,7 +763,7 @@ class TestCalculateAccuraciesAndFaiss(unittest.TestCase):
             return torch.abs(x - y) < 1
 
         self.assertRaises(
-            NotImplementedError,
+            ValueError,
             lambda: accuracy_calculator.AccuracyCalculator(
                 include=("NMI", "AMI"),
                 avg_of_avgs=False,

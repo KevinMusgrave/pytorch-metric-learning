@@ -16,7 +16,7 @@ def cascaded_loss(
     selected = []
     total = embeddings.sum() * 0
     for stage, miner in zip(stages, stage_miners, strict=True):
-        previous = miner(stage, labels, candidates=previous)
+        previous = miner(stage, labels, indices_tuple=previous)
         selected.append(previous)
         total = total + loss_func(stage, labels, previous)
     return total, selected

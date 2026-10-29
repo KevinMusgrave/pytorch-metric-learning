@@ -21,11 +21,11 @@ class FastAPLoss(BaseMetricLossFunction):
         embeddings: Tensor,
         labels: Tensor | None,
         indices_tuple: IndicesTuple | None,
-        ref_emb: Tensor,
+        ref_emb: Tensor | None,
         ref_labels: Tensor | None,
     ) -> LossDict:
         labels = _common.labels_required(labels)
-        _common.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
+        _common.ref_not_supported(ref_emb)
         dtype, device = embeddings.dtype, embeddings.device
         miner_weights = indexing.convert_to_weights(indices_tuple, labels, dtype=dtype)
         matches, diffs = indexing.get_matches_and_diffs(labels)
@@ -57,7 +57,6 @@ class FastAPLoss(BaseMetricLossFunction):
             "loss": {
                 "losses": loss[safe_N],
                 "indices": torch.where(safe_N)[0],
-                "reduction_type": "element",
             }
         }
 

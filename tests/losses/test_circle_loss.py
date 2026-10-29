@@ -13,7 +13,7 @@ class TestCircleLoss(unittest.TestCase):
         margin, gamma = 0.25, 256
         Op, On = 1 + margin, -margin
         delta_p, delta_n = 1 - margin, margin
-        loss_func = CircleLoss(m=margin, gamma=gamma)
+        loss_func = CircleLoss(margin=margin, gamma=gamma)
 
         for dtype in TEST_DTYPES:
             embedding_angles = [0, 20, 40, 60, 80]
@@ -96,7 +96,7 @@ class TestCircleLoss(unittest.TestCase):
 
     def test_with_no_valid_pairs(self):
         margin, gamma = 0.4, 80
-        loss_func = CircleLoss(m=margin, gamma=gamma)
+        loss_func = CircleLoss(margin=margin, gamma=gamma)
         for dtype in TEST_DTYPES:
             embedding_angles = [0]
             embeddings = torch.tensor(
@@ -111,7 +111,7 @@ class TestCircleLoss(unittest.TestCase):
 
     def test_overflow(self):
         margin, gamma = 0.4, 300
-        loss_func = CircleLoss(m=margin, gamma=gamma)
+        loss_func = CircleLoss(margin=margin, gamma=gamma)
         for dtype in TEST_DTYPES:
             embedding_angles = torch.arange(0, 180)
             embeddings = torch.tensor(

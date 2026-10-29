@@ -116,7 +116,7 @@ class TestHDCMinerCandidates(unittest.TestCase):
         miner = HDCMiner(filter_percentage=0.5)
         everything = miner(embeddings, labels)
         candidates = tuple(x[:4] for x in everything)
-        restricted = miner(embeddings, labels, candidates=candidates)
+        restricted = miner(embeddings, labels, indices_tuple=candidates)
         for pairs, (anchors, others) in (
             ((candidates[0], candidates[1]), restricted[:2]),
             ((candidates[2], candidates[3]), restricted[2:]),

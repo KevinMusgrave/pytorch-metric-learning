@@ -41,8 +41,7 @@
     {
       "name": "evaluation",
       "paths": [
-        "src/pytorch_metric_learning/utils/accuracy_calculator.py",
-        "src/pytorch_metric_learning/utils/retrieval.py"
+        "src/pytorch_metric_learning/evaluation/**"
       ],
       "dependsOn": [
         "numerics"
@@ -60,7 +59,7 @@
     {
       "name": "distributed",
       "paths": [
-        "src/pytorch_metric_learning/utils/distributed.py"
+        "src/pytorch_metric_learning/distributed.py"
       ],
       "dependsOn": [
         "numerics"
@@ -279,7 +278,7 @@
           "tests/losses/test_proxy_nca_loss.py",
           "tests/losses/test_ranked_list_loss.py",
           "tests/losses/test_self_supervised_loss.py",
-          "tests/losses/test_signal_to_noise_ratio_losses.py",
+          "tests/losses/test_signal_to_noise_ratio_contrastive_loss.py",
           "tests/losses/test_smooth_ap_loss.py",
           "tests/losses/test_soft_triple_loss.py",
           "tests/losses/test_subcenter_arcface_loss.py",
@@ -320,16 +319,17 @@
       },
       {
         "paths": [
-          "tests/utils/test_retrieval_backends.py"
+          "tests/evaluation/test_retrieval_backends.py"
         ],
         "module": "evaluation",
         "focusedSuite": "evaluation-focused"
       },
       {
         "paths": [
-          "tests/utils/test_calculate_accuracies.py",
-          "tests/utils/test_calculate_accuracies_large_k.py",
-          "tests/utils/test_accuracy_calculator_contracts.py"
+          "tests/evaluation/__init__.py",
+          "tests/evaluation/test_calculate_accuracies.py",
+          "tests/evaluation/test_calculate_accuracies_large_k.py",
+          "tests/evaluation/test_accuracy_calculator_contracts.py"
         ],
         "module": "evaluation",
         "focusedSuite": "evaluation-focused",
@@ -355,14 +355,15 @@
       },
       {
         "paths": [
-          "tests/utils/test_distributed_fallback.py"
+          "tests/distributed/test_distributed_fallback.py"
         ],
         "module": "distributed",
         "focusedSuite": "distributed-focused"
       },
       {
         "paths": [
-          "tests/utils/test_distributed.py"
+          "tests/distributed/__init__.py",
+          "tests/distributed/test_distributed.py"
         ],
         "module": "distributed",
         "focusedSuite": "distributed-focused"
@@ -442,7 +443,7 @@
           "evaluation"
         ],
         "paths": [
-          "tests/utils/test_retrieval_backends.py",
+          "tests/evaluation/test_retrieval_backends.py",
           "tests/__init__.py",
           "tests/helpers.py",
           "tests/losses/utils.py",
@@ -458,7 +459,7 @@
           "python",
           "-m",
           "pytest",
-          "tests/utils/test_retrieval_backends.py"
+          "tests/evaluation/test_retrieval_backends.py"
         ],
         "timeoutSeconds": 120
       },
@@ -500,8 +501,8 @@
           "distributed"
         ],
         "paths": [
-          "tests/utils/test_distributed_fallback.py",
-          "tests/utils/test_distributed.py",
+          "tests/distributed/test_distributed_fallback.py",
+          "tests/distributed/test_distributed.py",
           "tests/__init__.py",
           "tests/helpers.py",
           "tests/losses/utils.py",
@@ -517,8 +518,8 @@
           "python",
           "-m",
           "pytest",
-          "tests/utils/test_distributed_fallback.py",
-          "tests/utils/test_distributed.py"
+          "tests/distributed/test_distributed_fallback.py",
+          "tests/distributed/test_distributed.py"
         ],
         "timeoutSeconds": 120
       },

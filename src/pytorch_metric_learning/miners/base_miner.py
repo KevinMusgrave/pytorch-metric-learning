@@ -1,3 +1,5 @@
+from collections.abc import Sequence
+
 import torch
 from torch import Tensor
 
@@ -15,7 +17,12 @@ class BaseMiner(torch.nn.Module):
         return LpDistance()
 
     def mine(
-        self, embeddings: Tensor, labels: Tensor, ref_emb: Tensor, ref_labels: Tensor
+        self,
+        embeddings: Tensor,
+        labels: Tensor,
+        indices_tuple: IndicesTuple | None,
+        ref_emb: Tensor | None,
+        ref_labels: Tensor | None,
     ) -> IndicesTuple:
         raise NotImplementedError
 
@@ -23,45 +30,16 @@ class BaseMiner(torch.nn.Module):
         self,
         embeddings: Tensor,
         labels: Tensor,
+        indices_tuple: Sequence[Tensor] | None = None,
         ref_emb: Tensor | None = None,
         ref_labels: Tensor | None = None,
     ) -> IndicesTuple:
+        _common.prepare_inputs(embeddings, labels, ref_emb, ref_labels)
+        labels = _common.labels_required(labels)
+        candidates = _common.as_indices_tuple(indices_tuple, embeddings.device)
         with torch.no_grad():
-            embeddings, labels, ref_emb, ref_labels = prepare_mining_inputs(
-                embeddings, labels, ref_emb, ref_labels
-            )
-            output = self.mine(embeddings, labels, ref_emb, ref_labels)
-        validate_output(output)
-        return output
-
-
-def prepare_mining_inputs(
-    embeddings: Tensor,
-    labels: Tensor,
-    ref_emb: Tensor | None,
-    ref_labels: Tensor | None,
-) -> tuple[Tensor, Tensor, Tensor, Tensor]:
-    prepared = _common.prepare_inputs(embeddings, labels, ref_emb, ref_labels)
-    embeddings, prepared_labels, ref_emb, prepared_ref_labels = prepared
-    if prepared_labels is None or prepared_ref_labels is None:
-        raise ValueError("Mining requires labels and ref_labels")
-    return embeddings, prepared_labels, ref_emb, prepared_ref_labels
-
-
-def validate_output(output: IndicesTuple) -> None:
-    if not isinstance(output, (tuple, list)) or not all(
-        isinstance(index, Tensor) for index in output
-    ):
-        raise TypeError("Mining must return a tuple of index tensors")
-    if any(index.ndim != 1 for index in output):
-        raise ValueError("Mining indices must be one-dimensional tensors")
-    if len(output) == 3:
-        if not len(output[0]) == len(output[1]) == len(output[2]):
-            raise ValueError("Triplet mining must return three tensors of equal length")
-    elif len(output) == 4:
-        if len(output[0]) != len(output[1]) or len(output[2]) != len(output[3]):
-            raise ValueError(
-                "Pair mining must return anchor and partner indices of equal length"
-            )
-    else:
-        raise ValueError("Mining must return three triplet or four pair index tensors")
+            output = self.mine(embeddings, labels, candidates, ref_emb, ref_labels)
+        mined = _common.as_indices_tuple(output, embeddings.device)
+        if mined is None:
+            raise TypeError("Mining must return a tuple of index tensors")
+        return mined

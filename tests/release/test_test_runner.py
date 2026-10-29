@@ -75,7 +75,7 @@ def test_bare_pytest_runs_faiss_without_openmp_environment():
             "-m",
             "pytest",
             "-q",
-            "tests/utils/test_retrieval_backends.py::TestRetrievalBackends::test_faiss_index_persistence_and_incremental_add",
+            "tests/evaluation/test_retrieval_backends.py::TestRetrievalBackends::test_faiss_index_persistence_and_incremental_add",
         ],
         cwd=root,
         env=environment,

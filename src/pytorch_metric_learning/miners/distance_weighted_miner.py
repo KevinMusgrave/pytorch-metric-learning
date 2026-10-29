@@ -23,23 +23,28 @@ class DistanceWeightedMiner(BaseMiner):
         self.nonzero_loss_cutoff = float(nonzero_loss_cutoff)
 
     def mine(
-        self, embeddings: Tensor, labels: Tensor, ref_emb: Tensor, ref_labels: Tensor
+        self,
+        embeddings: Tensor,
+        labels: Tensor,
+        indices_tuple: IndicesTuple | None,
+        ref_emb: Tensor | None,
+        ref_labels: Tensor | None,
     ) -> IndicesTuple:
         d = float(embeddings.size(1))
         mat = torch.clamp(self.distance(embeddings, ref_emb), min=self.cutoff)
         log_weights = (2.0 - d) * torch.log(mat) - ((d - 3) / 2) * torch.log(
             1.0 - 0.25 * (mat**2.0)
         )
+        pairs = indexing.convert_to_pairs(indices_tuple, labels, ref_labels)
+        pos_mask, neg_mask = indexing.pair_masks(
+            pairs, (mat.shape[0], mat.shape[1]), mat.device
+        )
         eligible = (
-            torch.isfinite(log_weights)
-            & (labels.unsqueeze(1) != ref_labels.unsqueeze(0))
-            & (mat < self.nonzero_loss_cutoff)
+            torch.isfinite(log_weights) & neg_mask & (mat < self.nonzero_loss_cutoff)
         )
         log_weights = torch.where(
             eligible, log_weights, _common.neg_inf(log_weights.dtype)
         )
         row_max = log_weights.max(dim=1, keepdim=True).values
         weights = torch.exp(log_weights - row_max) * eligible
-        return indexing.get_random_triplet_indices(
-            labels, ref_labels=ref_labels, weights=weights
-        )
+        return indexing.sample_triplets(pos_mask, eligible, weights=weights)

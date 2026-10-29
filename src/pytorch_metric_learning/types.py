@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Literal, NotRequired, TypedDict
+from typing import TYPE_CHECKING, Literal, NamedTuple, NotRequired, TypedDict
 
 from torch import Tensor
 
@@ -10,19 +10,28 @@ if TYPE_CHECKING:
     from .reducers import BaseReducer
     from .regularizers import BaseRegularizer
 
-type PairIndices = tuple[Tensor, Tensor, Tensor, Tensor]
-type TripletIndices = tuple[Tensor, Tensor, Tensor]
+
+class PairIndices(NamedTuple):
+    pos_anchors: Tensor
+    positives: Tensor
+    neg_anchors: Tensor
+    negatives: Tensor
+
+
+class TripletIndices(NamedTuple):
+    anchors: Tensor
+    positives: Tensor
+    negatives: Tensor
+
+
 type IndicesTuple = PairIndices | TripletIndices
-type ReductionType = Literal[
-    "already_reduced", "element", "pos_pair", "neg_pair", "triplet"
-]
 type TripletsPerAnchor = int | Literal["all"]
+type MiningStrategy = Literal["hard", "semihard", "easy", "all"]
 
 
 class LossTerm(TypedDict):
     losses: Tensor
     indices: Tensor | tuple[Tensor, Tensor] | TripletIndices | None
-    reduction_type: ReductionType
     divisor: NotRequired[Tensor | float | int]
 
 
@@ -34,6 +43,12 @@ class LossOptions(TypedDict, total=False):
     reducer: BaseReducer | None
     embedding_regularizer: BaseRegularizer | None
     embedding_reg_weight: float
+
+
+class ProxyLossOptions(LossOptions, total=False):
+    weight_regularizer: BaseRegularizer | None
+    weight_reg_weight: float
+    weight_init_func: Callable[[Tensor], object] | None
 
 
 class RegularizerOptions(TypedDict, total=False):

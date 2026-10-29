@@ -37,7 +37,6 @@ class SparseCentersRegularizer(BaseRegularizer):
             "loss": {
                 "losses": reg,
                 "indices": _common.arange_like(reg),
-                "reduction_type": "element",
                 "divisor": divisor,
             }
         }

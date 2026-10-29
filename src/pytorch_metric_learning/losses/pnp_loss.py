@@ -13,8 +13,6 @@ VARIANTS: tuple[PNPVariant, ...] = ("Ds", "Dq", "Iu", "Ib", "O")
 
 
 class PNPLoss(BaseMetricLossFunction):
-    VARIANTS = VARIANTS
-
     def __init__(
         self,
         b: float = 2,
@@ -37,12 +35,12 @@ class PNPLoss(BaseMetricLossFunction):
         embeddings: Tensor,
         labels: Tensor | None,
         indices_tuple: IndicesTuple | None,
-        ref_emb: Tensor,
+        ref_emb: Tensor | None,
         ref_labels: Tensor | None,
     ) -> LossDict:
         _common.indices_tuple_not_supported(indices_tuple)
         labels = _common.labels_required(labels)
-        _common.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
+        _common.ref_not_supported(ref_emb)
         dtype = embeddings.dtype
         matches, diffs = indexing.get_matches_and_diffs(labels)
         I_pos = matches.to(dtype)
@@ -52,7 +50,7 @@ class PNPLoss(BaseMetricLossFunction):
         sim_all = self.distance(embeddings)
 
         sim_diff = sim_all.unsqueeze(1) - sim_all.unsqueeze(2)
-        sim_sg = self.sigmoid(sim_diff, temp=self.anneal) * I_neg.unsqueeze(0)
+        sim_sg = torch.sigmoid(sim_diff / self.anneal) * I_neg.unsqueeze(0)
         sim_all_rk = torch.sum(sim_sg, dim=-1)
 
         if self.variant == "Ds":
@@ -73,14 +71,8 @@ class PNPLoss(BaseMetricLossFunction):
             "loss": {
                 "losses": loss,
                 "indices": None,
-                "reduction_type": "already_reduced",
             }
         }
-
-    @staticmethod
-    def sigmoid(tensor: Tensor, temp: float = 1.0) -> Tensor:
-        exponent = torch.clamp(-tensor / temp, min=-50, max=50)
-        return 1.0 / (1.0 + torch.exp(exponent))
 
     def default_distance(self) -> BaseDistance:
         return CosineSimilarity()

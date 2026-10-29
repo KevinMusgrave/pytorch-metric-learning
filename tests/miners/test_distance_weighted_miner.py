@@ -52,7 +52,9 @@ class TestDistanceWeightedMiner(unittest.TestCase):
             for non_zero_cutoff_int in [0, *range(5, 15)]:
                 non_zero_cutoff = (float(non_zero_cutoff_int) / 10.0) - 0.01
                 miner = DistanceWeightedMiner(0, non_zero_cutoff)
-                a, p, n = miner(embeddings, labels, ref_embeddings, ref_labels)
+                a, p, n = miner(
+                    embeddings, labels, ref_emb=ref_embeddings, ref_labels=ref_labels
+                )
                 if non_zero_cutoff_int == 0:
                     self.assertTrue(len(a) == len(p) == len(n) == 0)
                     continue

@@ -178,7 +178,19 @@ class TestNTXentLoss(unittest.TestCase):
                         ).to(TEST_DEVICE)
                         loss = loss_func(embeddings, labels)
                         loss.backward()
-                        self.assertEqual(loss, 0)
+                        expected = 0
+                        if loss_class is SupConLoss and len(labels) > 1 == len(
+                            labels.unique()
+                        ):
+                            expected = supcon_without_negatives(
+                                embeddings, loss_func.distance, temperature
+                            )
+                        torch.testing.assert_close(
+                            loss.detach(),
+                            torch.as_tensor(expected, dtype=dtype),
+                            rtol=1e-2 if dtype == torch.float16 else 1e-5,
+                            atol=1e-6,
+                        )
 
     def test_backward(self):
         temperature = 0.1
@@ -196,3 +208,16 @@ class TestNTXentLoss(unittest.TestCase):
                     labels = torch.tensor([0, 0, 1, 1, 2], dtype=torch.long)
                     loss = loss_func(embeddings, labels)
                     loss.backward()
+
+
+def supcon_without_negatives(embeddings, distance, temperature):
+    mat = distance(embeddings.detach().double())
+    logits = (mat if distance.is_inverted else -mat) / temperature
+    total, count = 0.0, 0
+    for i in range(len(logits)):
+        others = [j for j in range(len(logits)) if j != i]
+        denominator = torch.logsumexp(logits[i, others], dim=0)
+        loss = -sum(logits[i, j] - denominator for j in others) / len(others)
+        if loss > 0:
+            total, count = total + loss, count + 1
+    return float(total / count) if count else 0.0

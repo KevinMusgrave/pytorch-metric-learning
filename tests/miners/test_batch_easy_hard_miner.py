@@ -320,9 +320,7 @@ class TestBatchEasyHardMiner(unittest.TestCase):
                     allowed_pos_range=cfg.get("allowed_pos_range"),
                     allowed_neg_range=cfg.get("allowed_neg_range"),
                 )
-                a1, p, a2, n = miner.mine(
-                    embeddings, self.labels, embeddings, self.labels
-                )
+                a1, p, a2, n = miner.mine(embeddings, self.labels, None, None, None)
                 self.helper(a1, p, a2, n, cfg["expected"])
 
     def test_strategy_assertion(self):

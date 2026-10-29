@@ -18,13 +18,9 @@ class SupConLoss(GenericPairLoss):
 
     def pair_loss(self, mat: Tensor, pairs: PairIndices) -> LossDict:
         pos_mask, neg_mask = self.pair_masks(mat, pairs)
-        if len(pairs[0]) == 0 or len(pairs[2]) == 0:
-            return self.zero_losses(mat)
         if not self.distance.is_inverted:
             mat = -mat
         mat = mat / self.temperature
-        mat_max, _ = mat.max(dim=1, keepdim=True)
-        mat = mat - mat_max.detach()
         denominator = _common.logsumexp(
             mat, keep_mask=pos_mask | neg_mask, add_one=False, dim=1
         )
@@ -35,7 +31,6 @@ class SupConLoss(GenericPairLoss):
             "loss": {
                 "losses": -mean_log_prob_pos,
                 "indices": _common.arange_like(mat),
-                "reduction_type": "element",
             }
         }
 

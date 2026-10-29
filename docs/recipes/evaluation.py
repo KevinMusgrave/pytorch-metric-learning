@@ -4,7 +4,7 @@ import torch
 from torch import Tensor, nn
 from torch.utils.data import DataLoader, TensorDataset
 
-from pytorch_metric_learning.utils.accuracy_calculator import AccuracyCalculator
+from pytorch_metric_learning.evaluation.accuracy_calculator import AccuracyCalculator
 
 
 @torch.inference_mode()
@@ -67,7 +67,7 @@ def parent_conditioned_accuracy(
         for metric, values in by_metric.items():
             results[f"{metric}_level{level}"] = sum(values) / len(values)
     if len(levels) > 1:
-        for metric in calculator.get_curr_metrics():
+        for metric in calculator.metrics:
             per_level = [results[f"{metric}_level{level}"] for level in levels]
             results[f"AVERAGE_{metric}"] = sum(per_level) / len(per_level)
     return results

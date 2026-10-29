@@ -7,6 +7,7 @@ import torch.nn.functional
 import torch.nn.functional as F
 
 from pytorch_metric_learning.losses import PNPLoss
+from pytorch_metric_learning.losses.pnp_loss import VARIANTS
 
 from .. import TEST_DEVICE, TEST_DTYPES
 
@@ -89,7 +90,7 @@ class TestPNPLoss(unittest.TestCase):
         torch.manual_seed(30293)
         bs = 180
         classes = 30
-        for variant in PNPLoss.VARIANTS:
+        for variant in VARIANTS:
             original_variant = {
                 "Ds": "PNP-D_s",
                 "Dq": "PNP-D_q",

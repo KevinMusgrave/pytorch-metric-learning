@@ -23,7 +23,6 @@ class CenterInvariantRegularizer(BaseRegularizer):
             "loss": {
                 "losses": (deviations_from_mean**2) / 4,
                 "indices": _common.arange_like(x),
-                "reduction_type": "element",
             }
         }
 

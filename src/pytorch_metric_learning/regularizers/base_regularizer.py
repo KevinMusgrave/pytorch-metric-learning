@@ -3,7 +3,6 @@ from torch import Tensor, nn
 from ..distances import BaseDistance, LpDistance
 from ..reducers import BaseReducer, MeanReducer
 from ..types import LossDict
-from ..utils._common import arange_like
 
 
 class BaseRegularizer(nn.Module):
@@ -27,4 +26,4 @@ class BaseRegularizer(nn.Module):
         raise NotImplementedError
 
     def forward(self, x: Tensor) -> Tensor:
-        return self.reducer(self.compute_loss(x), x, arange_like(x))
+        return self.reducer(self.compute_loss(x), x, None)

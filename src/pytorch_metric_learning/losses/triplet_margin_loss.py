@@ -29,7 +29,7 @@ class TripletMarginLoss(BaseMetricLossFunction):
         embeddings: Tensor,
         labels: Tensor | None,
         indices_tuple: IndicesTuple | None,
-        ref_emb: Tensor,
+        ref_emb: Tensor | None,
         ref_labels: Tensor | None,
     ) -> LossDict:
         _common.labels_or_indices_tuple_required(labels, indices_tuple)
@@ -38,21 +38,25 @@ class TripletMarginLoss(BaseMetricLossFunction):
         )
         anchor_idx, positive_idx, negative_idx = triplets
         if len(anchor_idx) == 0:
-            return self.zero_losses(embeddings)
+            return {}
         mat = self.distance(embeddings, ref_emb)
         ap_dists = mat[anchor_idx, positive_idx]
         an_dists = mat[anchor_idx, negative_idx]
         if self.swap:
-            pn_dists = mat[positive_idx, negative_idx]
-            an_dists = self.distance.smallest_dist(an_dists, pn_dists)
+            reference, _ = _common.resolve_reference(
+                embeddings, labels, ref_emb, ref_labels
+            )
+            pn_dists = self.distance.pairwise(
+                reference[positive_idx], reference[negative_idx]
+            )
+            closest = torch.maximum if self.distance.is_inverted else torch.minimum
+            an_dists = closest(an_dists, pn_dists)
         violation = self.distance.margin(ap_dists, an_dists) + self.margin
         if self.smooth_loss:
             loss = torch.nn.functional.softplus(violation)
         else:
             loss = torch.relu(violation)
-        return {
-            "loss": {"losses": loss, "indices": triplets, "reduction_type": "triplet"}
-        }
+        return {"loss": {"losses": loss, "indices": triplets}}
 
     def default_reducer(self) -> BaseReducer:
         return AvgNonZeroReducer()

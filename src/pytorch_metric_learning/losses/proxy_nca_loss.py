@@ -1,17 +1,16 @@
-from collections.abc import Callable
 from typing import Unpack
 
 import torch
 from torch import Tensor
 
-from ..regularizers import BaseRegularizer
-from ..types import IndicesTuple, LossDict, LossOptions
-from ..utils import _common
-from .base_metric_loss_function import regularization_term
-from .nca_loss import NCALoss
+from ..distances import BaseDistance, LpDistance
+from ..types import IndicesTuple, LossDict, ProxyLossOptions
+from ..utils import _common, indexing
+from .base_proxy_loss import BaseProxyLoss
+from .nca_loss import nca_terms
 
 
-class ProxyNCALoss(NCALoss):
+class ProxyNCALoss(BaseProxyLoss):
     proxy_labels: Tensor
 
     def __init__(
@@ -19,17 +18,10 @@ class ProxyNCALoss(NCALoss):
         num_classes: int,
         embedding_size: int,
         softmax_scale: float = 1,
-        *,
-        weight_regularizer: BaseRegularizer | None = None,
-        weight_reg_weight: float = 1.0,
-        weight_init_func: Callable[[Tensor], object] | None = None,
-        **options: Unpack[LossOptions],
+        **options: Unpack[ProxyLossOptions],
     ) -> None:
-        super().__init__(softmax_scale, **options)
-        self.weight_regularizer = weight_regularizer
-        self.weight_reg_weight = weight_reg_weight
-        self.weight = torch.nn.Parameter(torch.empty(num_classes, embedding_size))
-        (weight_init_func or torch.nn.init.normal_)(self.weight)
+        super().__init__(num_classes, embedding_size, **options)
+        self.softmax_scale = softmax_scale
         self.register_buffer(
             "proxy_labels", torch.arange(num_classes), persistent=False
         )
@@ -39,24 +31,26 @@ class ProxyNCALoss(NCALoss):
         embeddings: Tensor,
         labels: Tensor | None,
         indices_tuple: IndicesTuple | None,
-        ref_emb: Tensor,
+        ref_emb: Tensor | None,
         ref_labels: Tensor | None,
     ) -> LossDict:
         labels = _common.labels_required(labels)
-        _common.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
-        _common.check_parameter_placement(self, self.weight, embeddings)
-        embeddings = embeddings.to(dtype=self.weight.dtype)
-        return self.nca_computation(
-            embeddings, self.weight, labels, self.proxy_labels, indices_tuple
+        _common.ref_not_supported(ref_emb)
+        weights = indexing.convert_to_weights(
+            indices_tuple, labels, dtype=_common.accumulation_dtype(embeddings.dtype)
+        )
+        return nca_terms(
+            self.get_logits(embeddings),
+            labels,
+            self.proxy_labels,
+            weights,
+            self.softmax_scale,
+            self.distance.is_inverted,
+            exclude_self=False,
         )
 
-    def regularization_terms(self, embeddings: Tensor) -> LossDict:
-        terms = super().regularization_terms(embeddings)
-        if self.weight_regularizer is not None:
-            terms["weight_reg_loss"] = regularization_term(
-                self.weight_regularizer, self.weight_reg_weight, self.weight
-            )
-        return terms
+    def default_distance(self) -> BaseDistance:
+        return LpDistance(power=2)
 
     def get_logits(self, embeddings: Tensor) -> Tensor:
         _common.check_parameter_placement(self, self.weight, embeddings)

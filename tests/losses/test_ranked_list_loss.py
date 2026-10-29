@@ -7,6 +7,11 @@ from pytorch_metric_learning.losses import RankedListLoss
 from .. import TEST_DEVICE, TEST_DTYPES
 
 
+def weighted_average(weights, values):
+    total = torch.sum(weights)
+    return torch.sum(weights * values) / total if total > 0 else total
+
+
 class TestRankedListLoss(unittest.TestCase):
     def test_ranked_list_loss_simpler(self):
         torch.manual_seed(22)
@@ -35,7 +40,11 @@ class TestRankedListLoss(unittest.TestCase):
                     alpha = 1 - margin / 2
                     Tn = Tp
                     loss_func = RankedListLoss(
-                        margin=margin, Tn=Tn, imbalance=lam, alpha=alpha, Tp=Tp
+                        margin=margin,
+                        neg_temperature=Tn,
+                        imbalance=lam,
+                        alpha=alpha,
+                        pos_temperature=Tp,
                     )
 
                     L_RLL = torch.zeros(
@@ -74,8 +83,8 @@ class TestRankedListLoss(unittest.TestCase):
                             elif labels[j] != labels[i] and d_ij < alpha:
                                 w_n[j] = torch.exp(Tn * (alpha - d_ij))
                                 L_N[j] = alpha - d_ij
-                        L_P = torch.sum(w_p * L_P) / torch.sum(w_p + 1e-5)
-                        L_N = torch.sum(w_n * L_N) / torch.sum(w_n + 1e-5)
+                        L_P = weighted_average(w_p, L_P)
+                        L_N = weighted_average(w_n, L_N)
 
                         L_RLL[i] = (1 - lam) * L_P + lam * L_N
                     correct_loss = torch.mean(L_RLL)
@@ -113,7 +122,11 @@ class TestRankedListLoss(unittest.TestCase):
                     strict=True,
                 ):
                     loss_func = RankedListLoss(
-                        margin=margin, Tn=Tn, imbalance=lam, alpha=alpha, Tp=Tp
+                        margin=margin,
+                        neg_temperature=Tn,
+                        imbalance=lam,
+                        alpha=alpha,
+                        pos_temperature=Tp,
                     )
 
                     L_RLL = torch.zeros(
@@ -152,8 +165,8 @@ class TestRankedListLoss(unittest.TestCase):
                             elif labels[j] != labels[i] and d_ij < alpha:
                                 w_n[j] = torch.exp(Tn * (alpha - d_ij))
                                 L_N[j] = alpha - d_ij
-                        L_P = torch.sum(w_p * L_P) / torch.sum(w_p + 1e-5)
-                        L_N = torch.sum(w_n * L_N) / torch.sum(w_n + 1e-5)
+                        L_P = weighted_average(w_p, L_P)
+                        L_N = weighted_average(w_n, L_N)
 
                         L_RLL[i] = (1 - lam) * L_P + lam * L_N
                     correct_loss = torch.mean(L_RLL)
@@ -166,5 +179,5 @@ class TestRankedListLoss(unittest.TestCase):
 
     def test_assertion_raises(self):
         with self.assertRaises(ValueError):
-            _ = RankedListLoss(margin=1, Tn=0, imbalance=-1)
-            _ = RankedListLoss(margin=1, Tn=0, imbalance=2)
+            _ = RankedListLoss(margin=1, neg_temperature=0, imbalance=-1)
+            _ = RankedListLoss(margin=1, neg_temperature=0, imbalance=2)

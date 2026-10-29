@@ -1,20 +1,16 @@
-from typing import Literal
-
 from torch import Tensor
 
 from ..distances import BaseDistance
-from ..types import IndicesTuple
+from ..types import IndicesTuple, MiningStrategy, TripletIndices
 from ..utils import indexing
 from .base_miner import BaseMiner
-
-type TripletType = Literal["all", "hard", "semihard", "easy"]
 
 
 class TripletMarginMiner(BaseMiner):
     def __init__(
         self,
         margin: float = 0.2,
-        type_of_triplets: TripletType = "all",
+        type_of_triplets: MiningStrategy = "all",
         *,
         distance: BaseDistance | None = None,
     ) -> None:
@@ -27,10 +23,15 @@ class TripletMarginMiner(BaseMiner):
         self.type_of_triplets = type_of_triplets
 
     def mine(
-        self, embeddings: Tensor, labels: Tensor, ref_emb: Tensor, ref_labels: Tensor
+        self,
+        embeddings: Tensor,
+        labels: Tensor,
+        indices_tuple: IndicesTuple | None,
+        ref_emb: Tensor | None,
+        ref_labels: Tensor | None,
     ) -> IndicesTuple:
-        anchor_idx, positive_idx, negative_idx = indexing.get_all_triplets_indices(
-            labels, ref_labels
+        anchor_idx, positive_idx, negative_idx = indexing.convert_to_triplets(
+            indices_tuple, labels, ref_labels
         )
         mat = self.distance(embeddings, ref_emb)
         ap_dist = mat[anchor_idx, positive_idx]
@@ -44,4 +45,4 @@ class TripletMarginMiner(BaseMiner):
                 keep &= triplet_margin <= 0
             elif self.type_of_triplets == "semihard":
                 keep &= triplet_margin > 0
-        return anchor_idx[keep], positive_idx[keep], negative_idx[keep]
+        return TripletIndices(anchor_idx[keep], positive_idx[keep], negative_idx[keep])

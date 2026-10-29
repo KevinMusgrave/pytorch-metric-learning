@@ -17,7 +17,7 @@ from torch.nn.parallel import DistributedDataParallel
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from pytorch_metric_learning import losses, miners
-from pytorch_metric_learning.utils.distributed import DistributedLossWrapper
+from pytorch_metric_learning.distributed import DistributedLossWrapper
 
 
 @dataclass

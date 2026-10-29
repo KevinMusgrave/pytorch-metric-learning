@@ -1,4 +1,3 @@
-import inspect
 import unittest
 from typing import Any
 
@@ -199,12 +198,19 @@ class TestLossComposition(unittest.TestCase):
             losses.SubCenterArcFaceLoss,
         ):
             with self.subTest(loss=loss_class.__name__):
-                parameters = inspect.signature(loss_class).parameters
-                for name in ("weight_regularizer", "weight_reg_weight"):
-                    self.assertIn(name, parameters)
-                    self.assertEqual(
-                        parameters[name].kind, inspect.Parameter.KEYWORD_ONLY
-                    )
+                self.assertTrue(issubclass(loss_class, losses.BaseProxyLoss))
+                loss_func = loss_class(
+                    num_classes=3,
+                    embedding_size=4,
+                    weight_regularizer=LpRegularizer(),
+                    weight_reg_weight=0.5,
+                )
+                embeddings = torch.randn(3, 4)
+                terms = loss_func.loss_terms(embeddings, torch.tensor([0, 1, 2]))
+                torch.testing.assert_close(
+                    terms["weight_reg_loss"]["losses"],
+                    0.5 * loss_func.weight.norm(dim=1).mean(),
+                )
 
     def test_forward_does_not_change_parameter_placement(self):
         loss_func = losses.NormalizedSoftmaxLoss(3, 4)

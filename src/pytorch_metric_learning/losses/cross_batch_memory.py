@@ -1,10 +1,11 @@
+from collections.abc import Sequence
 from typing import TypedDict
 
 import torch
 from torch import Tensor
 
 from ..miners import BaseMiner
-from ..types import IndicesTuple
+from ..types import IndicesTuple, PairIndices
 from ..utils import _common, indexing
 from .base_metric_loss_function import BaseMetricLossFunction
 
@@ -60,9 +61,7 @@ class CrossBatchMemory(torch.nn.Module):
             raise TypeError("CrossBatchMemory requires a BaseMetricLossFunction")
         self.loss = loss
         self.miner = miner
-        self.embedding_size = embedding_size
         self.memory_size = memory_size
-        self.label_dtype = label_dtype
         self.register_buffer(
             "embedding_memory", torch.zeros(memory_size, embedding_size)
         )
@@ -77,68 +76,76 @@ class CrossBatchMemory(torch.nn.Module):
         self,
         embeddings: Tensor,
         labels: Tensor,
-        indices_tuple: IndicesTuple | None = None,
+        indices_tuple: Sequence[Tensor] | None = None,
         enqueue_mask: Tensor | None = None,
     ) -> Tensor:
+        _common.check_shapes(embeddings, labels)
+        _common.check_device(labels, embeddings, "labels")
+        if embeddings.shape[1] != self.embedding_memory.shape[1]:
+            raise ValueError("embeddings must have the memory's embedding size")
         if indices_tuple is not None and enqueue_mask is not None:
             raise ValueError("indices_tuple and enqueue_mask are mutually exclusive")
+        indices = _common.as_indices_tuple(indices_tuple, embeddings.device)
         if enqueue_mask is not None:
             if enqueue_mask.dtype != torch.bool:
                 raise TypeError("enqueue_mask must be a boolean tensor")
-            if enqueue_mask.ndim != 1:
-                raise ValueError("enqueue_mask must be one-dimensional")
-            if len(enqueue_mask) != len(embeddings):
+            if enqueue_mask.ndim != 1 or len(enqueue_mask) != len(embeddings):
                 raise ValueError("enqueue_mask must contain one value per embedding")
+            _common.check_device(enqueue_mask, embeddings, "enqueue_mask")
         _common.check_parameter_placement(self, self.embedding_memory, embeddings)
         embeddings = embeddings.to(dtype=self.embedding_memory.dtype)
-        if not torch.can_cast(labels.dtype, self.label_memory.dtype):
-            raise ValueError(
-                f"CrossBatchMemory stores {self.label_memory.dtype} labels and cannot "
-                f"safely store {labels.dtype} labels; set label_dtype"
-            )
-        labels = labels.to(device=embeddings.device, dtype=self.label_memory.dtype)
+        labels = self.stored_labels(labels)
 
         if enqueue_mask is not None:
             emb_for_queue = embeddings[enqueue_mask]
             labels_for_queue = labels[enqueue_mask]
             embeddings = embeddings[~enqueue_mask]
             labels = labels[~enqueue_mask]
-            do_remove_self_comparisons = False
         else:
             emb_for_queue = embeddings
             labels_for_queue = labels
-            do_remove_self_comparisons = True
-
-        self.add_to_memory(emb_for_queue, labels_for_queue, len(emb_for_queue))
-        memory_end = self.memory_size if self.has_been_filled else self.queue_idx
-        E_mem = self.embedding_memory[:memory_end].clone()
-        L_mem = self.label_memory[:memory_end].clone()
-        indices_tuple = self.create_indices_tuple(
-            embeddings, labels, E_mem, L_mem, indices_tuple, do_remove_self_comparisons
-        )
-        return self.loss(embeddings, labels, indices_tuple, E_mem, L_mem)
-
-    def add_to_memory(
-        self, embeddings: Tensor, labels: Tensor, batch_size: int
-    ) -> None:
-        if batch_size > self.memory_size:
+        count = len(emb_for_queue)
+        if count > self.memory_size:
             raise ValueError(
                 "The number of enqueued embeddings must not exceed memory_size"
             )
-        self.curr_batch_idx = (
-            torch.arange(
-                self.queue_idx, self.queue_idx + batch_size, device=labels.device
-            )
+
+        slots = (
+            torch.arange(self.queue_idx, self.queue_idx + count, device=labels.device)
             % self.memory_size
         )
-        if batch_size == 0:
-            return
-        self.embedding_memory[self.curr_batch_idx] = embeddings.detach()
-        self.label_memory[self.curr_batch_idx] = labels.detach()
-        prev_queue_idx = self.queue_idx
-        self.queue_idx = (self.queue_idx + batch_size) % self.memory_size
-        if (not self.has_been_filled) and (self.queue_idx <= prev_queue_idx):
-            self.has_been_filled = True
+        filled = self.has_been_filled or self.queue_idx + count >= self.memory_size
+        memory_end = self.memory_size if filled else self.queue_idx + count
+        E_mem = self.embedding_memory[:memory_end].clone()
+        L_mem = self.label_memory[:memory_end].clone()
+        E_mem[slots] = emb_for_queue.detach()
+        L_mem[slots] = labels_for_queue
+        mined = self.create_indices_tuple(
+            embeddings,
+            labels,
+            E_mem,
+            L_mem,
+            indices,
+            None if enqueue_mask is not None else slots,
+        )
+        loss = self.loss(embeddings, labels, mined, E_mem, L_mem)
+        self.embedding_memory[slots] = emb_for_queue.detach()
+        self.label_memory[slots] = labels_for_queue
+        self.queue_idx = (self.queue_idx + count) % self.memory_size
+        self.has_been_filled = filled
+        return loss
+
+    def stored_labels(self, labels: Tensor) -> Tensor:
+        dtype = self.label_memory.dtype
+        if labels.dtype == dtype:
+            return labels
+        converted = labels.to(dtype)
+        if not torch.equal(converted.to(labels.dtype), labels):
+            raise ValueError(
+                f"CrossBatchMemory stores {dtype} labels and cannot represent these "
+                f"{labels.dtype} labels exactly; set label_dtype"
+            )
+        return converted
 
     def create_indices_tuple(
         self,
@@ -147,29 +154,27 @@ class CrossBatchMemory(torch.nn.Module):
         E_mem: Tensor,
         L_mem: Tensor,
         input_indices_tuple: IndicesTuple | None,
-        do_remove_self_comparisons: bool,
+        curr_batch_idx: Tensor | None,
     ) -> IndicesTuple:
         if self.miner:
-            indices_tuple = self.miner(embeddings, labels, E_mem, L_mem)
+            indices_tuple = self.miner(
+                embeddings, labels, ref_emb=E_mem, ref_labels=L_mem
+            )
         else:
             indices_tuple = indexing.get_all_pairs_indices(labels, L_mem)
-        if do_remove_self_comparisons:
+        if curr_batch_idx is not None:
             indices_tuple = indexing.remove_self_comparisons(
-                indices_tuple, self.curr_batch_idx, self.memory_size
+                indices_tuple, curr_batch_idx
             )
-        if input_indices_tuple is not None:
-            if len(input_indices_tuple) == 3 and len(indices_tuple) == 4:
-                input_indices_tuple = indexing.convert_to_pairs(
-                    input_indices_tuple, labels
-                )
-            elif len(input_indices_tuple) == 4 and len(indices_tuple) == 3:
-                input_indices_tuple = indexing.convert_to_triplets(
-                    input_indices_tuple, labels
-                )
-            indices_tuple = indexing.concatenate_indices_tuples(
-                indices_tuple, input_indices_tuple
+        if input_indices_tuple is None:
+            return indices_tuple
+        if isinstance(indices_tuple, PairIndices):
+            input_indices_tuple = indexing.convert_to_pairs(input_indices_tuple, labels)
+        else:
+            input_indices_tuple = indexing.convert_to_triplets(
+                input_indices_tuple, labels
             )
-        return indices_tuple
+        return indexing.concatenate_indices_tuples(indices_tuple, input_indices_tuple)
 
     def reset_queue(self) -> None:
         self.embedding_memory.zero_()

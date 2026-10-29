@@ -1,3 +1,5 @@
+from typing import cast
+
 import torch
 from torch import Tensor
 
@@ -7,6 +9,7 @@ class BaseDistance(torch.nn.Module):
 
     def __init__(
         self,
+        *,
         normalize_embeddings: bool = True,
         p: float = 2,
         power: float = 1,
@@ -33,21 +36,25 @@ class BaseDistance(torch.nn.Module):
             )
         return mat
 
+    def pairwise(self, query_emb: Tensor, ref_emb: Tensor) -> Tensor:
+        self.check_shapes(query_emb, ref_emb)
+        if query_emb.shape != ref_emb.shape:
+            raise ValueError("pairwise inputs must have the same shape")
+        values = self.pairwise_distance(
+            self.maybe_normalize(query_emb), self.maybe_normalize(ref_emb)
+        )
+        if self.power != 1:
+            values = values**self.power
+        return values
+
     def compute_mat(self, query_emb: Tensor, ref_emb: Tensor) -> Tensor:
         raise NotImplementedError
 
     def pairwise_distance(self, query_emb: Tensor, ref_emb: Tensor) -> Tensor:
         raise NotImplementedError
 
-    def smallest_dist(self, *args, **kwargs):
-        if self.is_inverted:
-            return torch.max(*args, **kwargs)
-        return torch.min(*args, **kwargs)
-
     def margin(self, x: Tensor | float, y: Tensor | float) -> Tensor:
-        difference = y - x if self.is_inverted else x - y
-        assert isinstance(difference, Tensor)
-        return difference
+        return cast(Tensor, y - x if self.is_inverted else x - y)
 
     def normalize(self, embeddings: Tensor, dim: int = 1) -> Tensor:
         return torch.nn.functional.normalize(embeddings, p=self.p, dim=dim)

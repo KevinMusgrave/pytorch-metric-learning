@@ -17,31 +17,15 @@ class NTXentLoss(GenericPairLoss):
         self.temperature = temperature
 
     def pair_loss(self, mat: Tensor, pairs: PairIndices) -> LossDict:
-        pos_pairs, neg_pairs = self.pair_values(mat, pairs)
         a1, p, a2, _ = pairs
-        if len(a1) == 0 or len(a2) == 0:
-            return self.zero_losses(mat)
-        dtype = neg_pairs.dtype
-        if not self.distance.is_inverted:
-            pos_pairs = -pos_pairs
-            neg_pairs = -neg_pairs
-        pos_pairs = pos_pairs.unsqueeze(1) / self.temperature
-        neg_pairs = neg_pairs / self.temperature
-        n_per_p = a2.unsqueeze(0) == a1.unsqueeze(1)
-        neg_pairs = torch.where(n_per_p, neg_pairs, _common.neg_inf(dtype))
-        max_val = torch.max(
-            pos_pairs, torch.max(neg_pairs, dim=1, keepdim=True)[0]
-        ).detach()
-        numerator = torch.exp(pos_pairs - max_val).squeeze(1)
-        denominator = torch.sum(torch.exp(neg_pairs - max_val), dim=1) + numerator
-        log_exp = torch.log((numerator / denominator) + _common.small_val(dtype))
-        return {
-            "loss": {
-                "losses": -log_exp,
-                "indices": (a1, p),
-                "reduction_type": "pos_pair",
-            }
-        }
+        pos_pairs, neg_pairs = self.pair_values(mat, pairs)
+        dtype = _common.accumulation_dtype(mat.dtype)
+        sign = 1 if self.distance.is_inverted else -1
+        pos_logits = sign * pos_pairs.to(dtype) / self.temperature
+        neg_logits = sign * neg_pairs.to(dtype) / self.temperature
+        neg_lse = _common.segment_logsumexp(neg_logits, a2, mat.shape[0])
+        losses = torch.logaddexp(pos_logits, neg_lse[a1]) - pos_logits
+        return {"loss": {"losses": losses.to(mat.dtype), "indices": (a1, p)}}
 
     def default_distance(self) -> BaseDistance:
         return CosineSimilarity()

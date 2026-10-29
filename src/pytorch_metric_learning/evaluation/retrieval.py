@@ -60,12 +60,7 @@ class MatchFinder:
     def is_match(self, x: Tensor, y: Tensor, threshold: float | None = None) -> Tensor:
         threshold = self._threshold(threshold)
         with torch.no_grad():
-            x = self.distance.maybe_normalize(x)
-            y = self.distance.maybe_normalize(y)
-            values = self.distance.pairwise_distance(x, y)
-            if self.distance.power != 1:
-                values = values**self.distance.power
-            return self._compare(values, threshold)
+            return self._compare(self.distance.pairwise(x, y), threshold)
 
 
 class FaissKNN:

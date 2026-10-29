@@ -21,12 +21,12 @@ class InstanceLoss(BaseMetricLossFunction):
         embeddings: Tensor,
         labels: Tensor | None,
         indices_tuple: IndicesTuple | None,
-        ref_emb: Tensor,
+        ref_emb: Tensor | None,
         ref_labels: Tensor | None,
     ) -> LossDict:
         labels = _common.labels_required(labels)
         _common.indices_tuple_not_supported(indices_tuple)
-        _common.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
+        _common.ref_not_supported(ref_emb)
         sim1 = self.distance(embeddings) * self.gamma
         _, sim_label = torch.unique(labels, return_inverse=True)
         loss = F.cross_entropy(sim1, sim_label, reduction="none")
@@ -34,7 +34,6 @@ class InstanceLoss(BaseMetricLossFunction):
             "loss": {
                 "losses": loss,
                 "indices": _common.arange_like(embeddings),
-                "reduction_type": "element",
             }
         }
 

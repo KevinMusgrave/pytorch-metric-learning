@@ -19,17 +19,17 @@ class NPairsLoss(BaseMetricLossFunction):
         embeddings: Tensor,
         labels: Tensor | None,
         indices_tuple: IndicesTuple | None,
-        ref_emb: Tensor,
+        ref_emb: Tensor | None,
         ref_labels: Tensor | None,
     ) -> LossDict:
         labels = _common.labels_required(labels)
-        _common.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
+        _common.ref_not_supported(ref_emb)
         anchor_idx, positive_idx = indexing.convert_to_pos_pairs_with_unique_labels(
             indices_tuple, labels
         )
         num_pairs = len(anchor_idx)
         if num_pairs == 0:
-            return self.zero_losses(embeddings)
+            return {}
         anchors, positives = embeddings[anchor_idx], embeddings[positive_idx]
         targets = torch.arange(num_pairs, device=embeddings.device)
         sim_mat = self.distance(anchors, positives)
@@ -39,7 +39,6 @@ class NPairsLoss(BaseMetricLossFunction):
             "loss": {
                 "losses": self.cross_entropy(sim_mat, targets),
                 "indices": anchor_idx,
-                "reduction_type": "element",
             }
         }
 

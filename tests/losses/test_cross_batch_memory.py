@@ -15,10 +15,17 @@ from pytorch_metric_learning.miners import (
     PairMarginMiner,
     TripletMarginMiner,
 )
+from pytorch_metric_learning.types import PairIndices, TripletIndices
 from pytorch_metric_learning.utils import indexing
 
 from .. import TEST_DEVICE, TEST_DTYPES
 from ..helpers import angle_to_coord
+
+
+def recent(all_labels, batch_size):
+    return torch.arange(
+        len(all_labels) - batch_size, len(all_labels), device=all_labels.device
+    )
 
 
 class TestCrossBatchMemory(unittest.TestCase):
@@ -41,18 +48,18 @@ class TestCrossBatchMemory(unittest.TestCase):
             ).to(TEST_DEVICE, dtype)
             loss.embedding_memory = loss.embedding_memory.to(TEST_DEVICE).type(dtype)
             loss.label_memory = loss.label_memory.to(TEST_DEVICE)
-            embeddings = (
-                torch.randn(batch_size, self.embedding_size).to(TEST_DEVICE).type(dtype)
-            )
-            labels = torch.randint(0, 10, (batch_size,)).to(TEST_DEVICE)
             num_tuples = 1000
             num_non_identical = 147
 
-            for _ in range(30):
-                loss.add_to_memory(embeddings, labels, batch_size)
+            for step in range(30):
+                start = step * batch_size
+                curr_batch_idx = (
+                    torch.arange(start, start + batch_size, device=TEST_DEVICE)
+                    % self.memory_size
+                )
                 for identical in [True, False]:
                     a = torch.randint(0, batch_size, (num_tuples,)).to(TEST_DEVICE)
-                    p = a + loss.curr_batch_idx[0]
+                    p = a + curr_batch_idx[0]
                     if not identical:
                         rand_diff_idx = torch.randint(
                             0, num_tuples, (num_non_identical,)
@@ -67,7 +74,7 @@ class TestCrossBatchMemory(unittest.TestCase):
                     p %= self.memory_size
                     n = torch.randint(0, batch_size, (num_tuples,)).to(TEST_DEVICE)
                     a_new, p_new, n_new = indexing.remove_self_comparisons(
-                        (a, p, n), loss.curr_batch_idx, loss.memory_size
+                        TripletIndices(a, p, n), curr_batch_idx
                     )
                     if identical:
                         self.assertTrue(len(a_new) == len(p_new) == len(n_new) == 0)
@@ -88,7 +95,7 @@ class TestCrossBatchMemory(unittest.TestCase):
                         self.assertTrue(set(triplets) == set(triplets_new))
 
                     a1 = torch.randint(0, batch_size, (num_tuples,)).to(TEST_DEVICE)
-                    p = a1 + loss.curr_batch_idx[0]
+                    p = a1 + curr_batch_idx[0]
                     if not identical:
                         rand_diff_idx = torch.randint(
                             0, num_tuples, (num_non_identical,)
@@ -104,10 +111,10 @@ class TestCrossBatchMemory(unittest.TestCase):
                     a2 = torch.randint(0, batch_size, (num_tuples,)).to(TEST_DEVICE)
                     n = (
                         torch.randint(0, batch_size, (num_tuples,)).to(TEST_DEVICE)
-                        + loss.curr_batch_idx[0]
+                        + curr_batch_idx[0]
                     ) % self.memory_size
                     a1_new, p_new, a2_new, n_new = indexing.remove_self_comparisons(
-                        (a1, p, a2, n), loss.curr_batch_idx, loss.memory_size
+                        PairIndices(a1, p, a2, n), curr_batch_idx
                     )
                     if identical:
                         self.assertTrue(len(a1_new) == len(p_new) == 0)
@@ -183,8 +190,8 @@ class TestCrossBatchMemory(unittest.TestCase):
                             triplets = inner_miner(
                                 not_enqueue_emb,
                                 not_enqueue_labels,
-                                enqueue_emb,
-                                enqueue_labels,
+                                ref_emb=enqueue_emb,
+                                ref_labels=enqueue_labels,
                             )
                             inner_loss_val = inner_loss(
                                 not_enqueue_emb,
@@ -258,7 +265,7 @@ class TestCrossBatchMemory(unittest.TestCase):
 
                     indices_tuple = indexing.get_all_pairs_indices(labels, all_labels)
                     a1, p, a2, n = indexing.remove_self_comparisons(
-                        indices_tuple, self.loss.curr_batch_idx, self.loss.memory_size
+                        indices_tuple, recent(all_labels, batch_size)
                     )
                     correct_loss = inner_loss(
                         embeddings,
@@ -270,12 +277,13 @@ class TestCrossBatchMemory(unittest.TestCase):
                     self.assertTrue(torch.isclose(loss, correct_loss))
 
                     indices_tuple = inner_miner(
-                        embeddings, labels, all_embeddings, all_labels
+                        embeddings,
+                        labels,
+                        ref_emb=all_embeddings,
+                        ref_labels=all_labels,
                     )
                     a1, p, a2, n = indexing.remove_self_comparisons(
-                        indices_tuple,
-                        self.loss_with_miner.curr_batch_idx,
-                        self.loss_with_miner.memory_size,
+                        indices_tuple, recent(all_labels, batch_size)
                     )
                     correct_loss_with_miner = inner_loss(
                         embeddings,
@@ -407,8 +415,8 @@ class TestCrossBatchMemory(unittest.TestCase):
                 a1, p, a2, n = pair_miner(
                     embeddings,
                     labels,
-                    self.loss.embedding_memory,
-                    self.loss.label_memory,
+                    ref_emb=self.loss.embedding_memory,
+                    ref_labels=self.loss.label_memory,
                 )
                 self.assertTrue(
                     not torch.any((labels[a1] - self.loss.label_memory[p]).bool())
@@ -420,8 +428,8 @@ class TestCrossBatchMemory(unittest.TestCase):
                 a, p, n = triplet_miner(
                     embeddings,
                     labels,
-                    self.loss.embedding_memory,
-                    self.loss.label_memory,
+                    ref_emb=self.loss.embedding_memory,
+                    ref_labels=self.loss.label_memory,
                 )
                 self.assertTrue(
                     not torch.any((labels[a] - self.loss.label_memory[p]).bool())
@@ -456,8 +464,13 @@ class TestCrossBatchMemory(unittest.TestCase):
                     indices_tuple = indexing.get_all_pairs_indices(
                         labels, self.loss.label_memory
                     )
+                    slots = (
+                        torch.arange(batch_size, device=TEST_DEVICE)
+                        + self.loss.queue_idx
+                        - batch_size
+                    ) % self.memory_size
                     a1i, pi, a2i, ni = indexing.remove_self_comparisons(
-                        indices_tuple, self.loss.curr_batch_idx, self.loss.memory_size
+                        indices_tuple, slots
                     )
                     a1, p, a2, n = self.loss.create_indices_tuple(
                         embeddings,
@@ -465,7 +478,7 @@ class TestCrossBatchMemory(unittest.TestCase):
                         self.loss.embedding_memory,
                         self.loss.label_memory,
                         input_indices_tuple,
-                        True,
+                        slots,
                     )
                     self.assertTrue(
                         not torch.any((labels[a1] - self.loss.label_memory[p]).bool())
@@ -507,7 +520,7 @@ class TestCrossBatchMemory(unittest.TestCase):
 
                     indices_tuple = indexing.get_all_pairs_indices(labels, all_labels)
                     a1, p, a2, n = indexing.remove_self_comparisons(
-                        indices_tuple, self.loss.curr_batch_idx, self.loss.memory_size
+                        indices_tuple, recent(all_labels, batch_size)
                     )
 
                     correct_loss = inner_loss(

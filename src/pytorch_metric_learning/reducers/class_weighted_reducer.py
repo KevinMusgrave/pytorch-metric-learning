@@ -14,11 +14,16 @@ class ClassWeightedReducer(BaseReducer):
     def element_reduction(
         self,
         losses: Tensor,
-        loss_indices: Tensor,
+        anchors: Tensor,
         embeddings: Tensor,
         labels: Tensor | None,
     ) -> Tensor:
         if labels is None:
             raise ValueError("ClassWeightedReducer requires labels")
-        weights = self.weights.to(device=losses.device, dtype=losses.dtype)
-        return torch.mean(losses * weights[labels[loss_indices]])
+        if self.weights.device != losses.device:
+            raise ValueError(
+                f"ClassWeightedReducer weights are on {self.weights.device}, but "
+                f"losses are on {losses.device}. Move the reducer with .to(device)."
+            )
+        weights = self.weights.to(dtype=losses.dtype)
+        return torch.mean(losses * weights[labels[anchors]])

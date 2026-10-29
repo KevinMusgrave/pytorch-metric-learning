@@ -79,8 +79,8 @@ class TestThresholdConsistentMarginReference(unittest.TestCase):
 
     def test_reference_embeddings_are_used(self):
         torch.manual_seed(7)
-        query = torch.randn(4, 3, dtype=torch.float64)
-        reference = torch.randn(6, 3, dtype=torch.float64)
+        query = torch.randn(4, 3, dtype=torch.float64, device=TEST_DEVICE)
+        reference = torch.randn(6, 3, dtype=torch.float64, device=TEST_DEVICE)
         labels = torch.tensor([0, 1, 0, 1]).to(TEST_DEVICE)
         ref_labels = torch.tensor([0, 0, 1, 1, 2, 1]).to(TEST_DEVICE)
         loss = ThresholdConsistentMarginLoss(margin_plus=0.5, margin_minus=-0.5)(

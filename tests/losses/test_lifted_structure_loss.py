@@ -176,7 +176,7 @@ class TestGeneralizedLiftedStructureLoss(unittest.TestCase):
 
 class TestLiftedStructureReferenceSet(unittest.TestCase):
     def test_separate_reference_set_is_rejected(self):
-        embeddings = torch.randn(4, 3)
+        embeddings = torch.randn(4, 3, device=TEST_DEVICE)
         labels = torch.tensor([0, 0, 1, 1]).to(TEST_DEVICE)
         loss_func = LiftedStructureLoss()
         self.assertTrue(torch.isfinite(loss_func(embeddings, labels)))
@@ -184,8 +184,8 @@ class TestLiftedStructureReferenceSet(unittest.TestCase):
             loss_func(
                 embeddings,
                 labels,
-                ref_emb=torch.randn(5, 3),
-                ref_labels=torch.tensor([0, 1, 0, 1, 1]),
+                ref_emb=torch.randn(5, 3, device=TEST_DEVICE),
+                ref_labels=torch.tensor([0, 1, 0, 1, 1], device=TEST_DEVICE),
             )
 
 

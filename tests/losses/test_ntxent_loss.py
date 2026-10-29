@@ -187,7 +187,7 @@ class TestNTXentLoss(unittest.TestCase):
                             )
                         torch.testing.assert_close(
                             loss.detach(),
-                            torch.as_tensor(expected, dtype=dtype),
+                            torch.as_tensor(expected, dtype=dtype, device=TEST_DEVICE),
                             rtol=helpers.rtol(dtype),
                             atol=1e-6,
                         )

@@ -91,7 +91,7 @@ class TestAngularLoss(unittest.TestCase):
 class TestAngularLossNormalization(unittest.TestCase):
     def test_negatives_are_normalized_like_anchors_and_positives(self):
         torch.manual_seed(5)
-        embeddings = 3 * torch.randn(6, 4, dtype=torch.float64)
+        embeddings = 3 * torch.randn(6, 4, dtype=torch.float64, device=TEST_DEVICE)
         labels = torch.tensor([0, 0, 1, 1, 2, 2]).to(TEST_DEVICE)
         alpha = 40
         loss = AngularLoss(alpha=alpha)(embeddings, labels)

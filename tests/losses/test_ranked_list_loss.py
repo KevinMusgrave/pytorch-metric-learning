@@ -28,7 +28,7 @@ class TestRankedListLoss(unittest.TestCase):
                 labels = torch.randint(0, 5, size=(batch_size,)).to(TEST_DEVICE)
 
                 normalized_embeddings = torch.nn.functional.normalize(
-                    embeddings, p=2, dim=1
+                    embeddings.detach().double(), p=2, dim=1
                 )
                 n = len(embeddings)
                 for Tp, lam, margin in zip(
@@ -49,20 +49,20 @@ class TestRankedListLoss(unittest.TestCase):
 
                     L_RLL = torch.zeros(
                         n,
-                    ).to(dtype=dtype)
+                    ).to(dtype=torch.float64)
                     for i in range(n):
                         w_p = torch.zeros(
                             n,
-                        ).to(dtype=dtype)
+                        ).to(dtype=torch.float64)
                         w_n = torch.zeros(
                             n,
-                        ).to(dtype=dtype)
+                        ).to(dtype=torch.float64)
                         L_P = torch.zeros(
                             n,
-                        ).to(dtype=dtype)
+                        ).to(dtype=torch.float64)
                         L_N = torch.zeros(
                             n,
-                        ).to(dtype=dtype)
+                        ).to(dtype=torch.float64)
                         for j in range(n):
                             if i == j:
                                 continue
@@ -91,7 +91,9 @@ class TestRankedListLoss(unittest.TestCase):
                     loss = loss_func(embeddings, labels)
 
                     rtol = helpers.rtol(dtype)
-                    self.assertTrue(torch.isclose(loss, correct_loss, rtol=rtol))
+                    self.assertTrue(
+                        torch.isclose(loss.double(), correct_loss, rtol=rtol)
+                    )
 
                     loss.backward()
 
@@ -110,7 +112,7 @@ class TestRankedListLoss(unittest.TestCase):
                 labels = torch.randint(0, 5, size=(batch_size,)).to(TEST_DEVICE)
 
                 normalized_embeddings = torch.nn.functional.normalize(
-                    embeddings, p=2, dim=1
+                    embeddings.detach().double(), p=2, dim=1
                 )
                 n = len(embeddings)
                 for Tn, Tp, alpha, lam, margin in zip(
@@ -131,20 +133,20 @@ class TestRankedListLoss(unittest.TestCase):
 
                     L_RLL = torch.zeros(
                         n,
-                    ).to(dtype=dtype)
+                    ).to(dtype=torch.float64)
                     for i in range(n):
                         w_p = torch.zeros(
                             n,
-                        ).to(dtype=dtype)
+                        ).to(dtype=torch.float64)
                         w_n = torch.zeros(
                             n,
-                        ).to(dtype=dtype)
+                        ).to(dtype=torch.float64)
                         L_P = torch.zeros(
                             n,
-                        ).to(dtype=dtype)
+                        ).to(dtype=torch.float64)
                         L_N = torch.zeros(
                             n,
-                        ).to(dtype=dtype)
+                        ).to(dtype=torch.float64)
                         for j in range(n):
                             if i == j:
                                 continue
@@ -173,7 +175,9 @@ class TestRankedListLoss(unittest.TestCase):
                     loss = loss_func(embeddings, labels)
 
                     rtol = helpers.rtol(dtype)
-                    self.assertTrue(torch.isclose(loss, correct_loss, rtol=rtol))
+                    self.assertTrue(
+                        torch.isclose(loss.double(), correct_loss, rtol=rtol)
+                    )
 
                     loss.backward()
 

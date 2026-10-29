@@ -176,12 +176,18 @@ Some implementation choices are numerical rather than mathematical.
 `LpDistance` computes float16 and bfloat16 matrices with `torch.cdist` in
 float32 and casts the result, because `torch.cdist` lacks CPU kernels for those
 types and expanding every row pair costs memory proportional to queries times
-references times dimensions. The cast is differentiable, so the input dtype and
-autograd are preserved outside autocast. Tests compare values and both input
-gradients against explicit float64 norms for normalized and unnormalized
-embeddings, L1 and L2 distances, and powers 1 and 2. Comparisons allow four
-machine epsilons of relative error and one of absolute error for low-precision
-rounding. Default reductions avoid data-dependent shapes: `ThresholdReducer`
+references times dimensions. The call fixes `compute_mode` to the direct
+difference kernel: the default switches to $\|x\|^2 + \|y\|^2 - 2 x \cdot y$
+above 25 rows, and that formula cancels to exactly zero for nearby rows whose
+half-precision difference is representable, erasing their gradients. The direct
+kernel costs more time on CPU than the matrix product, but it preserves every
+representable distance and keeps peak memory at the output size. The cast is
+differentiable, so the input dtype and autograd are preserved outside autocast.
+Tests compare values and both input gradients against explicit float64 norms
+for normalized and unnormalized embeddings, L1 and L2 distances, and powers 1
+and 2, and check rows differing by one machine epsilon on both sides of the
+25-row threshold. Comparisons allow four machine epsilons of relative error and
+one of absolute error for low-precision rounding. Default reductions avoid data-dependent shapes: `ThresholdReducer`
 masks and counts instead of indexing, and `DivisorReducer` selects with
 `torch.where`, so the common loss paths neither synchronize with the host nor
 break full-graph compilation.
@@ -189,9 +195,12 @@ break full-graph compilation.
 which half precision lacks, and masks excluded terms with $-\infty$ before
 log-sum-exp rather than subtracting margins, avoiding cancellation; a sample's
 correlation with its own proxy contributes no loss. `DistanceWeightedMiner`
-clamps distances at `cutoff` to bound weight variance, works in log space with
-the maximum subtracted, and zeroes same-class weights so only negatives are
-sampled, following the first equation of Section 4 of Wu et al. `SupConLoss`
+clamps distances at `cutoff` to bound weight variance and works in log space,
+following the first equation of Section 4 of Wu et al. It masks same-class
+pairs, pairs at or beyond `nonzero_loss_cutoff`, and non-finite weights before
+subtracting each anchor's maximum log weight, so the clamped self-pair cannot
+dominate the normalizer and underflow every eligible negative, and anchors
+whose negatives lie at different distance scales each keep a nonzero row. `SupConLoss`
 subtracts each row's maximum before exponentiation.
 
 The mathematical definitions, supported arguments, and paper references remain

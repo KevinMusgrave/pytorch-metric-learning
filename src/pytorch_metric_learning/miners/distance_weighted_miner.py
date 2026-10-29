@@ -30,14 +30,16 @@ class DistanceWeightedMiner(BaseMiner):
         log_weights = (2.0 - d) * torch.log(mat) - ((d - 3) / 2) * torch.log(
             1.0 - 0.25 * (mat**2.0)
         )
-        finite = torch.isfinite(log_weights)
-        different_class = labels.unsqueeze(1) != ref_labels.unsqueeze(0)
-        log_weights = torch.where(finite, log_weights, _common.neg_inf(mat.dtype))
-        weights = torch.exp(log_weights - log_weights.max())
-        weights = weights * different_class * (mat < self.nonzero_loss_cutoff)
-        weights = weights / torch.sum(weights, dim=1, keepdim=True).clamp_min(
-            _common.small_val(weights.dtype)
+        eligible = (
+            torch.isfinite(log_weights)
+            & (labels.unsqueeze(1) != ref_labels.unsqueeze(0))
+            & (mat < self.nonzero_loss_cutoff)
         )
+        log_weights = torch.where(
+            eligible, log_weights, _common.neg_inf(log_weights.dtype)
+        )
+        row_max = log_weights.max(dim=1, keepdim=True).values
+        weights = torch.exp(log_weights - row_max) * eligible
         return indexing.get_random_triplet_indices(
             labels, ref_labels=ref_labels, weights=weights
         )

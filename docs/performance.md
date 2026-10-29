@@ -260,14 +260,18 @@ median milliseconds for one call; the CUDA column synchronizes after each call.
 
 | Case                                                 | Batch | M1 Pro before | M1 Pro after | A40 before | A40 after |
 | ---------------------------------------------------- | ----: | ------------: | -----------: | ---------: | --------: |
-| `get_random_triplet_indices(t_per_anchor=100)`       |   128 |         1.267 |        0.571 |     11.310 |     0.532 |
-| `get_random_triplet_indices(t_per_anchor=100)`       |   512 |         5.242 |        3.356 |     44.957 |     0.551 |
-| `DistanceWeightedMiner` (normalized, 128 dimensions) |   512 |        54.919 |        3.592 |     66.761 |     1.052 |
-| `LpDistance` matrix, half-precision inputs           |   512 |        47.047 |        0.303 |      1.266 |     0.202 |
+| `get_random_triplet_indices(t_per_anchor=100)`       |   128 |         1.268 |        0.581 |     11.310 |     0.532 |
+| `get_random_triplet_indices(t_per_anchor=100)`       |   512 |         5.216 |        3.281 |     44.957 |     0.551 |
+| `DistanceWeightedMiner` (normalized, 128 dimensions) |   512 |        54.846 |        3.516 |     66.761 |     1.052 |
+| `LpDistance` matrix, half-precision inputs           |   512 |        46.967 |       16.643 |      1.266 |     0.202 |
 
 The CPU rows use bfloat16 and the A40 rows use float16 for the distance case.
 On the A40, the old half-precision distance allocated 261.1 MiB of peak
 additional memory for the 512-by-512 matrix; the new path allocates 2.1 MiB.
+The low-precision distance uses `torch.cdist`'s direct difference kernel rather
+than its matrix-product formula, which cancels nearby rows to zero; on CPU that
+kernel is a scalar loop, so the CPU gain is limited to the removed expansion,
+while the CUDA kernel keeps the full gain.
 The previous sampler looped over labels with host random draws, which is why
 its CUDA cost grew with the number of classes; the previous low-precision
 distance gathered every row pair, allocating memory proportional to queries

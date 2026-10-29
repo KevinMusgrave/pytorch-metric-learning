@@ -50,3 +50,25 @@ def test_half_precision_values_and_gradients(dtype, p, power, normalize):
         torch.testing.assert_close(
             result.double(), target, rtol=4 * tolerance, atol=tolerance
         )
+
+
+@pytest.mark.parametrize("dtype", [torch.float16, torch.bfloat16])
+@pytest.mark.parametrize("batch", [24, 32])
+def test_half_precision_nearby_rows(dtype, batch):
+    query = torch.ones(batch, 128, dtype=dtype, device=TEST_DEVICE)
+    reference = query.clone()
+    reference[:, 0] = 1 - torch.finfo(dtype).eps
+    query.requires_grad_()
+    reference.requires_grad_()
+    actual = LpDistance(normalize_embeddings=False)(query, reference)
+    expected = torch.linalg.vector_norm(
+        query.detach().double()[:, None] - reference.detach().double()[None, :], dim=2
+    )
+    gradient = torch.autograd.grad(actual.sum(), query)[0]
+    tolerance = torch.finfo(dtype).eps
+    assert torch.all(expected > 0)
+    torch.testing.assert_close(actual.double(), expected, rtol=4 * tolerance, atol=0)
+    torch.testing.assert_close(
+        gradient.double()[:, 0], torch.full((batch,), float(batch), dtype=torch.float64)
+    )
+    assert torch.all(gradient[:, 1:] == 0)

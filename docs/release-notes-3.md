@@ -319,6 +319,9 @@ integer `triplets_per_anchor` values and `DistanceWeightedMiner`, is vectorized
 with `torch.multinomial` instead of a Python loop over labels with host random
 draws; `t_per_anchor=None` now draws one triplet per positive of each anchor.
 `LpDistance` computes float16 and bfloat16 matrices with `torch.cdist` in
-float32 and casts the result, replacing an expansion that materialized every row
-pair. See [performance measurements](performance.md) for the measured workload
+float32 using the direct difference kernel and casts the result, replacing an
+expansion that materialized every row pair while preserving small distances and
+their gradients. `DistanceWeightedMiner` normalizes sampling weights per anchor
+over eligible negatives only, so default cutoffs with realistic embedding
+dimensions no longer underflow to an empty output. See [performance measurements](performance.md) for the measured workload
 and its limits.

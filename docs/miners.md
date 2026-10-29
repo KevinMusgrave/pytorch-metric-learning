@@ -147,7 +147,7 @@ miners.DistanceWeightedMiner(cutoff=0.5, nonzero_loss_cutoff=1.4, *, distance=No
 
 **Important note**:
 
-This miner works well only with low dimensionality embeddings (e.g 64-dim) and L2-normalized distances. Check out [UniformHistogramMiner](#uniformhistogramminer) for a miner that is roughly equivalent, but works with embeddings of any dimensionality and any distance metric.
+Sampling weights are normalized per anchor over its eligible negatives, so a batch of a few hundred rows produces triplets at any embedding dimension. The paper's weighting still concentrates on a narrow distance band as dimensionality grows, so this miner works best with low dimensionality embeddings (e.g 64-dim) and L2-normalized distances. Check out [UniformHistogramMiner](#uniformhistogramminer) for a miner that is roughly equivalent, but works with embeddings of any dimensionality and any distance metric.
 
 ## HDCMiner
 

@@ -80,3 +80,32 @@ class TestDistanceWeightedMiner(unittest.TestCase):
             self.assertTrue(len(a) == 0)
             self.assertTrue(len(p) == 0)
             self.assertTrue(len(n) == 0)
+
+    def test_default_cutoffs_sample_every_anchor(self):
+        for dim in (32, 128, 256):
+            for dtype in TEST_DTYPES:
+                torch.manual_seed(2026)
+                embeddings = torch.randn(64, dim, dtype=dtype, device=TEST_DEVICE)
+                labels = torch.arange(32, device=TEST_DEVICE).repeat_interleave(2)
+                miner = DistanceWeightedMiner()
+                mat = miner.distance(embeddings)
+                eligible = (labels.unsqueeze(1) != labels.unsqueeze(0)) & (mat < 1.4)
+                a, p, n = miner(embeddings, labels)
+                self.assertEqual(len(a), int((eligible.sum(dim=1) > 0).sum()))
+                self.assertTrue(torch.equal(labels[a], labels[p]))
+                self.assertTrue(torch.all(labels[a] != labels[n]))
+                self.assertTrue(torch.all(mat[a, n] < 1.4))
+
+    def test_rows_normalize_independently(self):
+        for dtype in TEST_DTYPES:
+            basis = torch.eye(256, dtype=dtype, device=TEST_DEVICE)
+            near = torch.nn.functional.normalize(basis[0] + 0.5 * basis[1], dim=0)
+            far = torch.nn.functional.normalize(basis[2] + 1.2 * basis[3], dim=0)
+            embeddings = torch.stack(
+                [basis[0], basis[0], near, basis[2], basis[2], far]
+            )
+            labels = torch.tensor([0, 0, 1, 2, 2, 3], device=TEST_DEVICE)
+            a, _, n = DistanceWeightedMiner()(embeddings, labels)
+            self.assertEqual(sorted(a.tolist()), [0, 1, 3, 4])
+            self.assertTrue(torch.all(n[labels[a] == 0] == 2))
+            self.assertTrue(torch.all(n[labels[a] == 2] == 5))

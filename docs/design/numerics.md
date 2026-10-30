@@ -180,6 +180,11 @@ scaling, then takes softplus of the negative log-sum-exp minus the shifted
 positive logit. Subtracting the positive from a completed log-sum-exp lost
 small losses in the presence of large common score offsets; shifting before
 scaling also avoids rounding away score differences during division.
+Tuplet margin uses the positive cosine directly at zero margin. At nonzero
+margin, identical and antipodal positives use exact endpoint angles with a
+zero angular gradient, while interior cosines retain the paper's derivative.
+Moving endpoint cosines inward by a dtype-dependent epsilon changed the loss
+substantially in float16 and erased valid near-endpoint gradients at zero margin.
 
 Normalization divides by `max(norm, eps)` with `eps = max(1e-12,
 finfo(dtype).tiny)`, computing float16 and bfloat16 in float32 and casting

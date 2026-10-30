@@ -1,3 +1,4 @@
+import math
 import unittest
 
 import numpy as np
@@ -80,6 +81,61 @@ class TestTupletMarginLoss(unittest.TestCase):
 
 
 class TestTupletMarginDuplicates(unittest.TestCase):
+    def test_endpoint_values_and_gradients_follow_the_angular_objective(self):
+        labels = torch.tensor([0], device=TEST_DEVICE)
+        reference_labels = torch.tensor([0, 1], device=TEST_DEVICE)
+        query = torch.tensor([[1, 0]])
+        for sign in (1, -1):
+            reference = torch.tensor([[sign, 0], [math.cos(0.1), math.sin(0.1)]])
+            for margin in (0, 5.73, 30):
+                loss = TupletMarginLoss(margin=margin)
+                positive = sign * math.cos(math.radians(margin))
+                for dtype in TEST_DTYPES:
+                    with self.subTest(sign=sign, margin=margin, dtype=dtype):
+                        helpers.assert_matches_float64(
+                            lambda q, r, loss=loss: loss(
+                                q, labels, ref_emb=r, ref_labels=reference_labels
+                            ),
+                            lambda q, r, positive=positive: (
+                                torch.nn.functional.softplus(
+                                    64
+                                    * (
+                                        torch.sum(
+                                            torch.nn.functional.normalize(q)
+                                            * torch.nn.functional.normalize(r)[1]
+                                        )
+                                        - positive
+                                    )
+                                )
+                            ),
+                            [query, reference],
+                            dtype,
+                        )
+
+    def test_zero_margin_preserves_near_endpoint_positive_gradients(self):
+        labels = torch.tensor([0], device=TEST_DEVICE)
+        reference_labels = torch.tensor([0, 1], device=TEST_DEVICE)
+        query = torch.tensor([[1, 0]])
+        reference = torch.tensor(
+            [[math.cos(0.04), math.sin(0.04)], [math.cos(0.1), math.sin(0.1)]]
+        )
+        loss = TupletMarginLoss(margin=0, scale=16)
+        for dtype in TEST_DTYPES:
+            with self.subTest(dtype=dtype):
+                helpers.assert_matches_float64(
+                    lambda q, r: loss(
+                        q, labels, ref_emb=r, ref_labels=reference_labels
+                    ),
+                    lambda q, r: torch.nn.functional.cross_entropy(
+                        16
+                        * torch.nn.functional.normalize(q)
+                        @ torch.nn.functional.normalize(r).T,
+                        labels,
+                    ),
+                    [query, reference],
+                    dtype,
+                )
+
     def test_identical_positive_pair_has_finite_loss_and_gradient(self):
         for dtype in TEST_DTYPES:
             with self.subTest(dtype=dtype):

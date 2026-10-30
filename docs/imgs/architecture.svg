@@ -34,8 +34,8 @@
 
   <rect class="box" x="32" y="80" width="218" height="66" rx="6"/>
   <text class="name" x="44" y="102">DataLoader</text>
-  <text class="code" x="44" y="122">sampler=MPerClassSampler(…)</text>
-  <text class="note" x="44" y="138">optional label-balanced batches</text>
+  <text class="code" x="44" y="122">batch_sampler=sampler</text>
+  <text class="note" x="44" y="138">optional MPerClassSampler</text>
 
   <rect class="box" x="32" y="174" width="218" height="66" rx="6"/>
   <text class="name" x="44" y="196">model(data)</text>

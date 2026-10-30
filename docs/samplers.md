@@ -1,9 +1,10 @@
 # Samplers
 
 Samplers decide which dataset indices form each batch. `MPerClassSampler` and
-`FixedSetOfTriplets` yield one dataset index at a time; pass them to
-`DataLoader(..., sampler=...)`. `HierarchicalSampler` yields whole batches; pass
-it as `DataLoader(..., batch_sampler=...)` and omit `batch_size` and `shuffle`.
+`HierarchicalSampler` yield whole batches; pass them as
+`DataLoader(..., batch_sampler=...)` and omit `batch_size` and `shuffle`.
+`FixedSetOfTriplets` yields one dataset index at a time; pass it to
+`DataLoader(..., sampler=...)`.
 
 Labels describe the whole dataset: `labels[i]` is the label of dataset item `i`.
 `MPerClassSampler` and `FixedSetOfTriplets` accept a one-dimensional tensor, a
@@ -29,26 +30,32 @@ random batches, and two samplers given generators with the same seed produce the
 same sequence of epochs. Samplers run in the main process, so `DataLoader`
 worker seeding does not affect them.
 
-These samplers balance labels within batches. They sample classes and examples
-independently for each batch, with replacement across batches, so an iterator
-is not an epoch that visits every example or class exactly once. A class with
-fewer members than requested is sampled with replacement within its batch.
-Use `num_samples` to choose how many indices one `MPerClassSampler`
-iterator yields.
+Samplers balance labels within batches, and balance has priority over visiting
+every example equally often: when class sizes differ, equal class counts
+per batch must repeat small classes. `MPerClassSampler` documents its
+[coverage guarantees](#coverage-guarantees). `HierarchicalSampler` draws classes
+and examples independently for each batch, with replacement across batches, so
+its iterators are not epochs. A class with fewer members than requested is
+sampled with replacement within its batch.
 
 ## MPerClassSampler
 
-Yields `m` indices per class in consecutive groups. For example, with a
-`DataLoader` batch size of 100 and `m=5`, each batch holds 20 classes with 5
-samples each. If `batch_size` is not given, most batches have `m` samples per
-class, but a batch can span the boundary between two passes over the classes.
+Yields batches of `batch_size // m` different classes with `m` indices per
+class, grouped by class. For example, `batch_size=100` and `m=5` gives 20
+classes with 5 samples each in every batch.
+
+```python
+sampler = samplers.MPerClassSampler(labels, m=4, batch_size=32)
+loader = torch.utils.data.DataLoader(dataset, batch_sampler=sampler)
+assert len(loader) == len(sampler) == 2
+```
 
 ```python {.signature}
 samplers.MPerClassSampler(
     labels: Tensor | np.ndarray | Iterable[Hashable],
     m: int,
-    batch_size: int | None = None,
-    num_samples: int = 100000,
+    batch_size: int,
+    num_batches: int | None = None,
     *,
     generator: torch.Generator | None = None,
 )
@@ -57,23 +64,36 @@ samplers.MPerClassSampler(
 **Parameters**:
 
 - **labels**: The dataset labels.
-- **m**: The number of samples per class in each group. A class with fewer than
-  `m` samples is sampled with replacement, so the batch contains duplicates.
-- **batch_size**: Optional. If given, every batch of this size has `m` samples
-  per class. Construction raises `ValueError` unless:
-  - `batch_size` is a multiple of `m`
-  - `num_samples >= batch_size`
-  - `m * (number of unique labels) >= batch_size`
-- **num_samples**: The number of indices one iterator yields, rounded down to a multiple of `batch_size` (or of `m * number of classes` when that is smaller and `batch_size` is `None`). `len(sampler)` equals the number of indices yielded.
+- **m**: The number of samples per class in each batch.
+- **batch_size**: The number of indices per batch. Construction raises
+  `ValueError` unless `batch_size` is a multiple of `m` and
+  `m * (number of unique labels) >= batch_size`.
+- **num_batches**: The number of batches one iterator yields, which is
+  `len(sampler)`. It must be positive. With `None`, the sampler uses the smallest
+  length with the default coverage guarantee below:
+  `ceil(ceil(largest_class_size / m) * num_classes / (batch_size // m))`.
 - **generator**: Optional `torch.Generator`; see [randomness and coverage](#randomness-and-coverage).
 
-To keep the per-batch guarantee, give the `DataLoader` the same `batch_size`
-and do not set `shuffle`:
+### Coverage guarantees
 
-```python
-sampler = samplers.MPerClassSampler(labels, m=4, batch_size=32)
-loader = torch.utils.data.DataLoader(dataset, batch_size=32, sampler=sampler)
-```
+Classes rotate through shuffled passes, and so do the examples of each class. In
+every iterator, at every batch:
+
+- Every batch has exactly `batch_size // m` different classes and `m` indices
+  for each.
+- A class appears at most once more than any other class.
+- An example appears at most once more than any other example of its class.
+- A batch repeats an example only when its class has fewer than `m` examples.
+
+With the default `num_batches`, every example appears at least once per
+iterator. Each example appears exactly once when all classes have the same size,
+`m` divides that size, and `batch_size // m` divides the number of classes.
+
+With unequal class sizes, exactly-once coverage is impossible: every class
+appears equally often, so the default length is set by the largest class, and
+smaller classes repeat. On long-tailed data that length can be large. Pass a
+smaller `num_batches` to shorten an iterator; the guarantees that hold at every
+batch still apply, but examples of large classes may be missed.
 
 ## HierarchicalSampler
 

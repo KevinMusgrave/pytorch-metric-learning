@@ -26,6 +26,25 @@ def shuffled[T](items: Sequence[T], generator: torch.Generator | None) -> list[T
     return [items[i] for i in order]
 
 
+class Rotation[T]:
+    def __init__(self, items: Sequence[T], generator: torch.Generator | None) -> None:
+        self.items = items
+        self.generator = generator
+        self.pending: list[T] = []
+
+    def take(self, size: int) -> list[T]:
+        taken: list[T] = []
+        while len(taken) < size:
+            if not self.pending:
+                self.pending = sorted(
+                    shuffled(self.items, self.generator),
+                    key=set(taken).__contains__,
+                    reverse=True,
+                )
+            taken.append(self.pending.pop())
+        return taken
+
+
 def choose(indices: Tensor, size: int, generator: torch.Generator | None) -> Tensor:
     if len(indices) >= size:
         return indices[torch.randperm(len(indices), generator=generator)[:size]]

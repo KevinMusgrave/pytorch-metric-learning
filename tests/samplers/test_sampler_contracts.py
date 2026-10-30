@@ -19,7 +19,7 @@ def hierarchical_labels():
 def make_samplers(generator):
     labels = torch.arange(10).repeat_interleave(4)
     return [
-        MPerClassSampler(labels, 2, batch_size=8, num_samples=64, generator=generator),
+        MPerClassSampler(labels, 2, batch_size=8, num_batches=8, generator=generator),
         FixedSetOfTriplets(labels, 20, generator=generator),
         HierarchicalSampler(hierarchical_labels(), 12, 3, generator=generator),
     ]
@@ -28,9 +28,9 @@ def make_samplers(generator):
 class TestSamplerContracts(unittest.TestCase):
     def test_samplers_reject_impossible_batches(self):
         with self.assertRaisesRegex(ValueError, "m must be positive"):
-            MPerClassSampler([0, 0, 1, 1], m=0)
+            MPerClassSampler([0, 0, 1, 1], m=0, batch_size=2)
         with self.assertRaisesRegex(ValueError, "labels must not be empty"):
-            MPerClassSampler([], m=2)
+            MPerClassSampler([], m=2, batch_size=2)
         with self.assertRaisesRegex(ValueError, "at least two classes"):
             FixedSetOfTriplets([0, 0], num_triplets=2)
         for num_triplets in (0, -1):
@@ -87,31 +87,15 @@ class TestSamplerContracts(unittest.TestCase):
         self.assertEqual(first, second)
 
     def test_length_matches_yielded_items(self):
-        labels = torch.arange(100).repeat(3)
-        for batch_size, num_samples in (
-            (None, 100),
-            (None, 1999),
-            (20, 100),
-        ):
-            with self.subTest(batch_size=batch_size, num_samples=num_samples):
-                sampler = MPerClassSampler(
-                    labels,
-                    5,
-                    batch_size=batch_size,
-                    num_samples=num_samples,
-                )
-                indices = list(sampler)
-                self.assertEqual(len(indices), len(sampler))
-                self.assertTrue(all(0 <= i < len(labels) for i in indices))
-        for sampler in make_samplers(None)[1:]:
+        for sampler in make_samplers(None):
             with self.subTest(sampler=type(sampler).__name__):
                 items = list(sampler)
                 self.assertEqual(len(items), len(sampler))
 
-    def test_m_per_class_batches_in_a_dataloader(self):
+    def test_m_per_class_sampler_is_a_batch_sampler(self):
         labels = torch.arange(10).repeat_interleave(4)
-        sampler = MPerClassSampler(labels, 2, batch_size=8, num_samples=64)
-        loader = DataLoader(TensorDataset(labels), batch_size=8, sampler=sampler)
+        sampler = MPerClassSampler(labels, 2, batch_size=8, num_batches=8)
+        loader = DataLoader(TensorDataset(labels), batch_sampler=sampler)
         batches = [batch_labels for (batch_labels,) in loader]
         self.assertEqual(len(batches), 8)
         for batch_labels in batches:
@@ -130,13 +114,6 @@ class TestSamplerContracts(unittest.TestCase):
             self.assertEqual(super_counts.tolist(), [6, 6])
             _, class_counts = torch.unique(batch[:, 0], return_counts=True)
             self.assertTrue(torch.all(class_counts == 3))
-
-    def test_small_classes_are_sampled_with_replacement(self):
-        labels = torch.tensor([0, 1, 1, 1])
-        sampler = MPerClassSampler(labels, 3, batch_size=6, num_samples=6)
-        indices = list(sampler)
-        self.assertEqual(sorted(labels[indices].tolist()), [0, 0, 0, 1, 1, 1])
-        self.assertEqual(sorted(i for i in indices if labels[i] == 1), [1, 2, 3])
 
 
 if __name__ == "__main__":

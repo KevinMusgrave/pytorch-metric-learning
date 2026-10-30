@@ -130,3 +130,13 @@ class TestThresholdConsistentMarginReference(unittest.TestCase):
     def test_distance_must_be_a_similarity(self):
         with self.assertRaises(TypeError):
             ThresholdConsistentMarginLoss(distance=LpDistance())
+
+    def test_float16_accumulates_large_batches_in_float32(self):
+        generator = torch.Generator().manual_seed(0)
+        embeddings = torch.randn(512, 32, generator=generator).to(TEST_DEVICE)
+        labels = torch.arange(512, device=TEST_DEVICE) % 2
+        loss_func = ThresholdConsistentMarginLoss()
+        expected = loss_func(embeddings.double(), labels)
+        actual = loss_func(embeddings.half(), labels)
+        self.assertEqual(actual.dtype, torch.float16)
+        helpers.assert_close(actual, expected, torch.float16)

@@ -178,6 +178,23 @@ class TestP2SGradLoss(unittest.TestCase):
             t_loss.backward()
             self.assertTrue(torch.isclose(loss, t_loss, rtol=rtol))
 
+    def test_zero_and_tiny_rows_give_finite_values_and_gradients(self):
+        for dtype in TEST_DTYPES:
+            with self.subTest(dtype=dtype):
+                loss_func = P2SGradLoss(3, 4).to(TEST_DEVICE, dtype)
+                embeddings = torch.tensor(
+                    [[0.0, 0.0, 0.0, 0.0], [1e-7, 0.0, 0.0, 0.0], [0.3, -0.2, 0.5, 1]],
+                    device=TEST_DEVICE,
+                    dtype=dtype,
+                    requires_grad=True,
+                )
+                labels = torch.tensor([0, 1, 2], device=TEST_DEVICE)
+                loss = loss_func(embeddings, labels)
+                gradients = torch.autograd.grad(loss, (embeddings, loss_func.weight))
+                self.assertTrue(torch.isfinite(loss))
+                for gradient in gradients:
+                    self.assertTrue(torch.isfinite(gradient).all())
+
     def test_empty_batch_gives_differentiable_zero(self):
         loss_func = P2SGradLoss(3, 4).to(TEST_DEVICE)
         embeddings = torch.randn(0, 4, device=TEST_DEVICE, requires_grad=True)

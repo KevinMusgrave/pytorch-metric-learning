@@ -38,14 +38,12 @@ class MultipleLosses(torch.nn.Module):
         ref_emb: Tensor | None = None,
         ref_labels: Tensor | None = None,
     ) -> Tensor:
-        if self.miners and indices_tuple is not None:
-            raise ValueError("indices_tuple cannot be supplied with configured miners")
         total = torch.zeros((), device=embeddings.device, dtype=embeddings.dtype)
         for name, loss_func in self.losses.items():
             current = indices_tuple
             if name in self.miners:
                 current = self.miners[name](
-                    embeddings, labels, ref_emb=ref_emb, ref_labels=ref_labels
+                    embeddings, labels, indices_tuple, ref_emb, ref_labels
                 )
             loss = loss_func(embeddings, labels, current, ref_emb, ref_labels)
             total = total + loss * self.weights[name]

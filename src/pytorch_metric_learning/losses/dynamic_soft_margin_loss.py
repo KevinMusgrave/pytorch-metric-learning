@@ -103,7 +103,7 @@ class DynamicSoftMarginLoss(BaseMetricLossFunction):
         return mat[anchor, positive] - mat[anchor, negative]
 
     def bin_positions(self, data: Tensor) -> Tensor:
-        data = data.to(dtype=self.hist.dtype)
+        data = data.to(_common.accumulation_dtype(self.hist.dtype))
         return ((data - self.min_val) / self.delta).clamp(0, self.num_bins - 1)
 
     @torch.no_grad()
@@ -112,12 +112,12 @@ class DynamicSoftMarginLoss(BaseMetricLossFunction):
         lower = positions.long()
         upper = (lower + 1).clamp_max(self.num_bins - 1)
         fraction = positions - lower
-        histogram = torch.zeros_like(self.hist)
+        histogram = positions.new_zeros(self.num_bins)
         histogram.scatter_add_(0, lower, 1 - fraction)
         histogram.scatter_add_(0, upper, fraction)
         histogram /= data.numel()
         momentum = torch.where(self.hist.sum() > 0, self.momentum, 1.0)
-        self.hist.lerp_(histogram, momentum)
+        self.hist.copy_(self.hist.to(histogram.dtype).lerp(histogram, momentum))
 
     def weigh_loss(self, data: Tensor) -> Tensor:
         positions = self.bin_positions(data).long()

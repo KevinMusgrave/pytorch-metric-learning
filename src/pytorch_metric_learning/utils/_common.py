@@ -28,6 +28,13 @@ def normalization_eps(dtype: torch.dtype) -> float:
     return max(1e-12, torch.finfo(dtype).tiny)
 
 
+def normalize(embeddings: Tensor, p: float = 2, dim: int = 1) -> Tensor:
+    work = embeddings.to(accumulation_dtype(embeddings.dtype))
+    eps = normalization_eps(embeddings.dtype)
+    normalized = torch.nn.functional.normalize(work, p=p, dim=dim, eps=eps)
+    return normalized.to(embeddings.dtype)
+
+
 INDEX_DTYPES = (torch.int64, torch.int32)
 
 

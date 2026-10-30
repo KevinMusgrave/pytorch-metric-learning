@@ -545,6 +545,36 @@ class TestEvaluationBoundary(unittest.TestCase):
             ):
                 calculator.get_accuracy(reference, labels, reference, labels)
 
+    def test_neighbor_indices_of_another_shape_raise_value_error(self):
+        reference = torch.tensor([[0.0], [0.1], [5.0], [5.1]], device=TEST_DEVICE)
+        labels = torch.tensor([0, 0, 1, 1], device=TEST_DEVICE)
+
+        def knn_func(query, k, reference, ref_includes_query):
+            distances, indices = CustomKNN(LpDistance())(
+                query, k, reference, ref_includes_query
+            )
+            return distances[:, :-1], indices[:, :-1]
+
+        calculator = accuracy_calculator.AccuracyCalculator(
+            include=("r_precision",), knn_func=knn_func
+        )
+        with self.assertRaisesRegex(ValueError, r"require shape \(4, 1\)"):
+            calculator.get_accuracy(reference, labels)
+
+    def test_boolean_labels_match_integer_labels(self):
+        embeddings = torch.tensor([[0.0], [0.1], [5.0], [5.1]], device=TEST_DEVICE)
+        labels = torch.tensor([False, False, True, True], device=TEST_DEVICE)
+        calculator = accuracy_calculator.AccuracyCalculator(
+            include=("precision_at_1", "r_precision", "mean_average_precision")
+        )
+        self.assertEqual(
+            calculator.get_accuracy(embeddings, labels),
+            calculator.get_accuracy(embeddings, labels.long()),
+        )
+        self.assertEqual(
+            calculator.get_accuracy(embeddings, labels)["precision_at_1"], 1
+        )
+
     def test_persistent_faiss_index_is_reported_instead_of_index_error(self):
         reference = torch.tensor([[0.0], [1.0], [2.0], [3.0]])
         labels = torch.tensor([0, 0, 1, 1])

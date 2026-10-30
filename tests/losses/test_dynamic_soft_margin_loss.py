@@ -302,3 +302,24 @@ class TestDynamicSoftMarginLoss(unittest.TestCase):
         for kwargs in invalid:
             with self.subTest(kwargs=kwargs), self.assertRaises(ValueError):
                 DynamicSoftMarginLoss(**kwargs).to(TEST_DEVICE)
+
+    def test_half_precision_histogram_counts_more_triplets_than_float16_max(
+        self,
+    ) -> None:
+        generator = torch.Generator().manual_seed(0)
+        embeddings = torch.randn(128, 32, generator=generator).to(TEST_DEVICE)
+        labels = torch.arange(128, device=TEST_DEVICE) % 2
+        for dtype in (torch.float16, torch.bfloat16):
+            with self.subTest(dtype=dtype):
+                expected = DynamicSoftMarginLoss().to(TEST_DEVICE, torch.float64)
+                actual = DynamicSoftMarginLoss().to(TEST_DEVICE, dtype)
+                for _ in range(2):
+                    reference = expected(embeddings.double(), labels)
+                    loss = actual(embeddings.to(dtype), labels)
+                self.assertEqual(loss.dtype, dtype)
+                torch.testing.assert_close(
+                    loss.double(), reference, rtol=2e-2, atol=1e-3
+                )
+                torch.testing.assert_close(
+                    actual.hist.double(), expected.hist, rtol=2e-2, atol=1e-3
+                )

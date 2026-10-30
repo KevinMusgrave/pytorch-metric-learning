@@ -17,9 +17,12 @@ This is the [`BaseMetricLossFunction` forward signature](../losses.md#forward-ar
 It returns $\sum_k w_k L_k$ over the named losses, and passes `labels`,
 `ref_emb`, and `ref_labels` to every loss. A loss with a configured miner
 receives that miner's output for
-`(embeddings, labels, ref_emb=ref_emb, ref_labels=ref_labels)`; every other loss
-receives the `indices_tuple` given to `forward`. Supplying both a miner mapping
-and an `indices_tuple` raises `ValueError`. The losses and miners are
+`(embeddings, labels, indices_tuple, ref_emb, ref_labels)`, so the miner
+selects from the given `indices_tuple` as
+[candidates](../miners.md#candidates) when there is one; every other loss
+receives the `indices_tuple` itself. Wrappers that build their own tuple, such
+as `CrossBatchMemory` and `DistributedLossWrapper(objective="local_anchor")`,
+therefore let per-loss miners refine the wrapper's pairs. The losses and miners are
 registered as submodules, so `loss_func.to(...)` and `loss_func.parameters()`
 cover them. Because the signature matches, a `MultipleLosses` can be wrapped
 by [CrossBatchMemory](cross_batch_memory.md),

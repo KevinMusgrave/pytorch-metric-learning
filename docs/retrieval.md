@@ -37,9 +37,9 @@ removes each query's own index `i`; if row `i` does not appear in a row's
 results, the last neighbor is removed instead. This assumes the query is the
 first `len(query)` rows of `reference`, which
 [`AccuracyCalculator`](accuracy_calculation.md#getting-accuracy) validates.
-Every index must address a row of the `reference` passed to that call;
-`AccuracyCalculator` raises `ValueError` naming the returned index range
-otherwise. It calls `knn_func` under `torch.no_grad()` with the
+Every index must address a row of the `reference` passed to that call.
+`AccuracyCalculator` raises `ValueError` for indices of another shape or
+outside the reference set. It calls `knn_func` under `torch.no_grad()` with the
 [number of neighbors its selected metrics need](accuracy_calculation.md#neighbors-retrieved).
 
 ## CustomKNN

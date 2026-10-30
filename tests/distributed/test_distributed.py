@@ -18,9 +18,11 @@ from pytorch_metric_learning.distributed import (
 from pytorch_metric_learning.losses import (
     ContrastiveLoss,
     CrossBatchMemory,
+    MultipleLosses,
     NormalizedSoftmaxLoss,
 )
 from pytorch_metric_learning.miners import BatchEasyHardMiner, PairMarginMiner
+from pytorch_metric_learning.types import PairIndices
 
 from .. import TEST_DEVICE, TEST_DTYPES
 
@@ -323,6 +325,40 @@ def check_local_selecting_miner(
         assert_close(actual_indices, expected_indices)
 
 
+def check_local_multiple_losses_miner(
+    rank: int, device: torch.device, dtype: torch.dtype, sizes: tuple[int, int]
+) -> None:
+    inputs, labels = make_inputs(device, dtype)
+    selected = rank_slice(sizes, rank)
+    miner = BatchEasyHardMiner(
+        pos_strategy="easy",
+        neg_strategy="hard",
+        distance=LpDistance(normalize_embeddings=False),
+    )
+    wrapper = DistributedLossWrapper(
+        MultipleLosses({"pairs": make_pair_loss()}, miners={"pairs": miner}),
+        objective="local_anchor",
+    )
+    actual = wrapper(inputs[selected], labels[selected])
+    distances = torch.linalg.vector_norm(
+        inputs[selected, None] - inputs[None, :], dim=-1
+    )
+    local = torch.arange(len(distances), device=device)
+    positive = labels[selected, None] == labels[None, :]
+    positive[local, local + selected.start] = False
+    negative = labels[selected, None] != labels[None, :]
+    mined = PairIndices(
+        local,
+        distances.masked_fill(~positive, torch.inf).argmin(dim=1),
+        local,
+        distances.masked_fill(~negative, torch.inf).argmin(dim=1),
+    )
+    expected = make_pair_loss()(
+        inputs[selected], labels[selected], mined, inputs, labels
+    )
+    assert_close(actual, expected * 2)
+
+
 def assert_raises_on_all_ranks(
     rank: int,
     local_message: str,
@@ -433,6 +469,7 @@ def run_references(rank: int, address: str, backend: str) -> None:
                 check_local_anchor_case(rank, device, dtype, sizes)
                 check_local_miner(rank, device, dtype, sizes)
                 check_local_selecting_miner(rank, device, dtype, sizes)
+                check_local_multiple_losses_miner(rank, device, dtype, sizes)
     finally:
         dist.destroy_process_group()
 

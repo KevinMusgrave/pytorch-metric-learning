@@ -3,7 +3,7 @@ from typing import cast
 import torch
 from torch import Tensor
 
-from ..utils._common import accumulation_dtype, normalization_eps
+from ..utils._common import normalize
 
 
 class BaseDistance(torch.nn.Module):
@@ -59,10 +59,7 @@ class BaseDistance(torch.nn.Module):
         return cast(Tensor, y - x if self.is_inverted else x - y)
 
     def normalize(self, embeddings: Tensor, dim: int = 1) -> Tensor:
-        work = embeddings.to(accumulation_dtype(embeddings.dtype))
-        eps = normalization_eps(embeddings.dtype)
-        normalized = torch.nn.functional.normalize(work, p=self.p, dim=dim, eps=eps)
-        return normalized.to(embeddings.dtype)
+        return normalize(embeddings, p=self.p, dim=dim)
 
     def maybe_normalize(self, embeddings: Tensor, dim: int = 1) -> Tensor:
         if self.normalize_embeddings:

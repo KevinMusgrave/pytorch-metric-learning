@@ -86,6 +86,8 @@ def _mutual_information_scores() -> Any:
 
 def _equal_label_counts(labels: Tensor, reference_labels: Tensor) -> Tensor:
     dtype = torch.promote_types(labels.dtype, reference_labels.dtype)
+    if dtype == torch.bool:
+        dtype = torch.long
     labels, reference_labels = labels.to(dtype), reference_labels.to(dtype)
     values, counts = torch.unique(reference_labels, return_counts=True)
     if len(values) == 0:
@@ -224,7 +226,14 @@ class _QueryGroups:
         return sums / counts
 
 
-def _check_neighbor_indices(indices: Tensor, num_reference: int) -> None:
+def _check_neighbor_indices(
+    indices: Tensor, num_query: int, k: int, num_reference: int
+) -> None:
+    if indices.shape != (num_query, k):
+        raise ValueError(
+            f"knn_func returned neighbor indices of shape {tuple(indices.shape)}, "
+            f"but {num_query} queries with k={k} require shape ({num_query}, {k})."
+        )
     if indices.numel() == 0:
         return
     low, high = torch.stack(torch.aminmax(indices)).tolist()
@@ -477,7 +486,7 @@ class AccuracyCalculator:
             _LOGGER.warning("None of the query labels are in the reference set.")
         num_k = self.determine_k(counts, len(reference), ref_includes_query, metrics)
         _, knn_indices = self.knn_func(query, num_k, reference, ref_includes_query)
-        _check_neighbor_indices(knn_indices, len(reference))
+        _check_neighbor_indices(knn_indices, len(query), num_k, len(reference))
         knn_labels = reference_labels[knn_indices]
         matches = self.label_comparison_fn(query_labels.unsqueeze(1), knn_labels)
         inputs = RetrievalInputs(

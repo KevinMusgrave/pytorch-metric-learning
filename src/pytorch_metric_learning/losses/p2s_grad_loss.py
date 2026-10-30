@@ -41,9 +41,9 @@ class P2SGradLoss(BaseMetricLossFunction):
         if len(embeddings) == 0:
             return {}
         with torch.no_grad():
-            self.weight.copy_(F.normalize(self.weight, dim=1))
+            self.weight.copy_(_common.normalize(self.weight))
         weight = self.weight.clone()
-        cos_theta = F.normalize(embeddings, dim=1) @ weight.t()
+        cos_theta = _common.normalize(embeddings) @ weight.t()
         cos_theta = cos_theta.clamp(-1, 1)
         target = F.one_hot(labels, self.num_classes).to(cos_theta.dtype)
         return {

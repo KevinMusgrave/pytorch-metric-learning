@@ -50,8 +50,9 @@ class ThresholdConsistentMarginLoss(BaseMetricLossFunction):
         reference, _ = _common.resolve_reference(
             embeddings, labels, ref_emb, ref_labels
         )
-        pos_sims = self.distance.pairwise(embeddings[ap], reference[p])
-        neg_sims = self.distance.pairwise(embeddings[an], reference[n])
+        dtype = _common.accumulation_dtype(embeddings.dtype)
+        pos_sims = self.distance.pairwise(embeddings[ap], reference[p]).to(dtype)
+        neg_sims = self.distance.pairwise(embeddings[an], reference[n]).to(dtype)
 
         s_lte_m = pos_sims <= self.margin_plus
         tcm_pos_num = ((self.margin_plus - pos_sims) * s_lte_m).sum()
@@ -64,7 +65,7 @@ class ThresholdConsistentMarginLoss(BaseMetricLossFunction):
         tcm_loss = self.lambda_plus * pos_tcm + self.lambda_minus * neg_tcm
         return {
             "loss": {
-                "losses": tcm_loss,
+                "losses": tcm_loss.to(embeddings.dtype),
                 "indices": None,
             }
         }

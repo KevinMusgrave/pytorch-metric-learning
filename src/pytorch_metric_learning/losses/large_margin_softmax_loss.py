@@ -34,7 +34,7 @@ class _CosineMarginSoftmaxLoss(BaseProxyLoss):
         return torch.acos(torch.clamp(cosine_of_target_classes, -1, 1))
 
     def modify_cosine_of_target_classes(
-        self, cosine_of_target_classes: Tensor
+        self, cosine_of_target_classes: Tensor, labels: Tensor
     ) -> Tensor:
         raise NotImplementedError
 
@@ -55,7 +55,7 @@ class _CosineMarginSoftmaxLoss(BaseProxyLoss):
         cosine = self.get_cosine(embeddings)
         targets = labels.unsqueeze(1)
         modified = self.modify_cosine_of_target_classes(
-            cosine.gather(1, targets).squeeze(1)
+            cosine.gather(1, targets).squeeze(1), labels
         )
         logits = self.scale_logits(
             cosine.scatter(1, targets, modified.unsqueeze(1).to(cosine.dtype)),
@@ -108,7 +108,7 @@ class LargeMarginSoftmaxLoss(_CosineMarginSoftmaxLoss):
         return torch.sum(terms, dim=1)
 
     def modify_cosine_of_target_classes(
-        self, cosine_of_target_classes: Tensor
+        self, cosine_of_target_classes: Tensor, labels: Tensor
     ) -> Tensor:
         cos_with_margin = self.get_cos_with_margin(cosine_of_target_classes)
         angles = self.get_angles(cosine_of_target_classes)

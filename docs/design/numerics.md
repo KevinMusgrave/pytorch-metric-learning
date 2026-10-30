@@ -122,7 +122,14 @@ and proxy losses: a parameter named `weight` with one row per class or center
 losses had duplicated that code. `ProxyNCALoss` derives from it and reuses the
 NCA objective as a function instead of inheriting `NCALoss`, whose references
 are embeddings rather than learned proxies. The cosine-margin base shared by
-ArcFace, CosFace, and large-margin softmax is private.
+ArcFace, CosFace, and large-margin softmax is private. Its target-cosine hook
+receives the labels, and `ArcFaceLoss.target_margins` supplies the margin, so
+`DynamicArcFaceLoss` derives per-class margins from a non-persistent buffer.
+Mutating a wrapped loss's `margin` each forward left state on the module and
+outside PyTorch placement. It derives from `SubCenterArcFaceLoss` because the
+paper uses sub-centers and `sub_centers=1` reduces to ArcFace. Margins are
+parameterized by the bounds the paper reports, and identical class sizes raise
+instead of dividing by a zero count range.
 
 `GenericPairLoss` exposes one hook, `pair_loss(mat, pairs)`, with
 `pair_values` and `pair_masks` helpers. Miners accept optional candidate tuples

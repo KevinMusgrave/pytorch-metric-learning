@@ -1,6 +1,6 @@
 # Release notes
 
-- [3.0.0](3.0.0.md)
+- [3.0.0rc1 (preview)](3.0.0rc1.md)
 
 Version 2 releases are listed on
 [GitHub releases](https://github.com/KevinMusgrave/pytorch-metric-learning/releases),

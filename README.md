@@ -6,11 +6,11 @@ retrieval, clustering, recognition, or learning from pairs and triplets.
 
 ## Install
 
-Install the published package from PyPI with uv or pip:
+Install the version 3 release candidate from PyPI with uv or pip:
 
 ```sh
-uv pip install pytorch-metric-learning
-pip install pytorch-metric-learning
+uv pip install "pytorch-metric-learning==3.0.0rc1"
+pip install "pytorch-metric-learning==3.0.0rc1"
 ```
 
 The core package needs only PyTorch and NumPy. Optional extras add the Faiss
@@ -19,7 +19,7 @@ NMI/AMI clustering metrics, `pytorch-metric-learning[clustering]`.
 
 Version 3 requires Python 3.12 or newer, PyTorch 2.14.0 or newer, and NumPy
 2.5.3 or newer. Upgrading from version 2? Read the
-[release notes](https://kevinmusgrave.github.io/pytorch-metric-learning/release-notes/3.0.0/) and look up old names in the
+[release notes](https://kevinmusgrave.github.io/pytorch-metric-learning/release-notes/3.0.0rc1/) and look up old names in the
 [migration guide](https://kevinmusgrave.github.io/pytorch-metric-learning/migration-2-to-3/). The
 [version 2 documentation](https://kevinmusgrave.github.io/pytorch-metric-learning/v2/) remains available.
 

@@ -262,6 +262,7 @@
           "tests/losses/test_circle_loss.py",
           "tests/losses/test_cosface_loss.py",
           "tests/losses/test_cross_batch_memory.py",
+          "tests/losses/test_dynamic_arcface_loss.py",
           "tests/losses/test_fastap_loss.py",
           "tests/losses/test_histogram_loss.py",
           "tests/losses/test_instance_loss.py",

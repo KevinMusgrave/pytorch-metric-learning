@@ -10,6 +10,7 @@ DOCS = Path(__file__).resolve().parents[2] / "docs"
 LEARNABLE = {
     "ArcFaceLoss": (3, 4),
     "CosFaceLoss": (3, 4),
+    "DynamicArcFaceLoss": ([1, 2, 4], 4),
     "LargeMarginSoftmaxLoss": (3, 4),
     "NormalizedSoftmaxLoss": (3, 4),
     "P2SGradLoss": (3, 4),

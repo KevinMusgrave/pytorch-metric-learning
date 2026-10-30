@@ -234,7 +234,8 @@ regularizer still adds its penalty.
 ## Miner weights
 
 Losses that do not consume pairs or triplets directly can still use a miner's
-output. ArcFaceLoss, CosFaceLoss, FastAPLoss, LargeMarginSoftmaxLoss, NCALoss,
+output. ArcFaceLoss, CosFaceLoss, DynamicArcFaceLoss, FastAPLoss,
+LargeMarginSoftmaxLoss, NCALoss,
 NormalizedSoftmaxLoss, ProxyAnchorLoss, ProxyNCALoss, SmoothAPLoss,
 SoftTripleLoss, SphereFaceLoss, and SubCenterArcFaceLoss turn `indices_tuple`
 into one weight per embedding:
@@ -276,7 +277,7 @@ arguments:
 | Loss                                                                                                                                                                                     | `weight` shape | Default initialization                                           |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | ---------------------------------------------------------------- |
 | [ArcFaceLoss](losses/arcface_loss.md), [CosFaceLoss](losses/cosface_loss.md), [LargeMarginSoftmaxLoss](losses/large_margin_softmax_loss.md), [SphereFaceLoss](losses/sphereface_loss.md) | `(C, D)`       | `torch.nn.init.normal_`                                          |
-| [SubCenterArcFaceLoss](losses/subcenter_arcface_loss.md)                                                                                                                                 | `(C·S, D)`     | `torch.nn.init.normal_`                                          |
+| [SubCenterArcFaceLoss](losses/subcenter_arcface_loss.md), [DynamicArcFaceLoss](losses/dynamic_arcface_loss.md)                                                                           | `(C·S, D)`     | `torch.nn.init.normal_`                                          |
 | [NormalizedSoftmaxLoss](losses/normalized_softmax_loss.md)                                                                                                                               | `(C, D)`       | `torch.nn.init.normal_`                                          |
 | [ProxyAnchorLoss](losses/proxy_anchor_loss.md)                                                                                                                                           | `(C, D)`       | `torch.nn.init.kaiming_normal_(mode="fan_out")`                  |
 | [ProxyNCALoss](losses/proxy_nca_loss.md)                                                                                                                                                 | `(C, D)`       | `torch.nn.init.normal_`                                          |
@@ -319,16 +320,16 @@ These losses provide `loss_func.get_logits(embeddings)`, which returns a
 `(N, num_classes)` tensor with one score per embedding and class. The scores
 omit the training margin, so they suit prediction and evaluation:
 
-| Loss                     | `get_logits` returns                                                           |
-| ------------------------ | ------------------------------------------------------------------------------ |
-| ArcFaceLoss, CosFaceLoss | `scale` times the cosine similarity to each class weight                       |
-| SubCenterArcFaceLoss     | `scale` times the cosine similarity to each class's closest sub-center         |
-| LargeMarginSoftmaxLoss   | `scale` times the weight norm, the embedding norm, and the cosine              |
-| SphereFaceLoss           | `scale` times the embedding norm and the cosine                                |
-| NormalizedSoftmaxLoss    | The similarity to each normalized class weight divided by `temperature`        |
-| ProxyAnchorLoss          | The distance-matrix value to each proxy, cosine similarity by default          |
-| ProxyNCALoss             | The distance-matrix value to each proxy, squared Euclidean distance by default |
-| SoftTripleLoss           | The relaxed similarity $\mathcal{S}'_{i,c}$ over each class's centers          |
+| Loss                                     | `get_logits` returns                                                           |
+| ---------------------------------------- | ------------------------------------------------------------------------------ |
+| ArcFaceLoss, CosFaceLoss                 | `scale` times the cosine similarity to each class weight                       |
+| SubCenterArcFaceLoss, DynamicArcFaceLoss | `scale` times the cosine similarity to each class's closest sub-center         |
+| LargeMarginSoftmaxLoss                   | `scale` times the weight norm, the embedding norm, and the cosine              |
+| SphereFaceLoss                           | `scale` times the embedding norm and the cosine                                |
+| NormalizedSoftmaxLoss                    | The similarity to each normalized class weight divided by `temperature`        |
+| ProxyAnchorLoss                          | The distance-matrix value to each proxy, cosine similarity by default          |
+| ProxyNCALoss                             | The distance-matrix value to each proxy, squared Euclidean distance by default |
+| SoftTripleLoss                           | The relaxed similarity $\mathcal{S}'_{i,c}$ over each class's centers          |
 
 For every loss except ProxyNCALoss with its default distance, a larger value
 means a closer class. ProxyNCALoss returns distances unless it is configured
@@ -393,6 +394,8 @@ see [learnable weight arguments](#learnable-weight-arguments).
 - [ArcFaceLoss](losses/arcface_loss.md): an additive angular margin, widely
   used for face recognition and other tasks with many classes.
 - [CosFaceLoss](losses/cosface_loss.md): an additive cosine margin.
+- [DynamicArcFaceLoss](losses/dynamic_arcface_loss.md): SubCenterArcFace with
+  larger margins for smaller classes, for long-tailed class distributions.
 - [LargeMarginSoftmaxLoss](losses/large_margin_softmax_loss.md): a
   multiplicative angular margin that keeps the weight and embedding norms.
 - [ManifoldLoss](losses/manifold_loss.md): proxies compared through a

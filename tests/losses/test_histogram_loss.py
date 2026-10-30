@@ -150,16 +150,65 @@ class TestHistogramLoss(unittest.TestCase):
 
 class TestHistogramEndpoints(unittest.TestCase):
     def test_identical_and_opposite_embeddings(self):
-        embeddings = torch.tensor(
-            [[1.0, 0.0], [1.0, 0.0], [-1.0, 0.0], [-1.0, 0.0]],
-            device=TEST_DEVICE,
-            requires_grad=True,
-        )
-        labels = torch.tensor([0, 0, 1, 1], device=TEST_DEVICE)
-        loss = HistogramLoss(num_bins=4)(embeddings, labels)
-        loss.backward()
-        self.assertEqual(loss.item(), 0)
-        loss = HistogramLoss(num_bins=4)(
-            embeddings, torch.tensor([0, 1, 0, 1], device=TEST_DEVICE)
-        )
-        self.assertEqual(loss.item(), 1)
+        for dtype in TEST_DTYPES:
+            with self.subTest(dtype=dtype):
+                embeddings = torch.tensor(
+                    [[1.0, 0.0], [1.0, 0.0], [-1.0, 0.0], [-1.0, 0.0]],
+                    dtype=dtype,
+                    device=TEST_DEVICE,
+                    requires_grad=True,
+                )
+                labels = torch.tensor([0, 0, 1, 1], device=TEST_DEVICE)
+                loss = HistogramLoss(num_bins=4)(embeddings, labels)
+                (gradient,) = torch.autograd.grad(loss, embeddings)
+                self.assertEqual(loss.item(), 0)
+                self.assertTrue(torch.isfinite(gradient).all())
+                loss = HistogramLoss(num_bins=4)(
+                    embeddings, torch.tensor([0, 1, 0, 1], device=TEST_DEVICE)
+                )
+                self.assertEqual(loss.item(), 1)
+
+    def test_collapsed_embeddings_have_unit_loss(self):
+        for dtype in TEST_DTYPES:
+            with self.subTest(dtype=dtype):
+                embeddings = torch.tensor(
+                    [[1.0, 0.0]] * 4,
+                    dtype=dtype,
+                    device=TEST_DEVICE,
+                    requires_grad=True,
+                )
+                labels = torch.tensor([0, 0, 1, 1], device=TEST_DEVICE)
+                loss = HistogramLoss()(embeddings, labels)
+                (gradient,) = torch.autograd.grad(loss, embeddings)
+                helpers.assert_close(loss, 1.0, dtype)
+                self.assertTrue(torch.isfinite(gradient).all())
+
+    def test_endpoint_mass_splits_between_first_and_last_nodes(self):
+        for dtype in TEST_DTYPES:
+            for num_bins in (1, 4, 20, 100):
+                with self.subTest(dtype=dtype, num_bins=num_bins):
+                    distances = torch.tensor(
+                        [-1.0, 1.0], dtype=dtype, device=TEST_DEVICE, requires_grad=True
+                    )
+                    density = HistogramLoss(num_bins=num_bins).compute_density(
+                        distances
+                    )
+                    expected = torch.zeros(num_bins + 1, dtype=dtype)
+                    expected[0], expected[-1] = 0.5, 0.5
+                    helpers.assert_close(density, expected, dtype)
+                    helpers.assert_close(density.sum(), 1.0, dtype)
+                    nodes = torch.arange(num_bins + 1, dtype=dtype, device=TEST_DEVICE)
+                    (gradient,) = torch.autograd.grad(density @ nodes, distances)
+                    self.assertTrue(torch.isfinite(gradient).all())
+
+    def test_interior_interpolation_preserves_values_and_slopes(self):
+        for dtype in TEST_DTYPES:
+            with self.subTest(dtype=dtype):
+                distances = torch.tensor(
+                    [-0.75, 0.25], dtype=dtype, device=TEST_DEVICE, requires_grad=True
+                )
+                density = HistogramLoss(num_bins=4).compute_density(distances)
+                helpers.assert_close(density, [0.25, 0.25, 0.25, 0.25, 0.0], dtype)
+                nodes = torch.arange(5, dtype=dtype, device=TEST_DEVICE)
+                (gradient,) = torch.autograd.grad(density @ nodes, distances)
+                helpers.assert_close(gradient, [1.0, 1.0], dtype)

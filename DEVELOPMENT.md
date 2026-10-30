@@ -57,6 +57,13 @@ detection and module dependency direction from `.code-polishy.json`:
 Source comments and docstrings are not used. Put design rationale in
 `docs/design/` and adapted-code provenance in `THIRD_PARTY_NOTICES.md`.
 
+CI uses the locked policy tool's `test-levels` decision to select its jobs.
+Ordinary Markdown-only changes run the documentation merge gate without
+installing Python dependencies or running the CPU matrix, package build, or
+source checks. Source and policy changes retain those checks. Scheduled and
+manually dispatched runs compare against the repository root and retain full
+verification.
+
 ## CPU tests
 
 Pytest runs every test, including `unittest.TestCase` classes. Third-party

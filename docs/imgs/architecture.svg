@@ -89,7 +89,7 @@
 
   <rect class="zone-eval" x="714" y="16" width="270" height="488" rx="10"/>
   <text class="zone-title" x="730" y="42">Evaluation: retrieval</text>
-  <text class="zone-sub" x="730" y="60">pytorch_metric_learning.utils</text>
+  <text class="zone-sub" x="730" y="60">pytorch_metric_learning.evaluation</text>
 
   <rect class="box-eval" x="730" y="80" width="238" height="74" rx="6"/>
   <text class="name" x="742" y="102">AccuracyCalculator</text>

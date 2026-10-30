@@ -5,7 +5,7 @@ import torch
 from pytorch_metric_learning.losses import NormalizedSoftmaxLoss
 from pytorch_metric_learning.regularizers import CenterInvariantRegularizer
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 
 
 class TestCenterInvariantRegularizer(unittest.TestCase):
@@ -21,7 +21,7 @@ class TestCenterInvariantRegularizer(unittest.TestCase):
                 embedding_size=embedding_size,
                 weight_regularizer=CenterInvariantRegularizer(),
                 weight_reg_weight=reg_weight,
-            ).to(TEST_DEVICE)
+            ).to(TEST_DEVICE, dtype)
 
             embeddings = torch.nn.functional.normalize(
                 torch.randn((180, embedding_size), requires_grad=True)
@@ -33,7 +33,7 @@ class TestCenterInvariantRegularizer(unittest.TestCase):
             loss = loss_func(embeddings, labels)
             loss.backward()
 
-            weights = torch.nn.functional.normalize(loss_func.W, p=2, dim=0)
+            weights = torch.nn.functional.normalize(loss_func.weight, p=2, dim=1).t()
             logits = torch.matmul(embeddings, weights)
             correct_class_loss = torch.nn.functional.cross_entropy(
                 logits / temperature, labels
@@ -42,16 +42,18 @@ class TestCenterInvariantRegularizer(unittest.TestCase):
             correct_reg_loss = 0
             average_squared_weight_norms = 0
             for i in range(num_classes):
-                average_squared_weight_norms += torch.norm(loss_func.W[:, i], p=2) ** 2
+                average_squared_weight_norms += (
+                    torch.norm(loss_func.weight[i], p=2) ** 2
+                )
             average_squared_weight_norms /= num_classes
             for i in range(num_classes):
                 deviation = (
-                    torch.norm(loss_func.W[:, i], p=2) ** 2
+                    torch.norm(loss_func.weight[i], p=2) ** 2
                     - average_squared_weight_norms
                 )
                 correct_reg_loss += (deviation**2) / 4
             correct_reg_loss /= num_classes
 
             correct_total_loss = correct_class_loss + (correct_reg_loss * reg_weight)
-            rtol = 1e-2 if dtype == torch.float16 else 1e-5
+            rtol = helpers.rtol(dtype)
             self.assertTrue(torch.isclose(loss, correct_total_loss, rtol=rtol))

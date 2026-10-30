@@ -1,1208 +1,459 @@
 # Losses
-All loss functions are used as follows:
+
+Every loss takes embeddings and labels and returns a scalar tensor:
 
 ```python
+import torch
 from pytorch_metric_learning import losses
-loss_func = losses.SomeLoss()
-loss = loss_func(embeddings, labels) # in your training for-loop
+
+embeddings = torch.randn(32, 128, requires_grad=True)
+labels = torch.randint(0, 8, (32,))
+
+loss_func = losses.TripletMarginLoss()
+loss = loss_func(embeddings, labels)
 ```
 
-Or if you are using a loss in conjunction with a [miner](miners.md):
+With a [miner](miners.md), pass the mined pairs or triplets as the third argument:
 
 ```python
 from pytorch_metric_learning import miners
-miner_func = miners.SomeMiner()
-loss_func = losses.SomeLoss()
-miner_output = miner_func(embeddings, labels) # in your training for-loop
+
+miner_func = miners.MultiSimilarityMiner()
+miner_output = miner_func(embeddings, labels)
 loss = loss_func(embeddings, labels, miner_output)
 ```
 
-For some losses, you don't need to pass in labels if you are already passing in pair/triplet indices:
+Tuple losses accept pair or triplet indices without labels. With `ref_emb`,
+positives and negatives index the reference set:
+
 ```python
+ref_emb = torch.randn(16, 128)
+ref_labels = torch.randint(0, 8, (16,))
+miner_func = miners.PairMarginMiner()
+pairs = miner_func(embeddings, labels)
+ref_pairs = miner_func(embeddings, labels, ref_emb=ref_emb, ref_labels=ref_labels)
+
 loss = loss_func(embeddings, indices_tuple=pairs)
-# it also works with ref_emb
-loss = loss_func(embeddings, indices_tuple=pairs, ref_emb=ref_emb)
-```
-??? note "Losses for which you can pass in `indices_tuple` without `labels`"
-    - CircleLoss
-    - ContrastiveLoss
-    - IntraPairVarianceLoss
-    - GeneralizedLiftedStructureLoss
-    - LiftedStructureLoss
-    - MarginLoss
-    - MultiSimilarityLoss
-    - NTXentLoss
-    - SignalToNoiseRatioContrastiveLoss
-    - SupConLoss
-    - TripletMarginLoss
-    - TupletMarginLoss
-
-
-You can specify how losses get reduced to a single value by using a [reducer](reducers.md):
-```python
-from pytorch_metric_learning import reducers
-reducer = reducers.SomeReducer()
-loss_func = losses.SomeLoss(reducer=reducer)
-loss = loss_func(embeddings, labels) # in your training for-loop
+loss = loss_func(embeddings, indices_tuple=ref_pairs, ref_emb=ref_emb)
 ```
 
-For tuple losses, you can separate the source of anchors and positives/negatives:
+Tuple losses also accept a separate reference set. Anchors come from
+`embeddings`, and positives and negatives come from `ref_emb`:
+
 ```python
-loss_func = losses.SomeLoss()
-# anchors will come from embeddings
-# positives/negatives will come from ref_emb
 loss = loss_func(embeddings, labels, ref_emb=ref_emb, ref_labels=ref_labels)
 ```
 
-For classification losses, you can get logits using the ```get_logits``` function:
-```python
-loss_func = losses.SomeClassificationLoss()
-logits = loss_func.get_logits(embeddings)
+## Forward arguments
+
+```python {.signature}
+loss_func(embeddings, labels=None, indices_tuple=None, ref_emb=None, ref_labels=None)
 ```
 
-
-## AngularLoss 
-[Deep Metric Learning with Angular Loss](https://arxiv.org/pdf/1708.01682.pdf){target=_blank}
-```python
-losses.AngularLoss(alpha=40, **kwargs)
-```
-**Equation**:
-
-![angular_loss_equation](imgs/angular_loss_equation.png){: style="height:200px"}
-
-
-**Parameters**:
-
-* **alpha**: The angle specified in degrees. The paper uses values between 36 and 55.
-
-**Default distance**: 
-
- - [```LpDistance(p=2, power=1, normalize_embeddings=True)```](distances.md#lpdistance)
-
-     - This is the only compatible distance.
-
-**Default reducer**: 
-
- - [MeanReducer](reducers.md#meanreducer)
-
-**Reducer input**:
-
-* **loss**: The loss for every ```a1```, where ```(a1,p)``` represents every positive pair in the batch. Reduction type is ```"element"```.
-
-
-## ArcFaceLoss 
-[ArcFace: Additive Angular Margin Loss for Deep Face Recognition](https://arxiv.org/pdf/1801.07698.pdf){target=_blank}
-
-```python
-losses.ArcFaceLoss(num_classes, embedding_size, margin=28.6, scale=64, **kwargs)
-```
-
-**Equation**:
-
-![arcface_loss_equation](imgs/arcface_loss_equation.png){: style="height:80px"}
-
-
-**Parameters**:
-
-* **num_classes**: The number of classes in your training dataset.
-* **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set ```embedding_size``` to 512.
-* **margin**: The angular margin penalty in degrees. In the above equation, ```m = radians(margin)```. The paper uses 0.5 radians, which is 28.6 degrees.
-* **scale**: This is ```s``` in the above equation. The paper uses 64.
-
-**Other info**: 
-
-* This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts ```weight_regularizer```, ```weight_reg_weight```, and ```weight_init_func``` as optional arguments.
-* This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
-```python
-loss_func = losses.ArcFaceLoss(...).to(torch.device('cuda'))
-loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
-# then during training:
-loss_optimizer.step()
-```
-
-**Default distance**: 
-
- - [```CosineSimilarity()```](distances.md#cosinesimilarity)
-     - This is the only compatible distance.
-
-**Default reducer**: 
-
- - [MeanReducer](reducers.md#meanreducer)
-
-**Reducer input**:
-
-* **loss**: The loss per element in the batch. Reduction type is ```"element"```.
-
-
-## BaseMetricLossFunction
-All loss functions extend this class and therefore inherit its ```__init__``` parameters.
-
-```python
-losses.BaseMetricLossFunction(collect_stats = False, 
-							reducer = None, 
-							distance = None, 
-							embedding_regularizer = None,
-							embedding_reg_weight = 1)
-```
-
-**Parameters**:
-
-* **collect_stats**: If True, will collect various statistics that may be useful to analyze during experiments. If False, these computations will be skipped. Want to make ```True``` the default? Set the global [COLLECT_STATS](common_functions.md#collect_stats) flag.
-* **reducer**: A [reducer](reducers.md) object. If None, then the default reducer will be used.
-* **distance**: A [distance](distances.md) object. If None, then the default distance will be used.
-* **embedding_regularizer**: A [regularizer](regularizers.md) object that will be applied to embeddings. If None, then no embedding regularization will be used.
-* **embedding_reg_weight**: If an embedding regularizer is used, then its loss will be multiplied by this amount before being added to the total loss.
-
-**Default distance**: 
-
- - [```LpDistance(normalize_embeddings=True, p=2, power=1)```](distances.md#lpdistance)
-
-**Default reducer**: 
-
-- [MeanReducer](reducers.md#meanreducer)
-
-**Reducer input**:
-
-* **embedding_reg_loss**: Only exists if an embedding regularizer is used. It contains the loss per element in the batch. Reduction type is ```"already_reduced"```. 
-
-
-**Required Implementations**:
-```python
-def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
-    raise NotImplementedError
-```
-
-
-## CircleLoss 
-[Circle Loss: A Unified Perspective of Pair Similarity Optimization](https://arxiv.org/pdf/2002.10857.pdf){target=_blank}
-
-```python
-losses.CircleLoss(m=0.4, gamma=80, **kwargs)
-```
-
-**Equations**:
-
-![circle_loss_equation1](imgs/circle_loss_equation1.png){: style="height:60px"}
-
-where
-
-![circle_loss_equation2](imgs/circle_loss_equation2.png){: style="height:70px"}
-
-![circle_loss_equation3](imgs/circle_loss_equation3.png){: style="height:25px"}
-
-![circle_loss_equation4](imgs/circle_loss_equation4.png){: style="height:25px"}
-
-![circle_loss_equation5](imgs/circle_loss_equation5.png){: style="height:25px"}
-
-![circle_loss_equation6](imgs/circle_loss_equation6.png){: style="height:25px"}
-
-
-
-**Parameters**:
-
-* **m**: The relaxation factor that controls the radius of the decision boundary. The paper uses 0.25 for face recognition, and 0.4 for fine-grained image retrieval (images of birds, cars, and online products).
-* **gamma**: The scale factor that determines the largest scale of each similarity score. The paper uses 256 for face recognition, and 80 for fine-grained image retrieval.
-
-**Default distance**: 
-
- - [```CosineSimilarity()```](distances.md#cosinesimilarity)
-
-    - This is the only compatible distance.
-
-**Default reducer**: 
-
- - [AvgNonZeroReducer](reducers.md#avgnonzeroreducer)
-
-**Reducer input**:
-
-* **loss**: The loss per element in the batch. Reduction type is ```"element"```.
-
-## ContrastiveLoss
-```python
-losses.ContrastiveLoss(pos_margin=0, neg_margin=1, **kwargs):
-```
-
-**Equation**:
-
-If using a distance metric like [LpDistance](distances.md#lpdistance), the loss is:
-
-![contrastive_loss_equation](imgs/contrastive_loss_equation.png){: style="height:37px"}
-
-If using a similarity metric like [CosineSimilarity](distances.md#cosinesimilarity), the loss is:
-
-![contrastive_loss_similarity_equation](imgs/contrastive_loss_similarity_equation.png){: style="height:35px"}
-
-**Parameters**:
-
-* **pos_margin**: The distance (or similarity) over (under) which positive pairs will contribute to the loss.
-* **neg_margin**: The distance (or similarity) under (over) which negative pairs will contribute to the loss.  
-
-Note that the default values for ```pos_margin``` and ```neg_margin``` are suitable if you are using a non-inverted distance measure, like [LpDistance](distances.md#lpdistance). If you use an inverted distance measure like [CosineSimilarity](distances.md#cosinesimilarity), then more appropriate values would be ```pos_margin = 1``` and ```neg_margin = 0```.
-
-**Default distance**: 
-
- - [```LpDistance(normalize_embeddings=True, p=2, power=1)```](distances.md#lpdistance)
-
-**Default reducer**: 
-
- - [AvgNonZeroReducer](reducers.md#avgnonzeroreducer)
-
-**Reducer input**:
-
-* **pos_loss**: The loss per positive pair in the batch. Reduction type is ```"pos_pair"```.
-* **neg_loss**: The loss per negative pair in the batch. Reduction type is ```"neg_pair"```.
-
-
-## CosFaceLoss 
-[CosFace: Large Margin Cosine Loss for Deep Face Recognition](https://arxiv.org/pdf/1801.09414.pdf){target=_blank}
+- **embeddings**: A `(N, D)` tensor of query embeddings.
+- **labels**: A `(N,)` tensor of labels on the embeddings' device. Labels on
+  another device raise `ValueError`; the loss never copies them.
+- **indices_tuple**: Optional pair or triplet indices; see
+  [index tuples](#index-tuples).
+- **ref_emb**: Optional `(M, D)` reference embeddings on the embeddings'
+  device; see [reference embeddings](#reference-embeddings).
+- **ref_labels**: A `(M,)` tensor of reference labels. It requires `ref_emb`;
+  passing it alone raises `ValueError`.
+
+The return value is a scalar tensor connected to the embeddings and to the
+loss's parameters. When there are no valid pairs, triplets, or queries, the
+result is a differentiable zero.
+
+### Reference embeddings
+
+`ref_emb=None` compares the embeddings with each other, and a supplied `ref_emb`
+is a separate reference set, even when it is the same tensor. See
+[reference sets](concepts.md#reference-sets) for the indexing rule and the
+`labels`/`ref_labels` combinations that raise `ValueError`.
+
+### Index tuples
+
+`indices_tuple` takes one of two forms, matching what [miners](miners.md)
+return:
+
+- `types.PairIndices(pos_anchors, positives, neg_anchors, negatives)`: positive
+  pairs `(pos_anchors[i], positives[i])` and negative pairs
+  `(neg_anchors[j], negatives[j])`.
+- `types.TripletIndices(anchors, positives, negatives)`: triplets
+  `(anchors[i], positives[i], negatives[i])`.
+
+Plain tuples or lists of four or three tensors are accepted and converted to
+these named tuples. Every tensor must be one-dimensional, have dtype `int64` or
+`int32`, and be on the embeddings' device. Anchors index `embeddings`;
+positives and negatives index `ref_emb`, or `embeddings` when `ref_emb` is
+`None`. A non-tensor entry or another index dtype, including `bool` and
+`uint8`, raises `TypeError`; a wrong length, dimension, or device raises
+`ValueError`. Indices must be in range: losses do not check bounds, because that
+would synchronize the device, so negative or out-of-range indices are a caller
+error with undefined results.
+
+`indices_tuple=None` means no restriction: the loss uses every pair or triplet
+its labels define. A supplied tuple whose tensors are empty means that nothing
+was selected, which gives a differentiable zero.
+
+Losses use the tuples in one of three ways:
+
+- Pair losses use the pairs directly and read triplets `(a, p, n)` as the pairs
+  `(a, p)` and `(a, n)`. Triplet losses use the triplets directly and form
+  triplets from pairs by combining each anchor's positives with its negatives.
+- Classification, proxy, and some ranking losses use the tuples only to weight
+  embeddings; see [miner weights](#miner-weights).
+- InstanceLoss, ManifoldLoss, P2SGradLoss, PNPLoss, and RankedListLoss raise
+  `ValueError` when `indices_tuple` is supplied.
+
+## Supported arguments
+
+Each loss accepts the arguments listed for it below. Passing an unsupported
+argument raises `ValueError`. These lists are verified by the test suite.
+
+**Losses that accept `indices_tuple` without `labels`**
+
+- CircleLoss
+- ContrastiveLoss
+- DynamicSoftMarginLoss
+- GeneralizedLiftedStructureLoss
+- HistogramLoss
+- IntraPairVarianceLoss
+- LiftedStructureLoss
+- MarginLoss
+- MultiSimilarityLoss
+- NTXentLoss
+- SignalToNoiseRatioContrastiveLoss
+- SupConLoss
+- ThresholdConsistentMarginLoss
+- TripletMarginLoss
+- TupletMarginLoss
+
+**Losses that accept `ref_emb` and `ref_labels`**
+
+- AngularLoss
+- CircleLoss
+- ContrastiveLoss
+- DynamicSoftMarginLoss
+- GeneralizedLiftedStructureLoss
+- IntraPairVarianceLoss
+- MarginLoss
+- MultiSimilarityLoss
+- MultiSupConLoss
+- NCALoss
+- NTXentLoss
+- SignalToNoiseRatioContrastiveLoss
+- SupConLoss
+- ThresholdConsistentMarginLoss
+- TripletMarginLoss
+- TupletMarginLoss
+
+Use a loss from this list whenever queries are compared with a separate
+reference set, such as a gallery, a second augmented view, or a memory bank.
+[CrossBatchMemory](losses/cross_batch_memory.md) and
+[SelfSupervisedLoss](losses/self_supervised_loss.md) with `symmetric=False`
+pass a reference set to the wrapped loss, so they require a loss from this
+list. Every other loss raises `ValueError` when `ref_emb` is supplied.
+
+## Loss options
+
+Most loss signatures end with `**options`, declared by
+`pytorch_metric_learning.types.LossOptions`. Losses that return one
+already-reduced value (DynamicSoftMarginLoss, HistogramLoss, ManifoldLoss,
+P2SGradLoss, PNPLoss, ThresholdConsistentMarginLoss) list `distance` (except
+P2SGradLoss), `embedding_regularizer`, and `embedding_reg_weight` explicitly and
+take no `reducer`. Wrappers (CrossBatchMemory, MultipleLosses,
+SelfSupervisedLoss) take the losses they wrap instead. The options are:
+
+- **distance**: A [distance](distances.md) module. `None` selects the loss's
+  default distance. A loss that supports only some distances raises `TypeError`
+  for another distance class and `ValueError` for an incompatible setting.
+- **reducer**: A [reducer](reducers.md) module. `None` selects the loss's
+  default reducer. The reducer object is used as given, not copied; a loss with
+  several terms applies it to each term unless it is a
+  [MultipleReducers](reducers.md#multiplereducers).
+- **embedding_regularizer**: A [regularizer](regularizers.md) applied to the
+  embeddings. `None` adds no penalty.
+- **embedding_reg_weight**: The weight multiplying that penalty. The default is 1.
 
 ```python
-losses.CosFaceLoss(num_classes, embedding_size, margin=0.35, scale=64, **kwargs)
-```
-
-**Equation**:
-
-![cosface_loss_equation](imgs/cosface_loss_equation.png){: style="height:80px"}
-
-**Parameters**:
-
-* **num_classes**: The number of classes in your training dataset.
-* **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set ```embedding_size``` to 512.
-* **margin**: The cosine margin penalty (m in the above equation). The paper used values between 0.25 and 0.45.
-* **scale**: This is ```s``` in the above equation. The paper uses 64.
-
-**Other info**: 
-
-* This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts ```weight_regularizer```, ```weight_reg_weight```, and ```weight_init_func``` as optional arguments.
-* This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
-```python
-loss_func = losses.CosFaceLoss(...).to(torch.device('cuda'))
-loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
-# then during training:
-loss_optimizer.step()
-```
-
-**Default distance**: 
-
- - [```CosineSimilarity()```](distances.md#cosinesimilarity)
-
-    - This is the only compatible distance.
-
-**Default reducer**: 
-
- - [MeanReducer](reducers.md#meanreducer)
-
-**Reducer input**:
-
-* **loss**: The loss per element in the batch. Reduction type is ```"element"```.
-
-
-## CrossBatchMemory 
-This wraps a loss function, and implements [Cross-Batch Memory for Embedding Learning](https://arxiv.org/pdf/1912.06798.pdf){target=_blank}. It stores embeddings from previous iterations in a queue, and uses them to form more pairs/triplets with the current iteration's embeddings.
-
-```python
-losses.CrossBatchMemory(loss, embedding_size, memory_size=1024, miner=None)
-```
-
-**Parameters**:
-
-* **loss**: The loss function to be wrapped. For example, you could pass in ```ContrastiveLoss()```.
-* **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set ```embedding_size``` to 512.
-* **memory_size**: The size of the memory queue.
-* **miner**: An optional [tuple miner](miners.md), which will be used to mine pairs/triplets from the memory queue.
-
-**Forward function**
-```python
-loss_fn(embeddings, labels, indices_tuple=None, enqueue_mask=None)
-```
-
-As shown above, CrossBatchMemory comes with a 4th argument in its ```forward``` function:
-
-* **enqueue_mask**: A boolean tensor where `enqueue_mask[i]` is True if `embeddings[i]` should be added to the memory queue. This enables CrossBatchMemory to be used in self-supervision frameworks like [MoCo](https://arxiv.org/pdf/1911.05722.pdf). Check out the [MoCo on CIFAR100](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples#simple-examples) notebook to see how this works.
-
-
-??? note "Supported Loss Functions"
-    - [AngularLoss](losses.md#angularloss)
-    - [CircleLoss](losses.md#circleloss)
-    - [ContrastiveLoss](losses.md#contrastiveloss)
-    - [GeneralizedLiftedStructureLoss](losses.md#generalizedliftedstructureloss)
-    - [IntraPairVarianceLoss](losses.md#intrapairvarianceloss)
-    - [LiftedStructureLoss](losses.md#liftedstructureloss)
-    - [MarginLoss](losses.md#marginloss)
-    - [MultiSimilarityLoss](losses.md#multisimilarityloss)
-    - [NCALoss](losses.md#ncaloss)
-    - [NTXentLoss](losses.md#ntxentloss)
-    - [SignalToNoiseRatioContrastiveLoss](losses.md#signaltonoiseratiocontrastiveloss)
-    - [SupConLoss](losses.md#supconloss)
-    - [TripletMarginLoss](losses.md#tripletmarginloss)
-    - [TupletMarginLoss](losses.md#tupletmarginloss)
-
-
-**Reset queue**
-
-The queue can be cleared like this:
-```python
-loss_fn.reset_queue()
-```
-
-## FastAPLoss
-[Deep Metric Learning to Rank](http://openaccess.thecvf.com/content_CVPR_2019/papers/Cakir_Deep_Metric_Learning_to_Rank_CVPR_2019_paper.pdf){target=_blank}
-
-```python
-losses.FastAPLoss(num_bins=10, **kwargs)
-```
-
-**Parameters**:
-
-* **num_bins**: The number of soft histogram bins for calculating average precision. The paper suggests using 10.
-
-**Default distance**:
-
-- [```LpDistance(normalize_embeddings=True, p=2, power=2)```](distances.md#lpdistance)
-    - The only compatible distance is ```LpDistance(normalize_embeddings=True, p=2)```. However, the ```power``` value can be changed.
-
-**Default reducer**: 
-
- - [MeanReducer](reducers.md#meanreducer)
-
-**Reducer input**:
-
-* **loss**: The loss per element that has at least 1 positive in the batch. Reduction type is ```"element"```.
-
-
-## GenericPairLoss
-```python
-losses.GenericPairLoss(mat_based_loss, **kwargs)
-```
-**Parameters**:
-
-* **mat_based_loss**: See required implementations.
-
-**Required Implementations**:
-```python
-# If mat_based_loss is True, then this takes in mat, pos_mask, neg_mask
-# If False, this takes in pos_pair, neg_pair, indices_tuple
-def _compute_loss(self):
-    raise NotImplementedError
-```
-
-## GeneralizedLiftedStructureLoss
-This was presented in [In Defense of the Triplet Loss for Person Re-Identification](https://arxiv.org/pdf/1703.07737.pdf){target=_blank}. It is a modification of the original [LiftedStructureLoss](losses.md#liftedstructureloss)
-
-```python
-losses.GeneralizedLiftedStructureLoss(neg_margin=1, pos_margin=0, **kwargs)
-```
-**Equation**:
-
-![generalized_lifted_structure_loss_equation](imgs/generalized_lifted_structure_loss_equation.png){: style="height:250px"}
-
-**Parameters**:
-
-* **pos_margin**: The margin in the expression ```e^(D - margin)```. The paper uses ```pos_margin = 0 ```, which is why this margin does not appear in the above equation.
-* **neg_margin**: This is ```m``` in the above equation. The paper used values between 0.1 and 1.
-
-**Default distance**: 
-
- - [```LpDistance(normalize_embeddings=True, p=2, power=1)```](distances.md#lpdistance)
-
-**Default reducer**: 
-
- - [MeanReducer](reducers.md#meanreducer)
-
-**Reducer input**:
-
-* **loss**: The loss per element in the batch. Reduction type is ```"element"```.
-
-## InstanceLoss
-[Dual-Path Convolutional Image-Text Embeddings with Instance Loss](https://arxiv.org/pdf/1711.05535.pdf)
-```python
-losses.InstanceLoss(gamma=64, **kwargs)
-```
-
-**Parameters**:
-
-* **gamma**: The cosine similarity matrix is scaled by this amount.
-
-
-## IntraPairVarianceLoss
-[Deep Metric Learning with Tuplet Margin Loss](http://openaccess.thecvf.com/content_ICCV_2019/papers/Yu_Deep_Metric_Learning_With_Tuplet_Margin_Loss_ICCV_2019_paper.pdf){target=_blank}
-```python
-losses.IntraPairVarianceLoss(pos_eps=0.01, neg_eps=0.01, **kwargs)
-```
-
-**Equations**:
-
-![intra_pair_variance_loss_equation1](imgs/intra_pair_variance_loss_equation1.png){: style="height:39px"}
-
-![intra_pair_variance_loss_equation2](imgs/intra_pair_variance_loss_equation2.png){: style="height:34px"}
-
-**Parameters**:
-
-* **pos_eps**: The epsilon in the L<sub>pos</sub> equation. The paper uses 0.01.
-* **neg_eps**: The epsilon in the L<sub>neg</sub> equation. The paper uses 0.01.
-
-You should probably use this in conjunction with another loss, as described in the paper. You can accomplish this by using [MultipleLosses](losses.md#multiplelosses):
-```python
-main_loss = losses.TupletMarginLoss()
-var_loss = losses.IntraPairVarianceLoss()
-complete_loss = losses.MultipleLosses([main_loss, var_loss], weights=[1, 0.5])
-```
-
-**Default distance**: 
-
- - [```LpDistance(normalize_embeddings=True, p=2, power=1)```](distances.md#lpdistance)
-
-**Default reducer**: 
-
- - [MeanReducer](reducers.md#meanreducer)
-
-**Reducer input**:
-
-* **pos_loss**: The loss per positive pair in the batch. Reduction type is ```"pos_pair"```.
-* **neg_loss**: The loss per negative pair in the batch. Reduction type is ```"neg_pair"```.
-
-
-
-## LargeMarginSoftmaxLoss
-[Large-Margin Softmax Loss for Convolutional Neural Networks](https://arxiv.org/pdf/1612.02295.pdf){target=_blank}
-
-```python
-losses.LargeMarginSoftmaxLoss(num_classes, 
-                            embedding_size, 
-                            margin=4, 
-                            scale=1, 
-                            **kwargs)
-```
-
-**Equations**:
-
-![large_margin_softmax_loss_equation1](imgs/large_margin_softmax_loss_equation1.png){: style="height:80px"}
-
-where
-
-![large_margin_softmax_loss_equation2](imgs/large_margin_softmax_loss_equation2.png){: style="height:90px"}
-
-**Parameters**:
-
-* **num_classes**: The number of classes in your training dataset.
-* **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set ```embedding_size``` to 512.
-* **margin**: An integer which dictates the size of the angular margin. This is ```m``` in the above equation. The paper finds ```m=4``` works best.
-* **scale**: The exponent multiplier in the loss's softmax expression. The paper uses ```scale = 1 ```, which is why it does not appear in the above equation.
-
-**Other info**: 
-
-* This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts ```weight_regularizer```, ```weight_reg_weight```, and ```weight_init_func``` as optional arguments.
-* This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
-```python
-loss_func = losses.LargeMarginSoftmaxLoss(...).to(torch.device('cuda'))
-loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
-# then during training:
-loss_optimizer.step()
-```
-
-**Default distance**: 
-
- - [```CosineSimilarity()```](distances.md#cosinesimilarity)
-
-    - This is the only compatible distance.
-
-**Default reducer**: 
-
- - [MeanReducer](reducers.md#meanreducer)
-
-
-**Reducer input**:
-
-* **loss**: The loss per element in the batch. Reduction type is ```"element"```.
-
-
-## LiftedStructureLoss
-The original lifted structure loss as presented in [Deep Metric Learning via Lifted Structured Feature Embedding](https://arxiv.org/pdf/1511.06452.pdf){target=_blank}
-
-```python
-losses.LiftedStructureLoss(neg_margin=1, pos_margin=0, **kwargs):
-```
-
-**Equation**:
-
-![lifted_structure_loss_equation](imgs/lifted_structure_loss_equation.png){: style="height:150px"}
-
-**Parameters**:
-
-* **pos_margin**: The margin in the expression ```D_(i,j) - margin```. The paper uses ```pos_margin = 0 ```, which is why it does not appear in the above equation.
-* **neg_margin**: This is ```alpha``` in the above equation. The paper uses 1.
-
-**Default distance**: 
-
- - [```LpDistance(normalize_embeddings=True, p=2, power=1)```](distances.md#lpdistance)
-
-**Default reducer**: 
-
- - [MeanReducer](reducers.md#meanreducer)
-
-**Reducer input**:
-
-* **loss**: The loss per positive pair in the batch. Reduction type is ```"pos_pair"```.
-
-
-## MarginLoss
-[Sampling Matters in Deep Embedding Learning](https://arxiv.org/pdf/1706.07567.pdf){target=_blank}
-```python
-losses.MarginLoss(margin=0.2, 
-                nu=0, 
-                beta=1.2, 
-                triplets_per_anchor="all", 
-                learn_beta=False, 
-                num_classes=None, 
-                **kwargs)
-```
-
-**Equations**:
-
-![margin_loss_equation2](imgs/margin_loss_equation2.png){: style="height:60px"}
-
-where
-
-![margin_loss_equation1](imgs/margin_loss_equation1.png){: style="height:40px"}
-
-
-**Parameters**:
-
-* **margin**: This is alpha in the above equation. The paper uses 0.2.
-* **nu**: The regularization weight for the magnitude of beta.
-* **beta**: This is beta in the above equation. The paper uses 1.2 as the initial value.
-* **triplets_per_anchor**: The number of triplets per element to sample within a batch. Can be an integer or the string "all". For example, if your batch size is 128, and triplets_per_anchor is 100, then 12800 triplets will be sampled. If triplets_per_anchor is "all", then all possible triplets in the batch will be used.
-* **learn_beta**: If True, beta will be a torch.nn.Parameter, which can be optimized using any PyTorch optimizer.
-* **num_classes**: If not None, then beta will be of size ```num_classes```, so that a separate beta is used for each class during training.
-
-**Default distance**: 
-
- - [```LpDistance(normalize_embeddings=True, p=2, power=1)```](distances.md#lpdistance)
-
-
-**Default reducer**: 
-
- - [DivisorReducer](reducers.md#divisorreducer)
-
-**Reducer input**:
-
-* **margin_loss**: The loss per triplet in the batch. Reduction type is ```"triplet"```.
-* **beta_reg_loss**: The regularization loss per element in ```self.beta```. Reduction type is ```"already_reduced"``` if ```self.num_classes = None```. Otherwise it is ```"element"```.
-
-
-## MultiSimilarityLoss
-[Multi-Similarity Loss with General Pair Weighting for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf){target=_blank}
-```python
-losses.MultiSimilarityLoss(alpha=2, beta=50, base=0.5, **kwargs)
-```
-
-**Equation**:
-
-![multi_similarity_loss_equation](imgs/multi_similarity_loss_equation.png){: style="height:150px"}
-
-
-**Parameters**:
-
-* **alpha**: The weight applied to positive pairs. The paper uses 2.
-* **beta**: The weight applied to negative pairs. The paper uses 50.
-* **base**: The offset applied to the exponent in the loss. This is lambda in the above equation. The paper uses 1. 
-
-**Default distance**: 
-
- - [```CosineSimilarity()```](distances.md#cosinesimilarity)
-
-**Default reducer**: 
-
- - [MeanReducer](reducers.md#meanreducer)
-
-**Reducer input**:
-
-* **loss**: The loss per element in the batch. Reduction type is ```"element"```.
-
-## MultipleLosses
-This is a simple wrapper for multiple losses. Pass in a list of already-initialized loss functions. Then, when you call forward on this object, it will return the sum of all wrapped losses.
-```python
-losses.MultipleLosses(losses, miners=None, weights=None)
-```
-**Parameters**:
-
-* **losses**: A list or dictionary of initialized loss functions. On the forward call of MultipleLosses, each wrapped loss will be computed, and then the average will be returned.
-* **miners**: Optional. A list or dictionary of mining functions. This allows you to pair mining functions with loss functions. For example, if ```losses = [loss_A, loss_B]```, and ```miners = [None, miner_B]``` then no mining will be done for ```loss_A```, but the output of ```miner_B``` will be passed to ```loss_B```. The same logic applies if ```losses = {"loss_A": loss_A, "loss_B": loss_B}``` and ```miners = {"loss_B": miner_B}```.
-* **weights**: Optional. A list or dictionary of loss weights, which will be multiplied by the corresponding losses obtained by the loss functions. The default is to multiply each loss by 1. If ```losses``` is a list, then ```weights``` must be a list. If ```losses``` is a dictionary, ```weights``` must contain the same keys as ```losses```. 
-
-
-## NCALoss
-[Neighbourhood Components Analysis](https://www.cs.toronto.edu/~hinton/absps/nca.pdf){target=_blank}
-```python
-losses.NCALoss(softmax_scale=1, **kwargs)
-```
-
-**Equations**:
-
-![nca_loss_equation1](imgs/nca_loss_equation1.png){: style="height:50px"}
-
-where
-
-![nca_loss_equation2](imgs/nca_loss_equation2.png){: style="height:60px"}
-
-![nca_loss_equation3](imgs/nca_loss_equation3.png){: style="height:60px"}
-
-In this implementation, we use ```-g(A)``` as the loss.
-
-**Parameters**:
-
-* **softmax_scale**: The exponent multiplier in the loss's softmax expression. The paper uses ```softmax_scale = 1 ```, which is why it does not appear in the above equations.
-
-**Default distance**: 
-
- - [```LpDistance(normalize_embeddings=True, p=2, power=2)```](distances.md#lpdistance)
-
-**Default reducer**: 
-
- - [MeanReducer](reducers.md#meanreducer)
-
-**Reducer input**:
-
-* **loss**: The loss per element in the batch, that results in a non zero exponent in the cross entropy expression. Reduction type is ```"element"```.
-
-
-
-## NormalizedSoftmaxLoss
-[Classification is a Strong Baseline for Deep Metric Learning](https://arxiv.org/pdf/1811.12649.pdf){target=_blank}
-```python
-losses.NormalizedSoftmaxLoss(num_classes, embedding_size, temperature=0.05, **kwargs)
-```
-
-**Equation**:
-
-![normalized_softmax_loss_equation](imgs/normalized_softmax_loss_equation.png){: style="height:80px"}
-
-
-**Parameters**:
-
-* **num_classes**: The number of classes in your training dataset.
-* **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set ```embedding_size``` to 512.
-* **temperature**: This is sigma in the above equation. The paper uses 0.05.
-
-**Other info**
-
-* This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts ```weight_regularizer```, ```weight_reg_weight```, and ```weight_init_func``` as optional arguments.
-* This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
-```python
-loss_func = losses.NormalizedSoftmaxLoss(...).to(torch.device('cuda'))
-loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
-# then during training:
-loss_optimizer.step()
-```
-
-**Default distance**: 
-
- - [```DotProductSimilarity()```](distances.md#dotproductsimilarity)
-
-**Default reducer**: 
-
- - [MeanReducer](reducers.md#meanreducer)
-
-**Reducer input**:
-
-* **loss**: The loss per element in the batch. Reduction type is ```"element"```.
-
-
-## NPairsLoss
-[Improved Deep Metric Learning with Multi-class N-pair Loss Objective](http://www.nec-labs.com/uploads/images/Department-Images/MediaAnalytics/papers/nips16_npairmetriclearning.pdf){target=_blank}
-
-If your batch has more than 2 samples per label, then you should use [NTXentLoss](#ntxentloss).
-
-```python
-losses.NPairsLoss(**kwargs)
-```
-
-**Default distance**: 
-
- - [```DotProductSimilarity()```](distances.md#dotproductsimilarity)
-
-**Default reducer**: 
-
- - [MeanReducer](reducers.md#meanreducer)
-
-**Reducer input**:
-
-* **loss**: The loss per element in the batch. Reduction type is ```"element"```.
-
-
-## NTXentLoss
-This is also known as InfoNCE, and is a generalization of the [NPairsLoss](losses.md#npairsloss). It has been used in self-supervision papers such as: 
-
- - [Representation Learning with Contrastive Predictive Coding](https://arxiv.org/pdf/1807.03748.pdf){target=_blank}
- - [Momentum Contrast for Unsupervised Visual Representation Learning](https://arxiv.org/pdf/1911.05722.pdf){target=_blank}
- - [A Simple Framework for Contrastive Learning of Visual Representations](https://arxiv.org/pdf/2002.05709.pdf){target=_blank}
-```python
-losses.NTXentLoss(temperature=0.07, **kwargs)
-```
-
-**Equation**:
-
-![ntxent_loss_equation](imgs/ntxent_loss_equation.png){: style="height:70px"}
-
-**Parameters**:
-
-* **temperature**: This is tau in the above equation. The MoCo paper uses 0.07, while SimCLR uses 0.5.
-
-**Default distance**: 
-
- - [```CosineSimilarity()```](distances.md#cosinesimilarity)
-
-**Default reducer**: 
-
- - [MeanReducer](reducers.md#meanreducer)
-
-**Reducer input**:
-
-* **loss**: The loss per positive pair in the batch. Reduction type is ```"pos_pair"```.
-
-
-## PNPLoss
-[Rethinking the Optimization of Average Precision: Only Penalizing Negative Instances before Positive Ones is Enough](https://arxiv.org/pdf/2102.04640.pdf){target=_blank}
-```python
-losses.PNPLoss(b=2, alpha=1, anneal=0.01, variant="O", **kwargs)
-```
-
-
-## ProxyAnchorLoss
-[Proxy Anchor Loss for Deep Metric Learning](https://arxiv.org/pdf/2003.13911.pdf){target=_blank}
-```python
-losses.ProxyAnchorLoss(num_classes, embedding_size, margin = 0.1, alpha = 32, **kwargs)
-```
-
-**Equation**:
-
-![proxy_anchor_loss_equation](imgs/proxy_anchor_loss_equation.png){: style="height:150px"}
-
-
-**Parameters**:
-
-* **num_classes**: The number of classes in your training dataset.
-* **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set ```embedding_size``` to 512.
-* **margin**: This is delta in the above equation. The paper uses 0.1.
-* **alpha**: This is alpha in the above equation. The paper uses 32.
-
-**Other info**
-
-* This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts ```weight_regularizer```, ```weight_reg_weight```, and ```weight_init_func``` as optional arguments.
-* This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
-```python
-loss_func = losses.ProxyAnchorLoss(...).to(torch.device('cuda'))
-loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
-# then during training:
-loss_optimizer.step()
-```
-
-**Default distance**: 
-
- - [```CosineSimilarity()```](distances.md#cosinesimilarity)
-
-**Default reducer**: 
-
- - [DivisorReducer](reducers.md#divisorreducer)
-
-**Reducer input**:
-
-* **pos_loss**: The positive pair loss per proxy. Reduction type is ```"element"```.
-* **neg_loss**: The negative pair loss per proxy. Reduction type is ```"element"```.
-
-
-## ProxyNCALoss
-[No Fuss Distance Metric Learning using Proxies](https://arxiv.org/pdf/1703.07464.pdf){target=_blank}
-```python
-losses.ProxyNCALoss(num_classes, embedding_size, softmax_scale=1, **kwargs)
-```
-
-**Parameters**:
-
-* **num_classes**: The number of classes in your training dataset.
-* **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set ```embedding_size``` to 512.
-* **softmax_scale**: See [NCALoss](losses.md#ncaloss)
-
-**Other info**
-
-* This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts ```weight_regularizer```, ```weight_reg_weight```, and ```weight_init_func``` as optional arguments.
-* This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
-```python
-loss_func = losses.ProxyNCALoss(...).to(torch.device('cuda'))
-loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
-# then during training:
-loss_optimizer.step()
-```
-
-**Default distance**: 
-
- - [```LpDistance(normalize_embeddings=True, p=2, power=2)```](distances.md#lpdistance)
-
-**Default reducer**:
-
- - [MeanReducer](reducers.md#meanreducer)
-
-**Reducer input**:
-
-* **loss**: The loss per element in the batch, that results in a non zero exponent in the cross entropy expression. Reduction type is ```"element"```.
-
-
-## SelfSupervisedLoss
-
-A common use case is to have `embeddings` and `ref_emb` be augmented versions of each other. For most losses, you have to create labels to indicate which `embeddings` correspond with which `ref_emb`. `SelfSupervisedLoss` automates this.
-
-```python
-loss_fn = losses.TripletMarginLoss()
-loss_fn = SelfSupervisedLoss(loss_fn)
-loss = loss_fn(embeddings, ref_emb)
-```
-
-??? "Supported Loss Functions"
-    - [AngularLoss](losses.md#angularloss)
-    - [CircleLoss](losses.md#circleloss)
-    - [ContrastiveLoss](losses.md#contrastiveloss)
-    - [IntraPairVarianceLoss](losses.md#intrapairvarianceloss)
-    - [MultiSimilarityLoss](losses.md#multisimilarityloss)
-    - [NTXentLoss](losses.md#ntxentloss)
-    - [SignalToNoiseRatioContrastiveLoss](losses.md#signaltonoiseratiocontrastiveloss)
-    - [SupConLoss](losses.md#supconloss)
-    - [TripletMarginLoss](losses.md#tripletmarginloss)
-    - [TupletMarginLoss](losses.md#tupletmarginloss)
-
-
-
-## SignalToNoiseRatioContrastiveLoss
-[Signal-to-Noise Ratio: A Robust Distance Metric for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Yuan_Signal-To-Noise_Ratio_A_Robust_Distance_Metric_for_Deep_Metric_Learning_CVPR_2019_paper.pdf){target=_blank}
-```python
-losses.SignalToNoiseRatioContrastiveLoss(pos_margin=0, neg_margin=1, **kwargs):
-```
-
-**Parameters**:
-
-* **pos_margin**: The noise-to-signal ratio over which positive pairs will contribute to the loss.
-* **neg_margin**: The noise-to-signal ratio under which negative pairs will contribute to the loss.
-
-**Default distance**: 
-
- - [```SNRDistance()```](distances.md#snrdistance)
-     - This is the only compatible distance.
-
-**Default reducer**: 
-
- - [AvgNonZeroReducer](reducers.md#avgnonzeroreducer)
-
-**Reducer input**:
-
-* **pos_loss**: The loss per positive pair in the batch. Reduction type is ```"pos_pair"```.
-* **neg_loss**: The loss per negative pair in the batch. Reduction type is ```"neg_pair"```.
-
-## SoftTripleLoss   
-[SoftTriple Loss: Deep Metric Learning Without Triplet Sampling](http://openaccess.thecvf.com/content_ICCV_2019/papers/Qian_SoftTriple_Loss_Deep_Metric_Learning_Without_Triplet_Sampling_ICCV_2019_paper.pdf){target=_blank}
-```python
-losses.SoftTripleLoss(num_classes, 
-                    embedding_size, 
-                    centers_per_class=10, 
-                    la=20, 
-                    gamma=0.1, 
-                    margin=0.01,
-					**kwargs)
-```
-
-**Equations**:
-
-![soft_triple_loss_equation1](imgs/soft_triple_loss_equation1.png){: style="height:100px"}
-
-where
-
-![soft_triple_loss_equation2](imgs/soft_triple_loss_equation2.png){: style="height:80px"}
-
-
-**Parameters**:
-
-* **num_classes**: The number of classes in your training dataset.
-* **embedding_size**: The size of the embeddings that you pass into the loss function. For example, if your batch size is 128 and your network outputs 512 dimensional embeddings, then set ```embedding_size``` to 512.
-* **centers_per_class**: The number of weight vectors per class. (The regular cross entropy loss has 1 center per class.) The paper uses 10.
-* **la**: This is lambda in the above equation.
-* **gamma**: This is gamma in the above equation. The paper uses 0.1.
-* **margin**: The is delta in the above equations. The paper uses 0.01.
-
-**Other info**
-
-* This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts ```weight_regularizer```, ```weight_reg_weight```, and ```weight_init_func``` as optional arguments.
-* This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
-```python
-loss_func = losses.SoftTripleLoss(...).to(torch.device('cuda'))
-loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
-# then during training:
-loss_optimizer.step()
-```
-
-**Default distance**: 
-
- - [```CosineSimilarity()```](distances.md#cosinesimilarity)
-     - The distance measure must be inverted. For example, [```DotProductSimilarity(normalize_embeddings=False)```](distances.md#dotproductsimilarity) is also compatible.
-
-**Default reducer**: 
-
- - [MeanReducer](reducers.md#meanreducer)
-
-**Reducer input**:
-
-* **loss**: The loss per element in the batch. Reduction type is ```"element"```.
-
-
-
-## SphereFaceLoss 
-[SphereFace: Deep Hypersphere Embedding for Face Recognition](https://arxiv.org/pdf/1704.08063.pdf){target=_blank}
-
-```python
-losses.SphereFaceLoss(num_classes, 
-                    embedding_size, 
-                    margin=4, 
-                    scale=1, 
-                    **kwargs)
-```
-
-**Parameters**:
-
-See [LargeMarginSoftmaxLoss](losses.md#largemarginsoftmaxloss)
-
-**Other info**
-
-* This also extends [WeightRegularizerMixin](losses.md#weightregularizermixin), so it accepts ```weight_regularizer```, ```weight_reg_weight```, and ```weight_init_func``` as optional arguments.
-* This loss **requires an optimizer**. You need to create an optimizer and pass this loss's parameters to that optimizer. For example:
-```python
-loss_func = losses.SphereFaceLoss(...).to(torch.device('cuda'))
-loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
-# then during training:
-loss_optimizer.step()
-```
-
-**Default distance**: 
-
- - [```CosineSimilarity()```](distances.md#cosinesimilarity)
-
-    - This is the only compatible distance.
-
-**Default reducer**: 
-
- - [MeanReducer](reducers.md#meanreducer)
-
-**Reducer input**:
-
-* **loss**: The loss per element in the batch. Reduction type is ```"element"```.
-
-
-## SubCenterArcFaceLoss 
-[Sub-center ArcFace: Boosting Face Recognition by Large-scale Noisy Web Faces](https://www.ecva.net/papers/eccv_2020/papers_ECCV/papers/123560715.pdf){target=_blank}
-
-This loss extends [ArcFaceLoss](losses.md#arcfaceloss). It uses multiple sub centers per class, instead of just a single center, hence the name Sub-center ArcFace.
-
-```python
-losses.SubCenterArcFaceLoss(
-    num_classes, 
-    embedding_size, 
-    margin=28.6, 
-    scale=64, 
-    sub_centers=3, 
-    **kwargs
+from pytorch_metric_learning import distances, losses, reducers, regularizers
+
+loss_func = losses.ContrastiveLoss(
+    neg_margin=0.5,
+    distance=distances.CosineSimilarity(),
+    reducer=reducers.MeanReducer(),
+    embedding_regularizer=regularizers.LpRegularizer(),
+    embedding_reg_weight=0.1,
 )
 ```
 
-**Parameters**:
+Proxy losses also accept the [learnable weight arguments](#learnable-weight-arguments),
+declared by `types.ProxyLossOptions`.
 
-* **sub_centers**: The number of sub centers per class.
+## Regularization terms
 
-See [ArcFaceLoss](losses.md#arcfaceloss) for a description of the other parameters.
+Losses with [learnable weights](#learnable-weight-arguments) also accept
+`weight_regularizer` and `weight_reg_weight`. The total loss is
 
+$$
+L = \operatorname{reduce}(\text{objective terms})
++ w_e \, R_e(\text{embeddings}) + w_w \, R_w(\text{weights}),
+$$
 
-**Other info**: 
+where each penalty appears only when its regularizer is supplied. The
+[reducer](reducers.md) sees only the loss's own objective terms. Each
+regularizer applies its own reducer, and the weighted result is added after
+reduction.
 
-* This loss **requires an optimizer**. See [ArcFaceLoss](losses.md#arcfaceloss) for details.
-* See [ArcFaceLoss](losses.md#arcfaceloss) for default distance, reducer, and reducer input.
+## Unreduced loss terms
 
-
-**Getting outliers and dominant centers**
-
-Outliers and dominant centers can be computed as described in the paper.
-```python
-outliers, dominant_centers = loss_func.get_outliers(
-    embeddings, labels, threshold=75, return_dominant_centers=True
-)
-```
-
-
-## SupConLoss
-Described in [Supervised Contrastive Learning](https://arxiv.org/abs/2004.11362){target=_blank}.
-```python
-losses.SupConLoss(temperature=0.1, **kwargs)
-```
-
-**Equation**:
-
-![supcon_loss_equation](imgs/supcon_loss_equation.png){: style="height:90px"}
-
-**Parameters**:
-
-* **temperature**: This is tau in the above equation. The paper uses 0.1.
-
-**Default distance**: 
-
- - [```CosineSimilarity()```](distances.md#cosinesimilarity)
-
-**Default reducer**: 
-
-- [AvgNonZeroReducer](reducers.md#avgnonzeroreducer)
-
-**Reducer input**:
-
-* **loss**: The loss per element in the batch. If an element has only negative pairs or no pairs, it's ignored thanks to `AvgNonZeroReducer`. Reduction type is ```"element"```.
-
-
-## TripletMarginLoss
+`loss_func.loss_terms(embeddings, labels, ...)` takes the same arguments as
+`forward` and returns the `pytorch_metric_learning.types.LossDict` that the
+reducer would receive, plus the regularization terms `embedding_reg_loss` and
+`weight_reg_loss` when their regularizers are set. Regularization terms are
+already reduced and already multiplied by their weights. An objective term
+with the same name as a regularization term raises `ValueError` from both
+`forward` and `loss_terms`. Use `loss_terms` to
+implement a custom aggregation or to inspect per-pair values:
 
 ```python
-losses.TripletMarginLoss(margin=0.05,
-                        swap=False,
-                        smooth_loss=False,
-                        triplets_per_anchor="all",
-                        **kwargs)
+terms = loss_func.loss_terms(embeddings, labels)
+pos_pair_losses = terms["pos_loss"]["losses"]
 ```
 
-**Equation**:
+Each term follows the [`LossTerm` contract](types.md#lossterm): its `indices`
+say whether one value of `losses` is already reduced or belongs to an element, a
+pair, or a triplet, and a term with a `divisor` requires
+[DivisorReducer](reducers.md#divisorreducer). Each loss page lists its terms
+under **Reducer input**. A loss with no valid pairs, triplets, or queries
+returns `{}` or terms with empty `losses`, which
+[reduce](reducers.md#reduction) to a differentiable zero; an embedding
+regularizer still adds its penalty.
 
-![triplet_margin_loss_equation](imgs/triplet_margin_loss_equation.png){: style="height:35px"}
+## Miner weights
 
-**Parameters**:
+Losses that do not consume pairs or triplets directly can still use a miner's
+output. ArcFaceLoss, CosFaceLoss, DynamicArcFaceLoss, FastAPLoss,
+LargeMarginSoftmaxLoss, NCALoss,
+NormalizedSoftmaxLoss, ProxyAnchorLoss, ProxyNCALoss, SmoothAPLoss,
+SoftTripleLoss, SphereFaceLoss, and SubCenterArcFaceLoss turn `indices_tuple`
+into one weight per embedding:
 
-* **margin**: The desired difference between the anchor-positive distance and the anchor-negative distance. This is ```m``` in the above equation.
-* **swap**: Use the positive-negative distance instead of anchor-negative distance, if it violates the margin more.
-* **smooth_loss**: Use the log-exp version of the triplet loss
-* **triplets_per_anchor**: The number of triplets per element to sample within a batch. Can be an integer or the string "all". For example, if your batch size is 128, and triplets_per_anchor is 100, then 12800 triplets will be sampled. If triplets_per_anchor is "all", then all possible triplets in the batch will be used.
+$$
+w_i = \frac{c_i}{\max_j c_j},
+$$
 
-**Default distance**: 
+where $c_i$ counts the occurrences of embedding $i$ in the tuples. Embeddings
+absent from the tuples get weight 0, and the most frequent embedding gets
+weight 1. With `indices_tuple=None`, every weight is 1. A supplied tuple that
+contains no indices, such as an empty miner result, gives every embedding
+weight 0, so the loss is a differentiable zero rather than the unmined loss.
+NCALoss counts only anchors when `ref_emb` is supplied, because positives and
+negatives then index the reference set. ProxyAnchorLoss multiplies each
+exponential term by its weight; the other losses multiply each embedding's loss
+by its weight. These losses require `labels`.
 
- - [```LpDistance(normalize_embeddings=True, p=2, power=1)```](distances.md#lpdistance)
+## Learnable weight arguments
 
-**Default reducer**: 
+[BaseProxyLoss](losses/base_proxy_loss.md) is the base class of every loss that
+owns one learnable vector per class or per class center. It stores them in a
+parameter named `weight` with shape `(num_weights, embedding_size)`; row `r` is
+one vector, as in `torch.nn.Linear.weight`. With one vector per class, row `c`
+belongs to class `c`. With `K` centers per class, rows `c * K` through
+`(c + 1) * K - 1` belong to class `c`. Each subclass declares these keyword-only
+arguments:
 
- - [AvgNonZeroReducer](reducers.md#avgnonzeroreducer)
+- **weight_regularizer**: A [regularizer](regularizers.md) applied to `weight`.
+  If `None`, no weight penalty is added. The penalty appears in `loss_terms` as
+  `weight_reg_loss`.
+- **weight_reg_weight**: The weight multiplying that penalty before it is added
+  to the reduced loss. The default is 1.0.
+- **weight_init_func**: A callable that initializes `weight` in place, such as
+  `torch.nn.init.xavier_uniform_` or
+  `functools.partial(torch.nn.init.kaiming_uniform_, a=1, mode="fan_out")`. If
+  `None`, the loss's `default_weight_init(weight)` is used, as listed below.
 
-**Reducer input**:
+| Loss                                                                                                                                                                                     | `weight` shape | Default initialization                                           |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | ---------------------------------------------------------------- |
+| [ArcFaceLoss](losses/arcface_loss.md), [CosFaceLoss](losses/cosface_loss.md), [LargeMarginSoftmaxLoss](losses/large_margin_softmax_loss.md), [SphereFaceLoss](losses/sphereface_loss.md) | `(C, D)`       | `torch.nn.init.normal_`                                          |
+| [SubCenterArcFaceLoss](losses/subcenter_arcface_loss.md), [DynamicArcFaceLoss](losses/dynamic_arcface_loss.md)                                                                           | `(C·S, D)`     | `torch.nn.init.normal_`                                          |
+| [NormalizedSoftmaxLoss](losses/normalized_softmax_loss.md)                                                                                                                               | `(C, D)`       | `torch.nn.init.normal_`                                          |
+| [ProxyAnchorLoss](losses/proxy_anchor_loss.md)                                                                                                                                           | `(C, D)`       | `torch.nn.init.kaiming_normal_(mode="fan_out")`                  |
+| [ProxyNCALoss](losses/proxy_nca_loss.md)                                                                                                                                                 | `(C, D)`       | `torch.nn.init.normal_`                                          |
+| [SoftTripleLoss](losses/soft_triple_loss.md)                                                                                                                                             | `(C·K, D)`     | `torch.nn.init.kaiming_uniform_(a=math.sqrt(5), mode="fan_out")` |
 
-* **loss**: The loss per triplet in the batch. Reduction type is ```"triplet"```.
+`D` is the embedding size, `C` the number of classes, `S` the sub-centers per
+class, and `K` the centers per class.
 
-## TupletMarginLoss
-[Deep Metric Learning with Tuplet Margin Loss](http://openaccess.thecvf.com/content_ICCV_2019/papers/Yu_Deep_Metric_Learning_With_Tuplet_Margin_Loss_ICCV_2019_paper.pdf){target=_blank}
-```python
-losses.TupletMarginLoss(margin=5.73, scale=64, **kwargs)
-```
-
-**Equation**:
-
-![tuplet_margin_loss_equation](imgs/tuplet_margin_loss_equation.png){: style="height:80px"}
-
-**Parameters**:
-
-* **margin**: The angular margin (in degrees) applied to positive pairs. This is beta in the above equation. The paper uses a value of 5.73 degrees (0.1 radians).
-* **scale**: This is ```s``` in the above equation.
-
-The paper combines this loss with [IntraPairVarianceLoss](losses.md#intrapairvarianceloss). You can accomplish this by using [MultipleLosses](losses.md#multiplelosses):
-```python
-main_loss = losses.TupletMarginLoss()
-var_loss = losses.IntraPairVarianceLoss()
-complete_loss = losses.MultipleLosses([main_loss, var_loss], weights=[1, 0.5])
-```
-
-**Default distance**: 
-
- - [```CosineSimilarity()```](distances.md#cosinesimilarity)
-
-    - This is the only compatible distance.
-
-**Default reducer**: 
-
- - [MeanReducer](reducers.md#meanreducer)
-
-**Reducer input**:
-
-* **loss**: The loss per positive pair in the batch. Reduction type is ```"pos_pair"```.
-
-## WeightRegularizerMixin
-Losses can extend this class in addition to BaseMetricLossFunction. You should extend this class if your loss function contains a learnable weight matrix.
-```python
-losses.WeightRegularizerMixin(weight_init_func=None, weight_regularizer=None, weight_reg_weight=1, **kwargs)
-```
-
-**Parameters**:
-
-* **weight_init_func**: An [TorchInitWrapper](common_functions.md#torchinitwrapper) object, which will be used to initialize the weights of the loss function.
-* **weight_regularizer**: The [regularizer](regularizers.md) to apply to the loss's learned weights.
-* **weight_reg_weight**: The amount the regularization loss will be multiplied by.
-
-Extended by:
-
-* [ArcFaceLoss](losses.md#arcfaceloss)
-* [CosFaceLoss](losses.md#cosfaceloss)
-* [LargeMarginSoftmaxLoss](losses.md#largemarginsoftmaxloss)
-* [NormalizedSoftmaxLoss](losses.md#normalizedsoftmaxloss)
-* [ProxyAnchorLoss](losses.md#proxyanchorloss)
-* [ProxyNCALoss](losses.md#proxyncaloss)
-* [SoftTripleLoss](losses.md#softtripleloss)
-* [SphereFaceLoss](losses.md#spherefaceloss)
-
-
-## VICRegLoss
-[VICReg: Variance-Invariance-Covariance Regularization for Self-Supervised Learning](https://arxiv.org/pdf/2105.04906.pdf){target=_blank}
-```python
-losses.VICRegLoss(invariance_lambda=25, 
-                variance_mu=25, 
-                covariance_v=1, 
-                eps=1e-4, 
-                **kwargs)
-```
-
-**Usage**:
-
-Unlike other loss functions, ```VICRegLoss``` does not accept ```labels``` or ```indices_tuple```:
+These parameters belong to the loss module. Move the loss with
+`loss_func.to(device, dtype)` and include `loss_func.parameters()` in an
+optimizer:
 
 ```python
-loss_fn = VICRegLoss()
-loss = loss_fn(embeddings, ref_emb=ref_emb)
+import torch
+from pytorch_metric_learning import losses
+
+loss_func = losses.ArcFaceLoss(num_classes=10, embedding_size=128)
+loss_optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.01)
+
+embeddings = torch.randn(32, 128, requires_grad=True)
+labels = torch.randint(0, 10, (32,))
+loss = loss_func(embeddings, labels)
+loss.backward()
+loss_optimizer.step()
 ```
 
-**Equations**:
+Outside autocast, the parameters must have the embeddings' device and dtype;
+otherwise the loss raises `ValueError` naming both placements. Under autocast,
+parameters may keep a higher precision than the embeddings. The loss never
+moves or casts its own parameters during a forward pass.
 
-![vicreg_total](imgs/vicreg_total.png){: style="height:40px"}
+[P2SGradLoss](losses/p2s_grad_loss.md) owns a `weight` parameter and
+[ManifoldLoss](losses/manifold_loss.md) owns `proxies` under the same placement
+rule. They do not derive from BaseProxyLoss and accept only the embedding
+regularization options.
 
-where
+## Classification logits
 
-![vicreg_total](imgs/vicreg_invariance.png){: style="height:70px"}
+These losses provide `loss_func.get_logits(embeddings)`, which returns a
+`(N, num_classes)` tensor with one score per embedding and class. The scores
+omit the training margin, so they suit prediction and evaluation:
 
-![vicreg_total](imgs/vicreg_variance.png){: style="height:90px"}
+| Loss                                     | `get_logits` returns                                                           |
+| ---------------------------------------- | ------------------------------------------------------------------------------ |
+| ArcFaceLoss, CosFaceLoss                 | `scale` times the cosine similarity to each class weight                       |
+| SubCenterArcFaceLoss, DynamicArcFaceLoss | `scale` times the cosine similarity to each class's closest sub-center         |
+| LargeMarginSoftmaxLoss                   | `scale` times the weight norm, the embedding norm, and the cosine              |
+| SphereFaceLoss                           | `scale` times the embedding norm and the cosine                                |
+| NormalizedSoftmaxLoss                    | The similarity to each normalized class weight divided by `temperature`        |
+| ProxyAnchorLoss                          | The distance-matrix value to each proxy, cosine similarity by default          |
+| ProxyNCALoss                             | The distance-matrix value to each proxy, squared Euclidean distance by default |
+| SoftTripleLoss                           | The relaxed similarity $\mathcal{S}'_{i,c}$ over each class's centers          |
 
-![vicreg_total](imgs/vicreg_variance_detail.png){: style="height:40px"}
+For every loss except ProxyNCALoss with its default distance, a larger value
+means a closer class. ProxyNCALoss returns distances unless it is configured
+with a similarity, so its closest class is the smallest value. P2SGradLoss and
+ManifoldLoss do not provide `get_logits`.
 
-![vicreg_total](imgs/vicreg_covariance.png){: style="height:70px"}
+## Choose an objective
 
-**Parameters**:
+Each loss has a separate contract page with its signature, equation, default
+distance and reducer, the arguments it supports, and the paper's settings when
+the library default differs. Use the guidance below to pick a starting point.
 
-* **invariance_lambda**: The weight of the invariance term.
-* **variance_mu**: The weight of the variance term.
-* **covariance_v**: The weight of the covariance term.
-* **eps**: Small scalar to prevent numerical instability.
+### Pair and triplet objectives
 
-**Default distance**: 
+These compare embeddings with each other and need several examples per class in
+each batch, such as batches from [MPerClassSampler](samplers.md#mperclasssampler).
 
- - Not applicable. You cannot pass in a distance function.
+- [AngularLoss](losses/angular_loss.md): triplets constrained by the angle at
+  the negative, which is invariant to the scale of the distances.
+- [CircleLoss](losses/circle_loss.md): pairs weighted by how far each
+  similarity is from its optimum, with one margin and one scale.
+- [ContrastiveLoss](losses/contrastive_loss.md): the simplest pair objective;
+  pull positives within one margin and push negatives beyond another.
+- [DynamicSoftMarginLoss](losses/dynamic_soft_margin_loss.md): local
+  descriptors and patch matching, where the margin adapts to a running
+  histogram of distances.
+- [GeneralizedLiftedStructureLoss](losses/generalized_lifted_structure_loss.md):
+  lifted structure per anchor, with support for a separate reference set.
+- [HistogramLoss](losses/histogram_loss.md): no margin to tune; it penalizes the
+  overlap of the positive and negative similarity distributions.
+- [IntraPairVarianceLoss](losses/intra_pair_variance_loss.md): an auxiliary term
+  that reduces the variance of pair similarities, combined with TupletMarginLoss
+  through [MultipleLosses](losses/multiple_losses.md) as in its paper.
+- [LiftedStructureLoss](losses/lifted_structure_loss.md): each positive pair
+  against every negative of both of its members in the batch.
+- [MarginLoss](losses/margin_loss.md): a boundary between positive and negative
+  distances, optionally learned per class, from the same paper as
+  [DistanceWeightedMiner](miners.md#distanceweightedminer).
+- [MultiSimilarityLoss](losses/multi_similarity_loss.md): a strong pair
+  baseline that weights pairs by their relative similarities; pair it with
+  [MultiSimilarityMiner](miners.md#multisimilarityminer).
+- [NCALoss](losses/nca_loss.md): a softmax over distances to every reference,
+  with no margin.
+- [NPairsLoss](losses/n_pairs_loss.md): batches of one positive pair per class,
+  scored as classification among the batch's positives.
+- [RankedListLoss](losses/ranked_list_loss.md): each anchor's ranked list of
+  references, separating positives from negatives by a margin.
+- [SignalToNoiseRatioContrastiveLoss](losses/signal_to_noise_ratio_contrastive_loss.md):
+  the contrastive objective measured with the signal-to-noise ratio distance.
+- [TripletMarginLoss](losses/triplet_margin_loss.md): the standard triplet
+  baseline; combine it with a miner such as
+  [TripletMarginMiner](miners.md#tripletmarginminer).
+- [TupletMarginLoss](losses/tuplet_margin_loss.md): one positive against all
+  negatives of an anchor with scaled angular margins.
 
-**Default reducer**: 
+### Classification and proxy objectives
 
- - [MeanReducer](reducers.md#meanreducer)
+These learn one vector per class, or per class center, so they need only labels
+and work with ordinary random batches. Train their parameters with the model;
+see [learnable weight arguments](#learnable-weight-arguments).
 
-**Reducer input**:
+- [ArcFaceLoss](losses/arcface_loss.md): an additive angular margin, widely
+  used for face recognition and other tasks with many classes.
+- [CosFaceLoss](losses/cosface_loss.md): an additive cosine margin.
+- [DynamicArcFaceLoss](losses/dynamic_arcface_loss.md): SubCenterArcFace with
+  larger margins for smaller classes, for long-tailed class distributions.
+- [LargeMarginSoftmaxLoss](losses/large_margin_softmax_loss.md): a
+  multiplicative angular margin that keeps the weight and embedding norms.
+- [ManifoldLoss](losses/manifold_loss.md): proxies compared through a
+  random-walk similarity over the batch and the proxies.
+- [NormalizedSoftmaxLoss](losses/normalized_softmax_loss.md): a cosine softmax
+  with a temperature and no margin; a strong, simple baseline.
+- [P2SGradLoss](losses/p2s_grad_loss.md): cosine classification without margin
+  or scale hyperparameters.
+- [ProxyAnchorLoss](losses/proxy_anchor_loss.md): proxies as anchors against all
+  embeddings of the batch; fast to converge.
+- [ProxyNCALoss](losses/proxy_nca_loss.md): NCA against one learned proxy per
+  class.
+- [SoftTripleLoss](losses/soft_triple_loss.md): several centers per class, for
+  classes with multiple modes.
+- [SphereFaceLoss](losses/sphereface_loss.md): a multiplicative angular margin
+  on normalized weights.
+- [SubCenterArcFaceLoss](losses/subcenter_arcface_loss.md): ArcFace with
+  sub-centers per class, for noisy labels; it can report outliers.
 
-* **invariance_loss**: The MSE loss between ```embeddings[i]``` and ```ref_emb[i]```. Reduction type is ```"element"```.
-* **variance_loss1**: The variance loss for ```embeddings```. Reduction type is ```"element"```.
-* **variance_loss2**: The variance loss for ```ref_emb```. Reduction type is ```"element"```.
-* **covariance_loss**: The covariance loss. This loss is already reduced to a single value.
+### Ranking objectives
+
+These optimize a retrieval ranking measure directly and benefit from large
+batches with several positives per class.
+
+- [FastAPLoss](losses/fast_ap_loss.md): average precision through a histogram
+  of distances.
+- [PNPLoss](losses/pnp_loss.md): average precision that penalizes only negatives
+  ranked before positives, with paper variants.
+- [SmoothAPLoss](losses/smooth_ap_loss.md): average precision with a sigmoid
+  relaxation of the ranking.
+- [ThresholdConsistentMarginLoss](losses/threshold_consistent_margin_loss.md):
+  an auxiliary term that makes one similarity threshold work across classes;
+  add it to another loss with [MultipleLosses](losses/multiple_losses.md).
+
+### Self-supervised and supervised contrastive objectives
+
+- [InstanceLoss](losses/instance_loss.md): classification of each instance
+  against the batch, as in image-text instance retrieval.
+- [MultiSupConLoss](losses/multi_supcon_loss.md): SupCon for label sets, with
+  positives chosen and weighted by Jaccard similarity.
+- [NTXentLoss](losses/ntxent_loss.md): the InfoNCE objective of SimCLR and MoCo;
+  use [SelfSupervisedLoss](losses/self_supervised_loss.md) for unlabeled views.
+- [SupConLoss](losses/supcon_loss.md): the contrastive objective with every
+  same-label sample as a positive.
+- [VICRegLoss](losses/vicreg_loss.md): two views without negatives, regularized
+  by variance and covariance terms.
+
+### Composition and extension
+
+- [BaseMetricLossFunction](losses/base_metric_loss_function.md): subclass it to
+  write a [custom loss](extend/losses.md).
+- [BaseProxyLoss](losses/base_proxy_loss.md): subclass it for a custom loss with
+  one learnable vector per class.
+- [CrossBatchMemory](losses/cross_batch_memory.md): more references than one
+  batch holds, from a queue of earlier embeddings.
+- [GenericPairLoss](losses/generic_pair_loss.md): subclass it for a custom loss
+  over positive and negative pairs.
+- [MultipleLosses](losses/multiple_losses.md): a weighted sum of losses, each
+  with an optional miner.
+- [SelfSupervisedLoss](losses/self_supervised_loss.md): two augmented views
+  without labels, with any loss that uses labels.

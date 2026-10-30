@@ -1,26 +1,91 @@
 site_name: PyTorch Metric Learning
+site_url: https://kevinmusgrave.github.io/pytorch-metric-learning/
+exclude_docs: |
+  design/
+  security/
+  recipes/__init__.py
+  **/__pycache__/
 nav:
     - Home: index.md
+    - Concepts: concepts.md
     - Distances: distances.md
-    - Losses: losses.md
+    - Losses:
+      - Overview: losses.md
+      - Pair and triplet objectives:
+        - AngularLoss: losses/angular_loss.md
+        - CircleLoss: losses/circle_loss.md
+        - ContrastiveLoss: losses/contrastive_loss.md
+        - DynamicSoftMarginLoss: losses/dynamic_soft_margin_loss.md
+        - GeneralizedLiftedStructureLoss: losses/generalized_lifted_structure_loss.md
+        - HistogramLoss: losses/histogram_loss.md
+        - IntraPairVarianceLoss: losses/intra_pair_variance_loss.md
+        - LiftedStructureLoss: losses/lifted_structure_loss.md
+        - MarginLoss: losses/margin_loss.md
+        - MultiSimilarityLoss: losses/multi_similarity_loss.md
+        - NCALoss: losses/nca_loss.md
+        - NPairsLoss: losses/n_pairs_loss.md
+        - RankedListLoss: losses/ranked_list_loss.md
+        - SignalToNoiseRatioContrastiveLoss: losses/signal_to_noise_ratio_contrastive_loss.md
+        - TripletMarginLoss: losses/triplet_margin_loss.md
+        - TupletMarginLoss: losses/tuplet_margin_loss.md
+      - Classification and proxy objectives:
+        - ArcFaceLoss: losses/arcface_loss.md
+        - CosFaceLoss: losses/cosface_loss.md
+        - DynamicArcFaceLoss: losses/dynamic_arcface_loss.md
+        - LargeMarginSoftmaxLoss: losses/large_margin_softmax_loss.md
+        - ManifoldLoss: losses/manifold_loss.md
+        - NormalizedSoftmaxLoss: losses/normalized_softmax_loss.md
+        - P2SGradLoss: losses/p2s_grad_loss.md
+        - ProxyAnchorLoss: losses/proxy_anchor_loss.md
+        - ProxyNCALoss: losses/proxy_nca_loss.md
+        - SoftTripleLoss: losses/soft_triple_loss.md
+        - SphereFaceLoss: losses/sphereface_loss.md
+        - SubCenterArcFaceLoss: losses/subcenter_arcface_loss.md
+      - Ranking objectives:
+        - FastAPLoss: losses/fast_ap_loss.md
+        - PNPLoss: losses/pnp_loss.md
+        - SmoothAPLoss: losses/smooth_ap_loss.md
+        - ThresholdConsistentMarginLoss: losses/threshold_consistent_margin_loss.md
+      - Self-supervised and supervised contrastive objectives:
+        - InstanceLoss: losses/instance_loss.md
+        - MultiSupConLoss: losses/multi_supcon_loss.md
+        - NTXentLoss: losses/ntxent_loss.md
+        - SupConLoss: losses/supcon_loss.md
+        - VICRegLoss: losses/vicreg_loss.md
+      - Composition and extension:
+        - BaseMetricLossFunction: losses/base_metric_loss_function.md
+        - BaseProxyLoss: losses/base_proxy_loss.md
+        - CrossBatchMemory: losses/cross_batch_memory.md
+        - GenericPairLoss: losses/generic_pair_loss.md
+        - MultipleLosses: losses/multiple_losses.md
+        - SelfSupervisedLoss: losses/self_supervised_loss.md
     - Miners: miners.md
     - Reducers: reducers.md
     - Regularizers: regularizers.md
     - Samplers: samplers.md
-    - Trainers: trainers.md
-    - Testers: testers.md
-    - Utils: 
-      - Accuracy Calculation: accuracy_calculation.md
-      - Inference Models: inference_models.md
-      - Logging Presets: logging_presets.md
-      - Common Functions: common_functions.md
-      - Distributed: distributed.md
+    - Evaluation:
+      - Accuracy calculation: accuracy_calculation.md
+      - Retrieval backends: retrieval.md
+    - Distributed: distributed.md
+    - Types: types.md
+    - Index utilities: indexing.md
     - How to extend this library:
       - Custom losses: extend/losses.md
       - Custom miners: extend/miners.md
-    - Frequently Asked Questions: faq.md
+    - Recipes:
+      - Training: recipes/training.md
+      - Retrieval evaluation: recipes/evaluation.md
+    - Performance: performance.md
+    - Release notes:
+      - All releases: release-notes/index.md
+      - 3.0.0rc1 (preview): release-notes/3.0.0rc1.md
+    - Migrating from version 2: migration-2-to-3.md
+    - Versioning and support: versioning.md
+    - How to cite: citing.md
+    - Version 2 documentation: https://kevinmusgrave.github.io/pytorch-metric-learning/v2/
 theme:
   name: 'material'
+  custom_dir: overrides
   palette:
     primary: 'red'
     accent: 'red'
@@ -30,9 +95,11 @@ markdown_extensions:
   - admonition
   - pymdownx.details
   - pymdownx.highlight
-  - pymdownx.superfences 
+  - pymdownx.superfences
   - toc:
       permalink: true
   - attr_list
+  - pymdownx.arithmatex:
+      generic: true
 repo_name: 'KevinMusgrave/pytorch-metric-learning'
 repo_url: 'https://github.com/KevinMusgrave/pytorch-metric-learning'

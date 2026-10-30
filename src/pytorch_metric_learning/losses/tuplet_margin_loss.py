@@ -1,59 +1,38 @@
-import numpy as np
-import torch
+import math
+from typing import Unpack
 
-from ..distances import CosineSimilarity
-from ..utils import common_functions as c_f
-from ..utils import loss_and_miner_utils as lmu
+import torch
+from torch import Tensor
+
+from ..distances import BaseDistance, CosineSimilarity
+from ..types import LossDict, LossOptions, PairIndices
+from ..utils import _common
 from .generic_pair_loss import GenericPairLoss
 
 
 class TupletMarginLoss(GenericPairLoss):
-    def __init__(self, margin=5.73, scale=64, **kwargs):
-        super().__init__(mat_based_loss=False, **kwargs)
-        c_f.assert_distance_type(self, CosineSimilarity)
-        self.margin = np.radians(margin)
+    def __init__(
+        self, margin: float = 5.73, scale: float = 64, **options: Unpack[LossOptions]
+    ) -> None:
+        super().__init__(**options)
+        _common.check_distance_type(self, CosineSimilarity)
+        self.margin = margin
         self.scale = scale
-        self.add_to_recordable_attributes(
-            list_of_names=["margin", "scale"], is_stat=False
+
+    def pair_loss(self, mat: Tensor, pairs: PairIndices) -> LossDict:
+        a1, p, a2, _ = pairs
+        pos_pairs, neg_pairs = self.pair_values(mat, pairs)
+        dtype = _common.accumulation_dtype(mat.dtype)
+        bound = 1 - 4 * torch.finfo(pos_pairs.dtype).eps
+        pos_angles = torch.acos(pos_pairs.to(dtype).clamp(-bound, bound))
+        pos_with_margin = torch.cos(pos_angles - math.radians(self.margin))
+        neg_lse = _common.segment_logsumexp(
+            self.scale * neg_pairs.to(dtype), a2, mat.shape[0]
         )
-        self.add_to_recordable_attributes(
-            list_of_names=["avg_pos_angle", "avg_neg_angle"], is_stat=True
+        losses = torch.nn.functional.softplus(
+            neg_lse[a1] - self.scale * pos_with_margin
         )
+        return {"loss": {"losses": losses.to(mat.dtype), "indices": (a1, p)}}
 
-    # pos_pairs and neg_pairs already represent cos(theta)
-    def _compute_loss(self, pos_pairs, neg_pairs, indices_tuple):
-        a1, p, a2, _ = indices_tuple
-
-        if len(a1) > 0 and len(a2) > 0:
-            # acos has an infinite derivative at +/-1. Keep the endpoint
-            # angles, but choose a zero angular gradient there.
-            pos_angles = torch.acos(pos_pairs.masked_fill(pos_pairs.abs() >= 1, 0))
-            pos_angles = pos_angles.masked_fill(pos_pairs >= 1, 0)
-            pos_angles = pos_angles.masked_fill(pos_pairs <= -1, np.pi)
-            self.set_stats(pos_angles, neg_pairs)
-            # At zero margin the objective is smooth in the cosine itself.
-            if self.margin != 0:
-                pos_pairs = torch.cos(pos_angles - self.margin)
-            pos_pairs = pos_pairs.unsqueeze(1)
-            neg_pairs = neg_pairs.repeat(pos_pairs.size(0), 1)
-            inside_exp = self.scale * (neg_pairs - pos_pairs)
-            keep_mask = a2.unsqueeze(0) == a1.unsqueeze(1)
-            loss = lmu.logsumexp(inside_exp, keep_mask=keep_mask, add_one=True, dim=1)
-            return {
-                "loss": {
-                    "losses": loss,
-                    "indices": (a1, p),
-                    "reduction_type": "pos_pair",
-                }
-            }
-        return self.zero_losses()
-
-    def get_default_distance(self):
+    def default_distance(self) -> BaseDistance:
         return CosineSimilarity()
-
-    def set_stats(self, pos_angles, neg_pairs):
-        if self.collect_stats:
-            with torch.no_grad():
-                neg_angles = torch.acos(neg_pairs)
-                self.avg_pos_angle = np.degrees(torch.mean(pos_angles).item())
-                self.avg_neg_angle = np.degrees(torch.mean(neg_angles).item())

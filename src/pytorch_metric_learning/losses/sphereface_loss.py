@@ -1,10 +1,9 @@
-import torch
+from torch import Tensor
 
 from .large_margin_softmax_loss import LargeMarginSoftmaxLoss
 
 
 class SphereFaceLoss(LargeMarginSoftmaxLoss):
-    # implementation of https://arxiv.org/pdf/1704.08063.pdf
-    def scale_logits(self, logits, embeddings):
-        embedding_norms = torch.norm(embeddings, p=2, dim=1)
+    def scale_logits(self, logits: Tensor, embeddings: Tensor) -> Tensor:
+        embedding_norms = self.distance.get_norm(embeddings)
         return logits * embedding_norms.unsqueeze(1) * self.scale

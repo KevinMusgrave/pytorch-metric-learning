@@ -1,130 +1,240 @@
 # Distances
 
-Distance classes compute pairwise distances/similarities between input embeddings.
+Distance modules compute distances or similarities between embeddings.
+Consider TripletMarginLoss with a margin of 0.2:
 
-Consider the TripletMarginLoss in its default form:
 ```python
 from pytorch_metric_learning.losses import TripletMarginLoss
+
 loss_func = TripletMarginLoss(margin=0.2)
 ```
-This loss function attempts to minimize [d<sub>ap</sub> - d<sub>an</sub> + margin]<sub>+</sub>.
 
-Typically, d<sub>ap</sub> and d<sub>an</sub> represent Euclidean or L2 distances. But what if we want to use a squared L2 distance, or an unnormalized L1 distance, or a completely different distance measure like signal-to-noise ratio? With the distances module, you can try out these ideas easily:
+This loss minimizes $\left[d_{ap} - d_{an} + m\right]_+$, where $d_{ap}$ and
+$d_{an}$ are Euclidean distances between L2-normalized embeddings by default. To
+use a squared L2 distance, an unnormalized L1 distance, or a different measure
+such as signal-to-noise ratio, pass a distance module:
+
 ```python
-### TripletMarginLoss with squared L2 distance ###
-from pytorch_metric_learning.distances import LpDistance
+from pytorch_metric_learning.distances import LpDistance, SNRDistance
+
+# squared L2 distance
 loss_func = TripletMarginLoss(margin=0.2, distance=LpDistance(power=2))
-
-### TripletMarginLoss with unnormalized L1 distance ###
-loss_func = TripletMarginLoss(margin=0.2, distance=LpDistance(normalize_embeddings=False, p=1))
-
-### TripletMarginLoss with signal-to-noise ratio###
-from pytorch_metric_learning.distances import SNRDistance
+# unnormalized L1 distance
+loss_func = TripletMarginLoss(
+    margin=0.2, distance=LpDistance(normalize_embeddings=False, p=1)
+)
+# signal-to-noise ratio
 loss_func = TripletMarginLoss(margin=0.2, distance=SNRDistance())
 ```
 
-You can also use similarity measures rather than distances, and the loss function will make the necessary adjustments:
+Similarities work too, and the loss orients its comparisons accordingly:
+
 ```python
-### TripletMarginLoss with cosine similarity##
 from pytorch_metric_learning.distances import CosineSimilarity
+
 loss_func = TripletMarginLoss(margin=0.2, distance=CosineSimilarity())
 ```
-With a similarity measure, the TripletMarginLoss internally swaps the anchor-positive and anchor-negative terms: [s<sub>an</sub> - s<sub>ap</sub> + margin]<sub>+</sub>. In other words, it will try to make the anchor-negative similarities smaller than the anchor-positive similarities.
 
-All **losses, miners, and regularizers** accept a ```distance``` argument. So you can try out the ```MultiSimilarityMiner``` using ```SNRDistance```, or the ```NTXentLoss``` using ```LpDistance(p=1)``` and so on. Note that some losses/miners/regularizers have restrictions on the type of distances they can accept. For example, some classification losses only allow ```CosineSimilarity``` or ```DotProductSimilarity``` as their distance measure between embeddings and weights. To view restrictions for specific loss functions, see the [losses page](losses.md)
+With a similarity, TripletMarginLoss minimizes
+$\left[s_{an} - s_{ap} + m\right]_+$, pushing anchor-negative similarities below
+anchor-positive similarities.
+
+All losses, miners, and regularizers accept a `distance` option. Some restrict
+the compatible distances; each component page lists its default distance and
+any restriction.
+
+## Distance orientation
+
+`is_inverted` is a class attribute: `False` means smaller values are closer
+(distances), and `True` means larger values are closer (similarities). Losses and
+miners read it to orient margins and comparisons. `distance.margin(x, y)` returns
+`x - y` for distances and `y - x` for similarities, so a positive value means `x`
+is farther than `y` under either orientation.
 
 ## BaseDistance
 
-All distances extend this class and therefore inherit its ```__init__``` parameters.
+All distances extend this class. Its options are keyword-only.
 
-```python
-distances.BaseDistance(collect_stats = False,
-						normalize_embeddings=True, 
-						p=2, 
-						power=1, 
-						is_inverted=False)
+```python {.signature}
+distances.BaseDistance(*, normalize_embeddings=True, p=2, power=1)
 ```
 
 **Parameters**:
 
-* **collect_stats**: If True, will collect various statistics that may be useful to analyze during experiments. If False, these computations will be skipped. Want to make ```True``` the default? Set the global [COLLECT_STATS](common_functions.md#collect_stats) flag.
-* **normalize_embeddings**: If True, embeddings will be normalized to have an Lp norm of 1, before the distance/similarity matrix is computed.
-* **p**: The distance norm.
-* **power**: If not 1, each element of the distance/similarity matrix will be raised to this power.
-* **is_inverted**: Should be set by child classes. If False, then small values represent embeddings that are close together. If True, then large values represent embeddings that are similar to each other.
+- **normalize_embeddings**: If `True`, embeddings are normalized to unit Lp norm
+  before values are computed. See [normalization](#normalization).
+- **p**: The norm used for embedding normalization and, in `LpDistance`, for
+  the distance itself. Similarities use it only for normalization.
+- **power**: If not 1, each computed value is raised to this power.
 
-**Required Implementations**:
+### Normalization
+
+`distance.normalize(x, dim=1)` returns `x / max(norm_p(x), eps)` row by row,
+with the same dtype as `x`. `eps` is `1e-12` for float32, float64, and
+bfloat16, and `2**-14` (the smallest normal float16 value) for float16. Float16
+and bfloat16 inputs are normalized in float32 and cast back, so their norms do
+not underflow. A zero row normalizes to zero with finite gradients in every
+dtype. A row whose norm is below `eps` is divided by `eps` instead of being
+scaled to unit norm, so its gradient is the incoming gradient times `1 / eps`:
+16384 in float16, where `1e-12` would overflow.
+
+### Calling a distance
+
+- `distance(query_emb, ref_emb=None)` returns a matrix of shape
+  `(len(query_emb), len(ref_emb))` whose entry `[i, j]` compares `query_emb[i]`
+  with `ref_emb[j]`. `ref_emb=None` compares `query_emb` with itself.
+- `distance.pairwise(query_emb, ref_emb)` returns a vector of shape
+  `(len(query_emb),)` whose entry `i` compares `query_emb[i]` with `ref_emb[i]`.
+  The inputs must have the same shape; otherwise it raises `ValueError`. It
+  computes only the corresponding rows, without a full matrix.
+
+Both apply `normalize_embeddings` and `power` exactly as configured, so
+`distance.pairwise(x, y)` equals the diagonal of `distance(x, y)` up to
+floating-point rounding, and identical rows give exactly zero in both for
+`LpDistance`. Inputs must be
+two-dimensional `(batch_size, embedding_size)` tensors; otherwise both raise
+`ValueError`.
+
 ```python
-# Must return a matrix where mat[j,k] represents 
-# the distance/similarity between query_emb[j] and ref_emb[k]
-def compute_mat(self, query_emb, ref_emb):
-    raise NotImplementedError
+import torch
+from pytorch_metric_learning.distances import LpDistance
 
-# Must return a tensor where output[j] represents 
-# the distance/similarity between query_emb[j] and ref_emb[j]
-def pairwise_distance(self, query_emb, ref_emb):
-    raise NotImplementedError
+distance = LpDistance(power=2)
+x, y = torch.randn(5, 8), torch.randn(5, 8)
+assert distance(x, y).shape == (5, 5)
+assert torch.allclose(distance.pairwise(x, y), distance(x, y).diagonal(), atol=1e-5)
 ```
 
+### Custom distances
+
+A subclass implements two hooks on already-normalized embeddings. `forward` and
+`pairwise` call them and then apply `power`:
+
+- `compute_mat(query_emb, ref_emb)` returns the matrix whose entry `[j, k]` is
+  the distance or similarity between `query_emb[j]` and `ref_emb[k]`.
+- `pairwise_distance(query_emb, ref_emb)` returns the vector whose entry `j` is
+  the distance or similarity between `query_emb[j]` and `ref_emb[j]`.
+
+```python
+import torch
+from pytorch_metric_learning.distances import BaseDistance
+
+
+class ChebyshevDistance(BaseDistance):
+    def compute_mat(self, query_emb, ref_emb):
+        return torch.cdist(query_emb, ref_emb, p=float("inf"))
+
+    def pairwise_distance(self, query_emb, ref_emb):
+        return (query_emb - ref_emb).abs().amax(dim=1)
+
+
+distance = ChebyshevDistance(normalize_embeddings=False)
+x, y = torch.randn(4, 8), torch.randn(4, 8)
+assert distance(x, y).shape == (4, 4)
+assert torch.allclose(distance.pairwise(x, y), distance(x, y).diagonal())
+```
+
+`compute_mat` must return shape `(len(query_emb), len(ref_emb))`; another shape
+raises `ValueError`. Call `pairwise`, not `pairwise_distance`, from losses and
+application code, so normalization and `power` apply. Custom similarities set
+`is_inverted = True` on the class.
 
 ## BatchedDistance
 
-Computes distance matrices iteratively, passing each matrix into ```iter_fn```.
+Computes a distance matrix in blocks of query rows, so peak memory is one
+`(batch_size, len(ref_emb))` block instead of the full matrix.
 
-```python
-distances.BatchedDistance(distance, iter_fn=None, batch_size=32)
+```python {.signature}
+distances.BatchedDistance(distance, batch_size=32)
 ```
 
 **Parameters**:
 
-* **distance**: The wrapped distance function.
-* **iter_fn**: This function will be called at every iteration. It receives ```(mat, s, e)``` as input, where ```mat``` is the current distance matrix, and ```s, e``` is the range of query embeddings used to construct ```mat```.
-* **batch_size**: Each distance matrix will be size ```(batch_size, len(ref_emb))```.
+- **distance**: The wrapped distance module.
+- **batch_size**: The number of query rows per block. It must be positive;
+  otherwise construction raises `ValueError`.
 
-**Example usage**:
+Calling `batched(query_emb, ref_emb=None)` returns an iterator of
+`(mat, start, end)` tuples, where `mat` is the block for query rows
+`start:end`. The final block may be shorter than `batch_size`. The wrapper
+exposes `is_inverted` for search ordering; other configuration is available
+through `batched.distance`. It is not a `BaseDistance`, so pass the wrapped
+distance, not the wrapper, to losses and miners.
+
 ```python
+import torch
 from pytorch_metric_learning.distances import BatchedDistance, CosineSimilarity
 
-def fn(mat, s, e):
-	print(f"At query indices {s}:{e}")
-
-distance = BatchedDistance(CosineSimilarity(), fn)
-
-# Works like a regular distance function, except nothing is returned.
-# So any persistent changes need to be done in the supplied iter_fn.
-# query vs query
-distance(embeddings)
-# query vs ref
-distance(embeddings, ref_emb)
+embeddings, ref_emb = torch.randn(600, 16), torch.randn(100, 16)
+batched = BatchedDistance(CosineSimilarity(), batch_size=256)
+for mat, start, end in batched(embeddings):
+    print(f"rows {start}:{end} -> {tuple(mat.shape)}")
+blocks = [mat for mat, _, _ in batched(embeddings, ref_emb)]
+assert torch.cat(blocks).shape == (600, 100)
 ```
 
 ## CosineSimilarity
-```python
-distances.CosineSimilarity(**kwargs)
+
+```python {.signature}
+distances.CosineSimilarity()
 ```
 
-The returned ```mat[i,j]``` is the cosine similarity between ```query_emb[i]``` and ```ref_emb[j]```. This class is equivalent to [```DotProductSimilarity(normalize_embeddings=True)```](distances.md#dotproductsimilarity).
+`mat[i, j]` is the cosine similarity between `query_emb[i]` and `ref_emb[j]`, a
+value in `[-1, 1]`. Embeddings are always L2-normalized and no power is
+applied, so this equals
+[`DotProductSimilarity(normalize_embeddings=True)`](#dotproductsimilarity).
+The class takes no options: losses that require `CosineSimilarity`, such as
+CircleLoss and LargeMarginSoftmaxLoss, rely on signed cosines (some take their
+`acos`). For a powered or Lp-normalized dot product, use `DotProductSimilarity`
+with `p` or `power`.
 
 ## DotProductSimilarity
-```python
-distances.DotProductSimilarity(**kwargs)
-```
-The returned ```mat[i,j]``` is equal to ```torch.sum(query_emb[i] * ref_emb[j])```
 
+```python {.signature}
+distances.DotProductSimilarity(*, normalize_embeddings=True, p=2, power=1)
+```
+
+`mat[i, j]` equals `torch.sum(query_emb[i] * ref_emb[j])` after optional
+normalization.
 
 ## LpDistance
-```python
-distances.LpDistance(**kwargs)
+
+```python {.signature}
+distances.LpDistance(*, normalize_embeddings=True, p=2, power=1)
 ```
-The returned ```mat[i,j]``` is the Lp distance between ```query_emb[i]``` and ```ref_emb[j]```. With default parameters, this is the Euclidean distance.
+
+`mat[i, j]` is the Lp distance between `query_emb[i]` and `ref_emb[j]`. With
+default parameters, this is the Euclidean distance between normalized
+embeddings. For float16 and bfloat16 inputs, the matrix is computed in float32
+with `torch.cdist` using its direct difference kernel and cast back, which keeps
+peak memory at the size of the output matrix on every device and preserves
+distances between nearby rows that the matrix-product formula would cancel to
+zero.
+
+`pairwise` computes `torch.linalg.vector_norm(x - y, ord=p, dim=-1)`, in float32
+for float16 and bfloat16 inputs. It adds no epsilon, so identical rows give
+exactly zero, as in the matrix, and the gradient at identical rows is zero, as
+`torch.cdist` defines it.
 
 ## SNRDistance
-[Signal-to-Noise Ratio: A Robust Distance Metric for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Yuan_Signal-To-Noise_Ratio_A_Robust_Distance_Metric_for_Deep_Metric_Learning_CVPR_2019_paper.pdf){target=_blank}
-```python
-distances.SNRDistance(**kwargs)
+
+[Signal-to-Noise Ratio: A Robust Distance Metric for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Yuan_Signal-To-Noise_Ratio_A_Robust_Distance_Metric_for_Deep_Metric_Learning_CVPR_2019_paper.pdf)
+
+```python {.signature}
+distances.SNRDistance(*, normalize_embeddings=True, p=2, power=1)
 ```
-The returned ```mat[i,j]``` is equal to:
+
+`mat[i, j]` is the variance of `query_emb[i] - ref_emb[j]` divided by the
+variance of `query_emb[i]`, computed after normalization when
+`normalize_embeddings=True`. The ratio is undefined for a query row whose
+elements are all equal, such as a zero row, and its entries are NaN:
 
 ```python
-torch.var(query_emb[i] - ref_emb[j]) / torch.var(query_emb[i])
+import torch
+
+query_emb, ref_emb = torch.randn(3, 8), torch.randn(5, 8)
+mat = SNRDistance(normalize_embeddings=False)(query_emb, ref_emb)
+i, j = 1, 4
+expected = torch.var(query_emb[i] - ref_emb[j]) / torch.var(query_emb[i])
+assert torch.allclose(mat[i, j], expected)
 ```

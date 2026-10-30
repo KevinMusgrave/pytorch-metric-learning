@@ -27,7 +27,8 @@ class TestMultipleReducers(unittest.TestCase):
                 torch.randint(0, batch_size, (batch_size,)),
                 torch.randint(0, batch_size, (batch_size,)),
             )
-            triplet_indices = pair_indices + (
+            triplet_indices = (
+                *pair_indices,
                 torch.randint(0, batch_size, (batch_size,)),
             )
             lossesA = torch.randn(batch_size).type(dtype).to(TEST_DEVICE)
@@ -56,4 +57,4 @@ class TestMultipleReducers(unittest.TestCase):
                 correct_output = (torch.mean(lossesA[lossesA > 0])) + (
                     torch.sum(lossesB) / (32 + 15)
                 )
-                self.assertTrue(output == correct_output)
+                torch.testing.assert_close(output, correct_output.to(output.dtype))

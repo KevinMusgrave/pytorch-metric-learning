@@ -22,8 +22,11 @@ uv sync --frozen --all-extras --no-build --no-install-project
 .venv/bin/uv run --frozen --no-sync mkdocs build --strict
 ```
 
-CI runs these commands on Linux and the test suite on macOS and Windows, plus
-the maintainers' policy checks described in [DEVELOPMENT.md](DEVELOPMENT.md).
+For source changes, CI runs these commands on Linux and the test suite on macOS
+and Windows, plus the maintainers' policy checks described in
+[DEVELOPMENT.md](DEVELOPMENT.md). Ordinary Markdown-only changes, such as README
+prose, run formatting and documentation checks without the application suites.
+Control documents and product-input Markdown receive source verification.
 You do not need to install or run the policy tool or edit `.code-polishy.json`.
 If a policy step fails on your pull request while the commands above pass, say
 so in the pull request and a maintainer will resolve it.

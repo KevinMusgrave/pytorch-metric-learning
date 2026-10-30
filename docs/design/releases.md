@@ -45,8 +45,20 @@ the policy validates every published requirement against its exact development
 pin and still audits the entire frozen dependency graph.
 
 CI runs on pull requests, `master` pushes, and a weekly schedule, so expiring
-dependency assessments fail before a release attempt discovers them. The policy
-gate runs once on the locked Python 3.12 development environment. Before it,
+dependency assessments fail before a release attempt discovers them. An
+unconditional scope job uses the locked tool's `test-levels` JSON report to
+select documentation or source verification. The workflow accepts only known
+levels and uses the same resolved base for planning and its unconditional merge
+gate; it does not duplicate the policy's path classification. Ordinary
+Markdown-only changes use the documentation gate without Python dependencies,
+application tests, or package builds. Control documents and product-input
+Markdown retain source verification. Scheduled and manually dispatched runs
+compare against the repository root, selecting full verification. The workflow
+still completes on documentation-only commits, so release preflight can require
+successful CI for the exact tagged commit.
+
+For source changes, the policy gate runs once on the locked Python 3.12
+development environment. Before it,
 plain `ruff`, `ty`, and a strict MkDocs build run as separate steps with the
 same pinned tools, so contributors without the policy tool get readable
 failures, and documentation errors surface in pull requests rather than at

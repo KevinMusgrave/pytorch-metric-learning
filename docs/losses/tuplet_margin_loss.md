@@ -18,9 +18,13 @@ Here $\theta_{ap}$ and $\theta_{an_i}$ are the angles from the anchor to its pos
 averaged by the default reducer. The negatives are combined with a per-anchor
 log-sum-exp, and the loss is $\operatorname{softplus}(\mathrm{LSE} - s\cos(\theta_{ap} - \beta))$;
 float16 and bfloat16 inputs accumulate in float32. A positive pair whose anchor
-has no negatives contributes 0. Cosines are clamped just inside $[-1, 1]$
-before $\arccos$, so identical anchor-positive pairs, such as duplicates from
-sampling with replacement, have finite values and gradients.
+has no negatives contributes 0. Cosines are clamped to $[-1, 1]$ to absorb
+rounding outside their support. At zero margin the positive cosine is used
+directly, preserving gradients near identical or antipodal pairs. At nonzero
+margin the endpoint angles are exactly 0 or $\pi$, with zero gradient through
+the positive angular term at these nondifferentiable endpoints. Negative-pair
+gradients remain active. This keeps duplicate positives finite without moving
+valid cosines into the interior of the interval.
 
 The paper combines this loss with
 [IntraPairVarianceLoss](intra_pair_variance_loss.md) through

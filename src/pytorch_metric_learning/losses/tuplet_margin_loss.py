@@ -23,9 +23,13 @@ class TupletMarginLoss(GenericPairLoss):
         a1, p, a2, _ = pairs
         pos_pairs, neg_pairs = self.pair_values(mat, pairs)
         dtype = _common.accumulation_dtype(mat.dtype)
-        bound = 1 - 4 * torch.finfo(pos_pairs.dtype).eps
-        pos_angles = torch.acos(pos_pairs.to(dtype).clamp(-bound, bound))
-        pos_with_margin = torch.cos(pos_angles - math.radians(self.margin))
+        pos_with_margin = pos_pairs.to(dtype).clamp(-1, 1)
+        if self.margin != 0:
+            endpoints = pos_with_margin.abs() >= 1
+            pos_angles = torch.acos(pos_with_margin.masked_fill(endpoints, 0))
+            pos_angles = pos_angles.masked_fill(pos_with_margin >= 1, 0)
+            pos_angles = pos_angles.masked_fill(pos_with_margin <= -1, math.pi)
+            pos_with_margin = torch.cos(pos_angles - math.radians(self.margin))
         neg_lse = _common.segment_logsumexp(
             self.scale * neg_pairs.to(dtype), a2, mat.shape[0]
         )

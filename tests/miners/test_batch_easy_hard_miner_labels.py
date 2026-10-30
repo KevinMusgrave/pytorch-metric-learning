@@ -1,4 +1,5 @@
 import unittest
+from typing import Any
 
 import torch
 
@@ -24,7 +25,7 @@ class TestBatchEasyHardMinerLabels(unittest.TestCase):
                 DotProductSimilarity,
                 SNRDistance,
             ]:
-                for pos_strategy, neg_strategy in [
+                strategies: list[tuple[Any, Any]] = [
                     ("easy", "easy"),
                     ("easy", "semihard"),
                     ("easy", "hard"),
@@ -38,7 +39,8 @@ class TestBatchEasyHardMinerLabels(unittest.TestCase):
                     ("all", "easy"),
                     ("all", "hard"),
                     ("all", "all"),
-                ]:
+                ]
+                for pos_strategy, neg_strategy in strategies:
                     for pos_range, neg_range in [
                         (None, None),
                         ([0.2, 0.5], None),

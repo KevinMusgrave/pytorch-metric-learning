@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 from pytorch_metric_learning.losses import VICRegLoss
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 
 HYPERPARAMETERS = [[25, 25, 1, 1e-4], [10, 10, 2, 1e-5], [5, 5, 5, 1e-6]]
 
@@ -33,18 +33,15 @@ class TestVICRegLoss(unittest.TestCase):
                     loss = loss_func(emb, ref_emb=ref_emb)
                     loss.backward()
 
-                    # invariance_loss
                     invariance_loss = F.mse_loss(emb, ref_emb)
 
-                    # variance_loss
                     std_emb = torch.sqrt(emb.var(dim=0) + hyp[3])
                     std_ref_emb = torch.sqrt(ref_emb.var(dim=0) + hyp[3])
                     variance_loss = torch.mean(F.relu(1 - std_emb)) + torch.mean(
                         F.relu(1 - std_ref_emb)
                     )
-                    variance_loss = variance_loss / 2  # for averaging
+                    variance_loss = variance_loss / 2
 
-                    # covariance loss, a more manual version
                     N, D = emb.size()
                     emb = emb - emb.mean(dim=0)
                     ref_emb = ref_emb - ref_emb.mean(dim=0)
@@ -62,6 +59,13 @@ class TestVICRegLoss(unittest.TestCase):
                         + hyp[2] * covariance_loss
                     )
 
-                    rtol = 1e-2 if dtype == torch.float16 else 1e-5
+                    rtol = helpers.rtol(dtype)
 
                     self.assertTrue(torch.isclose(loss, correct_loss, rtol=rtol))
+
+    def test_batches_smaller_than_two_rows_are_rejected(self):
+        for rows in (0, 1):
+            with self.subTest(rows=rows):
+                embeddings = torch.randn(rows, 4, device=TEST_DEVICE)
+                with self.assertRaisesRegex(ValueError, "at least 2 rows"):
+                    VICRegLoss()(embeddings, embeddings.clone())

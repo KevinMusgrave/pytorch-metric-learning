@@ -1,14 +1,22 @@
 import math
 import unittest
+from functools import partial
+from typing import Any
 
 import numpy as np
-import scipy
 import torch
+import torch.nn.functional as F
 
 from pytorch_metric_learning.losses import LargeMarginSoftmaxLoss, SphereFaceLoss
 
-from .. import TEST_DEVICE, TEST_DTYPES
-from ..zzz_testing_utils.testing_utils import angle_to_coord
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
+from ..helpers import angle_to_coord
+
+UNNORMALIZED_EMBEDDING_SCALE = 10
+
+
+def index_of_angle_interval(angle, margin):
+    return (angle / (math.pi / margin)).floor()
 
 
 class TestLargeMarginSoftmaxLoss(unittest.TestCase):
@@ -18,45 +26,42 @@ class TestLargeMarginSoftmaxLoss(unittest.TestCase):
         for dtype in TEST_DTYPES:
             loss_funcA = LargeMarginSoftmaxLoss(
                 margin=margin, scale=scale, num_classes=10, embedding_size=2
-            )
+            ).to(TEST_DEVICE, dtype)
             loss_funcB = SphereFaceLoss(
                 margin=margin, scale=scale, num_classes=10, embedding_size=2
-            )
+            ).to(TEST_DEVICE, dtype)
 
             embedding_angles = torch.arange(0, 180)
-            # multiply by 10 to make the embeddings unnormalized
             embeddings = torch.tensor(
-                np.array([angle_to_coord(a) for a in embedding_angles]) * 10,
+                np.array([angle_to_coord(a) for a in embedding_angles])
+                * UNNORMALIZED_EMBEDDING_SCALE,
                 requires_grad=True,
                 dtype=dtype,
-            ).to(
-                TEST_DEVICE
-            )  # 2D embeddings
+            ).to(TEST_DEVICE)
             labels = torch.randint(low=0, high=10, size=(180,)).to(TEST_DEVICE)
 
             lossA = loss_funcA(embeddings, labels)
             lossB = loss_funcB(embeddings, labels)
 
-            weightsA = loss_funcA.W
-            weightsB = torch.nn.functional.normalize(loss_funcB.W, dim=0)
+            exact = embeddings.detach().double()
+            weightsA = loss_funcA.weight.detach().double().t()
+            weightsB = F.normalize(loss_funcB.weight.detach().double(), dim=1).t()
 
             product_of_magnitudesA = torch.norm(weightsA, p=2, dim=0).unsqueeze(
                 0
-            ) * torch.norm(embeddings, p=2, dim=1).unsqueeze(1)
+            ) * torch.norm(exact, p=2, dim=1).unsqueeze(1)
             product_of_magnitudesB = torch.norm(weightsB, p=2, dim=0).unsqueeze(
                 0
-            ) * torch.norm(embeddings, p=2, dim=1).unsqueeze(1)
-            cosinesA = torch.matmul(embeddings, weightsA) / (product_of_magnitudesA)
-            cosinesB = torch.matmul(embeddings, weightsB) / (product_of_magnitudesB)
-            coefficients = [
-                scipy.special.binom(margin, 2 * n) for n in range((margin // 2) + 1)
-            ]
+            ) * torch.norm(exact, p=2, dim=1).unsqueeze(1)
+            cosinesA = torch.matmul(exact, weightsA) / (product_of_magnitudesA)
+            cosinesB = torch.matmul(exact, weightsB) / (product_of_magnitudesB)
+            coefficients = [math.comb(margin, 2 * n) for n in range((margin // 2) + 1)]
 
             for i, j in enumerate(labels):
                 curr_cosineA = cosinesA[i, j]
                 curr_cosineB = cosinesB[i, j]
-                cos_with_marginA = torch.zeros(len(coefficients))
-                cos_with_marginB = torch.zeros(len(coefficients))
+                cos_with_marginA = torch.zeros(len(coefficients), dtype=torch.float64)
+                cos_with_marginB = torch.zeros(len(coefficients), dtype=torch.float64)
                 for z, c in enumerate(coefficients):
                     curr_valA = (
                         c
@@ -78,12 +83,8 @@ class TestLargeMarginSoftmaxLoss(unittest.TestCase):
                 cos_with_marginB = torch.sum(cos_with_marginB)
                 angleA = torch.acos(torch.clamp(curr_cosineA, -1 + 1e-7, 1 - 1e-7))
                 angleB = torch.acos(torch.clamp(curr_cosineB, -1 + 1e-7, 1 - 1e-7))
-                kA = (
-                    angleA / (math.pi / margin)
-                ).floor()  # Equation 6: angles needs to be between [k*pi/m and (k+1)*pi/m]
-                kB = (
-                    angleB / (math.pi / margin)
-                ).floor()  # Equation 6: angles needs to be between [k*pi/m and (k+1)*pi/m]
+                kA = index_of_angle_interval(angleA, margin)
+                kB = index_of_angle_interval(angleB, margin)
                 cosinesA[i, j] = ((-1) ** kA) * cos_with_marginA - (2 * kA)
                 cosinesB[i, j] = ((-1) ** kB) * cos_with_marginB - (2 * kB)
 
@@ -93,50 +94,72 @@ class TestLargeMarginSoftmaxLoss(unittest.TestCase):
             correct_lossA = torch.nn.functional.cross_entropy(cosinesA * scale, labels)
             correct_lossB = torch.nn.functional.cross_entropy(cosinesB * scale, labels)
 
-            rtol = 1e-2 if dtype == torch.float16 else 1e-5
-            self.assertTrue(torch.isclose(lossA, correct_lossA, rtol=rtol))
-            self.assertTrue(torch.isclose(lossB, correct_lossB, rtol=rtol))
+            helpers.assert_close(lossA, correct_lossA, dtype, atol=1e-8)
+            helpers.assert_close(lossB, correct_lossB, dtype, atol=1e-8)
 
-            # test get_logits
-            if dtype != torch.float16:
-                logits_outA = loss_funcA.get_logits(embeddings)
-                logits_outB = loss_funcB.get_logits(embeddings)
-                self.assertTrue(
-                    torch.allclose(
-                        logits_outA,
-                        torch.matmul(embeddings, weightsA) * scale,
-                        rtol=1e-2,
-                    )
-                )
-                self.assertTrue(
-                    torch.allclose(
-                        logits_outB,
-                        torch.matmul(embeddings, weightsB) * scale,
-                        rtol=1e-2,
-                    )
-                )
+            logits_outA = loss_funcA.get_logits(embeddings)
+            logits_outB = loss_funcB.get_logits(embeddings)
+            helpers.assert_close(
+                logits_outA / (scale * product_of_magnitudesA),
+                exact @ weightsA / product_of_magnitudesA,
+                dtype,
+            )
+            helpers.assert_close(
+                logits_outB / (scale * product_of_magnitudesB),
+                exact @ weightsB / product_of_magnitudesB,
+                dtype,
+            )
 
     def test_backward(self):
-        margin = 10
-        scale = 2
-        for dtype in TEST_DTYPES:
-            loss_funcA = LargeMarginSoftmaxLoss(
-                margin=margin, scale=scale, num_classes=10, embedding_size=2
-            )
-            loss_funcB = SphereFaceLoss(
-                margin=margin, scale=scale, num_classes=10, embedding_size=2
-            )
-            for loss_func in [loss_funcA, loss_funcB]:
-                embedding_angles = torch.arange(0, 180)
-                # multiply by 10 to make the embeddings unnormalized
-                embeddings = torch.tensor(
-                    np.array([angle_to_coord(a) for a in embedding_angles]) * 10,
-                    requires_grad=True,
-                    dtype=dtype,
-                ).to(
-                    TEST_DEVICE
-                )  # 2D embeddings
-                labels = torch.randint(low=0, high=10, size=(180,)).to(TEST_DEVICE)
+        generator = torch.Generator().manual_seed(5)
+        embeddings = 3 * torch.randn(24, 2, generator=generator)
+        weight = torch.randn(5, 2, generator=generator)
+        labels = torch.randint(0, 5, (24,), generator=generator).to(TEST_DEVICE)
+        for margin in (2, 4):
+            for loss_class, scale_by_weight_norm in (
+                (LargeMarginSoftmaxLoss, True),
+                (SphereFaceLoss, False),
+            ):
+                for dtype in TEST_DTYPES:
+                    loss_func = loss_class(
+                        num_classes=5, embedding_size=2, margin=margin, scale=1.5
+                    ).to(TEST_DEVICE, dtype)
+                    with self.subTest(loss=loss_class.__name__, m=margin, dtype=dtype):
+                        helpers.assert_matches_float64(
+                            partial(call_with_weight, loss_func, labels=labels),
+                            partial(
+                                angular_margin_reference,
+                                labels=labels,
+                                margin=margin,
+                                scale=1.5,
+                                weight_norms=scale_by_weight_norm,
+                            ),
+                            [embeddings, weight],
+                            dtype,
+                        )
 
-                loss = loss_func(embeddings, labels)
-                loss.backward()
+    def test_margin_must_be_a_positive_integer(self):
+        fractional: Any = 2.5
+        with self.assertRaises(TypeError):
+            LargeMarginSoftmaxLoss(3, 4, margin=fractional)
+        with self.assertRaises(ValueError):
+            LargeMarginSoftmaxLoss(3, 4, margin=0)
+
+
+def call_with_weight(loss_func, embeddings, weight, labels):
+    return torch.func.functional_call(
+        loss_func, {"weight": weight}, (embeddings, labels)
+    )
+
+
+def angular_margin_reference(embeddings, weight, labels, margin, scale, weight_norms):
+    cosine = F.normalize(embeddings, dim=1) @ F.normalize(weight, dim=1).T
+    theta = torch.acos(cosine.gather(1, labels.unsqueeze(1)).squeeze(1))
+    k = torch.floor(theta.detach() * margin / math.pi)
+    psi = (-1) ** k * torch.cos(margin * theta) - 2 * k
+    target = F.one_hot(labels, len(weight)).bool()
+    modified = torch.where(target, psi.unsqueeze(1), cosine)
+    magnitudes = embeddings.norm(dim=1, keepdim=True)
+    if weight_norms:
+        magnitudes = magnitudes * weight.norm(dim=1)
+    return F.cross_entropy(scale * magnitudes * modified, labels)

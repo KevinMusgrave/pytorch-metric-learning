@@ -1,66 +1,58 @@
-import torch
+from collections.abc import Mapping, Sequence
 
-from ..utils import common_functions as c_f
+import torch
+from torch import Tensor
+
+from ..types import MetricLoss
+from .base_metric_loss_function import BaseMetricLossFunction
 
 
 class MultipleLosses(torch.nn.Module):
-    def __init__(self, losses, miners=None, weights=None):
+    def __init__(
+        self,
+        losses: Mapping[str, MetricLoss],
+        miners: Mapping[str, torch.nn.Module] | None = None,
+        weights: Mapping[str, float] | None = None,
+    ) -> None:
         super().__init__()
-        self.is_dict = isinstance(losses, dict)
-        self.losses = (
-            torch.nn.ModuleDict(losses) if self.is_dict else torch.nn.ModuleList(losses)
-        )
-
-        if miners is not None:
-            self.assertions_if_not_none(miners, match_all_keys=False)
-            self.miners = (
-                torch.nn.ModuleDict(miners)
-                if self.is_dict
-                else torch.nn.ModuleList(miners)
-            )
-        else:
-            self.miners = None
-
+        if not isinstance(losses, Mapping) or not losses:
+            raise TypeError("losses must be a non-empty mapping from names to modules")
+        for loss in losses.values():
+            _require_metric_loss(loss, "MultipleLosses")
+        self.losses = torch.nn.ModuleDict(losses)
+        miners = {} if miners is None else dict(miners)
+        if not set(miners) <= set(losses):
+            raise ValueError("miner keys must be present in losses")
+        self.miners = torch.nn.ModuleDict(miners)
+        self.weights = dict.fromkeys(losses, 1.0)
         if weights is not None:
-            self.assertions_if_not_none(weights, match_all_keys=True)
-            self.weights = weights
-        else:
-            self.weights = (
-                {k: 1 for k in self.losses.keys()}
-                if self.is_dict
-                else [1] * len(losses)
-            )
+            if set(weights) != set(losses):
+                raise ValueError("weights must have exactly the same keys as losses")
+            self.weights = dict(weights)
 
-    def forward(self, embeddings, labels, indices_tuple=None):
-        if self.miners:
-            assert indices_tuple is None
-        total_loss = 0
-        iterable = self.losses.items() if self.is_dict else enumerate(self.losses)
-        for i, loss_func in iterable:
-            curr_indices_tuple = self.get_indices_tuple(
-                i, embeddings, labels, indices_tuple
-            )
-            total_loss += (
-                loss_func(embeddings, labels, curr_indices_tuple) * self.weights[i]
-            )
-        return total_loss
+    def forward(
+        self,
+        embeddings: Tensor,
+        labels: Tensor | None = None,
+        indices_tuple: Sequence[Tensor] | None = None,
+        ref_emb: Tensor | None = None,
+        ref_labels: Tensor | None = None,
+    ) -> Tensor:
+        total = torch.zeros((), device=embeddings.device, dtype=embeddings.dtype)
+        for name, loss_func in self.losses.items():
+            current = indices_tuple
+            if name in self.miners:
+                current = self.miners[name](
+                    embeddings, labels, indices_tuple, ref_emb, ref_labels
+                )
+            loss = loss_func(embeddings, labels, current, ref_emb, ref_labels)
+            total = total + loss * self.weights[name]
+        return total
 
-    def get_indices_tuple(self, i, embeddings, labels, indices_tuple):
-        if self.miners:
-            if (self.is_dict and i in self.miners) or (
-                not self.is_dict and self.miners[i] is not None
-            ):
-                indices_tuple = self.miners[i](embeddings, labels)
-        return indices_tuple
 
-    def assertions_if_not_none(self, x, match_all_keys):
-        if x is not None:
-            if self.is_dict:
-                assert isinstance(x, dict)
-                if match_all_keys:
-                    assert sorted(list(x.keys())) == sorted(list(self.losses.keys()))
-                else:
-                    assert all(k in self.losses.keys() for k in x.keys())
-            else:
-                assert c_f.is_list_or_tuple(x)
-                assert len(x) == len(self.losses)
+def _require_metric_loss(loss: object, owner: str) -> None:
+    if not isinstance(loss, (BaseMetricLossFunction, MultipleLosses)):
+        raise TypeError(
+            f"{owner} requires a BaseMetricLossFunction or MultipleLosses, "
+            f"not {type(loss).__name__}"
+        )

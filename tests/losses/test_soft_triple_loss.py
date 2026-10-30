@@ -1,28 +1,24 @@
-######################################
-#######ORIGINAL IMPLEMENTATION########
-######################################
-# FROM https://github.com/idstcv/SoftTriple/blob/master/loss/SoftTriple.py
-# This code is copied directly from the official implementation
-# so that we can make sure our implementation returns the same result.
-# It's copied under the Apache license.
-# No changes have been made, except removal of .cuda() calls
-# Implementation of SoftTriple Loss
 import math
+import unittest
 
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
+from torch import nn
 from torch.nn import init
 from torch.nn.parameter import Parameter
 
-from pytorch_metric_learning.utils import common_functions as c_f
+from pytorch_metric_learning.distances import LpDistance
+from pytorch_metric_learning.losses import SoftTripleLoss
+from pytorch_metric_learning.regularizers import SparseCentersRegularizer
+from pytorch_metric_learning.utils import _common as c_f
 
-from ..zzz_testing_utils.testing_utils import angle_to_coord
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
+from ..helpers import angle_to_coord
 
 
 class OriginalImplementationSoftTriple(nn.Module):
     def __init__(self, la, gamma, tau, margin, dim, cN, K):
-        super(OriginalImplementationSoftTriple, self).__init__()
+        super().__init__()
         self.la = la
         self.gamma = 1.0 / gamma
         self.tau = tau
@@ -31,11 +27,10 @@ class OriginalImplementationSoftTriple(nn.Module):
         self.K = K
         self.fc = Parameter(torch.Tensor(dim, cN * K))
         self.weight = torch.zeros(cN * K, cN * K, dtype=torch.bool)
-        for i in range(0, cN):
-            for j in range(0, K):
+        for i in range(cN):
+            for j in range(K):
                 self.weight[i * K + j, i * K + j + 1 : (i + 1) * K] = 1
         init.kaiming_uniform_(self.fc, a=math.sqrt(5))
-        return
 
     def forward(self, input, target):
         centers = F.normalize(self.fc, p=2, dim=0)
@@ -58,24 +53,16 @@ class OriginalImplementationSoftTriple(nn.Module):
             return lossClassify
 
 
-import unittest
-
-from pytorch_metric_learning.losses import SoftTripleLoss
-from pytorch_metric_learning.regularizers import SparseCentersRegularizer
-
-from .. import TEST_DEVICE, TEST_DTYPES
-
-
 class TestSoftTripleLoss(unittest.TestCase):
     def test_soft_triple_loss(self):
         embedding_size = 2
         num_classes = 11
         reg_weight = 0.2
         margin = 0.01
+        la = 20
+        gamma = 0.1
 
         for dtype in TEST_DTYPES:
-            la = 1 if dtype == torch.float16 else 20
-            gamma = 1 if dtype == torch.float16 else 0.1
             for centers_per_class in range(1, 12):
                 if centers_per_class > 1:
                     weight_regularizer = SparseCentersRegularizer(
@@ -101,22 +88,29 @@ class TestSoftTripleLoss(unittest.TestCase):
                     embedding_size,
                     num_classes,
                     centers_per_class,
-                ).to(TEST_DEVICE)
+                ).to(TEST_DEVICE, torch.float64)
 
-                original_loss_func.fc.data = original_loss_func.fc.data.type(dtype)
-                loss_func.fc = original_loss_func.fc
+                loss_func.weight = torch.nn.Parameter(
+                    original_loss_func.fc.detach().t().to(dtype).contiguous()
+                )
+                with torch.no_grad():
+                    original_loss_func.fc.copy_(loss_func.weight.t())
 
                 embedding_angles = torch.arange(0, 180)
                 embeddings = torch.tensor(
                     [angle_to_coord(a) for a in embedding_angles],
                     requires_grad=True,
                     dtype=dtype,
-                ).to(
-                    TEST_DEVICE
-                )  # 2D embeddings
+                ).to(TEST_DEVICE)
                 labels = torch.randint(low=0, high=10, size=(180,)).to(TEST_DEVICE)
 
                 loss = loss_func(embeddings, labels)
                 loss.backward()
-                correct_loss = original_loss_func(F.normalize(embeddings), labels)
-                self.assertTrue(torch.isclose(loss, correct_loss))
+                correct_loss = original_loss_func(
+                    F.normalize(embeddings.detach().double()), labels
+                )
+                helpers.assert_close(loss, correct_loss, dtype, atol=1e-8)
+
+    def test_distance_must_be_a_similarity(self):
+        with self.assertRaises(TypeError):
+            SoftTripleLoss(3, 4, distance=LpDistance())

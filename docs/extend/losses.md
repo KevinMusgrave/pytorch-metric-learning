@@ -26,7 +26,8 @@ loss = loss_func(torch.randn(8, 16))
 
 `compute_loss` receives validated inputs:
 
-- `labels` is `None` or a `(N,)` tensor on the embeddings' device.
+- `labels` is `None` or a `(N,)` tensor on the embeddings' device. A loss that
+  sets the class attribute `label_ndim` to 2 receives `(N, classes)` labels.
 - `indices_tuple` is `None`, a `types.PairIndices`, or a `types.TripletIndices`.
   Callers may pass plain tuples; they are validated and converted before
   `compute_loss` runs.

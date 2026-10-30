@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+from typing import ClassVar
 
 from torch import Tensor, nn
 
@@ -16,6 +17,8 @@ def _regularization_term(
 
 
 class BaseMetricLossFunction(nn.Module):
+    label_ndim: ClassVar[int] = 1
+
     def __init__(
         self,
         *,
@@ -84,7 +87,7 @@ class BaseMetricLossFunction(nn.Module):
         ref_emb: Tensor | None,
         ref_labels: Tensor | None,
     ) -> LossDict:
-        _common.prepare_inputs(embeddings, labels, ref_emb, ref_labels)
+        _common.prepare_inputs(embeddings, labels, ref_emb, ref_labels, self.label_ndim)
         indices = _common.as_indices_tuple(indices_tuple, embeddings.device)
         return self.compute_loss(embeddings, labels, indices, ref_emb, ref_labels)
 

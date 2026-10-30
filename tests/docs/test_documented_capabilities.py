@@ -43,6 +43,12 @@ def construct(name: str) -> losses.BaseMetricLossFunction:
     return cls(*LEARNABLE.get(name, CONSTRUCTOR_ARGUMENTS.get(name, ())))
 
 
+def labels_for(loss: losses.BaseMetricLossFunction, labels: torch.Tensor):
+    if loss.label_ndim == 1:
+        return labels
+    return torch.nn.functional.one_hot(labels, num_classes=3).bool()
+
+
 def accepts(loss: torch.nn.Module, **kwargs) -> bool:
     try:
         loss(**kwargs)
@@ -91,9 +97,9 @@ class TestDocumentedCapabilities(unittest.TestCase):
                 if accepts(
                     loss,
                     embeddings=self.embeddings,
-                    labels=self.labels,
+                    labels=labels_for(loss, self.labels),
                     ref_emb=self.ref_emb,
-                    ref_labels=self.ref_labels,
+                    ref_labels=labels_for(loss, self.ref_labels),
                 ):
                     observed.add(name)
         self.assertEqual(observed, documented)

@@ -7,7 +7,7 @@ them as references for the current iteration's embeddings, forming more pairs
 or triplets than one batch provides.
 
 ```python {.signature}
-losses.CrossBatchMemory(loss, embedding_size, memory_size=1024, miner=None, *, label_dtype=torch.long)
+losses.CrossBatchMemory(loss, embedding_size, memory_size=1024, miner=None, *, label_dtype=torch.long, label_shape=(), pair_function=None)
 ```
 
 **Implementation notes**: `CrossBatchMemory` is a `torch.nn.Module` whose
@@ -82,7 +82,34 @@ for _ in range(3):
 loss_func.reset_queue()
 ```
 
-**Parameters**:
+## Label sets
+
+To queue [MultiSupConLoss](multi_supcon_loss.md) label sets, store them as
+booleans and let the loss define the pairs:
+
+```python
+import torch
+from pytorch_metric_learning import losses
+
+loss = losses.MultiSupConLoss()
+loss_func = losses.CrossBatchMemory(
+    loss,
+    embedding_size=128,
+    memory_size=1024,
+    label_dtype=torch.bool,
+    label_shape=(40,),
+    pair_function=loss.pair_indices,
+)
+embeddings = torch.randn(32, 128, requires_grad=True)
+labels = torch.rand(32, 40) < 0.25
+loss_func(embeddings, labels).backward()
+```
+
+An anchor's own slot has similarity 1, so it is excluded with the other
+self-comparisons, even for an empty label set. Miners require one label per
+sample and raise `ValueError` for label sets, leaving the queue unchanged.
+
+## Parameters
 
 - **loss**: The loss function to wrap, for example `ContrastiveLoss()`.
 - **embedding_size**: The size of the embeddings passed to the loss. Other
@@ -93,6 +120,12 @@ loss_func.reset_queue()
 - **label_dtype**: The dtype of the label queue. Incoming labels are converted
   to it only when the conversion round-trips exactly; otherwise the call raises
   `ValueError`. Use a floating dtype for non-integer labels.
+- **label_shape**: The shape of one label, `()` by default. A non-empty shape
+  requires `pair_function` and raises `ValueError` without it; labels of another
+  shape raise `ValueError`.
+- **pair_function**: A [`PairFunction`](../types.md#pairfunction) that returns
+  all candidate pairs between the labels and the snapshot. The default is
+  `indexing.get_all_pairs_indices`, which compares labels for equality.
 - **enqueue_mask** (forward argument): A boolean tensor of shape `(N,)` on the
   embeddings' device, where `enqueue_mask[i]` is `True` if `embeddings[i]`
   should be added to the queue. This supports self-supervision frameworks such

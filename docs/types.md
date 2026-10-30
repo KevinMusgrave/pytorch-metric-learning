@@ -199,6 +199,15 @@ type MiningStrategy = Literal["hard", "semihard", "easy", "all"]
 The `pos_strategy` and `neg_strategy` of
 [BatchEasyHardMiner](miners.md#batcheasyhardminer).
 
+### PairFunction
+
+```python {.signature}
+type PairFunction = Callable[[Tensor, Tensor], PairIndices]
+```
+
+The `pair_function` of [CrossBatchMemory](losses/cross_batch_memory.md): it
+takes labels and reference labels and returns all candidate pairs.
+
 ### PNPVariant
 
 ```python {.signature}

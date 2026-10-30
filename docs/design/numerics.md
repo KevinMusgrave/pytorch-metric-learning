@@ -8,7 +8,10 @@ retrieval backends, or distributed process management.
 ## Tensor contracts
 
 Embeddings have shape `(batch, dimensions)`. Label equality defines positive
-pairs; unequal labels define negative pairs. Mined indices are named tuples:
+pairs; unequal labels define negative pairs. A loss with class attribute
+`label_ndim = 2`, currently `MultiSupConLoss`, instead takes boolean
+`(batch, classes)` label sets and defines pairs by thresholded Jaccard
+similarity. Mined indices are named tuples:
 `PairIndices(pos_anchors, positives, neg_anchors, negatives)` and
 `TripletIndices(anchors, positives, negatives)`. Named tuples let code dispatch
 with `isinstance` instead of counting tensors; plain 3- and 4-tuples are
@@ -143,6 +146,19 @@ gave zero. `CosineSimilarity` has no `p` or `power` options: several losses and
 regularizers require it and take `acos` of, or assume signed, unit-L2 cosines,
 which any other setting silently broke. `DotProductSimilarity` keeps both
 options.
+
+`MultiSupConLoss` keeps the standard pair tuples and derives Jaccard weights from
+the labels inside the loss. Embedding a similarity matrix in 4- and 5-tuples
+would have required separate conversion, queue, and self-comparison code.
+Boolean labels make the matrix product exact for sets without reading device
+values, at roughly 2 ms against 450 ms for 512 queries, 4096 references, and
+1000 classes on CPU; a kernel for Eq. 4's label counts needs row-wise `minimum`
+to avoid an 8 GiB intermediate, with no demonstrated need. Two empty sets have
+similarity 1, so a row's self-comparison is always positive and the existing
+self-comparison removal applies, and `threshold=1` recovers SupCon.
+`CrossBatchMemory` stores label sets through `label_shape` and takes candidate
+pairs from an explicit `pair_function`, instead of inspecting the wrapped loss
+or duplicating the queue.
 
 ## Index enumeration
 

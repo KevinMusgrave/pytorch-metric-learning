@@ -5,7 +5,7 @@ import torch
 from torch import Tensor
 
 from ..miners import BaseMiner
-from ..types import IndicesTuple, MetricLoss, PairIndices
+from ..types import IndicesTuple, MetricLoss, PairFunction, PairIndices
 from ..utils import _common, indexing
 from .multiple_losses import _require_metric_loss
 
@@ -55,17 +55,22 @@ class CrossBatchMemory(torch.nn.Module):
         miner: BaseMiner | None = None,
         *,
         label_dtype: torch.dtype = torch.long,
+        label_shape: tuple[int, ...] = (),
+        pair_function: PairFunction | None = None,
     ) -> None:
         super().__init__()
         _require_metric_loss(loss, "CrossBatchMemory")
+        if label_shape and pair_function is None:
+            raise ValueError("label_shape requires pair_function")
         self.loss = loss
         self.miner = miner
         self.memory_size = memory_size
+        self.pair_function = pair_function or indexing.get_all_pairs_indices
         self.register_buffer(
             "embedding_memory", torch.zeros(memory_size, embedding_size)
         )
         self.register_buffer(
-            "label_memory", torch.zeros(memory_size, dtype=label_dtype)
+            "label_memory", torch.zeros(memory_size, *label_shape, dtype=label_dtype)
         )
         self.reset_queue()
         self.register_state_dict_post_hook(_save_queue_state)
@@ -78,7 +83,9 @@ class CrossBatchMemory(torch.nn.Module):
         indices_tuple: Sequence[Tensor] | None = None,
         enqueue_mask: Tensor | None = None,
     ) -> Tensor:
-        _common.check_shapes(embeddings, labels)
+        _common.check_shapes(embeddings, labels, self.label_memory.ndim)
+        if labels.shape[1:] != self.label_memory.shape[1:]:
+            raise ValueError("labels must have the memory's label shape")
         _common.check_device(labels, embeddings, "labels")
         if embeddings.shape[1] != self.embedding_memory.shape[1]:
             raise ValueError("embeddings must have the memory's embedding size")
@@ -162,7 +169,7 @@ class CrossBatchMemory(torch.nn.Module):
                 embeddings, labels, ref_emb=E_mem, ref_labels=L_mem
             )
         else:
-            indices_tuple = indexing.get_all_pairs_indices(labels, L_mem)
+            indices_tuple = self.pair_function(labels, L_mem)
             if curr_batch_idx is not None:
                 indices_tuple = indexing._remove_self_comparisons(
                     indices_tuple, curr_batch_idx

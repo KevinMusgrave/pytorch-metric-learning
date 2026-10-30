@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 from unittest import mock
 
+import pytest
 import torch
 
 from pytorch_metric_learning.distances import CosineSimilarity, LpDistance
@@ -17,6 +18,23 @@ from pytorch_metric_learning.evaluation import accuracy_calculator, retrieval
 from .. import TEST_DEVICE, TEST_DTYPES
 
 HAS_FAISS = importlib.util.find_spec("faiss") is not None
+
+
+class ShardedIndex:
+    def add(self, tensor):
+        self.added = tensor
+
+    def search(self, tensor, k):
+        self.searched = tensor
+        return tensor[:, :k], torch.zeros_like(tensor[:, :k], dtype=torch.long)
+
+
+class DeviceIndex(ShardedIndex):
+    def __init__(self, device):
+        self.device = device
+
+    def getDevice(self):
+        return self.device
 
 
 class TestRetrievalBackends(unittest.TestCase):
@@ -246,6 +264,48 @@ class TestRetrievalBackends(unittest.TestCase):
                 calculator.get_accuracy(embeddings, labels)
 
     @unittest.skipUnless(HAS_FAISS, "requires the faiss extra")
+    @unittest.skipUnless(HAS_FAISS, "requires Faiss")
+    def test_faiss_accepts_non_contiguous_inputs(self):
+        rows = torch.arange(24.0, device=TEST_DEVICE).reshape(6, 4)
+        strided = rows[:, ::2]
+        self.assertFalse(strided.is_contiguous())
+        distances, indices = retrieval.FaissKNN()(strided[:2], 1, strided)
+        self.assertEqual(indices.squeeze(1).tolist(), [0, 1])
+        self.assertEqual(distances.squeeze(1).tolist(), [0, 0])
+
+    def test_cpu_inputs_reach_a_gpu_index_on_the_cpu(self):
+        index = DeviceIndex(0)
+        query = torch.ones(2, 3, dtype=torch.float64)
+        retrieval._add_to_index_and_search(index, query, 2 * query, 1)
+        self.assertEqual(index.added.dtype, torch.float32)
+        self.assertEqual(index.added.device.type, "cpu")
+        self.assertEqual(index.searched.device.type, "cpu")
+
+    @pytest.mark.cuda
+    def test_inputs_stay_on_the_device_of_a_gpu_index(self):
+        query = torch.ones(2, 3, device=TEST_DEVICE, dtype=torch.float16)
+        index = DeviceIndex(query.device.index)
+        retrieval._add_to_index_and_search(index, query, query, 1)
+        self.assertEqual(index.added.device, query.device)
+        self.assertEqual(index.searched.device, query.device)
+        self.assertEqual(index.searched.dtype, torch.float32)
+
+    @pytest.mark.cuda
+    def test_inputs_leave_another_gpu_for_the_cpu(self):
+        index = DeviceIndex(1)
+        query = torch.ones(2, 3, device="cuda:0")
+        retrieval._add_to_index_and_search(index, query, query, 1)
+        self.assertEqual(index.added.device.type, "cpu")
+        self.assertEqual(index.searched.device.type, "cpu")
+
+    @pytest.mark.cuda
+    def test_indices_without_a_device_receive_cpu_inputs(self):
+        index = ShardedIndex()
+        query = torch.ones(2, 3, device=TEST_DEVICE)
+        retrieval._add_to_index_and_search(index, query, query, 1)
+        self.assertEqual(index.added.device.type, "cpu")
+        self.assertEqual(index.searched.device.type, "cpu")
+
     def test_faiss_gpus_must_be_a_nonempty_sequence(self):
         invalid: list[Any] = [0, "0", {0}]
         for gpus in invalid:

@@ -105,7 +105,11 @@ Faiss runs on CPU copies with `faiss-cpu`, including when embeddings originate
 on CUDA. GPU search requires a GPU build, detected by its `GpuIndex` type:
 `faiss-cpu` on macOS reports a GPU through `get_num_gpus()` without providing
 GPU indexes. Backend-specific GPU acceleration is distinct from
-PyTorch CUDA support. The Faiss GPU path is limited to `k <= 2048`, the maximum
+PyTorch CUDA support. A CUDA tensor is passed directly only to one GPU index on
+that tensor's device. `faiss.contrib.torch_utils` synchronizes streams on that
+path, requires a single-device index, and takes a raw pointer without comparing
+devices, so sharded indices and tensors on another GPU receive CPU copies.
+The Faiss GPU path is limited to `k <= 2048`, the maximum
 in Faiss's [`DeviceDefs.cuh`](https://github.com/facebookresearch/faiss/blob/main/faiss/gpu/utils/DeviceDefs.cuh).
 
 Metric definitions and examples live in `docs/accuracy_calculation.md`;

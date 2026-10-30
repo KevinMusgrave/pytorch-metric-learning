@@ -17,6 +17,17 @@ def normalized_planar_embeddings(num_points, dtype):
     ).to(TEST_DEVICE)
 
 
+def three_cluster_embeddings(dimensions, dtype):
+    embeddings = torch.zeros(6, dimensions, dtype=dtype, device=TEST_DEVICE)
+    embeddings[:2, 0] = 1
+    embeddings[2:4, 0] = 0.82
+    embeddings[2:4, 1] = (1 - 0.82**2) ** 0.5
+    embeddings[4:, 0] = 0.2
+    embeddings[4:, 1] = (0.2 - 0.82 * 0.2) / (1 - 0.82**2) ** 0.5
+    embeddings[4:, 2] = (1 - embeddings[4, 0] ** 2 - embeddings[4, 1] ** 2) ** 0.5
+    return embeddings
+
+
 def uniform_distribution_mean(low, high):
     return (high + low) / 2
 
@@ -113,3 +124,75 @@ class TestDistanceWeightedMiner(unittest.TestCase):
             self.assertEqual(sorted(a.tolist()), [0, 1, 3, 4])
             self.assertTrue(torch.all(n[labels[a] == 0] == 2))
             self.assertTrue(torch.all(n[labels[a] == 2] == 5))
+
+    def test_large_reference_set_samples_a_valid_triplet(self):
+        num_negatives = 65536
+        for dtype in TEST_DTYPES:
+            with self.subTest(dtype=dtype):
+                embeddings = torch.zeros(1, 64, dtype=dtype, device=TEST_DEVICE)
+                embeddings[0, 0] = 1
+                ref_emb = torch.zeros(
+                    num_negatives + 1, 64, dtype=dtype, device=TEST_DEVICE
+                )
+                ref_emb[0, 0] = 1
+                ref_emb[1:, 0] = 1 - 1.39**2 / 2
+                ref_emb[1:, 1] = (1 - ref_emb[1, 0] ** 2) ** 0.5
+                labels = torch.zeros(1, dtype=torch.long, device=TEST_DEVICE)
+                ref_labels = torch.ones(
+                    num_negatives + 1, dtype=torch.long, device=TEST_DEVICE
+                )
+                ref_labels[0] = 0
+                a, p, n = DistanceWeightedMiner()(
+                    embeddings, labels, ref_emb=ref_emb, ref_labels=ref_labels
+                )
+                self.assertEqual(a.tolist(), [0])
+                self.assertEqual(p.tolist(), [0])
+                self.assertEqual(len(n), 1)
+                self.assertTrue(0 < n.item() <= num_negatives)
+
+    def test_high_dimensional_anchors_stay_sampleable(self):
+        labels = torch.tensor([0, 0, 1, 1, 2, 2], device=TEST_DEVICE)
+        for dimensions in (512, 2048):
+            for dtype in TEST_DTYPES:
+                with self.subTest(dimensions=dimensions, dtype=dtype):
+                    embeddings = three_cluster_embeddings(dimensions, dtype)
+                    a, p, n = DistanceWeightedMiner()(embeddings, labels)
+                    self.assertEqual(sorted(a.tolist()), list(range(6)))
+                    self.assertTrue(torch.equal(labels[a], labels[p]))
+                    self.assertTrue(torch.all(labels[a] != labels[n]))
+                    nearest_cluster = labels[a] < 2
+                    self.assertTrue(
+                        torch.equal(
+                            labels[n][nearest_cluster], 1 - labels[a][nearest_cluster]
+                        )
+                    )
+
+    def test_antipodal_negative_above_cutoff_leaves_other_rows_sampleable(self):
+        labels = torch.tensor([0, 0, 1, 1, 2, 2], device=TEST_DEVICE)
+        for dtype in TEST_DTYPES:
+            with self.subTest(dtype=dtype):
+                embeddings = torch.zeros(6, 512, dtype=dtype, device=TEST_DEVICE)
+                embeddings[:2, 0] = 1
+                embeddings[2:4, 0] = 0.2
+                embeddings[2:4, 1] = (1 - 0.2**2) ** 0.5
+                embeddings[4:, 0] = -0.9995
+                embeddings[4:, 2] = (1 - 0.9995**2) ** 0.5
+                a, p, n = DistanceWeightedMiner()(embeddings, labels)
+                self.assertEqual(sorted(a.tolist()), [0, 1, 2, 3])
+                self.assertTrue(torch.equal(labels[a], labels[p]))
+                self.assertTrue(torch.equal(labels[n], 1 - labels[a]))
+
+    def test_cutoff_excludes_negatives_at_exactly_that_distance(self):
+        labels = torch.tensor([0, 0, 1, 1], device=TEST_DEVICE)
+        for dtype in TEST_DTYPES:
+            with self.subTest(dtype=dtype):
+                embeddings = three_cluster_embeddings(16, dtype)[:4]
+                distance = DistanceWeightedMiner().distance(embeddings)[0, 2].item()
+                above = torch.nextafter(
+                    torch.tensor(distance, dtype=dtype),
+                    torch.tensor(2.0, dtype=dtype),
+                ).item()
+                a, _, _ = DistanceWeightedMiner(0, distance)(embeddings, labels)
+                self.assertEqual(len(a), 0)
+                a, _, _ = DistanceWeightedMiner(0, above)(embeddings, labels)
+                self.assertEqual(sorted(a.tolist()), [0, 1, 2, 3])

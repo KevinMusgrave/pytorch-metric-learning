@@ -2,6 +2,7 @@ import math
 import re
 import runpy
 import tempfile
+import tomllib
 import unittest
 from pathlib import Path
 
@@ -14,6 +15,7 @@ PUBLISHED = [
         if path.relative_to(ROOT / "docs").parts[0] not in ("design", "security")
     ),
 ]
+REPOSITORY = "https://github.com/KevinMusgrave/pytorch-metric-learning"
 LINK = re.compile(r"(?<!!)\[[^\]]*\]\(([^)\s]+)\)|!\[[^\]]*\]\(([^)\s]+)\)")
 HEADING = re.compile(r"^#{1,6}\s+(.+?)\s*$", re.MULTILINE)
 FENCE = re.compile(r"```.*?```", re.DOTALL)
@@ -62,10 +64,22 @@ class TestDocumentationPaths(unittest.TestCase):
                     if destination.is_dir():
                         destination = destination / "index.md"
                     self.assertTrue(destination.exists(), destination)
+                    self.assertNotEqual(destination.suffix, ".py")
                     if fragment and destination.suffix == ".md":
                         self.assertIn(fragment, anchors(destination))
                     checked += 1
         self.assertGreater(checked, 100)
+
+    def test_recipe_pages_link_to_release_source(self):
+        version = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"][
+            "version"
+        ]
+        expected = {path.name for path in (ROOT / "docs/recipes").glob("[!_]*.py")}
+        pages = (ROOT / "docs/recipes").glob("*.md")
+        text = "".join(page.read_text() for page in pages)
+        source = rf"{re.escape(REPOSITORY)}/blob/v{re.escape(version)}/docs/recipes/"
+        linked = re.findall(rf"\]\({source}([a-z_]+\.py)\)", text)
+        self.assertEqual(set(linked), expected)
 
 
 if __name__ == "__main__":

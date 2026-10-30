@@ -10,13 +10,13 @@ This documentation describes the version 3 release candidate. Install the
 preview explicitly:
 
 ```sh
-pip install "pytorch-metric-learning==3.0.0rc2"
-pip install "pytorch-metric-learning[faiss]==3.0.0rc2"       # Faiss retrieval backends
-pip install "pytorch-metric-learning[clustering]==3.0.0rc2"  # NMI and AMI metrics
+pip install "pytorch-metric-learning==3.0.0rc3"
+pip install "pytorch-metric-learning[faiss]==3.0.0rc3"       # Faiss retrieval backends
+pip install "pytorch-metric-learning[clustering]==3.0.0rc3"  # NMI and AMI metrics
 ```
 
 Version 3 requires Python 3.12 or newer, PyTorch 2.14.0 or newer, and NumPy
-2.5.3 or newer. See the [release notes](release-notes/3.0.0rc2.md), the
+2.5.3 or newer. See the [release notes](release-notes/3.0.0rc3.md), the
 [migration guide](migration-2-to-3.md), and the
 [version 2 documentation](https://kevinmusgrave.github.io/pytorch-metric-learning/v2/).
 New to the library? Read the [concepts overview](concepts.md).

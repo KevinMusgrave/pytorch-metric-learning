@@ -4,11 +4,11 @@ import torch
 def get_triplet_embeddings_with_ref(dtype, device):
     embeddings = torch.randn(4, 32, requires_grad=True, device=device, dtype=dtype)
     embeddings = torch.nn.functional.normalize(embeddings)
-    labels = torch.LongTensor([0, 0, 1, 1])
+    labels = torch.tensor([0, 0, 1, 1], dtype=torch.long, device=device)
 
     ref_emb = torch.randn(3, 32, requires_grad=True, device=device, dtype=dtype)
     ref_emb = torch.nn.functional.normalize(ref_emb)
-    ref_labels = torch.LongTensor([0, 1, 2])
+    ref_labels = torch.tensor([0, 1, 2], dtype=torch.long, device=device)
 
     triplets = [
         (0, 0, 1),
@@ -27,11 +27,11 @@ def get_triplet_embeddings_with_ref(dtype, device):
 def get_pair_embeddings_with_ref(dtype, device):
     embeddings = torch.randn(4, 32, requires_grad=True, device=device, dtype=dtype)
     embeddings = torch.nn.functional.normalize(embeddings)
-    labels = torch.LongTensor([0, 0, 1, 1])
+    labels = torch.tensor([0, 0, 1, 1], dtype=torch.long, device=device)
 
     ref_emb = torch.randn(3, 32, requires_grad=True, device=device, dtype=dtype)
     ref_emb = torch.nn.functional.normalize(ref_emb)
-    ref_labels = torch.LongTensor([0, 1, 2])
+    ref_labels = torch.tensor([0, 1, 2], dtype=torch.long, device=device)
 
     pos_pairs = [
         (0, 0),

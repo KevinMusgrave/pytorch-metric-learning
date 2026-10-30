@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 520" width="1000" height="520" role="img" aria-labelledby="title desc" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+  <title id="title">How PyTorch Metric Learning fits into a PyTorch training loop</title>
+  <desc id="desc">Your code loads batches, optionally with a metric-learning sampler, and computes embeddings with your model. A miner can select pairs or triplets. The loss computes distances, objective terms, and a reduction, then adds optional regularization penalties to produce a scalar. Your code calls backward and steps an optimizer that owns the model and any loss parameters. For evaluation, your code extracts embeddings, and AccuracyCalculator retrieves nearest neighbors to compute metrics.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#475569"/>
+    </marker>
+    <style>
+      .bg { fill: #ffffff; }
+      .zone-user { fill: #f8fafc; stroke: #cbd5e1; stroke-dasharray: 6 4; }
+      .zone-lib { fill: #eff6ff; stroke: #93c5fd; }
+      .zone-eval { fill: #f0fdf4; stroke: #86efac; }
+      .box { fill: #ffffff; stroke: #64748b; stroke-width: 1.2; }
+      .box-lib { fill: #ffffff; stroke: #2563eb; stroke-width: 1.4; }
+      .box-eval { fill: #ffffff; stroke: #16a34a; stroke-width: 1.4; }
+      .box-opt { fill: #ffffff; stroke: #2563eb; stroke-width: 1.2; stroke-dasharray: 4 3; }
+      .zone-title { font-size: 15px; font-weight: 600; fill: #0f172a; }
+      .zone-sub { font-size: 12px; fill: #475569; }
+      .name { font-size: 14px; font-weight: 600; fill: #0f172a; }
+      .code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; fill: #334155; }
+      .note { font-size: 12px; fill: #475569; }
+      .edge { stroke: #475569; stroke-width: 1.4; fill: none; marker-end: url(#arrow); }
+      .edge-dash { stroke: #475569; stroke-width: 1.4; fill: none; stroke-dasharray: 5 4; marker-end: url(#arrow); }
+      .label { font-size: 12px; fill: #334155; }
+      .plus { font-size: 18px; font-weight: 600; fill: #0f172a; }
+    </style>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1000" height="520" rx="12"/>
+
+  <rect class="zone-user" x="16" y="16" width="250" height="488" rx="10"/>
+  <text class="zone-title" x="32" y="42">Your PyTorch code</text>
+  <text class="zone-sub" x="32" y="60">data, model, optimizer, schedule</text>
+
+  <rect class="box" x="32" y="80" width="218" height="66" rx="6"/>
+  <text class="name" x="44" y="102">DataLoader</text>
+  <text class="code" x="44" y="122">sampler=MPerClassSampler(…)</text>
+  <text class="note" x="44" y="138">optional label-balanced batches</text>
+
+  <rect class="box" x="32" y="174" width="218" height="66" rx="6"/>
+  <text class="name" x="44" y="196">model(data)</text>
+  <text class="code" x="44" y="216">embeddings: (N, D)</text>
+  <text class="code" x="44" y="232">labels: (N,)</text>
+
+  <rect class="box" x="32" y="330" width="218" height="74" rx="6"/>
+  <text class="name" x="44" y="352">Optimize</text>
+  <text class="code" x="44" y="372">loss.backward()</text>
+  <text class="code" x="44" y="390">optimizer.step()</text>
+
+  <text class="note" x="32" y="428">The optimizer owns the model and any</text>
+  <text class="note" x="32" y="444">loss parameters, such as class proxies.</text>
+
+  <rect class="box" x="32" y="454" width="218" height="40" rx="6"/>
+  <text class="name" x="44" y="471">Evaluate</text>
+  <text class="code" x="44" y="487">model.eval(); embed data</text>
+
+  <rect class="zone-lib" x="290" y="16" width="400" height="458" rx="10"/>
+  <text class="zone-title" x="306" y="42">Training: losses and miners</text>
+  <text class="zone-sub" x="306" y="60">pytorch_metric_learning · embeddings in, scalar loss out</text>
+
+  <rect class="box-opt" x="306" y="80" width="368" height="56" rx="6"/>
+  <text class="name" x="318" y="102">Miner (optional)</text>
+  <text class="code" x="318" y="122">indices_tuple = miner(embeddings, labels)</text>
+
+  <rect class="box-lib" x="306" y="164" width="368" height="234" rx="6"/>
+  <text class="name" x="318" y="186">Loss</text>
+  <text class="code" x="318" y="206">loss_func(embeddings, labels, indices_tuple)</text>
+
+  <rect class="box" x="322" y="222" width="104" height="48" rx="5"/>
+  <text class="name" x="334" y="244">Distance</text>
+  <text class="note" x="334" y="261">pairwise matrix</text>
+
+  <rect class="box" x="444" y="222" width="104" height="48" rx="5"/>
+  <text class="name" x="456" y="244">Objective</text>
+  <text class="note" x="456" y="261">per-tuple terms</text>
+
+  <rect class="box" x="566" y="222" width="94" height="48" rx="5"/>
+  <text class="name" x="578" y="244">Reducer</text>
+  <text class="note" x="578" y="261">to a scalar</text>
+
+  <rect class="box-opt" x="322" y="300" width="226" height="48" rx="5"/>
+  <text class="name" x="334" y="322">Regularizers (optional)</text>
+  <text class="note" x="334" y="339">embedding or weight penalty</text>
+
+  <circle cx="613" cy="324" r="14" fill="#ffffff" stroke="#0f172a" stroke-width="1.4"/>
+  <text class="plus" x="607" y="330">+</text>
+
+  <text class="note" x="318" y="384">Multi-process batches: DistributedLossWrapper</text>
+
+  <rect class="zone-eval" x="714" y="16" width="270" height="488" rx="10"/>
+  <text class="zone-title" x="730" y="42">Evaluation: retrieval</text>
+  <text class="zone-sub" x="730" y="60">pytorch_metric_learning.evaluation</text>
+
+  <rect class="box-eval" x="730" y="80" width="238" height="74" rx="6"/>
+  <text class="name" x="742" y="102">AccuracyCalculator</text>
+  <text class="code" x="742" y="122">get_accuracy(query, labels,</text>
+  <text class="code" x="742" y="138">  reference, ref_labels)</text>
+
+  <rect class="box-eval" x="730" y="182" width="238" height="74" rx="6"/>
+  <text class="name" x="742" y="204">k-NN backend</text>
+  <text class="code" x="742" y="224">CustomKNN (default)</text>
+  <text class="code" x="742" y="240">FaissKNN (faiss extra)</text>
+
+  <rect class="box" x="730" y="284" width="238" height="56" rx="6"/>
+  <text class="name" x="742" y="306">Metrics</text>
+  <text class="code" x="742" y="326">precision_at_1, MAP@R</text>
+
+  <path class="edge" d="M141,146 V174"/>
+  <path class="edge" d="M250,207 H272 V108 H306"/>
+  <path class="edge" d="M490,136 V164"/>
+  <text class="label" x="498" y="155">indices_tuple</text>
+  <path class="edge" d="M272,207 V246 H322"/>
+  <path class="edge" d="M426,246 H444"/>
+  <path class="edge" d="M548,246 H566"/>
+  <path class="edge" d="M613,270 V310"/>
+  <path class="edge" d="M548,324 H599"/>
+  <path class="edge" d="M627,324 H650 V420 H272 V367 H250"/>
+  <text class="label" x="306" y="436">scalar loss</text>
+  <path class="edge-dash" d="M250,474 H700 V117 H730"/>
+  <text class="label" x="560" y="466">embeddings, labels</text>
+  <path class="edge" d="M849,154 V182"/>
+  <path class="edge" d="M849,256 V284"/>
+</svg>

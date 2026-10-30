@@ -4,7 +4,7 @@ import torch
 
 from pytorch_metric_learning.reducers import ClassWeightedReducer
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 
 
 class TestClassWeightedReducer(unittest.TestCase):
@@ -12,7 +12,7 @@ class TestClassWeightedReducer(unittest.TestCase):
         torch.manual_seed(99114)
         class_weights = torch.tensor([1, 0.9, 1, 0.1, 0, 0, 0, 0, 0, 0])
         for dtype in TEST_DTYPES:
-            reducer = ClassWeightedReducer(class_weights)
+            reducer = ClassWeightedReducer(class_weights).to(TEST_DEVICE)
             batch_size = 100
             num_classes = 10
             embedding_size = 64
@@ -24,7 +24,8 @@ class TestClassWeightedReducer(unittest.TestCase):
                 torch.randint(0, batch_size, (batch_size,)),
                 torch.randint(0, batch_size, (batch_size,)),
             )
-            triplet_indices = pair_indices + (
+            triplet_indices = (
+                *pair_indices,
                 torch.randint(0, batch_size, (batch_size,)),
             )
             losses = torch.randn(batch_size).type(dtype).to(TEST_DEVICE)
@@ -43,7 +44,7 @@ class TestClassWeightedReducer(unittest.TestCase):
                     }
                 }
                 output = reducer(loss_dict, embeddings, labels)
-                correct_output = 0
+                correct_output = torch.zeros((), dtype=dtype, device=TEST_DEVICE)
                 for i in range(len(losses)):
                     if reduction_type == "element":
                         batch_idx = indices[i]
@@ -55,5 +56,5 @@ class TestClassWeightedReducer(unittest.TestCase):
                         * class_weights.type(dtype).to(TEST_DEVICE)[class_label]
                     )
                 correct_output /= len(losses)
-                rtol = 1e-2 if dtype == torch.float16 else 1e-5
+                rtol = helpers.rtol(dtype)
                 self.assertTrue(torch.isclose(output, correct_output, rtol=rtol))

@@ -1,23 +1,23 @@
-######################################
-#######ORIGINAL IMPLEMENTATION########
-######################################
-# FROM https://github.com/tjddus9597/Proxy-Anchor-CVPR2020/blob/master/code/losses.py
-# This code is copied directly from the official implementation
-# so that we can make sure our implementation returns the same result.
-# It's copied under the MIT license.
+import unittest
 from contextlib import nullcontext
 
+import pytest
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
+from torch import nn
+
+from pytorch_metric_learning.losses import ProxyAnchorLoss
+
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
+from ..helpers import angle_to_coord
 
 
 def binarize(T, nb_classes):
     T = T.cpu().numpy()
     import sklearn.preprocessing
 
-    T = sklearn.preprocessing.label_binarize(T, classes=range(0, nb_classes))
-    T = torch.FloatTensor(T)
+    T = sklearn.preprocessing.label_binarize(T, classes=range(nb_classes))
+    T = torch.as_tensor(T, dtype=torch.float32)
     return T
 
 
@@ -34,7 +34,6 @@ def l2_norm(input):
 class OriginalImplementationProxyAnchor(torch.nn.Module):
     def __init__(self, nb_classes, sz_embed, mrg=0.1, alpha=32):
         torch.nn.Module.__init__(self)
-        # Proxy Anchor Initialization
         self.proxies = torch.nn.Parameter(torch.randn(nb_classes, sz_embed))
         nn.init.kaiming_normal_(self.proxies, mode="fan_out")
 
@@ -46,17 +45,15 @@ class OriginalImplementationProxyAnchor(torch.nn.Module):
     def forward(self, X, T):
         P = self.proxies
 
-        cos = F.linear(l2_norm(X), l2_norm(P))  # Calcluate cosine similarity
+        cos = F.linear(l2_norm(X), l2_norm(P))
         P_one_hot = binarize(T=T, nb_classes=self.nb_classes).to(X.device)
         N_one_hot = 1 - P_one_hot
 
         pos_exp = torch.exp(-self.alpha * (cos - self.mrg))
         neg_exp = torch.exp(self.alpha * (cos + self.mrg))
 
-        with_pos_proxies = torch.where(P_one_hot.sum(dim=0) != 0)[
-            0
-        ]  # The set of positive proxies of data in the batch
-        num_valid_proxies = len(with_pos_proxies)  # The number of positive proxies
+        with_pos_proxies = torch.where(P_one_hot.sum(dim=0) != 0)[0]
+        num_valid_proxies = len(with_pos_proxies)
 
         P_sim_sum = torch.where(P_one_hot == 1, pos_exp, torch.zeros_like(pos_exp)).sum(
             dim=0
@@ -72,75 +69,100 @@ class OriginalImplementationProxyAnchor(torch.nn.Module):
         return loss
 
 
-import unittest
-
-import torch
-
-from pytorch_metric_learning.losses import ProxyAnchorLoss
-
-from .. import TEST_DEVICE, TEST_DTYPES
-from ..zzz_testing_utils.testing_utils import angle_to_coord
-
-
 class TestProxyAnchorLoss(unittest.TestCase):
     def test_proxyanchor_loss(self):
+        self.check_proxyanchor_loss(use_autocast=False)
+
+    @pytest.mark.cuda
+    def test_proxyanchor_loss_under_cuda_autocast(self):
+        self.check_proxyanchor_loss(use_autocast=True)
+
+    def check_proxyanchor_loss(self, use_autocast):
         num_classes = 10
         embedding_size = 2
         margin = 0.5
+        alpha = 32
+        cm = torch.amp.autocast("cuda") if use_autocast else nullcontext()
 
-        for use_autocast in [True, False]:
-            if use_autocast:
-                cm = torch.cuda.amp.autocast()
-            else:
-                cm = nullcontext()
+        for dtype in TEST_DTYPES:
+            loss_func = ProxyAnchorLoss(
+                num_classes, embedding_size, margin=margin, alpha=alpha
+            ).to(TEST_DEVICE)
+            original_loss_func = OriginalImplementationProxyAnchor(
+                num_classes, embedding_size, mrg=margin, alpha=alpha
+            ).to(TEST_DEVICE, torch.float64)
 
-            for dtype in TEST_DTYPES:
-                alpha = 1 if dtype == torch.float16 else 32
-                loss_func = ProxyAnchorLoss(
-                    num_classes, embedding_size, margin=margin, alpha=alpha
-                ).to(TEST_DEVICE)
-                original_loss_func = OriginalImplementationProxyAnchor(
-                    num_classes, embedding_size, mrg=margin, alpha=alpha
-                ).to(TEST_DEVICE)
+            if not use_autocast:
+                loss_func.to(dtype=dtype)
+            with torch.no_grad():
+                loss_func.weight.copy_(original_loss_func.proxies)
+                original_loss_func.proxies.copy_(loss_func.weight)
 
-                if not use_autocast:
-                    original_loss_func.proxies.data = (
-                        original_loss_func.proxies.data.type(dtype)
-                    )
-                loss_func.proxies = original_loss_func.proxies
+            embedding_angles = list(range(180))
+            embeddings = torch.tensor(
+                [angle_to_coord(a) for a in embedding_angles],
+                requires_grad=True,
+                dtype=torch.float32,
+            ).to(TEST_DEVICE)
 
-                embedding_angles = list(range(0, 180))
-                embeddings = torch.tensor(
-                    [angle_to_coord(a) for a in embedding_angles],
-                    requires_grad=True,
-                    dtype=torch.float32,
-                ).to(
-                    TEST_DEVICE
-                )  # 2D embeddings
+            if not use_autocast:
+                embeddings = embeddings.type(dtype)
+            labels = torch.randint(low=0, high=5, size=(180,)).to(TEST_DEVICE)
 
-                if not use_autocast:
-                    embeddings = embeddings.type(dtype)
-                labels = torch.randint(low=0, high=5, size=(180,)).to(TEST_DEVICE)
+            with cm:
+                loss = loss_func(embeddings, labels)
 
-                with cm:
-                    loss = loss_func(embeddings, labels)
+            loss.backward()
+            exact_embeddings = embeddings.detach().double()
+            correct_loss = original_loss_func(exact_embeddings, labels)
+            helpers.assert_close(
+                loss, correct_loss, torch.float16 if use_autocast else dtype, atol=1e-8
+            )
 
-                loss.backward()
-                correct_loss = original_loss_func(embeddings, labels)
-                rtol = 1e-2 if dtype == torch.float16 or use_autocast else 1e-5
+            logits_out = loss_func.get_logits(embeddings)
+            cosines = torch.matmul(
+                F.normalize(exact_embeddings),
+                F.normalize(original_loss_func.proxies).t(),
+            )
+            helpers.assert_close(logits_out, cosines, logits_out.dtype)
 
-                self.assertTrue(torch.isclose(loss, correct_loss, rtol=rtol))
 
-                # test get_logits
-                logits_out = loss_func.get_logits(embeddings)
-                self.assertTrue(
-                    torch.allclose(
-                        logits_out,
-                        torch.matmul(
-                            F.normalize(embeddings), F.normalize(loss_func.proxies).t()
-                        ),
-                    )
-                )
+def weighted_proxy_anchor_reference(embeddings, labels, proxies, weights):
+    margin, alpha = 0.1, 32
+    cos = F.normalize(embeddings, dim=1) @ F.normalize(proxies, dim=1).T
+    positive = F.one_hot(labels, len(proxies)).bool()
+    used = weights[:, None] > 0
+    log_w = torch.log(weights)[:, None]
+    pos = (-alpha * (cos - margin) + log_w).masked_fill(~(positive & used), -torch.inf)
+    neg = (alpha * (cos + margin) + log_w).masked_fill(~(~positive & used), -torch.inf)
+    pos_term = F.softplus(torch.logsumexp(pos, 0))
+    neg_term = F.softplus(torch.logsumexp(neg, 0))
+    with_positives = positive.any(0)
+    return pos_term[with_positives].sum() / with_positives.sum() + neg_term.mean()
+
+
+class TestProxyAnchorMinerWeights(unittest.TestCase):
+    def test_mined_weights_scale_exponential_terms(self):
+        labels = torch.tensor([0, 0, 1, 2, 2, 1], device=TEST_DEVICE)
+        anchors = torch.tensor([0, 0, 2, 3], device=TEST_DEVICE)
+        positives = torch.tensor([1, 1, 5, 4], device=TEST_DEVICE)
+        negatives = torch.tensor([2, 3, 0, 1], device=TEST_DEVICE)
+        triplets = (anchors, positives, negatives)
+        counts = torch.bincount(torch.cat(triplets), minlength=len(labels))
+        weights = counts.double() / counts.max()
+        embeddings = torch.randn(6, 4)
+        for dtype in TEST_DTYPES:
+            loss_func = ProxyAnchorLoss(3, 4).to(TEST_DEVICE, dtype)
+            proxies = loss_func.weight.detach().double()
+            helpers.assert_matches_float64(
+                lambda x, loss_func=loss_func: loss_func(x, labels, triplets),
+                lambda x, proxies=proxies: weighted_proxy_anchor_reference(
+                    x, labels, proxies, weights.to(TEST_DEVICE)
+                ),
+                [embeddings],
+                dtype,
+                atol=1e-5,
+            )
 
 
 if __name__ == "__main__":

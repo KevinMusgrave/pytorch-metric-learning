@@ -1,0 +1,107 @@
+{
+  "metadata": {
+    "timestamp_utc": "2026-10-29T10:50:18.100577+00:00",
+    "revision": "e25aba57a11f1f1e5ed246dd2779579c04e5462d",
+    "working_tree_dirty": false,
+    "os": "macOS-26.7.1-arm64-arm-64bit",
+    "cpu": "Apple M1 Pro",
+    "logical_cpus": 8,
+    "python": "3.12.13",
+    "pytorch": "2.14.0",
+    "cuda_runtime": null,
+    "device": "cpu",
+    "gpu": null,
+    "dtype": "float32",
+    "mode": "eager",
+    "fullgraph": false,
+    "threads_per_rank": 1,
+    "world_size": 1,
+    "backend": null,
+    "local_batch_size": 512,
+    "global_batch_size": 512,
+    "dimensions": 128,
+    "samples_per_class": 16,
+    "data": "standard normal embeddings; contiguous balanced class labels",
+    "seed": 17,
+    "warmup_steps_after_first": 3,
+    "measured_steps": 10,
+    "matmul_precision": "highest"
+  },
+  "results_by_rank": [
+    [
+      {
+        "case": "mined-triplet",
+        "rank": 0,
+        "first_step_ms": 56.6860829712823,
+        "validation": {
+          "loss": 0.2598066031932831
+        },
+        "forward_ms": {
+          "median": 30.906374973710626,
+          "min": 30.16862494405359,
+          "max": 31.41154197510332,
+          "median_absolute_deviation": 0.3556040464900434
+        },
+        "backward_ms": {
+          "median": 10.986103967297822,
+          "min": 10.669415933080018,
+          "max": 11.183457914739847,
+          "median_absolute_deviation": 0.09093747939914465
+        },
+        "peak_allocated_delta_bytes": null,
+        "samples": [
+          {
+            "forward_ms": 31.099957996048033,
+            "backward_ms": 10.734374984167516,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 30.16862494405359,
+            "backward_ms": 11.000624974258244,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 31.21450007893145,
+            "backward_ms": 10.987667017616332,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 31.223417026922107,
+            "backward_ms": 11.183457914739847,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 30.201999936252832,
+            "backward_ms": 10.669415933080018,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 30.71279195137322,
+            "backward_ms": 11.041874997317791,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 30.70658294018358,
+            "backward_ms": 10.68116701208055,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 30.402750009670854,
+            "backward_ms": 11.021625017747283,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 31.300541013479233,
+            "backward_ms": 10.984540916979313,
+            "peak_allocated_delta_bytes": null
+          },
+          {
+            "forward_ms": 31.41154197510332,
+            "backward_ms": 10.860000038519502,
+            "peak_allocated_delta_bytes": null
+          }
+        ]
+      }
+    ]
+  ]
+}

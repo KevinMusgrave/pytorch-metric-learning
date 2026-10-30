@@ -10,6 +10,15 @@ from ..helpers import angle_to_coord
 
 
 class TestNormalizedSoftmaxLoss(unittest.TestCase):
+    def test_default_objective_ignores_embedding_scale(self):
+        embeddings = torch.randn(6, 2, device=TEST_DEVICE)
+        labels = torch.tensor([0, 0, 1, 1, 2, 2], device=TEST_DEVICE)
+        loss_func = NormalizedSoftmaxLoss(num_classes=3, embedding_size=2)
+        loss_func.to(TEST_DEVICE)
+        torch.testing.assert_close(
+            loss_func(embeddings * 7, labels), loss_func(embeddings, labels)
+        )
+
     def test_normalized_softmax_loss(self):
         temperature = 0.1
         for dtype in TEST_DTYPES:

@@ -43,4 +43,4 @@ class NPairsLoss(BaseMetricLossFunction):
         }
 
     def default_distance(self) -> BaseDistance:
-        return DotProductSimilarity()
+        return DotProductSimilarity(normalize_embeddings=True)

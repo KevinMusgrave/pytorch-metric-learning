@@ -37,7 +37,7 @@ class NormalizedSoftmaxLoss(BaseProxyLoss):
         return {"loss": {"losses": loss, "indices": _common.arange_like(embeddings)}}
 
     def default_distance(self) -> BaseDistance:
-        return DotProductSimilarity()
+        return DotProductSimilarity(normalize_embeddings=True)
 
     def get_logits(self, embeddings: Tensor) -> Tensor:
         normalized_weight = self.distance.normalize(self.weight, dim=1)

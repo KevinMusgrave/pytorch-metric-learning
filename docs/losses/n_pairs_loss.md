@@ -25,7 +25,7 @@ required, and `ref_emb` raises `ValueError`.
 **Paper settings**: The default distance L2-normalizes the embeddings, so
 $\mathbf{x}_i^\top \mathbf{x}_j^+$ is a cosine similarity. The paper uses
 unnormalized inner products and penalizes the squared embedding norms. Pass
-`distance=distances.DotProductSimilarity(normalize_embeddings=False)` and an
+`distance=distances.DotProductSimilarity()` and an
 `embedding_regularizer` such as `regularizers.LpRegularizer(power=2)` for the
 paper's formulation.
 
@@ -44,8 +44,8 @@ loss.backward()
 
 **Default distance**:
 
-- [`DotProductSimilarity()`](../distances.md#dotproductsimilarity), which
-  L2-normalizes the embeddings.
+- [`DotProductSimilarity(normalize_embeddings=True)`](../distances.md#dotproductsimilarity),
+  which L2-normalizes the embeddings.
 
 **Default reducer**:
 

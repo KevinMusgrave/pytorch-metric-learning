@@ -77,7 +77,7 @@ optimizer.step()
 
 - [`CosineSimilarity()`](../distances.md#cosinesimilarity). The distance must
   be a similarity (`is_inverted=True`), such as
-  [`DotProductSimilarity()`](../distances.md#dotproductsimilarity); otherwise
+  [`DotProductSimilarity(normalize_embeddings=True)`](../distances.md#dotproductsimilarity); otherwise
   the constructor raises `TypeError`.
 
 **Default reducer**:

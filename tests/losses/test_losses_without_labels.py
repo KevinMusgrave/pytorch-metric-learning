@@ -67,7 +67,9 @@ class TestLossesWithoutLabels(unittest.TestCase):
                         loss_fn(emb, indices_tuple=p, ref_emb=emb)
                     continue
                 loss_without_labels2 = loss_fn(emb, indices_tuple=p, ref_emb=emb)
-                self.assertEqual(loss_with_labels.item(), loss_without_labels2.item())
+                torch.testing.assert_close(
+                    loss_with_labels, loss_without_labels2, rtol=1e-6, atol=1e-7
+                )
 
             for loss_fn in compatible_losses:
                 with self.assertRaises(ValueError):

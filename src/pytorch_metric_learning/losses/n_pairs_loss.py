@@ -1,27 +1,37 @@
-import torch
+from typing import Unpack
 
-from ..distances import DotProductSimilarity
-from ..utils import common_functions as c_f
-from ..utils import loss_and_miner_utils as lmu
+import torch
+from torch import Tensor
+
+from ..distances import BaseDistance, DotProductSimilarity
+from ..types import IndicesTuple, LossDict, LossOptions
+from ..utils import _common, indexing
 from .base_metric_loss_function import BaseMetricLossFunction
 
 
 class NPairsLoss(BaseMetricLossFunction):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.add_to_recordable_attributes(name="num_pairs", is_stat=True)
+    def __init__(self, **options: Unpack[LossOptions]) -> None:
+        super().__init__(**options)
         self.cross_entropy = torch.nn.CrossEntropyLoss(reduction="none")
 
-    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
-        c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
-        anchor_idx, positive_idx = lmu.convert_to_pos_pairs_with_unique_labels(
+    def compute_loss(
+        self,
+        embeddings: Tensor,
+        labels: Tensor | None,
+        indices_tuple: IndicesTuple | None,
+        ref_emb: Tensor | None,
+        ref_labels: Tensor | None,
+    ) -> LossDict:
+        labels = _common.labels_required(labels)
+        _common.ref_not_supported(ref_emb)
+        anchor_idx, positive_idx = indexing._convert_to_pos_pairs_with_unique_labels(
             indices_tuple, labels
         )
-        self.num_pairs = len(anchor_idx)
-        if self.num_pairs == 0:
-            return self.zero_losses()
+        num_pairs = len(anchor_idx)
+        if num_pairs == 0:
+            return {}
         anchors, positives = embeddings[anchor_idx], embeddings[positive_idx]
-        targets = c_f.to_device(torch.arange(self.num_pairs), embeddings)
+        targets = torch.arange(num_pairs, device=embeddings.device)
         sim_mat = self.distance(anchors, positives)
         if not self.distance.is_inverted:
             sim_mat = -sim_mat
@@ -29,9 +39,8 @@ class NPairsLoss(BaseMetricLossFunction):
             "loss": {
                 "losses": self.cross_entropy(sim_mat, targets),
                 "indices": anchor_idx,
-                "reduction_type": "element",
             }
         }
 
-    def get_default_distance(self):
+    def default_distance(self) -> BaseDistance:
         return DotProductSimilarity()

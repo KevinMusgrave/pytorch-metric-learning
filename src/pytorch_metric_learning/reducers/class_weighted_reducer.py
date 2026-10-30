@@ -1,28 +1,29 @@
 import torch
+from torch import Tensor
 
-from ..utils import common_functions as c_f
 from .base_reducer import BaseReducer
 
 
 class ClassWeightedReducer(BaseReducer):
-    def __init__(self, weights, **kwargs):
-        super().__init__(**kwargs)
-        self.weights = weights
+    weights: Tensor
 
-    def element_reduction(self, losses, loss_indices, embeddings, labels):
-        return self.element_reduction_helper(losses, loss_indices, labels)
+    def __init__(self, weights: Tensor) -> None:
+        super().__init__()
+        self.register_buffer("weights", torch.as_tensor(weights))
 
-    def pos_pair_reduction(self, losses, loss_indices, embeddings, labels):
-        return self.element_reduction_helper(losses, loss_indices[0], labels)
-
-    # based on anchor label
-    def neg_pair_reduction(self, losses, loss_indices, embeddings, labels):
-        return self.element_reduction_helper(losses, loss_indices[0], labels)
-
-    # based on anchor label
-    def triplet_reduction(self, losses, loss_indices, embeddings, labels):
-        return self.element_reduction_helper(losses, loss_indices[0], labels)
-
-    def element_reduction_helper(self, losses, indices, labels):
-        self.weights = c_f.to_device(self.weights, losses, dtype=losses.dtype)
-        return torch.mean(losses * self.weights[labels[indices]])
+    def element_reduction(
+        self,
+        losses: Tensor,
+        anchors: Tensor,
+        embeddings: Tensor,
+        labels: Tensor | None,
+    ) -> Tensor:
+        if labels is None:
+            raise ValueError("ClassWeightedReducer requires labels")
+        if self.weights.device != losses.device:
+            raise ValueError(
+                f"ClassWeightedReducer weights are on {self.weights.device}, but "
+                f"losses are on {losses.device}. Move the reducer with .to(device)."
+            )
+        weights = self.weights.to(dtype=losses.dtype)
+        return torch.mean(losses * weights[labels[anchors]])

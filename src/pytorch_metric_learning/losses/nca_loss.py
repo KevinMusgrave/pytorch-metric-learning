@@ -1,51 +1,71 @@
-import torch
+from typing import Unpack
 
-from ..distances import LpDistance
-from ..utils import common_functions as c_f
-from ..utils import loss_and_miner_utils as lmu
+import torch
+from torch import Tensor
+
+from ..distances import BaseDistance, LpDistance
+from ..types import IndicesTuple, LossDict, LossOptions
+from ..utils import _common, indexing
 from .base_metric_loss_function import BaseMetricLossFunction
 
 
+def _nca_terms(
+    mat: Tensor,
+    labels: Tensor,
+    reference_labels: Tensor,
+    weights: Tensor,
+    scale: float,
+    is_inverted: bool,
+    exclude_self: bool,
+) -> LossDict:
+    dtype = _common.accumulation_dtype(mat.dtype)
+    logits = mat.to(dtype) * (scale if is_inverted else -scale)
+    candidates = torch.ones_like(logits, dtype=torch.bool)
+    if exclude_self:
+        candidates.fill_diagonal_(False)
+    same = (labels.unsqueeze(1) == reference_labels.unsqueeze(0)) & candidates
+    masked = _common.neg_inf(dtype)
+    all_lse = torch.logsumexp(logits.masked_fill(~candidates, masked), dim=1)
+    pos_lse = torch.logsumexp(logits.masked_fill(~same, masked), dim=1)
+    valid = torch.where(same.any(dim=1))[0]
+    losses = (all_lse - pos_lse)[valid] * weights[valid]
+    return {"loss": {"losses": losses.to(mat.dtype), "indices": valid}}
+
+
 class NCALoss(BaseMetricLossFunction):
-    def __init__(self, softmax_scale=1, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(
+        self, softmax_scale: float = 1, **options: Unpack[LossOptions]
+    ) -> None:
+        super().__init__(**options)
         self.softmax_scale = softmax_scale
-        self.add_to_recordable_attributes(
-            list_of_names=["softmax_scale"], is_stat=False
+
+    def compute_loss(
+        self,
+        embeddings: Tensor,
+        labels: Tensor | None,
+        indices_tuple: IndicesTuple | None,
+        ref_emb: Tensor | None,
+        ref_labels: Tensor | None,
+    ) -> LossDict:
+        labels = _common.labels_required(labels)
+        _, reference_labels = _common.resolve_reference(
+            embeddings, labels, ref_emb, ref_labels
+        )
+        weights = indexing.convert_to_weights(
+            indices_tuple,
+            labels,
+            dtype=_common.accumulation_dtype(embeddings.dtype),
+            using_ref=ref_emb is not None,
+        )
+        return _nca_terms(
+            self.distance(embeddings, ref_emb),
+            labels,
+            _common.labels_required(reference_labels),
+            weights,
+            self.softmax_scale,
+            self.distance.is_inverted,
+            exclude_self=ref_emb is None,
         )
 
-    # https://www.cs.toronto.edu/~hinton/absps/nca.pdf
-    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
-        if len(embeddings) <= 1:
-            return self.zero_losses()
-        return self.nca_computation(
-            embeddings, ref_emb, labels, ref_labels, indices_tuple
-        )
-
-    def nca_computation(
-        self, query, reference, query_labels, reference_labels, indices_tuple
-    ):
-        dtype = query.dtype
-        miner_weights = lmu.convert_to_weights(indices_tuple, query_labels, dtype=dtype)
-        mat = self.distance(query, reference)
-        if not self.distance.is_inverted:
-            mat = -mat
-        if query is reference:
-            mat.fill_diagonal_(c_f.neg_inf(dtype))
-        same_labels = c_f.to_dtype(
-            query_labels.unsqueeze(1) == reference_labels.unsqueeze(0), dtype=dtype
-        )
-        exp = torch.nn.functional.softmax(self.softmax_scale * mat, dim=1)
-        exp = torch.sum(exp * same_labels, dim=1)
-        non_zero = exp != 0
-        loss = -torch.log(exp[non_zero]) * miner_weights[non_zero]
-        return {
-            "loss": {
-                "losses": loss,
-                "indices": c_f.torch_arange_from_size(query)[non_zero],
-                "reduction_type": "element",
-            }
-        }
-
-    def get_default_distance(self):
+    def default_distance(self) -> BaseDistance:
         return LpDistance(power=2)

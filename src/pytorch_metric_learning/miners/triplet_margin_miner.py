@@ -1,60 +1,48 @@
-import torch
+from torch import Tensor
 
-from ..utils import loss_and_miner_utils as lmu
-from .base_miner import BaseTupleMiner
+from ..distances import BaseDistance
+from ..types import IndicesTuple, MiningStrategy, TripletIndices
+from ..utils import indexing
+from .base_miner import BaseMiner
 
 
-class TripletMarginMiner(BaseTupleMiner):
-    """
-    Returns triplets that violate the margin
-    Args:
-        margin
-        type_of_triplets: options are "all", "hard", or "semihard".
-                "all" means all triplets that violate the margin
-                "hard" is a subset of "all", but the negative is closer to the anchor than the positive
-                "semihard" is a subset of "all", but the negative is further from the anchor than the positive
-            "easy" is all triplets that are not in "all"
-    """
-
-    def __init__(self, margin=0.2, type_of_triplets="all", **kwargs):
-        super().__init__(**kwargs)
+class TripletMarginMiner(BaseMiner):
+    def __init__(
+        self,
+        margin: float = 0.2,
+        type_of_triplets: MiningStrategy = "all",
+        *,
+        distance: BaseDistance | None = None,
+    ) -> None:
+        super().__init__(distance=distance)
+        if type_of_triplets not in ("all", "hard", "semihard", "easy"):
+            raise ValueError(
+                'type_of_triplets must be "all", "hard", "semihard" or "easy"'
+            )
         self.margin = margin
         self.type_of_triplets = type_of_triplets
-        self.add_to_recordable_attributes(list_of_names=["margin"], is_stat=False)
-        self.add_to_recordable_attributes(
-            list_of_names=["avg_triplet_margin", "pos_pair_dist", "neg_pair_dist"],
-            is_stat=True,
-        )
 
-    def mine(self, embeddings, labels, ref_emb, ref_labels):
-        anchor_idx, positive_idx, negative_idx = lmu.get_all_triplets_indices(
-            labels, ref_labels
+    def mine(
+        self,
+        embeddings: Tensor,
+        labels: Tensor,
+        indices_tuple: IndicesTuple | None,
+        ref_emb: Tensor | None,
+        ref_labels: Tensor | None,
+    ) -> IndicesTuple:
+        anchor_idx, positive_idx, negative_idx = indexing.convert_to_triplets(
+            indices_tuple, labels, ref_labels
         )
         mat = self.distance(embeddings, ref_emb)
         ap_dist = mat[anchor_idx, positive_idx]
         an_dist = mat[anchor_idx, negative_idx]
-        triplet_margin = (
-            ap_dist - an_dist if self.distance.is_inverted else an_dist - ap_dist
-        )
-
+        triplet_margin = self.distance.margin(an_dist, ap_dist)
         if self.type_of_triplets == "easy":
-            threshold_condition = triplet_margin > self.margin
+            keep = triplet_margin > self.margin
         else:
-            threshold_condition = triplet_margin <= self.margin
+            keep = triplet_margin <= self.margin
             if self.type_of_triplets == "hard":
-                threshold_condition &= triplet_margin <= 0
+                keep &= triplet_margin <= 0
             elif self.type_of_triplets == "semihard":
-                threshold_condition &= triplet_margin > 0
-
-        return (
-            anchor_idx[threshold_condition],
-            positive_idx[threshold_condition],
-            negative_idx[threshold_condition],
-        )
-
-    def set_stats(self, ap_dist, an_dist, triplet_margin):
-        if self.collect_stats:
-            with torch.no_grad():
-                self.pos_pair_dist = torch.mean(ap_dist).item()
-                self.neg_pair_dist = torch.mean(an_dist).item()
-                self.avg_triplet_margin = torch.mean(triplet_margin).item()
+                keep &= triplet_margin > 0
+        return TripletIndices(anchor_idx[keep], positive_idx[keep], negative_idx[keep])

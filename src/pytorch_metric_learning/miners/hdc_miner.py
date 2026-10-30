@@ -1,65 +1,42 @@
 import math
 
 import torch
+from torch import Tensor
 
-from ..utils import loss_and_miner_utils as lmu
-from .base_miner import BaseTupleMiner
+from ..distances import BaseDistance
+from ..types import IndicesTuple, PairIndices
+from ..utils import indexing
+from .base_miner import BaseMiner
 
 
-# mining method used in Hard Aware Deeply Cascaded Embeddings
-# https://arxiv.org/abs/1611.05720
-class HDCMiner(BaseTupleMiner):
-    def __init__(self, filter_percentage=0.5, **kwargs):
-        super().__init__(**kwargs)
+class HDCMiner(BaseMiner):
+    def __init__(
+        self, filter_percentage: float = 0.5, *, distance: BaseDistance | None = None
+    ) -> None:
+        super().__init__(distance=distance)
+        if not 0 < filter_percentage <= 1:
+            raise ValueError("filter_percentage must be in (0, 1]")
         self.filter_percentage = filter_percentage
-        self.add_to_recordable_attributes(
-            list_of_names=["filter_percentage"], is_stat=False
-        )
-        self.reset_idx()
 
-    def mine(self, embeddings, labels, ref_emb, ref_labels):
+    def mine(
+        self,
+        embeddings: Tensor,
+        labels: Tensor,
+        indices_tuple: IndicesTuple | None,
+        ref_emb: Tensor | None,
+        ref_labels: Tensor | None,
+    ) -> IndicesTuple:
         mat = self.distance(embeddings, ref_emb)
-        self.set_idx(labels, ref_labels)
+        a1, p, a2, n = indexing.convert_to_pairs(indices_tuple, labels, ref_labels)
+        a1, p = self.hardest(mat, a1, p, largest=not self.distance.is_inverted)
+        a2, n = self.hardest(mat, a2, n, largest=self.distance.is_inverted)
+        return PairIndices(a1, p, a2, n)
 
-        for name, (anchor, other) in {
-            "pos": (self.a1, self.p),
-            "neg": (self.a2, self.n),
-        }.items():
-            if len(anchor) > 0:
-                pairs = mat[anchor, other]
-                num_pairs = len(pairs)
-                k = int(math.ceil(self.filter_percentage * num_pairs))
-                largest = self.should_select_largest(name)
-                _, idx = torch.topk(pairs, k=k, largest=largest)
-                self.filter_original_indices(name, idx)
-
-        return self.a1, self.p, self.a2, self.n
-
-    def should_select_largest(self, name):
-        if self.distance.is_inverted:
-            return False if name == "pos" else True
-        return True if name == "pos" else False
-
-    def set_idx(self, labels, ref_labels):
-        if not self.was_set_externally:
-            self.a1, self.p, self.a2, self.n = lmu.get_all_pairs_indices(
-                labels, ref_labels
-            )
-
-    def set_idx_externally(self, external_indices_tuple, labels):
-        self.a1, self.p, self.a2, self.n = lmu.convert_to_pairs(
-            external_indices_tuple, labels
-        )
-        self.was_set_externally = True
-
-    def reset_idx(self):
-        self.a1, self.p, self.a2, self.n = None, None, None, None
-        self.was_set_externally = False
-
-    def filter_original_indices(self, name, idx):
-        if name == "pos":
-            self.a1 = self.a1[idx]
-            self.p = self.p[idx]
-        else:
-            self.a2 = self.a2[idx]
-            self.n = self.n[idx]
+    def hardest(
+        self, mat: Tensor, anchors: Tensor, others: Tensor, largest: bool
+    ) -> tuple[Tensor, Tensor]:
+        if len(anchors) == 0:
+            return anchors, others
+        k = math.ceil(self.filter_percentage * len(anchors))
+        _, idx = torch.topk(mat[anchors, others], k=k, largest=largest)
+        return anchors[idx], others[idx]

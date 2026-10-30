@@ -1,90 +1,190 @@
 # Samplers
-Samplers are just extensions of the torch.utils.data.Sampler class, i.e. they are passed to a PyTorch Dataloader. The purpose of samplers is to determine how batches should be formed. This is also where any offline pair or triplet miners should exist.
 
+Samplers decide which dataset indices form each batch. `MPerClassSampler` and
+`FixedSetOfTriplets` yield one dataset index at a time; pass them to
+`DataLoader(..., sampler=...)`. `HierarchicalSampler` yields whole batches; pass
+it as `DataLoader(..., batch_sampler=...)` and omit `batch_size` and `shuffle`.
+
+Labels describe the whole dataset: `labels[i]` is the label of dataset item `i`.
+`MPerClassSampler` and `FixedSetOfTriplets` accept a one-dimensional tensor, a
+NumPy array, or any iterable of hashable labels, such as a list of strings
+([`types.DatasetLabels`](types.md#datasetlabels)).
+The examples on this page use this dataset of 64 items in 16 classes:
+
+```python
+import torch
+from pytorch_metric_learning import samplers
+
+labels = torch.arange(64) // 4
+dataset = torch.utils.data.TensorDataset(torch.randn(64, 8), labels)
+```
+
+## Randomness and coverage
+
+Every sampler takes a keyword-only `generator: torch.Generator | None`. With
+`None`, sampling uses PyTorch's global random number generator, so
+`torch.manual_seed` makes it repeatable; a dedicated generator isolates sampler
+randomness from model initialization and dropout. Each new iterator draws fresh
+random batches, and two samplers given generators with the same seed produce the
+same sequence of epochs. Samplers run in the main process, so `DataLoader`
+worker seeding does not affect them.
+
+These samplers balance labels within batches. They sample classes and examples
+independently for each batch, with replacement across batches, so an iterator
+is not an epoch that visits every example or class exactly once. A class with
+fewer members than requested is sampled with replacement within its batch.
+Use `num_samples` to choose how many indices one `MPerClassSampler`
+iterator yields.
 
 ## MPerClassSampler
-At every iteration, this will return ```m``` samples per class, assuming that the batch size is a multiple of ```m```. For example, if your dataloader's batch size is 100, and ```m``` = 5, then 20 classes with 5 samples each will be returned. Note that if ```batch_size``` is not specified, then most batches will have ```m``` samples per class, but it's not guaranteed for every batch.
-```python
-samplers.MPerClassSampler(labels, m, batch_size=None, length_before_new_iter=100000)
+
+Yields `m` indices per class in consecutive groups. For example, with a
+`DataLoader` batch size of 100 and `m=5`, each batch holds 20 classes with 5
+samples each. If `batch_size` is not given, most batches have `m` samples per
+class, but a batch can span the boundary between two passes over the classes.
+
+```python {.signature}
+samplers.MPerClassSampler(
+    labels: Tensor | np.ndarray | Iterable[Hashable],
+    m: int,
+    batch_size: int | None = None,
+    num_samples: int = 100000,
+    *,
+    generator: torch.Generator | None = None,
+)
 ```
+
 **Parameters**:
 
-* **labels**: The list of labels for your dataset, i.e. the labels[x] should be the label of the xth element in your dataset.
-* **m**: The number of samples per class to fetch at every iteration. If a class has less than m samples, then there will be duplicates in the returned batch.
-* **batch_size**: Optional. If specified, then every batch is guaranteed to have ```m``` samples per class. There are a few restrictions on this value:
-	* ```batch_size``` must be a multiple of ```m```
-	* ```length_before_new_iter >= batch_size``` must be true
-	* ```m * (number of unique labels) >= batch_size``` must be true
-* **length_before_new_iter**: How many iterations will pass before a new iterable is created.
+- **labels**: The dataset labels.
+- **m**: The number of samples per class in each group. A class with fewer than
+  `m` samples is sampled with replacement, so the batch contains duplicates.
+- **batch_size**: Optional. If given, every batch of this size has `m` samples
+  per class. Construction raises `ValueError` unless:
+  - `batch_size` is a multiple of `m`
+  - `num_samples >= batch_size`
+  - `m * (number of unique labels) >= batch_size`
+- **num_samples**: The number of indices one iterator yields, rounded down to a multiple of `batch_size` (or of `m * number of classes` when that is smaller and `batch_size` is `None`). `len(sampler)` equals the number of indices yielded.
+- **generator**: Optional `torch.Generator`; see [randomness and coverage](#randomness-and-coverage).
 
+To keep the per-batch guarantee, give the `DataLoader` the same `batch_size`
+and do not set `shuffle`:
+
+```python
+sampler = samplers.MPerClassSampler(labels, m=4, batch_size=32)
+loader = torch.utils.data.DataLoader(dataset, batch_size=32, sampler=sampler)
+```
 
 ## HierarchicalSampler
+
 Implementation of the sampler used in [Deep Metric Learning to Rank](http://openaccess.thecvf.com/content_CVPR_2019/papers/Cakir_Deep_Metric_Learning_to_Rank_CVPR_2019_paper.pdf).
 
-It will do the following per batch:
+Each batch is built as follows:
 
- - Randomly select X super classes.
- - For each super class, randomly select Y samples from Z classes, such that Y * Z equals the batch size divided by X.
+- Select X super classes.
+- For each super class, select Y samples from each of Z classes, such that
+  Y * Z equals the batch size divided by X.
 
-(X, Y, and the batch size are controllable parameters. See below for details.)
-
-This is a [BatchSampler](https://pytorch.org/docs/stable/data.html#torch.utils.data.BatchSampler), so you should pass it into your dataloader as the ```batch_sampler``` parameter.
+X is `super_classes_per_batch` and Y is `samples_per_class`. The sampler yields
+lists of dataset indices, so pass it as the `batch_sampler` argument:
 
 ```python
+hierarchical_labels = torch.stack([labels, labels // 4], dim=1)
+sampler = samplers.HierarchicalSampler(
+    hierarchical_labels, batch_size=32, samples_per_class=4
+)
+loader = torch.utils.data.DataLoader(dataset, batch_sampler=sampler)
+assert all(len(batch) == 32 for batch in sampler)
+```
+
+```python {.signature}
 samplers.HierarchicalSampler(
-		labels,
-        batch_size,
-        samples_per_class,
-        batches_per_super_tuple=4,
-        super_classes_per_batch=2,
-        inner_label=0,
-        outer_label=1,
-    )
-```
-**Parameters**:
-
-* **labels**: 2D array, where rows correspond to elements, and columns correspond to the hierarchical labels.
-* **batch_size**: because this is a BatchSampler the batch size must be specified.
-	* ```batch_size``` must be a multiple of ```super_classes_per_batch``` and ```samples_per_class```
-* **samples_per_class**: number of samples per class per batch. Corresponds to Y in the above explanation. You can also set this to "all" to use all elements of a class, but this is suitable only for few-shot datasets.
-* **batches_per_super_tuple**: number of batches to create for each tuple of super classes. This affects the length of the iterator returned by the sampler.
-* **super_classes_per_batch**: the number of super classes per batch. Corresponds to X in the above explanation.
-* **inner_label**: column index of ```labels``` corresponding to classes.
-* **outer_label**: column index of ```labels``` corresponding to super classes.
-
-
-## TuplesToWeightsSampler
-This is a simple offline miner. It does the following:
-
-1. Take a random subset of the dataset, if you provide ```subset_size```.
-2. Use a specified miner to mine tuples from the subset dataset.
-3. Compute weights based on how often each element appears in the mined tuples.
-4. Randomly sample, using the weights as probabilities.
-
-```python
-samplers.TuplesToWeightsSampler(model, 
-								miner, 
-								dataset, 
-								subset_size=None, 
-								**tester_kwargs)
+    labels: Tensor | np.ndarray | Sequence[Sequence[int]],
+    batch_size: int,
+    samples_per_class: int | Literal["all"],
+    batches_per_super_tuple: int = 4,
+    super_classes_per_batch: int = 2,
+    inner_label: int = 0,
+    outer_label: int = 1,
+    *,
+    generator: torch.Generator | None = None,
+)
 ```
 
 **Parameters**:
 
-* **model**: This model will be used to compute embeddings.
-* **miner**: This miner will find hard tuples from the computed embeddings.
-* **dataset**: The dataset you want to sample from.
-* **subset_size**: Optional. If ```None```, then the entire dataset will be mined, and the iterable will have length ```len(dataset)```. Most likely though, you will run out of memory if you do this. So to avoid that, set ```subset_size``` to a number of embeddings that can be passed to the miner without running out of memory. Then a random subset of ```dataset``` of size ```subset_size``` will be used for mining. The iterable will also have length ```subset_size```.
-* **tester_kwargs**: Any other keyword options will be passed to [BaseTester](testers.md#basetester), which is used internally to compute embeddings. This allows you to set things like ```dataloader_num_workers``` etc, if you want to.
+- **labels**: A two-dimensional array of integer labels with one row per dataset
+  item and one column per hierarchy level.
+- **batch_size**: The number of indices per batch. It must be positive and a
+  multiple of `super_classes_per_batch`, and `batch_size // super_classes_per_batch`
+  must be a multiple of `samples_per_class`; otherwise construction raises
+  `ValueError`.
+- **samples_per_class**: The number of samples per class in a batch, Y in the
+  explanation above, or `"all"` to take every sample of each chosen class. `"all"`
+  suits datasets with few samples per class.
+- **batches_per_super_tuple**: The number of batches created for each
+  combination of super classes.
+- **super_classes_per_batch**: The number of super classes per batch, X in the
+  explanation above.
+- **inner_label**: The column of `labels` holding classes.
+- **outer_label**: The column of `labels` holding super classes.
+- **generator**: Optional `torch.Generator`; see [randomness and coverage](#randomness-and-coverage).
 
+`len(sampler)` is `batches_per_super_tuple` times the number of combinations of
+`super_classes_per_batch` super classes. Each super class fills
+`batch_size // super_classes_per_batch` positions with whole classes in random
+order, skipping a class that would overflow its share. A batch is shorter than
+`batch_size` when a super class lacks enough classes to fill its share.
+
+## Mining-weighted sampling
+
+To sample examples in proportion to how often a miner selects them, pass
+`utils.indexing.convert_to_weights` output to PyTorch's `WeightedRandomSampler`.
+The [executable recipe](recipes/training.md#mining-weighted-sampling-contract)
+shows embedding extraction, subset-index mapping, and seeded sampling.
 
 ## FixedSetOfTriplets
-When initialized, this class creates a fixed set of triplets. This is useful for determining the performance of algorithms in cases where the only ground truth data is a set of triplets.
+
+Creates a fixed set of triplets at construction. Use it when the only ground
+truth for evaluating an algorithm is a set of triplets.
+
+```python {.signature}
+samplers.FixedSetOfTriplets(
+    labels: Tensor | np.ndarray | Iterable[Hashable],
+    num_triplets: int,
+    *,
+    generator: torch.Generator | None = None,
+)
+```
+
+Each triplet draws two different classes, then an anchor and a positive from the
+first class and a negative from the second. A class with one sample yields an
+anchor equal to its positive. Construction raises `ValueError` when
+`num_triplets` is not positive or `labels` has fewer than two classes.
+
+The triplets are drawn once, when the sampler is created; each iterator yields
+them in a new random order as consecutive `(anchor, positive, negative)` index
+triples. Use a `DataLoader` batch size divisible by 3 and recover the tuple
+indices directly from each embedding batch:
+
 ```python
-samplers.FixedSetOfTriplets(labels, num_triplets)
+from pytorch_metric_learning import losses
+
+sampler = samplers.FixedSetOfTriplets(labels, num_triplets=30)
+loader = torch.utils.data.DataLoader(dataset, batch_size=9, sampler=sampler)
+model = torch.nn.Linear(8, 4)
+loss_func = losses.TripletMarginLoss()
+
+data, batch_labels = next(iter(loader))
+embeddings = model(data)
+indices_tuple = (
+    torch.arange(len(embeddings), device=embeddings.device).reshape(-1, 3).unbind(1)
+)
+loss = loss_func(embeddings, batch_labels, indices_tuple=indices_tuple)
 ```
 
 **Parameters**:
 
-* **labels**: The list of labels for your dataset, i.e. the labels[x] should be the label of the xth element in your dataset.
-* **num_triplets**: The number of triplets to create.
+- **labels**: The dataset labels.
+- **num_triplets**: The number of triplets to create.
+- **generator**: Optional `torch.Generator` used for creation and ordering.

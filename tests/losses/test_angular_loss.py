@@ -1,12 +1,14 @@
+import math
 import unittest
 
 import numpy as np
 import torch
+import torch.nn.functional as F
 
 from pytorch_metric_learning.losses import AngularLoss
 
-from .. import TEST_DEVICE, TEST_DTYPES
-from ..zzz_testing_utils.testing_utils import angle_to_coord
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
+from ..helpers import angle_to_coord
 from .utils import get_triplet_embeddings_with_ref
 
 
@@ -17,7 +19,7 @@ class TestAngularLoss(unittest.TestCase):
                 5, 32, requires_grad=True, device=TEST_DEVICE, dtype=dtype
             )
             embeddings = torch.nn.functional.normalize(embeddings)
-            labels = torch.LongTensor([0, 0, 1, 1, 2])
+            labels = torch.tensor([0, 0, 1, 1, 2], dtype=torch.long).to(TEST_DEVICE)
 
             triplets = [
                 (0, 1, 2),
@@ -57,7 +59,7 @@ class TestAngularLoss(unittest.TestCase):
         sq_tan_alpha = (
             torch.tan(torch.tensor(np.radians(40), dtype=dtype).to(TEST_DEVICE)) ** 2
         )
-        correct_losses = [0, 0, 0, 0]
+        correct_losses = torch.zeros(4, dtype=dtype, device=TEST_DEVICE)
         for a, p, n in triplets:
             anchor = embeddings[a]
             if ref_emb is not None:
@@ -68,10 +70,7 @@ class TestAngularLoss(unittest.TestCase):
                 anchor + positive, negative
             ) - 2 * (1 + sq_tan_alpha) * torch.matmul(anchor, positive)
             correct_losses[a] += torch.exp(exponent)
-        total_loss = 0
-        for c in correct_losses:
-            total_loss += torch.log(1 + c)
-        total_loss /= len(correct_losses)
+        total_loss = torch.log(1 + correct_losses).mean()
         self.assertTrue(torch.isclose(loss, total_loss, rtol=1e-2))
 
     def test_with_no_valid_triplets(self):
@@ -82,10 +81,67 @@ class TestAngularLoss(unittest.TestCase):
                 [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
-            ).to(
-                TEST_DEVICE
-            )  # 2D embeddings
-            labels = torch.LongTensor([0, 1, 2, 3, 4])
+            ).to(TEST_DEVICE)
+            labels = torch.tensor([0, 1, 2, 3, 4], dtype=torch.long).to(TEST_DEVICE)
             loss = loss_func(embeddings, labels)
             loss.backward()
             self.assertEqual(loss, 0)
+
+
+class TestAngularLossNormalization(unittest.TestCase):
+    def test_negatives_are_normalized_like_anchors_and_positives(self):
+        torch.manual_seed(5)
+        embeddings = 3 * torch.randn(6, 4, dtype=torch.float64, device=TEST_DEVICE)
+        labels = torch.tensor([0, 0, 1, 1, 2, 2]).to(TEST_DEVICE)
+        alpha = 40
+        loss = AngularLoss(alpha=alpha)(embeddings, labels)
+        x = F.normalize(embeddings, dim=1)
+        tan_sq = math.tan(math.radians(alpha)) ** 2
+        terms = []
+        for a in range(6):
+            for p in range(6):
+                if a == p or labels[a] != labels[p]:
+                    continue
+                f = [
+                    4 * tan_sq * (x[a] + x[p]) @ x[n] - 2 * (1 + tan_sq) * x[a] @ x[p]
+                    for n in range(6)
+                    if labels[n] != labels[a]
+                ]
+                terms.append(torch.log1p(torch.exp(torch.stack(f)).sum()))
+        torch.testing.assert_close(loss, torch.stack(terms).mean())
+        torch.testing.assert_close(AngularLoss(alpha=alpha)(x, labels), loss)
+
+
+class TestAngularLossMinedPairs(unittest.TestCase):
+    def test_positive_only_miner_uses_label_negatives(self):
+        torch.manual_seed(2)
+        embeddings = torch.randn(6, 4)
+        labels = torch.tensor([0, 0, 1, 1, 2, 0], device=TEST_DEVICE)
+        anchors = torch.tensor([0, 2, 5], device=TEST_DEVICE)
+        positives = torch.tensor([1, 3, 0], device=TEST_DEVICE)
+        empty = torch.empty(0, dtype=torch.long, device=TEST_DEVICE)
+        mined = (anchors, positives, empty, empty)
+        sq_tan = math.tan(math.radians(40)) ** 2
+
+        def reference(x):
+            x = F.normalize(x, dim=1)
+            losses = []
+            for a, p in zip(anchors.tolist(), positives.tolist(), strict=True):
+                exponents = [
+                    4 * sq_tan * torch.dot(x[a] + x[p], x[n])
+                    - 2 * (1 + sq_tan) * torch.dot(x[a], x[p])
+                    for n in range(len(x))
+                    if labels[n] != labels[a]
+                ]
+                losses.append(torch.log(1 + torch.exp(torch.stack(exponents)).sum()))
+            return torch.stack(losses).mean()
+
+        for dtype in TEST_DTYPES:
+            with self.subTest(dtype=dtype):
+                loss = helpers.assert_matches_float64(
+                    lambda x: AngularLoss(alpha=40)(x, labels, mined),
+                    reference,
+                    [embeddings],
+                    dtype,
+                )
+                self.assertGreater(loss.item(), 0)

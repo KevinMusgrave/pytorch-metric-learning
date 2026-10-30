@@ -1,102 +1,65 @@
 import torch
+from torch import Tensor
 
-from ..utils import common_functions as c_f
-from ..utils.module_with_records import ModuleWithRecords
+from ..types import LossDict, LossTerm
+from ..utils._common import check_index_dtypes, zero_loss
 
 
-class BaseReducer(ModuleWithRecords):
-    def forward(self, loss_dict, embeddings, labels):
-        self.reset_stats()
-        assert len(loss_dict) == 1
-        loss_name = list(loss_dict.keys())[0]
-        loss_info = loss_dict[loss_name]
-        self.add_to_recordable_attributes(name=loss_name, is_stat=True)
-        losses, loss_indices, reduction_type, kwargs = self.unpack_loss_info(loss_info)
-        loss_val = self.reduce_the_loss(
-            losses, loss_indices, reduction_type, kwargs, embeddings, labels
-        )
-        setattr(self, loss_name, loss_val.item())
-        return loss_val
+class BaseReducer(torch.nn.Module):
+    def forward(
+        self, loss_dict: LossDict, embeddings: Tensor, labels: Tensor | None
+    ) -> Tensor:
+        reduced = (self.reduce(term, embeddings, labels) for term in loss_dict.values())
+        return sum(reduced, start=zero_loss(embeddings))
 
-    def unpack_loss_info(self, loss_info):
-        return (
-            loss_info["losses"],
-            loss_info["indices"],
-            loss_info["reduction_type"],
-            {},
-        )
+    def reduce(
+        self, term: LossTerm, embeddings: Tensor, labels: Tensor | None
+    ) -> Tensor:
+        losses, anchors = _validate_term(term)
+        if "divisor" in term:
+            raise ValueError(
+                f"{type(self).__name__} cannot apply a loss term's divisor; "
+                "reduce this loss with DivisorReducer"
+            )
+        if anchors is None:
+            return losses
+        if losses.numel() == 0:
+            return zero_loss(embeddings)
+        return self.element_reduction(losses, anchors, embeddings, labels)
 
-    def reduce_the_loss(
-        self, losses, loss_indices, reduction_type, kwargs, embeddings, labels
+    def element_reduction(
+        self,
+        losses: Tensor,
+        anchors: Tensor,
+        embeddings: Tensor,
+        labels: Tensor | None,
+    ) -> Tensor:
+        raise NotImplementedError
+
+
+def _validate_term(term: LossTerm) -> tuple[Tensor, Tensor | None]:
+    losses, indices = term["losses"], term["indices"]
+    if not isinstance(losses, Tensor):
+        raise TypeError("losses must be a tensor")
+    if indices is None:
+        if losses.numel() != 1:
+            raise ValueError("A loss term without indices must contain one value")
+        if "divisor" in term:
+            raise ValueError("An already reduced loss term cannot have a divisor")
+        return losses.reshape(()), None
+    if isinstance(indices, Tensor):
+        index_tensors: tuple[Tensor, ...] = (indices,)
+    elif (
+        isinstance(indices, tuple)
+        and len(indices) in (2, 3)
+        and all(isinstance(x, Tensor) for x in indices)
     ):
-        self.set_losses_size_stat(losses)
-        if self.input_is_zero_loss(losses):
-            return self.zero_loss(embeddings)
-        self.assert_sizes(losses, loss_indices, reduction_type)
-        reduction_func = self.get_reduction_func(reduction_type)
-        return reduction_func(losses, loss_indices, embeddings, labels, **kwargs)
-
-    def already_reduced_reduction(self, losses, loss_indices, embeddings, labels):
-        assert losses.ndim == 0 or len(losses) == 1
-        return losses
-
-    def element_reduction(self, losses, loss_indices, embeddings, labels):
-        raise NotImplementedError
-
-    def pos_pair_reduction(self, losses, loss_indices, embeddings, labels):
-        raise NotImplementedError
-
-    def neg_pair_reduction(self, losses, loss_indices, embeddings, labels):
-        raise NotImplementedError
-
-    def triplet_reduction(self, losses, loss_indices, embeddings, labels):
-        raise NotImplementedError
-
-    def get_reduction_func(self, reduction_type):
-        return getattr(self, "{}_reduction".format(reduction_type))
-
-    def assert_sizes(self, losses, loss_indices, reduction_type):
-        getattr(self, "assert_sizes_{}".format(reduction_type))(losses, loss_indices)
-
-    def zero_loss(self, embeddings):
-        return torch.sum(embeddings * 0)
-
-    def input_is_zero_loss(self, losses):
-        if (not torch.is_tensor(losses)) and (losses == 0):
-            return True
-        return False
-
-    def assert_sizes_already_reduced(self, losses, loss_indices):
-        pass
-
-    def assert_sizes_element(self, losses, loss_indices):
-        assert torch.is_tensor(losses)
-        assert torch.is_tensor(loss_indices)
-        assert len(losses) == len(loss_indices)
-
-    def assert_sizes_pair(self, losses, loss_indices):
-        assert torch.is_tensor(losses)
-        assert c_f.is_list_or_tuple(loss_indices)
-        assert len(loss_indices) == 2
-        assert all(torch.is_tensor(x) for x in loss_indices)
-        assert len(losses) == len(loss_indices[0]) == len(loss_indices[1])
-
-    def assert_sizes_pos_pair(self, losses, loss_indices):
-        self.assert_sizes_pair(losses, loss_indices)
-
-    def assert_sizes_neg_pair(self, losses, loss_indices):
-        self.assert_sizes_pair(losses, loss_indices)
-
-    def assert_sizes_triplet(self, losses, loss_indices):
-        assert torch.is_tensor(losses)
-        assert c_f.is_list_or_tuple(loss_indices)
-        assert len(loss_indices) == 3
-        assert all(len(x) == len(losses) for x in loss_indices)
-
-    def set_losses_size_stat(self, losses):
-        if self.collect_stats:
-            self.add_to_recordable_attributes(name="losses_size", is_stat=True)
-            if not torch.is_tensor(losses) or losses.ndim == 0:
-                self.losses_size = 1
-            else:
-                self.losses_size = len(losses)
+        index_tensors = indices
+    else:
+        raise TypeError("indices must be a tensor or a tuple of two or three tensors")
+    check_index_dtypes(index_tensors, "loss term indices")
+    if losses.ndim != 1 or any(x.ndim != 1 for x in index_tensors):
+        raise ValueError("losses and indices must be one-dimensional")
+    if any(len(x) != len(losses) for x in index_tensors):
+        raise ValueError("losses and indices must have equal lengths")
+    return losses, index_tensors[0]

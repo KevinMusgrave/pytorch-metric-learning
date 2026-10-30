@@ -1,32 +1,24 @@
 import torch
+from torch import Tensor
 
-from .base_reducer import BaseReducer
+from ..types import LossTerm
+from ..utils._common import accumulation_dtype
+from .base_reducer import BaseReducer, _validate_term
 
 
 class DivisorReducer(BaseReducer):
-    def unpack_loss_info(self, loss_info):
-        losses, loss_indices, reduction_type, kwargs = super().unpack_loss_info(
-            loss_info
-        )
-        if reduction_type != "already_reduced":
-            kwargs = {"divisor": loss_info["divisor"]}
-            self.divisor = kwargs["divisor"]
-            self.add_to_recordable_attributes(name="divisor", is_stat=True)
-        return losses, loss_indices, reduction_type, kwargs
+    def reduce(
+        self, term: LossTerm, embeddings: Tensor, labels: Tensor | None
+    ) -> Tensor:
+        losses, anchors = _validate_term(term)
+        if anchors is None:
+            return losses
+        return self.sum_and_divide(losses, term.get("divisor", 1))
 
-    def sum_and_divide(self, losses, embeddings, divisor):
-        if divisor != 0:
-            return torch.sum(losses) / divisor
-        return self.zero_loss(embeddings)
-
-    def element_reduction(self, losses, loss_indices, embeddings, labels, divisor=1):
-        return self.sum_and_divide(losses, embeddings, divisor)
-
-    def pos_pair_reduction(self, *args, **kwargs):
-        return self.element_reduction(*args, **kwargs)
-
-    def neg_pair_reduction(self, *args, **kwargs):
-        return self.element_reduction(*args, **kwargs)
-
-    def triplet_reduction(self, *args, **kwargs):
-        return self.element_reduction(*args, **kwargs)
+    def sum_and_divide(self, losses: Tensor, divisor: Tensor | float) -> Tensor:
+        dtype = accumulation_dtype(losses.dtype)
+        divisor = torch.as_tensor(divisor, dtype=dtype, device=losses.device)
+        total = losses.sum(dtype=dtype)
+        safe = torch.where(divisor != 0, divisor, torch.ones_like(divisor))
+        output = torch.where(divisor != 0, total / safe, torch.zeros_like(total))
+        return output.to(losses.dtype)

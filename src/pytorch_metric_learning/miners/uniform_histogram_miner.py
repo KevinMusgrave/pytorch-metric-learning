@@ -1,66 +1,54 @@
 import torch
+from torch import Tensor
 
-from ..utils import loss_and_miner_utils as lmu
-from .base_miner import BaseTupleMiner
+from ..distances import BaseDistance
+from ..types import IndicesTuple, PairIndices
+from ..utils import _common, indexing
+from .base_miner import BaseMiner
 
 
-class UniformHistogramMiner(BaseTupleMiner):
-    def __init__(self, num_bins=100, pos_per_bin=10, neg_per_bin=10, **kwargs):
-        super().__init__(**kwargs)
+class UniformHistogramMiner(BaseMiner):
+    def __init__(
+        self,
+        num_bins: int = 100,
+        pos_per_bin: int = 10,
+        neg_per_bin: int = 10,
+        *,
+        distance: BaseDistance | None = None,
+    ) -> None:
+        super().__init__(distance=distance)
         self.num_bins = num_bins
         self.pos_per_bin = pos_per_bin
         self.neg_per_bin = neg_per_bin
-        self.add_to_recordable_attributes(
-            list_of_names=["pos_per_bin", "neg_per_bin"], is_stat=False
-        )
 
-    def mine(self, embeddings, labels, ref_emb, ref_labels):
+    def mine(
+        self,
+        embeddings: Tensor,
+        labels: Tensor,
+        indices_tuple: IndicesTuple | None,
+        ref_emb: Tensor | None,
+        ref_labels: Tensor | None,
+    ) -> IndicesTuple:
         mat = self.distance(embeddings, ref_emb)
-        a1, p, a2, n = lmu.get_all_pairs_indices(labels, ref_labels)
-        pos_pairs = mat[a1, p]
-        neg_pairs = mat[a2, n]
-
-        if len(pos_pairs) > 0:
-            a1, p = self.get_uniformly_distributed_pairs(
-                pos_pairs, a1, p, self.pos_per_bin
+        a1, p, a2, n = indexing.convert_to_pairs(indices_tuple, labels, ref_labels)
+        if len(a1) > 0:
+            a1, p = self.uniformly_distributed_pairs(
+                mat[a1, p], a1, p, self.pos_per_bin
             )
-
-        if len(neg_pairs) > 0:
-            a2, n = self.get_uniformly_distributed_pairs(
-                neg_pairs, a2, n, self.neg_per_bin
+        if len(a2) > 0:
+            a2, n = self.uniformly_distributed_pairs(
+                mat[a2, n], a2, n, self.neg_per_bin
             )
+        return PairIndices(a1, p, a2, n)
 
-        return a1, p, a2, n
-
-    def get_bins(self, pairs):
-        device, dtype = pairs.device, pairs.dtype
-        return torch.linspace(
-            torch.min(pairs),
-            torch.max(pairs),
-            steps=self.num_bins + 1,
-            device=device,
-            dtype=dtype,
-        )
-
-    def filter_by_bin(self, distances, bins, num_pairs):
-        range_max = len(bins) - 1
-        all_idx = []
-        for i in range(range_max):
-            s, e = bins[i], bins[i + 1]
-            low_condition = s <= distances
-            high_condition = distances < e if i != range_max - 1 else distances <= e
-            condition = torch.where(low_condition & high_condition)[0]
-            if len(condition) == 0:
-                continue
-            idx = torch.multinomial(
-                torch.ones_like(condition, device=condition.device, dtype=torch.float),
-                num_pairs,
-                replacement=True,
-            )
-            all_idx.append(condition[idx])
-        return torch.cat(all_idx, dim=0)
-
-    def get_uniformly_distributed_pairs(self, distances, anchors, others, num_pairs):
-        bins = self.get_bins(distances)
-        idx = self.filter_by_bin(distances, bins, num_pairs)
-        return anchors[idx], others[idx]
+    def uniformly_distributed_pairs(
+        self, distances: Tensor, anchors: Tensor, others: Tensor, num_pairs: int
+    ) -> tuple[Tensor, Tensor]:
+        low, high = distances.min(), distances.max()
+        width = (high - low).clamp_min(_common.small_val(distances.dtype))
+        bins = ((distances - low) / width * self.num_bins).long()
+        bins = bins.clamp_(max=self.num_bins - 1)
+        occupied = torch.unique(bins)
+        membership = (bins.unsqueeze(0) == occupied.unsqueeze(1)).to(torch.float32)
+        chosen = torch.multinomial(membership, num_pairs, replacement=True).flatten()
+        return anchors[chosen], others[chosen]

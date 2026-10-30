@@ -1,66 +1,57 @@
 import torch
+from torch import Tensor
 
-from ..distances import CosineSimilarity
-from ..utils import common_functions as c_f
-from ..utils import loss_and_miner_utils as lmu
-from .base_miner import BaseTupleMiner
+from ..distances import BaseDistance, CosineSimilarity
+from ..types import IndicesTuple, PairIndices
+from ..utils import _common, indexing
+from .base_miner import BaseMiner
 
 
-class MultiSimilarityMiner(BaseTupleMiner):
-    def __init__(self, epsilon=0.1, **kwargs):
-        super().__init__(**kwargs)
+class MultiSimilarityMiner(BaseMiner):
+    def __init__(
+        self, epsilon: float = 0.1, *, distance: BaseDistance | None = None
+    ) -> None:
+        super().__init__(distance=distance)
         self.epsilon = epsilon
-        self.add_to_recordable_attributes(name="epsilon", is_stat=False)
 
-    def mine(self, embeddings, labels, ref_emb, ref_labels):
+    def mine(
+        self,
+        embeddings: Tensor,
+        labels: Tensor,
+        indices_tuple: IndicesTuple | None,
+        ref_emb: Tensor | None,
+        ref_labels: Tensor | None,
+    ) -> IndicesTuple:
         mat = self.distance(embeddings, ref_emb)
-        a1, p, a2, n = lmu.get_all_pairs_indices(labels, ref_labels)
-
-        if len(a1) == 0 or len(a2) == 0:
-            empty = torch.tensor([], device=labels.device, dtype=torch.long)
-            return empty.clone(), empty.clone(), empty.clone(), empty.clone()
-
-        mat_neg_sorting = mat
-        mat_pos_sorting = mat.clone()
-
-        dtype = mat.dtype
-        pos_ignore = (
-            c_f.pos_inf(dtype) if self.distance.is_inverted else c_f.neg_inf(dtype)
+        if mat.numel() == 0:
+            return _common.empty_pairs(mat.device)
+        pairs = indexing.convert_to_pairs(indices_tuple, labels, ref_labels)
+        pos_mask, neg_mask = indexing._pair_masks(
+            pairs, (mat.shape[0], mat.shape[1]), mat.device
         )
-        neg_ignore = (
-            c_f.neg_inf(dtype) if self.distance.is_inverted else c_f.pos_inf(dtype)
-        )
-
-        mat_pos_sorting[a2, n] = pos_ignore
-        mat_neg_sorting[a1, p] = neg_ignore
-        if embeddings is ref_emb:
-            mat_pos_sorting.fill_diagonal_(pos_ignore)
-            mat_neg_sorting.fill_diagonal_(neg_ignore)
-
-        pos_sorted, pos_sorted_idx = torch.sort(mat_pos_sorting, dim=1)
-        neg_sorted, neg_sorted_idx = torch.sort(mat_neg_sorting, dim=1)
-
+        high, low = _common.pos_inf(mat.dtype), _common.neg_inf(mat.dtype)
         if self.distance.is_inverted:
-            hard_pos_idx = torch.where(
+            pos_sorted, pos_sorted_idx = torch.sort(mat.masked_fill(~pos_mask, high))
+            neg_sorted, neg_sorted_idx = torch.sort(mat.masked_fill(~neg_mask, low))
+            hard_pos = torch.where(
                 pos_sorted - self.epsilon < neg_sorted[:, -1].unsqueeze(1)
             )
-            hard_neg_idx = torch.where(
+            hard_neg = torch.where(
                 neg_sorted + self.epsilon > pos_sorted[:, 0].unsqueeze(1)
             )
         else:
-            hard_pos_idx = torch.where(
+            pos_sorted, pos_sorted_idx = torch.sort(mat.masked_fill(~pos_mask, low))
+            neg_sorted, neg_sorted_idx = torch.sort(mat.masked_fill(~neg_mask, high))
+            hard_pos = torch.where(
                 pos_sorted + self.epsilon > neg_sorted[:, 0].unsqueeze(1)
             )
-            hard_neg_idx = torch.where(
+            hard_neg = torch.where(
                 neg_sorted - self.epsilon < pos_sorted[:, -1].unsqueeze(1)
             )
+        a1, a2 = hard_pos[0], hard_neg[0]
+        p = pos_sorted_idx[a1, hard_pos[1]]
+        n = neg_sorted_idx[a2, hard_neg[1]]
+        return PairIndices(a1, p, a2, n)
 
-        a1 = hard_pos_idx[0]
-        p = pos_sorted_idx[a1, hard_pos_idx[1]]
-        a2 = hard_neg_idx[0]
-        n = neg_sorted_idx[a2, hard_neg_idx[1]]
-
-        return a1, p, a2, n
-
-    def get_default_distance(self):
+    def default_distance(self) -> BaseDistance:
         return CosineSimilarity()

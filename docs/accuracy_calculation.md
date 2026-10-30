@@ -1,235 +1,464 @@
 # Accuracy Calculation
 
-The AccuracyCalculator class computes several accuracy metrics given a query and reference embeddings. It can be easily extended to create custom accuracy metrics.
+`AccuracyCalculator` computes retrieval and clustering metrics for query
+embeddings against reference embeddings. Additional metrics are registered with
+`custom_metrics`; see [adding custom accuracy metrics](#adding-custom-accuracy-metrics).
 
-```python
-from pytorch_metric_learning.utils.accuracy_calculator import AccuracyCalculator
-AccuracyCalculator(include=(),
-                    exclude=(),
-                    avg_of_avgs=False,
-                    return_per_class=False,
-                    k=None,
-                    label_comparison_fn=None,
-                    device=None,
-                    knn_func=None,
-                    kmeans_func=None)
+```python {.signature}
+evaluation.AccuracyCalculator(
+    include=(),
+    exclude=(),
+    avg_of_avgs=False,
+    k=None,
+    label_comparison_fn=None,
+    device=None,
+    knn_func=None,
+    kmeans_func=None,
+    custom_metrics=None,
+)
 ```
+
+Import it with `from pytorch_metric_learning.evaluation import AccuracyCalculator`.
+
 ### Parameters
 
-* **include**: Optional. A list or tuple of strings, which are the names of metrics you want to calculate. If left empty, all default metrics will be calculated.
-* **exclude**: Optional. A list or tuple of strings, which are the names of metrics you **do not** want to calculate.
-* **avg_of_avgs**: If True, the average accuracy per class is computed, and then the average of those averages is returned. This can be useful if your dataset has unbalanced classes. If False, the global average will be returned.
-* **return_per_class**: If True, the average accuracy per class is computed and returned.
-* **k**: The number of nearest neighbors that will be retrieved for metrics that require k-nearest neighbors. The allowed values are:
-    * ```None```. This means k will be set to the total number of reference embeddings.
-    * An integer greater than 0. This means k will be set to the input integer.
-    * ```"max_bin_count"```. This means k will be set to ```max(bincount(reference_labels)) - self_count``` where ```self_count == 1``` if the query and reference embeddings come from the same source.
-* **label_comparison_fn**: A function that compares two torch arrays of labels and returns a boolean array. The default is ```torch.eq```. If a custom function is used, then you must exclude clustering based metrics ("NMI" and "AMI"). The following is an example of a custom function for two-dimensional labels. It returns ```True``` if the 0th column matches, and the 1st column does **not** match:
-* **device**: The device to move input tensors to. If ```None```, will default to GPUs if available.
-* **knn_func**: A callable that takes in 4 arguments (```query, k, reference, embeddings_come_from_same_source```) and returns ```distances, indices```. Default is ```pytorch_metric_learning.utils.inference.FaissKNN```.
-* **kmeans_func**: A callable that takes in 2 arguments (```x, nmb_clusters```) and returns a 1-d tensor of cluster assignments. Default is ```pytorch_metric_learning.utils.inference.FaissKMeans```.
+- **include**: A sequence of metric names to compute. If empty, every
+  retrieval metric, built-in or custom, is selected. Clustering metrics
+  (`"NMI"`, `"AMI"`, and custom `ClusteringMetric` entries) are computed only
+  when named here.
+- **exclude**: A sequence of metric names to leave out.
+- **avg_of_avgs**: If `True`, each k-NN metric is averaged per query class, and
+  the result is the mean of those class averages, which gives every class equal
+  weight. If `False`, the result is the mean over queries.
+- **k**: The largest number of nearest neighbors k-NN metrics may use, typed as
+  [`types.NeighborLimit`](types.md#neighborlimit):
+  - `None`: retrieve every reference, excluding the query's own row when
+    `ref_includes_query=True`.
+  - An integer greater than 0: retrieve at most this many neighbors, capped at
+    `len(reference) - int(ref_includes_query)` in each call.
+  - `"max_bin_count"`: retrieve the largest number of relevant references of any
+    query class, capped the same way and at least 1. A reference is relevant to a
+    query when the label comparison matches their labels. With
+    `ref_includes_query=True`, the query's own row is subtracted from the count
+    only when the comparison matches a label with itself.
+
+  Other values raise `ValueError`. The calculator retrieves no more neighbors
+  than the selected metrics need; see
+  [neighbors retrieved](#neighbors-retrieved).
+
+- **label_comparison_fn**: A function that compares two label tensors and
+  returns a boolean tensor; see
+  [custom label comparison](#using-a-custom-label-comparison-function). The
+  default is `torch.eq`. A custom function cannot be combined with clustering
+  metrics; that combination raises `ValueError` at construction.
+- **device**: A `torch.device` or device string such as `"cpu"` or `"cuda:0"`.
+  Inputs are moved there before metrics are computed. If `None`, the query's
+  device is used, and NumPy inputs use the CPU. The calculator never selects a
+  GPU on its own.
+- **knn_func**: A callable `knn_func(query, k, reference, ref_includes_query)`
+  returning `(distances, indices)`; see the
+  [k-NN function contract](retrieval.md#k-nn-function-contract). The default is
+  `CustomKNN(LpDistance(normalize_embeddings=False, power=2), batch_size=256)`,
+  an exact PyTorch squared-Euclidean search on the input device. Pass
+  [`FaissKNN()`](retrieval.md#faissknn) to use the optional Faiss backend.
+- **kmeans_func**: A callable `kmeans_func(x, num_clusters)` returning a
+  one-dimensional tensor of cluster indices, one per row of `x`. There is no
+  default. Selecting a clustering metric without it raises `ValueError` at
+  construction. [`FaissKMeans()`](retrieval.md#faisskmeans) requires the `faiss`
+  extra. NMI and AMI also require scikit-learn, installed by the `clustering`
+  extra; a missing package raises `ModuleNotFoundError` when those metrics are
+  computed.
+- **custom_metrics**: A mapping from new metric names to `RetrievalMetric` or
+  `ClusteringMetric` registrations; see
+  [adding custom accuracy metrics](#adding-custom-accuracy-metrics). A name that
+  matches a built-in metric raises `ValueError`, and any other value type raises
+  `TypeError`.
+
+Metric names outside `calculator.available_metrics`, the read-only mapping of
+built-in and custom registrations, raise `ValueError`, and a string instead of a
+sequence of names raises `TypeError`. The selected names are available as the
+tuple `calculator.metrics`.
+
 ```python
-from pytorch_metric_learning.distances import SNRDistance
-from pytorch_metric_learning.utils.inference import CustomKNN
+import torch
+from pytorch_metric_learning.distances import CosineSimilarity
+from pytorch_metric_learning.evaluation import AccuracyCalculator, CustomKNN
 
-def example_label_comparison_fn(x, y):
-    return (x[:, 0] == y[:, 0]) & (x[:, 1] != y[:, 1])
-
-knn_func = CustomKNN(SNRDistance())
-AccuracyCalculator(exclude=("NMI", "AMI"), 
-                    label_comparison_fn=example_label_comparison_fn,
-                    knn_func=knn_func)
+calculator = AccuracyCalculator(
+    include=("precision_at_1", "r_precision"),
+    k="max_bin_count",
+    knn_func=CustomKNN(CosineSimilarity()),
+)
+assert calculator.metrics == ("precision_at_1", "r_precision")
 ```
 
 ### Getting accuracy
 
-Call the ```get_accuracy``` method to obtain a dictionary of accuracies.
-```python
-def get_accuracy(self, 
-	query, 		
-	reference, 
-	query_labels, 
-	reference_labels, 
-	embeddings_come_from_same_source, 
-	include=(),
-	exclude=()
-):
-# returns a dictionary mapping from metric names to accuracy values
-# The default metrics are:
-# "NMI" (Normalized Mutual Information)
-# "AMI" (Adjusted Mutual Information)
-# "precision_at_1"
-# "r_precision"
-# "mean_average_precision_at_r"
+```python {.signature}
+calculator.get_accuracy(
+    query,
+    query_labels,
+    reference=None,
+    reference_labels=None,
+    ref_includes_query=False,
+    include=(),
+    exclude=(),
+)
 ```
 
-* **query**: A 2D torch or numpy array of size ```(Nq, D)```, where Nq is the number of query samples. For each query sample, nearest neighbors are retrieved and accuracy is computed.
-* **reference**: A 2D torch or numpy array of size ```(Nr, D)```, where Nr is the number of reference samples. This is where nearest neighbors are retrieved from.
-* **query_labels**: A 1D torch or numpy array of size ```(Nq)```. Each element should be an integer representing the sample's label.
-* **reference_labels**: A 1D torch or numpy array of size ```(Nr)```. Each element should be an integer representing the sample's label. 
-* **embeddings_come_from_same_source**: Set to True if ```query``` is a subset of ```reference``` or if ```query is reference```. Set to False otherwise.
-* **include**: Optional. A list or tuple of strings, which are the names of metrics you want to calculate. If left empty, all metrics specified during initialization will be calculated.
-* **exclude**: Optional. A list or tuple of strings, which are the names of metrics you do not want to calculate.
+It returns a `dict[str, float]` from metric names to values. A k-NN metric is
+NaN when no query has a relevant reference. Metrics are computed under
+`torch.no_grad()`, so inputs that require gradients build no autograd graph.
 
-Note that labels can be 2D if a [custom label comparison function](#using-a-custom-label-comparison-function) is used.
+- **query**: A 2D torch tensor or NumPy array
+  ([`types.ArrayLike`](types.md#arraylike)) of shape `(Nq, D)`. Nearest
+  neighbors are retrieved for each query row.
+- **query_labels**: Labels of shape `(Nq,)`, or `(Nq, L)` with a
+  [custom label comparison](#using-a-custom-label-comparison-function). Labels
+  keep their dtype, so 64-bit identifiers compare exactly.
+- **reference**: A 2D torch tensor or NumPy array of shape `(Nr, D)`, the set
+  neighbors are retrieved from. If `None`, the query is evaluated against
+  itself: the reference is the query and `ref_includes_query` is `True`.
+- **reference_labels**: Labels of shape `(Nr,)` or `(Nr, L)`. Required when
+  `reference` is given; otherwise `ValueError` is raised.
+- **ref_includes_query**: Set to `True` when the query is exactly the first
+  `len(query)` rows of `reference` and `reference_labels`, for example
+  `reference = torch.cat([query, gallery])`. Each query's own row is then
+  excluded from its neighbors and from its relevant count. The calculator
+  checks this layout and raises `ValueError` if those rows do not equal the
+  query and its labels; a query that is an arbitrary subset of the reference is
+  not supported. Set it to `False` when the reference is a separate set.
+- **include**: Metric names to compute in this call. It must be a subset of the
+  metrics selected at construction; otherwise `ValueError` is raised. If empty,
+  all selected metrics are computed.
+- **exclude**: Metric names to leave out of this call.
 
+Embeddings and labels must have matching lengths, and embeddings must be finite;
+otherwise `ValueError` is raised before any search. Floating embeddings keep
+their dtype, promoted to the wider of the two when query and reference differ;
+integer embeddings are converted to float32.
 
-### Lone query labels
-If some query labels don't appear in the reference set, then it's impossible for those labels to have non-zero k-nn accuracy. Zero accuracy for these labels doesn't indicate anything about the quality of the embedding space. So these lone query labels are excluded from k-nn based accuracy calculations.
+### Per-class accuracy
 
-For example, if the input ```query_labels``` is ```[0,0,1,1]``` and ```reference_labels``` is ```[1,1,1,2,2]```, then 0 is considered a lone query label.
+```python {.signature}
+calculator.get_accuracy_per_class(
+    query,
+    query_labels,
+    reference=None,
+    reference_labels=None,
+    ref_includes_query=False,
+    include=(),
+    exclude=(),
+)
+```
 
+It takes the same arguments as `get_accuracy`, also runs under
+`torch.no_grad()`, and returns a `dict[str, dict[label, float]]`. Only selected
+retrieval metrics are computed; clustering metrics have no per-class form and
+are left out, and naming one in `include` raises `ValueError`. Each inner
+dictionary:
 
-### CPU/GPU usage
+- Is keyed by class label: a Python scalar for one-dimensional labels, or a
+  tuple for multi-column labels.
+- Contains every class present in `query_labels`, in sorted label order.
+- Maps a class to NaN when none of its queries has a relevant reference, or
+  when the metric is NaN for every such query.
 
-* If you installed ```faiss-cpu``` then the CPU will always be used.
-* If you installed ```faiss-gpu```, then the GPU will be used if ```k <= 1024``` for CUDA < 9.5, and ```k <= 2048``` for CUDA >= 9.5. If this condition is not met, then the CPU will be used. 
+```python
+import torch
+from pytorch_metric_learning.evaluation import AccuracyCalculator
 
-If your dataset is large, you might find the k-nn search is very slow. This is because the default behavior is to set k to ```len(reference_embeddings)```. To avoid this, you can set k to a number, like ```k = 1000```, or try ```k = "max_bin_count"```.
+calculator = AccuracyCalculator(include=("precision_at_1",))
+query = torch.tensor([[0.0, 0.0], [0.1, 0.0], [5.0, 5.0], [9.0, 9.0]])
+labels = torch.tensor([0, 0, 1, 2])
+per_class = calculator.get_accuracy_per_class(query, labels)
+assert per_class["precision_at_1"][0] == 1.0
+assert per_class["precision_at_1"].keys() == {0, 1, 2}
+assert torch.isnan(torch.tensor(per_class["precision_at_1"][1]))
+```
 
+### Lone queries
 
-### Explanations of the default accuracy metrics
+A query with no relevant reference cannot have nonzero k-NN accuracy, and its
+zero says nothing about the embedding space. Such lone queries are excluded from
+k-NN metrics. Relevance uses the label comparison, and with
+`ref_includes_query=True` the query's own row does not count.
 
-- **AMI**: 
+For example, if `query_labels` is `[0, 0, 1, 1]` and `reference_labels` is
+`[1, 1, 1, 2, 2]`, the queries labeled 0 are lone queries. When every query is
+lone, the calculator logs a warning and the k-NN metrics are NaN.
 
-     - [scikit-learn article](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.adjusted_mutual_info_score.html)
-     - [Wikipedia](https://en.wikipedia.org/wiki/Adjusted_mutual_information)
+### Neighbors retrieved
 
-- **NMI**:
+Each call asks `knn_func` for the fewest neighbors that give the selected
+metrics their values under `k`. A metric needs:
 
-     - [scikit-learn article](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.normalized_mutual_info_score.html)
-     - [Slides from Northeastern University](https://course.ccs.neu.edu/cs6140sp15/7_locality_cluster/Assignment-6/NMI.pdf)
+- `precision_at_1`: 1 neighbor.
+- `r_precision` and `mean_average_precision_at_r`: the largest number of
+  relevant references of any query, at least 1.
+- `mean_average_precision` and `mean_reciprocal_rank`: every available
+  neighbor.
+- A custom `RetrievalMetric`: its declared `neighbors`.
 
-- **mean_average_precision**:
+The effective `k` is the smallest of the largest need among the selected
+metrics, the configured `k` bound (every available neighbor for `None`; the
+largest relevant count, at least 1, for `"max_bin_count"`), and
+`len(reference) - int(ref_includes_query)`. Requesting only `precision_at_1`
+therefore searches for one neighbor even with `k=None`. Metric values are the
+same as with a search over every allowed neighbor; tied neighbors may be
+ordered differently, as with any `torch.topk` search.
 
-    - [Slides from Stanford](https://web.stanford.edu/class/cs276/handouts/EvaluationNew-handout-1-per.pdf)
+### Device and memory usage
 
-- **mean_average_precision_at_r**:
+The default backend runs on the input device and processes 256 queries at a
+time, so its temporary distance block is `(256, len(reference))`. Its outputs
+are `(len(query), effective_k)`. When `mean_average_precision` or
+`mean_reciprocal_rank` is selected with `k=None`, all references except
+excluded self-matches are retrieved, so output storage is quadratic for
+self-search. For large evaluations, set `k` to a number, such as `k=1000`, or
+use `k="max_bin_count"`.
 
-    - [See section 3.2 of A Metric Learning Reality Check](https://arxiv.org/pdf/2003.08505.pdf)
+With the default label comparison, relevant counts come from the reference
+label counts, so they need no `(classes, len(reference))` comparison matrix. A
+custom `label_comparison_fn` compares each query class with every reference
+label.
 
-- **mean_reciprocal_rank**:
+With [`FaissKNN`](retrieval.md#faissknn), searches run on a CPU copy unless a
+GPU build of Faiss is installed, and on GPU only when `k <= 2048`.
 
-    - [Slides from Stanford](https://web.stanford.edu/class/cs276/handouts/EvaluationNew-handout-1-per.pdf)
+### Default accuracy metrics
 
-- **precision_at_1**:
+- **AMI**: adjusted mutual information between query labels and k-means
+  clusters of the query embeddings.
+  - [scikit-learn article](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.adjusted_mutual_info_score.html)
+  - [Wikipedia](https://en.wikipedia.org/wiki/Adjusted_mutual_information)
+- **NMI**: normalized mutual information between query labels and k-means
+  clusters of the query embeddings.
+  - [scikit-learn article](https://scikit-learn.org/stable/modules/generated/sklearn.metrics.normalized_mutual_info_score.html)
+  - [Slides from Northeastern University](https://course.ccs.neu.edu/cs6140sp15/7_locality_cluster/Assignment-6/NMI.pdf)
+- **mean_average_precision**: average precision over the retrieved neighbors,
+  normalized by the number of relevant references.
+  - [Slides from Stanford](https://web.stanford.edu/class/cs276/handouts/EvaluationNew-handout-1-per.pdf)
+- **mean_average_precision_at_r**: average precision over the first `R`
+  neighbors, where `R` is the query's number of relevant references.
+  - [See section 3.2 of A Metric Learning Reality Check](https://arxiv.org/pdf/2003.08505.pdf)
+- **mean_reciprocal_rank**: the reciprocal rank of the first relevant neighbor,
+  or 0 if none is retrieved.
+  - [Slides from Stanford](https://web.stanford.edu/class/cs276/handouts/EvaluationNew-handout-1-per.pdf)
+- **precision_at_1**: 1 if the nearest neighbor is relevant, 0 otherwise.
+- **r_precision**: the fraction of the first `R` neighbors that are relevant.
+  - [See chapter 8 (page 161) of Introduction to Information Retrieval](https://nlp.stanford.edu/IR-book/)
 
-    - Fancy way of saying "is the 1st nearest neighbor correct?"
-
-- **r_precision**:
-
-    - [See chapter 8 (page 161) of Introduction to Information Retrieval](https://nlp.stanford.edu/IR-book/)
-
-
-**Important note**
-
-AccuracyCalculator's ```mean_average_precision_at_r``` and ```r_precision``` are correct only if ```k = None```, **or** ```k = "max_bin_count"```, **or** ```k >= max(bincount(reference_labels))```
-
+`mean_average_precision_at_r` and `r_precision` are correct only if `k=None`,
+`k="max_bin_count"`, or `k` is at least the largest number of relevant
+references of any query. With a smaller integer `k`, the calculator logs a
+warning.
 
 ### Adding custom accuracy metrics
 
-Let's say you want to use the existing metrics but also compute precision @ 2, and a fancy mutual info method. You can extend the existing class, and write methods that start with the keyword ```calculate_```
+Register each metric under a new name in `custom_metrics`. The calculator owns
+selection, retrieval, clustering, lone-query handling, and reduction; a metric
+only computes values.
 
-```python
-from pytorch_metric_learning.utils import accuracy_calculator
-
-class YourCalculator(accuracy_calculator.AccuracyCalculator):
-    def calculate_precision_at_2(self, knn_labels, query_labels, **kwargs):
-        return accuracy_calculator.precision_at_k(knn_labels, query_labels[:, None], 2)
-
-    def calculate_fancy_mutual_info(self, query_labels, cluster_labels, **kwargs):
-        return fancy_computations
-
-    def requires_clustering(self):
-        return super().requires_clustering() + ["fancy_mutual_info"] 
-
-    def requires_knn(self):
-    	return super().requires_knn() + ["precision_at_2"] 
+```python {.signature}
+evaluation.RetrievalMetric(function, neighbors="all")
 ```
 
-Any method that starts with "calculate_" will be passed the following kwargs:
-```python
-kwargs = {"query": query,                    # query embeddings
-    "reference": reference,                  # reference embeddings
-    "query_labels": query_labels,        
-    "reference_labels": reference_labels,
-    "embeddings_come_from_same_source": e}  # True if query is reference, or if query is a subset of reference.
+```python {.signature}
+evaluation.ClusteringMetric(function)
 ```
 
-If your method requires a k-nearest neighbors search, then append your method's name to the ```requires_knn``` list, as shown in the above example. If any of your accuracy methods require k-nearest neighbors, they will also receive the following kwargs:
+Import them, and the `RetrievalInputs` type they receive, from
+`pytorch_metric_learning.evaluation`.
 
-```python
-	{"label_counts": label_counts,           # A dictionary mapping from reference labels to the number of times they occur
-    "knn_labels": knn_labels,                # A 2d array where each row is the labels of the nearest neighbors of each query. The neighbors are retrieved from the reference set
-    "knn_distances": knn_distances           # The euclidean distance corresponding to each k-nearest neighbor in knn_labels
-    "lone_query_labels": lone_query_labels   # The set of labels (in the form of a torch array) that have only 1 occurrence in reference_labels
-    "not_lone_query_mask": not_lone_query_mask} # A boolean mask, where True means that a query element has at least 1 possible neighbor in reference.           
+A **retrieval metric** is `function(inputs: RetrievalInputs) -> Tensor` that
+returns one value per query: a one-dimensional tensor of length `Nq`, NaN where
+the metric is undefined for that query. Any other shape raises `ValueError`.
+`neighbors`, typed as [`types.MetricNeighbors`](types.md#metricneighbors),
+declares how many ranked neighbors the function reads: a positive
+integer, `"relevant"` for the largest number of relevant references of any
+query, or `"all"` (the default) for every neighbor allowed by `k`. The calculator
+may pass fewer columns when the gallery or `k` is smaller. Other values raise
+`ValueError`. A selected metric declaring `"relevant"` logs the same warning as
+`r_precision` when an integer `k` is smaller than the largest relevant count.
+
+`RetrievalInputs` is a frozen dataclass with these fields:
+
+```python {.signature}
+evaluation.RetrievalInputs(query_labels, knn_labels, matches, relevant_counts)
 ```
 
-If your method requires cluster labels, then append your method's name to the ```requires_clustering``` list, as shown in the above example. Then, if any of your methods need cluster labels, ```self.get_cluster_labels()``` will be called, and the kwargs will include:
+| Field             | Value                                                                                       |
+| ----------------- | ------------------------------------------------------------------------------------------- |
+| `matches`         | `(Nq, k)` boolean tensor; `True` where the neighbor is relevant to the query, nearest first |
+| `relevant_counts` | `(Nq,)` `torch.long` number of relevant references per query, without the query's own row   |
+| `query_labels`    | `(Nq,)` or `(Nq, L)` query labels on the calculator's device                                |
+| `knn_labels`      | `(Nq, k)` or `(Nq, k, L)` labels of each query's neighbors, nearest first                   |
+
+Relevance uses the calculator's label comparison. `k` here is the
+[effective number of neighbors](#neighbors-retrieved) for the call.
+
+The calculator converts the values to float64, then ignores NaN values and
+[lone queries](#lone-queries), whose `relevant_counts` is 0. `get_accuracy`
+returns the mean of the remaining values, or the mean of per-class means with
+`avg_of_avgs=True`. `get_accuracy_per_class` returns the per-class means. A
+result with no remaining values is NaN.
+
+A **clustering metric** is `function(query_labels: Tensor, cluster_labels:
+Tensor) -> float`. `cluster_labels` holds the `kmeans_func` cluster index of
+each query row, and the calculator asks for as many clusters as there are unique
+query labels. Like NMI and AMI, a clustering metric is computed only when named
+in `include`, requires a `kmeans_func`, cannot be combined with a custom
+`label_comparison_fn`, and has no per-class value.
+
+This example adds precision at 2, built from the exported
+[`precision_at_k`](#built-in-retrieval-metric-functions), and cluster purity.
+`nearest_seed_clusters` is a small deterministic stand-in for a k-means function
+such as `FaissKMeans()`:
 
 ```python
-    {"cluster_labels": cluster_labels} # A 1D array with a cluster label for each element in the query embeddings.
-```
+from functools import partial
 
-Now when ```get_accuracy``` is called, the returned dictionary will contain ```precision_at_2``` and ```fancy_mutual_info```:
-```python
-calculator = YourCalculator()
-acc_dict = calculator.get_accuracy(query_embeddings,
-    reference_embeddings,
-    query_labels,
-    reference_labels,
-    embeddings_come_from_same_source=True
+import torch
+from pytorch_metric_learning.evaluation import (
+    AccuracyCalculator,
+    ClusteringMetric,
+    RetrievalMetric,
+    precision_at_k,
 )
-# Now acc_dict contains the metrics "precision_at_2" and "fancy_mutual_info"
-# in addition to the original metrics from AccuracyCalculator
+
+
+def cluster_purity(query_labels, cluster_labels):
+    _, classes = torch.unique(query_labels, return_inverse=True)
+    _, clusters = torch.unique(cluster_labels, return_inverse=True)
+    counts = torch.zeros(
+        int(clusters.max()) + 1,
+        int(classes.max()) + 1,
+        dtype=torch.long,
+        device=query_labels.device,
+    )
+    counts.index_put_((clusters, classes), torch.ones_like(classes), accumulate=True)
+    return counts.max(dim=1).values.sum().item() / len(query_labels)
+
+
+def nearest_seed_clusters(x, num_clusters):
+    return torch.cdist(x, x[:num_clusters]).argmin(dim=1)
+
+
+calculator = AccuracyCalculator(
+    include=("precision_at_1", "precision_at_2", "cluster_purity"),
+    kmeans_func=nearest_seed_clusters,
+    custom_metrics={
+        "precision_at_2": RetrievalMetric(partial(precision_at_k, k=2), neighbors=2),
+        "cluster_purity": ClusteringMetric(cluster_purity),
+    },
+)
+labels = torch.arange(3).repeat(4)
+embeddings = torch.nn.functional.one_hot(labels).float() + 0.1 * torch.randn(12, 3)
+
+accuracies = calculator.get_accuracy(embeddings, labels)
+per_class = calculator.get_accuracy_per_class(embeddings, labels)
+assert set(accuracies) == {"precision_at_1", "precision_at_2", "cluster_purity"}
+assert set(per_class) == {"precision_at_1", "precision_at_2"}
+assert set(per_class["precision_at_2"]) == {0, 1, 2}
 ```
 
-You can use your custom calculator with the [tester](testers.md) classes as well, by passing it in as an init argument. (By default, the testers use AccuracyCalculator.)
+### Built-in retrieval metric functions
+
+The built-in retrieval metrics are exported from
+`pytorch_metric_learning.evaluation` as functions with the retrieval-metric
+contract, so custom metrics can reuse them:
+
+```python {.signature}
+evaluation.precision_at_k(inputs, k)
+```
+
+```python {.signature}
+evaluation.precision_at_1(inputs)
+```
+
+```python {.signature}
+evaluation.r_precision(inputs)
+```
+
+```python {.signature}
+evaluation.mean_average_precision(inputs)
+```
+
+```python {.signature}
+evaluation.mean_average_precision_at_r(inputs)
+```
+
+```python {.signature}
+evaluation.mean_reciprocal_rank(inputs)
+```
+
+Each takes a `RetrievalInputs` and returns a `(Nq,)` float64 tensor computed as
+defined in [default accuracy metrics](#default-accuracy-metrics).
+`precision_at_k` counts relevant neighbors among the first `k` columns of
+`matches` and divides by `k`, so register it with `neighbors=k`. The functions
+do not validate their inputs. For a lone query, whose `relevant_counts` is 0,
+`r_precision`, `mean_average_precision`, and `mean_average_precision_at_r`
+return NaN; the calculator excludes lone queries before reducing.
+
 ```python
-from pytorch_metric_learning import testers
-t = testers.GlobalEmbeddingSpaceTester(..., accuracy_calculator=YourCalculator())
+from pytorch_metric_learning.evaluation import RetrievalInputs, r_precision
+
+inputs = RetrievalInputs(
+    query_labels=torch.tensor([0, 1]),
+    knn_labels=torch.tensor([[0, 1, 0], [0, 0, 0]]),
+    matches=torch.tensor([[True, False, True], [False, False, False]]),
+    relevant_counts=torch.tensor([2, 0]),
+)
+assert precision_at_k(inputs, 2).tolist() == [0.5, 0.0]
+assert r_precision(inputs)[0] == 0.5 and r_precision(inputs)[1].isnan()
 ```
 
+The [evaluation recipe](recipes/evaluation.md) passes any calculator to its
+split, two-stream, and hierarchical helpers.
 
 ### Using a custom label comparison function
-If you define your own ```label_comparison_fn```, then ```query_labels``` and ```reference_labels``` can be 1D or 2D, and consist of integers or floating point numbers, as long as your ```label_comparison_fn``` can process them.
 
-Example of 2D labels:
+With a custom `label_comparison_fn`, `query_labels` and `reference_labels` can be
+one- or two-dimensional and can hold integers or floating-point numbers, as long
+as the function can process them. With the default `torch.eq`, labels must be
+one-dimensional.
+
+The function receives label tensors whose leading dimensions broadcast against
+each other, such as `(Nq, 1)` query labels and `(Nq, k)` neighbor labels, with a
+trailing label dimension for two-dimensional labels. It returns a boolean tensor
+of the broadcast shape without that trailing dimension. Index label columns with
+`x[..., i]` so the function works for every call.
+
+This example matches two-dimensional labels when the first column matches and
+the second column does **not** match:
+
 ```python
+import torch
+from pytorch_metric_learning.distances import SNRDistance
+from pytorch_metric_learning.evaluation import AccuracyCalculator, CustomKNN
+
+
 def label_comparison_fn(x, y):
     return (x[..., 0] == y[..., 0]) & (x[..., 1] != y[..., 1])
 
-# these are valid labels
-labels = torch.tensor([
-    (1, 3),
-    (7, 4),
-    (1, 4),
-    (1, 5),
-    (1, 6),
-])
+
+calculator = AccuracyCalculator(
+    label_comparison_fn=label_comparison_fn,
+    knn_func=CustomKNN(SNRDistance()),
+)
+labels = torch.tensor([(1, 3), (7, 4), (1, 4), (1, 5), (7, 6), (1, 3)])
+accuracies = calculator.get_accuracy(torch.randn(6, 8), labels)
+per_class = calculator.get_accuracy_per_class(torch.randn(6, 8), labels)
+assert set(per_class["precision_at_1"]) == {(1, 3), (1, 4), (1, 5), (7, 4), (7, 6)}
 ```
 
-Example of floating point labels:
+Example of floating-point labels:
+
 ```python
 def label_comparison_fn(x, y):
     return torch.abs(x - y) < 1
 
-# these are valid labels
-labels = torch.tensor([
-    10.0,
-    0.03,
-    0.04,
-    0.05,
-])
+
+labels = torch.tensor([10.0, 0.03, 0.04, 0.05])
 ```
-
-
-### Warning for versions <= 0.9.97
-
-The behavior of the ```k``` parameter described in the [Parameters](#parameters) section is for versions >= 0.9.98.
-
-For versions <= 0.9.97, the behavior was:
-
-* If ```k = None```, then ```k = min(1023, max(bincount(reference_labels)))```
-* Otherwise ```k = k```

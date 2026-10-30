@@ -1,148 +1,246 @@
 # Reducers
-Reducers specify how to go from many loss values to a single loss value. For example, the [ContrastiveLoss](losses.md#contrastiveloss) computes a loss for every positive and negative pair in a batch. A reducer will take all these per-pair losses, and reduce them to a single value. Here's where reducers fit in this library's flow of filters and computations:
 
-```Your Data --> Sampler --> Miner --> Loss --> Reducer --> Final loss value```
+A reducer turns the loss terms a loss computes into one scalar. For example,
+[ContrastiveLoss](losses/contrastive_loss.md#contrastiveloss) computes a loss
+for every positive and every negative pair in a batch; its default reducer
+averages the nonzero losses of each group and sums the results. Reducers sit
+between the loss and the final value:
 
-Reducers are passed into loss functions like this:
+`Your Data --> Sampler --> Miner --> Loss --> Reducer --> Final loss value`
+
+Pass a reducer to a loss through its `reducer` option:
+
 ```python
+import torch
 from pytorch_metric_learning import losses, reducers
-reducer = reducers.SomeReducer()
-loss_func = losses.SomeLoss(reducer=reducer)
-loss = loss_func(embeddings, labels) # in your training for-loop
-```
-Internally, the loss function creates a dictionary that contains the losses and other information. The reducer takes this dictionary, performs the reduction, and returns a single value on which ```.backward()``` can be called. Most reducers are written such that they can be passed into any loss function.
 
+embeddings = torch.randn(32, 16)
+labels = torch.randint(0, 4, (32,))
 
-## AvgNonZeroReducer
-This computes the average loss, using only the losses that are greater than 0. For example, if the losses are ```[0, 2, 0, 3]```, then this reducer will return ```2.5```.
-```python
-reducers.AvgNonZeroReducer(**kwargs)
+loss_func = losses.ContrastiveLoss(reducer=reducers.ThresholdReducer(low=0.1))
+loss = loss_func(embeddings, labels)
 ```
-This class is equivalent to using ```ThresholdReducer(low=0)```. See [ThresholdReducer](reducers.md#thresholdreducer).
+
+The loss computes a dictionary of loss terms, the reducer reduces each term to a
+scalar and sums them, and the loss adds any regularization penalty afterwards.
+The reducer object is used as given; the loss does not copy it. Every reducer
+returns a tensor. To get the unreduced terms instead, call
+[`loss_func.loss_terms(...)`](losses.md#unreduced-loss-terms).
 
 ## BaseReducer
+
 All reducers extend this class.
-```python
-reducers.BaseReducer(collect_stats=False)
+
+```python {.signature}
+reducers.BaseReducer()
 ```
 
-**Parameters**:
+### Loss terms
 
-* **collect_stats**: If True, will collect various statistics that may be useful to analyze during experiments. If False, these computations will be skipped. Want to make ```True``` the default? Set the global [COLLECT_STATS](common_functions.md#collect_stats) flag.
+A reducer receives a [`types.LossDict`](types.md#lossdict): term names mapped to
+terms that follow the [`LossTerm` contract](types.md#lossterm), which defines
+the `losses`, `indices`, and `divisor` keys, the anchors each kind of term is
+grouped by, and the errors raised for malformed terms.
 
+### Reduction
+
+`reducer(loss_dict, embeddings, labels)` reduces every term with
+`reduce(term, embeddings, labels)` and returns their sum. `reduce`:
+
+1. Validates the term. Wrong types raise `TypeError`; wrong shapes or lengths
+   raise `ValueError`.
+2. Raises `ValueError` if the term has a `divisor`. Only
+   [DivisorReducer](#divisorreducer) applies divisors.
+3. Returns an already-reduced term unchanged.
+4. Returns a differentiable zero for an empty `losses` tensor.
+5. Otherwise calls `element_reduction(losses, anchors, embeddings, labels)`,
+   where `anchors` is the term's first index tensor.
+
+An empty `loss_dict`, which losses return when a batch has no valid pairs or
+triplets, reduces to a differentiable zero connected to `embeddings`.
+
+Subclasses implement the one reduction hook:
+
+```python {.signature}
+def element_reduction(self, losses, anchors, embeddings, labels): ...
+```
+
+`labels` is `None` when the reducer belongs to a
+[regularizer](regularizers.md).
+
+## AvgNonZeroReducer
+
+The average of the losses that are greater than 0. For losses `[0, 2, 0, 3]`, it
+returns `2.5`. It is `ThresholdReducer(low=0)`.
+
+```python {.signature}
+reducers.AvgNonZeroReducer()
+```
 
 ## ClassWeightedReducer
-This multiplies each loss by a class weight, and then takes the average.
-```python
-reducers.ClassWeightedReducer(weights, **kwargs)
+
+Multiplies each loss by the weight of its anchor's class, then takes the mean:
+`torch.mean(losses * weights[labels[anchors]])`.
+
+```python {.signature}
+reducers.ClassWeightedReducer(weights)
 ```
 
 **Parameters**:
 
-* **weights**: A tensor of weights, where ```weights[i]``` is the weight for the ith class.
+- **weights**: A tensor where `weights[c]` is the weight of class `c`. It is
+  stored as a buffer and moves with the reducer; it is cast to the losses'
+  dtype when applied.
 
+Labels must be class indices into `weights`. Without labels, as in a
+regularizer, the reducer raises `ValueError`. If `weights` is on a different
+device from the losses, it raises `ValueError`; move the reducer, or the loss
+that owns it, with `.to(device)`.
 
 ## DivisorReducer
-This divides each loss by a custom value specified inside the loss function. This is useful if you want to hardcode a reduction behavior in your loss function (i.e. by using DivisorReducer), while still having the option to use other reducers.
-```python
-reducers.DivisorReducer(**kwargs)
-```
-To use this reducer, the loss function must include ```divisor``` in its loss dictionary. For example, the [ProxyAnchorLoss](losses.md#proxyanchorloss) uses ```DivisorReducer``` by default, and returns the following dictionary:
 
-```python
-loss_dict = {
-    "pos_loss": {
-        "losses": pos_term.squeeze(0),
-        "indices": loss_indices,
-        "reduction_type": "element",
-        "divisor": len(with_pos_proxies),
-    },
-    "neg_loss": {
-        "losses": neg_term.squeeze(0),
-        "indices": loss_indices,
-        "reduction_type": "element",
-        "divisor": self.num_classes,
-    },
-}
+Divides the sum of each term by a divisor that the loss supplies, so a loss can
+apply its paper's normalization while the caller can still choose another
+reducer for terms without divisors.
+
+```python {.signature}
+reducers.DivisorReducer()
 ```
 
-## DoNothingReducer
-This returns its input. In other words, no reduction is performed. The output will be the loss dictionary that is passed into it.
-```python
-reducers.DoNothingReducer(**kwargs)
-```
+A term without a divisor uses 1, so its reduction is the sum. A zero divisor
+gives 0. Sums are accumulated in float32 for float16 and bfloat16 losses, and in
+the losses' dtype otherwise. A Python or tensor divisor is converted directly to
+that accumulation dtype, so a float64 divisor such as `1e-50` keeps its value.
+
+These components emit divisor terms and use `DivisorReducer` by default:
+
+| Component                                                            | Terms with a divisor                                                |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| [MarginLoss](losses/margin_loss.md#marginloss)                       | `loss`; `beta_reg_loss` with `learn_beta=True` and per-class `beta` |
+| [ProxyAnchorLoss](losses/proxy_anchor_loss.md#proxyanchorloss)       | `pos_loss`, `neg_loss`                                              |
+| [SparseCentersRegularizer](regularizers.md#sparsecentersregularizer) | `loss`                                                              |
+
+Any other reducer raises `ValueError` for these terms. To combine a divisor
+term with a different reduction of other terms, route each divisor term to
+`DivisorReducer` with [MultipleReducers](#multiplereducers).
 
 ## MeanReducer
-This will return the average of the losses.
-```python
-reducers.MeanReducer(**kwargs)
+
+The mean of the losses.
+
+```python {.signature}
+reducers.MeanReducer()
 ```
 
 ## MultipleReducers
-This wraps multiple reducers. Each reducer is applied to a different sub-loss, as specified in the host loss function. Then the reducer outputs are summed to obtain the final loss.
-```python
-reducers.MultipleReducers(reducers, default_reducer=None, **kwargs)
+
+Applies a different reducer to each named term and sums the results.
+
+```python {.signature}
+reducers.MultipleReducers(reducers, default_reducer=None)
 ```
 
 **Parameters**:
 
-* **reducers**: A dictionary mapping from strings to reducers. The strings must match sub-loss names of the host loss function.
-* **default_reducer**: This reducer will be used for any sub-losses that are not included in the keys of ```reducers```. If None, then MeanReducer() will be the default.
+- **reducers**: A mapping from term names to reducers. The names are the keys of
+  the loss's terms, as returned by
+  [`loss_func.loss_terms(...)`](losses.md#unreduced-loss-terms). Values that
+  are not reducers raise `TypeError`.
+- **default_reducer**: Used for terms not in `reducers`. If `None`,
+  `MeanReducer()` is used.
+
+`MultipleReducers` routes terms only when it is the reducer of a loss or
+regularizer. Used as the inner reducer of `PerAnchorReducer` or as a value inside
+another `MultipleReducers`, it raises `TypeError`.
 
 **Example usage**:
 
-The [ContrastiveLoss](losses.md#contrastiveloss) has two sub-losses: ```pos_loss``` for the positive pairs, and ```neg_loss``` for the negative pairs. In this example, a [ThresholdReducer](reducers.md#thresholdreducer) is used for the ```pos_loss``` and a [MeanReducer](reducers.md#meanreducer) is used for the ```neg_loss```.
+[ContrastiveLoss](losses/contrastive_loss.md#contrastiveloss) has two terms,
+`pos_loss` and `neg_loss`. Here a [ThresholdReducer](#thresholdreducer) is used
+for `pos_loss` and a [MeanReducer](#meanreducer) for `neg_loss`:
+
 ```python
 from pytorch_metric_learning.losses import ContrastiveLoss
-from pytorch_metric_learning.reducers import MultipleReducers, ThresholdReducer, MeanReducer
-reducer_dict = {"pos_loss": ThresholdReducer(0.1), "neg_loss": MeanReducer()}
-reducer = MultipleReducers(reducer_dict)
+from pytorch_metric_learning.reducers import (
+    MeanReducer,
+    MultipleReducers,
+    ThresholdReducer,
+)
+
+reducer = MultipleReducers(
+    {"pos_loss": ThresholdReducer(low=0.1), "neg_loss": MeanReducer()}
+)
 loss_func = ContrastiveLoss(reducer=reducer)
 ```
 
 ## PerAnchorReducer
-This converts unreduced pairs to unreduced elements. For example, [NTXentLoss](losses.md#ntxentloss) returns losses per positive pair. If you used PerAnchorReducer with NTXentLoss, then the losses per pair would first be converted to losses per batch element, before being passed to the inner reducer.
-```python
-def aggregation_func(x, num_per_row):
-    zero_denom = num_per_row == 0
-    x = torch.sum(x, dim=1) / num_per_row
-    x[zero_denom] = 0
-    return x
 
-reducers.PerAnchorReducer(reducer=None, 
-							aggregation_func=aggregation_func, 
-							**kwargs):
+Aggregates losses by anchor, then passes one value per anchor to an inner
+reducer. For example, [NTXentLoss](losses/ntxent_loss.md#ntxentloss) returns a
+loss per positive pair; with `PerAnchorReducer`, each anchor's pair losses are
+averaged first, so every anchor has equal weight regardless of its number of
+positives.
+
+```python {.signature}
+reducers.PerAnchorReducer(reducer=None, aggregation="mean")
 ```
 
 **Parameters**:
 
-* **reducer**: The reducer that will be fed per-element losses. The default is [MeanReducer](#meanreducer)
-* **aggregation_func**: A function that takes in ```(x, num_per_row)``` and returns a loss per row of ```x```. The default is the ```aggregation_func``` defined in the code snippet above. It returns the mean per row.
-   	* ```x``` is an NxN array of pairwise losses, where N is the batch size.
-   	* ```num_per_row``` is a size N array which indicates how many non-zero losses there are per-row of ```x```.
+- **reducer**: The reducer that receives the per-anchor losses. If `None`,
+  [MeanReducer](#meanreducer) is used.
+- **aggregation**: `"mean"` or `"sum"` of each anchor's losses, typed as
+  [`types.AnchorAggregation`](types.md#anchoraggregation). Other values raise
+  `ValueError`.
 
+Aggregation works the same for element, pair, and triplet terms, using the
+term's anchor indices:
+
+- Anchor indices are rows of the query `embeddings`. A reference set passed as
+  `ref_emb` may have more rows than the query.
+- Anchors without any loss are excluded before the inner reducer, so they do
+  not dilute the mean.
+- Duplicate entries for an anchor, such as a pair mined twice, each count.
+- The inner reducer receives an element term whose indices are the anchors that
+  have losses, so it can weight by the anchors' labels.
+
+For losses `[1, 3, 5]` with anchors `[0, 0, 2]`, `aggregation="mean"` gives
+per-anchor values `[2, 5]`, and the default inner reducer returns `3.5`.
+Sums are accumulated in float32 for float16 and bfloat16 losses.
+
+## SumReducer
+
+The sum of the losses.
+
+```python {.signature}
+reducers.SumReducer()
+```
 
 ## ThresholdReducer
-This computes the average loss, using only the losses that fall within a specified range.
 
-```python
-reducers.ThresholdReducer(low=None, high=None **kwargs)
+The mean of the losses that fall strictly within a range.
+
+```python {.signature}
+reducers.ThresholdReducer(low=None, high=None)
 ```
 
-At least one of ```low``` or ```high``` must be specified.
+At least one of `low` or `high` must be specified; otherwise construction raises
+`ValueError`.
 
 **Parameters**:
 
-* **low**: Losses less than this value will be ignored.
-* **high**: Losses greater than this value will be ignored.
+- **low**: Losses less than or equal to this value are ignored.
+- **high**: Losses greater than or equal to this value are ignored.
 
 **Examples**:
 
-- ```ThresholdReducer(low=6)```: the filter is ```losses > 6```
-    - If the losses are ```[3, 7, 1, 13, 5]```, then this reducer will return ```(7+13)/2 = 10```.
+- `ThresholdReducer(low=6)` keeps `losses > 6`. For `[3, 7, 1, 13, 5]` it
+  returns `(7+13)/2 = 10`.
+- `ThresholdReducer(high=6)` keeps `losses < 6`. For `[3, 7, 1, 13, 5]` it
+  returns `(1+3+5)/3 = 3`.
+- `ThresholdReducer(low=6, high=12)` keeps `6 < losses < 12`. For
+  `[3, 7, 1, 13, 5]` it returns `7`.
 
-- ```ThresholdReducer(high=6)```: the filter is ```losses < 6```
-    - If the losses are ```[3, 7, 1, 13, 5]```, then this reducer will return ```(1+3+5)/3 = 3```.
-
-- ```ThresholdReducer(low=6, high=12)```: the filter is ```6 < losses < 12```
-    - If the losses are ```[3, 7, 1, 13, 5]```, then this reducer will return ```(7)/1 = 7```.
+When no loss falls in the range, the result is a differentiable zero. The
+reduction uses a mask rather than boolean indexing, so it performs no host
+synchronization and keeps a fixed shape for `torch.compile`.

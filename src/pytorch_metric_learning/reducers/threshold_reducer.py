@@ -1,56 +1,31 @@
 import torch
+from torch import Tensor
 
+from ..utils._common import LOW_PRECISION
 from .base_reducer import BaseReducer
 
 
 class ThresholdReducer(BaseReducer):
-    def __init__(self, low=None, high=None, **kwargs):
-        super().__init__(**kwargs)
-        assert (low is not None) or (
-            high is not None
-        ), "At least one of low or high must be specified"
+    def __init__(self, low: float | None = None, high: float | None = None) -> None:
+        super().__init__()
+        if low is None and high is None:
+            raise ValueError("At least one of low or high must be specified")
         self.low = low
         self.high = high
+
+    def element_reduction(
+        self,
+        losses: Tensor,
+        anchors: Tensor,
+        embeddings: Tensor,
+        labels: Tensor | None,
+    ) -> Tensor:
+        keep = torch.ones_like(losses, dtype=torch.bool)
         if self.low is not None:
-            self.add_to_recordable_attributes(list_of_names=["low"], is_stat=False)
+            keep &= losses > self.low
         if self.high is not None:
-            self.add_to_recordable_attributes(list_of_names=["high"], is_stat=False)
-
-    def element_reduction(self, losses, loss_indices, embeddings, labels):
-        return self.element_reduction_helper(losses, embeddings, "elements")
-
-    def pos_pair_reduction(self, losses, loss_indices, embeddings, labels):
-        return self.element_reduction_helper(losses, embeddings, "pos_pairs")
-
-    def neg_pair_reduction(self, losses, loss_indices, embeddings, labels):
-        return self.element_reduction_helper(losses, embeddings, "neg_pairs")
-
-    def triplet_reduction(self, losses, loss_indices, embeddings, labels):
-        return self.element_reduction_helper(losses, embeddings, "triplets")
-
-    def element_reduction_helper(self, losses, embeddings, attr_name):
-        low_condition = losses > self.low if self.low is not None else True
-        high_condition = losses < self.high if self.high is not None else True
-        threshold_condition = low_condition & high_condition
-        num_past_filter = torch.sum(threshold_condition)
-        if num_past_filter >= 1:
-            loss = torch.mean(losses[threshold_condition])
-        else:
-            loss = self.zero_loss(embeddings)
-        self.set_stats(low_condition, high_condition, num_past_filter, attr_name)
-        return loss
-
-    def set_stats(self, low_condition, high_condition, num_past_filter, attr_name):
-        if self.collect_stats:
-            curr_attr_name = "{}_past_filter".format(attr_name)
-            self.add_to_recordable_attributes(name=curr_attr_name, is_stat=True)
-            setattr(self, curr_attr_name, num_past_filter.item())
-            with torch.no_grad():
-                if self.low is not None:
-                    curr_attr_name = "{}_above_low".format(attr_name)
-                    self.add_to_recordable_attributes(name=curr_attr_name, is_stat=True)
-                    setattr(self, curr_attr_name, torch.sum(low_condition).item())
-                if self.high is not None:
-                    curr_attr_name = "{}_below_high".format(attr_name)
-                    self.add_to_recordable_attributes(name=curr_attr_name, is_stat=True)
-                    setattr(self, curr_attr_name, torch.sum(high_condition).item())
+            keep &= losses < self.high
+        kept = torch.where(keep, losses, torch.zeros_like(losses))
+        dtype = torch.float32 if losses.dtype in LOW_PRECISION else losses.dtype
+        total = kept.sum(dtype=dtype) / keep.sum().clamp_min(1)
+        return total.to(losses.dtype)

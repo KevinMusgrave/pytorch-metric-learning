@@ -1,25 +1,30 @@
-import torch
+from typing import Unpack
 
-from ..distances import LpDistance
-from ..utils import common_functions as c_f
+import torch
+from torch import Tensor
+
+from ..distances import BaseDistance, LpDistance
+from ..types import LossDict, RegularizerOptions
+from ..utils import _common
 from .base_regularizer import BaseRegularizer
 
 
 class CenterInvariantRegularizer(BaseRegularizer):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        c_f.assert_distance_type(self, LpDistance, power=1, normalize_embeddings=False)
+    def __init__(self, **options: Unpack[RegularizerOptions]) -> None:
+        super().__init__(**options)
+        _common.check_distance_type(
+            self, LpDistance, power=1, normalize_embeddings=False
+        )
 
-    def compute_loss(self, weights):
-        squared_weight_norms = self.distance.get_norm(weights) ** 2
+    def compute_loss(self, x: Tensor) -> LossDict:
+        squared_weight_norms = self.distance.get_norm(x) ** 2
         deviations_from_mean = squared_weight_norms - torch.mean(squared_weight_norms)
         return {
             "loss": {
                 "losses": (deviations_from_mean**2) / 4,
-                "indices": c_f.torch_arange_from_size(weights),
-                "reduction_type": "element",
+                "indices": _common.arange_like(x),
             }
         }
 
-    def get_default_distance(self):
+    def default_distance(self) -> BaseDistance:
         return LpDistance(power=1, normalize_embeddings=False)

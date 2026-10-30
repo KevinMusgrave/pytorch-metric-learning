@@ -188,8 +188,22 @@ def _add_to_index_and_search(
     index: Any, query: Tensor, reference: Tensor | None, k: int
 ) -> tuple[Tensor, Tensor]:
     if reference is not None:
-        index.add(reference.float().cpu())
-    return index.search(query.float().cpu(), k)
+        _call_index(index, index.add, reference)
+    return _call_index(index, index.search, query, k)
+
+
+def _call_index(
+    index: Any, operation: Callable[..., Any], tensor: Tensor, *args: int
+) -> Any:
+    get_device = getattr(index, "getDevice", None)
+    if (
+        get_device is not None
+        and tensor.is_cuda
+        and tensor.device.index == get_device()
+    ):
+        with torch.cuda.device(tensor.device):
+            return operation(tensor.float().contiguous(), *args)
+    return operation(tensor.cpu().float().contiguous(), *args)
 
 
 def _return_results(

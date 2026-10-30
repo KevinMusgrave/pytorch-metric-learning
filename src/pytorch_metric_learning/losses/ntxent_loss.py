@@ -21,10 +21,15 @@ class NTXentLoss(GenericPairLoss):
         pos_pairs, neg_pairs = self.pair_values(mat, pairs)
         dtype = _common.accumulation_dtype(mat.dtype)
         sign = 1 if self.distance.is_inverted else -1
-        pos_logits = sign * pos_pairs.to(dtype) / self.temperature
-        neg_logits = sign * neg_pairs.to(dtype) / self.temperature
+        pos_scores = sign * pos_pairs.to(dtype)
+        neg_scores = sign * neg_pairs.to(dtype)
+        shift = neg_scores.new_full((mat.shape[0],), -torch.inf)
+        shift.scatter_reduce_(0, a2, neg_scores.detach(), reduce="amax")
+        shift = torch.where(torch.isfinite(shift), shift, 0)
+        pos_logits = (pos_scores - shift[a1]) / self.temperature
+        neg_logits = (neg_scores - shift[a2]) / self.temperature
         neg_lse = _common.segment_logsumexp(neg_logits, a2, mat.shape[0])
-        losses = torch.logaddexp(pos_logits, neg_lse[a1]) - pos_logits
+        losses = torch.nn.functional.softplus(neg_lse[a1] - pos_logits)
         return {"loss": {"losses": losses.to(mat.dtype), "indices": (a1, p)}}
 
     def default_distance(self) -> BaseDistance:

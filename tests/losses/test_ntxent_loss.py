@@ -3,7 +3,7 @@ from functools import partial
 
 import torch
 
-from pytorch_metric_learning.distances import LpDistance
+from pytorch_metric_learning.distances import DotProductSimilarity, LpDistance
 from pytorch_metric_learning.losses import NTXentLoss, SupConLoss
 from pytorch_metric_learning.reducers import (
     AvgNonZeroReducer,
@@ -323,6 +323,74 @@ def ntxent_reference(embeddings, labels, temperature):
 
 
 class TestNTXentPrecision(unittest.TestCase):
+    def test_common_score_shift_preserves_values_and_gradients(self):
+        labels = torch.tensor([0, 1], device=TEST_DEVICE)
+        ref_labels = torch.tensor([0, 1, 2], device=TEST_DEVICE)
+        for dtype in TEST_DTYPES:
+            offset = 1e4 if dtype == torch.float16 else 1e16
+            for temperature in (0.01, 0.07, 1.0):
+                with self.subTest(dtype=dtype, temperature=temperature):
+                    query = torch.tensor(
+                        [[1, 0, 0], [0, 1, 0]],
+                        device=TEST_DEVICE,
+                        dtype=dtype,
+                        requires_grad=True,
+                    )
+                    reference = torch.tensor(
+                        [[0, 0, 1], [0, 0, -1], [0, 0, 0.5]],
+                        device=TEST_DEVICE,
+                        dtype=dtype,
+                        requires_grad=True,
+                    )
+                    exact_query = query.detach().double().requires_grad_()
+                    exact_reference = reference.detach().double().requires_grad_()
+                    expected = torch.nn.functional.cross_entropy(
+                        exact_query @ exact_reference.T / temperature, labels
+                    )
+                    expected_gradients = torch.autograd.grad(
+                        expected, (exact_query, exact_reference)
+                    )
+                    actual = NTXentLoss(
+                        temperature,
+                        distance=OffsetDotProductSimilarity(offset),
+                    )(query, labels, ref_emb=reference, ref_labels=ref_labels)
+                    helpers.assert_close(actual, expected, dtype, atol=1e-6)
+                    for actual_gradient, expected_gradient in zip(
+                        torch.autograd.grad(actual, (query, reference)),
+                        expected_gradients,
+                        strict=True,
+                    ):
+                        helpers.assert_close(
+                            actual_gradient, expected_gradient, dtype, atol=1e-6
+                        )
+
+    def test_empty_and_saturated_negative_sets_have_finite_zero_gradients(self):
+        indices = tuple(
+            torch.tensor(values, device=TEST_DEVICE)
+            for values in ([0, 1], [0, 2], [0], [1])
+        )
+        for dtype in TEST_DTYPES:
+            with self.subTest(dtype=dtype):
+                query = torch.tensor(
+                    [[1, 0], [0, 1]],
+                    device=TEST_DEVICE,
+                    dtype=dtype,
+                    requires_grad=True,
+                )
+                reference = torch.tensor(
+                    [[60000, 0], [-60000, 0], [0, 1]],
+                    device=TEST_DEVICE,
+                    dtype=dtype,
+                    requires_grad=True,
+                )
+                actual = NTXentLoss(
+                    temperature=1,
+                    distance=DotProductSimilarity(normalize_embeddings=False),
+                )(query, indices_tuple=indices, ref_emb=reference)
+                self.assertEqual(actual.item(), 0)
+                for gradient in torch.autograd.grad(actual, (query, reference)):
+                    torch.testing.assert_close(gradient, torch.zeros_like(gradient))
+
     def test_hard_positive_matches_float64_in_low_precision(self):
         labels = torch.tensor([0, 0, 1, 2], device=TEST_DEVICE)
         embeddings = torch.tensor([[1.0, 0.0], [-1.0, 0.02], [1.0, 0.05], [1.0, -0.05]])
@@ -346,3 +414,15 @@ class TestNTXentPrecision(unittest.TestCase):
                 [embeddings],
                 dtype,
             )
+
+
+class OffsetDotProductSimilarity(DotProductSimilarity):
+    def __init__(self, offset):
+        super().__init__(normalize_embeddings=False)
+        self.offset = offset
+
+    def compute_mat(self, query_emb, ref_emb):
+        return super().compute_mat(query_emb, ref_emb) + self.offset
+
+    def pairwise_distance(self, query_emb, ref_emb):
+        return super().pairwise_distance(query_emb, ref_emb) + self.offset

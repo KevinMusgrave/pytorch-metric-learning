@@ -26,11 +26,14 @@ negative pair `(2, 3)` is not used. With an `indices_tuple`, the positive pairs
 are its `(pos_anchors, positives)` and the negatives of anchor `a` are the pairs
 whose `neg_anchors` entry is `a`.
 
-The loss is computed in log space as
-$\log\left(e^{q \cdot k_+ / \tau} + e^{\mathrm{LSE}_q}\right) - q \cdot k_+ / \tau$,
-where $\mathrm{LSE}_q$ is the log-sum-exp over the anchor's negatives, so no
-positive-by-negative matrix is built. A positive pair whose anchor has no
-negatives contributes 0. float16 and bfloat16 inputs accumulate in float32.
+The loss is computed as $\operatorname{softplus}(\mathrm{LSE}_q - z_+)$,
+where $z_+$ and the negative logits first subtract the anchor's maximum
+negative score before dividing by temperature. $\mathrm{LSE}_q$ is the
+log-sum-exp over those shifted negative logits. Removing the common score
+offset before scaling preserves small losses even when all scores are large,
+and negatives are reduced per anchor without a positive-by-negative matrix.
+A positive pair whose anchor has no negatives contributes 0. float16 and
+bfloat16 inputs accumulate in float32.
 With a distance where smaller means closer, the logits are negated distances.
 
 For two augmented views of the same batch, wrap the loss in

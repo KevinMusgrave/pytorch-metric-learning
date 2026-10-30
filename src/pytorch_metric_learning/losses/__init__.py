@@ -17,6 +17,7 @@ from .lifted_structure_loss import GeneralizedLiftedStructureLoss, LiftedStructu
 from .manifold_loss import ManifoldLoss
 from .margin_loss import MarginLoss
 from .multi_similarity_loss import MultiSimilarityLoss
+from .multi_supcon_loss import MultiSupConLoss
 from .multiple_losses import MultipleLosses
 from .n_pairs_loss import NPairsLoss
 from .nca_loss import NCALoss
@@ -60,6 +61,7 @@ __all__ = [
     "ManifoldLoss",
     "MarginLoss",
     "MultiSimilarityLoss",
+    "MultiSupConLoss",
     "MultipleLosses",
     "NCALoss",
     "NPairsLoss",

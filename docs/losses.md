@@ -139,6 +139,7 @@ argument raises `ValueError`. These lists are verified by the test suite.
 - IntraPairVarianceLoss
 - MarginLoss
 - MultiSimilarityLoss
+- MultiSupConLoss
 - NCALoss
 - NTXentLoss
 - SignalToNoiseRatioContrastiveLoss
@@ -430,6 +431,8 @@ batches with several positives per class.
 
 - [InstanceLoss](losses/instance_loss.md): classification of each instance
   against the batch, as in image-text instance retrieval.
+- [MultiSupConLoss](losses/multi_supcon_loss.md): SupCon for label sets, with
+  positives chosen and weighted by Jaccard similarity.
 - [NTXentLoss](losses/ntxent_loss.md): the InfoNCE objective of SimCLR and MoCo;
   use [SelfSupervisedLoss](losses/self_supervised_loss.md) for unlabeled views.
 - [SupConLoss](losses/supcon_loss.md): the contrastive objective with every

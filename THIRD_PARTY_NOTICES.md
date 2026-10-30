@@ -66,6 +66,10 @@ include. The HistogramLoss reference was adapted for device placement, boolean
 masks, and half precision. The large-k accuracy reference derives
 from a [gist by VChristlein](https://gist.github.com/VChristlein/fd55016f8d1b38e95011a025cbff9ccc)
 contributed in [issue 290](https://github.com/KevinMusgrave/pytorch-metric-learning/issues/290).
+The MultiSupConLoss reference values were computed by Qibin Liang in
+[pull request 667](https://github.com/KevinMusgrave/pytorch-metric-learning/pull/667)
+by running [WolodjaZ/MultiSupContrast](https://github.com/WolodjaZ/MultiSupContrast)
+`losses.py`; no code from that repository is included.
 
 ## License texts
 

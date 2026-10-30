@@ -276,6 +276,7 @@
           "tests/losses/test_nca_loss.py",
           "tests/losses/test_normalized_softmax_loss.py",
           "tests/losses/test_npairs_loss.py",
+          "tests/losses/test_multi_supcon_loss.py",
           "tests/losses/test_ntxent_loss.py",
           "tests/losses/test_p2s_grad_loss.py",
           "tests/losses/test_pnp_loss.py",

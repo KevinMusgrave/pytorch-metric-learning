@@ -30,6 +30,7 @@ __all__ = [
     "MiningStrategy",
     "NeighborLimit",
     "PNPVariant",
+    "PairFunction",
     "PairIndices",
     "ProxyLossOptions",
     "RegularizerOptions",
@@ -53,6 +54,7 @@ class TripletIndices(NamedTuple):
 
 
 type IndicesTuple = PairIndices | TripletIndices
+type PairFunction = Callable[[Tensor, Tensor], PairIndices]
 type TripletsPerAnchor = int | Literal["all"]
 type MiningStrategy = Literal["hard", "semihard", "easy", "all"]
 type PNPVariant = Literal["Ds", "Dq", "Iu", "Ib", "O"]

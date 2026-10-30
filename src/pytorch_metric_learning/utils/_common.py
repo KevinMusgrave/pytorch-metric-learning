@@ -57,9 +57,12 @@ def zero_loss(embeddings: Tensor) -> Tensor:
     return embeddings.reshape(-1)[:0].sum()
 
 
-def check_shapes(embeddings: Tensor, labels: Tensor | None) -> None:
-    if labels is not None and labels.ndim != 1:
-        raise ValueError("labels must be a 1D tensor of shape (batch,)")
+def check_shapes(
+    embeddings: Tensor, labels: Tensor | None, label_ndim: int = 1
+) -> None:
+    if labels is not None and labels.ndim != label_ndim:
+        shape = "(batch,)" if label_ndim == 1 else "(batch, classes)"
+        raise ValueError(f"labels must be a {label_ndim}D tensor of shape {shape}")
     if labels is not None and embeddings.shape[0] != labels.shape[0]:
         raise ValueError("Number of embeddings must equal number of labels")
 
@@ -110,14 +113,15 @@ def prepare_inputs(
     labels: Tensor | None,
     ref_emb: Tensor | None,
     ref_labels: Tensor | None,
+    label_ndim: int = 1,
 ) -> None:
-    check_shapes(embeddings, labels)
+    check_shapes(embeddings, labels, label_ndim)
     check_device(labels, embeddings, "labels")
     if ref_emb is None:
         if ref_labels is not None:
             raise ValueError("ref_labels require ref_emb")
         return
-    check_shapes(ref_emb, ref_labels)
+    check_shapes(ref_emb, ref_labels, label_ndim)
     check_device(ref_emb, embeddings, "ref_emb")
     check_device(ref_labels, embeddings, "ref_labels")
     if (labels is None) != (ref_labels is None):

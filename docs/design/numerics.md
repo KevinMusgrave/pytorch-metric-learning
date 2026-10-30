@@ -175,6 +175,11 @@ negatives per anchor with a segment log-sum-exp (`scatter_reduce` maximum, then
 `index_add` of shifted exponentials) instead of a positives-by-negatives matrix,
 accumulating half precision in float32. Exponentiating probabilities and adding
 a small constant before the logarithm lost float16 hard positives entirely.
+NT-Xent subtracts each anchor's maximum negative score before temperature
+scaling, then takes softplus of the negative log-sum-exp minus the shifted
+positive logit. Subtracting the positive from a completed log-sum-exp lost
+small losses in the presence of large common score offsets; shifting before
+scaling also avoids rounding away score differences during division.
 
 Normalization divides by `max(norm, eps)` with `eps = max(1e-12,
 finfo(dtype).tiny)`, computing float16 and bfloat16 in float32 and casting

@@ -12,7 +12,7 @@ from .base_metric_loss_function import BaseMetricLossFunction
 class TripletMarginLoss(BaseMetricLossFunction):
     def __init__(
         self,
-        margin: float = 0.05,
+        margin: float = 0.2,
         swap: bool = False,
         smooth_loss: bool = False,
         triplets_per_anchor: TripletsPerAnchor = "all",

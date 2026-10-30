@@ -8,7 +8,7 @@ large-margin nearest-neighbor objective of
 
 ```python {.signature}
 losses.TripletMarginLoss(
-    margin=0.05, swap=False, smooth_loss=False, triplets_per_anchor="all", **options
+    margin=0.2, swap=False, smooth_loss=False, triplets_per_anchor="all", **options
 )
 ```
 
@@ -33,9 +33,10 @@ or from the supplied `indices_tuple`; pairs are combined into every triplet
 that shares an anchor.
 
 **Paper settings**: FaceNet uses squared Euclidean distances between
-L2-normalized embeddings and a margin of 0.2; the default `margin=0.05` and
-unsquared distances differ. Pass
-`margin=0.2, distance=distances.LpDistance(power=2)` for FaceNet's setting.
+L2-normalized embeddings and a margin of 0.2. The default margin matches the
+paper and the [TripletMarginMiner](../miners.md#tripletmarginminer) default, but
+the default distances are unsquared. Pass
+`distance=distances.LpDistance(power=2)` for FaceNet's setting.
 
 **Example**:
 
@@ -43,8 +44,8 @@ unsquared distances differ. Pass
 import torch
 from pytorch_metric_learning import losses, miners
 
-loss_func = losses.TripletMarginLoss(margin=0.2)
-miner = miners.TripletMarginMiner(margin=0.2, type_of_triplets="semihard")
+loss_func = losses.TripletMarginLoss()
+miner = miners.TripletMarginMiner(type_of_triplets="semihard")
 embeddings = torch.randn(32, 128, requires_grad=True)
 labels = torch.randint(0, 8, (32,))
 loss = loss_func(embeddings, labels, miner(embeddings, labels))

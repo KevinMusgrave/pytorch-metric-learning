@@ -5,6 +5,7 @@ import torch
 
 from pytorch_metric_learning.distances import CosineSimilarity
 from pytorch_metric_learning.losses import TripletMarginLoss
+from pytorch_metric_learning.miners import TripletMarginMiner
 from pytorch_metric_learning.reducers import MeanReducer
 
 from .. import TEST_DEVICE, TEST_DTYPES, helpers
@@ -13,6 +14,20 @@ from .utils import get_triplet_embeddings_with_ref
 
 
 class TestTripletMarginLoss(unittest.TestCase):
+    def test_default_margin_agrees_with_default_miner(self):
+        embeddings = torch.randn(32, 8, device=TEST_DEVICE)
+        labels = torch.arange(4, device=TEST_DEVICE).repeat_interleave(8)
+        triplets = TripletMarginMiner()(embeddings, labels)
+        terms = TripletMarginLoss(reducer=MeanReducer()).loss_terms(
+            embeddings, labels, triplets
+        )
+        self.assertTrue(torch.all(terms["loss"]["losses"] > 0))
+        self.assertGreater(len(triplets[0]), 0)
+        all_terms = TripletMarginLoss().loss_terms(embeddings, labels)
+        self.assertEqual(
+            int(torch.count_nonzero(all_terms["loss"]["losses"])), len(triplets[0])
+        )
+
     def test_triplet_margin_loss(self):
         for dtype in TEST_DTYPES:
             embeddings = torch.randn(
@@ -139,7 +154,7 @@ class TestTripletMarginLoss(unittest.TestCase):
             ),
             (
                 TripletMarginLoss(smooth_loss=True),
-                {"margin": 0.05, "smooth": True, "nonzero_mean": False},
+                {"margin": 0.2, "smooth": True, "nonzero_mean": False},
             ),
         )
         for loss_func, options in cases:

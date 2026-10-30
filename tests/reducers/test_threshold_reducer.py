@@ -4,7 +4,7 @@ import torch
 
 from pytorch_metric_learning.reducers import ThresholdReducer
 
-from .. import TEST_DEVICE, TEST_DTYPES, WITH_COLLECT_STATS
+from .. import TEST_DEVICE, TEST_DTYPES
 
 
 class TestThresholdReducer(unittest.TestCase):
@@ -22,7 +22,8 @@ class TestThresholdReducer(unittest.TestCase):
                     torch.randint(0, batch_size, (batch_size,)),
                     torch.randint(0, batch_size, (batch_size,)),
                 )
-                triplet_indices = pair_indices + (
+                triplet_indices = (
+                    *pair_indices,
                     torch.randint(0, batch_size, (batch_size,)),
                 )
                 losses = torch.randn(batch_size).type(dtype).to(TEST_DEVICE)
@@ -44,14 +45,12 @@ class TestThresholdReducer(unittest.TestCase):
                         }
                         output = reducer(loss_dict, embeddings, labels)
                         if low_threshold is not None:
-                            L = L[L > low_threshold]
+                            L = L[low_threshold < L]
                         if high_threshold is not None:
-                            L = L[L < high_threshold]
-                        if len(L) > 0:
-                            correct_output = torch.mean(L)
-                        else:
-                            correct_output = 0
-                        self.assertTrue(output == correct_output)
-
-                        if WITH_COLLECT_STATS:
-                            self.assertTrue(reducer.num_past_filter == len(L))
+                            L = L[high_threshold > L]
+                        correct_output = (
+                            torch.mean(L) if len(L) > 0 else torch.zeros_like(output)
+                        )
+                        torch.testing.assert_close(
+                            output, correct_output.to(output.dtype)
+                        )

@@ -1,15 +1,20 @@
 import torch
+from torch import Tensor
 
-from ..utils import common_functions as c_f
+from ..reducers import BaseReducer
+from ..types import LossDict
+from ..utils._common import arange_like
 from .base_regularizer import BaseRegularizer
 
 
 class ZeroMeanRegularizer(BaseRegularizer):
-    def compute_loss(self, embeddings):
+    def __init__(self, *, reducer: BaseReducer | None = None) -> None:
+        super().__init__(reducer=reducer)
+
+    def compute_loss(self, x: Tensor) -> LossDict:
         return {
             "loss": {
-                "losses": torch.abs(torch.sum(embeddings, dim=1)),
-                "indices": c_f.torch_arange_from_size(embeddings),
-                "reduction_type": "element",
+                "losses": torch.abs(torch.sum(x, dim=1)),
+                "indices": arange_like(x),
             }
         }

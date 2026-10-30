@@ -4,8 +4,8 @@ import torch
 
 from pytorch_metric_learning.losses import MarginLoss
 
-from .. import TEST_DEVICE, TEST_DTYPES
-from ..zzz_testing_utils.testing_utils import angle_to_coord
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
+from ..helpers import angle_to_coord
 from .utils import get_triplet_embeddings_with_ref
 
 
@@ -26,11 +26,11 @@ class TestMarginLoss(unittest.TestCase):
                 beta=beta,
                 learn_beta=learn_beta,
                 num_classes=num_classes,
-            )
+            ).to(TEST_DEVICE, dtype)
 
             loss = loss_func(embeddings, labels, ref_emb=ref_emb, ref_labels=ref_labels)
 
-            correct_total_loss = 0
+            correct_total_loss = torch.zeros((), dtype=dtype, device=TEST_DEVICE)
             num_non_zero = 0
             for a, p, n in triplets:
                 anchor = embeddings[a]
@@ -63,7 +63,7 @@ class TestMarginLoss(unittest.TestCase):
                         )
                     correct_total_loss += correct_beta_reg_loss.item()
 
-            rtol = 1e-2 if dtype == torch.float16 else 1e-5
+            rtol = helpers.rtol(dtype)
             self.assertTrue(torch.isclose(loss, correct_total_loss, rtol=rtol))
 
     def test_margin_loss(self):
@@ -72,7 +72,7 @@ class TestMarginLoss(unittest.TestCase):
                 TEST_DEVICE
             )
             embeddings = torch.nn.functional.normalize(embeddings)
-            labels = torch.LongTensor([0, 0, 1, 1, 2])
+            labels = torch.tensor([0, 0, 1, 1, 2], dtype=torch.long).to(TEST_DEVICE)
 
             triplets = [
                 (0, 1, 2),
@@ -111,11 +111,9 @@ class TestMarginLoss(unittest.TestCase):
                 [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
-            ).to(
-                TEST_DEVICE
-            )  # 2D embeddings
-            labels = torch.LongTensor([0, 1, 2, 3, 4])
-            loss = loss_func(embeddings, labels)
+            ).to(TEST_DEVICE)
+            labels = torch.tensor([0, 1, 2, 3, 4], dtype=torch.long).to(TEST_DEVICE)
+            loss = loss_func.to(TEST_DEVICE, dtype)(embeddings, labels)
             loss.backward()
             self.assertEqual(loss, 0)
 
@@ -129,3 +127,17 @@ class TestMarginLoss(unittest.TestCase):
             margin=margin, nu=nu, beta=beta, learn_beta=True, num_classes=35
         )
         self.assertTrue(len(loss_func.beta) == 35)
+
+    def test_beta_follows_module_placement(self):
+        for learn_beta in (False, True):
+            loss_func = MarginLoss(beta=1.2, learn_beta=learn_beta, num_classes=3)
+            loss_func.to(torch.float64)
+            self.assertEqual(loss_func.beta.dtype, torch.float64)
+            self.assertIn("beta", loss_func.state_dict())
+            self.assertEqual(
+                any(p is loss_func.beta for p in loss_func.parameters()), learn_beta
+            )
+            embeddings = torch.randn(6, 2, dtype=torch.float32)
+            labels = torch.tensor([0, 0, 1, 1, 2, 2])
+            with self.assertRaisesRegex(ValueError, "float64"):
+                loss_func(embeddings, labels)

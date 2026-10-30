@@ -62,4 +62,4 @@ files it informed, and reproduces its license notice.
 
 ### Logo
 
-Thanks to [Jeff Musgrave](https://www.designgenius.ca/) for designing the logo.
+Thanks to [Jeff Musgrave](https://github.com/JeffMusgrave) for designing the logo.

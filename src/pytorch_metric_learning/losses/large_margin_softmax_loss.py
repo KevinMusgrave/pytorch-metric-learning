@@ -1,135 +1,123 @@
 import math
+from typing import Unpack
 
-import numpy as np
-import scipy.special
 import torch
+import torch.nn.functional as F
+from torch import Tensor
 
-from ..distances import CosineSimilarity
-from ..utils import common_functions as c_f
-from ..utils import loss_and_miner_utils as lmu
-from .base_metric_loss_function import BaseMetricLossFunction
-from .mixins import WeightRegularizerMixin
+from ..distances import BaseDistance, CosineSimilarity
+from ..types import IndicesTuple, LossDict, ProxyLossOptions
+from ..utils import _common, indexing
+from .base_proxy_loss import BaseProxyLoss
 
 
-class LargeMarginSoftmaxLoss(WeightRegularizerMixin, BaseMetricLossFunction):
-    """
-    Implementation of https://arxiv.org/pdf/1612.02295.pdf
-    """
-
-    def __init__(self, num_classes, embedding_size, margin=4, scale=1, **kwargs):
-        super().__init__(**kwargs)
-        c_f.assert_distance_type(self, CosineSimilarity)
-        self.margin = margin
+class _CosineMarginSoftmaxLoss(BaseProxyLoss):
+    def __init__(
+        self,
+        num_classes: int,
+        embedding_size: int,
+        margin: float,
+        scale: float,
+        **options: Unpack[ProxyLossOptions],
+    ) -> None:
+        super().__init__(num_classes, embedding_size, **options)
+        _common.check_distance_type(self, CosineSimilarity)
         self.num_classes = num_classes
+        self.margin = margin
         self.scale = scale
-        self.add_to_recordable_attributes(
-            list_of_names=["num_classes", "margin", "scale"], is_stat=False
-        )
-        self.add_to_recordable_attributes(name="avg_angle", is_stat=True)
-        self.init_margin()
-        self.W = torch.nn.Parameter(torch.Tensor(embedding_size, num_classes))
-        self.weight_init_func(self.W)
-        self.cross_entropy = torch.nn.CrossEntropyLoss(reduction="none")
 
-    def init_margin(self):
-        self.margin = int(self.margin)
-        self.max_n = self.margin // 2
-        ## For the trigonometric multiple-angle formula ##
-        self.n_range = torch.tensor([n for n in range(0, self.max_n + 1)])
-        self.margin_choose_n = torch.tensor(
-            [scipy.special.binom(self.margin, 2 * n) for n in self.n_range]
-        )
-        self.cos_powers = torch.tensor([self.margin - (2 * n) for n in self.n_range])
-        self.alternating = torch.tensor([(-1) ** n for n in self.n_range])
+    def get_cosine(self, embeddings: Tensor) -> Tensor:
+        return self.distance(embeddings, self.weight)
 
-    def get_cos_with_margin(self, cosine):
+    @staticmethod
+    def get_angles(cosine_of_target_classes: Tensor) -> Tensor:
+        return torch.acos(torch.clamp(cosine_of_target_classes, -1, 1))
+
+    def modify_cosine_of_target_classes(
+        self, cosine_of_target_classes: Tensor
+    ) -> Tensor:
+        raise NotImplementedError
+
+    def scale_logits(self, logits: Tensor, embeddings: Tensor) -> Tensor:
+        return logits * self.scale
+
+    def compute_loss(
+        self,
+        embeddings: Tensor,
+        labels: Tensor | None,
+        indices_tuple: IndicesTuple | None,
+        ref_emb: Tensor | None,
+        ref_labels: Tensor | None,
+    ) -> LossDict:
+        labels = _common.labels_required(labels)
+        _common.ref_not_supported(ref_emb)
+        _common.check_parameter_placement(self, self.weight, embeddings)
+        cosine = self.get_cosine(embeddings)
+        targets = labels.unsqueeze(1)
+        modified = self.modify_cosine_of_target_classes(
+            cosine.gather(1, targets).squeeze(1)
+        )
+        logits = self.scale_logits(
+            cosine.scatter(1, targets, modified.unsqueeze(1).to(cosine.dtype)),
+            embeddings,
+        )
+        weights = indexing.convert_to_weights(indices_tuple, labels, dtype=logits.dtype)
+        loss = F.cross_entropy(logits, labels, reduction="none") * weights
+        return {"loss": {"losses": loss, "indices": _common.arange_like(embeddings)}}
+
+    def default_distance(self) -> BaseDistance:
+        return CosineSimilarity()
+
+    def get_logits(self, embeddings: Tensor) -> Tensor:
+        return self.scale_logits(self.get_cosine(embeddings), embeddings)
+
+
+class LargeMarginSoftmaxLoss(_CosineMarginSoftmaxLoss):
+    n_range: Tensor
+    margin_choose_n: Tensor
+    cos_powers: Tensor
+    alternating: Tensor
+
+    def __init__(
+        self,
+        num_classes: int,
+        embedding_size: int,
+        margin: int = 4,
+        scale: float = 1,
+        **options: Unpack[ProxyLossOptions],
+    ) -> None:
+        if not isinstance(margin, int):
+            raise TypeError("margin must be an integer")
+        if margin < 1:
+            raise ValueError("margin must be positive")
+        super().__init__(num_classes, embedding_size, margin, scale, **options)
+        n_range = torch.arange(margin // 2 + 1)
+        coefficients = [float(math.comb(margin, 2 * n)) for n in n_range]
+        self.register_buffer("n_range", n_range, persistent=False)
+        self.register_buffer(
+            "margin_choose_n", torch.tensor(coefficients), persistent=False
+        )
+        self.register_buffer("cos_powers", margin - 2 * n_range, persistent=False)
+        self.register_buffer("alternating", (-1) ** n_range, persistent=False)
+
+    def get_cos_with_margin(self, cosine: Tensor) -> Tensor:
         cosine = cosine.unsqueeze(1)
-        for attr in ["n_range", "margin_choose_n", "cos_powers", "alternating"]:
-            setattr(self, attr, c_f.to_device(getattr(self, attr), cosine))
         cos_powered = cosine**self.cos_powers
         sin_powered = (1 - cosine**2) ** self.n_range
-        terms = (
-            self.alternating * self.margin_choose_n * cos_powered * sin_powered
-        )  # Equation 7 in the paper
+        terms = self.alternating * self.margin_choose_n * cos_powered * sin_powered
         return torch.sum(terms, dim=1)
 
-    def get_cosine(self, embeddings):
-        return self.distance(embeddings, self.W.t())
-
-    def get_angles(self, cosine_of_target_classes):
-        angles = torch.acos(torch.clamp(cosine_of_target_classes, -1, 1))
-        if self.collect_stats:
-            with torch.no_grad():
-                self.avg_angle = np.degrees(torch.mean(angles).item())
-        return angles
-
-    def get_target_mask(self, embeddings, labels):
-        batch_size = labels.size(0)
-        mask = torch.zeros(
-            batch_size,
-            self.num_classes,
-            dtype=embeddings.dtype,
-            device=embeddings.device,
-        )
-        mask[torch.arange(batch_size), labels] = 1
-        return mask
-
-    def modify_cosine_of_target_classes(self, cosine_of_target_classes):
+    def modify_cosine_of_target_classes(
+        self, cosine_of_target_classes: Tensor
+    ) -> Tensor:
         cos_with_margin = self.get_cos_with_margin(cosine_of_target_classes)
         angles = self.get_angles(cosine_of_target_classes)
         with torch.no_grad():
-            k = (
-                angles / (math.pi / self.margin)
-            ).floor()  # Equation 6: angles needs to be between [k*pi/m and (k+1)*pi/m]
+            k = (angles / (math.pi / self.margin)).floor()
         return ((-1) ** k) * cos_with_margin - (2 * k)
 
-    def scale_logits(self, logits, embeddings):
+    def scale_logits(self, logits: Tensor, embeddings: Tensor) -> Tensor:
         embedding_norms = self.distance.get_norm(embeddings)
-        weight_norms = self.distance.get_norm(self.W, dim=0)
+        weight_norms = self.distance.get_norm(self.weight)
         product_of_magnitudes = weight_norms.unsqueeze(0) * embedding_norms.unsqueeze(1)
         return logits * product_of_magnitudes * self.scale
-
-    def cast_types(self, dtype, device):
-        self.W.data = c_f.to_device(self.W.data, device=device, dtype=dtype)
-        self.n_range = c_f.to_device(self.n_range, device=device, dtype=dtype)
-        self.margin_choose_n = c_f.to_device(
-            self.margin_choose_n, device=device, dtype=dtype
-        )
-        self.cos_powers = c_f.to_device(self.cos_powers, device=device, dtype=dtype)
-        self.alternating = c_f.to_device(self.alternating, device=device, dtype=dtype)
-
-    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
-        c_f.labels_required(labels)
-        c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
-        dtype, device = embeddings.dtype, embeddings.device
-        self.cast_types(dtype, device)
-        miner_weights = lmu.convert_to_weights(indices_tuple, labels, dtype=dtype)
-        mask = self.get_target_mask(embeddings, labels)
-        cosine = self.get_cosine(embeddings)
-        cosine_of_target_classes = cosine[mask == 1]
-        modified_cosine_of_target_classes = self.modify_cosine_of_target_classes(
-            cosine_of_target_classes
-        )
-        diff = (modified_cosine_of_target_classes - cosine_of_target_classes).unsqueeze(
-            1
-        )
-        logits = cosine + (mask * diff)
-        logits = self.scale_logits(logits, embeddings)
-        unweighted_loss = self.cross_entropy(logits, labels)
-        miner_weighted_loss = unweighted_loss * miner_weights
-        loss_dict = {
-            "loss": {
-                "losses": miner_weighted_loss,
-                "indices": c_f.torch_arange_from_size(embeddings),
-                "reduction_type": "element",
-            }
-        }
-        self.add_weight_regularization_to_loss_dict(loss_dict, self.W.t())
-        return loss_dict
-
-    def get_default_distance(self):
-        return CosineSimilarity()
-
-    def get_logits(self, embeddings):
-        logits = self.get_cosine(embeddings)
-        return self.scale_logits(logits, embeddings)

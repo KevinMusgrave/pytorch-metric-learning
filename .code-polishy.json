@@ -1,0 +1,980 @@
+{
+  "version": 4,
+  "project": {
+    "kind": "library",
+    "capabilities": []
+  },
+  "scope": {
+    "pythonContracts": [
+      {
+        "project": "pyproject.toml",
+        "kind": "decorator",
+        "target": "pytest.hookimpl",
+        "reason": "Pytest registers decorated conftest hooks and invokes them through its plugin manager."
+      }
+    ]
+  },
+  "quality": {
+    "allowComments": false,
+    "lineBudget": {
+      "production": 7000
+    }
+  },
+  "portability": {},
+  "modules": [
+    {
+      "name": "numerics",
+      "paths": [
+        "src/pytorch_metric_learning/__init__.py",
+        "src/pytorch_metric_learning/distances/**",
+        "src/pytorch_metric_learning/reducers/**",
+        "src/pytorch_metric_learning/regularizers/**",
+        "src/pytorch_metric_learning/losses/**",
+        "src/pytorch_metric_learning/miners/**",
+        "src/pytorch_metric_learning/utils/_common.py",
+        "src/pytorch_metric_learning/utils/indexing.py",
+        "src/pytorch_metric_learning/utils/__init__.py",
+        "src/pytorch_metric_learning/types.py",
+        "src/pytorch_metric_learning/py.typed"
+      ]
+    },
+    {
+      "name": "evaluation",
+      "paths": [
+        "src/pytorch_metric_learning/evaluation/**"
+      ],
+      "dependsOn": [
+        "numerics"
+      ]
+    },
+    {
+      "name": "sampling",
+      "paths": [
+        "src/pytorch_metric_learning/samplers/**"
+      ],
+      "dependsOn": [
+        "numerics"
+      ]
+    },
+    {
+      "name": "distributed",
+      "paths": [
+        "src/pytorch_metric_learning/distributed.py"
+      ],
+      "dependsOn": [
+        "numerics"
+      ]
+    },
+    {
+      "name": "benchmarks",
+      "paths": [
+        "benchmarks/**"
+      ],
+      "dependsOn": [
+        "numerics",
+        "distributed"
+      ]
+    },
+    {
+      "name": "recipes",
+      "paths": [
+        "docs/recipes/*.py"
+      ],
+      "dependsOn": [
+        "numerics",
+        "evaluation"
+      ]
+    },
+    {
+      "name": "release",
+      "paths": [
+        ".github/workflows/**",
+        "scripts/**"
+      ],
+      "dependsOn": [
+        "numerics"
+      ]
+    }
+  ],
+  "checks": [
+    {
+      "name": "python-lock",
+      "provides": [
+        "lock-sync"
+      ],
+      "modules": [
+        "numerics",
+        "evaluation",
+        "sampling",
+        "distributed",
+        "benchmarks",
+        "recipes",
+        "release"
+      ],
+      "argv": [
+        ".venv/bin/uv",
+        "lock",
+        "--check",
+        "--offline"
+      ],
+      "runOn": [
+        "supply-chain"
+      ],
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "python-build",
+      "provides": [
+        "build"
+      ],
+      "modules": [
+        "numerics",
+        "evaluation",
+        "sampling",
+        "distributed"
+      ],
+      "argv": [
+        ".venv/bin/uv",
+        "run",
+        "--frozen",
+        "--no-sync",
+        "python",
+        "-m",
+        "build",
+        "--no-isolation"
+      ],
+      "runOn": [
+        "build"
+      ],
+      "timeoutSeconds": 120
+    },
+    {
+      "name": "benchmark-bytecode",
+      "provides": [
+        "build"
+      ],
+      "modules": [
+        "benchmarks"
+      ],
+      "argv": [
+        ".venv/bin/uv",
+        "run",
+        "--frozen",
+        "--no-sync",
+        "python",
+        "-m",
+        "compileall",
+        "-q",
+        "benchmarks"
+      ],
+      "runOn": [
+        "build"
+      ],
+      "timeoutSeconds": 60
+    },
+    {
+      "name": "recipe-bytecode",
+      "provides": [
+        "build"
+      ],
+      "modules": [
+        "recipes"
+      ],
+      "argv": [
+        ".venv/bin/uv",
+        "run",
+        "--frozen",
+        "--no-sync",
+        "python",
+        "-m",
+        "compileall",
+        "-q",
+        "docs/recipes"
+      ],
+      "runOn": [
+        "build"
+      ],
+      "timeoutSeconds": 60
+    },
+    {
+      "name": "release-bytecode",
+      "provides": [
+        "build"
+      ],
+      "modules": [
+        "release"
+      ],
+      "argv": [
+        ".venv/bin/uv",
+        "run",
+        "--frozen",
+        "--no-sync",
+        "python",
+        "-m",
+        "compileall",
+        "-q",
+        "scripts"
+      ],
+      "runOn": [
+        "build"
+      ],
+      "timeoutSeconds": 60
+    }
+  ],
+  "tests": {
+    "paths": [
+      "conftest.py"
+    ],
+    "ownership": [
+      {
+        "paths": [
+          "tests/reducers/test_mean_reducer.py",
+          "tests/miners/test_pair_margin_miner.py",
+          "tests/losses/test_contrastive_loss.py",
+          "tests/regularizers/test_center_invariant_regularizer.py",
+          "tests/losses/test_cross_batch_memory_state.py",
+          "tests/losses/test_dynamic_soft_margin_loss.py",
+          "tests/utils/test_triplet_enumeration.py",
+          "tests/losses/test_loss_composition.py",
+          "tests/docs/__init__.py",
+          "tests/docs/test_documented_capabilities.py",
+          "tests/docs/test_documented_signatures.py",
+          "tests/docs/test_documentation_paths.py",
+          "tests/utils/test_validation.py",
+          "tests/distances/test_lp_distance.py",
+          "tests/docs/test_documented_examples.py",
+          "tests/docs/test_public_surface.py"
+        ],
+        "module": "numerics",
+        "focusedSuite": "numerics-focused"
+      },
+      {
+        "paths": [
+          "tests/__init__.py",
+          "tests/distances/__init__.py",
+          "tests/distances/test_batched_distance.py",
+          "tests/distances/test_custom_check_shape.py",
+          "tests/distances/test_similarities.py",
+          "tests/distances/test_normalization.py",
+          "tests/losses/__init__.py",
+          "tests/losses/test_angular_loss.py",
+          "tests/losses/test_arcface_loss.py",
+          "tests/losses/test_circle_loss.py",
+          "tests/losses/test_cosface_loss.py",
+          "tests/losses/test_cross_batch_memory.py",
+          "tests/losses/test_fastap_loss.py",
+          "tests/losses/test_histogram_loss.py",
+          "tests/losses/test_instance_loss.py",
+          "tests/losses/test_intra_pair_variance_loss.py",
+          "tests/losses/test_large_margin_softmax_loss.py",
+          "tests/losses/test_lifted_structure_loss.py",
+          "tests/losses/test_losses_without_labels.py",
+          "tests/losses/test_manifold_loss.py",
+          "tests/losses/test_margin_loss.py",
+          "tests/losses/test_multi_similarity_loss.py",
+          "tests/losses/test_multiple_losses.py",
+          "tests/losses/test_nca_loss.py",
+          "tests/losses/test_normalized_softmax_loss.py",
+          "tests/losses/test_npairs_loss.py",
+          "tests/losses/test_ntxent_loss.py",
+          "tests/losses/test_p2s_grad_loss.py",
+          "tests/losses/test_pnp_loss.py",
+          "tests/losses/test_proxy_anchor_loss.py",
+          "tests/losses/test_proxy_nca_loss.py",
+          "tests/losses/test_ranked_list_loss.py",
+          "tests/losses/test_reduced_loss_options.py",
+          "tests/losses/test_self_supervised_loss.py",
+          "tests/losses/test_signal_to_noise_ratio_contrastive_loss.py",
+          "tests/losses/test_smooth_ap_loss.py",
+          "tests/losses/test_soft_triple_loss.py",
+          "tests/losses/test_subcenter_arcface_loss.py",
+          "tests/losses/test_tcm_loss.py",
+          "tests/losses/test_triplet_margin_loss.py",
+          "tests/losses/test_tuplet_margin_loss.py",
+          "tests/losses/test_vicreg_loss.py",
+          "tests/losses/utils.py",
+          "tests/miners/__init__.py",
+          "tests/miners/test_angular_miner.py",
+          "tests/miners/test_batch_easy_hard_miner.py",
+          "tests/miners/test_batch_easy_hard_miner_labels.py",
+          "tests/miners/test_batch_hard_miner.py",
+          "tests/miners/test_distance_weighted_miner.py",
+          "tests/miners/test_hdc_miner.py",
+          "tests/miners/test_empty_inputs.py",
+          "tests/miners/test_multi_similarity_miner.py",
+          "tests/miners/test_triplet_margin_miner.py",
+          "tests/miners/test_uniform_histogram_miner.py",
+          "tests/reducers/__init__.py",
+          "tests/reducers/test_avg_non_zero_reducer.py",
+          "tests/reducers/test_class_weighted_reducer.py",
+          "tests/reducers/test_divisor_reducer.py",
+          "tests/reducers/test_multiple_reducers.py",
+          "tests/reducers/test_per_anchor_reducer.py",
+          "tests/reducers/test_setting_reducers.py",
+          "tests/reducers/test_threshold_reducer.py",
+          "tests/regularizers/__init__.py",
+          "tests/regularizers/test_regular_face_regularizer.py",
+          "tests/regularizers/test_lp_and_sparse_centers_regularizers.py",
+          "tests/utils/__init__.py",
+          "tests/utils/test_common_functions.py",
+          "tests/utils/test_indexing.py",
+          "tests/helpers.py",
+          "conftest.py"
+        ],
+        "module": "numerics",
+        "focusedSuite": "numerics-focused",
+        "executionSuite": "cpu-full"
+      },
+      {
+        "paths": [
+          "tests/evaluation/test_retrieval_backends.py"
+        ],
+        "module": "evaluation",
+        "focusedSuite": "evaluation-focused"
+      },
+      {
+        "paths": [
+          "tests/evaluation/__init__.py",
+          "tests/evaluation/test_calculate_accuracies.py",
+          "tests/evaluation/test_calculate_accuracies_large_k.py",
+          "tests/evaluation/test_accuracy_calculator_contracts.py"
+        ],
+        "module": "evaluation",
+        "focusedSuite": "evaluation-focused",
+        "executionSuite": "cpu-full"
+      },
+      {
+        "paths": [
+          "tests/samplers/test_m_per_class_sampler.py",
+          "tests/samplers/test_sampler_contracts.py"
+        ],
+        "module": "sampling",
+        "focusedSuite": "sampling-focused"
+      },
+      {
+        "paths": [
+          "tests/samplers/__init__.py",
+          "tests/samplers/test_fixed_set_of_triplets.py",
+          "tests/samplers/test_hierarchical_sampler.py"
+        ],
+        "module": "sampling",
+        "focusedSuite": "sampling-focused",
+        "executionSuite": "cpu-full"
+      },
+      {
+        "paths": [
+          "tests/distributed/test_distributed_fallback.py"
+        ],
+        "module": "distributed",
+        "focusedSuite": "distributed-focused"
+      },
+      {
+        "paths": [
+          "tests/distributed/__init__.py",
+          "tests/distributed/test_distributed.py"
+        ],
+        "module": "distributed",
+        "focusedSuite": "distributed-focused"
+      },
+      {
+        "paths": [
+          "tests/recipes/**"
+        ],
+        "module": "recipes",
+        "focusedSuite": "recipes-focused"
+      },
+      {
+        "paths": [
+          "tests/release/**"
+        ],
+        "module": "release",
+        "focusedSuite": "release-focused"
+      }
+    ],
+    "suites": [
+      {
+        "name": "numerics-focused",
+        "kind": "unit",
+        "scope": "module",
+        "modules": [
+          "numerics"
+        ],
+        "paths": [
+          "tests/reducers/test_mean_reducer.py",
+          "tests/miners/test_pair_margin_miner.py",
+          "tests/losses/test_contrastive_loss.py",
+          "tests/regularizers/test_center_invariant_regularizer.py",
+          "tests/__init__.py",
+          "tests/helpers.py",
+          "tests/losses/utils.py",
+          "tests/losses/test_cross_batch_memory_state.py",
+          "tests/losses/test_dynamic_soft_margin_loss.py",
+          "tests/utils/test_triplet_enumeration.py",
+          "tests/losses/test_loss_composition.py",
+          "tests/docs/**",
+          "tests/utils/test_validation.py",
+          "conftest.py",
+          "tests/distances/test_lp_distance.py"
+        ],
+        "argv": [
+          ".venv/bin/uv",
+          "run",
+          "--frozen",
+          "--no-sync",
+          "--env-file",
+          "tests/cpu.env",
+          "python",
+          "-m",
+          "pytest",
+          "tests/reducers/test_mean_reducer.py",
+          "tests/miners/test_pair_margin_miner.py",
+          "tests/losses/test_contrastive_loss.py",
+          "tests/regularizers/test_center_invariant_regularizer.py",
+          "tests/losses/test_cross_batch_memory_state.py",
+          "tests/losses/test_dynamic_soft_margin_loss.py",
+          "tests/utils/test_triplet_enumeration.py",
+          "tests/losses/test_loss_composition.py",
+          "tests/docs/test_documented_capabilities.py",
+          "tests/docs/test_documented_signatures.py",
+          "tests/docs/test_documentation_paths.py",
+          "tests/utils/test_validation.py",
+          "tests/distances/test_lp_distance.py",
+          "tests/docs/test_documented_examples.py",
+          "tests/docs/test_public_surface.py"
+        ],
+        "timeoutSeconds": 120
+      },
+      {
+        "name": "evaluation-focused",
+        "kind": "unit",
+        "scope": "module",
+        "modules": [
+          "evaluation"
+        ],
+        "paths": [
+          "tests/evaluation/test_retrieval_backends.py",
+          "tests/__init__.py",
+          "tests/helpers.py",
+          "tests/losses/utils.py",
+          "conftest.py"
+        ],
+        "argv": [
+          ".venv/bin/uv",
+          "run",
+          "--frozen",
+          "--no-sync",
+          "--env-file",
+          "tests/cpu.env",
+          "python",
+          "-m",
+          "pytest",
+          "tests/evaluation/test_retrieval_backends.py"
+        ],
+        "timeoutSeconds": 120
+      },
+      {
+        "name": "sampling-focused",
+        "kind": "unit",
+        "scope": "module",
+        "modules": [
+          "sampling"
+        ],
+        "paths": [
+          "tests/samplers/test_m_per_class_sampler.py",
+          "tests/__init__.py",
+          "tests/helpers.py",
+          "tests/losses/utils.py",
+          "tests/samplers/test_sampler_contracts.py",
+          "conftest.py"
+        ],
+        "argv": [
+          ".venv/bin/uv",
+          "run",
+          "--frozen",
+          "--no-sync",
+          "--env-file",
+          "tests/cpu.env",
+          "python",
+          "-m",
+          "pytest",
+          "tests/samplers/test_m_per_class_sampler.py",
+          "tests/samplers/test_sampler_contracts.py"
+        ],
+        "timeoutSeconds": 120
+      },
+      {
+        "name": "distributed-focused",
+        "kind": "unit",
+        "scope": "module",
+        "modules": [
+          "distributed"
+        ],
+        "paths": [
+          "tests/distributed/test_distributed_fallback.py",
+          "tests/distributed/test_distributed.py",
+          "tests/distributed/__init__.py",
+          "tests/__init__.py",
+          "tests/helpers.py",
+          "tests/losses/utils.py",
+          "conftest.py"
+        ],
+        "argv": [
+          ".venv/bin/uv",
+          "run",
+          "--frozen",
+          "--no-sync",
+          "--env-file",
+          "tests/cpu.env",
+          "python",
+          "-m",
+          "pytest",
+          "tests/distributed/test_distributed_fallback.py",
+          "tests/distributed/test_distributed.py"
+        ],
+        "timeoutSeconds": 120
+      },
+      {
+        "name": "cpu-full",
+        "kind": "integration",
+        "scope": "repository",
+        "cost": "standard",
+        "paths": [
+          "tests/**",
+          "conftest.py"
+        ],
+        "argv": [
+          ".venv/bin/uv",
+          "run",
+          "--frozen",
+          "--no-sync",
+          "--env-file",
+          "tests/cpu.env",
+          "python",
+          "-m",
+          "pytest",
+          "tests"
+        ],
+        "runOn": [
+          "recommended",
+          "full"
+        ],
+        "timeoutSeconds": 3600
+      },
+      {
+        "name": "benchmarks-focused",
+        "kind": "unit",
+        "scope": "module",
+        "modules": [
+          "benchmarks"
+        ],
+        "paths": [
+          "benchmarks/**"
+        ],
+        "argv": [
+          ".venv/bin/uv",
+          "run",
+          "--frozen",
+          "--no-sync",
+          "python",
+          "-m",
+          "benchmarks.run",
+          "--batch-size",
+          "8",
+          "--dimensions",
+          "4",
+          "--warmup",
+          "1",
+          "--repeats",
+          "2",
+          "--output",
+          ".code-polishy-artifacts/benchmarks/smoke.json"
+        ],
+        "timeoutSeconds": 120
+      },
+      {
+        "name": "recipes-focused",
+        "kind": "unit",
+        "scope": "module",
+        "modules": [
+          "recipes"
+        ],
+        "paths": [
+          "tests/recipes/**",
+          "tests/__init__.py",
+          "conftest.py"
+        ],
+        "argv": [
+          ".venv/bin/uv",
+          "run",
+          "--frozen",
+          "--no-sync",
+          "--env-file",
+          "tests/cpu.env",
+          "python",
+          "-m",
+          "pytest",
+          "tests/recipes/test_training.py",
+          "tests/recipes/test_evaluation.py"
+        ],
+        "timeoutSeconds": 120
+      },
+      {
+        "name": "release-focused",
+        "kind": "unit",
+        "scope": "module",
+        "modules": [
+          "release"
+        ],
+        "paths": [
+          "tests/release/**",
+          "tests/__init__.py",
+          "conftest.py"
+        ],
+        "argv": [
+          ".venv/bin/uv",
+          "run",
+          "--frozen",
+          "--no-sync",
+          "--env-file",
+          "tests/cpu.env",
+          "python",
+          "-m",
+          "pytest",
+          "tests/release"
+        ],
+        "timeoutSeconds": 120
+      }
+    ]
+  },
+  "verification": {
+    "trustedMergeTarget": "origin/master",
+    "finalGateOwner": "ci"
+  },
+  "supplyChain": {
+    "pythonLibraries": [
+      "pyproject.toml"
+    ],
+    "releaseAgeAssessments": [
+      {
+        "id": "uv-compromised-root",
+        "ecosystem": "pypi",
+        "package": "uv",
+        "version": "0.13.4",
+        "scope": "uv.lock",
+        "category": "security-fix",
+        "evidence": "https://github.com/astral-sh/uv/security/advisories/GHSA-hq85-5cpj-mr62",
+        "reason": "Package acquisition must not trust the compromised emSign CA. See docs/security/dependency-assessments.md#certificate-trust.",
+        "owner": "Codex",
+        "reviewed": "2026-10-26",
+        "expires": "2026-11-19"
+      }
+    ],
+    "vulnerabilityAssessments": [
+      {
+        "id": "ghsa-9vhv-jxww-xfm5",
+        "ecosystem": "pypi",
+        "advisory": "GHSA-9vhv-jxww-xfm5",
+        "package": "filelock",
+        "affectedVersion": "4.0.3",
+        "scope": "uv.lock",
+        "severity": "low",
+        "status": "not-affected",
+        "basis": "unreachable",
+        "reason": "PyTorch uses FileLock, resolved to UnixFileLock on the Mac/Linux development hosts and WindowsFileLock on Windows. Neither this project nor its enabled PyTorch callers use ReadWriteLock or SoftFileLock. See docs/security/dependency-assessments.md#retained-aged-dependencies.",
+        "impact": "The advisory-specific vulnerable API is not reached by the supported build, test, or library execution paths. Reassess before enabling the affected feature.",
+        "evidence": "https://osv.dev/vulnerability/GHSA-9vhv-jxww-xfm5",
+        "owner": "Claude",
+        "reviewed": "2026-10-29",
+        "expires": "2027-01-27"
+      },
+      {
+        "id": "ghsa-v4x8-3wr5-3wq8",
+        "ecosystem": "pypi",
+        "advisory": "GHSA-v4x8-3wr5-3wq8",
+        "package": "filelock",
+        "affectedVersion": "4.0.3",
+        "scope": "uv.lock",
+        "severity": "high",
+        "status": "not-affected",
+        "basis": "unreachable",
+        "reason": "PyTorch uses FileLock, resolved to UnixFileLock on the Mac/Linux development hosts and WindowsFileLock on Windows. Neither this project nor its enabled PyTorch callers use ReadWriteLock or SoftFileLock. See docs/security/dependency-assessments.md#retained-aged-dependencies.",
+        "impact": "The advisory-specific vulnerable API is not reached by the supported build, test, or library execution paths. Reassess before enabling the affected feature.",
+        "evidence": "https://osv.dev/vulnerability/GHSA-v4x8-3wr5-3wq8",
+        "owner": "Claude",
+        "reviewed": "2026-10-29",
+        "expires": "2026-11-28"
+      },
+      {
+        "id": "ghsa-xmj3-9gf7-h52w",
+        "ecosystem": "pypi",
+        "advisory": "GHSA-xmj3-9gf7-h52w",
+        "package": "setuptools",
+        "affectedVersion": "84.0.0",
+        "scope": "uv.lock",
+        "severity": "low",
+        "status": "not-affected",
+        "basis": "unreachable",
+        "reason": "Builds use build_meta; uv installs wheels. No setup_requires or install_as_egg path consumes namespace_packages.txt. See docs/security/dependency-assessments.md#retained-aged-dependencies.",
+        "impact": "The advisory-specific vulnerable API is not reached by the supported build, test, or library execution paths. Reassess before enabling the affected feature.",
+        "evidence": "https://osv.dev/vulnerability/GHSA-xmj3-9gf7-h52w",
+        "owner": "Claude",
+        "reviewed": "2026-10-29",
+        "expires": "2027-01-27"
+      },
+      {
+        "id": "ghsa-567q-5qvw-pf92",
+        "ecosystem": "pypi",
+        "advisory": "GHSA-567q-5qvw-pf92",
+        "package": "filelock",
+        "affectedVersion": "4.0.3",
+        "scope": "uv.lock",
+        "severity": "low",
+        "status": "not-affected",
+        "basis": "unreachable",
+        "reason": "PyTorch uses FileLock, resolved to UnixFileLock on the Mac/Linux development hosts and WindowsFileLock on Windows. Neither this project nor its enabled PyTorch callers use ReadWriteLock or SoftFileLock. See docs/security/dependency-assessments.md#retained-aged-dependencies.",
+        "impact": "The advisory-specific vulnerable API is not reached by the supported build, test, or library execution paths. Reassess before enabling the affected feature.",
+        "evidence": "https://osv.dev/vulnerability/GHSA-567q-5qvw-pf92",
+        "owner": "Claude",
+        "reviewed": "2026-10-29",
+        "expires": "2027-01-27"
+      },
+      {
+        "id": "certifi-disabled-documentation-clients",
+        "ecosystem": "pypi",
+        "advisory": "GHSA-6q48-6c7w-9gw2",
+        "package": "certifi",
+        "affectedVersion": "2026.7.22",
+        "scope": "uv.lock",
+        "severity": "critical",
+        "status": "not-affected",
+        "basis": "unreachable",
+        "reason": "MkDocs Material uses Requests only in its info, privacy, and social plugins, none enabled in mkdocs.yml. The library makes no network requests and acquisition uses patched uv. See docs/security/dependency-assessments.md#retained-aged-dependencies.",
+        "impact": "No enabled HTTPS client uses the affected certifi trust bundle. Review before enabling a Requests caller or these plugins; update once the fix ages in.",
+        "evidence": "https://github.com/certifi/python-certifi/security/advisories/GHSA-6q48-6c7w-9gw2",
+        "owner": "Claude",
+        "reviewed": "2026-10-29",
+        "expires": "2026-11-05"
+      },
+      {
+        "id": "ghsa-6627-m3xw-93mp",
+        "ecosystem": "pypi",
+        "advisory": "GHSA-6627-m3xw-93mp",
+        "package": "filelock",
+        "affectedVersion": "4.0.3",
+        "scope": "uv.lock",
+        "severity": "moderate",
+        "status": "not-affected",
+        "basis": "unreachable",
+        "evidence": "https://github.com/advisories/GHSA-6627-m3xw-93mp",
+        "reason": "No project or installed dependency caller selects StrictSoftFileLock, SoftReadWriteLock or SQLite ReadWriteLock; PyTorch selects native UnixFileLock or WindowsFileLock. See docs/security/dependency-assessments.md#filelock-local-filesystem-advisories.",
+        "owner": "Claude",
+        "reviewed": "2026-10-29",
+        "expires": "2026-11-28",
+        "impact": "The advisory cannot cross its local-file trust boundary in the reviewed development and verification environments. Reassess before enabling affected APIs, compiled execution on shared hosts, untrusted shared caches or soft-lock fallback; review an aged fixed release from 2026-11-16."
+      },
+      {
+        "id": "ghsa-69hj-f68j-2879",
+        "ecosystem": "pypi",
+        "advisory": "GHSA-69hj-f68j-2879",
+        "package": "filelock",
+        "affectedVersion": "4.0.3",
+        "scope": "uv.lock",
+        "severity": "moderate",
+        "status": "not-affected",
+        "basis": "unreachable",
+        "evidence": "https://github.com/advisories/GHSA-69hj-f68j-2879",
+        "reason": "PyTorch compiler locks are in the private per-user macOS temporary tree; CI on Linux, macOS and Windows and GPU checks use isolated single-tenant hosts and eager execution. No untrusted account can replace lock paths in the reviewed environments. See docs/security/dependency-assessments.md#filelock-local-filesystem-advisories.",
+        "owner": "Claude",
+        "reviewed": "2026-10-29",
+        "expires": "2026-11-28",
+        "impact": "The advisory cannot cross its local-file trust boundary in the reviewed development and verification environments. Reassess before enabling affected APIs, compiled execution on shared hosts, untrusted shared caches or soft-lock fallback; review an aged fixed release from 2026-11-16."
+      },
+      {
+        "id": "ghsa-8mx5-7m5m-r77g",
+        "ecosystem": "pypi",
+        "advisory": "GHSA-8mx5-7m5m-r77g",
+        "package": "filelock",
+        "affectedVersion": "4.0.3",
+        "scope": "uv.lock",
+        "severity": "moderate",
+        "status": "not-affected",
+        "basis": "unreachable",
+        "evidence": "https://github.com/advisories/GHSA-8mx5-7m5m-r77g",
+        "reason": "Windows runs only the eager CPU suite on an ephemeral single-tenant GitHub-hosted runner, which creates no filelock lock file and has no other local account to use inherited ACLs; SQLite ReadWriteLock is not called. See docs/security/dependency-assessments.md#filelock-local-filesystem-advisories.",
+        "owner": "Claude",
+        "reviewed": "2026-10-29",
+        "expires": "2026-11-28",
+        "impact": "The advisory cannot cross its local-file trust boundary in the reviewed development and verification environments. Reassess before enabling affected APIs, compiled execution on shared hosts, untrusted shared caches or soft-lock fallback; review an aged fixed release from 2026-11-16."
+      },
+      {
+        "id": "ghsa-9c4x-gm8v-wgc4",
+        "ecosystem": "pypi",
+        "advisory": "GHSA-9c4x-gm8v-wgc4",
+        "package": "filelock",
+        "affectedVersion": "4.0.3",
+        "scope": "uv.lock",
+        "severity": "moderate",
+        "status": "not-affected",
+        "basis": "unreachable",
+        "evidence": "https://github.com/advisories/GHSA-9c4x-gm8v-wgc4",
+        "reason": "No project or installed dependency caller selects StrictSoftFileLock, SoftReadWriteLock or SQLite ReadWriteLock; PyTorch selects native UnixFileLock or WindowsFileLock. See docs/security/dependency-assessments.md#filelock-local-filesystem-advisories.",
+        "owner": "Claude",
+        "reviewed": "2026-10-29",
+        "expires": "2026-11-28",
+        "impact": "The advisory cannot cross its local-file trust boundary in the reviewed development and verification environments. Reassess before enabling affected APIs, compiled execution on shared hosts, untrusted shared caches or soft-lock fallback; review an aged fixed release from 2026-11-16."
+      },
+      {
+        "id": "ghsa-9j6q-wvj5-jgjg",
+        "ecosystem": "pypi",
+        "advisory": "GHSA-9j6q-wvj5-jgjg",
+        "package": "filelock",
+        "affectedVersion": "4.0.3",
+        "scope": "uv.lock",
+        "severity": "low",
+        "status": "not-affected",
+        "basis": "unreachable",
+        "evidence": "https://github.com/advisories/GHSA-9j6q-wvj5-jgjg",
+        "reason": "PyTorch selects native UnixFileLock on the reviewed macOS/Linux local filesystems and WindowsFileLock on Windows. SoftFileLock, leases and ENOSYS soft-lock fallback are not enabled. See docs/security/dependency-assessments.md#filelock-local-filesystem-advisories.",
+        "owner": "Claude",
+        "reviewed": "2026-10-29",
+        "expires": "2027-01-27",
+        "impact": "The advisory cannot cross its local-file trust boundary in the reviewed development and verification environments. Reassess before enabling affected APIs, compiled execution on shared hosts, untrusted shared caches or soft-lock fallback; review an aged fixed release from 2026-11-16."
+      },
+      {
+        "id": "ghsa-cwqr-hh33-gh44",
+        "ecosystem": "pypi",
+        "advisory": "GHSA-cwqr-hh33-gh44",
+        "package": "filelock",
+        "affectedVersion": "4.0.3",
+        "scope": "uv.lock",
+        "severity": "moderate",
+        "status": "not-affected",
+        "basis": "unreachable",
+        "evidence": "https://github.com/advisories/GHSA-cwqr-hh33-gh44",
+        "reason": "No project or installed dependency caller selects StrictSoftFileLock, SoftReadWriteLock or SQLite ReadWriteLock; PyTorch selects native UnixFileLock or WindowsFileLock. See docs/security/dependency-assessments.md#filelock-local-filesystem-advisories.",
+        "owner": "Claude",
+        "reviewed": "2026-10-29",
+        "expires": "2026-11-28",
+        "impact": "The advisory cannot cross its local-file trust boundary in the reviewed development and verification environments. Reassess before enabling affected APIs, compiled execution on shared hosts, untrusted shared caches or soft-lock fallback; review an aged fixed release from 2026-11-16."
+      },
+      {
+        "id": "ghsa-fj95-fr6c-h845",
+        "ecosystem": "pypi",
+        "advisory": "GHSA-fj95-fr6c-h845",
+        "package": "filelock",
+        "affectedVersion": "4.0.3",
+        "scope": "uv.lock",
+        "severity": "moderate",
+        "status": "not-affected",
+        "basis": "unreachable",
+        "evidence": "https://github.com/advisories/GHSA-fj95-fr6c-h845",
+        "reason": "No project or installed dependency caller selects StrictSoftFileLock, SoftReadWriteLock or SQLite ReadWriteLock; PyTorch selects native UnixFileLock or WindowsFileLock. See docs/security/dependency-assessments.md#filelock-local-filesystem-advisories.",
+        "owner": "Claude",
+        "reviewed": "2026-10-29",
+        "expires": "2026-11-28",
+        "impact": "The advisory cannot cross its local-file trust boundary in the reviewed development and verification environments. Reassess before enabling affected APIs, compiled execution on shared hosts, untrusted shared caches or soft-lock fallback; review an aged fixed release from 2026-11-16."
+      },
+      {
+        "id": "ghsa-fq56-3cx3-fjxp",
+        "ecosystem": "pypi",
+        "advisory": "GHSA-fq56-3cx3-fjxp",
+        "package": "filelock",
+        "affectedVersion": "4.0.3",
+        "scope": "uv.lock",
+        "severity": "moderate",
+        "status": "not-affected",
+        "basis": "unreachable",
+        "evidence": "https://github.com/advisories/GHSA-fq56-3cx3-fjxp",
+        "reason": "PyTorch selects native UnixFileLock on the reviewed macOS/Linux local filesystems and WindowsFileLock on Windows. SoftFileLock, leases and ENOSYS soft-lock fallback are not enabled. See docs/security/dependency-assessments.md#filelock-local-filesystem-advisories.",
+        "owner": "Claude",
+        "reviewed": "2026-10-29",
+        "expires": "2026-11-28",
+        "impact": "The advisory cannot cross its local-file trust boundary in the reviewed development and verification environments. Reassess before enabling affected APIs, compiled execution on shared hosts, untrusted shared caches or soft-lock fallback; review an aged fixed release from 2026-11-16."
+      },
+      {
+        "id": "ghsa-j8f7-rjxc-mr56",
+        "ecosystem": "pypi",
+        "advisory": "GHSA-j8f7-rjxc-mr56",
+        "package": "filelock",
+        "affectedVersion": "4.0.3",
+        "scope": "uv.lock",
+        "severity": "moderate",
+        "status": "not-affected",
+        "basis": "unreachable",
+        "evidence": "https://github.com/advisories/GHSA-j8f7-rjxc-mr56",
+        "reason": "No project or installed dependency caller selects StrictSoftFileLock, SoftReadWriteLock or SQLite ReadWriteLock; PyTorch selects native UnixFileLock or WindowsFileLock. See docs/security/dependency-assessments.md#filelock-local-filesystem-advisories.",
+        "owner": "Claude",
+        "reviewed": "2026-10-29",
+        "expires": "2026-11-28",
+        "impact": "The advisory cannot cross its local-file trust boundary in the reviewed development and verification environments. Reassess before enabling affected APIs, compiled execution on shared hosts, untrusted shared caches or soft-lock fallback; review an aged fixed release from 2026-11-16."
+      },
+      {
+        "id": "ghsa-m462-7rxw-wvpg",
+        "ecosystem": "pypi",
+        "advisory": "GHSA-m462-7rxw-wvpg",
+        "package": "filelock",
+        "affectedVersion": "4.0.3",
+        "scope": "uv.lock",
+        "severity": "moderate",
+        "status": "not-affected",
+        "basis": "unreachable",
+        "evidence": "https://github.com/advisories/GHSA-m462-7rxw-wvpg",
+        "reason": "No project or installed dependency caller selects StrictSoftFileLock, SoftReadWriteLock or SQLite ReadWriteLock; PyTorch selects native UnixFileLock or WindowsFileLock. See docs/security/dependency-assessments.md#filelock-local-filesystem-advisories.",
+        "owner": "Claude",
+        "reviewed": "2026-10-29",
+        "expires": "2026-11-28",
+        "impact": "The advisory cannot cross its local-file trust boundary in the reviewed development and verification environments. Reassess before enabling affected APIs, compiled execution on shared hosts, untrusted shared caches or soft-lock fallback; review an aged fixed release from 2026-11-16."
+      },
+      {
+        "id": "ghsa-rfpc-qcw5-3pc4",
+        "ecosystem": "pypi",
+        "advisory": "GHSA-rfpc-qcw5-3pc4",
+        "package": "filelock",
+        "affectedVersion": "4.0.3",
+        "scope": "uv.lock",
+        "severity": "moderate",
+        "status": "not-affected",
+        "basis": "unreachable",
+        "evidence": "https://github.com/advisories/GHSA-rfpc-qcw5-3pc4",
+        "reason": "PyTorch selects native UnixFileLock on the reviewed macOS/Linux local filesystems and WindowsFileLock on Windows. SoftFileLock, leases and ENOSYS soft-lock fallback are not enabled. See docs/security/dependency-assessments.md#filelock-local-filesystem-advisories.",
+        "owner": "Claude",
+        "reviewed": "2026-10-29",
+        "expires": "2026-11-28",
+        "impact": "The advisory cannot cross its local-file trust boundary in the reviewed development and verification environments. Reassess before enabling affected APIs, compiled execution on shared hosts, untrusted shared caches or soft-lock fallback; review an aged fixed release from 2026-11-16."
+      }
+    ]
+  },
+  "exceptions": [],
+  "documentation": {
+    "design": [
+      {
+        "path": "docs/design/numerics.md",
+        "module": "numerics"
+      },
+      {
+        "path": "docs/design/evaluation.md",
+        "module": "evaluation"
+      },
+      {
+        "path": "docs/design/sampling.md",
+        "module": "sampling"
+      },
+      {
+        "path": "docs/design/distributed.md",
+        "module": "distributed"
+      },
+      {
+        "path": "docs/design/benchmarks.md",
+        "module": "benchmarks"
+      },
+      {
+        "path": "docs/design/recipes.md",
+        "module": "recipes"
+      },
+      {
+        "path": "docs/design/releases.md",
+        "module": "release"
+      }
+    ]
+  }
+}

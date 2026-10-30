@@ -1,40 +1,33 @@
-import torch
+from torch import Tensor
 
-from ..utils import common_functions as c_f
-from ..utils import loss_and_miner_utils as lmu
+from ..types import IndicesTuple, LossDict, PairIndices
+from ..utils import _common, indexing
 from .base_metric_loss_function import BaseMetricLossFunction
 
 
 class GenericPairLoss(BaseMetricLossFunction):
-    def __init__(self, mat_based_loss, **kwargs):
-        super().__init__(**kwargs)
-        self.loss_method = (
-            self.mat_based_loss if mat_based_loss else self.pair_based_loss
-        )
+    def compute_loss(
+        self,
+        embeddings: Tensor,
+        labels: Tensor | None,
+        indices_tuple: IndicesTuple | None,
+        ref_emb: Tensor | None,
+        ref_labels: Tensor | None,
+    ) -> LossDict:
+        _common.labels_or_indices_tuple_required(labels, indices_tuple)
+        pairs = indexing.convert_to_pairs(indices_tuple, labels, ref_labels)
+        if all(len(x) == 0 for x in pairs):
+            return {}
+        return self.pair_loss(self.distance(embeddings, ref_emb), pairs)
 
-    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
-        c_f.labels_or_indices_tuple_required(labels, indices_tuple)
-        indices_tuple = lmu.convert_to_pairs(indices_tuple, labels, ref_labels)
-        if all(len(x) <= 1 for x in indices_tuple):
-            return self.zero_losses()
-        mat = self.distance(embeddings, ref_emb)
-        return self.loss_method(mat, indices_tuple)
-
-    def _compute_loss(self):
+    def pair_loss(self, mat: Tensor, pairs: PairIndices) -> LossDict:
         raise NotImplementedError
 
-    def mat_based_loss(self, mat, indices_tuple):
-        a1, p, a2, n = indices_tuple
-        pos_mask, neg_mask = torch.zeros_like(mat), torch.zeros_like(mat)
-        pos_mask[a1, p] = 1
-        neg_mask[a2, n] = 1
-        return self._compute_loss(mat, pos_mask, neg_mask)
+    @staticmethod
+    def pair_values(mat: Tensor, pairs: PairIndices) -> tuple[Tensor, Tensor]:
+        a1, p, a2, n = pairs
+        return mat[a1, p], mat[a2, n]
 
-    def pair_based_loss(self, mat, indices_tuple):
-        a1, p, a2, n = indices_tuple
-        pos_pair, neg_pair = [], []
-        if len(a1) > 0:
-            pos_pair = mat[a1, p]
-        if len(a2) > 0:
-            neg_pair = mat[a2, n]
-        return self._compute_loss(pos_pair, neg_pair, indices_tuple)
+    @staticmethod
+    def pair_masks(mat: Tensor, pairs: PairIndices) -> tuple[Tensor, Tensor]:
+        return indexing._pair_masks(pairs, (mat.shape[0], mat.shape[1]), mat.device)

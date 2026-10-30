@@ -1,142 +1,85 @@
-# PyTorch Metric Learning
+# Use PyTorch Metric Learning
 
-## Google Colab Examples
-See the [examples folder](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/examples/README.md) for notebooks you can download or run on Google Colab.
+Choose a loss for embeddings produced by your PyTorch model, then add mining,
+custom distances, reduction, or regularization as needed. Applications own
+training loops, data loading, optimizers, and logging.
 
-## Overview
-This library contains 9 modules, each of which can be used independently within your existing codebase, or combined together for a complete train/test workflow.
+## Install
 
-![high_level_module_overview](imgs/high_level_module_overview.png)
+This documentation describes the version 3 release candidate. Install the
+preview explicitly:
 
-
-
-## How loss functions work
-
-### Using losses and miners in your training loop
-Let’s initialize a plain [TripletMarginLoss](losses/#tripletmarginloss):
-```python
-from pytorch_metric_learning import losses
-loss_func = losses.TripletMarginLoss()
+```sh
+pip install "pytorch-metric-learning==3.0.0rc1"
+pip install "pytorch-metric-learning[faiss]==3.0.0rc1"       # Faiss retrieval backends
+pip install "pytorch-metric-learning[clustering]==3.0.0rc1"  # NMI and AMI metrics
 ```
 
-To compute the loss in your training loop, pass in the embeddings computed by your model, and the corresponding labels. The embeddings should have size (N, embedding_size), and the labels should have size (N), where N is the batch size.
+Version 3 requires Python 3.12 or newer, PyTorch 2.14.0 or newer, and NumPy
+2.5.3 or newer. See the [release notes](release-notes/3.0.0rc1.md), the
+[migration guide](migration-2-to-3.md), and the
+[version 2 documentation](https://kevinmusgrave.github.io/pytorch-metric-learning/v2/).
+New to the library? Read the [concepts overview](concepts.md).
 
-```python
-# your training loop
-for i, (data, labels) in enumerate(dataloader):
-	optimizer.zero_grad()
-	embeddings = model(data)
-	loss = loss_func(embeddings, labels)
-	loss.backward()
-	optimizer.step()
-```
+[![Your PyTorch code computes embeddings and calls the library's miner and loss to get a scalar loss, then calls backward and steps its optimizer. For evaluation, your code extracts embeddings and AccuracyCalculator retrieves nearest neighbors to compute metrics.](imgs/architecture.svg)](imgs/architecture.svg)
 
-The TripletMarginLoss computes all possible triplets within the batch, based on the labels you pass into it. Anchor-positive pairs are formed by embeddings that share the same label, and anchor-negative pairs are formed by embeddings that have different labels. 
+## Choose by task
 
-Sometimes it can help to add a mining function:
-```python
-from pytorch_metric_learning import miners, losses
-miner = miners.MultiSimilarityMiner()
-loss_func = losses.TripletMarginLoss()
+| Task                                        | Public entry point                                          | Contract and runnable composition                                                                                                                    |
+| ------------------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Learn from labels and pairs                 | `losses.ContrastiveLoss`                                    | [Contrastive loss](losses/contrastive_loss.md#contrastiveloss), [training recipe](recipes/training.md#metric-classifier-proxy-and-two-stream-inputs) |
+| Learn relative distances                    | `losses.TripletMarginLoss`                                  | [Triplet margin loss](losses/triplet_margin_loss.md#tripletmarginloss)                                                                               |
+| Train learnable class proxies               | `losses.NormalizedSoftmaxLoss`, `losses.ProxyAnchorLoss`    | [Proxy parameters and optimizer ownership](recipes/training.md#metric-classifier-proxy-and-two-stream-inputs)                                        |
+| Select difficult pairs or triplets          | `miners`                                                    | [Miners](miners.md), [cascaded mining](recipes/training.md#cascaded-mining-contract)                                                                 |
+| Compare separate embedding streams          | Loss `ref_emb` / `ref_labels` arguments                     | [Two-stream gradients](recipes/training.md#metric-classifier-proxy-and-two-stream-inputs)                                                            |
+| Use augmented views                         | `losses.SelfSupervisedLoss`, `losses.VICRegLoss`            | [Self-supervision](losses/self_supervised_loss.md#selfsupervisedloss)                                                                                |
+| Reuse detached embeddings                   | `losses.CrossBatchMemory`                                   | [Memory contract](losses/cross_batch_memory.md#crossbatchmemory), [warmup](recipes/training.md#memory-warmup-contract)                               |
+| Balance batches by label                    | `samplers.MPerClassSampler`, `samplers.HierarchicalSampler` | [Samplers](samplers.md)                                                                                                                              |
+| Sample from mined tuple frequency           | `utils.indexing.convert_to_weights`                         | [Weighted sampling](recipes/training.md#mining-weighted-sampling-contract)                                                                           |
+| Evaluate retrieval                          | `evaluation.AccuracyCalculator`                             | [Metrics and query/reference rules](accuracy_calculation.md), [evaluation recipe](recipes/evaluation.md)                                             |
+| Evaluate hierarchical or two-stream labels  | `AccuracyCalculator` with explicit subsets                  | [Parent-conditioned and two-stream evaluation](recipes/evaluation.md#parent-conditioned-hierarchical-retrieval)                                      |
+| Find nearest neighbors or threshold matches | `evaluation.CustomKNN`, `evaluation.MatchFinder`            | [Retrieval backends](retrieval.md)                                                                                                                   |
+| Train across devices                        | `distributed.DistributedLossWrapper`                        | [Distributed values and gradients](distributed.md)                                                                                                   |
+| Generate hard negatives                     | Ordinary PyTorch modules and triplet loss                   | [Adversarial objectives](recipes/training.md#adversarial-objectives-and-gradient-ownership)                                                          |
 
-# your training loop
-for i, (data, labels) in enumerate(dataloader):
-	optimizer.zero_grad()
-	embeddings = model(data)
-	hard_pairs = miner(embeddings, labels)
-	loss = loss_func(embeddings, labels, hard_pairs)
-	loss.backward()
-	optimizer.step()
-```
-In the above code, the miner finds positive and negative pairs that it thinks are particularly difficult. Note that even though the TripletMarginLoss operates on triplets, it’s still possible to pass in pairs. This is because the library automatically converts pairs to triplets and triplets to pairs, when necessary.
+## Component references
 
-### Customizing loss functions
-Loss functions can be customized using [distances](distances.md), [reducers](reducers.md), and [regularizers](regularizers.md). In the diagram below, a miner finds the indices of hard pairs within a batch. These are used to index into the distance matrix, computed by the distance object. For this diagram, the loss function is pair-based, so it computes a loss per pair. In addition, a regularizer has been supplied, so a regularization loss is computed for each embedding in the batch. The per-pair and per-element losses are passed to the reducer, which (in this diagram) only keeps losses with a high value. The averages are computed for the high-valued pair and element losses, and are then added together to obtain the final loss.
+- [Concepts](concepts.md): how embeddings, tuples, distances, loss terms, and reducers fit together.
+- [Losses](losses.md), [miners](miners.md), [distances](distances.md),
+  [reducers](reducers.md), [regularizers](regularizers.md), and [samplers](samplers.md).
+- [Retrieval metrics](accuracy_calculation.md) and [retrieval backends](retrieval.md).
+- [Distributed execution](distributed.md) and [measured performance](performance.md).
+- [Custom losses](extend/losses.md) and [custom miners](extend/miners.md).
+- [Versioning and support](versioning.md) and [how to cite](citing.md).
 
-![high_level_loss_function_overview](imgs/high_level_loss_function_overview.png)
+## Execute a recipe
 
+The [training](recipes/training.md) and [evaluation](recipes/evaluation.md)
+recipes list their inputs, expected results, supported composition, and exact
+verification command. They use synthetic tensors and download nothing.
 
-Now here's an example of a customized TripletMarginLoss:
-```python
-from pytorch_metric_learning.distances import CosineSimilarity
-from pytorch_metric_learning.reducers import ThresholdReducer
-from pytorch_metric_learning.regularizers import LpRegularizer
-from pytorch_metric_learning import losses
-loss_func = losses.TripletMarginLoss(distance = CosineSimilarity(), 
-									reducer = ThresholdReducer(high=0.3), 
-									embedding_regularizer = LpRegularizer())
-```
-This customized triplet loss has the following properties:
-
- - The loss will be computed using cosine similarity instead of Euclidean distance.
- - All triplet losses that are higher than 0.3 will be discarded.
- - The embeddings will be L2 regularized.  
-
-### Using loss functions for unsupervised / self-supervised learning
-
-A `SelfSupervisedLoss` wrapper is provided for self-supervised learning:
+## Imports
 
 ```python
-from pytorch_metric_learning.losses import SelfSupervisedLoss
-loss_func = SelfSupervisedLoss(TripletMarginLoss())
-
-# your training for-loop
-for i, data in enumerate(dataloader):
-	optimizer.zero_grad()
-	embeddings = your_model(data)
-	augmented = your_model(your_augmentation(data))
-	loss = loss_func(embeddings, augmented)
-	loss.backward()
-	optimizer.step()
+from pytorch_metric_learning import (
+    distances,
+    losses,
+    miners,
+    reducers,
+    regularizers,
+    samplers,
+)
+from pytorch_metric_learning.evaluation import (
+    AccuracyCalculator,
+    CustomKNN,
+    MatchFinder,
+)
+from pytorch_metric_learning.distributed import DistributedLossWrapper
+from pytorch_metric_learning.utils import indexing
+from pytorch_metric_learning.types import PairIndices, TripletIndices
 ```
 
-If you're interested in [MoCo](https://arxiv.org/pdf/1911.05722.pdf)-style self-supervision, take a look at the [MoCo on CIFAR10](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples#simple-examples) notebook. It uses CrossBatchMemory to implement the momentum encoder queue, which means you can use any tuple loss, and any tuple miner to extract hard samples from the queue.
-
-
-## Highlights of the rest of the library
-
-- For a convenient way to train your model, take a look at the [trainers](trainers).
-- Want to test your model's accuracy on a dataset? Try the [testers](testers/).
-- To compute the accuracy of an embedding space directly, use [AccuracyCalculator](accuracy_calculation.md).
-
-If you're short of time and want a complete train/test workflow, check out the [example Google Colab notebooks](https://github.com/KevinMusgrave/pytorch-metric-learning/tree/master/examples).
-
-
-## Installation
-
-### Required PyTorch version
- - ```pytorch-metric-learning >= v0.9.90``` requires ```torch >= 1.6```
- - ```pytorch-metric-learning < v0.9.90``` doesn't have a version requirement, but was tested with ```torch >= 1.2```
-
-### Pip
-```
-pip install pytorch-metric-learning
-```
-
-**To get the latest dev version**:
-```
-pip install pytorch-metric-learning --pre
-```
-
-**To install on Windows**:
-```
-pip install torch===1.6.0 torchvision===0.7.0 -f https://download.pytorch.org/whl/torch_stable.html
-pip install pytorch-metric-learning
-```
-
-**To install with evaluation and logging capabilities (This will install the unofficial pypi version of faiss-gpu)**:
-```
-pip install pytorch-metric-learning[with-hooks]
-```
-
-**To install with evaluation and logging capabilities (CPU) (This will install the unofficial pypi version of faiss-cpu)**:
-```
-pip install pytorch-metric-learning[with-hooks-cpu]
-```
-
-### Conda
-```
-conda install -c conda-forge pytorch-metric-learning
-```
-
-**To use the testing module, you'll need faiss, which can be installed via conda as well. See the [installation instructions for faiss](https://github.com/facebookresearch/faiss/blob/master/INSTALL.md).**
+`utils.indexing` holds the public pair, triplet, and weight utilities used by
+custom losses and miners; other modules under `utils` are private. Shared type
+annotations live in `pytorch_metric_learning.types`. Names starting with an
+underscore are private.

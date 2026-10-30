@@ -2,11 +2,12 @@ import unittest
 
 import torch
 
+from pytorch_metric_learning.distances import LpDistance
 from pytorch_metric_learning.losses import NormalizedSoftmaxLoss
 from pytorch_metric_learning.regularizers import RegularFaceRegularizer
-from pytorch_metric_learning.utils import common_functions as c_f
+from pytorch_metric_learning.utils import _common as c_f
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 
 
 class TestRegularFaceRegularizer(unittest.TestCase):
@@ -22,7 +23,7 @@ class TestRegularFaceRegularizer(unittest.TestCase):
                 embedding_size=embedding_size,
                 weight_regularizer=RegularFaceRegularizer(),
                 weight_reg_weight=reg_weight,
-            ).to(TEST_DEVICE)
+            ).to(TEST_DEVICE, dtype)
 
             embeddings = torch.nn.functional.normalize(
                 torch.randn((180, embedding_size), requires_grad=True)
@@ -34,7 +35,7 @@ class TestRegularFaceRegularizer(unittest.TestCase):
             loss = loss_func(embeddings, labels)
             loss.backward()
 
-            weights = torch.nn.functional.normalize(loss_func.W, p=2, dim=0)
+            weights = torch.nn.functional.normalize(loss_func.weight, p=2, dim=1).t()
             logits = torch.matmul(embeddings, weights)
             correct_class_loss = torch.nn.functional.cross_entropy(
                 logits / temperature, labels
@@ -48,5 +49,9 @@ class TestRegularFaceRegularizer(unittest.TestCase):
             correct_reg_loss /= num_classes
 
             correct_total_loss = correct_class_loss + (correct_reg_loss * reg_weight)
-            rtol = 1e-2 if dtype == torch.float16 else 1e-5
+            rtol = helpers.rtol(dtype)
             self.assertTrue(torch.isclose(loss, correct_total_loss, rtol=rtol))
+
+    def test_distance_must_be_a_similarity(self):
+        with self.assertRaises(TypeError):
+            RegularFaceRegularizer(distance=LpDistance())

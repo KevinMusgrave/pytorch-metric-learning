@@ -1,4 +1,6 @@
 import unittest
+from functools import partial
+from typing import Any, get_args
 
 import torch
 import torch.nn
@@ -6,13 +8,14 @@ import torch.nn.functional
 import torch.nn.functional as F
 
 from pytorch_metric_learning.losses import PNPLoss
+from pytorch_metric_learning.types import PNPVariant
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 
 
 class OriginalImplementationPNP(torch.nn.Module):
     def __init__(self, b, alpha, anneal, variant, bs, classes):
-        super(OriginalImplementationPNP, self).__init__()
+        super().__init__()
         self.b = b
         self.alpha = alpha
         self.anneal = anneal
@@ -33,16 +36,12 @@ class OriginalImplementationPNP(torch.nn.Module):
     def forward(self, batch):
         dtype, device = batch.dtype, batch.device
         self.mask = self.mask.type(dtype).to(device)
-        # compute the relevance scores via cosine similarity of the CNN-produced embedding vectors
 
         sim_all = self.compute_aff(batch)
 
         sim_all_repeat = sim_all.unsqueeze(dim=1).repeat(1, self.batch_size, 1)
-        # compute the difference matrix
         sim_diff = sim_all_repeat - sim_all_repeat.permute(0, 2, 1)
-        # pass through the sigmoid and ignores the relevance score of the query to itself
         sim_sg = self.sigmoid(sim_diff, temp=self.anneal) * self.mask
-        # compute the rankings,all batch
         sim_all_rk = torch.sum(sim_sg, dim=-1)
         if self.variant == "PNP-D_s":
             sim_all_rk = torch.log(1 + sim_all_rk)
@@ -58,9 +57,8 @@ class OriginalImplementationPNP(torch.nn.Module):
         elif self.variant == "PNP-O":
             pass
         else:
-            raise Exception("variantation <{}> not available!".format(self.variant))
+            raise ValueError(f"variantation <{self.variant}> not available!")
 
-        # sum the values of the Smooth-AP for all instances in the mini-batch
         loss = torch.zeros(1).type(dtype).to(device)
         group = int(self.batch_size / self.num_id)
 
@@ -79,17 +77,12 @@ class OriginalImplementationPNP(torch.nn.Module):
             return loss
 
     def sigmoid(self, tensor, temp=1.0):
-        """temperature controlled sigmoid
-        takes as input a torch tensor (tensor) and passes it through a sigmoid, controlled by temperature: temp
-        """
         exponent = -tensor / temp
-        # clamp the input tensor for stability
         exponent = torch.clamp(exponent, min=-50, max=50)
         y = 1.0 / (1.0 + torch.exp(exponent))
         return y
 
     def compute_aff(self, x):
-        """computes the affinity matrix between an input vector and itself"""
         return torch.mm(x, x.t())
 
 
@@ -98,7 +91,7 @@ class TestPNPLoss(unittest.TestCase):
         torch.manual_seed(30293)
         bs = 180
         classes = 30
-        for variant in PNPLoss.VARIANTS:
+        for variant in get_args(PNPVariant.__value__):
             original_variant = {
                 "Ds": "PNP-D_s",
                 "Dq": "PNP-D_q",
@@ -125,8 +118,66 @@ class TestPNPLoss(unittest.TestCase):
                 loss.backward()
                 correct_loss = original_loss_func(F.normalize(embeddings, dim=-1))
 
-                rtol = 1e-2 if dtype == torch.float16 else 1e-5
+                rtol = helpers.rtol(dtype)
                 self.assertTrue(torch.isclose(loss, correct_loss[0], rtol=rtol))
 
+        invalid: Any = "PNP"
         with self.assertRaises(ValueError):
-            PNPLoss(b, alpha, anneal, "PNP")
+            PNPLoss(b, alpha, anneal, invalid)
+
+    def test_negatives_that_have_no_positives(self):
+        loss_func = PNPLoss()
+        labels = torch.tensor([1, 1, 2], device=TEST_DEVICE)
+        for dtype in TEST_DTYPES:
+            embeddings = torch.randn(3, 32, dtype=dtype, device=TEST_DEVICE)
+            loss = loss_func(embeddings, labels)
+            self.assertTrue(not torch.isnan(loss))
+
+    def test_anchors_without_other_positives_are_excluded(self):
+        labels = torch.tensor([1, 1, 2, 1, 3], device=TEST_DEVICE)
+        torch.manual_seed(4)
+        embeddings = torch.randn(5, 6)
+
+        def reference(x, variant, alpha):
+            x = F.normalize(x, dim=1)
+            sims = x @ x.T
+            per_anchor = []
+            for q in range(len(labels)):
+                positives = [i for i in range(len(labels)) if labels[i] == labels[q]]
+                if len(positives) == 1:
+                    continue
+                negatives = [k for k in range(len(labels)) if labels[k] != labels[q]]
+                ranks = [
+                    torch.sigmoid((sims[q, negatives] - sims[q, i]) / 0.1).sum()
+                    for i in positives
+                ]
+                if variant == "Dq":
+                    ranks = [1 / (1 + r) ** alpha for r in ranks]
+                per_anchor.append(torch.stack(ranks).mean())
+            loss = torch.stack(per_anchor).mean()
+            return 1 - loss if variant == "Dq" else loss
+
+        for variant in ("O", "Dq"):
+            loss_func = PNPLoss(alpha=2, anneal=0.1, variant=variant)
+            for dtype in TEST_DTYPES:
+                with self.subTest(variant=variant, dtype=dtype):
+                    helpers.assert_matches_float64(
+                        partial(loss_func, labels=labels),
+                        partial(reference, variant=variant, alpha=2),
+                        [embeddings],
+                        dtype,
+                    )
+
+    def test_batches_without_positive_pairs_give_differentiable_zero(self):
+        for labels in ([], [0], [0, 1]):
+            for dtype in TEST_DTYPES:
+                with self.subTest(labels=labels, dtype=dtype):
+                    embeddings = torch.randn(
+                        len(labels), 4, dtype=dtype, device=TEST_DEVICE
+                    ).requires_grad_()
+                    loss = PNPLoss()(
+                        embeddings, torch.tensor(labels, device=TEST_DEVICE).long()
+                    )
+                    loss.backward()
+                    self.assertEqual(loss.item(), 0)
+                    self.assertIsNotNone(embeddings.grad)

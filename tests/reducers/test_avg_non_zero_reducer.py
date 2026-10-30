@@ -21,7 +21,8 @@ class TestAvgNonZeroReducer(unittest.TestCase):
                 torch.randint(0, batch_size, (batch_size,)),
                 torch.randint(0, batch_size, (batch_size,)),
             )
-            triplet_indices = pair_indices + (
+            triplet_indices = (
+                *pair_indices,
                 torch.randint(0, batch_size, (batch_size,)),
             )
             losses = torch.randn(batch_size).type(dtype).to(TEST_DEVICE)
@@ -47,4 +48,4 @@ class TestAvgNonZeroReducer(unittest.TestCase):
                         correct_output = torch.mean(filtered_L)
                     else:
                         correct_output = torch.mean(L) * 0
-                    self.assertTrue(output == correct_output)
+                    torch.testing.assert_close(output, correct_output.to(output.dtype))

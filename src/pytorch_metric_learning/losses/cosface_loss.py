@@ -1,30 +1,23 @@
-import torch
+from typing import Unpack
 
-from ..utils import common_functions as c_f
-from .large_margin_softmax_loss import LargeMarginSoftmaxLoss
+from torch import Tensor
+
+from ..types import ProxyLossOptions
+from .large_margin_softmax_loss import _CosineMarginSoftmaxLoss
 
 
-class CosFaceLoss(LargeMarginSoftmaxLoss):
-    """
-    Implementation of https://arxiv.org/pdf/1801.07698.pdf
-    """
+class CosFaceLoss(_CosineMarginSoftmaxLoss):
+    def __init__(
+        self,
+        num_classes: int,
+        embedding_size: int,
+        margin: float = 0.35,
+        scale: float = 64,
+        **options: Unpack[ProxyLossOptions],
+    ) -> None:
+        super().__init__(num_classes, embedding_size, margin, scale, **options)
 
-    def __init__(self, *args, margin=0.35, scale=64, **kwargs):
-        super().__init__(*args, margin=margin, scale=scale, **kwargs)
-
-    def init_margin(self):
-        pass
-
-    def cast_types(self, dtype, device):
-        self.W.data = c_f.to_device(self.W.data, device=device, dtype=dtype)
-
-    def modify_cosine_of_target_classes(self, cosine_of_target_classes):
-        if self.collect_stats:
-            with torch.no_grad():
-                self.get_angles(
-                    cosine_of_target_classes
-                )  # For the purpose of collecting stats
+    def modify_cosine_of_target_classes(
+        self, cosine_of_target_classes: Tensor
+    ) -> Tensor:
         return cosine_of_target_classes - self.margin
-
-    def scale_logits(self, logits, *_):
-        return logits * self.scale

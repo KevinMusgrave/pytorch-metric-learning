@@ -1,0 +1,187 @@
+import unittest
+
+import torch
+
+from pytorch_metric_learning.losses import RankedListLoss
+
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
+
+
+def weighted_average(weights, values):
+    total = torch.sum(weights)
+    return torch.sum(weights * values) / total if total > 0 else total
+
+
+class TestRankedListLoss(unittest.TestCase):
+    def test_ranked_list_loss_simpler(self):
+        torch.manual_seed(22)
+        batch_size = 32
+        embedding_size = 64
+        for dtype in TEST_DTYPES:
+            for _ in range(2):
+                embeddings = torch.randn(
+                    batch_size,
+                    embedding_size,
+                    requires_grad=True,
+                    dtype=dtype,
+                ).to(TEST_DEVICE)
+                labels = torch.randint(0, 5, size=(batch_size,)).to(TEST_DEVICE)
+
+                normalized_embeddings = torch.nn.functional.normalize(
+                    embeddings.detach().double(), p=2, dim=1
+                )
+                n = len(embeddings)
+                for Tp, lam, margin in zip(
+                    [0, 0.5, 3, -10],
+                    [0, 0.5, 0.7, 0.9],
+                    [0, 0.4, 0.8, 1.2],
+                    strict=True,
+                ):
+                    alpha = 1 - margin / 2
+                    Tn = Tp
+                    loss_func = RankedListLoss(
+                        margin=margin,
+                        neg_temperature=Tn,
+                        imbalance=lam,
+                        alpha=alpha,
+                        pos_temperature=Tp,
+                    )
+
+                    L_RLL = torch.zeros(
+                        n,
+                    ).to(dtype=torch.float64)
+                    for i in range(n):
+                        w_p = torch.zeros(
+                            n,
+                        ).to(dtype=torch.float64)
+                        w_n = torch.zeros(
+                            n,
+                        ).to(dtype=torch.float64)
+                        L_P = torch.zeros(
+                            n,
+                        ).to(dtype=torch.float64)
+                        L_N = torch.zeros(
+                            n,
+                        ).to(dtype=torch.float64)
+                        for j in range(n):
+                            if i == j:
+                                continue
+
+                            d_ij = (
+                                torch.sum(
+                                    (
+                                        normalized_embeddings[i, :]
+                                        - normalized_embeddings[j, :]
+                                    )
+                                    ** 2
+                                )
+                                ** 0.5
+                            )
+                            if labels[j] == labels[i] and d_ij > alpha - margin:
+                                w_p[j] = torch.exp(Tp * (d_ij - (alpha - margin)))
+                                L_P[j] = d_ij - (alpha - margin)
+                            elif labels[j] != labels[i] and d_ij < alpha:
+                                w_n[j] = torch.exp(Tn * (alpha - d_ij))
+                                L_N[j] = alpha - d_ij
+                        L_P = weighted_average(w_p, L_P)
+                        L_N = weighted_average(w_n, L_N)
+
+                        L_RLL[i] = (1 - lam) * L_P + lam * L_N
+                    correct_loss = torch.mean(L_RLL)
+                    loss = loss_func(embeddings, labels)
+
+                    rtol = helpers.rtol(dtype)
+                    self.assertTrue(
+                        torch.isclose(loss.double(), correct_loss, rtol=rtol)
+                    )
+
+                    loss.backward()
+
+    def test_ranked_list_loss(self):
+        torch.manual_seed(22)
+        batch_size = 32
+        embedding_size = 64
+        for dtype in TEST_DTYPES:
+            for _ in range(2):
+                embeddings = torch.randn(
+                    batch_size,
+                    embedding_size,
+                    requires_grad=True,
+                    dtype=dtype,
+                ).to(TEST_DEVICE)
+                labels = torch.randint(0, 5, size=(batch_size,)).to(TEST_DEVICE)
+
+                normalized_embeddings = torch.nn.functional.normalize(
+                    embeddings.detach().double(), p=2, dim=1
+                )
+                n = len(embeddings)
+                for Tn, Tp, alpha, lam, margin in zip(
+                    [0.3, 0.8, 2, -10],
+                    [0, 0.5, 3, -10],
+                    [0.3, 0.8, 1, 3],
+                    [0, 0.5, 0.7, 0.9],
+                    [0, 0.4, 0.8, 1.2],
+                    strict=True,
+                ):
+                    loss_func = RankedListLoss(
+                        margin=margin,
+                        neg_temperature=Tn,
+                        imbalance=lam,
+                        alpha=alpha,
+                        pos_temperature=Tp,
+                    )
+
+                    L_RLL = torch.zeros(
+                        n,
+                    ).to(dtype=torch.float64)
+                    for i in range(n):
+                        w_p = torch.zeros(
+                            n,
+                        ).to(dtype=torch.float64)
+                        w_n = torch.zeros(
+                            n,
+                        ).to(dtype=torch.float64)
+                        L_P = torch.zeros(
+                            n,
+                        ).to(dtype=torch.float64)
+                        L_N = torch.zeros(
+                            n,
+                        ).to(dtype=torch.float64)
+                        for j in range(n):
+                            if i == j:
+                                continue
+
+                            d_ij = (
+                                torch.sum(
+                                    (
+                                        normalized_embeddings[i, :]
+                                        - normalized_embeddings[j, :]
+                                    )
+                                    ** 2
+                                )
+                                ** 0.5
+                            )
+                            if labels[j] == labels[i] and d_ij > alpha - margin:
+                                w_p[j] = torch.exp(Tp * (d_ij - (alpha - margin)))
+                                L_P[j] = d_ij - (alpha - margin)
+                            elif labels[j] != labels[i] and d_ij < alpha:
+                                w_n[j] = torch.exp(Tn * (alpha - d_ij))
+                                L_N[j] = alpha - d_ij
+                        L_P = weighted_average(w_p, L_P)
+                        L_N = weighted_average(w_n, L_N)
+
+                        L_RLL[i] = (1 - lam) * L_P + lam * L_N
+                    correct_loss = torch.mean(L_RLL)
+                    loss = loss_func(embeddings, labels)
+
+                    rtol = helpers.rtol(dtype)
+                    self.assertTrue(
+                        torch.isclose(loss.double(), correct_loss, rtol=rtol)
+                    )
+
+                    loss.backward()
+
+    def test_assertion_raises(self):
+        with self.assertRaises(ValueError):
+            _ = RankedListLoss(margin=1, neg_temperature=0, imbalance=-1)
+            _ = RankedListLoss(margin=1, neg_temperature=0, imbalance=2)

@@ -1,138 +1,330 @@
 # How to write custom loss functions
 
+1. Extend [BaseMetricLossFunction](../losses/base_metric_loss_function.md), or
+   [BaseProxyLoss](../losses/base_proxy_loss.md) for a loss with class weights.
+2. Implement `compute_loss`.
+3. Inside `compute_loss`, return a dictionary of [loss terms](#loss-terms).
+
 ## The simplest possible loss function
 
 ```python
-from pytorch_metric_learning.losses import BaseMetricLossFunction
 import torch
+from pytorch_metric_learning.losses import BaseMetricLossFunction
+from pytorch_metric_learning.types import LossDict
+
 
 class BarebonesLoss(BaseMetricLossFunction):
-    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
-        # perform some calculation #
-        some_loss = torch.mean(embeddings)
+    def compute_loss(
+        self, embeddings, labels, indices_tuple, ref_emb, ref_labels
+    ) -> LossDict:
+        return {"loss": {"losses": embeddings.mean(), "indices": None}}
 
-        # put into dictionary #
-        return {
-            "loss": {
-                "losses": some_loss,
-                "indices": None,
-                "reduction_type": "already_reduced",
-            }
-        }
+
+loss_func = BarebonesLoss()
+loss = loss_func(torch.randn(8, 16))
 ```
 
-## Compatability with distances and reducers
+`compute_loss` receives validated inputs:
 
-You can make your loss function a lot more powerful by adding support for distance metrics and reducers:
+- `labels` is `None` or a `(N,)` tensor on the embeddings' device.
+- `indices_tuple` is `None`, a `types.PairIndices`, or a `types.TripletIndices`.
+  Callers may pass plain tuples; they are validated and converted before
+  `compute_loss` runs.
+- `ref_emb` and `ref_labels` follow the
+  [reference-set rule](../concepts.md#reference-sets): `ref_emb` is `None` for
+  self-comparison, `ref_labels` is `None` whenever `ref_emb` is, and with
+  `ref_emb`, `labels` and `ref_labels` are both tensors or both `None`.
+
+`compute_loss` returns a `types.LossDict`, a dictionary from term names to loss
+terms. The base class reduces the terms with the reducer, adds the
+regularization penalties, and returns a tensor.
+
+## Compatibility with distances and reducers
+
+A loss becomes more useful when it supports distance metrics and reducers:
 
 ```python
-from pytorch_metric_learning.losses import BaseMetricLossFunction
-from pytorch_metric_learning.reducers import AvgNonZeroReducer
-from pytorch_metric_learning.distances import CosineSimilarity
-from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
+from typing import Unpack
+
 import torch
+from pytorch_metric_learning.distances import BaseDistance, CosineSimilarity
+from pytorch_metric_learning.losses import BaseMetricLossFunction
+from pytorch_metric_learning.reducers import AvgNonZeroReducer, BaseReducer
+from pytorch_metric_learning.types import LossDict, LossOptions
+from pytorch_metric_learning.utils import indexing
+
 
 class FullFeaturedLoss(BaseMetricLossFunction):
-    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
-        indices_tuple = lmu.convert_to_triplets(indices_tuple, labels)
-        anchors, positives, negatives = indices_tuple
+    def __init__(self, margin: float = 0.1, **options: Unpack[LossOptions]) -> None:
+        super().__init__(**options)
+        self.margin = margin
+
+    def compute_loss(
+        self, embeddings, labels, indices_tuple, ref_emb, ref_labels
+    ) -> LossDict:
+        if labels is None and indices_tuple is None:
+            raise ValueError("FullFeaturedLoss requires labels or indices_tuple")
+        triplets = indexing.convert_to_triplets(indices_tuple, labels, ref_labels)
+        anchors, positives, negatives = triplets
         if len(anchors) == 0:
-            return self.zero_losses()
+            return {}
 
-        mat = self.distance(embeddings)
-        ap_dists = mat[anchors, positives]
-        an_dists = mat[anchors, negatives]
+        mat = self.distance(embeddings, ref_emb)
+        ap = mat[anchors, positives]
+        an = mat[anchors, negatives]
 
-        # perform some calculations #
-        losses1 = ap_dists - an_dists
-        losses2 = ap_dists * 5
-        losses3 = torch.mean(embeddings)
-
-        # put into dictionary #
         return {
-            "loss1": {
-                "losses": losses1,
-                "indices": indices_tuple,
-                "reduction_type": "triplet",
+            "triplet_loss": {
+                "losses": torch.relu(self.distance.margin(ap, an) + self.margin),
+                "indices": triplets,
             },
-            "loss2": {
-                "losses": losses2,
+            "pos_loss": {
+                "losses": torch.relu(self.distance.margin(ap, 0.5)),
                 "indices": (anchors, positives),
-                "reduction_type": "pos_pair",
             },
-            "loss3": {
-                "losses": losses3,
+            "norm_loss": {
+                "losses": (embeddings.norm(dim=1) - 1).square(),
+                "indices": torch.arange(len(embeddings), device=embeddings.device),
+            },
+            "mean_loss": {
+                "losses": embeddings.mean().abs(),
                 "indices": None,
-                "reduction_type": "already_reduced",
             },
         }
 
-    def get_default_reducer(self):
+    def default_reducer(self) -> BaseReducer:
         return AvgNonZeroReducer()
 
-    def get_default_distance(self):
+    def default_distance(self) -> BaseDistance:
         return CosineSimilarity()
 
-    def _sub_loss_names(self):
-        return ["loss1", "loss2", "loss3"]
+
+loss_func = FullFeaturedLoss(margin=0.2)
+embeddings = torch.randn(32, 16, requires_grad=True)
+labels = torch.randint(0, 4, (32,))
+loss = loss_func(embeddings, labels)
+loss.backward()
+
+terms = loss_func.loss_terms(embeddings, labels)
+assert set(terms) == {"triplet_loss", "pos_loss", "norm_loss", "mean_loss"}
+assert loss_func(embeddings, torch.arange(32)).item() == 0
 ```
 
 Here are a few details about this loss function:
 
- - It operates on triplets, so ```convert_to_triplets``` is used to convert ```indices_tuple``` to triplet form.
- - ```self.distance``` returns a pairwise distance matrix
- - The output of the loss function is a dictionary that contains multiple sub losses. This is why it overrides the ```_sub_loss_names``` function.
- - ```get_default_reducer``` is overriden to use ```AvgNonZeroReducer``` by default, rather than ```MeanReducer```.
- - ```get_default_distance``` is overriden to use ```CosineSimilarity``` by default, rather than ```LpDistances(p=2)```.
+- It operates on triplets, so `convert_to_triplets` turns labels or a supplied
+  `indices_tuple` into a `TripletIndices`. Without `ref_emb`, `ref_labels` is
+  `None` and the conversion excludes each embedding from its own positives.
+- `self.distance(embeddings, ref_emb)` returns the `(N, N)` matrix of
+  `embeddings` with themselves when `ref_emb` is `None`, or the `(N, M)` matrix
+  against `ref_emb`.
+- When there are no triplets, it returns `{}`, which
+  [reduces](../reducers.md#reduction) to a differentiable zero, so the call with
+  all-distinct labels returns zero.
+- Each term's `indices` tell the reducer what one value of `losses` is; see
+  [loss terms](#loss-terms). Regularization penalties are not objective terms;
+  the base class adds them after reduction.
+- `default_reducer` and `default_distance` select the components used when the
+  caller passes none. The user can override either through the
+  [loss options](../losses.md#loss-options).
+- Constructor arguments are declared before `**options: Unpack[LossOptions]`,
+  and `**options` is forwarded to the base class, so the loss accepts the
+  keyword-only options `distance`, `reducer`, `embedding_regularizer`, and
+  `embedding_reg_weight`.
 
+## Pair-based losses
 
-## More on distances
-To make your loss compatible with inverted distances (like cosine similarity), you can check ```self.distance.is_inverted```, and write whatever logic necessary to make your loss make sense in that context. 
+[GenericPairLoss](../losses/generic_pair_loss.md) converts labels or mined
+indices into pairs, returns `{}` when there are none, computes the distance
+matrix, and calls `pair_loss(mat, pairs)`. Subclass it and implement only
+`pair_loss`, using `pair_values` for the distances of the selected pairs or
+`pair_masks` for boolean masks over the whole matrix. Its page has a complete
+`HingePairLoss` example, including a separate reference set.
 
-There are also a few functions in ```self.distance``` that provide some of this logic, specifically ```self.distance.smallest_dist```, ```self.distance.largest_dist```, and ```self.distance.margin```. The function definitions are pretty straightforward, and you can find them [here](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/src/pytorch_metric_learning/distances/base_distance.py#L39-L53).
+## Losses with learnable parameters
 
-## Using ```indices_tuple```
-
-This is an optional argument passed in from the outside. (See the [overview](../../#using-losses-and-miners-in-your-training-loop) for an example.) It currently has 3 possible forms: 
-
- - ```None```
- - A tuple of size 4, representing the indices of mined pairs (anchors, positives, anchors, negatives)
- - A tuple of size 3, representing the indices of mined triplets (anchors, positives, negatives)
-
-To use ```indices_tuple```, use the appropriate conversion function. You don't need to know what type will be passed in, as the conversion function takes care of that:
+Extend [BaseProxyLoss](../losses/base_proxy_loss.md) for a loss with one
+learnable vector per class. It owns the `weight` parameter, shaped
+`(num_weights, embedding_size)`, the keyword-only `weight_regularizer`,
+`weight_reg_weight`, and `weight_init_func` arguments, and the `weight_reg_loss`
+term that is added after reduction. Override `default_weight_init` to change
+the initialization used when the caller passes no `weight_init_func`:
 
 ```python
-from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
+from typing import Unpack
 
-# For a pair based loss
-# After conversion, indices_tuple will be a tuple of size 4
-indices_tuple = lmu.convert_to_pairs(indices_tuple, labels)
+import torch
+from pytorch_metric_learning import regularizers
+from pytorch_metric_learning.losses import BaseProxyLoss
+from pytorch_metric_learning.types import ProxyLossOptions
 
-# For a triplet based loss
-# After conversion, indices_tuple will be a tuple of size 3
-indices_tuple = lmu.convert_to_triplets(indices_tuple, labels)
 
-# For a classification based loss
-# miner_weights.shape == labels.shape
-# You can use these to weight your loss
-miner_weights = lmu.convert_to_weights(indices_tuple, labels, dtype=torch.float32)
+class CenterLoss(BaseProxyLoss):
+    def __init__(
+        self, num_classes: int, embedding_size: int, **options: Unpack[ProxyLossOptions]
+    ) -> None:
+        super().__init__(num_classes, embedding_size, **options)
+
+    def default_weight_init(self, weight):
+        torch.nn.init.xavier_uniform_(weight)
+
+    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+        if labels is None:
+            raise ValueError("CenterLoss requires labels")
+        if indices_tuple is not None or ref_emb is not None:
+            raise ValueError("CenterLoss does not support indices_tuple or ref_emb")
+        if self.weight.device != embeddings.device or (
+            not torch.is_autocast_enabled(embeddings.device.type)
+            and self.weight.dtype != embeddings.dtype
+        ):
+            raise ValueError("Move the loss with .to(device, dtype) before calling it")
+        losses = (embeddings - self.weight[labels]).square().sum(dim=1)
+        return {
+            "loss": {
+                "losses": losses,
+                "indices": torch.arange(len(embeddings), device=embeddings.device),
+            }
+        }
+
+
+loss_func = CenterLoss(
+    num_classes=4,
+    embedding_size=16,
+    weight_regularizer=regularizers.LpRegularizer(),
+    weight_reg_weight=0.01,
+)
+optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.1)
+embeddings = torch.randn(32, 16)
+labels = torch.randint(0, 4, (32,))
+loss = loss_func(embeddings, labels)
+loss.backward()
+optimizer.step()
+assert set(loss_func.loss_terms(embeddings, labels)) == {"loss", "weight_reg_loss"}
 ```
 
+Raise an error for unsupported arguments instead of ignoring them, so callers
+learn which combinations the loss supports. Do not move or cast parameters
+inside `forward`; that would silently change optimizer state.
 
-## Reduction type
-The purpose of reduction types is to provide extra information to the reducer, if it needs it. For example, you could write a reducer that behaves differently depending on what kind of loss it receives. Here's a summary of each reduction type:
+A loss with learnable parameters that are not one vector per class, such as a
+temperature, can declare them on a `BaseMetricLossFunction` subclass and add a
+penalty by overriding `regularization_terms(embeddings)`. Penalty term names
+must differ from the names `compute_loss` returns; a shared name raises
+`ValueError` from `forward` and `loss_terms`.
 
-| Reduction type | Meaning | Shape of "indices" |
-|--|--|--|
-| "triplet" | Each entry in "losses" represents a triplet. | A tuple of 3 tensors (anchors, positives, negatives), each of size (N,). |
-| "pos_pair" | Each entry in "losses" represents a positive pair. | A tuple of 2 tensors (anchors, positives), each of size (N,). |
-| "neg_pair" | Each entry in "losses" represents a negative pair. | A tuple of 2 tensors (anchors, negatives), each of size (N,). |
-| "element" | Each entry in "losses" represents something other than a tuple, e.g. an element in a batch. | A tensor of size (N,) |  
-| "already_reduced" | "losses" is a single number, i.e. the loss has already been reduced. | Should be ```None``` |
+## More on distances
+
+To make your loss compatible with both distances and similarities, check
+`self.distance.is_inverted`, which is `True` for similarities, where larger
+means closer. Two helpers cover the common cases:
+
+- `self.distance.margin(x, y)` returns `x - y` for distances and `y - x` for
+  similarities, so `margin(anchor_positive, anchor_negative)` is positive when a
+  triplet is violated in either orientation.
+- `self.distance.pairwise(query, ref)` returns the distance between
+  corresponding rows, applying the distance's normalization and power.
+
+To select the closest value, pick `torch.max` or `torch.min` from
+`is_inverted`. To require a specific distance, check it in the constructor:
+
+```python
+from typing import Unpack
+
+import torch
+from pytorch_metric_learning.distances import BaseDistance, CosineSimilarity, LpDistance
+from pytorch_metric_learning.losses import BaseMetricLossFunction
+from pytorch_metric_learning.types import LossOptions
+
+
+class NearestNeighborLoss(BaseMetricLossFunction):
+    def __init__(self, **options: Unpack[LossOptions]) -> None:
+        super().__init__(**options)
+        if not isinstance(self.distance, CosineSimilarity):
+            raise TypeError("NearestNeighborLoss requires CosineSimilarity")
+
+    def default_distance(self) -> BaseDistance:
+        return CosineSimilarity()
+
+    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
+        if ref_emb is None:
+            mat = self.distance(embeddings)
+            mat = mat.masked_fill(
+                torch.eye(len(mat), dtype=torch.bool, device=mat.device), -torch.inf
+            )
+        else:
+            mat = self.distance(embeddings, ref_emb)
+        closest = torch.amax if self.distance.is_inverted else torch.amin
+        nearest = closest(mat, dim=1)
+        return {
+            "loss": {
+                "losses": 1 - nearest,
+                "indices": torch.arange(len(embeddings), device=embeddings.device),
+            }
+        }
+
+
+loss = NearestNeighborLoss()(torch.randn(8, 4))
+try:
+    NearestNeighborLoss(distance=LpDistance())
+except TypeError:
+    pass
+```
+
+## Using `indices_tuple`
+
+This optional argument comes from the caller, usually from a miner. Inside
+`compute_loss` it has one of three forms:
+
+- `None`
+- `types.PairIndices(pos_anchors, positives, neg_anchors, negatives)`, the
+  indices of mined pairs
+- `types.TripletIndices(anchors, positives, negatives)`, the indices of mined
+  triplets
+
+Anchors index `embeddings`; positives and negatives index `ref_emb`, or
+`embeddings` when `ref_emb` is `None`. Use the conversion function for the
+form your loss needs; each accepts any of the three inputs, as well as plain
+tuples:
+
+```python
+import torch
+from pytorch_metric_learning.types import PairIndices, TripletIndices
+from pytorch_metric_learning.utils import indexing
+
+labels = torch.tensor([0, 0, 1, 1, 2])
+pairs = indexing.convert_to_pairs(None, labels)
+triplets = indexing.convert_to_triplets(pairs, labels)
+weights = indexing.convert_to_weights(triplets, labels, dtype=torch.float32)
+plain = (torch.tensor([0, 2]), torch.tensor([1, 3]), torch.tensor([4, 4]))
+
+assert isinstance(pairs, PairIndices)
+assert isinstance(triplets, TripletIndices)
+assert isinstance(indexing.convert_to_pairs(plain, labels), PairIndices)
+assert weights.shape == (5,) and weights.max() == 1
+```
+
+`convert_to_pairs` reads a triplet `(a, p, n)` as the pairs `(a, p)` and
+`(a, n)`, and `convert_to_triplets` combines each anchor's positive pairs with
+its negative pairs. With `indices_tuple=None`, both use labels.
+`convert_to_weights` returns the [miner weights](../losses.md#miner-weights).
+The [index utilities](../indexing.md) page documents each function's defaults
+and errors.
+
+## Loss terms
+
+`compute_loss` returns a [`types.LossDict`](../types.md#lossdict): term names
+mapped to terms that follow the [`LossTerm` contract](../types.md#lossterm).
+Each term's `indices` tell the reducer whether its `losses` are already reduced
+or belong to elements, pairs, or triplets, and an optional `divisor` requires
+[DivisorReducer](../reducers.md#divisorreducer), as in
+[ProxyAnchorLoss](../losses/proxy_anchor_loss.md) and
+[MarginLoss](../losses/margin_loss.md). `loss_terms` returns the `LossDict`
+before reduction, including regularization terms; see
+[unreduced loss terms](../losses.md#unreduced-loss-terms).
 
 ## Some useful examples to look at
-Here are some existing loss functions that might be useful for reference:
 
 - [ContrastiveLoss](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/src/pytorch_metric_learning/losses/contrastive_loss.py)
 - [MultiSimilarityLoss](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/src/pytorch_metric_learning/losses/multi_similarity_loss.py)
 - [NormalizedSoftmaxLoss](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/src/pytorch_metric_learning/losses/normalized_softmax_loss.py)
+- [ProxyAnchorLoss](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/src/pytorch_metric_learning/losses/proxy_anchor_loss.py)

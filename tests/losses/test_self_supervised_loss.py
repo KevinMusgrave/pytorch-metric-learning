@@ -27,6 +27,10 @@ def ntxent_reference(*views, symmetric, temperature=0.07):
     return torch.stack(terms).mean(), len(terms)
 
 
+def reference_loss(*views, symmetric):
+    return ntxent_reference(*views, symmetric=symmetric)[0]
+
+
 class TestSelfSupervisedLoss(unittest.TestCase):
     def test_more_than_two_views_match_scalar_reference(self):
         torch.manual_seed(5)
@@ -36,13 +40,12 @@ class TestSelfSupervisedLoss(unittest.TestCase):
             loss_func = losses.SelfSupervisedLoss(
                 losses.NTXentLoss(), symmetric=symmetric
             )
-            reference = partial(ntxent_reference, symmetric=symmetric)
-            self.assertEqual(reference(*views)[1], expected_pairs[symmetric])
+            reference = partial(reference_loss, symmetric=symmetric)
+            pairs = ntxent_reference(*views, symmetric=symmetric)[1]
+            self.assertEqual(pairs, expected_pairs[symmetric])
             for dtype in TEST_DTYPES:
                 with self.subTest(symmetric=symmetric, dtype=dtype):
-                    helpers.assert_matches_float64(
-                        loss_func, lambda *x: reference(*x)[0], views, dtype
-                    )
+                    helpers.assert_matches_float64(loss_func, reference, views, dtype)
 
     def test_every_view_receives_gradients(self):
         for symmetric in (True, False):
@@ -54,7 +57,7 @@ class TestSelfSupervisedLoss(unittest.TestCase):
                 *views
             ).backward()
             for view in views:
-                self.assertGreater(view.grad.abs().sum().item(), 0)
+                self.assertGreater(torch.as_tensor(view.grad).abs().sum().item(), 0)
 
     def test_rejects_views_of_different_shapes(self):
         loss_func = losses.SelfSupervisedLoss(losses.NTXentLoss())

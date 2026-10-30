@@ -1,5 +1,6 @@
 import unittest
 from collections import Counter
+from typing import Any
 
 import torch
 
@@ -27,7 +28,7 @@ class TestMPerClassSampler(unittest.TestCase):
 
     def test_rejects_impossible_batches(self):
         labels = [0, 0, 1, 1, 2, 2]
-        cases = (
+        cases: tuple[tuple[dict[str, Any], str], ...] = (
             ({"m": 2, "batch_size": 8}, "unique labels"),
             ({"m": 2, "batch_size": 5}, "without any remainder"),
             ({"m": 2, "batch_size": 0}, "batch_size must be positive"),

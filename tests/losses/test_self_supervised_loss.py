@@ -1,13 +1,68 @@
 import unittest
+from functools import partial
 
 import torch
 
 from pytorch_metric_learning import losses
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
+
+
+def ntxent_reference(*views, symmetric, temperature=0.07):
+    num_samples = len(views[0])
+    unit = torch.nn.functional.normalize(torch.cat(views), dim=1)
+    labels = torch.arange(num_samples, device=unit.device).repeat(len(views))
+    anchors = range(len(unit)) if symmetric else range(num_samples)
+    references = range(len(unit)) if symmetric else range(num_samples, len(unit))
+    terms = []
+    for a in anchors:
+        negatives = [r for r in references if r != a and labels[r] != labels[a]]
+        negative_sum = sum(
+            torch.exp(unit[a].dot(unit[n]) / temperature) for n in negatives
+        )
+        for p in references:
+            if p != a and labels[p] == labels[a]:
+                positive = torch.exp(unit[a].dot(unit[p]) / temperature)
+                terms.append(-torch.log(positive / (positive + negative_sum)))
+    return torch.stack(terms).mean(), len(terms)
 
 
 class TestSelfSupervisedLoss(unittest.TestCase):
+    def test_more_than_two_views_match_scalar_reference(self):
+        torch.manual_seed(5)
+        views = [torch.randn(3, 4) for _ in range(4)]
+        expected_pairs = {True: 4 * 3 * 3, False: 3 * 3}
+        for symmetric in (True, False):
+            loss_func = losses.SelfSupervisedLoss(
+                losses.NTXentLoss(), symmetric=symmetric
+            )
+            reference = partial(ntxent_reference, symmetric=symmetric)
+            self.assertEqual(reference(*views)[1], expected_pairs[symmetric])
+            for dtype in TEST_DTYPES:
+                with self.subTest(symmetric=symmetric, dtype=dtype):
+                    helpers.assert_matches_float64(
+                        loss_func, lambda *x: reference(*x)[0], views, dtype
+                    )
+
+    def test_every_view_receives_gradients(self):
+        for symmetric in (True, False):
+            views = [
+                torch.randn(4, 3, requires_grad=True, device=TEST_DEVICE)
+                for _ in range(3)
+            ]
+            losses.SelfSupervisedLoss(losses.SupConLoss(), symmetric=symmetric)(
+                *views
+            ).backward()
+            for view in views:
+                self.assertGreater(view.grad.abs().sum().item(), 0)
+
+    def test_rejects_views_of_different_shapes(self):
+        loss_func = losses.SelfSupervisedLoss(losses.NTXentLoss())
+        view = torch.randn(4, 3, device=TEST_DEVICE)
+        for other in (view[:3], view[:, :2]):
+            with self.assertRaisesRegex(ValueError, "same shape"):
+                loss_func(view, view, other)
+
     def test_ssl_wrapper_all(self):
         for dtype in TEST_DTYPES:
             for symmetric in [True, False]:

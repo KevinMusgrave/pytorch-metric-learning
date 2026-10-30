@@ -32,9 +32,24 @@ class ShardedIndex:
 class DeviceIndex(ShardedIndex):
     def __init__(self, device):
         self.device = device
+        self.contexts = []
 
     def getDevice(self):
         return self.device
+
+    def record_context(self):
+        if torch.cuda.is_available():
+            self.contexts.append(
+                (torch.cuda.current_device(), torch.cuda.current_stream())
+            )
+
+    def add(self, tensor):
+        self.record_context()
+        super().add(tensor)
+
+    def search(self, tensor, k):
+        self.record_context()
+        return super().search(tensor, k)
 
 
 class TestRetrievalBackends(unittest.TestCase):
@@ -289,6 +304,23 @@ class TestRetrievalBackends(unittest.TestCase):
         self.assertEqual(index.added.device, query.device)
         self.assertEqual(index.searched.device, query.device)
         self.assertEqual(index.searched.dtype, torch.float32)
+
+    @pytest.mark.cuda
+    def test_direct_gpu_calls_use_the_index_device_and_its_stream(self):
+        rows = torch.ones(2, 6, device="cuda:1", dtype=torch.float16)
+        strided = rows[:, ::2]
+        stream = torch.cuda.Stream(device="cuda:1")
+        for selected in (None, stream):
+            with torch.cuda.stream(selected), torch.cuda.device(0):
+                expected = torch.cuda.current_stream(1) if selected is None else stream
+                index = DeviceIndex(1)
+                retrieval._add_to_index_and_search(index, strided, strided, 1)
+                self.assertEqual(torch.cuda.current_device(), 0)
+            self.assertEqual(index.contexts, [(1, expected), (1, expected)])
+            for tensor in (index.added, index.searched):
+                self.assertEqual(tensor.device, torch.device("cuda:1"))
+                self.assertEqual(tensor.dtype, torch.float32)
+                self.assertTrue(tensor.is_contiguous())
 
     @pytest.mark.cuda
     def test_inputs_leave_another_gpu_for_the_cpu(self):

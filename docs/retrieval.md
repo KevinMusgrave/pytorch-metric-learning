@@ -153,8 +153,8 @@ evaluation.FaissKNN(reset_before=True, reset_after=True, index_init_fn=None, gpu
   list or tuple raises `TypeError`; an empty one raises `ValueError`.
 
 Faiss receives float32 inputs, and results return to the query's device. An
-input stays on its GPU when the index is one GPU index on that same device;
-otherwise, including for sharded multi-GPU indices, Faiss receives a CPU copy.
+input stays on its GPU when the index is one GPU index on that same device, and
+the call runs in that device's context on its current PyTorch stream; otherwise, including for sharded multi-GPU indices, Faiss receives a CPU copy.
 A GPU search requires a GPU build of Faiss, one that provides
 `faiss.GpuIndex`, with at least one visible GPU, and a CUDA query or `gpus`.
 The `faiss-cpu` package never searches on a GPU, even when Faiss reports one.

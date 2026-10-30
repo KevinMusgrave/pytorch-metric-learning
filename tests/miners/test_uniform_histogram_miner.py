@@ -4,9 +4,11 @@ import torch
 
 from pytorch_metric_learning.distances import LpDistance, SNRDistance
 from pytorch_metric_learning.miners import UniformHistogramMiner
-from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
+from pytorch_metric_learning.utils import indexing
 
 from .. import TEST_DEVICE, TEST_DTYPES
+
+HISTC_UNSUPPORTED_DTYPES = {torch.float16}
 
 
 class TestUniformHistogramMiner(unittest.TestCase):
@@ -33,27 +35,27 @@ class TestUniformHistogramMiner(unittest.TestCase):
                 )
                 labels = torch.randint(0, 2, size=(batch_size,), device=TEST_DEVICE)
 
-                a1, p, a2, n = lmu.get_all_pairs_indices(labels)
+                a1, p, a2, n = indexing.get_all_pairs_indices(labels)
                 dist_mat = distance(embeddings)
                 pos_pairs = dist_mat[a1, p]
                 neg_pairs = dist_mat[a2, n]
 
                 a1, p, a2, n = miner(embeddings, labels)
 
-                if dtype == torch.float16:
-                    continue  # histc doesn't work for Half tensor
+                if dtype in HISTC_UNSUPPORTED_DTYPES:
+                    continue
 
                 pos_histogram = torch.histc(
                     dist_mat[a1, p],
                     bins=num_bins,
-                    min=torch.min(pos_pairs),
-                    max=torch.max(pos_pairs),
+                    min=torch.min(pos_pairs).item(),
+                    max=torch.max(pos_pairs).item(),
                 )
                 neg_histogram = torch.histc(
                     dist_mat[a2, n],
                     bins=num_bins,
-                    min=torch.min(neg_pairs),
-                    max=torch.max(neg_pairs),
+                    min=torch.min(neg_pairs).item(),
+                    max=torch.max(neg_pairs).item(),
                 )
 
                 self.assertTrue(
@@ -68,6 +70,6 @@ class TestUniformHistogramMiner(unittest.TestCase):
         batch_size = 32
         for dtype in TEST_DTYPES:
             embeddings = torch.randn(batch_size, 64).type(dtype).to(TEST_DEVICE)
-            labels = torch.arange(batch_size)
+            labels = torch.arange(batch_size).to(TEST_DEVICE)
             a1, p, _, _ = miner(embeddings, labels)
             self.assertTrue(len(a1) == len(p) == 0)

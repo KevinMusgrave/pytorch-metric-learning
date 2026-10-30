@@ -17,8 +17,4 @@ class TestSettingReducers(unittest.TestCase):
                 AvgNonZeroReducer(),
             ]:
                 L = loss(reducer=reducer)
-                if isinstance(L, TripletMarginLoss):
-                    assert type(L.reducer) is type(reducer)
-                else:
-                    for v in L.reducer.reducers.values():
-                        assert type(v) is type(reducer)
+                assert L.reducer is reducer

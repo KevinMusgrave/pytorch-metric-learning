@@ -3,9 +3,10 @@ import unittest
 import torch
 
 from pytorch_metric_learning.losses import CircleLoss
+from pytorch_metric_learning.reducers import MeanReducer
 
-from .. import TEST_DEVICE, TEST_DTYPES
-from ..zzz_testing_utils.testing_utils import angle_to_coord
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
+from ..helpers import angle_to_coord
 
 
 class TestCircleLoss(unittest.TestCase):
@@ -13,7 +14,7 @@ class TestCircleLoss(unittest.TestCase):
         margin, gamma = 0.25, 256
         Op, On = 1 + margin, -margin
         delta_p, delta_n = 1 - margin, margin
-        loss_func = CircleLoss(m=margin, gamma=gamma)
+        loss_func = CircleLoss(margin=margin, gamma=gamma)
 
         for dtype in TEST_DTYPES:
             embedding_angles = [0, 20, 40, 60, 80]
@@ -21,10 +22,8 @@ class TestCircleLoss(unittest.TestCase):
                 [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
-            ).to(
-                TEST_DEVICE
-            )  # 2D embeddings
-            labels = torch.LongTensor([0, 0, 1, 1, 2])
+            ).to(TEST_DEVICE)
+            labels = torch.tensor([0, 0, 1, 1, 2], dtype=torch.long).to(TEST_DEVICE)
 
             loss = loss_func(embeddings, labels)
             loss.backward()
@@ -49,8 +48,10 @@ class TestCircleLoss(unittest.TestCase):
                 (4, 3),
             ]
 
-            normalized_embeddings = torch.nn.functional.normalize(embeddings)
-            correct_total = 0
+            normalized_embeddings = torch.nn.functional.normalize(
+                embeddings.detach().double()
+            )
+            correct_total = torch.zeros((), dtype=torch.float64, device=TEST_DEVICE)
             for i in range(len(normalized_embeddings)):
                 pos_logits = []
                 neg_logits = []
@@ -92,43 +93,76 @@ class TestCircleLoss(unittest.TestCase):
                         + torch.logsumexp(neg_logits, dim=0)
                     )
 
-            correct_total /= 4  # only 4 of the embeddings have both pos and neg pairs
-            self.assertTrue(torch.isclose(loss, correct_total))
+            num_anchors_with_pos_and_neg_pairs = 4
+            correct_total /= num_anchors_with_pos_and_neg_pairs
+            helpers.assert_close(loss, correct_total, dtype, atol=1e-8)
 
     def test_with_no_valid_pairs(self):
         margin, gamma = 0.4, 80
-        loss_func = CircleLoss(m=margin, gamma=gamma)
+        loss_func = CircleLoss(margin=margin, gamma=gamma)
         for dtype in TEST_DTYPES:
             embedding_angles = [0]
             embeddings = torch.tensor(
                 [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
-            ).to(
-                TEST_DEVICE
-            )  # 2D embeddings
-            labels = torch.LongTensor([0])
+            ).to(TEST_DEVICE)
+            labels = torch.tensor([0], dtype=torch.long).to(TEST_DEVICE)
             loss = loss_func(embeddings, labels)
             loss.backward()
             self.assertEqual(loss, 0)
 
     def test_overflow(self):
         margin, gamma = 0.4, 300
-        loss_func = CircleLoss(m=margin, gamma=gamma)
+        loss_func = CircleLoss(margin=margin, gamma=gamma)
         for dtype in TEST_DTYPES:
             embedding_angles = torch.arange(0, 180)
             embeddings = torch.tensor(
                 [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
-            ).to(
-                TEST_DEVICE
-            )  # 2D embeddings
-            labels = torch.randint(low=0, high=10, size=(180,))
+            ).to(TEST_DEVICE)
+            labels = torch.randint(low=0, high=10, size=(180,)).to(TEST_DEVICE)
             loss = loss_func(embeddings, labels)
             loss.backward()
             self.assertTrue(not torch.isnan(loss) and not torch.isinf(loss))
             self.assertTrue(loss > 0)
+
+    def test_anchors_without_positives_and_negatives_are_excluded(self):
+        margin, gamma = 0.25, 4
+        labels = torch.tensor([0, 0, 1, 1, 2, 0], device=TEST_DEVICE)
+        torch.manual_seed(6)
+        embeddings = torch.randn(6, 3)
+
+        def reference(x):
+            x = torch.nn.functional.normalize(x, dim=1)
+            sims = x @ x.T
+            losses = []
+            for a in range(len(labels)):
+                others = [k for k in range(len(labels)) if k != a]
+                pos = sims[a, [k for k in others if labels[k] == labels[a]]]
+                neg = sims[a, [k for k in others if labels[k] != labels[a]]]
+                if len(pos) == 0 or len(neg) == 0:
+                    continue
+                pos_logits = (
+                    -gamma
+                    * torch.relu(1 + margin - pos.detach())
+                    * (pos - (1 - margin))
+                )
+                neg_logits = gamma * torch.relu(neg.detach() + margin) * (neg - margin)
+                losses.append(
+                    torch.nn.functional.softplus(
+                        torch.logsumexp(pos_logits, 0) + torch.logsumexp(neg_logits, 0)
+                    )
+                )
+            return torch.stack(losses).mean()
+
+        loss_func = CircleLoss(margin=margin, gamma=gamma, reducer=MeanReducer())
+        for dtype in TEST_DTYPES:
+            with self.subTest(dtype=dtype):
+                helpers.assert_matches_float64(
+                    lambda x: loss_func(x, labels), reference, [embeddings], dtype
+                )
 
 
 if __name__ == "__main__":

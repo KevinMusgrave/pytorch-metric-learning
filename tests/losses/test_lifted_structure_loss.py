@@ -6,9 +6,10 @@ from pytorch_metric_learning.losses import (
     GeneralizedLiftedStructureLoss,
     LiftedStructureLoss,
 )
+from pytorch_metric_learning.types import PairIndices
 
-from .. import TEST_DEVICE, TEST_DTYPES
-from ..zzz_testing_utils.testing_utils import angle_to_coord
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
+from ..helpers import angle_to_coord
 
 
 class TestLiftedStructure(unittest.TestCase):
@@ -22,10 +23,8 @@ class TestLiftedStructure(unittest.TestCase):
                 [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
-            ).to(
-                TEST_DEVICE
-            )  # 2D embeddings
-            labels = torch.LongTensor([0, 0, 1, 1, 2])
+            ).to(TEST_DEVICE)
+            labels = torch.tensor([0, 0, 1, 1, 2], dtype=torch.long).to(TEST_DEVICE)
 
             loss = loss_func(embeddings, labels)
             loss.backward()
@@ -50,12 +49,12 @@ class TestLiftedStructure(unittest.TestCase):
                 (4, 3),
             ]
 
-            total_loss = 0
+            total_loss = torch.zeros((), dtype=dtype, device=TEST_DEVICE)
             embeddings = torch.nn.functional.normalize(embeddings)
             for a1, p in pos_pairs:
                 anchor, positive = embeddings[a1], embeddings[p]
                 pos_pair_component = torch.sqrt(torch.sum((anchor - positive) ** 2))
-                neg_pair_component = 0
+                neg_pair_component = torch.zeros((), dtype=dtype, device=TEST_DEVICE)
                 for a2, n in neg_pairs:
                     negative = embeddings[n]
                     if a2 == a1:
@@ -75,7 +74,7 @@ class TestLiftedStructure(unittest.TestCase):
 
             total_loss /= 2 * len(pos_pairs)
 
-            rtol = 1e-2 if dtype == torch.float16 else 1e-5
+            rtol = helpers.rtol(dtype)
             self.assertTrue(torch.isclose(loss, total_loss, rtol=rtol))
 
     def test_with_no_valid_pairs(self):
@@ -86,10 +85,8 @@ class TestLiftedStructure(unittest.TestCase):
                 [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
-            ).to(
-                TEST_DEVICE
-            )  # 2D embeddings
-            labels = torch.LongTensor([0])
+            ).to(TEST_DEVICE)
+            labels = torch.tensor([0], dtype=torch.long).to(TEST_DEVICE)
             loss = loss_func(embeddings, labels)
             loss.backward()
             self.assertEqual(loss, 0)
@@ -106,10 +103,8 @@ class TestGeneralizedLiftedStructureLoss(unittest.TestCase):
                 [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
-            ).to(
-                TEST_DEVICE
-            )  # 2D embeddings
-            labels = torch.LongTensor([0, 0, 1, 1, 2])
+            ).to(TEST_DEVICE)
+            labels = torch.tensor([0, 0, 1, 1, 2], dtype=torch.long).to(TEST_DEVICE)
 
             loss = loss_func(embeddings, labels)
             loss.backward()
@@ -135,18 +130,23 @@ class TestGeneralizedLiftedStructureLoss(unittest.TestCase):
             ]
 
             embeddings = torch.nn.functional.normalize(embeddings)
-            correct_total = 0
+            correct_total = torch.zeros((), dtype=dtype, device=TEST_DEVICE)
+            anchors_with_both = 0
             for i in range(len(embeddings)):
-                correct_pos_loss = 0
-                correct_neg_loss = 0
+                if not any(a == i for a, _ in pos_pairs) or not any(
+                    a == i for a, _ in neg_pairs
+                ):
+                    continue
+                anchors_with_both += 1
+                correct_pos_loss = torch.zeros((), dtype=dtype, device=TEST_DEVICE)
+                correct_neg_loss = torch.zeros((), dtype=dtype, device=TEST_DEVICE)
                 for a, p in pos_pairs:
                     if a == i:
                         anchor, positive = embeddings[a], embeddings[p]
                         correct_pos_loss += torch.exp(
                             torch.sqrt(torch.sum((anchor - positive) ** 2))
                         )
-                if correct_pos_loss > 0:
-                    correct_pos_loss = torch.log(correct_pos_loss)
+                correct_pos_loss = torch.log(correct_pos_loss)
 
                 for a, n in neg_pairs:
                     if a == i:
@@ -154,14 +154,13 @@ class TestGeneralizedLiftedStructureLoss(unittest.TestCase):
                         correct_neg_loss += torch.exp(
                             neg_margin - torch.sqrt(torch.sum((anchor - negative) ** 2))
                         )
-                if correct_neg_loss > 0:
-                    correct_neg_loss = torch.log(correct_neg_loss)
+                correct_neg_loss = torch.log(correct_neg_loss)
 
                 correct_total += torch.relu(correct_pos_loss + correct_neg_loss)
 
-            correct_total /= embeddings.size(0)
+            correct_total /= anchors_with_both
 
-            rtol = 1e-2 if dtype == torch.float16 else 1e-5
+            rtol = helpers.rtol(dtype)
             self.assertTrue(torch.isclose(loss, correct_total, rtol=rtol))
 
     def test_with_no_valid_pairs(self):
@@ -172,10 +171,39 @@ class TestGeneralizedLiftedStructureLoss(unittest.TestCase):
                 [angle_to_coord(a) for a in embedding_angles],
                 requires_grad=True,
                 dtype=dtype,
-            ).to(
-                TEST_DEVICE
-            )  # 2D embeddings
-            labels = torch.LongTensor([0])
+            ).to(TEST_DEVICE)
+            labels = torch.tensor([0], dtype=torch.long).to(TEST_DEVICE)
             loss = loss_func(embeddings, labels)
             loss.backward()
             self.assertEqual(loss, 0)
+
+
+class TestLiftedStructureReferenceSet(unittest.TestCase):
+    def test_separate_reference_set_is_rejected(self):
+        embeddings = torch.randn(4, 3, device=TEST_DEVICE)
+        labels = torch.tensor([0, 0, 1, 1]).to(TEST_DEVICE)
+        loss_func = LiftedStructureLoss()
+        self.assertTrue(torch.isfinite(loss_func(embeddings, labels)))
+        with self.assertRaisesRegex(ValueError, "ref_emb"):
+            loss_func(
+                embeddings,
+                labels,
+                ref_emb=torch.randn(5, 3, device=TEST_DEVICE),
+                ref_labels=torch.tensor([0, 1, 0, 1, 1], device=TEST_DEVICE),
+            )
+
+
+class TestLiftedStructureGrouping(unittest.TestCase):
+    def test_positive_pair_without_negatives_has_finite_zero_gradient(self):
+        embeddings = torch.randn(4, 3, device=TEST_DEVICE, requires_grad=True)
+        pairs = PairIndices(
+            torch.tensor([0, 2], device=TEST_DEVICE),
+            torch.tensor([1, 3], device=TEST_DEVICE),
+            torch.tensor([2], device=TEST_DEVICE),
+            torch.tensor([0], device=TEST_DEVICE),
+        )
+        terms = LiftedStructureLoss().loss_terms(embeddings, indices_tuple=pairs)
+        LiftedStructureLoss()(embeddings, indices_tuple=pairs).backward()
+        assert embeddings.grad is not None
+        self.assertTrue(torch.isfinite(embeddings.grad).all())
+        self.assertEqual(terms["loss"]["losses"][0].item(), 0)

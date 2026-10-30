@@ -1,73 +1,44 @@
-import numpy as np
-import torch
+import math
 
-from ..distances import LpDistance
-from ..utils import common_functions as c_f
-from ..utils import loss_and_miner_utils as lmu
+import torch
+from torch import Tensor
+
+from ..distances import BaseDistance, LpDistance
+from ..types import IndicesTuple, TripletIndices
+from ..utils import _common, indexing
 from .base_miner import BaseMiner
 
 
 class AngularMiner(BaseMiner):
-    """
-    Returns triplets that form an angle greater than some threshold (angle).
-    The angle is computed as defined in the angular loss paper:
-    https://arxiv.org/abs/1708.01682
-    """
-
-    def __init__(self, angle=20, **kwargs):
-        super().__init__(**kwargs)
-        c_f.assert_distance_type(
+    def __init__(
+        self, alpha: float = 20, *, distance: BaseDistance | None = None
+    ) -> None:
+        super().__init__(distance=distance)
+        _common.check_distance_type(
             self, LpDistance, p=2, power=1, normalize_embeddings=True
         )
-        self.angle = np.radians(angle)
-        self.add_to_recordable_attributes(list_of_names=["angle"], is_stat=False)
-        self.add_to_recordable_attributes(
-            list_of_names=[
-                "average_angle",
-                "average_angle_above_threshold",
-                "average_angle_below_threshold",
-                "min_angle",
-                "max_angle",
-                "std_of_angle",
-            ],
-            is_stat=True,
-        )
+        self.alpha = alpha
 
-    def mine(self, embeddings, labels, ref_emb, ref_labels):
-        anchor_idx, positive_idx, negative_idx = lmu.get_all_triplets_indices(
-            labels, ref_labels
+    def mine(
+        self,
+        embeddings: Tensor,
+        labels: Tensor,
+        indices_tuple: IndicesTuple | None,
+        ref_emb: Tensor | None,
+        ref_labels: Tensor | None,
+    ) -> IndicesTuple:
+        anchor_idx, positive_idx, negative_idx = indexing.convert_to_triplets(
+            indices_tuple, labels, ref_labels
         )
-        anchors, positives, negatives = (
-            embeddings[anchor_idx],
-            ref_emb[positive_idx],
-            ref_emb[negative_idx],
+        reference, _ = _common.resolve_reference(
+            embeddings, labels, ref_emb, ref_labels
         )
+        anchors = self.distance.normalize(embeddings[anchor_idx])
+        positives = self.distance.normalize(reference[positive_idx])
+        negatives = self.distance.normalize(reference[negative_idx])
         centers = (anchors + positives) / 2
-        ap_dist = self.distance.pairwise_distance(anchors, positives)
-        nc_dist = self.distance.pairwise_distance(negatives, centers)
+        ap_dist = torch.linalg.vector_norm(anchors - positives, dim=1)
+        nc_dist = torch.linalg.vector_norm(negatives - centers, dim=1)
         angles = torch.atan(ap_dist / (2 * nc_dist))
-        threshold_condition = angles > self.angle
-        self.set_stats(angles, threshold_condition)
-        return (
-            anchor_idx[threshold_condition],
-            positive_idx[threshold_condition],
-            negative_idx[threshold_condition],
-        )
-
-    def set_stats(self, angles, threshold_condition):
-        if self.collect_stats:
-            with torch.no_grad():
-                if len(angles) > 0:
-                    self.average_angle = np.degrees(torch.mean(angles).item())
-                    self.min_angle = np.degrees(torch.min(angles).item())
-                    self.max_angle = np.degrees(torch.max(angles).item())
-                    self.std_of_angle = np.degrees(torch.std(angles).item())
-                if torch.sum(threshold_condition) > 0:
-                    self.average_angle_above_threshold = np.degrees(
-                        torch.mean(angles[threshold_condition]).item()
-                    )
-                negated_condition = ~threshold_condition
-                if torch.sum(negated_condition) > 0:
-                    self.average_angle_below_threshold = np.degrees(
-                        torch.mean(angles[~threshold_condition]).item()
-                    )
+        keep = angles > math.radians(self.alpha)
+        return TripletIndices(anchor_idx[keep], positive_idx[keep], negative_idx[keep])

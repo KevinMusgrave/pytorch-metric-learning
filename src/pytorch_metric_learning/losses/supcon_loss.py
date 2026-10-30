@@ -1,45 +1,38 @@
-from ..distances import CosineSimilarity
-from ..reducers import AvgNonZeroReducer
-from ..utils import common_functions as c_f
-from ..utils import loss_and_miner_utils as lmu
+from typing import Unpack
+
+import torch
+from torch import Tensor
+
+from ..distances import BaseDistance, CosineSimilarity
+from ..reducers import AvgNonZeroReducer, BaseReducer
+from ..types import LossDict, LossOptions, PairIndices
+from ..utils import _common
 from .generic_pair_loss import GenericPairLoss
 
 
-# adapted from https://github.com/HobbitLong/SupContrast
 class SupConLoss(GenericPairLoss):
-    def __init__(self, temperature=0.1, **kwargs):
-        super().__init__(mat_based_loss=True, **kwargs)
+    def __init__(
+        self, temperature: float = 0.1, **options: Unpack[LossOptions]
+    ) -> None:
+        super().__init__(**options)
         self.temperature = temperature
-        self.add_to_recordable_attributes(list_of_names=["temperature"], is_stat=False)
 
-    def _compute_loss(self, mat, pos_mask, neg_mask):
-        if pos_mask.bool().any() and neg_mask.bool().any():
-            # if dealing with actual distances, use negative distances
-            if not self.distance.is_inverted:
-                mat = -mat
-            mat = mat / self.temperature
-            mat_max, _ = mat.max(dim=1, keepdim=True)
-            mat = mat - mat_max.detach()  # for numerical stability
+    def pair_loss(self, mat: Tensor, pairs: PairIndices) -> LossDict:
+        pos_mask, neg_mask = self.pair_masks(mat, pairs)
+        if not self.distance.is_inverted:
+            mat = -mat
+        mat = mat / self.temperature
+        denominator = _common.logsumexp(
+            mat, keep_mask=pos_mask | neg_mask, add_one=False, dim=1
+        )
+        log_prob = mat - denominator
+        positives = pos_mask.sum(dim=1)
+        rows = torch.where(positives > 0)[0]
+        mean_log_prob_pos = (pos_mask * log_prob).sum(dim=1)[rows] / positives[rows]
+        return {"loss": {"losses": -mean_log_prob_pos, "indices": rows}}
 
-            denominator = lmu.logsumexp(
-                mat, keep_mask=(pos_mask + neg_mask).bool(), add_one=False, dim=1
-            )
-            log_prob = mat - denominator
-            mean_log_prob_pos = (pos_mask * log_prob).sum(dim=1) / (
-                pos_mask.sum(dim=1) + c_f.small_val(mat.dtype)
-            )
-
-            return {
-                "loss": {
-                    "losses": -mean_log_prob_pos,
-                    "indices": c_f.torch_arange_from_size(mat),
-                    "reduction_type": "element",
-                }
-            }
-        return self.zero_losses()
-
-    def get_default_reducer(self):
+    def default_reducer(self) -> BaseReducer:
         return AvgNonZeroReducer()
 
-    def get_default_distance(self):
+    def default_distance(self) -> BaseDistance:
         return CosineSimilarity()

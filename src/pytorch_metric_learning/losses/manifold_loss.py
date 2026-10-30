@@ -1,130 +1,107 @@
-import numpy as np
-import torch
-from torch import nn
+import math
 
-from ..distances import CosineSimilarity
-from ..utils import common_functions as c_f
+import torch
+from torch import Tensor, nn
+
+from ..distances import BaseDistance, CosineSimilarity
+from ..regularizers import BaseRegularizer
+from ..types import IndicesTuple, LossDict
+from ..utils import _common
 from .base_metric_loss_function import BaseMetricLossFunction
 
 
 class ManifoldLoss(BaseMetricLossFunction):
-    r"""
-    The parameters are defined as in the paper https://openaccess.thecvf.com/content_CVPR_2019/papers/Aziere_Ensemble_Deep_Manifold_Similarity_Learning_Using_Hard_Proxies_CVPR_2019_paper.pdf
-    - l: embedding size.
-
-    - K: number of proxies. Optional
-
-    - lambdaC: regularization weight. Used in the formula
-                :math:`loss = loss^{int} + \lambda_C*loss^{ctx}`.
-        For :math:`\lambda_C=0` use only intrinsic loss, for :math:`\lambda_C=\infty` use only context loss.
-        Optional
-
-    - alpha: parameter of the Random Walk. It is contained in :math:`(0,1)` and specifies the amount of similarity from
-           each node is passed to neighbor nodes. Optional
-
-    - margin: margin used in the calculation of the loss. Optional
-    """
-
     def __init__(
         self,
-        l: int,
-        K: int = 50,
-        lambdaC: float = 1.0,
+        embedding_size: int,
+        num_proxies: int = 50,
+        lambda_c: float = 1.0,
         alpha: float = 0.8,
         margin: float = 5e-4,
-        **kwargs,
-    ):
-        super().__init__(**kwargs)
-        if lambdaC < 0:
-            raise ValueError(
-                f"Incorrect value for lambdaC argument. "
-                f"Given lambdaC={lambdaC} but accepted only non-negative values"
-            )
-
-        self.K = K
-        self.l = l
-        self.proxies = nn.Parameter(torch.randn(K, l))
-        self.lambdaC = lambdaC
+        *,
+        distance: BaseDistance | None = None,
+        embedding_regularizer: BaseRegularizer | None = None,
+        embedding_reg_weight: float = 1.0,
+    ) -> None:
+        super().__init__(
+            distance=distance,
+            embedding_regularizer=embedding_regularizer,
+            embedding_reg_weight=embedding_reg_weight,
+        )
+        if lambda_c < 0:
+            raise ValueError(f"lambda_c must be non-negative; got {lambda_c}")
+        self.num_proxies = num_proxies
+        self.embedding_size = embedding_size
+        self.proxies = nn.Parameter(torch.randn(num_proxies, embedding_size))
+        self.lambda_c = lambda_c
         self.alpha = alpha
         self.margin = margin
-        self.add_to_recordable_attributes(
-            list_of_names=["K", "l", "lambdaC", "alpha", "margin"], is_stat=False
-        )
 
-    def compute_loss(self, embeddings, labels, indices_tuple, ref_emb, ref_labels):
-        c_f.ref_not_supported(embeddings, labels, ref_emb, ref_labels)
-        c_f.labels_not_supported(labels, ref_labels)
-
-        assert embeddings.shape[1] == self.l
+    def compute_loss(
+        self,
+        embeddings: Tensor,
+        labels: Tensor | None,
+        indices_tuple: IndicesTuple | None,
+        ref_emb: Tensor | None,
+        ref_labels: Tensor | None,
+    ) -> LossDict:
+        _common.ref_not_supported(ref_emb)
+        _common.indices_tuple_not_supported(indices_tuple)
+        if embeddings.shape[1] != self.embedding_size:
+            raise ValueError("Embedding dimension must match embedding_size")
+        _common.check_parameter_placement(self, self.proxies, embeddings)
 
         N = len(embeddings)
-        if indices_tuple is not None:
-            meta_classes = indices_tuple
+        device = embeddings.device
+        if labels is not None and N == 0:
+            return {}
+        if labels is not None:
+            meta_classes = labels
+        elif self.num_proxies > N:
+            raise ValueError(
+                "Without labels, the batch must contain at least num_proxies rows"
+            )
         else:
-            meta_classes = torch.randint(0, self.K, (N - self.K,))
-            meta_classes = torch.cat((torch.arange(self.K), meta_classes))
-            meta_classes = meta_classes[torch.randperm(N)]
+            extra = torch.randint(
+                0, self.num_proxies, (N - self.num_proxies,), device=device
+            )
+            meta_classes = torch.cat(
+                (torch.arange(self.num_proxies, device=device), extra)
+            )
+            meta_classes = meta_classes[torch.randperm(N, device=device)]
+        rows = torch.arange(N, device=device)
 
-        loss_int = torch.zeros(1, device=embeddings.device, dtype=embeddings.dtype)
         embs_and_proxies = torch.cat([embeddings, self.proxies], dim=0)
-
-        S = self.distance(embs_and_proxies, embs_and_proxies).clamp(0, np.inf)
+        S = self.distance(embs_and_proxies, embs_and_proxies).clamp(0, math.inf)
         S = torch.exp(S / 0.5)
-        Y = torch.eye(N + self.K, device=S.device, dtype=S.dtype)
+        Y = torch.eye(N + self.num_proxies, device=S.device, dtype=S.dtype)
         S = S - S * Y
-
         D_inv_half = torch.pow(torch.sum(S, dim=1), -1 / 2).diag()
-        S_bar = D_inv_half.mm(S)
-        S_bar = S_bar.mm(D_inv_half)
-
-        dt = S_bar.dtype
-        L = torch.inverse(
-            Y.float() - self.alpha * S_bar.float()
-        )  # Added float cast since inverse is not available for Half
-        L = L.to(dt)
-
+        S_bar = D_inv_half.mm(S).mm(D_inv_half)
+        L = torch.inverse(Y.float() - self.alpha * S_bar.float()).to(S_bar.dtype)
         F = (1 - self.alpha) * L
-
-        F_p = F[N:, :].clone()
-        F_e = F[:N, :].clone()
-        if self.lambdaC != np.inf:
-            F = F[:N, N:]
-            loss_int = F - F[torch.arange(N), meta_classes].view(-1, 1) + self.margin
-            loss_int[torch.arange(N), meta_classes] = (
-                -np.inf
-            )  # This way avoid numerical cancellation happening   # NoQA
-            # instead with subtraction of margin term           # NoQA
-            loss_int[loss_int < 0] = (
-                -np.inf
-            )  # This way no loss for positive correlation with own proxy
-
-            loss_int = torch.exp(loss_int)
-            loss_int = torch.log(1 + torch.sum(loss_int, dim=1))
-            loss_int = loss_int.mean()
+        F_p = F[N:, :]
+        F_e = F[:N, :]
 
         loss_ctx = torch.nn.functional.cosine_similarity(
             F_e, F_p.unsqueeze(1), dim=-1
         ).t()
-        loss_ctx += -loss_ctx[torch.arange(N), meta_classes].view(-1, 1) + self.margin
-        loss_ctx[torch.arange(N), meta_classes] = (
-            -np.inf
-        )  # This way avoid numerical cancellation happening   # NoQA
-        # instead with subtraction of margin term           # NoQA
-        loss_ctx[loss_ctx < 0] = -np.inf
-
-        # This way no loss for positive correlation with own proxy
-        loss_ctx = torch.exp(loss_ctx)
-        loss_ctx = torch.log(1 + torch.sum(loss_ctx, dim=1))
-        loss_ctx = loss_ctx.mean()
-        loss = loss_int + self.lambdaC * loss_ctx
-
+        loss_ctx = self.ranking_term(loss_ctx, rows, meta_classes)
+        if self.lambda_c == math.inf:
+            return {"loss": {"losses": loss_ctx, "indices": None}}
+        loss_int = self.ranking_term(F[:N, N:], rows, meta_classes)
         return {
-            "loss": {
-                "losses": loss,
-                "indices": None,
-                "reduction_type": "already_reduced",
-            }
+            "loss": {"losses": loss_int + self.lambda_c * loss_ctx, "indices": None}
         }
 
-    def get_default_distance(self):
+    def ranking_term(
+        self, scores: Tensor, rows: Tensor, meta_classes: Tensor
+    ) -> Tensor:
+        violations = scores - scores[rows, meta_classes].view(-1, 1) + self.margin
+        excluded = torch.zeros_like(violations, dtype=torch.bool)
+        excluded[rows, meta_classes] = True
+        violations = violations.masked_fill(excluded | (violations < 0), -math.inf)
+        return torch.log(1 + torch.sum(torch.exp(violations), dim=1)).mean()
+
+    def default_distance(self) -> BaseDistance:
         return CosineSimilarity()

@@ -1,35 +1,27 @@
-import torch
+from typing import Unpack
 
-from ..distances import CosineSimilarity
-from ..utils import common_functions as c_f
+import torch
+from torch import Tensor
+
+from ..distances import BaseDistance, CosineSimilarity
+from ..types import LossDict, RegularizerOptions
+from ..utils import _common
 from .base_regularizer import BaseRegularizer
 
 
-# modified from http://kaizhao.net/regularface
 class RegularFaceRegularizer(BaseRegularizer):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        assert self.distance.is_inverted
+    def __init__(self, **options: Unpack[RegularizerOptions]) -> None:
+        super().__init__(**options)
+        if not self.distance.is_inverted:
+            raise TypeError("distance must be a similarity with is_inverted=True")
 
-    def compute_loss(self, weights):
-        dtype, device = weights.dtype, weights.device
-        num_classes = weights.size(0)
-        cos = self.distance(weights)
+    def compute_loss(self, x: Tensor) -> LossDict:
+        cos = self.distance(x)
         with torch.no_grad():
-            cos1 = cos.clone()
-            cos1.fill_diagonal_(c_f.neg_inf(dtype))
-            _, indices = self.distance.smallest_dist(cos1, dim=1)
-            mask = torch.zeros((num_classes, num_classes), dtype=dtype, device=device)
-            row_nums = torch.arange(num_classes, device=device, dtype=torch.long)
-            mask[row_nums, indices] = 1
-        losses = torch.sum(cos * mask, dim=1)
-        return {
-            "loss": {
-                "losses": losses,
-                "indices": c_f.torch_arange_from_size(weights),
-                "reduction_type": "element",
-            }
-        }
+            others = cos.detach().clone().fill_diagonal_(_common.neg_inf(x.dtype))
+            nearest = others.argmax(dim=1, keepdim=True)
+        losses = cos.gather(1, nearest).squeeze(1)
+        return {"loss": {"losses": losses, "indices": _common.arange_like(x)}}
 
-    def get_default_distance(self):
+    def default_distance(self) -> BaseDistance:
         return CosineSimilarity()

@@ -1,392 +1,325 @@
-import torch
-import torch.nn as nn
-
-from pytorch_metric_learning.utils import common_functions as c_f
-from pytorch_metric_learning.utils import loss_and_miner_utils as lmu
-
-
-######################################
-#######ORIGINAL IMPLEMENTATION########
-######################################
-# DIRECTLY COPIED FROM https://github.com/lg-zhang/dynamic-soft-margin-pytorch/blob/master/modules/dynamic_soft_margin.py.
-# This code is copied from the official implementation
-# so that we can make sure our implementation returns the same result.
-# Some minor changes were made to avoid errors during testing.
-# Every change in the original code is reported and explained.
-def compute_distance_matrix_unit_l2(a, b, eps=1e-6):
-    """
-    computes pairwise Euclidean distance and return a N x N matrix
-    """
-
-    dmat = torch.matmul(a, torch.transpose(b, 0, 1))
-    dmat = ((1.0 - dmat + eps) * 2.0).pow(0.5)
-    return dmat
-
-
-def find_hard_negatives(dmat, output_index=True, empirical_thresh=0.0):
-    """
-    a = A * P'
-    A: N * ndim
-    P: N * ndim
-
-    a1p1 a1p2 a1p3 a1p4 ...
-    a2p1 a2p2 a2p3 a2p4 ...
-    a3p1 a3p2 a3p3 a3p4 ...
-    a4p1 a4p2 a4p3 a4p4 ...
-    ...  ...  ...  ...
-    """
-
-    r, c = dmat.size()  # Correct bug
-
-    if not output_index:
-        pos = torch.zeros(max(r, c))  # Correct bug
-        pos[: min(r, c)] = dmat.diag()  # Correct bug
-
-    dmat = (
-        dmat + torch.eye(r, c).to(dmat.device) * 99999
-    )  # filter diagonal     # Correct bug
-    dmat[dmat < empirical_thresh] = 99999  # filter outliers in brown dataset
-
-    # Add following 3 lines to solve a bug
-    min_a, min_p = torch.zeros(max(r, c)), torch.zeros(
-        max(r, c)
-    )  # Check for unequal number of anchors and positives
-    min_a[:c], _ = torch.min(dmat, dim=0)
-    min_p[:r], _ = torch.min(dmat, dim=1)
-
-    if not output_index:
-        neg = torch.min(min_a, min_p)
-        return pos, neg.to(dtype=pos.dtype)  # Added cast to avoid errors
-
-    # Useless for our testing purposes
-    # mask = min_a < min_p
-    # a_idx = torch.cat(
-    #     (mask.nonzero().view(-1) + cnt, (~mask).nonzero().view(-1))
-    # )  # use p as anchor
-    # p_idx = torch.cat(
-    #     (mask.nonzero().view(-1), (~mask).nonzero().view(-1) + cnt)
-    # )  # use a as anchor
-    # n_idx = torch.cat((min_a_idx[mask], min_p_idx[~mask] + cnt))
-    # return a_idx, p_idx, n_idx
-
-
-class OriginalImplementationDynamicSoftMarginLoss(nn.Module):
-    def __init__(self, is_binary=False, momentum=0.01, max_dist=None, nbins=512):
-        """
-        is_binary: true if learning binary descriptor
-        momentum: weight assigned to the histogram computed from the current batch
-        max_dist: maximum possible distance in the feature space
-        nbins: number of bins to discretize the PDF
-        """
-        super(OriginalImplementationDynamicSoftMarginLoss, self).__init__()
-        self._is_binary = is_binary
-
-        if max_dist is None:
-            # max_dist = 256 if self._is_binary else 2.0
-            max_dist = 2.0
-
-        self._momentum = momentum
-        self._max_val = max_dist
-        self._min_val = -max_dist
-        self.register_buffer("histogram", torch.ones(nbins))
-
-        self._stats_initialized = False
-        self.current_step = None
-
-    def _compute_distances(self, x, labels=None):
-        # Useless for testing purposes
-        # if self._is_binary:
-        #     return self._compute_hamming_distances(x)
-        # else:
-        return self._compute_l2_distances(x, labels=labels)
-
-    # Formatted to test with and without labels
-    def _compute_l2_distances(self, x, labels=None):
-        if labels is None:
-            cnt = x.size(0) // 2
-            a = x[:cnt, :]
-            p = x[cnt:, :]
-            dmat = compute_distance_matrix_unit_l2(a, p)
-            return find_hard_negatives(dmat, output_index=False, empirical_thresh=0.008)
-        else:
-            dmat = compute_distance_matrix_unit_l2(x, x)
-            dmat.fill_diagonal_(0)  # Put distance to itself to 0
-            anchor_idx, positive_idx, negative_idx = lmu.convert_to_triplets(
-                None, labels, labels, t_per_anchor="all"
-            )
-            return dmat[anchor_idx, positive_idx], dmat[anchor_idx, negative_idx]
-
-    # We do not use binary descriptors
-    # def _compute_hamming_distances(self, x):
-    #     cnt = x.size(0) // 2
-    #     ndims = x.size(1)
-    #     a = x[:cnt, :]
-    #     p = x[cnt:, :]
-
-    #     dmat = compute_distance_matrix_hamming(
-    #         (a > 0).float() * 2.0 - 1.0, (p > 0).float() * 2.0 - 1.0
-    #     )
-    #     a_idx, p_idx, n_idx = find_hard_negatives(
-    #         dmat, output_index=True, empirical_thresh=2
-    #     )
-
-    #     # differentiable Hamming distance
-    #     a = x[a_idx, :]
-    #     p = x[p_idx, :]
-    #     n = x[n_idx, :]
-
-    #     pos_dist = (1.0 - a * p).sum(dim=1) / ndims
-    #     neg_dist = (1.0 - a * n).sum(dim=1) / ndims
-
-    #     # non-differentiable Hamming distance
-    #     a_b = (a > 0).float() * 2.0 - 1.0
-    #     p_b = (p > 0).float() * 2.0 - 1.0
-    #     n_b = (n > 0).float() * 2.0 - 1.0
-
-    #     pos_dist_b = (1.0 - a_b * p_b).sum(dim=1) / ndims
-    #     neg_dist_b = (1.0 - a_b * n_b).sum(dim=1) / ndims
-
-    #     return pos_dist, neg_dist, pos_dist_b, neg_dist_b
-
-    def _compute_histogram(self, x, momentum):
-        """
-        update the histogram using the current batch
-        """
-        num_bins = self.histogram.size(0)
-        x_detached = x.detach()
-        self.bin_width = (self._max_val - self._min_val) / num_bins  # Adjusted formula
-        lo = torch.floor(
-            (x_detached - self._min_val) / self.bin_width
-        ).long()  # Add cast to avoid errors
-        hi = (lo + 1).clamp(min=0, max=num_bins - 1)
-        hist = x.new_zeros(num_bins)
-        alpha = (
-            1.0
-            - (x_detached - self._min_val - lo.float() * self.bin_width)
-            / self.bin_width
-        ).to(
-            dtype=hist.dtype
-        )  # Added cast to avoid errors
-        hist.index_add_(0, lo, alpha)
-        hist.index_add_(0, hi, 1.0 - alpha)
-        hist = hist / (hist.sum() + 1e-6)
-        self.histogram = c_f.to_device(
-            self.histogram, tensor=hist, dtype=hist.dtype
-        )  # Line added to avoid errors
-        self.histogram = (1.0 - momentum) * self.histogram + momentum * hist
-
-    def _compute_stats(self, pos_dist, neg_dist):
-        hist_val = pos_dist - neg_dist
-        if self._stats_initialized:
-            self._compute_histogram(hist_val, self._momentum)
-        else:
-            self._compute_histogram(hist_val, 1.0)
-            self._stats_initialized = True
-
-    def forward(self, x, labels=None):
-        distances = self._compute_distances(x, labels=labels)
-        if not self._is_binary:
-            pos_dist, neg_dist = distances
-            self._compute_stats(pos_dist, neg_dist)
-            hist_var = pos_dist - neg_dist
-        else:
-            pos_dist, neg_dist, pos_dist_b, neg_dist_b = distances
-            self._compute_stats(pos_dist_b, neg_dist_b)
-            hist_var = pos_dist_b - neg_dist_b
-
-        PDF = self.histogram / self.histogram.sum()
-        CDF = PDF.cumsum(0)
-
-        # lookup weight from the CDF
-        bin_idx = torch.floor((hist_var - self._min_val) / self.bin_width).long()
-        weight = CDF[bin_idx]
-
-        # Changed to an equivalent version for making same computation as in dynamic_soft_margin_loss.py
-        # loss = -(neg_dist * weight).mean() + (pos_dist * weight).mean()
-        loss = (hist_var * weight).mean()
-        return loss.to(device=x.device, dtype=x.dtype)  # Added cast to avoid errors
-
-
 import unittest
+from typing import Any
+
+import torch
+from torch.nn.functional import normalize
 
 from pytorch_metric_learning.losses import DynamicSoftMarginLoss
 
 from .. import TEST_DEVICE, TEST_DTYPES
-from ..zzz_testing_utils.testing_utils import angle_to_coord
+
+
+def inputs(dtype: torch.dtype, count: int = 4) -> torch.Tensor:
+    return torch.tensor(
+        [[1.0, 0.1], [0.8, 0.4], [-0.5, 0.8], [-0.2, -1.0], [0.2, 0.7], [0.3, -0.9]],
+        device=TEST_DEVICE,
+        dtype=dtype,
+    )[:count].requires_grad_()
+
+
+def labeled_differences(embeddings: torch.Tensor, labels: list[int]) -> torch.Tensor:
+    vectors = normalize(embeddings, dim=1)
+    return torch.stack(
+        [
+            torch.linalg.vector_norm(vectors[a] - vectors[p])
+            - torch.linalg.vector_norm(vectors[a] - vectors[n])
+            for a in range(len(labels))
+            for p in range(len(labels))
+            for n in range(len(labels))
+            if a != p and labels[a] == labels[p] and labels[a] != labels[n]
+        ]
+    )
+
+
+def paired_differences(query: torch.Tensor, reference: torch.Tensor) -> torch.Tensor:
+    query, reference = normalize(query, dim=1), normalize(reference, dim=1)
+    differences = []
+    for i in range(min(len(query), len(reference))):
+        positive = torch.linalg.vector_norm(query[i] - reference[i])
+        candidates = [
+            torch.linalg.vector_norm(query[i] - reference[j])
+            for j in range(len(reference))
+            if j != i
+        ] + [
+            torch.linalg.vector_norm(query[j] - reference[i])
+            for j in range(len(query))
+            if j != i
+        ]
+        differences.append(positive - torch.stack(candidates).min())
+    return torch.stack(differences)
+
+
+def histogram_reference(
+    differences: torch.Tensor,
+    previous: torch.Tensor | None = None,
+    momentum: float = 0.25,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    centers = [-2.0, -1.0, 0.0, 1.0, 2.0]
+    values = [max(-2.0, min(2.0, x)) for x in differences.detach().cpu().tolist()]
+    probabilities = differences.new_tensor(
+        [
+            sum(max(0.0, 1 - abs(x - center)) for x in values) / len(values)
+            for center in centers
+        ]
+    )
+    if previous is not None:
+        probabilities = (1 - momentum) * previous + momentum * probabilities
+    weights = torch.stack(
+        [probabilities[: sum(center <= x for center in centers)].sum() for x in values]
+    )
+    return (differences * weights).mean(), probabilities
+
+
+def assert_numeric_close(actual: torch.Tensor, expected: torch.Tensor) -> None:
+    if actual.dtype == torch.float16:
+        torch.testing.assert_close(
+            actual.double(), expected.double(), atol=5e-4, rtol=5e-3
+        )
+    else:
+        torch.testing.assert_close(actual, expected.to(actual.dtype))
 
 
 class TestDynamicSoftMarginLoss(unittest.TestCase):
-    def test_dynamic_soft_margin_loss_without_labels(self):
-        torch.manual_seed(21)
+    def test_autocast_histogram_uses_buffer_precision(self) -> None:
+        for dtype in (torch.float16, torch.bfloat16):
+            with self.subTest(dtype=dtype):
+                loss = DynamicSoftMarginLoss(num_bins=5, momentum=0.25).to(TEST_DEVICE)
+                previous = None
+                for shift in (0.0, 0.25):
+                    data = (
+                        torch.tensor(
+                            [-1.5, -0.25, -0.0001, 0.5, 2.0],
+                            device=TEST_DEVICE,
+                            dtype=dtype,
+                        )
+                        .add(shift)
+                        .requires_grad_()
+                    )
+                    expected, previous = histogram_reference(data.float(), previous)
+                    with torch.autocast(TEST_DEVICE.type, dtype=dtype):
+                        loss.update_histogram(data)
+                        actual = loss.weigh_loss(data).mean()
+                    self.assertEqual(loss.hist.dtype, torch.float32)
+                    torch.testing.assert_close(loss.hist, previous)
+                    torch.testing.assert_close(actual, expected)
+                    torch.testing.assert_close(
+                        torch.autograd.grad(actual, data)[0],
+                        torch.autograd.grad(expected, data)[0],
+                    )
+
+    def test_autocast_training_steps_have_finite_gradients(self) -> None:
+        labels = torch.tensor([0, 0, 1, 1], device=TEST_DEVICE)
+        for dtype in (torch.float16, torch.bfloat16):
+            with self.subTest(dtype=dtype):
+                torch.manual_seed(17)
+                encoder = torch.nn.Linear(2, 2).to(TEST_DEVICE)
+                optimizer = torch.optim.SGD(encoder.parameters(), lr=0.01)
+                loss = DynamicSoftMarginLoss().to(TEST_DEVICE)
+                for _ in range(2):
+                    optimizer.zero_grad(set_to_none=True)
+                    with torch.autocast(TEST_DEVICE.type, dtype=dtype):
+                        embeddings = encoder(inputs(torch.float32))
+                        self.assertEqual(embeddings.dtype, dtype)
+                        value = loss(embeddings, labels)
+                    value.backward()
+                    self.assertTrue(torch.isfinite(value))
+                    self.assertEqual(loss.hist.dtype, torch.float32)
+                    for parameter in encoder.parameters():
+                        gradient = parameter.grad
+                        assert gradient is not None
+                        self.assertTrue(torch.isfinite(gradient).all())
+                        self.assertGreater(gradient.abs().sum().item(), 0)
+                    optimizer.step()
+
+    def test_values_and_gradients_across_training_steps(self) -> None:
         for dtype in TEST_DTYPES:
-            if dtype == torch.float16:
-                continue
-            embeddings = torch.randn(
-                5,
-                32,
-                requires_grad=True,
-                dtype=dtype,
-            ).to(
-                TEST_DEVICE
-            )  # 2D embeddings
-            embeddings = torch.nn.functional.normalize(embeddings)
-            cnt = embeddings.size(0) // 2
+            with self.subTest(dtype=dtype):
+                loss = DynamicSoftMarginLoss(num_bins=5, momentum=0.25).to(
+                    TEST_DEVICE, dtype
+                )
+                previous = None
+                for count in (4, 6, 4):
+                    embedding = inputs(dtype, count)
+                    exact = embedding.detach().double().requires_grad_()
+                    labels = [i // 2 for i in range(count)]
+                    expected, previous = histogram_reference(
+                        labeled_differences(exact, labels), previous
+                    )
+                    expected_gradient = torch.autograd.grad(expected, exact)[0]
+                    actual = loss(embedding, torch.tensor(labels, device=TEST_DEVICE))
+                    gradient = torch.autograd.grad(actual, embedding)[0]
+                    assert_numeric_close(actual, expected)
+                    assert_numeric_close(gradient, expected_gradient)
+                    assert_numeric_close(loss.hist, previous)
 
-            self.helper(
-                embeddings[:cnt, :],
-                None,
-                dtype,
-                ref_emb=embeddings[cnt:, :],
-                min_val=-3.0,
-                num_bins=10,
-            )
-            self.helper(
-                embeddings[:cnt, :],
-                None,
-                dtype,
-                ref_emb=embeddings[cnt:, :],
-                min_val=-3.0,
-                num_bins=20,
-            )
-            self.helper(
-                embeddings[:cnt, :],
-                None,
-                dtype,
-                ref_emb=embeddings[cnt:, :],
-                min_val=-3.0,
-                num_bins=30,
-            )
-            self.helper(
-                embeddings[:cnt, :],
-                None,
-                dtype,
-                ref_emb=embeddings[cnt:, :],
-                min_val=-2.0,
-                num_bins=10,
-            )
-            self.helper(
-                embeddings[:cnt, :],
-                None,
-                dtype,
-                ref_emb=embeddings[cnt:, :],
-                min_val=-2.0,
-                num_bins=20,
-            )
-            self.helper(
-                embeddings[:cnt, :],
-                None,
-                dtype,
-                ref_emb=embeddings[cnt:, :],
-                min_val=-2.0,
-                num_bins=30,
-            )
-            self.helper(
-                embeddings[:cnt, :],
-                None,
-                dtype,
-                ref_emb=embeddings[cnt:, :],
-                min_val=-1.0,
-                num_bins=10,
-            )
-            self.helper(
-                embeddings[:cnt, :],
-                None,
-                dtype,
-                ref_emb=embeddings[cnt:, :],
-                min_val=-1.0,
-                num_bins=20,
-            )
-            self.helper(
-                embeddings[:cnt, :],
-                None,
-                dtype,
-                ref_emb=embeddings[cnt:, :],
-                min_val=-1.0,
-                num_bins=30,
-            )
-
-    def test_dynamic_soft_margin_loss_with_labels(self):
-        torch.manual_seed(21)
+    def test_paired_batches_and_accumulated_backward(self) -> None:
         for dtype in TEST_DTYPES:
-            if dtype == torch.float16:
-                continue
-            embeddings = torch.randn(
-                5,
-                32,
-                requires_grad=True,
-                dtype=dtype,
-            ).to(
-                TEST_DEVICE
-            )  # 2D embeddings
-            embeddings = torch.nn.functional.normalize(embeddings)
-            labels = torch.LongTensor([0, 0, 1, 1, 2])
+            for query_count, reference_count in ((3, 3), (2, 3), (3, 2)):
+                with self.subTest(dtype=dtype, sizes=(query_count, reference_count)):
+                    loss = DynamicSoftMarginLoss(num_bins=5, momentum=0.25).to(
+                        TEST_DEVICE, dtype
+                    )
+                    previous = None
+                    actual_losses, expected_losses, variables = [], [], []
+                    for shift in (0.05, 0.2):
+                        query = inputs(dtype, query_count)
+                        reference = (
+                            inputs(dtype, reference_count).detach() + shift
+                        ).requires_grad_()
+                        expected, previous = histogram_reference(
+                            paired_differences(query, reference), previous
+                        )
+                        expected_losses.append(expected)
+                        actual_losses.append(loss(query, ref_emb=reference))
+                        variables.extend((query, reference))
+                    expected = torch.stack(expected_losses).sum()
+                    actual = torch.stack(actual_losses).sum()
+                    expected_gradients = torch.autograd.grad(expected, variables)
+                    gradients = torch.autograd.grad(actual, variables)
+                    assert_numeric_close(actual, expected)
+                    for observed, wanted in zip(
+                        gradients, expected_gradients, strict=True
+                    ):
+                        assert_numeric_close(observed, wanted)
 
-            self.helper(embeddings, labels, dtype, min_val=-3.0, num_bins=10)
-            self.helper(embeddings, labels, dtype, min_val=-3.0, num_bins=20)
-            self.helper(embeddings, labels, dtype, min_val=-3.0, num_bins=30)
-            self.helper(embeddings, labels, dtype, min_val=-2.0, num_bins=10)
-            self.helper(embeddings, labels, dtype, min_val=-2.0, num_bins=20)
-            self.helper(embeddings, labels, dtype, min_val=-2.0, num_bins=30)
-            self.helper(embeddings, labels, dtype, min_val=-1.0, num_bins=10)
-            self.helper(embeddings, labels, dtype, min_val=-1.0, num_bins=20)
-            self.helper(embeddings, labels, dtype, min_val=-1.0, num_bins=30)
+    def test_histogram_interpolation_endpoints_and_clipping(self) -> None:
+        for dtype in TEST_DTYPES:
+            with self.subTest(dtype=dtype):
+                data = torch.tensor(
+                    [-3.0, -1.5, -0.25, 0.5, 2.0, 3.0],
+                    device=TEST_DEVICE,
+                    dtype=dtype,
+                    requires_grad=True,
+                )
+                loss = DynamicSoftMarginLoss(num_bins=5).to(TEST_DEVICE, dtype)
+                loss.update_histogram(data)
+                actual = loss.weigh_loss(data).mean()
+                expected, histogram = histogram_reference(data)
+                torch.testing.assert_close(loss.hist, histogram)
+                torch.testing.assert_close(actual, expected)
+                torch.testing.assert_close(
+                    torch.autograd.grad(actual, data)[0],
+                    torch.autograd.grad(expected, data)[0],
+                )
 
-    def helper(
-        self,
-        embeddings,
-        labels,
-        dtype,
-        ref_emb=None,
-        ref_labels=None,
-        min_val=-2.0,
-        num_bins=10,
-    ):
-        loss_func = DynamicSoftMarginLoss(min_val=min_val, num_bins=num_bins)
-        original_loss_func = OriginalImplementationDynamicSoftMarginLoss(
-            max_dist=-min_val, nbins=num_bins
+    def test_supplied_triplets_without_labels_keep_reference_gradients(self) -> None:
+        query = inputs(torch.float64)
+        reference = (inputs(torch.float64, 3).detach() - 0.1).requires_grad_()
+        q, r = normalize(query, dim=1), normalize(reference, dim=1)
+        differences = torch.stack(
+            [
+                torch.linalg.vector_norm(q[0] - r[1])
+                - torch.linalg.vector_norm(q[0] - r[0]),
+                torch.linalg.vector_norm(q[1] - r[2])
+                - torch.linalg.vector_norm(q[1] - r[0]),
+            ]
+        )
+        expected, _ = histogram_reference(differences)
+        indices = tuple(
+            torch.tensor(i, device=TEST_DEVICE) for i in ([0, 1], [1, 2], [0, 0])
+        )
+        actual = DynamicSoftMarginLoss(num_bins=5).to(TEST_DEVICE, torch.float64)(
+            query, indices_tuple=indices, ref_emb=reference
+        )
+        expected_gradients = torch.autograd.grad(expected, (query, reference))
+        gradients = torch.autograd.grad(actual, (query, reference))
+        torch.testing.assert_close(actual, expected)
+        for observed, wanted in zip(gradients, expected_gradients, strict=True):
+            torch.testing.assert_close(observed, wanted)
+
+    def test_coincident_and_opposite_embeddings_have_finite_gradients(self) -> None:
+        for dtype in TEST_DTYPES:
+            with self.subTest(dtype=dtype):
+                embeddings = torch.tensor(
+                    [[1.0, 0.0], [-1.0, 0.0], [1.0, 0.0], [-1.0, 0.0]],
+                    device=TEST_DEVICE,
+                    dtype=dtype,
+                    requires_grad=True,
+                )
+                labels = [0, 0, 1, 1]
+                expected, _ = histogram_reference(
+                    labeled_differences(embeddings, labels)
+                )
+                actual = DynamicSoftMarginLoss(num_bins=5).to(TEST_DEVICE, dtype)(
+                    embeddings, torch.tensor(labels, device=TEST_DEVICE)
+                )
+                expected_gradient = torch.autograd.grad(expected, embeddings)[0]
+                gradient = torch.autograd.grad(actual, embeddings)[0]
+                torch.testing.assert_close(actual, expected)
+                torch.testing.assert_close(gradient, expected_gradient)
+
+    def test_empty_valid_sets_preserve_histogram(self) -> None:
+        loss = DynamicSoftMarginLoss(num_bins=5).to(TEST_DEVICE)
+        loss(inputs(torch.float32), torch.tensor([0, 0, 1, 1], device=TEST_DEVICE))
+        previous = loss.hist.detach().clone()
+        for query_count, reference_count in ((0, 2), (2, 0), (1, 1)):
+            query = inputs(torch.float32, query_count)
+            actual = loss(query, ref_emb=inputs(torch.float32, reference_count))
+            self.assertEqual(actual.item(), 0)
+            torch.testing.assert_close(
+                torch.autograd.grad(actual, query)[0], torch.zeros_like(query)
+            )
+            torch.testing.assert_close(loss.hist, previous)
+        for labels in ([0, 0, 0, 0], [0, 1, 2, 3]):
+            query = inputs(torch.float32)
+            actual = loss(query, torch.tensor(labels, device=TEST_DEVICE))
+            self.assertEqual(actual.item(), 0)
+            torch.testing.assert_close(
+                torch.autograd.grad(actual, query)[0], torch.zeros_like(query)
+            )
+            torch.testing.assert_close(loss.hist, previous)
+
+    def test_checkpoint_preserves_next_loss_and_gradient(self) -> None:
+        labels = torch.tensor([0, 0, 1, 1], device=TEST_DEVICE)
+        original = DynamicSoftMarginLoss(num_bins=5, momentum=0.25).to(
+            TEST_DEVICE, torch.float64
+        )
+        original(inputs(torch.float64), labels).backward()
+        restored = DynamicSoftMarginLoss(num_bins=5, momentum=0.25).to(
+            TEST_DEVICE, torch.float64
+        )
+        restored.load_state_dict(original.state_dict(), assign=True)
+        original_input, restored_input = inputs(torch.float64), inputs(torch.float64)
+        expected, actual = (
+            original(original_input, labels),
+            restored(restored_input, labels),
+        )
+        torch.testing.assert_close(actual, expected)
+        torch.testing.assert_close(
+            torch.autograd.grad(actual, restored_input)[0],
+            torch.autograd.grad(expected, original_input)[0],
         )
 
-        loss = loss_func(embeddings, labels, ref_emb=ref_emb, ref_labels=ref_labels)
-        if labels is None:
-            embeddings = torch.cat((embeddings, ref_emb))
-        correct_loss = original_loss_func(embeddings, labels)
+    def test_invalid_histogram_configuration(self) -> None:
+        invalid: tuple[dict[str, Any], ...] = (
+            {"min_val": 0},
+            {"min_val": float("nan")},
+            {"min_val": -float("inf")},
+            {"num_bins": 1},
+            {"momentum": -0.1},
+            {"momentum": 1.1},
+        )
+        for kwargs in invalid:
+            with self.subTest(kwargs=kwargs), self.assertRaises(ValueError):
+                DynamicSoftMarginLoss(**kwargs).to(TEST_DEVICE)
 
-        rtol = 1e-2 if dtype == torch.float16 else 1e-5
-        self.assertTrue(torch.isclose(loss, correct_loss, rtol=rtol))
-
-    def test_with_no_valid_triplets(self):
-        torch.manual_seed(21)
-        loss_func = DynamicSoftMarginLoss()
-        for dtype in TEST_DTYPES:
-            if dtype == torch.float16:
-                continue
-            embedding_angles = [0, 20, 40, 60, 80]
-            embeddings = torch.tensor(
-                [angle_to_coord(a) for a in embedding_angles],
-                requires_grad=True,
-                dtype=dtype,
-            ).to(
-                TEST_DEVICE
-            )  # 2D embeddings
-            labels = torch.LongTensor([0, 1, 2, 3, 4])
-            loss = loss_func(embeddings, labels)
-            self.assertEqual(loss, 0)
-
-    def test_backward(self):
-        torch.manual_seed(21)
-        for dtype in TEST_DTYPES:
-            if dtype == torch.float16:
-                continue
-            loss_func = DynamicSoftMarginLoss()
-            embedding_angles = [0, 20, 40, 60, 80]
-            embeddings = torch.tensor(
-                [angle_to_coord(a) for a in embedding_angles],
-                requires_grad=True,
-                dtype=dtype,
-            ).to(
-                TEST_DEVICE
-            )  # 2D embeddings
-            labels = torch.LongTensor([0, 0, 1, 1, 2])
-
-            loss = loss_func(embeddings, labels)
-            loss.backward()
+    def test_half_precision_histogram_counts_more_triplets_than_float16_max(
+        self,
+    ) -> None:
+        generator = torch.Generator().manual_seed(0)
+        embeddings = torch.randn(128, 32, generator=generator).to(TEST_DEVICE)
+        labels = torch.arange(128, device=TEST_DEVICE) % 2
+        for dtype in (torch.float16, torch.bfloat16):
+            with self.subTest(dtype=dtype):
+                expected = DynamicSoftMarginLoss().to(TEST_DEVICE, torch.float64)
+                actual = DynamicSoftMarginLoss().to(TEST_DEVICE, dtype)
+                for _ in range(2):
+                    reference = expected(embeddings.double(), labels)
+                    loss = actual(embeddings.to(dtype), labels)
+                self.assertEqual(loss.dtype, dtype)
+                torch.testing.assert_close(
+                    loss.double(), reference, rtol=2e-2, atol=1e-3
+                )
+                torch.testing.assert_close(
+                    actual.hist.double(), expected.hist, rtol=2e-2, atol=1e-3
+                )

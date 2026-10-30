@@ -1,0 +1,155 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 6 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  scope:
+    name: Select verification scope
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+    outputs:
+      base: ${{ steps.base.outputs.sha }}
+      level: ${{ steps.level.outputs.value }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Cache the locked policy tools
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.local/share/code-polishy
+          key: code-polishy-${{ runner.os }}-${{ hashFiles('.code-polishy.lock.json') }}
+      - name: Install locked policy tools
+        run: ./code-polishyw setup
+      - name: Resolve verification base
+        id: base
+        run: |
+          if [ -z "$BASE_SHA" ] || [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ]; then
+            BASE_SHA="$(git rev-list --max-parents=0 HEAD)"
+          fi
+          echo "BASE_SHA=$BASE_SHA" >> "$GITHUB_ENV"
+          echo "sha=$BASE_SHA" >> "$GITHUB_OUTPUT"
+      - name: Select verification scope
+        id: level
+        run: |
+          ./code-polishyw test-levels --base="$BASE_SHA" --format json > "$RUNNER_TEMP/ci-plan.json"
+          level="$(jq -er '.mergePolicy.level | select(. == "documentation" or . == "recommended" or . == "full")' "$RUNNER_TEMP/ci-plan.json")"
+          echo "value=$level" >> "$GITHUB_OUTPUT"
+          echo "Verification level: $level"
+
+  verify:
+    needs: scope
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      BASE_SHA: ${{ needs.scope.outputs.base }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
+        if: needs.scope.outputs.level != 'documentation'
+        with:
+          version: 0.13.4
+          enable-cache: true
+      - name: Cache the locked policy tools
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: ~/.local/share/code-polishy
+          key: code-polishy-${{ runner.os }}-${{ hashFiles('.code-polishy.lock.json') }}
+      - name: Install locked policy tools
+        run: ./code-polishyw setup
+      - name: Review dependencies
+        if: needs.scope.outputs.level != 'documentation'
+        run: ./code-polishyw dependency-review --base "$BASE_SHA"
+      - name: Install locked development dependencies
+        if: needs.scope.outputs.level != 'documentation'
+        run: uv sync --frozen --all-extras --no-build --no-install-project
+      - name: Check formatting and lint
+        if: needs.scope.outputs.level != 'documentation'
+        run: |
+          uv run --frozen --no-sync ruff format --check
+          uv run --frozen --no-sync ruff check
+      - name: Type-check the package, tests, recipes, and tooling
+        if: needs.scope.outputs.level != 'documentation'
+        run: uv run --frozen --no-sync ty check src tests docs/recipes benchmarks scripts
+      - name: Build the documentation and the version 2 archive
+        if: needs.scope.outputs.level != 'documentation'
+        run: |
+          uv run --frozen --no-sync mkdocs build --strict
+          git worktree add "$RUNNER_TEMP/v2-docs" v2.9.0
+          uv run --frozen --no-sync mkdocs build -f "$RUNNER_TEMP/v2-docs/mkdocs.yml" -d "$PWD/site/v2"
+      - name: Verify the candidate
+        run: ./code-polishyw merge-gate --base="$BASE_SHA"
+      - name: Verify the wheel with minimum supported runtimes
+        if: needs.scope.outputs.level != 'documentation'
+        env:
+          UV_PROJECT_ENVIRONMENT: ${{ runner.temp }}/pml-wheel
+        run: |
+          uv sync --frozen --no-dev --no-build --no-install-project
+          uv pip install --python "$UV_PROJECT_ENVIRONMENT/bin/python" --no-deps --no-build dist/*.whl
+          uv run --frozen --no-sync python -I scripts/check_wheel.py
+
+  tests:
+    needs: scope
+    if: needs.scope.outputs.level != 'documentation'
+    name: CPU suite on Python ${{ matrix.python }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.12", "3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
+        with:
+          version: 0.13.4
+          python-version: ${{ matrix.python }}
+          enable-cache: true
+      - name: Install locked development dependencies
+        run: uv sync --frozen --all-extras --no-build --no-install-project --python ${{ matrix.python }}
+      - name: Run the CPU suite
+        run: uv run --frozen --no-sync --env-file tests/cpu.env python -m pytest -q
+
+  platforms:
+    needs: scope
+    if: needs.scope.outputs.level != 'documentation'
+    name: CPU suite on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15, windows-2025]
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@37802adc94f370d6bfd71619e3f0bf239e1f3b78 # v7.6.0
+        with:
+          version: 0.13.4
+          enable-cache: true
+      - name: Install locked development dependencies
+        run: uv sync --frozen --all-extras --no-build --no-install-project
+      - name: Run the CPU suite
+        run: uv run --frozen --no-sync --env-file tests/cpu.env python -m pytest -q

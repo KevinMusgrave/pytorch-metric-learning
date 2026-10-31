@@ -185,8 +185,6 @@ class DistributedLossWrapper(torch.nn.Module):
                 "or CrossBatchMemory"
             )
         _check_objective(objective)
-        if isinstance(loss, CrossBatchMemory) and objective == "local_anchor":
-            raise ValueError("CrossBatchMemory supports only the global objective")
         self.loss = loss
         self.objective = objective
 
@@ -319,12 +317,24 @@ class DistributedLossWrapper(torch.nn.Module):
         enqueue_mask: Tensor | None,
         sizes: list[int],
     ) -> Tensor:
-        query = _gather(emb, labels, sizes, remote_gradients=True)
+        local_anchor = self.objective == "local_anchor"
+        query = _gather(emb, labels, sizes, remote_gradients=not local_anchor)
         if enqueue_mask is not None:
             enqueue_mask = _gather_tensor(enqueue_mask, sizes)
-        if query.labels is None:
+        if query.labels is None or labels is None:
             raise ValueError("CrossBatchMemory requires labels")
-        return loss(query.embeddings, query.labels, indices_tuple, enqueue_mask)
+        if not local_anchor:
+            return loss(query.embeddings, query.labels, indices_tuple, enqueue_mask)
+        local = loss.forward_local_anchors(
+            emb,
+            labels,
+            query.embeddings,
+            query.labels,
+            query.offset,
+            indices_tuple,
+            enqueue_mask,
+        )
+        return local * len(sizes)
 
 
 class DistributedMinerWrapper(torch.nn.Module):

@@ -63,7 +63,17 @@ losing a self-pair selection afterward. The loss wrapper passes the gathered
 batch as `ref_emb` with a self-free pair tuple; losses that use `indices_tuple`
 only as weights, such as `NCALoss`, still see each anchor's own row.
 Explicit reference tensors describe a separate set, so matching row positions
-are not self-pairs. Memory losses do not support this mode.
+are not self-pairs.
+
+Memory losses support this mode through `CrossBatchMemory.forward_local_anchors`, which
+separates the two roles that `forward` gives one tensor: anchors are the rank's rows with
+their gradients, and the enqueued batch is the gathered one. `forward` is the case where
+they are equal, so wraparound, masks, and capacity stay in one code path. Every rank
+enqueues the gathered batch, not its own rows, because a rank's queue must hold other
+ranks' embeddings to be useful, and identical queues keep checkpoints from any rank
+equivalent. Self-pair exclusion selects the anchors' slots by the rank's offset. With a
+mask, anchors are not enqueued, so there is nothing to exclude. Remote rows do not need
+gradients because queue contents are always detached.
 
 Inputs must be on the embeddings' device on every rank; the wrappers never
 copy labels or masks across devices. Ordinary losses are

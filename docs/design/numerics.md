@@ -482,3 +482,14 @@ call trains against random centers, which is why the docs state it first.
 The loss stays in float32 for low-precision inputs, unlike most losses, because features in
 this paper's setting reach hundreds, and half a squared distance then exceeds the float16
 range for one row even when the reduced value fits.
+
+## Resolved reports
+
+#731 was a library defect in version 2, not caller ordering. Its `update_histogram` ran
+with gradients on, so `self.hist_` kept the batch's graph alive into the next step. The
+next `backward()` then walked the previous step's freed graph and raised "second time", and
+adding `retain_graph=True` moved the failure to the previous step's weights, which the
+optimizer had changed. Running the same training loop on v2.9.0 produces both errors in
+that order. Version 3 updates the histogram under `torch.no_grad()` into a buffer, and
+`weigh_loss` reads a cumulative sum that is a new tensor, so later updates cannot touch a
+pending graph. The tests pin this, with several forwards before `backward()`.

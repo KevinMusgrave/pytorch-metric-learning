@@ -416,6 +416,13 @@ because PyTorch refuses to combine unrelated subclasses and a full loss accepts 
 two dtypes together. The tags end at the function's return, so callers and tensor hooks
 receive plain tensors.
 
+Both behaviors cost something, and only for low-precision inputs. On an NVIDIA A40 with
+float16 rows of 128 dimensions and chunks of 16, the direct kernel raised the peak memory
+of anchor-batched triplets from 12 MiB to 55 MiB at 2048 rows, against 2118 MiB for a
+full `backward()`. Python dispatch on tagged tensors raised NT-Xent's time by about a
+third, from 1061 ms to 1403 ms at 2048 rows, and triplet ranges overlapped. Float32 and
+float64 inputs carry no tag.
+
 The function also leaves autocast. Under ambient float16 autocast, `matmul` narrowed the
 matrix, so the loss terms were float16 and their running sum became `inf` for an NT-Xent
 loss of 6.36 at 256 rows. Summing in float32 alone fixed that value, but kept float16

@@ -15,6 +15,7 @@ SUPPORTED = {
     "ContrastiveLoss-mean": lambda: losses.ContrastiveLoss(
         reducer=reducers.MeanReducer()
     ),
+    "DecoupledContrastiveLoss": lambda: losses.DecoupledContrastiveLoss(),
     "GeneralizedLiftedStructureLoss": lambda: losses.GeneralizedLiftedStructureLoss(),
     "MultiSimilarityLoss": lambda: losses.MultiSimilarityLoss(),
     "NTXentLoss": lambda: losses.NTXentLoss(),
@@ -441,6 +442,7 @@ class TestAnchorBatchedBackward(unittest.TestCase):
     def test_rejects_objectives_that_do_not_split_by_anchor(self):
         embeddings, labels = batch()
         cases = [
+            (losses.DecoupledContrastiveLoss(sigma=0.5), "cannot be batched"),
             (losses.IntraPairVarianceLoss(), "cannot be batched"),
             (losses.MarginLoss(), "cannot be batched"),
             (losses.NCALoss(), "cannot be batched"),

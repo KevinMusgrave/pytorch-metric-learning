@@ -392,3 +392,17 @@ embeddings, 128 dimensions, and one thread, chunks of 32 anchors cost 4.8 ms aga
 `tuples_per_anchor=32` cost 22.7 ms against 10.0 ms for a mined triplet step. Peak
 memory needs `--device cuda`, which the benchmark cases support, so the memory
 benefit of both features remains a design expectation.
+
+## Decoupled contrastive loss
+
+`DecoupledContrastiveLoss` shares `NTXentLoss`'s pair layout: one element per positive
+pair, with negatives grouped by anchor. It does not shift scores by the largest
+negative, because that shift exists to keep `softplus` accurate, and nothing here
+compares a positive with a sum containing it. An anchor without negatives has no
+defined objective, so its pairs are removed instead of contributing the infinite
+logarithm of an empty sum. Its default reducer must keep negative values, which the
+objective can take.
+
+`decomposes_by_anchor` is set per instance for this loss. Equation 7 normalizes DCLW's
+weights by a mean over all positive pairs, which is a batch statistic, while equation 6
+has none. The weights stay in the graph because the paper writes no stop-gradient.

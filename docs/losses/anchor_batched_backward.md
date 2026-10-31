@@ -84,6 +84,7 @@ anchor's row:
 
 - `CircleLoss`
 - `ContrastiveLoss`
+- `DecoupledContrastiveLoss` without `sigma`
 - `GeneralizedLiftedStructureLoss`
 - `MultiSimilarityLoss`
 - `NTXentLoss`

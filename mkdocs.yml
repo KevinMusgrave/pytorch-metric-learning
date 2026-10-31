@@ -47,6 +47,7 @@ nav:
         - SmoothAPLoss: losses/smooth_ap_loss.md
         - ThresholdConsistentMarginLoss: losses/threshold_consistent_margin_loss.md
       - Self-supervised and supervised contrastive objectives:
+        - DecoupledContrastiveLoss: losses/decoupled_contrastive_loss.md
         - InstanceLoss: losses/instance_loss.md
         - MultiSupConLoss: losses/multi_supcon_loss.md
         - NTXentLoss: losses/ntxent_loss.md

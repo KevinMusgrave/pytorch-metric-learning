@@ -127,12 +127,12 @@ The rules are:
 - A wrong shape, an integer dtype, or another device raises `ValueError`.
 - Nothing is cached. Modules neither change `mat` nor keep a reference to it.
 
-| Loss                                                                                                                                                                                                                                                                                             | `mat`        | Shape                                                                                             |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------ | ------------------------------------------------------------------------------------------------- |
-| `CircleLoss`, `ContrastiveLoss`, `DynamicSoftMarginLoss`, `GeneralizedLiftedStructureLoss`, `IntraPairVarianceLoss`, `MarginLoss`, `MultiSimilarityLoss`, `MultiSupConLoss`, `NCALoss`, `NTXentLoss`, `SignalToNoiseRatioContrastiveLoss`, `SupConLoss`, `TripletMarginLoss`, `TupletMarginLoss` | Supported    | `(N, N)`, or `(N, M)` with `ref_emb`                                                              |
-| `FastAPLoss`, `HistogramLoss`, `InstanceLoss`, `LiftedStructureLoss`, `PNPLoss`, `RankedListLoss`, `SmoothAPLoss`                                                                                                                                                                                | Supported    | `(N, N)`; these losses reject `ref_emb`                                                           |
-| Proxy and classifier losses, `AngularLoss`, `ManifoldLoss`, `NPairsLoss`, `ThresholdConsistentMarginLoss`                                                                                                                                                                                        | `ValueError` | They compare embeddings with their own weights or subsets, or read embeddings directly            |
-| `CrossBatchMemory`, `DistributedLossWrapper`, `MultipleLosses`, `SelfSupervisedLoss`, `VICRegLoss`                                                                                                                                                                                               | `TypeError`  | These wrappers build their own inputs or have no distance matrix, so their `forward` has no `mat` |
+| Loss                                                                                                                                                                                                                                                                                                                         | `mat`        | Shape                                                                                             |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------- |
+| `CircleLoss`, `ContrastiveLoss`, `DecoupledContrastiveLoss`, `DynamicSoftMarginLoss`, `GeneralizedLiftedStructureLoss`, `IntraPairVarianceLoss`, `MarginLoss`, `MultiSimilarityLoss`, `MultiSupConLoss`, `NCALoss`, `NTXentLoss`, `SignalToNoiseRatioContrastiveLoss`, `SupConLoss`, `TripletMarginLoss`, `TupletMarginLoss` | Supported    | `(N, N)`, or `(N, M)` with `ref_emb`                                                              |
+| `FastAPLoss`, `HistogramLoss`, `InstanceLoss`, `LiftedStructureLoss`, `PNPLoss`, `RankedListLoss`, `SmoothAPLoss`                                                                                                                                                                                                            | Supported    | `(N, N)`; these losses reject `ref_emb`                                                           |
+| Proxy and classifier losses, `AngularLoss`, `ManifoldLoss`, `NPairsLoss`, `ThresholdConsistentMarginLoss`                                                                                                                                                                                                                    | `ValueError` | They compare embeddings with their own weights or subsets, or read embeddings directly            |
+| `CrossBatchMemory`, `DistributedLossWrapper`, `MultipleLosses`, `SelfSupervisedLoss`, `VICRegLoss`                                                                                                                                                                                                                           | `TypeError`  | These wrappers build their own inputs or have no distance matrix, so their `forward` has no `mat` |
 
 `TripletMarginLoss(swap=True)` raises `ValueError` with `mat`, because swapping
 reads distances between references, which `mat` does not hold. Check
@@ -187,6 +187,7 @@ argument raises `ValueError`. These lists are verified by the test suite.
 
 - CircleLoss
 - ContrastiveLoss
+- DecoupledContrastiveLoss
 - DynamicSoftMarginLoss
 - GeneralizedLiftedStructureLoss
 - HistogramLoss
@@ -206,6 +207,7 @@ argument raises `ValueError`. These lists are verified by the test suite.
 - AngularLoss
 - CircleLoss
 - ContrastiveLoss
+- DecoupledContrastiveLoss
 - DynamicSoftMarginLoss
 - GeneralizedLiftedStructureLoss
 - IntraPairVarianceLoss
@@ -504,6 +506,8 @@ batches with several positives per class.
 
 ### Self-supervised and supervised contrastive objectives
 
+- [DecoupledContrastiveLoss](losses/decoupled_contrastive_loss.md): InfoNCE without
+  the positive in the denominator, which keeps small batches learning.
 - [InstanceLoss](losses/instance_loss.md): classification of each instance
   against the batch, as in image-text instance retrieval.
 - [MultiSupConLoss](losses/multi_supcon_loss.md): SupCon for label sets, with

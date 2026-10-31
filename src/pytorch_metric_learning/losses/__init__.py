@@ -7,6 +7,7 @@ from .circle_loss import CircleLoss
 from .contrastive_loss import ContrastiveLoss
 from .cosface_loss import CosFaceLoss
 from .cross_batch_memory import CrossBatchMemory
+from .decoupled_contrastive_loss import DecoupledContrastiveLoss
 from .dynamic_arcface_loss import DynamicArcFaceLoss
 from .dynamic_soft_margin_loss import DynamicSoftMarginLoss
 from .fast_ap_loss import FastAPLoss
@@ -51,6 +52,7 @@ __all__ = [
     "ContrastiveLoss",
     "CosFaceLoss",
     "CrossBatchMemory",
+    "DecoupledContrastiveLoss",
     "DynamicArcFaceLoss",
     "DynamicSoftMarginLoss",
     "FastAPLoss",

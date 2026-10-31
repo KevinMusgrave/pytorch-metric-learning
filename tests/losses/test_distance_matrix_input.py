@@ -18,6 +18,7 @@ COSINE = distances.CosineSimilarity
 PAIR_LOSSES = {
     "CircleLoss": lambda: losses.CircleLoss(),
     "ContrastiveLoss": lambda: losses.ContrastiveLoss(),
+    "DecoupledContrastiveLoss": lambda: losses.DecoupledContrastiveLoss(),
     "GeneralizedLiftedStructureLoss": lambda: losses.GeneralizedLiftedStructureLoss(),
     "IntraPairVarianceLoss": lambda: losses.IntraPairVarianceLoss(),
     "MultiSimilarityLoss": lambda: losses.MultiSimilarityLoss(),

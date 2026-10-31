@@ -340,6 +340,7 @@
           "tests/evaluation/test_calculate_accuracies.py",
           "tests/evaluation/test_calculate_accuracies_large_k.py",
           "tests/evaluation/test_accuracy_calculator_contracts.py",
+          "tests/evaluation/test_ndcg.py",
           "tests/evaluation/test_threshold_selection.py"
         ],
         "module": "evaluation",

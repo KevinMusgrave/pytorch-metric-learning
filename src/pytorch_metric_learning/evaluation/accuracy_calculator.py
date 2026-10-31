@@ -12,6 +12,7 @@ from torch import Tensor
 from ..distances import LpDistance
 from ..types import (
     ArrayLike,
+    GradedRelevance,
     KMeansFunction,
     KNNFunction,
     LabelComparison,
@@ -28,6 +29,7 @@ __all__ = [
     "mean_average_precision",
     "mean_average_precision_at_r",
     "mean_reciprocal_rank",
+    "ndcg",
     "precision_at_1",
     "precision_at_k",
     "r_precision",
@@ -47,6 +49,8 @@ class RetrievalInputs:
     knn_labels: Tensor
     matches: Tensor
     relevant_counts: Tensor
+    reference_labels: Tensor
+    ref_includes_query: bool
 
 
 @dataclass(frozen=True)
@@ -159,6 +163,50 @@ def mean_reciprocal_rank(inputs: RetrievalInputs) -> Tensor:
         return torch.zeros(len(matches), dtype=torch.float64, device=matches.device)
     first_match = torch.argmax(matches.to(torch.uint8), dim=1).to(torch.float64) + 1
     return torch.where(matches.any(dim=1), 1 / first_match, 0.0)
+
+
+def _gains(
+    relevance_fn: GradedRelevance, query_labels: Tensor, reference_labels: Tensor
+) -> Tensor:
+    gains = relevance_fn(query_labels, reference_labels).to(torch.float64)
+    if not (torch.isfinite(gains).all() and (gains >= 0).all()):
+        raise ValueError("relevance_fn must return finite, nonnegative values")
+    return gains
+
+
+def _ideal_dcg(
+    label: Tensor,
+    inputs: RetrievalInputs,
+    relevance_fn: GradedRelevance,
+    discounts: Tensor,
+) -> Tensor:
+    query = label.unsqueeze(0)
+    gains = _gains(relevance_fn, query, inputs.reference_labels)
+    gains = torch.sort(gains, descending=True).values
+    if inputs.ref_includes_query:
+        own = torch.nonzero(gains == _gains(relevance_fn, query, query))[0, 0]
+        gains = torch.cat([gains[:own], gains[own + 1 :]])
+    gains = gains[: len(discounts)]
+    return (gains * discounts[: len(gains)]).sum()
+
+
+def ndcg(
+    inputs: RetrievalInputs, relevance_fn: GradedRelevance, k: int | None = None
+) -> Tensor:
+    available = inputs.knn_labels.shape[1]
+    depth = available if k is None else min(k, available)
+    positions = torch.arange(
+        2, depth + 2, device=inputs.matches.device, dtype=torch.float64
+    )
+    discounts = 1 / torch.log2(positions)
+    gains = _gains(
+        relevance_fn, inputs.query_labels.unsqueeze(1), inputs.knn_labels[:, :depth]
+    )
+    classes, class_index = torch.unique(inputs.query_labels, dim=0, return_inverse=True)
+    ideal = torch.stack(
+        [_ideal_dcg(label, inputs, relevance_fn, discounts) for label in classes]
+    )
+    return (gains * discounts).sum(dim=1) / ideal[class_index]
 
 
 def _normalized_mutual_information(
@@ -494,6 +542,8 @@ class AccuracyCalculator:
             knn_labels=knn_labels,
             matches=matches.to(torch.bool),
             relevant_counts=counts_per_query,
+            reference_labels=reference_labels,
+            ref_includes_query=ref_includes_query,
         )
         return _QueryGroups(inputs, has_relevant, classes, class_index)
 

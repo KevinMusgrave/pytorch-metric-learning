@@ -41,6 +41,8 @@ def metrics_from_knn(
         knn_labels=knn_labels,
         matches=query_labels.unsqueeze(1) == knn_labels,
         relevant_counts=counts,
+        reference_labels=query_labels,
+        ref_includes_query=self_search,
     )
     groups = accuracy_calculator._QueryGroups(inputs, counts > 0, unique, index)
     results = {}

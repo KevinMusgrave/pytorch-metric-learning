@@ -18,6 +18,7 @@ __all__ = [
     "ArrayLike",
     "DatasetLabels",
     "DistributedObjective",
+    "GradedRelevance",
     "IndicesTuple",
     "KMeansFunction",
     "KNNFunction",
@@ -98,6 +99,7 @@ class RegularizerOptions(TypedDict, total=False):
 type KNNFunction = Callable[[Tensor, int, Tensor, bool], tuple[Tensor, Tensor]]
 type KMeansFunction = Callable[[Tensor, int], Tensor]
 type LabelComparison = Callable[[Tensor, Tensor], Tensor]
+type GradedRelevance = Callable[[Tensor, Tensor], Tensor]
 type ArrayLike = Tensor | np.ndarray
 type NeighborLimit = int | Literal["max_bin_count"] | None
 type MetricNeighbors = int | Literal["relevant", "all"]

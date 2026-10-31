@@ -285,15 +285,24 @@ may pass fewer columns when the gallery or `k` is smaller. Other values raise
 `RetrievalInputs` is a frozen dataclass with these fields:
 
 ```python {.signature}
-evaluation.RetrievalInputs(query_labels, knn_labels, matches, relevant_counts)
+evaluation.RetrievalInputs(
+    query_labels,
+    knn_labels,
+    matches,
+    relevant_counts,
+    reference_labels,
+    ref_includes_query,
+)
 ```
 
-| Field             | Value                                                                                       |
-| ----------------- | ------------------------------------------------------------------------------------------- |
-| `matches`         | `(Nq, k)` boolean tensor; `True` where the neighbor is relevant to the query, nearest first |
-| `relevant_counts` | `(Nq,)` `torch.long` number of relevant references per query, without the query's own row   |
-| `query_labels`    | `(Nq,)` or `(Nq, L)` query labels on the calculator's device                                |
-| `knn_labels`      | `(Nq, k)` or `(Nq, k, L)` labels of each query's neighbors, nearest first                   |
+| Field                | Value                                                                                       |
+| -------------------- | ------------------------------------------------------------------------------------------- |
+| `matches`            | `(Nq, k)` boolean tensor; `True` where the neighbor is relevant to the query, nearest first |
+| `relevant_counts`    | `(Nq,)` `torch.long` number of relevant references per query, without the query's own row   |
+| `query_labels`       | `(Nq,)` or `(Nq, L)` query labels on the calculator's device                                |
+| `knn_labels`         | `(Nq, k)` or `(Nq, k, L)` labels of each query's neighbors, nearest first                   |
+| `reference_labels`   | `(Nr,)` or `(Nr, L)` labels of every reference, including rows the search did not return    |
+| `ref_includes_query` | Whether the query is the first `Nq` rows of the reference, as passed to `get_accuracy`      |
 
 Relevance uses the calculator's label comparison. `k` here is the
 [effective number of neighbors](#neighbors-retrieved) for the call.
@@ -409,13 +418,106 @@ inputs = RetrievalInputs(
     knn_labels=torch.tensor([[0, 1, 0], [0, 0, 0]]),
     matches=torch.tensor([[True, False, True], [False, False, False]]),
     relevant_counts=torch.tensor([2, 0]),
+    reference_labels=torch.tensor([0, 1, 0, 2]),
+    ref_includes_query=False,
 )
 assert precision_at_k(inputs, 2).tolist() == [0.5, 0.0]
 assert r_precision(inputs)[0] == 0.5 and r_precision(inputs)[1].isnan()
 ```
 
 The [evaluation recipe](recipes/evaluation.md) passes any calculator to its
-split, two-stream, and hierarchical helpers.
+split, two-stream, centroid, and hierarchical helpers.
+
+### Graded relevance and NDCG
+
+Binary metrics treat a reference as relevant or not. With graded relevance, a
+reference earns a nonnegative gain instead, so a same-parent neighbor can count
+for less than a same-class neighbor and more than an unrelated one. NDCG, from
+[Järvelin and Kekäläinen](https://doi.org/10.1145/582415.582418), scores how
+close the ranking is to the best possible ordering of those gains.
+
+```python {.signature}
+evaluation.ndcg(inputs, relevance_fn, k=None)
+```
+
+- **inputs**: A `RetrievalInputs`.
+- **relevance_fn**: A [`types.GradedRelevance`](types.md#gradedrelevance)
+  function `relevance_fn(x, y)`, called like a
+  [`label_comparison_fn`](#using-a-custom-label-comparison-function) but returning
+  gains rather than booleans. A negative or non-finite gain raises `ValueError`.
+- **k**: The ranking depth. With `None`, it is every neighbor in `inputs`. A
+  larger `k` is capped at the available neighbors.
+
+For a query with neighbors ranked `1..k` and gains `g_i`:
+
+```text
+DCG@k  = sum(g_i / log2(i + 1) for i in 1..k)
+IDCG@k = DCG@k of the query's k largest gains over the whole reference set
+NDCG@k = DCG@k / IDCG@k
+```
+
+The result is a `(Nq,)` float64 tensor with values from 0 to 1. Gains are used as
+returned, so linear gain is `relevance` and exponential gain is
+`2**relevance - 1`. The rules below keep the normalization correct:
+
+- The ideal ranking draws from every reference, not only the retrieved neighbors,
+  so a query that retrieved no relevant reference in its `k` neighbors scores 0
+  and a truncated search cannot inflate a score.
+- `IDCG@k` uses the same depth as `DCG@k`. The depth is the smaller of `k` and the
+  columns in `inputs`, so a calculator bound or a small gallery shortens both.
+- With `ref_includes_query=True`, the query's own row is left out of the ideal
+  ranking, as it is left out of the neighbors.
+- A query whose gains are all 0 has `IDCG@k = 0`, so its value is NaN and the
+  calculator ignores it.
+- Tied neighbors keep the order the search returned, as for every other metric.
+
+Register `ndcg` as a custom metric with `functools.partial` and declare the
+neighbors it reads. Multi-column labels then serve both kinds of metric: here
+`label_comparison_fn` makes the finest column drive the binary metrics, and
+`relevance_fn` grades both columns.
+
+```python
+from functools import partial
+
+import torch
+from pytorch_metric_learning.evaluation import (
+    AccuracyCalculator,
+    RetrievalMetric,
+    ndcg,
+)
+
+
+def same_class(x, y):
+    return x[..., 0] == y[..., 0]
+
+
+def hierarchy_relevance(x, y):
+    same_parent = x[..., 1] == y[..., 1]
+    return same_parent.to(torch.float64) + same_class(x, y).to(torch.float64)
+
+
+calculator = AccuracyCalculator(
+    include=("mean_average_precision_at_r", "ndcg_at_3"),
+    k=3,
+    label_comparison_fn=same_class,
+    custom_metrics={
+        "ndcg_at_3": RetrievalMetric(
+            partial(ndcg, relevance_fn=hierarchy_relevance, k=3), neighbors=3
+        ),
+    },
+)
+embeddings = torch.tensor([[0.0], [1.0], [2.0], [3.0], [4.0], [9.0]])
+labels = torch.tensor([[0, 0], [1, 0], [0, 0], [1, 0], [2, 1], [2, 1]])
+accuracies = calculator.get_accuracy(embeddings, labels)
+assert 0 < accuracies["ndcg_at_3"] < 1
+```
+
+The calculator's `k` bounds every metric, so `k="max_bin_count"` would shorten
+`ndcg_at_3` to the largest relevant count from `label_comparison_fn`. Use `None`
+or an integer of at least the metric's depth. [Lone queries](#lone-queries) are also decided by
+`label_comparison_fn`, so a query with no same-class reference is excluded even if
+it has same-parent references. To include such queries, set `label_comparison_fn`
+to `relevance_fn(x, y) > 0`.
 
 ### Using a custom label comparison function
 

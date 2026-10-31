@@ -92,6 +92,18 @@ matrix comparisons and corresponding-row comparisons through
 `BaseDistance.pairwise`, so it needs no quadratic intermediate. Evaluation diagnostics use standard module loggers;
 applications configure the `pytorch_metric_learning` logger hierarchy.
 
+NDCG is a function a caller registers, not a built-in metric, because a gain
+scale is a modeling choice with no default. Its normalization must rank every
+reference: a metric that saw only retrieved neighbors would compute the ideal
+ranking from the same truncated list, so a poor search would look perfect.
+`RetrievalInputs` therefore carries the reference labels and the self-match flag.
+The ideal is computed once per unique query label, like relevant counts with a
+custom comparator, so the cost is `(classes, references)` label comparisons
+rather than `(queries, references)`. Binary metrics keep `label_comparison_fn`;
+`relevance_fn` is a separate argument of the metric so one calculator can report
+both from the same multi-column labels, which is what #339 asked for without
+adding per-metric label columns to the calculator.
+
 Threshold selection takes scores and labels rather than a model or embeddings,
 so inference, splits, and pair construction stay with the application and any
 source of scores works. The metric is a required callable over confusion counts

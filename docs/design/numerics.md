@@ -234,8 +234,10 @@ because `matmul` would otherwise narrow the widened inputs again.
 
 `LpDistance` computes float16 and bfloat16 matrices with `torch.cdist` in
 float32 and casts the normalized result, because `torch.cdist` lacks CPU kernels for those
-types and expanding every row pair costs memory proportional to queries times
-references times dimensions. The call fixes `compute_mode` to the direct
+types and expanding every row pair in the forward pass costs memory proportional to
+queries times references times dimensions. The backward pass of the direct kernel still
+expands them, about 40 times the float32 peak at 2048 rows, which is the accepted cost
+of keeping distances between nearby rows. The call fixes `compute_mode` to the direct
 difference kernel: the default switches to $\|x\|^2 + \|y\|^2 - 2 x \cdot y$
 above 25 rows, which cancels to zero for nearby half-precision rows and erases
 their gradients. Default reductions avoid data-dependent shapes:

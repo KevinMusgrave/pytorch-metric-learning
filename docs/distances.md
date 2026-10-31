@@ -247,9 +247,11 @@ distances.LpDistance(*, normalize_embeddings=True, p=2, power=1)
 `mat[i, j]` is the Lp distance between `query_emb[i]` and `ref_emb[j]`. With
 default parameters, this is the Euclidean distance between normalized
 embeddings. For float16 and bfloat16 inputs, the matrix is computed in float32
-with `torch.cdist` using its direct difference kernel, which keeps peak memory at
-the size of the output matrix on every device and preserves distances between
-nearby rows that the matrix-product formula would cancel to zero. With
+with `torch.cdist` using its direct difference kernel, which preserves distances
+between nearby rows that the matrix-product formula would cancel to zero. The
+forward pass stays near the size of the output matrix, but the backward pass peaks at
+queries times references times dimensions: about 2.1 GB for 2048 rows of 128 dimensions
+on CUDA, against 52 MiB for float32 inputs. With
 `normalize_embeddings=True` the result is cast back; otherwise it
 [stays in float32](#calling-a-distance).
 

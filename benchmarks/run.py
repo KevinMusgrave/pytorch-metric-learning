@@ -385,7 +385,11 @@ def main() -> None:
                 "reused-cosine",
                 "separate-lp",
                 "reused-lp",
+                "full-ntxent",
                 "anchor-batched-ntxent",
+                "full-triplet",
+                "anchor-batched-triplet",
+                "unbounded-mined-triplet",
                 "bounded-mined-triplet",
             )
             if args.case == "all"

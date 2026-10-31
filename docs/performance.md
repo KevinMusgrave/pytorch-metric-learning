@@ -41,6 +41,12 @@ compare a full-batch `backward()` with
 [`tuples_per_anchor=32`](miners.md#bounding-the-output). Peak memory for all of these
 needs `--device cuda`.
 
+The default run includes every case except `distributed`. Timings of a few milliseconds
+vary between processes: the same case differed by up to 122% across four 20-repeat
+runs on a rented GPU, while peak memory was identical. Compare timings from several
+processes with `--repeats 100` or more, and treat a difference as real only when the
+ranges of the two cases do not overlap.
+
 Change `--batch-size`, `--dimensions`, `--samples-per-class`, `--dtype`, and
 `--threads` to describe the intended workload. Batch size must contain at least
 two complete classes. Each case uses its own seeded inputs, independent of how

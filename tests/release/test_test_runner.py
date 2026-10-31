@@ -64,6 +64,48 @@ def test_runner_exit_status(tmp_path, source, expected_exit):
     assert result.returncode == expected_exit, result.stdout + result.stderr
 
 
+@pytest.mark.parametrize(
+    ("available", "expected"),
+    [(False, "1 passed, 1 deselected"), (True, "2 passed")],
+    ids=["unavailable", "available"],
+)
+def test_mps_tests_follow_device_availability(tmp_path, available, expected):
+    (tmp_path / "mps_availability.py").write_text(
+        f"import torch\ntorch.backends.mps.is_available = lambda: {available}\n"
+    )
+    candidate = tmp_path / "test_candidate.py"
+    candidate.write_text(
+        "import pytest\n"
+        "@pytest.mark.mps\n"
+        "def test_device():\n    pass\n"
+        "def test_ordinary():\n    pass\n"
+    )
+    root = Path(__file__).resolve().parents[2]
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "-q",
+            "-c",
+            str(root / "pyproject.toml"),
+            "-p",
+            "mps_availability",
+            "-p",
+            "conftest",
+            str(candidate),
+        ],
+        cwd=root,
+        env={**os.environ, "PYTHONPATH": f"{tmp_path}{os.pathsep}{root}"},
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=60,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert expected in result.stdout
+
+
 def test_bare_pytest_runs_faiss_without_openmp_environment():
     root = Path(__file__).resolve().parents[2]
     environment = os.environ.copy()

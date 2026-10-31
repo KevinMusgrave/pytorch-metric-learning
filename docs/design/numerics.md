@@ -278,3 +278,65 @@ outside this boundary. Mathematical definitions and paper references live on
 the component pages; upstream provenance for reference tests is in
 `THIRD_PARTY_NOTICES.md`. The development baseline uses current PyTorch;
 compatibility with obsolete PyTorch releases is not a requirement.
+
+## Shared distance matrices (proposed, not implemented)
+
+Issue #211 asks to compute one distance matrix for a miner and its losses. Issue
+#697 asks to pass per-call metadata, such as embedding ids, to a custom distance.
+One caller-owned matrix would address both, so they should be designed together.
+No public API exists for this yet.
+
+`docs/benchmarks/reused-distance-m1-pro-v3.json` measures the saving for a miner
+and two losses on one CPU thread, with no encoder, as the median of five
+interleaved rounds:
+
+| Batch size | Cosine saving | Lp saving | One matrix, forward and backward   |
+| ---------- | ------------- | --------- | ---------------------------------- |
+| 128        | 20.4%         | 8.9%      | 0.11 to 0.16 ms of about 2 ms      |
+| 512        | 16.9%         | 3.8%      | 0.75 ms of about 25 to 30 ms       |
+| 2048       | 9.6%          | 2.6%      | 13 to 14 ms of about 400 to 540 ms |
+
+Repeated distance computation is a minor cost that shrinks as batches grow,
+because mask construction and pair selection dominate. A whole training step with
+an encoder would save a smaller share. GPU time and memory were not measured, and
+GPU peak memory is the likeliest place for a larger benefit. #211 alone does not
+justify the API on these numbers; #697 is the stronger reason, because it has no
+alternative besides mutating the distance object before each call.
+
+If it is built, the design is an optional keyword on loss and miner `forward`:
+
+```python
+mat = distance(embeddings)
+pairs = miner(embeddings, labels, mat=mat)
+loss = first(embeddings, labels, pairs, mat=mat) + second(
+    embeddings, labels, pairs, mat=mat
+)
+```
+
+The gradient rules follow from how the modules already run:
+
+- The caller computes the matrix outside any miner and with gradients enabled.
+  Miners run under `torch.no_grad()`, so a matrix computed inside one has no graph,
+  and a loss built on it would train nothing without raising. A loss must raise
+  `ValueError` when `embeddings.requires_grad` is true and `mat.requires_grad` is
+  false.
+- Losses sharing a matrix share its graph, so their sum takes one `backward()`.
+  Separate `backward()` calls need `retain_graph=True`, as for any shared subgraph.
+- No module caches a matrix on itself or on the distance. A cache keyed on tensors
+  retains graphs between steps, goes stale after in-place updates, and hides which
+  matrix a loss used. Explicit passing is one keyword and has none of those
+  failure modes.
+- `mat` must have shape `(len(embeddings), len(reference))` and must not be
+  changed in place by a module. A text search found no in-place matrix updates in
+  losses or miners today; a test must establish this before release.
+- The receiving module's `distance` still decides orientation through
+  `is_inverted` and `margin`. A matrix from another distance cannot be detected,
+  so this is a documented caller obligation.
+
+It applies only to the modules that read `self.distance(embeddings, ref_emb)` as
+a batch-against-reference matrix: the pair and tuple losses and the seven distance
+miners. Proxy and classifier losses compare embeddings with their own weights, and
+`CrossBatchMemory`, `DistributedLossWrapper`, and `SelfSupervisedLoss` build the
+reference themselves, so a caller's matrix would not match; these must raise when
+given `mat`. A custom distance from #697 then needs no change to `compute_mat`:
+the caller computes `mat` with whatever metadata it holds and passes the result.

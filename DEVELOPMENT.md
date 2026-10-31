@@ -70,7 +70,8 @@ Pytest runs every test, including `unittest.TestCase` classes. Third-party
 plugin autoloading is disabled so the frozen environment determines behavior.
 Each test starts with `torch.manual_seed(0)`. Skipped tests and expected
 failures fail the run, with a message explaining why; tests marked
-`@pytest.mark.cuda` are deselected, not skipped, on CPU runs.
+`@pytest.mark.cuda` are deselected, not skipped, on CPU runs, and
+`@pytest.mark.mps` tests are deselected wherever MPS is unavailable.
 
 Tests default to CPU with float16, float32, and float64:
 

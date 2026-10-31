@@ -8,9 +8,9 @@ completes in under a second on CPU, and performs no downloads. The Python file
 in `docs/recipes` is the canonical executable source; it is not an installed
 library API.
 
-| Task                                                                         | Executable source                                                                                                        | Command                                                       |
-| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------- |
-| Extract embeddings and evaluate split, two-stream, or hierarchical retrieval | [View evaluation.py](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.0rc3/docs/recipes/evaluation.py) | `uv run --frozen --no-sync python -m docs.recipes.evaluation` |
+| Task                                                                                   | Executable source                                                                                                        | Command                                                       |
+| -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------- |
+| Extract embeddings and evaluate split, two-stream, centroid, or hierarchical retrieval | [View evaluation.py](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.0rc4/docs/recipes/evaluation.py) | `uv run --frozen --no-sync python -m docs.recipes.evaluation` |
 
 The command imports the installed package, so install the checkout as
 described in the [development guide](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/DEVELOPMENT.md#set-up-a-checkout),
@@ -55,6 +55,42 @@ the reference is only the given splits and no row is treated as a self-match.
 
 Equal shapes or equal labels never imply self-matches. Pass the flag that
 describes how the reference was assembled.
+
+## Nearest-centroid accuracy
+
+`nearest_centroid_accuracy(calculator, query, reference)` takes
+`(embeddings, labels)` pairs. It replaces the reference with one mean embedding
+per class and passes the centroids and their classes to `get_accuracy`. With one
+reference per class, `precision_at_1` is nearest-centroid accuracy: 1 when the
+nearest centroid has the query's class, 0 otherwise. Use a calculator that
+selects `precision_at_1`:
+
+```python
+import torch
+from docs.recipes.evaluation import nearest_centroid_accuracy
+from pytorch_metric_learning.evaluation import AccuracyCalculator
+
+reference = torch.tensor([[0.0, 0.0], [2.0, 0.0], [6.0, 0.0], [8.0, 0.0]])
+reference_labels = torch.tensor([0, 0, 1, 1])
+query = torch.tensor([[0.5, 0.0], [3.0, 0.0], [5.0, 0.0]])
+query_labels = torch.tensor([0, 1, 1])
+
+calculator = AccuracyCalculator(include=("precision_at_1",))
+accuracy = nearest_centroid_accuracy(
+    calculator, (query, query_labels), (reference, reference_labels)
+)
+assert accuracy["precision_at_1"] == 2 / 3
+```
+
+The calculator's `knn_func` sets the geometry, `avg_of_avgs` sets the weighting
+of classes, and a query whose class has no reference is a
+[lone query](../accuracy_calculation.md#lone-queries), excluded from the result.
+The centroids are arithmetic means with the reference's dtype and device. Class
+sums accumulate in float64, or float32 on MPS, so a large low-precision gallery
+does not overflow before the division. For cosine geometry, normalize embeddings
+before calling the function, and use a `knn_func` with `CosineSimilarity`, which
+normalizes each centroid before comparing. Other metrics in the calculator would
+rank against one reference per class, so they are not meaningful here.
 
 ## Two-stream evaluation
 

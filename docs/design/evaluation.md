@@ -24,7 +24,7 @@ relevance matrix, relevant counts, and query and neighbor labels) to one value
 per query, NaN where undefined; `ClusteringMetric(function)` maps query and
 cluster labels to one float. The record's type declares which backend the
 metric needs, and `neighbors` declares how much ranking it reads. The calculator
-owns lone-query exclusion and every reduction (pooled mean, mean of class means,
+owns lone-query exclusion, unless a metric opts out, and every reduction (pooled mean, mean of class means,
 per-class means), so a metric cannot return a type that depends on how it is
 reduced. The earlier contract required three parallel method overrides
 (`metric_functions`, `requires_knn`, `requires_clustering`), passed every
@@ -67,6 +67,11 @@ in blocks of 256 so temporary memory is one `(256, references)` block plus the
 contract. The calculator moves inputs only to a device the caller names; it
 never chooses a GPU itself.
 
+Metric values are float64 so that counts stay exact, and MPS has no float64.
+Labels and neighbor indices therefore move to CPU for metric arithmetic on MPS,
+while the search itself stays on the input device. Reducing metrics to float32
+everywhere would lose precision that other devices have.
+
 A positive integer `k` is an upper bound on the available neighbors for each
 evaluation call. The calculator caps it at the reference count minus one when
 self-matches are excluded, before the backend adds its self-search candidate.
@@ -91,6 +96,38 @@ Threshold matching applies the same distance normalization and power for
 matrix comparisons and corresponding-row comparisons through
 `BaseDistance.pairwise`, so it needs no quadratic intermediate. Evaluation diagnostics use standard module loggers;
 applications configure the `pytorch_metric_learning` logger hierarchy.
+
+NDCG is a function a caller registers, not a built-in metric, because a gain
+scale is a modeling choice with no default. Its normalization must rank every
+reference: a metric that saw only retrieved neighbors would compute the ideal
+ranking from the same truncated list, so a poor search would look perfect.
+`RetrievalInputs` therefore carries the reference labels and the self-match flag.
+The ideal is computed once per unique query label, like relevant counts with a
+custom comparator, so the cost is `(classes, references)` label comparisons
+rather than `(queries, references)`. Binary metrics keep `label_comparison_fn`;
+`relevance_fn` is a separate argument of the metric so one calculator can report
+both from the same multi-column labels, which is what #339 asked for without
+adding per-metric label columns to the calculator. Lone-query exclusion is a
+property of relevance under `label_comparison_fn`, so it cannot define NDCG's
+eligibility: a query with no same-class reference may still have same-parent
+references, and dropping it biases the score upward. A metric therefore declares
+`exclude_lone_queries`, and `ndcg_metric` clears it so that NaN from a zero ideal
+is the only exclusion. The registration is built by a function because a caller
+who forgot the flag would get a plausible, wrong number.
+
+Threshold selection takes scores and labels rather than a model or embeddings,
+so inference, splits, and pair construction stay with the application and any
+source of scores works. The metric is a required callable over confusion counts
+for every candidate, computed in one sorted pass, so constraints such as a
+false-match-rate ceiling need no extra options. `is_inverted` has no default
+because guessing the direction of a score silently inverts every decision. A
+returned threshold is the midpoint of the gap it separates: both neighbors give
+the same validation result, and an observed score would sit on the validation
+data's edge. Comparisons convert a Python threshold to the score dtype, so a
+midpoint that rounds onto the excluded score falls back to the kept score, which
+preserves the reported value under `MatchFinder`. Selection runs on CPU copies
+because float64 counts are unavailable on MPS and a one-dimensional sort is cheap
+relative to the inference that produced the scores.
 
 Faiss and scikit-learn are optional and imported only when a Faiss backend is
 constructed or a mutual-information metric is computed. Missing packages raise

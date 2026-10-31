@@ -22,6 +22,14 @@ NT-Xent temperature is 0.07, miner margins are 0.2 and 1.4, and proxy
 temperature is 0.1. The proxy benchmark includes gradients for its learnable
 weights.
 
+The `separate-cosine`, `reused-cosine`, `separate-lp`, and `reused-lp` cases run
+`MultiSimilarityMiner`, `MultiSimilarityLoss`, and `ContrastiveLoss` on one batch.
+A `separate` case computes one distance matrix per module. A `reused` case
+computes one matrix with gradients first and gives it to all three, through a
+benchmark-only distance subclass. Compare each pair to measure what repeated
+distance computation costs; their losses are equal for the same seed. These
+cases include no encoder, so they overstate the saving on a whole training step.
+
 Change `--batch-size`, `--dimensions`, `--samples-per-class`, `--dtype`, and
 `--threads` to describe the intended workload. Batch size must contain at least
 two complete classes. Each case uses its own seeded inputs, independent of how

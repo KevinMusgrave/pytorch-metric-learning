@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pytorch-metric-learning"
-version = "3.0.0rc3"
+version = "3.0.0rc4"
 description = "Composable metric learning losses, miners, distances, samplers, and retrieval metrics for PyTorch."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -75,7 +75,10 @@ testpaths = ["tests"]
 pythonpath = ["src"]
 addopts = ["--strict-config", "--strict-markers", "--disable-plugin-autoload", "-ra"]
 xfail_strict = true
-markers = ["cuda: requires TEST_DEVICE=cuda; deselected on CPU runs"]
+markers = [
+    "cuda: requires TEST_DEVICE=cuda; deselected on CPU runs",
+    "mps: requires an MPS device; deselected where MPS is unavailable",
+]
 
 [tool.uv]
 required-version = "==0.13.4"

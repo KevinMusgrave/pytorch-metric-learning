@@ -31,6 +31,21 @@ def split_accuracy(
     )
 
 
+def nearest_centroid_accuracy(
+    calculator: AccuracyCalculator,
+    query: tuple[Tensor, Tensor],
+    reference: tuple[Tensor, Tensor],
+) -> dict[str, float]:
+    embeddings = reference[0]
+    wide = torch.float32 if embeddings.device.type == "mps" else torch.float64
+    classes, positions = torch.unique(reference[1], return_inverse=True)
+    totals = embeddings.new_zeros(len(classes), embeddings.shape[1], dtype=wide)
+    totals.index_add_(0, positions, embeddings.to(wide))
+    sizes = torch.bincount(positions, minlength=len(classes)).unsqueeze(1)
+    centroids = (totals / sizes).to(embeddings.dtype)
+    return calculator.get_accuracy(query[0], query[1], centroids, classes, False)
+
+
 def two_stream_accuracy(
     calculator: AccuracyCalculator,
     anchors: Tensor,
@@ -89,6 +104,8 @@ def main() -> None:
     against_gallery = split_accuracy(calculator, query, [gallery], False)
     print(f"query against itself: {within}")
     print(f"query against gallery: {against_gallery}")
+    centroid = AccuracyCalculator(include=("precision_at_1",))
+    print(f"nearest centroid: {nearest_centroid_accuracy(centroid, query, gallery)}")
 
 
 if __name__ == "__main__":

@@ -7,13 +7,15 @@ from torch.utils.data import DataLoader, TensorDataset
 
 from docs.recipes.evaluation import (
     extract_embeddings,
+    nearest_centroid_accuracy,
     parent_conditioned_accuracy,
     split_accuracy,
     two_stream_accuracy,
 )
-from pytorch_metric_learning.evaluation import AccuracyCalculator
+from pytorch_metric_learning.distances import LpDistance
+from pytorch_metric_learning.evaluation import AccuracyCalculator, CustomKNN
 
-from .. import TEST_DEVICE
+from .. import TEST_DEVICE, TEST_DTYPES
 
 
 def angles(*values):
@@ -58,6 +60,95 @@ class TestEvaluationRecipes(unittest.TestCase):
                     self.calculator, query, references, query_in_reference
                 )
                 self.assertAlmostEqual(result["precision_at_1"], expected)
+
+    def test_nearest_centroid_uses_class_means(self):
+        reference = torch.tensor(
+            [[0.0, 0.0], [10.0, 0.0], [4.0, 0.0], [6.0, 0.0], [7.0, 0.0]],
+            device=TEST_DEVICE,
+        )
+        reference_labels = labels(0, 0, 1, 1, 1)
+        query = torch.tensor([[5.5, 0.0], [5.0, 0.0]], device=TEST_DEVICE)
+        result = nearest_centroid_accuracy(
+            self.calculator, (query, labels(1, 0)), (reference, reference_labels)
+        )
+        self.assertAlmostEqual(result["precision_at_1"], 1.0)
+        nearest_example = self.calculator.get_accuracy(
+            query, labels(1, 0), reference, reference_labels
+        )
+        self.assertAlmostEqual(nearest_example["precision_at_1"], 0.5)
+
+    def test_nearest_centroid_matches_direct_computation(self):
+        generator = torch.Generator().manual_seed(5)
+        reference = torch.randn(60, 4, generator=generator).to(TEST_DEVICE)
+        reference_labels = (torch.arange(60) % 7).to(TEST_DEVICE)
+        query = torch.randn(40, 4, generator=generator).to(TEST_DEVICE)
+        query_labels = (torch.arange(40) % 7).to(TEST_DEVICE)
+        centroids = torch.stack(
+            [reference[reference_labels == c].mean(dim=0) for c in range(7)]
+        )
+        nearest = torch.cdist(query, centroids).argmin(dim=1)
+        result = nearest_centroid_accuracy(
+            self.calculator, (query, query_labels), (reference, reference_labels)
+        )
+        self.assertAlmostEqual(
+            result["precision_at_1"], (nearest == query_labels).float().mean().item()
+        )
+
+    def test_nearest_centroid_keeps_sparse_labels_and_excludes_lone_queries(self):
+        reference = torch.tensor([[0.0, 0.0], [9.0, 0.0]], device=TEST_DEVICE)
+        query = torch.tensor([[1.0, 0.0], [8.0, 0.0], [0.0, 0.0]], device=TEST_DEVICE)
+        result = nearest_centroid_accuracy(
+            self.calculator,
+            (query, labels(7, 2**40, 5)),
+            (reference, labels(7, 2**40)),
+        )
+        self.assertEqual(result["precision_at_1"], 1.0)
+
+    def test_nearest_centroid_keeps_embedding_dtype(self):
+        for dtype in TEST_DTYPES:
+            with self.subTest(dtype=dtype):
+                reference = torch.tensor([[0.0], [2.0]], device=TEST_DEVICE).to(dtype)
+                result = nearest_centroid_accuracy(
+                    self.calculator,
+                    (reference[:1], labels(0)),
+                    (reference, labels(0, 0)),
+                )
+                self.assertEqual(result["precision_at_1"], 1.0)
+
+    def test_nearest_centroid_sum_does_not_overflow_low_precision(self):
+        embeddings = torch.ones(70001, 1, dtype=torch.float16, device=TEST_DEVICE)
+        embeddings[-1] = 0.5
+        classes = torch.zeros(70001, dtype=torch.long, device=TEST_DEVICE)
+        classes[-1] = 1
+        result = nearest_centroid_accuracy(
+            self.calculator,
+            (torch.ones_like(embeddings[:1]), labels(0)),
+            (embeddings, classes),
+        )
+        self.assertEqual(result["precision_at_1"], 1.0)
+
+    def test_nearest_centroid_keeps_reference_dtype_and_means(self):
+        seen = []
+
+        def nearest(query, k, reference, ref_includes_query):
+            seen.append(reference)
+            return CustomKNN(LpDistance(normalize_embeddings=False))(
+                query, k, reference, ref_includes_query
+            )
+
+        calculator = AccuracyCalculator(include=("precision_at_1",), knn_func=nearest)
+        for dtype in TEST_DTYPES:
+            with self.subTest(dtype=dtype):
+                embeddings = torch.tensor(
+                    [[1.0], [2.0], [6.0]], device=TEST_DEVICE, dtype=dtype
+                )
+                nearest_centroid_accuracy(
+                    calculator,
+                    (embeddings[:1], labels(0)),
+                    (embeddings, labels(0, 0, 1)),
+                )
+                self.assertEqual(seen[-1].dtype, dtype)
+                self.assertEqual(seen[-1].flatten().tolist(), [1.5, 6.0])
 
     def test_two_stream_does_not_infer_self_matches(self):
         anchors = angles(0, 10, 20, 30, 50, 60, 70, 80)

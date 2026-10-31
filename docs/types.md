@@ -304,6 +304,16 @@ type LabelComparison = Callable[[Tensor, Tensor], Tensor]
 A `label_comparison_fn(x, y)` returning a boolean tensor of the broadcast shape;
 see [custom label comparison](accuracy_calculation.md#using-a-custom-label-comparison-function).
 
+### GradedRelevance
+
+```python {.signature}
+type GradedRelevance = Callable[[Tensor, Tensor], Tensor]
+```
+
+A `relevance_fn(x, y)` returning a finite, nonnegative gain for every label pair,
+in the broadcast shape; see
+[graded relevance and NDCG](accuracy_calculation.md#graded-relevance-and-ndcg).
+
 ## Sampler types
 
 ### DatasetLabels

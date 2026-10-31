@@ -42,7 +42,11 @@ The evaluation recipe extracts embeddings in caller code and composes
 explicit query/reference sets for `AccuracyCalculator`. Split composition places
 a query first when it belongs to the reference; two-stream evaluation never
 removes self-matches; parent-conditioned metrics are unweighted means over
-parent groups, then over levels. Published dataset splits are documentation, not code.
+parent groups, then over levels. Nearest-centroid accuracy is a recipe rather
+than a built-in metric: a metric receives only neighbor results, while centroids
+replace the reference set, and `precision_at_1` over one reference per class
+already computes it with the caller's search backend. Published dataset splits
+are documentation, not code.
 
 Reference tests verify objective values and gradients, candidate-set nesting,
 gradient ownership, parameter updates, subset mapping, and queue progression.

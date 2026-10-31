@@ -2,6 +2,7 @@ import importlib
 import logging
 from collections.abc import Callable, Hashable, Mapping, Sequence
 from dataclasses import dataclass
+from functools import partial
 from types import MappingProxyType
 from typing import Any
 
@@ -12,6 +13,7 @@ from torch import Tensor
 from ..distances import LpDistance
 from ..types import (
     ArrayLike,
+    GradedRelevance,
     KMeansFunction,
     KNNFunction,
     LabelComparison,
@@ -28,6 +30,8 @@ __all__ = [
     "mean_average_precision",
     "mean_average_precision_at_r",
     "mean_reciprocal_rank",
+    "ndcg",
+    "ndcg_metric",
     "precision_at_1",
     "precision_at_k",
     "r_precision",
@@ -47,12 +51,15 @@ class RetrievalInputs:
     knn_labels: Tensor
     matches: Tensor
     relevant_counts: Tensor
+    reference_labels: Tensor
+    ref_includes_query: bool
 
 
 @dataclass(frozen=True)
 class RetrievalMetric:
     function: Callable[[RetrievalInputs], Tensor]
     neighbors: MetricNeighbors = "all"
+    exclude_lone_queries: bool = True
 
     def __post_init__(self) -> None:
         valid_count = (
@@ -161,6 +168,58 @@ def mean_reciprocal_rank(inputs: RetrievalInputs) -> Tensor:
     return torch.where(matches.any(dim=1), 1 / first_match, 0.0)
 
 
+def _gains(
+    relevance_fn: GradedRelevance, query_labels: Tensor, reference_labels: Tensor
+) -> Tensor:
+    gains = relevance_fn(query_labels, reference_labels).to(torch.float64)
+    if not (torch.isfinite(gains).all() and (gains >= 0).all()):
+        raise ValueError("relevance_fn must return finite, nonnegative values")
+    return gains
+
+
+def _ideal_dcg(
+    label: Tensor,
+    inputs: RetrievalInputs,
+    relevance_fn: GradedRelevance,
+    discounts: Tensor,
+) -> Tensor:
+    query = label.unsqueeze(0)
+    gains = _gains(relevance_fn, query, inputs.reference_labels)
+    gains = torch.sort(gains, descending=True).values
+    if inputs.ref_includes_query:
+        own = torch.nonzero(gains == _gains(relevance_fn, query, query))[0, 0]
+        gains = torch.cat([gains[:own], gains[own + 1 :]])
+    gains = gains[: len(discounts)]
+    return (gains * discounts[: len(gains)]).sum()
+
+
+def ndcg(
+    inputs: RetrievalInputs, relevance_fn: GradedRelevance, k: int | None = None
+) -> Tensor:
+    available = inputs.knn_labels.shape[1]
+    depth = available if k is None else min(k, available)
+    positions = torch.arange(
+        2, depth + 2, device=inputs.matches.device, dtype=torch.float64
+    )
+    discounts = 1 / torch.log2(positions)
+    gains = _gains(
+        relevance_fn, inputs.query_labels.unsqueeze(1), inputs.knn_labels[:, :depth]
+    )
+    classes, class_index = torch.unique(inputs.query_labels, dim=0, return_inverse=True)
+    ideal = torch.stack(
+        [_ideal_dcg(label, inputs, relevance_fn, discounts) for label in classes]
+    )
+    return (gains * discounts).sum(dim=1) / ideal[class_index]
+
+
+def ndcg_metric(relevance_fn: GradedRelevance, k: int | None = None) -> RetrievalMetric:
+    return RetrievalMetric(
+        partial(ndcg, relevance_fn=relevance_fn, k=k),
+        neighbors="all" if k is None else k,
+        exclude_lone_queries=False,
+    )
+
+
 def _normalized_mutual_information(
     query_labels: Tensor, cluster_labels: Tensor
 ) -> float:
@@ -213,7 +272,10 @@ class _QueryGroups:
                 f"{tuple(self.has_relevant.shape)}, one value per query"
             )
         values = values.to(torch.float64)
-        return values, self.has_relevant & ~torch.isnan(values)
+        defined = ~torch.isnan(values)
+        if metric.exclude_lone_queries:
+            defined = defined & self.has_relevant
+        return values, defined
 
     def class_means(self, values: Tensor, defined: Tensor) -> Tensor:
         num_classes = len(self.classes)
@@ -476,24 +538,30 @@ class AccuracyCalculator:
         ref_includes_query: bool,
         metrics: Mapping[str, RetrievalMetric],
     ) -> _QueryGroups:
+        metric_device = _metric_device(query.device)
+        query_labels = query_labels.to(metric_device)
+        reference_labels = reference_labels.to(metric_device)
         classes, class_index = torch.unique(query_labels, dim=0, return_inverse=True)
         counts = _relevant_counts(
             classes, reference_labels, ref_includes_query, self.custom_comparison
         )
         counts_per_query = counts[class_index]
         has_relevant = counts_per_query > 0
-        if not torch.any(has_relevant):
+        filters_lone = any(metric.exclude_lone_queries for metric in metrics.values())
+        if filters_lone and not torch.any(has_relevant):
             _LOGGER.warning("None of the query labels are in the reference set.")
         num_k = self.determine_k(counts, len(reference), ref_includes_query, metrics)
         _, knn_indices = self.knn_func(query, num_k, reference, ref_includes_query)
         _check_neighbor_indices(knn_indices, len(query), num_k, len(reference))
-        knn_labels = reference_labels[knn_indices]
+        knn_labels = reference_labels[knn_indices.to(metric_device)]
         matches = self.label_comparison_fn(query_labels.unsqueeze(1), knn_labels)
         inputs = RetrievalInputs(
             query_labels=query_labels,
             knn_labels=knn_labels,
             matches=matches.to(torch.bool),
             relevant_counts=counts_per_query,
+            reference_labels=reference_labels,
+            ref_includes_query=ref_includes_query,
         )
         return _QueryGroups(inputs, has_relevant, classes, class_index)
 
@@ -540,6 +608,10 @@ class AccuracyCalculator:
             for metric in metrics.values()
         )
         return min(limit, needed, available)
+
+
+def _metric_device(device: torch.device) -> torch.device:
+    return torch.device("cpu") if device.type == "mps" else device
 
 
 def _neighbors_needed(

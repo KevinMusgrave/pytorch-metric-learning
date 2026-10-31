@@ -420,3 +420,12 @@ because the hard case minimizes the value directly, and minimizing a distance wo
 the negative closer without any error. The authors' repository has no license file, so
 the implementation comes from the paper; their code served only as a numerical
 cross-check outside this repository.
+
+## Spherical embedding regularizer
+
+Issue #346 asked whether SEC duplicates `CenterInvariantRegularizer`. It does not. The
+center invariant penalty compares squared norms, so its gradient grows with the cube of
+the norm, while SEC compares norms, with a gradient linear in the deviation. The tests
+show that neither is a rescaling of the other. SEC computes on the raw row, so it needs
+unnormalized embeddings, which is where the losses' distances leave them. It needs no
+`distance` argument, because equation 17 is defined only on the Euclidean norm.

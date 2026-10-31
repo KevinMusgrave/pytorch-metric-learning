@@ -28,6 +28,12 @@ aggregate comparisons must use the slowest rank. Barriers align samples outside
 the timing window. Run this case with torchrun; correctness tests launch their
 own workers and remain a separate command.
 
+The reused-distance cases measure one proposal for #211 without adding public
+API: a benchmark-only subclass of a distance returns a matrix computed once, with
+gradients, before mining. Interleave the cases of a comparison; running them in
+sequence on a laptop produced a false 26% regression that five interleaved
+rounds did not reproduce.
+
 Short runs execute small real workloads and checks finite
 losses, gradients, and valid miner indices before reporting measurements. It
 does not assert machine-dependent timing thresholds. Longer measurements and

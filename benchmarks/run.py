@@ -16,7 +16,7 @@ from torch import nn
 from torch.nn.parallel import DistributedDataParallel
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from pytorch_metric_learning import losses, miners
+from pytorch_metric_learning import distances, losses, miners
 from pytorch_metric_learning.distributed import DistributedLossWrapper
 
 
@@ -56,6 +56,43 @@ class MinedLoss(nn.Module):
 
     def forward(self, embeddings: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
         return self.loss(embeddings, labels, self.miner(embeddings, labels))
+
+
+class ReusedMatrix(distances.BaseDistance):
+    def __init__(self, distance: distances.BaseDistance) -> None:
+        super().__init__()
+        self.distance = distance
+        self.is_inverted = distance.is_inverted
+        self.mat: torch.Tensor | None = None
+
+    def compute(self, embeddings: torch.Tensor) -> None:
+        self.mat = self.distance(embeddings)
+
+    def forward(
+        self, query_emb: torch.Tensor, ref_emb: torch.Tensor | None = None
+    ) -> torch.Tensor:
+        if self.mat is None:
+            raise ValueError("Compute the reused matrix before reading it")
+        return self.mat
+
+
+class MinedLosses(nn.Module):
+    def __init__(self, distance: distances.BaseDistance) -> None:
+        super().__init__()
+        self.distance = distance
+        self.miner = miners.MultiSimilarityMiner(distance=distance)
+        self.first = losses.MultiSimilarityLoss(distance=distance)
+        self.second = losses.ContrastiveLoss(distance=distance)
+
+    def forward(self, embeddings: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
+        if isinstance(self.distance, ReusedMatrix):
+            self.distance.compute(embeddings)
+        pairs = self.miner(embeddings, labels)
+        loss = self.first(embeddings, labels, pairs)
+        loss = loss + self.second(embeddings, labels, pairs)
+        if isinstance(self.distance, ReusedMatrix):
+            self.distance.mat = None
+        return loss
 
 
 def synchronize(device: torch.device) -> None:
@@ -131,6 +168,12 @@ def make_workload(
             embedding_size=args.dimensions,
             temperature=0.1,
         ),
+        "separate-cosine": lambda: MinedLosses(distances.CosineSimilarity()),
+        "reused-cosine": lambda: MinedLosses(
+            ReusedMatrix(distances.CosineSimilarity())
+        ),
+        "separate-lp": lambda: MinedLosses(distances.LpDistance()),
+        "reused-lp": lambda: MinedLosses(ReusedMatrix(distances.LpDistance())),
         "distributed": lambda: DistributedContrastive(args.dimensions),
     }
     module = factories[case]().to(device=device, dtype=dtype)
@@ -261,6 +304,10 @@ def arguments() -> argparse.Namespace:
             "mined-triplet",
             "miner",
             "proxy",
+            "separate-cosine",
+            "reused-cosine",
+            "separate-lp",
+            "reused-lp",
             "distributed",
         ),
         default="all",
@@ -316,7 +363,18 @@ def main() -> None:
         )
     try:
         cases = (
-            ("contrastive", "triplet", "ntxent", "mined-triplet", "miner", "proxy")
+            (
+                "contrastive",
+                "triplet",
+                "ntxent",
+                "mined-triplet",
+                "miner",
+                "proxy",
+                "separate-cosine",
+                "reused-cosine",
+                "separate-lp",
+                "reused-lp",
+            )
             if args.case == "all"
             else (args.case,)
         )

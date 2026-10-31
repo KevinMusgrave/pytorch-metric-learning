@@ -1,0 +1,129 @@
+{
+  "description": "Loss-only CPU step: MultiSimilarityMiner, MultiSimilarityLoss, and ContrastiveLoss with one distance matrix each (separate) or one reused matrix (reused). Medians of forward plus backward in milliseconds per round; five interleaved rounds of 12 samples after 3 warmup steps.",
+  "dimensions": 128,
+  "samples_per_class": 4,
+  "dtype": "float32",
+  "threads": 1,
+  "results": [
+    {
+      "batch_size": 128,
+      "distance": "cosine",
+      "separate_ms": [
+        1.968,
+        1.934,
+        1.974,
+        1.942,
+        1.947
+      ],
+      "reused_ms": [
+        1.705,
+        1.953,
+        1.55,
+        1.514,
+        1.549
+      ],
+      "saved_percent": 20.4
+    },
+    {
+      "batch_size": 128,
+      "distance": "lp",
+      "separate_ms": [
+        2.006,
+        2.042,
+        2.07,
+        2.171,
+        2.031
+      ],
+      "reused_ms": [
+        1.788,
+        1.86,
+        1.826,
+        1.913,
+        1.868
+      ],
+      "saved_percent": 8.9
+    },
+    {
+      "batch_size": 512,
+      "distance": "cosine",
+      "separate_ms": [
+        25.58,
+        26.981,
+        24.924,
+        24.709,
+        24.711
+      ],
+      "reused_ms": [
+        22.455,
+        28.79,
+        20.7,
+        20.709,
+        20.624
+      ],
+      "saved_percent": 16.9
+    },
+    {
+      "batch_size": 512,
+      "distance": "lp",
+      "separate_ms": [
+        29.727,
+        48.757,
+        29.924,
+        29.975,
+        29.891
+      ],
+      "reused_ms": [
+        28.785,
+        42.828,
+        28.757,
+        28.75,
+        29.008
+      ],
+      "saved_percent": 3.8
+    },
+    {
+      "batch_size": 2048,
+      "distance": "cosine",
+      "separate_ms": [
+        410.359,
+        397.848,
+        388.165,
+        387.941,
+        394.59
+      ],
+      "reused_ms": [
+        356.766,
+        356.718,
+        357.259,
+        357.081,
+        355.944
+      ],
+      "saved_percent": 9.6
+    },
+    {
+      "batch_size": 2048,
+      "distance": "lp",
+      "separate_ms": [
+        538.006,
+        544.85,
+        544.872,
+        546.333,
+        543.084
+      ],
+      "reused_ms": [
+        526.733,
+        531.271,
+        530.103,
+        530.563,
+        532.801
+      ],
+      "saved_percent": 2.6
+    }
+  ],
+  "environment": {
+    "cpu": "Apple M1 Pro",
+    "python": "3.12.13",
+    "pytorch": "2.14.0"
+  },
+  "revision_base": "93095aa"
+}

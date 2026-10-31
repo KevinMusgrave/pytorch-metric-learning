@@ -416,6 +416,16 @@ because PyTorch refuses to combine unrelated subclasses and a full loss accepts 
 two dtypes together. The tags end at the function's return, so callers and tensor hooks
 receive plain tensors.
 
+The function also leaves autocast. Under ambient float16 autocast, `matmul` narrowed the
+matrix, so the loss terms were float16 and their running sum became `inf` for an NT-Xent
+loss of 6.36 at 256 rows. Summing in float32 alone fixed that value, but kept float16
+rounding in the chunk graph: the loss stayed up to 0.03% from float64. Leaving autocast
+has to cover `autograd.grad` as well as the forward pass, because backward formulas run
+in the caller's thread and autocast narrowed them too, which left float32 gradients 0.4%
+off. A full loss under autocast keeps its own rounding, so the two differ by that
+rounding. Inputs that only autocast could combine, such as float32 queries with float64
+references, raise instead of being promoted, because that mix has no demonstrated use.
+
 Running chunks in the original dtype would match the forward pass by construction, and
 was rejected on measurements. Gradients of a chunk's sum overflow float16, and dividing
 by the chunk's count still overflows when the full gradient is finite, because that

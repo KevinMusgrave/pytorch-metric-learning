@@ -4,7 +4,7 @@ from typing import cast
 import torch
 from torch import Tensor
 
-from ..utils._common import accumulation_dtype, normalize
+from ..utils._common import accumulation_dtype, normalize, without_autocast
 
 
 class BaseDistance(torch.nn.Module):
@@ -58,12 +58,9 @@ class BaseDistance(torch.nn.Module):
         return embeddings.to(accumulation_dtype(embeddings.dtype))
 
     def value_precision(self, prepared: Tensor) -> AbstractContextManager:
-        if (
-            self.normalize_embeddings
-            or not torch.amp.autocast_mode.is_autocast_available(prepared.device.type)
-        ):
+        if self.normalize_embeddings:
             return nullcontext()
-        return torch.autocast(prepared.device.type, enabled=False)
+        return without_autocast(prepared)
 
     def compute_mat(self, query_emb: Tensor, ref_emb: Tensor) -> Tensor:
         raise NotImplementedError

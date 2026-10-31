@@ -53,6 +53,20 @@ def anchor_batched_backward(
     outputs = [x for x in (embeddings, ref_emb) if x is not None and x.requires_grad]
     if not outputs or not torch.is_grad_enabled():
         raise ValueError("anchor_batched_backward needs inputs tracking gradients")
+    with _common.without_autocast(embeddings):
+        return _backward_in_chunks(
+            loss_func, embeddings, labels, batch_size, ref_emb, ref_labels
+        )
+
+
+def _backward_in_chunks(
+    loss_func: BaseMetricLossFunction,
+    embeddings: Tensor,
+    labels: Tensor,
+    batch_size: int,
+    ref_emb: Tensor | None,
+    ref_labels: Tensor | None,
+) -> Tensor:
     query = _working_copy(embeddings)
     reference = query if ref_emb is None else _working_copy(ref_emb)
     reference_labels = labels if ref_labels is None else ref_labels

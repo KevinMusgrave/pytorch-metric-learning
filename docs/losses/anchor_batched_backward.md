@@ -26,7 +26,10 @@ losses.anchor_batched_backward(
 
 It returns the loss as a detached scalar tensor with the dtype of the full loss: that of
 `embeddings`, or float32 for float16 and bfloat16 embeddings with an
-[unnormalized distance](../distances.md#calling-a-distance). It
+[unnormalized distance](../distances.md#calling-a-distance). The exception is autocast,
+which this function leaves for its whole duration, so float32 embeddings return float32
+where a full loss would return float16, and `embeddings` and `ref_emb` must be usable
+together without autocast. It
 has already called `backward`, so gradients have accumulated in the model, and in
 any learnable parameters of `loss_func` such as those of a custom distance, the same
 way as after `loss.backward()`. Do not call `backward` again.

@@ -325,6 +325,46 @@ class TestAnchorBatchedBackward(unittest.TestCase):
                     self.assert_matches(grad, full_grad, dtype)
                     self.assertTrue(grad.isfinite().all())
 
+    def test_ambient_autocast_keeps_chunks_in_float32(self):
+        generator = torch.Generator().manual_seed(3)
+        base = torch.randn(256, 64, generator=generator, dtype=torch.float64)
+        base = base.to(TEST_DEVICE)
+        labels = (torch.arange(256) // 128).to(TEST_DEVICE)
+        for autocast_dtype in (torch.float16, torch.bfloat16):
+            for dtype in (torch.float16, torch.float32):
+                for chunk in (16, 256):
+                    with self.subTest(
+                        autocast=autocast_dtype, dtype=dtype, chunk=chunk
+                    ):
+                        rows = base.to(dtype).requires_grad_()
+                        exact = rows.detach().double().requires_grad_()
+                        expected = losses.NTXentLoss()(exact, labels)
+                        expected.backward()
+                        with torch.autocast(TEST_DEVICE.type, dtype=autocast_dtype):
+                            value = anchor_batched_backward(
+                                losses.NTXentLoss(), rows, labels, chunk
+                            )
+                        self.assertTrue(value.isfinite())
+                        self.assert_matches(value, expected.detach(), dtype)
+                        self.assert_matches(rows.grad, exact.grad, dtype)
+
+    def test_autocast_matches_the_full_loss_with_a_learnable_distance(self):
+        embeddings, labels = batch(torch.float32)
+        full_rows = embeddings.detach().clone().requires_grad_()
+        full_loss = losses.NTXentLoss(distance=LearnedCosine()).to(TEST_DEVICE)
+        with torch.autocast(TEST_DEVICE.type, dtype=torch.float16):
+            full = full_loss(full_rows, labels)
+        full.backward()
+        batched = copy.deepcopy(full_loss)
+        batched.zero_grad()
+        with torch.autocast(TEST_DEVICE.type, dtype=torch.float16):
+            value = anchor_batched_backward(batched, embeddings, labels, 5)
+        self.assert_matches(value, full.detach(), torch.float16)
+        self.assert_matches(embeddings.grad, full_rows.grad, torch.float16)
+        self.assert_matches(
+            scale_of(batched).grad, scale_of(full_loss).grad, torch.float16
+        )
+
     def test_results_are_plain_tensors(self):
         distances_by_case = {
             "normalized": distances.CosineSimilarity,

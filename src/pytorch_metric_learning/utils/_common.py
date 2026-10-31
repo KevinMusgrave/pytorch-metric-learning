@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from contextlib import AbstractContextManager, nullcontext
 from typing import TYPE_CHECKING, ClassVar, NamedTuple
 
 import torch
@@ -48,6 +49,12 @@ def widened(x: Tensor) -> Tensor:
 
 def input_dtype(tensor: Tensor) -> torch.dtype:
     return getattr(tensor, "source_dtype", tensor.dtype)
+
+
+def without_autocast(tensor: Tensor) -> AbstractContextManager:
+    if not torch.amp.autocast_mode.is_autocast_available(tensor.device.type):
+        return nullcontext()
+    return torch.autocast(tensor.device.type, enabled=False)
 
 
 def normalization_eps(dtype: torch.dtype) -> float:

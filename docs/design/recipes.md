@@ -54,6 +54,12 @@ loss already uses. A test pins that to equation 6. Global k-max pooling is the o
 enhancement with its own formula, so the recipe carries it; pooling, layer norm, and
 optimizer groups are model and training choices that the library does not own.
 
+N-pairs class mining is a recipe because it needs model output to choose a batch, and a
+library sampler would have to own inference. The paper names the violated constraint but
+not a formula, so the recipe documents its interpretation: the largest `a'n - a'p` over
+a selected anchor's hardest positive. A selected class's score combines by maximum, which
+matches "most" in the paper and needs only one `(classes, classes)` table per batch.
+
 Reference tests verify objective values and gradients, candidate-set nesting,
 gradient ownership, parameter updates, subset mapping, and queue progression.
 Runnable commands and paper citations belong in `docs/recipes/training.md`.

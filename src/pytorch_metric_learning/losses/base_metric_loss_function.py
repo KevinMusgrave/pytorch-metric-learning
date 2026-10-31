@@ -17,7 +17,7 @@ def _regularization_term(
 
 
 class BaseMetricLossFunction(nn.Module):
-    label_ndim: ClassVar[int] = 1
+    label_ndim: int = 1
     supports_mat: ClassVar[bool] = False
     decomposes_by_anchor: bool = False
 

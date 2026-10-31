@@ -127,12 +127,12 @@ The rules are:
 - A wrong shape, an integer dtype, or another device raises `ValueError`.
 - Nothing is cached. Modules neither change `mat` nor keep a reference to it.
 
-| Loss                                                                                                                                                                                                                                                                                                                                                              | `mat`        | Shape                                                                                             |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------- |
-| `CircleLoss`, `ContrastiveLoss`, `DecoupledContrastiveLoss`, `DynamicSoftMarginLoss`, `GeneralizedLiftedStructureLoss`, `IntraPairVarianceLoss`, `MarginLoss`, `MultiSimilarityLoss`, `MultiSupConLoss`, `NCALoss`, `NTXentLoss`, `SelectivelyContrastiveTripletLoss`, `SignalToNoiseRatioContrastiveLoss`, `SupConLoss`, `TripletMarginLoss`, `TupletMarginLoss` | Supported    | `(N, N)`, or `(N, M)` with `ref_emb`                                                              |
-| `FastAPLoss`, `HistogramLoss`, `InstanceLoss`, `LiftedStructureLoss`, `PNPLoss`, `RankedListLoss`, `SmoothAPLoss`                                                                                                                                                                                                                                                 | Supported    | `(N, N)`; these losses reject `ref_emb`                                                           |
-| Proxy and classifier losses, `AngularLoss`, `CenterLoss`, `CentroidTripletLoss`, `GE2ELoss`, `ManifoldLoss`, `NPairsLoss`, `ThresholdConsistentMarginLoss`                                                                                                                                                                                                        | `ValueError` | They compare embeddings with their own weights or subsets, or read embeddings directly            |
-| `CrossBatchMemory`, `DistributedLossWrapper`, `MultipleLosses`, `SelfSupervisedLoss`, `VICRegLoss`                                                                                                                                                                                                                                                                | `TypeError`  | These wrappers build their own inputs or have no distance matrix, so their `forward` has no `mat` |
+| Loss                                                                                                                                                                                                                                                                                                                                                                                   | `mat`        | Shape                                                                                             |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------- |
+| `CircleLoss`, `ContrastiveLoss`, `DecoupledContrastiveLoss`, `DynamicSoftMarginLoss`, `GeneralizedLiftedStructureLoss`, `IntraPairVarianceLoss`, `MarginLoss`, `MultiSimilarityLoss`, `MultiSupConLoss`, `NCALoss`, `NTXentLoss`, `RankNContrastLoss`, `SelectivelyContrastiveTripletLoss`, `SignalToNoiseRatioContrastiveLoss`, `SupConLoss`, `TripletMarginLoss`, `TupletMarginLoss` | Supported    | `(N, N)`, or `(N, M)` with `ref_emb`                                                              |
+| `FastAPLoss`, `HistogramLoss`, `InstanceLoss`, `LiftedStructureLoss`, `PNPLoss`, `RankedListLoss`, `SmoothAPLoss`                                                                                                                                                                                                                                                                      | Supported    | `(N, N)`; these losses reject `ref_emb`                                                           |
+| Proxy and classifier losses, `AngularLoss`, `CenterLoss`, `CentroidTripletLoss`, `GE2ELoss`, `ManifoldLoss`, `NPairsLoss`, `ThresholdConsistentMarginLoss`                                                                                                                                                                                                                             | `ValueError` | They compare embeddings with their own weights or subsets, or read embeddings directly            |
+| `CrossBatchMemory`, `DistributedLossWrapper`, `MultipleLosses`, `SelfSupervisedLoss`, `VICRegLoss`                                                                                                                                                                                                                                                                                     | `TypeError`  | These wrappers build their own inputs or have no distance matrix, so their `forward` has no `mat` |
 
 `TripletMarginLoss(swap=True)` raises `ValueError` with `mat`, because swapping
 reads distances between references, which `mat` does not hold. Check
@@ -217,6 +217,7 @@ argument raises `ValueError`. These lists are verified by the test suite.
 - MultiSupConLoss
 - NCALoss
 - NTXentLoss
+- RankNContrastLoss
 - SelectivelyContrastiveTripletLoss
 - SignalToNoiseRatioContrastiveLoss
 - SupConLoss
@@ -525,6 +526,8 @@ batches with several positives per class.
   positives chosen and weighted by Jaccard similarity.
 - [NTXentLoss](losses/ntxent_loss.md): the InfoNCE objective of SimCLR and MoCo;
   use [SelfSupervisedLoss](losses/self_supervised_loss.md) for unlabeled views.
+- [RankNContrastLoss](losses/rank_n_contrast_loss.md): supervised contrastive regression
+  for continuous targets, which orders embeddings by target distance.
 - [SupConLoss](losses/supcon_loss.md): the contrastive objective with every
   same-label sample as a positive.
 - [VICRegLoss](losses/vicreg_loss.md): two views without negatives, regularized

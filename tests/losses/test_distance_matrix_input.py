@@ -138,7 +138,13 @@ class TestLossMatrixInput(unittest.TestCase):
             if inspect.isclass(value)
             and issubclass(value, losses.BaseMetricLossFunction)
             and value is not losses.BaseMetricLossFunction
-            and name not in ("BaseProxyLoss", "GenericPairLoss", "MultiSupConLoss")
+            and name
+            not in (
+                "BaseProxyLoss",
+                "GenericPairLoss",
+                "MultiSupConLoss",
+                "RankNContrastLoss",
+            )
         }
         supported = {*REFERENCE_LOSSES, *BATCH_ONLY_LOSSES}
         self.assertEqual(exported, supported | UNSUPPORTED_LOSSES.keys())

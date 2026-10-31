@@ -50,6 +50,8 @@ def construct(name: str) -> losses.BaseMetricLossFunction:
 
 
 def labels_for(loss: losses.BaseMetricLossFunction, labels: torch.Tensor):
+    if isinstance(loss, losses.RankNContrastLoss):
+        return labels.float()
     if loss.label_ndim == 1:
         return labels
     return torch.nn.functional.one_hot(labels, num_classes=3).bool()

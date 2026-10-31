@@ -1,4 +1,4 @@
-from typing import ClassVar, Unpack
+from typing import Unpack
 
 import torch
 from torch import Tensor
@@ -32,7 +32,7 @@ def _jaccard(labels: Tensor, ref_labels: Tensor | None, dtype: torch.dtype) -> T
 class MultiSupConLoss(BaseMetricLossFunction):
     supports_mat = True
 
-    label_ndim: ClassVar[int] = 2
+    label_ndim = 2
 
     def __init__(
         self,

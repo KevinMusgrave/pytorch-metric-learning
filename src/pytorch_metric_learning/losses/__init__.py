@@ -33,6 +33,7 @@ from .p2s_grad_loss import P2SGradLoss
 from .pnp_loss import PNPLoss
 from .proxy_anchor_loss import ProxyAnchorLoss
 from .proxy_nca_loss import ProxyNCALoss
+from .rank_n_contrast_loss import RankNContrastLoss
 from .ranked_list_loss import RankedListLoss
 from .selectively_contrastive_triplet_loss import SelectivelyContrastiveTripletLoss
 from .self_supervised_loss import SelfSupervisedLoss
@@ -83,6 +84,7 @@ __all__ = [
     "PNPLoss",
     "ProxyAnchorLoss",
     "ProxyNCALoss",
+    "RankNContrastLoss",
     "RankedListLoss",
     "SelectivelyContrastiveTripletLoss",
     "SelfSupervisedLoss",

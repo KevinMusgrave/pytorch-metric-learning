@@ -250,6 +250,7 @@
           "tests/docs/test_documented_signatures.py",
           "tests/docs/test_documentation_paths.py",
           "tests/utils/test_validation.py",
+          "tests/distances/test_low_precision_range.py",
           "tests/distances/test_lp_distance.py",
           "tests/docs/test_documented_examples.py",
           "tests/docs/test_public_surface.py"
@@ -438,6 +439,7 @@
           "tests/docs/**",
           "tests/utils/test_validation.py",
           "conftest.py",
+          "tests/distances/test_low_precision_range.py",
           "tests/distances/test_lp_distance.py"
         ],
         "argv": [
@@ -471,6 +473,7 @@
           "tests/docs/test_documented_signatures.py",
           "tests/docs/test_documentation_paths.py",
           "tests/utils/test_validation.py",
+          "tests/distances/test_low_precision_range.py",
           "tests/distances/test_lp_distance.py",
           "tests/docs/test_documented_examples.py",
           "tests/docs/test_public_surface.py"

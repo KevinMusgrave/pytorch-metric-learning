@@ -83,7 +83,9 @@ class MultiSupConLoss(BaseMetricLossFunction):
                 (similarity.shape[0], similarity.shape[1]),
                 embeddings.device,
             )
-        mat = _common.resolve_matrix(self.distance, embeddings, ref_emb, mat).to(dtype)
+        mat = _common.resolve_matrix(self.distance, embeddings, ref_emb, mat)
+        result_dtype = mat.dtype
+        mat = mat.to(dtype)
         if not self.distance.is_inverted:
             mat = -mat
         mat = mat / self.temperature
@@ -94,7 +96,7 @@ class MultiSupConLoss(BaseMetricLossFunction):
         positives = pos_mask.sum(dim=1)
         rows = torch.where(positives > 0)[0]
         weighted = (similarity * pos_mask * log_prob).sum(dim=1)[rows] / positives[rows]
-        return {"loss": {"losses": (-weighted).to(embeddings.dtype), "indices": rows}}
+        return {"loss": {"losses": (-weighted).to(result_dtype), "indices": rows}}
 
     def default_reducer(self) -> BaseReducer:
         return AvgNonZeroReducer()

@@ -8,6 +8,7 @@ from pytorch_metric_learning.distances import (
     DotProductSimilarity,
     SNRDistance,
 )
+from pytorch_metric_learning.utils import _common
 
 from .. import TEST_DEVICE, TEST_DTYPES
 from ..helpers import assert_matches_float64
@@ -85,7 +86,9 @@ def test_matrix_matches_float64_reference(case, dtype):
 
     def compute(query, reference):
         mat = distance(query, reference)
-        assert mat.shape == (3, 4) and mat.dtype == dtype
+        widened = not distance.normalize_embeddings
+        expected_dtype = _common.accumulation_dtype(dtype) if widened else dtype
+        assert mat.shape == (3, 4) and mat.dtype == expected_dtype
         return (mat * weights.to(dtype)).sum()
 
     def expected(query, reference):

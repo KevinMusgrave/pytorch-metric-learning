@@ -219,8 +219,17 @@ below `eps` is `1 / eps` times the incoming gradient and overflows float16.
 The float16 `eps` of `2**-14` keeps that factor at 16384, while every other
 dtype keeps the `1e-12` of float32.
 
+Unnormalized distances compute and return float32 for low-precision inputs. A normalized
+distance is bounded, but a squared Euclidean distance or dot product of embeddings around
+300 passes the float16 maximum, so the matrix held `inf` before any loss saw it, and
+`inf - inf` then gave NaN or a silent zero depending on the reducer. Fixing that in each
+loss cannot work, because the value is already gone. Returning float32 only when a value
+overflows would make the dtype depend on the data, so the rule follows the configuration,
+and bounded distances keep the memory saving. Autocast is disabled around this path,
+because `matmul` would otherwise narrow the widened inputs again.
+
 `LpDistance` computes float16 and bfloat16 matrices with `torch.cdist` in
-float32 and casts the result, because `torch.cdist` lacks CPU kernels for those
+float32 and casts the normalized result, because `torch.cdist` lacks CPU kernels for those
 types and expanding every row pair costs memory proportional to queries times
 references times dimensions. The call fixes `compute_mode` to the direct
 difference kernel: the default switches to $\|x\|^2 + \|y\|^2 - 2 x \cdot y$

@@ -56,7 +56,8 @@ evaluation.CustomKNN(distance, batch_size=None)
   for the order of exactly tied values; peak memory falls from the full
   `(len(query), len(reference))` matrix to one block plus the outputs.
 
-Distances have the query's dtype; indices are `torch.long`. Tied values are
+Distances have the dtype the distance returns, which is float32 for float16 queries
+with an [unnormalized distance](distances.md#calling-a-distance); indices are `torch.long`. Tied values are
 ordered by `torch.topk`, which does not guarantee index order. The search runs
 under `torch.no_grad()`, so its outputs carry no autograd graph even when the
 inputs require gradients. The backend retains no per-call result tensors after

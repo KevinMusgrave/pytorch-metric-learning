@@ -11,6 +11,8 @@ _VARIANTS: tuple[PNPVariant, ...] = ("Ds", "Dq", "Iu", "Ib", "O")
 
 
 class PNPLoss(BaseMetricLossFunction):
+    supports_mat = True
+
     def __init__(
         self,
         b: float = 2,
@@ -42,6 +44,8 @@ class PNPLoss(BaseMetricLossFunction):
         indices_tuple: IndicesTuple | None,
         ref_emb: Tensor | None,
         ref_labels: Tensor | None,
+        *,
+        mat: Tensor | None = None,
     ) -> LossDict:
         _common.indices_tuple_not_supported(indices_tuple)
         labels = _common.labels_required(labels)
@@ -55,7 +59,7 @@ class PNPLoss(BaseMetricLossFunction):
         I_pos.fill_diagonal_(1)
         I_neg = diffs.to(dtype)
         N_pos = torch.sum(I_pos, dim=1)
-        sim_all = self.distance(embeddings)
+        sim_all = _common.resolve_matrix(self.distance, embeddings, None, mat)
 
         sim_diff = sim_all.unsqueeze(1) - sim_all.unsqueeze(2)
         sim_sg = torch.sigmoid(sim_diff / self.anneal) * I_neg.unsqueeze(0)

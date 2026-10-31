@@ -32,6 +32,12 @@ default distance the closest class has the smallest value; see
 [classification logits](../losses.md#classification-logits). This loss derives
 from [BaseProxyLoss](base_proxy_loss.md).
 
+**ProxyNCA++**: `softmax_scale=9` with the default distance is the loss of
+[ProxyNCA++](https://arxiv.org/abs/2004.01113) (Teh et al.): its equation 6 sums over all
+proxies, as this loss does, with temperature $T = 1/9$. The paper's other enhancements
+are model and training choices, shown in the
+[ProxyNCA++ recipe](../recipes/training.md#proxynca-contract).
+
 **Example**:
 
 ```python

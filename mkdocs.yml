@@ -13,6 +13,8 @@ nav:
       - Overview: losses.md
       - Pair and triplet objectives:
         - AngularLoss: losses/angular_loss.md
+        - CenterLoss: losses/center_loss.md
+        - CentroidTripletLoss: losses/centroid_triplet_loss.md
         - CircleLoss: losses/circle_loss.md
         - ContrastiveLoss: losses/contrastive_loss.md
         - DynamicSoftMarginLoss: losses/dynamic_soft_margin_loss.md
@@ -26,6 +28,7 @@ nav:
         - NPairsLoss: losses/n_pairs_loss.md
         - RankedListLoss: losses/ranked_list_loss.md
         - SignalToNoiseRatioContrastiveLoss: losses/signal_to_noise_ratio_contrastive_loss.md
+        - SelectivelyContrastiveTripletLoss: losses/selectively_contrastive_triplet_loss.md
         - TripletMarginLoss: losses/triplet_margin_loss.md
         - TupletMarginLoss: losses/tuplet_margin_loss.md
       - Classification and proxy objectives:
@@ -47,12 +50,16 @@ nav:
         - SmoothAPLoss: losses/smooth_ap_loss.md
         - ThresholdConsistentMarginLoss: losses/threshold_consistent_margin_loss.md
       - Self-supervised and supervised contrastive objectives:
+        - DecoupledContrastiveLoss: losses/decoupled_contrastive_loss.md
+        - GE2ELoss: losses/ge2e_loss.md
         - InstanceLoss: losses/instance_loss.md
         - MultiSupConLoss: losses/multi_supcon_loss.md
         - NTXentLoss: losses/ntxent_loss.md
+        - RankNContrastLoss: losses/rank_n_contrast_loss.md
         - SupConLoss: losses/supcon_loss.md
         - VICRegLoss: losses/vicreg_loss.md
       - Composition and extension:
+        - anchor_batched_backward: losses/anchor_batched_backward.md
         - BaseMetricLossFunction: losses/base_metric_loss_function.md
         - BaseProxyLoss: losses/base_proxy_loss.md
         - CrossBatchMemory: losses/cross_batch_memory.md
@@ -78,6 +85,7 @@ nav:
     - Performance: performance.md
     - Release notes:
       - All releases: release-notes/index.md
+      - 3.0.0rc5 (preview): release-notes/3.0.0rc5.md
       - 3.0.0rc4 (preview): release-notes/3.0.0rc4.md
       - 3.0.0rc3 (preview): release-notes/3.0.0rc3.md
       - 3.0.0rc2 (preview): release-notes/3.0.0rc2.md

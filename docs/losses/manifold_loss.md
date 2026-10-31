@@ -79,7 +79,10 @@ optimizer.step()
 - **alpha**: The random-walk parameter $\alpha$, in the open interval `(0, 1)`.
   It controls how much similarity propagates between neighboring nodes.
 - **margin**: The margin $m$.
-- **distance**, **embedding_regularizer**, **embedding_reg_weight**: See
+- **distance**: Must be a similarity (`is_inverted=True`), because a larger value means
+  a stronger graph edge; any other distance raises `TypeError`. Unnormalized
+  similarities work at any scale, since the graph is normalized in log space.
+- **embedding_regularizer**, **embedding_reg_weight**: See
   [loss options](../losses.md#loss-options).
 
 **Default distance**:

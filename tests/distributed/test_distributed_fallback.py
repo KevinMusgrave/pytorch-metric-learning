@@ -17,6 +17,7 @@ from pytorch_metric_learning.distributed import (
 )
 from pytorch_metric_learning.losses import ContrastiveLoss, CrossBatchMemory
 from pytorch_metric_learning.miners import PairMarginMiner
+from pytorch_metric_learning.types import DistributedObjective
 
 
 @contextmanager
@@ -120,13 +121,17 @@ class TestDistributedFallback(unittest.TestCase):
                 single_process_group(initialized),
             ):
                 for mask in (None, torch.tensor([True, False, False, True])):
-                    with self.subTest(mask=mask):
-                        self.check_memory_sequence(mask)
+                    for objective in ("global", "local_anchor"):
+                        with self.subTest(mask=mask, objective=objective):
+                            self.check_memory_sequence(mask, objective)
 
-    def check_memory_sequence(self, mask: torch.Tensor | None) -> None:
+    def check_memory_sequence(
+        self, mask: torch.Tensor | None, objective: DistributedObjective
+    ) -> None:
         direct = CrossBatchMemory(make_loss(), embedding_size=2, memory_size=5)
         wrapped = DistributedLossWrapper(
-            CrossBatchMemory(make_loss(), embedding_size=2, memory_size=5)
+            CrossBatchMemory(make_loss(), embedding_size=2, memory_size=5),
+            objective=objective,
         )
         expected_memory = torch.zeros(5, 2)
         expected_labels = torch.zeros(5, dtype=torch.long)

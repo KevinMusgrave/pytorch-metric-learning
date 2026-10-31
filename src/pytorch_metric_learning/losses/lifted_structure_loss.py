@@ -26,10 +26,12 @@ class LiftedStructureLoss(GenericPairLoss):
         indices_tuple: IndicesTuple | None,
         ref_emb: Tensor | None,
         ref_labels: Tensor | None,
+        *,
+        mat: Tensor | None = None,
     ) -> LossDict:
         _common.ref_not_supported(ref_emb)
         return super().compute_loss(
-            embeddings, labels, indices_tuple, ref_emb, ref_labels
+            embeddings, labels, indices_tuple, ref_emb, ref_labels, mat=mat
         )
 
     def pair_loss(self, mat: Tensor, pairs: PairIndices) -> LossDict:
@@ -47,6 +49,8 @@ class LiftedStructureLoss(GenericPairLoss):
 
 
 class GeneralizedLiftedStructureLoss(GenericPairLoss):
+    decomposes_by_anchor = True
+
     def __init__(
         self,
         pos_margin: float = 0.0,

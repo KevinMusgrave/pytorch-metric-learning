@@ -58,41 +58,32 @@ class MinedLoss(nn.Module):
         return self.loss(embeddings, labels, self.miner(embeddings, labels))
 
 
-class ReusedMatrix(distances.BaseDistance):
-    def __init__(self, distance: distances.BaseDistance) -> None:
-        super().__init__()
-        self.distance = distance
-        self.is_inverted = distance.is_inverted
-        self.mat: torch.Tensor | None = None
-
-    def compute(self, embeddings: torch.Tensor) -> None:
-        self.mat = self.distance(embeddings)
-
-    def forward(
-        self, query_emb: torch.Tensor, ref_emb: torch.Tensor | None = None
-    ) -> torch.Tensor:
-        if self.mat is None:
-            raise ValueError("Compute the reused matrix before reading it")
-        return self.mat
-
-
 class MinedLosses(nn.Module):
-    def __init__(self, distance: distances.BaseDistance) -> None:
+    def __init__(self, distance: distances.BaseDistance, reuse: bool) -> None:
         super().__init__()
         self.distance = distance
+        self.reuse = reuse
         self.miner = miners.MultiSimilarityMiner(distance=distance)
         self.first = losses.MultiSimilarityLoss(distance=distance)
         self.second = losses.ContrastiveLoss(distance=distance)
 
     def forward(self, embeddings: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
-        if isinstance(self.distance, ReusedMatrix):
-            self.distance.compute(embeddings)
-        pairs = self.miner(embeddings, labels)
-        loss = self.first(embeddings, labels, pairs)
-        loss = loss + self.second(embeddings, labels, pairs)
-        if isinstance(self.distance, ReusedMatrix):
-            self.distance.mat = None
-        return loss
+        mat = self.distance(embeddings) if self.reuse else None
+        pairs = self.miner(embeddings, labels, mat=mat)
+        first = self.first(embeddings, labels, pairs, mat=mat)
+        return first + self.second(embeddings, labels, pairs, mat=mat)
+
+
+class AnchorBatched(nn.Module):
+    def __init__(self, loss: losses.BaseMetricLossFunction, batch_size: int) -> None:
+        super().__init__()
+        self.loss = loss
+        self.batch_size = batch_size
+
+    def forward(self, embeddings: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
+        return losses.anchor_batched_backward(
+            self.loss, embeddings, labels, self.batch_size
+        )
 
 
 def synchronize(device: torch.device) -> None:
@@ -114,7 +105,7 @@ def step(workload: Workload, device: torch.device) -> tuple[Sample, object]:
     synchronize(device)
     forward_ms = (time.perf_counter() - start) * 1000
     backward_ms = None
-    if isinstance(output, torch.Tensor):
+    if isinstance(output, torch.Tensor) and output.requires_grad:
         start = time.perf_counter()
         output.backward()
         synchronize(device)
@@ -168,12 +159,25 @@ def make_workload(
             embedding_size=args.dimensions,
             temperature=0.1,
         ),
-        "separate-cosine": lambda: MinedLosses(distances.CosineSimilarity()),
-        "reused-cosine": lambda: MinedLosses(
-            ReusedMatrix(distances.CosineSimilarity())
+        "separate-cosine": lambda: MinedLosses(distances.CosineSimilarity(), False),
+        "reused-cosine": lambda: MinedLosses(distances.CosineSimilarity(), True),
+        "separate-lp": lambda: MinedLosses(distances.LpDistance(), False),
+        "reused-lp": lambda: MinedLosses(distances.LpDistance(), True),
+        "full-ntxent": lambda: losses.NTXentLoss(temperature=0.07),
+        "anchor-batched-ntxent": lambda: AnchorBatched(
+            losses.NTXentLoss(temperature=0.07), args.anchor_batch_size
         ),
-        "separate-lp": lambda: MinedLosses(distances.LpDistance()),
-        "reused-lp": lambda: MinedLosses(ReusedMatrix(distances.LpDistance())),
+        "full-triplet": lambda: losses.TripletMarginLoss(margin=0.2),
+        "anchor-batched-triplet": lambda: AnchorBatched(
+            losses.TripletMarginLoss(margin=0.2), args.anchor_batch_size
+        ),
+        "unbounded-mined-triplet": lambda: MinedLoss(
+            miners.TripletMarginMiner(margin=0.2), losses.TripletMarginLoss(margin=0.2)
+        ),
+        "bounded-mined-triplet": lambda: MinedLoss(
+            miners.TripletMarginMiner(margin=0.2, tuples_per_anchor=32),
+            losses.TripletMarginLoss(margin=0.2),
+        ),
         "distributed": lambda: DistributedContrastive(args.dimensions),
     }
     module = factories[case]().to(device=device, dtype=dtype)
@@ -308,6 +312,12 @@ def arguments() -> argparse.Namespace:
             "reused-cosine",
             "separate-lp",
             "reused-lp",
+            "full-ntxent",
+            "anchor-batched-ntxent",
+            "full-triplet",
+            "anchor-batched-triplet",
+            "unbounded-mined-triplet",
+            "bounded-mined-triplet",
             "distributed",
         ),
         default="all",
@@ -320,6 +330,7 @@ def arguments() -> argparse.Namespace:
     parser.add_argument("--batch-size", type=int, default=128)
     parser.add_argument("--dimensions", type=int, default=128)
     parser.add_argument("--samples-per-class", type=int, default=4)
+    parser.add_argument("--anchor-batch-size", type=int, default=16)
     parser.add_argument("--warmup", type=int, default=5)
     parser.add_argument("--repeats", type=int, default=20)
     parser.add_argument("--threads", type=int, default=1)
@@ -374,6 +385,12 @@ def main() -> None:
                 "reused-cosine",
                 "separate-lp",
                 "reused-lp",
+                "full-ntxent",
+                "anchor-batched-ntxent",
+                "full-triplet",
+                "anchor-batched-triplet",
+                "unbounded-mined-triplet",
+                "bounded-mined-triplet",
             )
             if args.case == "all"
             else (args.case,)

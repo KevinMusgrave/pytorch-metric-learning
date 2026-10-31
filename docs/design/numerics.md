@@ -219,10 +219,25 @@ below `eps` is `1 / eps` times the incoming gradient and overflows float16.
 The float16 `eps` of `2**-14` keeps that factor at 16384, while every other
 dtype keeps the `1e-12` of float32.
 
+Unnormalized distances compute and return float32 for low-precision inputs. A normalized
+distance is bounded, but a squared Euclidean distance or dot product of embeddings around
+300 passes the float16 maximum, so the matrix held `inf` before any loss saw it, and
+`inf - inf` then gave NaN or a silent zero depending on the reducer. Fixing that in each
+loss cannot work, because the value is already gone. Returning float32 only when a value
+overflows would make the dtype depend on the data, so the rule follows the configuration,
+and bounded distances keep the memory saving. Every return path follows the distance:
+casting a loss back to the embedding dtype restores the overflow after the matrix has
+avoided it, and `anchor_batched_backward`, which always computes in float32 working
+copies, decides from `normalize_embeddings` because its terms no longer show the
+distance's dtype. Autocast is disabled around this path,
+because `matmul` would otherwise narrow the widened inputs again.
+
 `LpDistance` computes float16 and bfloat16 matrices with `torch.cdist` in
-float32 and casts the result, because `torch.cdist` lacks CPU kernels for those
-types and expanding every row pair costs memory proportional to queries times
-references times dimensions. The call fixes `compute_mode` to the direct
+float32 and casts the normalized result, because `torch.cdist` lacks CPU kernels for those
+types and expanding every row pair in the forward pass costs memory proportional to
+queries times references times dimensions. The backward pass of the direct kernel still
+expands them, about 40 times the float32 peak at 2048 rows, which is the accepted cost
+of keeping distances between nearby rows. The call fixes `compute_mode` to the direct
 difference kernel: the default switches to $\|x\|^2 + \|y\|^2 - 2 x \cdot y$
 above 25 rows, which cancels to zero for nearby half-precision rows and erases
 their gradients. Default reductions avoid data-dependent shapes:
@@ -231,8 +246,10 @@ their gradients. Default reductions avoid data-dependent shapes:
 dtype; converting through the default dtype first turned a float64 divisor of
 `1e-50` into zero.
 
-`ManifoldLoss` inverts its random-walk matrix in float32 and masks excluded
-terms with $-\infty$ before log-sum-exp. `DistanceWeightedMiner` clamps
+`ManifoldLoss` normalizes its graph in log space, because $e^{2s}$ overflows float32 at
+$s \approx 44$, a dot product of embeddings with norm around 7, while $\bar{S}$ only needs
+the ratio $S_{ij} / \sqrt{D_i D_j}$. It then inverts its random-walk matrix in float32
+and masks excluded terms with $-\infty$ before log-sum-exp. `DistanceWeightedMiner` clamps
 distances at `cutoff` and works in log space following Section 4 of Wu et al.,
 masking ineligible pairs before subtracting each anchor's maximum log weight.
 `RankedListLoss` computes its weighted means as softmax-weighted averages over
@@ -279,12 +296,38 @@ the component pages; upstream provenance for reference tests is in
 `THIRD_PARTY_NOTICES.md`. The development baseline uses current PyTorch;
 compatibility with obsolete PyTorch releases is not a requirement.
 
-## Shared distance matrices (proposed, not implemented)
+## Shared distance matrices
 
-Issue #211 asks to compute one distance matrix for a miner and its losses. Issue
-#697 asks to pass per-call metadata, such as embedding ids, to a custom distance.
-One caller-owned matrix would address both, so they should be designed together.
-No public API exists for this yet.
+Issue #211 asked to compute one distance matrix for a miner and its losses. Issue
+#697 asked to pass per-call metadata, such as embedding ids, to a custom distance.
+One caller-owned matrix addresses both, so `forward` on losses and miners takes an
+optional keyword-only `mat`. Per-call metadata stays in application code and no
+signature on `BaseDistance` or `compute_mat` changes.
+
+Support is a class declaration, `supports_mat`, not a guess from a signature. A
+class that does not read a batch-by-reference matrix raises rather than ignoring
+`mat`, because an ignored matrix would silently train on different values. The
+base `compute_loss` and `mine` signatures do not change, so custom subclasses keep
+working; only classes that declare support receive a `mat` keyword, and the base
+class calls them through a cast because the override adds it. Wrappers that build
+their own reference or gather inputs have no `mat`: a caller's matrix would not
+describe the rows they compare.
+
+The gradient rules follow from how the modules run. Miners run under
+`torch.no_grad()`, so a matrix computed inside one has no graph, and a loss built
+on it would train nothing without raising; a loss therefore checks for a graph when
+its inputs are tracked. Losses sharing a matrix share its graph, so their sum takes
+one `backward()`. No module caches a matrix on itself or on the distance. A cache
+keyed on tensors retains graphs between steps, goes stale after in-place updates,
+and hides which matrix a loss used. Tests establish that modules do not change
+`mat` in place, that no module keeps a reference, and that every declaring class
+reads `mat` instead of its distance. The receiving module's `distance` still decides
+orientation through `is_inverted` and `margin`. A matrix from another distance
+cannot be detected, so this is a documented caller obligation.
+
+`TripletMarginLoss(swap=True)` needs reference-to-reference distances, which `mat`
+does not hold. Falling back to `distance.pairwise` would mix the caller's matrix
+with values from a distance that lacks the caller's metadata, so it raises.
 
 `docs/benchmarks/reused-distance-m1-pro-v3.json` measures the saving for a miner
 and two losses on one CPU thread, with no encoder, as the median of five
@@ -296,47 +339,205 @@ interleaved rounds:
 | 512        | 16.9%         | 3.8%      | 0.75 ms of about 25 to 30 ms       |
 | 2048       | 9.6%          | 2.6%      | 13 to 14 ms of about 400 to 540 ms |
 
-Repeated distance computation is a minor cost that shrinks as batches grow,
+Repeated distance computation is a minor CPU cost that shrinks as batches grow,
 because mask construction and pair selection dominate. A whole training step with
-an encoder would save a smaller share. GPU time and memory were not measured, and
-GPU peak memory is the likeliest place for a larger benefit. #211 alone does not
-justify the API on these numbers; #697 is the stronger reason, because it has no
-alternative besides mutating the distance object before each call.
+an encoder would save a smaller share. #697 is the stronger reason for the API,
+because it had no alternative besides mutating the distance object before each call.
 
-If it is built, the design is an optional keyword on loss and miner `forward`:
+GPU time and peak memory have not been measured for this path. The `separate` and
+`reused` benchmark cases are ready for that run with `--device cuda`.
 
-```python
-mat = distance(embeddings)
-pairs = miner(embeddings, labels, mat=mat)
-loss = first(embeddings, labels, pairs, mat=mat) + second(
-    embeddings, labels, pairs, mat=mat
-)
-```
+## Bounded mining output
 
-The gradient rules follow from how the modules already run:
+Issue #193 asked miners to limit how many tuples they return. `tuples_per_anchor`
+lives on `BaseMiner`, so every miner gains it, including custom miners that forward
+the keyword. It applies after `mine`, because the miner's selection rule is the
+contract; sampling candidates first would change which tuples are hard. Per-anchor
+sampling keeps anchors represented, which a global `num_tuples` would not: a global
+cap draws mostly from the anchors with the most hard tuples. It samples without
+replacement, since a repeated tuple only reweights the loss. The option bounds what
+a loss receives, not the miner's own candidate enumeration. `triplets_per_anchor` on
+triplet losses stays, because it draws from labels without a miner and has different
+semantics.
 
-- The caller computes the matrix outside any miner and with gradients enabled.
-  Miners run under `torch.no_grad()`, so a matrix computed inside one has no graph,
-  and a loss built on it would train nothing without raising. A loss must raise
-  `ValueError` when `embeddings.requires_grad` is true and `mat.requires_grad` is
-  false.
-- Losses sharing a matrix share its graph, so their sum takes one `backward()`.
-  Separate `backward()` calls need `retain_graph=True`, as for any shared subgraph.
-- No module caches a matrix on itself or on the distance. A cache keyed on tensors
-  retains graphs between steps, goes stale after in-place updates, and hides which
-  matrix a loss used. Explicit passing is one keyword and has none of those
-  failure modes.
-- `mat` must have shape `(len(embeddings), len(reference))` and must not be
-  changed in place by a module. A text search found no in-place matrix updates in
-  losses or miners today; a test must establish this before release.
-- The receiving module's `distance` still decides orientation through
-  `is_inverted` and `margin`. A matrix from another distance cannot be detected,
-  so this is a documented caller obligation.
+## Anchor-batched gradients
 
-It applies only to the modules that read `self.distance(embeddings, ref_emb)` as
-a batch-against-reference matrix: the pair and tuple losses and the seven distance
-miners. Proxy and classifier losses compare embeddings with their own weights, and
-`CrossBatchMemory`, `DistributedLossWrapper`, and `SelfSupervisedLoss` build the
-reference themselves, so a caller's matrix would not match; these must raise when
-given `mat`. A custom distance from #697 then needs no change to `compute_mat`:
-the caller computes `mat` with whatever metadata it holds and passes the result.
+Issue #586 asked for loss batching as a utility. A loss cannot do this from inside
+`forward`, which must return one differentiable scalar, so the graph it returns
+holds every chunk at once. `anchor_batched_backward` owns the backward pass instead:
+it backpropagates each chunk to a detached leaf, then passes the summed gradient
+through the encoder once.
+
+Exactness decides the design. The reduced objective is
+`sum(elements) / count` for each term, and both come from the whole batch, so a mean
+of chunk means is wrong whenever chunks differ. Each term therefore accumulates
+its sum, count, and gradient, and the division happens after the last chunk. A term
+needs its own gradient buffer because terms have different denominators. Self-pairs
+are removed through explicit candidates, because a supplied reference set means
+"no self-exclusion" everywhere else.
+
+`decomposes_by_anchor` is declared per class because shape cannot reveal it.
+`IntraPairVarianceLoss` returns per-pair elements yet subtracts a mean over all pairs,
+and batching it changed values by 28% and gradients by 47% in the probe that selected
+the supported set. Losses are admitted only after matching a full batch; reducers are
+admitted by exact type, because a subclass could change the denominator.
+
+Gradient state is part of the contract, because optimizers read it. Autograd reaches
+more than the embeddings: the loss's learnable parameters, such as a custom distance's,
+get accumulated and delivered the same way, or they would silently stop training. A
+term whose elements are all filtered out still backpropagates, which yields zeros and
+not `None`, because `AdamW` applies weight decay to a zero gradient and skips a `None`
+one. A term with no elements at all is skipped, as `BaseReducer` does, and a parameter
+that no term reaches stays `None`. The embeddings always receive at least zeros, as
+they do from the reducer's `zero_loss` start value.
+
+Chunks differentiate private copies, never the live parameters. A chunk's gradient is
+an intermediate value: it has no denominator yet, so at float16 a sum over tuples
+overflows before normalization even within a single chunk, and a tensor hook on the
+parameter would run on every chunk and again at delivery. `torch.func.functional_call`
+swaps widened, hook-free copies in for each chunk and restores the originals even when
+a chunk raises, and the final `backward` delivers the normalized gradient to the live
+parameter once, cast to its dtype. Rejecting hooked or low-precision parameters would
+have been simpler, but both are ordinary PyTorch usage that a full `backward` handles.
+
+Other memory is untouched: the encoder graph and the gradient remain whole, and each
+term holds one `(N, D)` gradient buffer.
+
+These two memory features have CPU timings and no memory measurements. At 256
+embeddings, 128 dimensions, and one thread, chunks of 32 anchors cost 4.8 ms against
+2.6 ms for NTXentLoss and 10.5 ms against 7.1 ms for TripletMarginLoss, and
+`tuples_per_anchor=32` cost 22.7 ms against 10.0 ms for a mined triplet step. Peak
+memory needs `--device cuda`, which the benchmark cases support, so the memory
+benefit of both features remains a design expectation.
+
+## Decoupled contrastive loss
+
+`DecoupledContrastiveLoss` shares `NTXentLoss`'s pair layout: one element per positive
+pair, with negatives grouped by anchor. It does not shift scores by the largest
+negative, because that shift exists to keep `softplus` accurate, and nothing here
+compares a positive with a sum containing it. An anchor without negatives has no
+defined objective, so its pairs are removed instead of contributing the infinite
+logarithm of an empty sum. Its default reducer must keep negative values, which the
+objective can take.
+
+`decomposes_by_anchor` is set per instance for this loss. Equation 7 normalizes DCLW's
+weights by a mean over all positive pairs, which is a batch statistic, while equation 6
+has none. The weights stay in the graph because the paper writes no stop-gradient.
+
+## Selectively contrastive triplet loss
+
+The paper's equation and the authors' code differ, so the defaults follow a stated
+rule: the equation decides behavior unless it leaves a setting open. Equation 1 omits a
+temperature, but cosine similarities in `[-1, 1]` at a unit temperature give weak
+gradients, so the default is the code's 0.1, with `temperature=1` recovering the
+equation. The code's extra `Neg > 0.8` hard rule changes which case applies, so it is an
+opt-in `hard_threshold`. Mining stays a separate miner rather than a built-in selection,
+so the loss composes with any tuple source. The loss rejects non-inverted distances,
+because the hard case minimizes the value directly, and minimizing a distance would pull
+the negative closer without any error. The authors' repository has no license file, so
+the implementation comes from the paper; their code served only as a numerical
+cross-check outside this repository.
+
+## Spherical embedding regularizer
+
+Issue #346 asked whether SEC duplicates `CenterInvariantRegularizer`. It does not. The
+center invariant penalty compares squared norms, so its gradient grows with the cube of
+the norm, while SEC compares norms, with a gradient linear in the deviation. The tests
+show that neither is a rescaling of the other. SEC computes on the raw row, so it needs
+unnormalized embeddings, which is where the losses' distances leave them. It needs no
+`distance` argument, because equation 17 is defined only on the Euclidean norm.
+
+## Class centroids
+
+`CentroidTripletLoss` was removed in version 2 because classes of different sizes crashed
+it. Its `(class, sample)` padding appended index 0 for missing samples, which put another
+class's row into each padded slot, as pgrosjean found in #451, and reshaping tuples then
+failed whenever the tuple count was not divisible by the classes. Version 3 has no padding.
+`_common.class_centroids` computes class sums with `index_add`, and the leave-one-out mean
+of a row is its class sum minus the row. Cost is linear in the batch, with one
+`(rows, classes)` distance matrix and no per-sample centroid loop.
+
+`CentroidTripletLoss` computes in float32 for low-precision inputs and stays there through
+the reducer. The default squared distance can overflow float16 for valid embeddings even
+when the result fits, and `inf - inf` is a NaN that `AvgNonZeroReducer` filters out, so
+casting back early would silently return zero with zero gradients. It also keeps very small
+`softplus` values from rounding to zero and leaving the reducer's count.
+
+Singletons are skipped rather than raising, as version 1 did. Batches with an occasional
+singleton are ordinary in long-tailed training, and raising stops a run at a random step
+for a row that simply has no objective. The row still contributes a negative centroid,
+because a centroid of one sample is well defined. `swap` and `triplets_per_anchor` were
+not restored: the paper defines neither, and every anchor-class triplet is cheap here.
+
+`GE2ELoss` shares that helper but normalizes first, because equation 4 defines centroids
+over unit vectors. Averaging raw embeddings would let large embeddings dominate a class's
+centroid, and leave-one-out on every class would stop scoring negatives against the
+centroids that equation 9 specifies. The own-class score replaces one entry of the
+matrix, so negatives use a single `(rows, classes)` comparison. `w > 0` comes from
+training `raw_w` with `w = softplus(raw_w)`. A forward clamp was tried first and is wrong: its
+derivative is zero below the boundary, so one step past zero left `w` with no gradient and
+embeddings with almost none, and training stopped. Softplus cannot cross zero and always
+has a gradient. It suits this loss better than `exp`, because its chain-rule factor is
+nearly 1 at the paper's scale, so updates there match training `w` directly, while `exp`
+rescales every update by `w`.
+
+## Center loss
+
+Algorithm 1 of Wen et al. updates centers by equation 4, with a `1 + n` denominator, not
+by the gradient of `L_C`, which has no denominator and grows with the class's batch count.
+A `Parameter` would let an optimizer apply that different rule, so `centers` is a buffer
+and no gradient reaches it.
+
+The update is an explicit method rather than a side effect of `forward`. `forward` runs for
+evaluation, for several micro-batches of one step, and under checkpointing, and each of those
+would otherwise move the centers a different number of times. It also avoids the failure in
+#731: writing to a tensor a pending graph has saved raises at `backward()`. The loss
+indexes `centers` into a new tensor, so a later in-place update does not touch the graph,
+and a test confirms that either order works. The cost is that a caller who forgets the
+call trains against random centers, which is why the docs state it first.
+
+The loss stays in float32 for low-precision inputs, unlike most losses, because features in
+this paper's setting reach hundreds, and half a squared distance then exceeds the float16
+range for one row even when the reduced value fits.
+
+## Resolved reports
+
+#731 was a library defect in version 2, not caller ordering. Its `update_histogram` ran
+with gradients on, so `self.hist_` kept the batch's graph alive into the next step. The
+next `backward()` then walked the previous step's freed graph and raised "second time", and
+adding `retain_graph=True` moved the failure to the previous step's weights, which the
+optimizer had changed. Running the same training loop on v2.9.0 produces both errors in
+that order. Version 3 updates the histogram under `torch.no_grad()` into a buffer, and
+`weigh_loss` reads a cumulative sum that is a new tensor, so later updates cannot touch a
+pending graph. The tests pin this, with several forwards before `backward()`.
+
+#723 has not been reproduced. It reported mixed-label pairs on MPS with library 2.6.0 and
+PyTorch 2.2.1 on macOS 14.4, and printing a tensor made the fault disappear. Those same
+library and PyTorch versions gave only valid pairs on MPS here on macOS 26, as did v2.9.0
+and version 3 on PyTorch 2.14, so a cause cannot be named. The reported code path no longer
+exists: version 3 builds masks with out-of-place `masked_fill`, not in-place writes
+to a cloned matrix. The MPS tests use the reporter's matrix through `mat`, so CPU and MPS
+compare identical inputs.
+
+## Rank-N-Contrast
+
+Each anchor has `M` denominators, and each is a suffix of the row sorted by target distance.
+`logcumsumexp` over the reversed row computes them all at once, and `searchsorted` maps a
+tied group to the first member's suffix, which keeps equal distances together as the `≥`
+in `S_ij` requires. Evaluating each denominator separately would cost `O(N^3)`, as the
+authors' code does.
+
+Targets are not cast to the embedding dtype, unlike most label handling here, because
+order is the whole objective, and target distances are computed in float64 for the same
+reason. Keeping targets in their own dtype is not enough: `|y_i - y_j|` and the L1 sum
+round too, and two different distances that round to one value become a tie that changes
+the denominators and the gradients. That also affects float32 targets of ordinary size,
+so widening only float16 would leave the defect in place. MPS has no float64, so ranking
+runs on CPU there and only the resulting indices return, since an exact ranking is worth
+one small transfer. The move and the cast are separate calls on purpose: on PyTorch 2.14,
+`tensor.to("cpu", torch.float64)` from MPS silently returns zeros, which would make every
+target tie. Integers are rejected rather than converted for the same
+reason. `label_ndim` is an instance setting because this loss alone accepts either shape,
+and `indices_tuple` is rejected because the set `S_ij` is defined over the whole batch. The
+authors' repository has no license file, so the implementation comes from the paper, and
+their code served only as a numerical cross-check outside this repository.

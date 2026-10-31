@@ -1,4 +1,4 @@
-from typing import ClassVar, Unpack
+from typing import Unpack
 
 import torch
 from torch import Tensor
@@ -30,7 +30,9 @@ def _jaccard(labels: Tensor, ref_labels: Tensor | None, dtype: torch.dtype) -> T
 
 
 class MultiSupConLoss(BaseMetricLossFunction):
-    label_ndim: ClassVar[int] = 2
+    supports_mat = True
+
+    label_ndim = 2
 
     def __init__(
         self,
@@ -67,6 +69,8 @@ class MultiSupConLoss(BaseMetricLossFunction):
         indices_tuple: IndicesTuple | None,
         ref_emb: Tensor | None,
         ref_labels: Tensor | None,
+        *,
+        mat: Tensor | None = None,
     ) -> LossDict:
         labels = _common.labels_required(labels)
         dtype = _common.accumulation_dtype(embeddings.dtype)
@@ -79,7 +83,9 @@ class MultiSupConLoss(BaseMetricLossFunction):
                 (similarity.shape[0], similarity.shape[1]),
                 embeddings.device,
             )
-        mat = self.distance(embeddings, ref_emb).to(dtype)
+        mat = _common.resolve_matrix(self.distance, embeddings, ref_emb, mat)
+        result_dtype = mat.dtype
+        mat = mat.to(dtype)
         if not self.distance.is_inverted:
             mat = -mat
         mat = mat / self.temperature
@@ -90,7 +96,7 @@ class MultiSupConLoss(BaseMetricLossFunction):
         positives = pos_mask.sum(dim=1)
         rows = torch.where(positives > 0)[0]
         weighted = (similarity * pos_mask * log_prob).sum(dim=1)[rows] / positives[rows]
-        return {"loss": {"losses": (-weighted).to(embeddings.dtype), "indices": rows}}
+        return {"loss": {"losses": (-weighted).to(result_dtype), "indices": rows}}
 
     def default_reducer(self) -> BaseReducer:
         return AvgNonZeroReducer()

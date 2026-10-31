@@ -10,6 +10,8 @@ from .generic_pair_loss import GenericPairLoss
 
 
 class MultiSimilarityLoss(GenericPairLoss):
+    decomposes_by_anchor = True
+
     def __init__(
         self,
         alpha: float = 2,

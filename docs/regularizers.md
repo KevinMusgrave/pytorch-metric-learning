@@ -32,7 +32,7 @@ An object that extends this class can be passed as the `embedding_regularizer` i
 
 Regularizer signatures end with `**options`, which accepts these two
 keyword-only arguments; see `pytorch_metric_learning.types.RegularizerOptions`.
-LpRegularizer and ZeroMeanRegularizer use no distance and accept only
+LpRegularizer, SphericalEmbeddingRegularizer, and ZeroMeanRegularizer use no distance and accept only
 `reducer`.
 
 Calling `regularizer(x)` computes one loss term with one value per row of `x`,
@@ -146,6 +146,66 @@ it requires [DivisorReducer](reducers.md#divisorreducer), the default.
 **Default reducer**:
 
 - [DivisorReducer](reducers.md#divisorreducer)
+
+## SphericalEmbeddingRegularizer
+
+[Deep Metric Learning with Spherical Embedding](https://arxiv.org/abs/2011.02785) (Zhang
+et al.)
+
+This is the spherical embedding constraint, SEC. Losses that normalize embeddings still
+update them through their unnormalized form, and an embedding with a large norm then
+changes direction less than one with a small norm. SEC pulls every norm toward the
+batch's mean norm, without fixing a radius. The loss for row `i` is:
+
+$$
+\mathcal{L}_{\mathrm{sec},i} = \left(\lVert f_i \rVert_2 - \mu\right)^2,
+\qquad \mu = \frac{1}{N} \sum_{j=1}^{N} \lVert f_j \rVert_2
+$$
+
+```python {.signature}
+regularizers.SphericalEmbeddingRegularizer(*, reducer=None)
+```
+
+Pass it as the `embedding_regularizer`, and set the paper's $\eta$ with
+`embedding_reg_weight`. The objective is then $\mathcal{L}_{\mathrm{metric}} + \eta
+\mathcal{L}_{\mathrm{sec}}$:
+
+```python
+import torch
+from pytorch_metric_learning import losses, regularizers
+
+loss_func = losses.TripletMarginLoss(
+    embedding_regularizer=regularizers.SphericalEmbeddingRegularizer(),
+    embedding_reg_weight=0.5,
+)
+embeddings = torch.randn(32, 128, requires_grad=True)
+labels = torch.arange(32) // 4
+loss = loss_func(embeddings, labels)
+loss.backward()
+```
+
+Do not L2-normalize embeddings before the loss. Every norm would equal 1, so the
+penalty and its gradient would be zero. Normalization belongs in the loss's distance,
+which is how the default distances work. The paper's $\eta$ study on Cars196 with a
+triplet loss reports its best recall at 0.5, among 0, 0.1, 0.5, 1.0, and 1.5.
+
+$\mu$ stays in the graph, which does not change the gradient, because the deviations
+from the mean sum to zero. The gradient for row `i` under the default reducer is
+equation 18 of the paper, $\frac{2}{N}(\lVert f_i \rVert_2 - \mu) \hat{f}_i$. A zero row
+receives a zero gradient. float16 and bfloat16 inputs stay in float32 until the
+reducer has finished, so one large deviation cannot overflow the mean.
+
+SEC differs from [CenterInvariantRegularizer](#centerinvariantregularizer), which
+penalizes $(\lVert x_i \rVert^2 - \overline{\lVert x \rVert^2})^2 / 4$, the deviation of
+squared norms. That places much more weight on large norms, so the two disagree in value
+and gradient, and neither is a rescaling of the other. SEC with $\mu = 0$ is the squared
+[LpRegularizer](#lpregularizer), `LpRegularizer(power=2)`, which the paper calls L2-reg.
+
+**Distance**: None. The regularizer takes no `distance` argument.
+
+**Default reducer**:
+
+- [MeanReducer](reducers.md#meanreducer)
 
 ## ZeroMeanRegularizer
 

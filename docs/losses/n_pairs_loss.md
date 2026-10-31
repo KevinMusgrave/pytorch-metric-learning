@@ -29,6 +29,10 @@ unnormalized inner products and penalizes the squared embedding norms. Pass
 `embedding_regularizer` such as `regularizers.LpRegularizer(power=2)` for the
 paper's formulation.
 
+The paper's hard negative class mining chooses which classes form a batch, so it
+runs before this loss. See the
+[class mining recipe](../recipes/training.md#n-pairs-hard-negative-class-mining-contract).
+
 **Example**:
 
 ```python

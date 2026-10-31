@@ -11,6 +11,8 @@ from .base_metric_loss_function import BaseMetricLossFunction
 
 
 class DynamicSoftMarginLoss(BaseMetricLossFunction):
+    supports_mat = True
+
     hist: Tensor
 
     def __init__(
@@ -50,6 +52,8 @@ class DynamicSoftMarginLoss(BaseMetricLossFunction):
         indices_tuple: IndicesTuple | None,
         ref_emb: Tensor | None,
         ref_labels: Tensor | None,
+        *,
+        mat: Tensor | None = None,
     ) -> LossDict:
         _common.check_parameter_placement(self, self.hist, embeddings)
         if labels is None and indices_tuple is None:
@@ -58,10 +62,10 @@ class DynamicSoftMarginLoss(BaseMetricLossFunction):
                     "Without labels or indices_tuple, ref_emb must hold the matching "
                     "row for each embedding"
                 )
-            differences = self.compute_loss_without_labels(embeddings, ref_emb)
+            differences = self.compute_loss_without_labels(embeddings, ref_emb, mat)
         else:
             differences = self.compute_loss_with_labels(
-                embeddings, labels, indices_tuple, ref_emb, ref_labels
+                embeddings, labels, indices_tuple, ref_emb, ref_labels, mat
             )
         if len(differences) == 0:
             return {}
@@ -74,9 +78,9 @@ class DynamicSoftMarginLoss(BaseMetricLossFunction):
         }
 
     def compute_loss_without_labels(
-        self, embeddings: Tensor, ref_emb: Tensor
+        self, embeddings: Tensor, ref_emb: Tensor, mat: Tensor | None = None
     ) -> Tensor:
-        mat = self.distance(embeddings, ref_emb)
+        mat = _common.resolve_matrix(self.distance, embeddings, ref_emb, mat)
         rows, columns = mat.shape
         paired_count = min(rows, columns)
         if paired_count == 0 or rows == columns == 1:
@@ -95,11 +99,12 @@ class DynamicSoftMarginLoss(BaseMetricLossFunction):
         indices_tuple: IndicesTuple | None,
         ref_emb: Tensor | None,
         ref_labels: Tensor | None,
+        mat: Tensor | None = None,
     ) -> Tensor:
         anchor, positive, negative = indexing.convert_to_triplets(
             indices_tuple, labels, ref_labels, t_per_anchor="all"
         )
-        mat = self.distance(embeddings, ref_emb)
+        mat = _common.resolve_matrix(self.distance, embeddings, ref_emb, mat)
         return mat[anchor, positive] - mat[anchor, negative]
 
     def bin_positions(self, data: Tensor) -> Tensor:

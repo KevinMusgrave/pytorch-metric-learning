@@ -83,35 +83,33 @@ class CrossBatchMemory(torch.nn.Module):
         indices_tuple: Sequence[Tensor] | None = None,
         enqueue_mask: Tensor | None = None,
     ) -> Tensor:
-        _common.check_shapes(embeddings, labels, self.label_memory.ndim)
-        if labels.shape[1:] != self.label_memory.shape[1:]:
-            raise ValueError("labels must have the memory's label shape")
-        _common.check_device(labels, embeddings, "labels")
-        if embeddings.shape[1] != self.embedding_memory.shape[1]:
-            raise ValueError("embeddings must have the memory's embedding size")
-        if indices_tuple is not None and enqueue_mask is not None:
-            raise ValueError("indices_tuple and enqueue_mask are mutually exclusive")
-        indices = _common.as_indices_tuple(indices_tuple, embeddings.device)
-        if enqueue_mask is not None:
-            if enqueue_mask.dtype != torch.bool:
-                raise TypeError("enqueue_mask must be a boolean tensor")
-            if enqueue_mask.ndim != 1 or len(enqueue_mask) != len(embeddings):
-                raise ValueError(
-                    "enqueue_mask must be one-dimensional with one value per embedding"
-                )
-            _common.check_device(enqueue_mask, embeddings, "enqueue_mask")
-        _common.check_parameter_placement(self, self.embedding_memory, embeddings)
-        embeddings = embeddings.to(dtype=self.embedding_memory.dtype)
-        labels = self.stored_labels(labels)
+        return self.forward_local_anchors(
+            embeddings, labels, embeddings, labels, 0, indices_tuple, enqueue_mask
+        )
 
+    def forward_local_anchors(
+        self,
+        anchors: Tensor,
+        anchor_labels: Tensor,
+        batch: Tensor,
+        batch_labels: Tensor,
+        offset: int,
+        indices_tuple: Sequence[Tensor] | None = None,
+        enqueue_mask: Tensor | None = None,
+    ) -> Tensor:
+        self.check_batch(batch, batch_labels, indices_tuple, enqueue_mask)
+        indices = _common.as_indices_tuple(indices_tuple, anchors.device)
+        anchors = anchors.to(dtype=self.embedding_memory.dtype)
+        batch = batch.to(dtype=self.embedding_memory.dtype)
+        anchor_labels = self.stored_labels(anchor_labels)
+        batch_labels = self.stored_labels(batch_labels)
+        emb_for_queue, labels_for_queue = batch, batch_labels
         if enqueue_mask is not None:
-            emb_for_queue = embeddings[enqueue_mask]
-            labels_for_queue = labels[enqueue_mask]
-            embeddings = embeddings[~enqueue_mask]
-            labels = labels[~enqueue_mask]
-        else:
-            emb_for_queue = embeddings
-            labels_for_queue = labels
+            emb_for_queue = batch[enqueue_mask]
+            labels_for_queue = batch_labels[enqueue_mask]
+            local_mask = enqueue_mask[offset : offset + len(anchors)]
+            anchors = anchors[~local_mask]
+            anchor_labels = anchor_labels[~local_mask]
         count = len(emb_for_queue)
         if count > self.memory_size:
             raise ValueError(
@@ -119,7 +117,7 @@ class CrossBatchMemory(torch.nn.Module):
             )
 
         slots = (
-            torch.arange(self.queue_idx, self.queue_idx + count, device=labels.device)
+            torch.arange(self.queue_idx, self.queue_idx + count, device=batch.device)
             % self.memory_size
         )
         filled = self.has_been_filled or self.queue_idx + count >= self.memory_size
@@ -128,20 +126,43 @@ class CrossBatchMemory(torch.nn.Module):
         L_mem = self.label_memory[:memory_end].clone()
         E_mem[slots] = emb_for_queue.detach()
         L_mem[slots] = labels_for_queue
+        anchor_slots = None
+        if enqueue_mask is None:
+            anchor_slots = slots[offset : offset + len(anchors)]
         mined = self.create_indices_tuple(
-            embeddings,
-            labels,
-            E_mem,
-            L_mem,
-            indices,
-            None if enqueue_mask is not None else slots,
+            anchors, anchor_labels, E_mem, L_mem, indices, anchor_slots
         )
-        loss = self.loss(embeddings, labels, mined, E_mem, L_mem)
+        loss = self.loss(anchors, anchor_labels, mined, E_mem, L_mem)
         self.embedding_memory[slots] = emb_for_queue.detach()
         self.label_memory[slots] = labels_for_queue
         self.queue_idx = (self.queue_idx + count) % self.memory_size
         self.has_been_filled = filled
         return loss
+
+    def check_batch(
+        self,
+        batch: Tensor,
+        batch_labels: Tensor,
+        indices_tuple: Sequence[Tensor] | None,
+        enqueue_mask: Tensor | None,
+    ) -> None:
+        _common.check_shapes(batch, batch_labels, self.label_memory.ndim)
+        if batch_labels.shape[1:] != self.label_memory.shape[1:]:
+            raise ValueError("labels must have the memory's label shape")
+        _common.check_device(batch_labels, batch, "labels")
+        if batch.shape[1] != self.embedding_memory.shape[1]:
+            raise ValueError("embeddings must have the memory's embedding size")
+        if indices_tuple is not None and enqueue_mask is not None:
+            raise ValueError("indices_tuple and enqueue_mask are mutually exclusive")
+        if enqueue_mask is not None:
+            if enqueue_mask.dtype != torch.bool:
+                raise TypeError("enqueue_mask must be a boolean tensor")
+            if enqueue_mask.ndim != 1 or len(enqueue_mask) != len(batch):
+                raise ValueError(
+                    "enqueue_mask must be one-dimensional with one value per embedding"
+                )
+            _common.check_device(enqueue_mask, batch, "enqueue_mask")
+        _common.check_parameter_placement(self, self.embedding_memory, batch)
 
     def stored_labels(self, labels: Tensor) -> Tensor:
         dtype = self.label_memory.dtype

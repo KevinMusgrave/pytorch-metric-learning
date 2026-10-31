@@ -8,6 +8,11 @@ from . import TEST_DEVICE
 LOW_PRECISION = (torch.float16, torch.bfloat16)
 
 
+def use_deterministic_kernels(test) -> None:
+    torch.use_deterministic_algorithms(True)
+    test.addCleanup(torch.use_deterministic_algorithms, False)
+
+
 def angle_to_coord(angle, normalized=False):
     radians = math.radians(angle)
     x = math.cos(radians)

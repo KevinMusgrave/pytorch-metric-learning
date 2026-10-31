@@ -15,7 +15,7 @@ from pytorch_metric_learning.losses import (
 from pytorch_metric_learning.miners import BatchHardMiner
 from pytorch_metric_learning.reducers import MeanReducer, SumReducer
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 
 EMBEDDINGS = [
     [0.1, 0.3, 0.1],
@@ -308,6 +308,7 @@ class TestMultiSupConLoss(unittest.TestCase):
             DistributedLossWrapper(MultiSupConLoss())(embeddings, labels)
 
     def test_multiple_losses_compose_label_set_losses(self):
+        helpers.use_deterministic_kernels(self)
         embeddings, labels = self.inputs(torch.float64)
         first, second = MultiSupConLoss(0.1, 0.3), MultiSupConLoss(0.2, 0.5)
         combined = MultipleLosses({"first": first, "second": second})(

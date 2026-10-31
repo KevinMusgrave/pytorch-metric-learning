@@ -10,7 +10,53 @@ from .. import TEST_DEVICE, TEST_DTYPES, helpers
 from ..helpers import angle_to_coord
 
 
+def proxy_nca_plus_plus_equation_6(embeddings, proxies, labels, temperature):
+    x = embeddings / embeddings.norm(dim=1, keepdim=True)
+    p = proxies / proxies.norm(dim=1, keepdim=True)
+    terms = []
+    for row, label in enumerate(labels.tolist()):
+        scaled = [
+            torch.exp(-(x[row] - p[z]).pow(2).sum() / temperature)
+            for z in range(len(p))
+        ]
+        terms.append(-torch.log(scaled[label] / torch.stack(scaled).sum()))
+    return torch.stack(terms).mean()
+
+
 class TestProxyNCALoss(unittest.TestCase):
+    def test_softmax_scale_is_the_proxy_nca_plus_plus_objective(self):
+        labels = torch.tensor([0, 1, 2, 3, 1, 0], device=TEST_DEVICE)
+        generator = torch.Generator().manual_seed(2)
+        rows = torch.randn(6, 5, generator=generator, dtype=torch.float64)
+        proxies = torch.randn(4, 5, generator=generator, dtype=torch.float64)
+        for dtype in TEST_DTYPES:
+            with self.subTest(dtype=dtype):
+                loss_func = ProxyNCALoss(4, 5, softmax_scale=9).to(TEST_DEVICE, dtype)
+                with torch.no_grad():
+                    loss_func.weight.copy_(proxies.to(TEST_DEVICE, dtype))
+
+                actual = loss_func(rows.to(TEST_DEVICE, dtype), labels)
+                expected = proxy_nca_plus_plus_equation_6(
+                    rows.to(TEST_DEVICE, dtype).double(),
+                    proxies.to(TEST_DEVICE, dtype).double(),
+                    labels,
+                    1 / 9,
+                )
+                helpers.assert_close(actual.detach(), expected, dtype)
+                embeddings = rows.to(TEST_DEVICE, dtype).requires_grad_()
+                wide = embeddings.detach().double().requires_grad_()
+                wide_proxies = loss_func.weight.detach().double().requires_grad_()
+                loss_func.zero_grad()
+                loss_func(embeddings, labels).backward()
+                wide_gradients = torch.autograd.grad(
+                    proxy_nca_plus_plus_equation_6(wide, wide_proxies, labels, 1 / 9),
+                    (wide, wide_proxies),
+                )
+                assert embeddings.grad is not None
+                assert loss_func.weight.grad is not None
+                helpers.assert_close(embeddings.grad, wide_gradients[0], dtype)
+                helpers.assert_close(loss_func.weight.grad, wide_gradients[1], dtype)
+
     def test_autocast_preserves_parameters_and_matches_reference_gradients(self):
         for dtype in (torch.float16, torch.bfloat16):
             with self.subTest(dtype=dtype):

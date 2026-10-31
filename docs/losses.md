@@ -47,7 +47,15 @@ loss = loss_func(embeddings, labels, ref_emb=ref_emb, ref_labels=ref_labels)
 ## Forward arguments
 
 ```python {.signature}
-loss_func(embeddings, labels=None, indices_tuple=None, ref_emb=None, ref_labels=None)
+loss_func(
+    embeddings,
+    labels=None,
+    indices_tuple=None,
+    ref_emb=None,
+    ref_labels=None,
+    *,
+    mat=None,
+)
 ```
 
 - **embeddings**: A `(N, D)` tensor of query embeddings.
@@ -59,6 +67,8 @@ loss_func(embeddings, labels=None, indices_tuple=None, ref_emb=None, ref_labels=
   device; see [reference embeddings](#reference-embeddings).
 - **ref_labels**: A `(M,)` tensor of reference labels. It requires `ref_emb`;
   passing it alone raises `ValueError`.
+- **mat**: Optional precomputed distance matrix used in place of the loss's
+  distance call; see [precomputed distance matrices](#precomputed-distance-matrices).
 
 The return value is a scalar tensor connected to the embeddings and to the
 loss's parameters. When there are no valid pairs, triplets, or queries, the
@@ -70,6 +80,68 @@ result is a differentiable zero.
 is a separate reference set, even when it is the same tensor. See
 [reference sets](concepts.md#reference-sets) for the indexing rule and the
 `labels`/`ref_labels` combinations that raise `ValueError`.
+
+### Precomputed distance matrices
+
+`mat` lets a caller compute the matrix a loss would otherwise compute. Use it to
+reuse one computation across a miner and several losses, or to build a matrix
+from per-batch metadata such as sample ids, which a
+[distance](distances.md#matrices-with-per-batch-metadata) does not receive.
+
+```python
+import torch
+from pytorch_metric_learning import distances, losses, miners
+
+distance = distances.CosineSimilarity()
+miner = miners.MultiSimilarityMiner(distance=distance)
+first = losses.MultiSimilarityLoss(distance=distance)
+second = losses.ContrastiveLoss(distance=distance)
+
+embeddings = torch.randn(32, 128, requires_grad=True)
+labels = torch.arange(32) // 4
+
+mat = distance(embeddings)
+pairs = miner(embeddings, labels, mat=mat)
+loss = first(embeddings, labels, pairs, mat=mat) + second(
+    embeddings, labels, pairs, mat=mat
+)
+loss.backward()
+```
+
+`mat` has shape `(len(embeddings), len(reference))`, where the reference is
+`ref_emb` when supplied and `embeddings` otherwise. With the same inputs, a
+supported loss returns the same value and gradients as computing the matrix
+itself.
+
+The rules are:
+
+- Compute `mat` once, outside any miner, with gradients enabled. A loss raises
+  `ValueError` if `embeddings` or `ref_emb` require gradients, gradients are
+  enabled, and `mat` has no graph, because the loss would not train anything.
+- Sum the losses and call `backward()` once. They share the graph of `mat`, so a
+  second `backward()` needs `retain_graph=True`, as for any shared subgraph.
+- The loss's `distance` still sets the orientation and margin through
+  `is_inverted` and `margin`, so `mat` must have the same meaning as that
+  distance's output. A loss cannot detect a matrix with the wrong orientation or
+  scale.
+- A wrong shape, an integer dtype, or another device raises `ValueError`.
+- Nothing is cached. Modules neither change `mat` nor keep a reference to it.
+
+| Loss                                                                                                                                                                                                                                                                                                                                                                                   | `mat`        | Shape                                                                                             |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------- |
+| `CircleLoss`, `ContrastiveLoss`, `DecoupledContrastiveLoss`, `DynamicSoftMarginLoss`, `GeneralizedLiftedStructureLoss`, `IntraPairVarianceLoss`, `MarginLoss`, `MultiSimilarityLoss`, `MultiSupConLoss`, `NCALoss`, `NTXentLoss`, `RankNContrastLoss`, `SelectivelyContrastiveTripletLoss`, `SignalToNoiseRatioContrastiveLoss`, `SupConLoss`, `TripletMarginLoss`, `TupletMarginLoss` | Supported    | `(N, N)`, or `(N, M)` with `ref_emb`                                                              |
+| `FastAPLoss`, `HistogramLoss`, `InstanceLoss`, `LiftedStructureLoss`, `PNPLoss`, `RankedListLoss`, `SmoothAPLoss`                                                                                                                                                                                                                                                                      | Supported    | `(N, N)`; these losses reject `ref_emb`                                                           |
+| Proxy and classifier losses, `AngularLoss`, `CenterLoss`, `CentroidTripletLoss`, `GE2ELoss`, `ManifoldLoss`, `NPairsLoss`, `ThresholdConsistentMarginLoss`                                                                                                                                                                                                                             | `ValueError` | They compare embeddings with their own weights or subsets, or read embeddings directly            |
+| `CrossBatchMemory`, `DistributedLossWrapper`, `MultipleLosses`, `SelfSupervisedLoss`, `VICRegLoss`                                                                                                                                                                                                                                                                                     | `TypeError`  | These wrappers build their own inputs or have no distance matrix, so their `forward` has no `mat` |
+
+`TripletMarginLoss(swap=True)` raises `ValueError` with `mat`, because swapping
+reads distances between references, which `mat` does not hold. Check
+`type(loss).supports_mat` to test a loss class.
+
+To reduce memory on large batches, supported tuple losses can compute gradients in
+chunks of anchors with
+[`anchor_batched_backward`](losses/anchor_batched_backward.md), and every miner can
+cap its output with [`tuples_per_anchor`](miners.md#bounding-the-output).
 
 ### Index tuples
 
@@ -115,6 +187,7 @@ argument raises `ValueError`. These lists are verified by the test suite.
 
 - CircleLoss
 - ContrastiveLoss
+- DecoupledContrastiveLoss
 - DynamicSoftMarginLoss
 - GeneralizedLiftedStructureLoss
 - HistogramLoss
@@ -123,6 +196,7 @@ argument raises `ValueError`. These lists are verified by the test suite.
 - MarginLoss
 - MultiSimilarityLoss
 - NTXentLoss
+- SelectivelyContrastiveTripletLoss
 - SignalToNoiseRatioContrastiveLoss
 - SupConLoss
 - ThresholdConsistentMarginLoss
@@ -134,6 +208,7 @@ argument raises `ValueError`. These lists are verified by the test suite.
 - AngularLoss
 - CircleLoss
 - ContrastiveLoss
+- DecoupledContrastiveLoss
 - DynamicSoftMarginLoss
 - GeneralizedLiftedStructureLoss
 - IntraPairVarianceLoss
@@ -142,6 +217,8 @@ argument raises `ValueError`. These lists are verified by the test suite.
 - MultiSupConLoss
 - NCALoss
 - NTXentLoss
+- RankNContrastLoss
+- SelectivelyContrastiveTripletLoss
 - SignalToNoiseRatioContrastiveLoss
 - SupConLoss
 - ThresholdConsistentMarginLoss
@@ -349,6 +426,10 @@ each batch, such as batches from [MPerClassSampler](samplers.md#mperclasssampler
 
 - [AngularLoss](losses/angular_loss.md): triplets constrained by the angle at
   the negative, which is invariant to the scale of the distances.
+- [CenterLoss](losses/center_loss.md): an auxiliary term that pulls each embedding
+  toward a class center, combined with a classification loss.
+- [CentroidTripletLoss](losses/centroid_triplet_loss.md): triplets of an anchor and
+  class centroids, which are less sensitive to a single unrepresentative sample.
 - [CircleLoss](losses/circle_loss.md): pairs weighted by how far each
   similarity is from its optimum, with one margin and one scale.
 - [ContrastiveLoss](losses/contrastive_loss.md): the simplest pair objective;
@@ -379,6 +460,9 @@ each batch, such as batches from [MPerClassSampler](samplers.md#mperclasssampler
   references, separating positives from negatives by a margin.
 - [SignalToNoiseRatioContrastiveLoss](losses/signal_to_noise_ratio_contrastive_loss.md):
   the contrastive objective measured with the signal-to-noise ratio distance.
+- [SelectivelyContrastiveTripletLoss](losses/selectively_contrastive_triplet_loss.md):
+  a triplet objective that only pushes the negative away on hard triplets, which
+  avoids collapse under hard-negative mining.
 - [TripletMarginLoss](losses/triplet_margin_loss.md): the standard triplet
   baseline; combine it with a miner such as
   [TripletMarginMiner](miners.md#tripletmarginminer).
@@ -432,12 +516,18 @@ batches with several positives per class.
 
 ### Self-supervised and supervised contrastive objectives
 
+- [DecoupledContrastiveLoss](losses/decoupled_contrastive_loss.md): InfoNCE without
+  the positive in the denominator, which keeps small batches learning.
+- [GE2ELoss](losses/ge2e_loss.md): each embedding against every class centroid in the
+  batch, with its own class's centroid computed without it.
 - [InstanceLoss](losses/instance_loss.md): classification of each instance
   against the batch, as in image-text instance retrieval.
 - [MultiSupConLoss](losses/multi_supcon_loss.md): SupCon for label sets, with
   positives chosen and weighted by Jaccard similarity.
 - [NTXentLoss](losses/ntxent_loss.md): the InfoNCE objective of SimCLR and MoCo;
   use [SelfSupervisedLoss](losses/self_supervised_loss.md) for unlabeled views.
+- [RankNContrastLoss](losses/rank_n_contrast_loss.md): supervised contrastive regression
+  for continuous targets, which orders embeddings by target distance.
 - [SupConLoss](losses/supcon_loss.md): the contrastive objective with every
   same-label sample as a positive.
 - [VICRegLoss](losses/vicreg_loss.md): two views without negatives, regularized

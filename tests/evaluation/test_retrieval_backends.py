@@ -175,7 +175,9 @@ class TestRetrievalBackends(unittest.TestCase):
                         LpDistance(normalize_embeddings=False, power=2), batch_size
                     )
                     distances, indices = knn(query, 4, reference)
-                    self.assertEqual(distances.dtype, dtype)
+                    self.assertEqual(
+                        distances.dtype, torch.promote_types(dtype, torch.float32)
+                    )
                     self.assertEqual(indices.dtype, torch.long)
                     self.assertTrue(torch.equal(indices, expected_indices))
                     tolerance = 1e-2 if dtype == torch.float16 else 1e-4

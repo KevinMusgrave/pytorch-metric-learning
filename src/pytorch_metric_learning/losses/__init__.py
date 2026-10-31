@@ -1,14 +1,19 @@
+from .anchor_batched_backward import anchor_batched_backward
 from .angular_loss import AngularLoss
 from .arcface_loss import ArcFaceLoss
 from .base_metric_loss_function import BaseMetricLossFunction
 from .base_proxy_loss import BaseProxyLoss
+from .center_loss import CenterLoss
+from .centroid_triplet_loss import CentroidTripletLoss
 from .circle_loss import CircleLoss
 from .contrastive_loss import ContrastiveLoss
 from .cosface_loss import CosFaceLoss
 from .cross_batch_memory import CrossBatchMemory
+from .decoupled_contrastive_loss import DecoupledContrastiveLoss
 from .dynamic_arcface_loss import DynamicArcFaceLoss
 from .dynamic_soft_margin_loss import DynamicSoftMarginLoss
 from .fast_ap_loss import FastAPLoss
+from .ge2e_loss import GE2ELoss
 from .generic_pair_loss import GenericPairLoss
 from .histogram_loss import HistogramLoss
 from .instance_loss import InstanceLoss
@@ -28,7 +33,9 @@ from .p2s_grad_loss import P2SGradLoss
 from .pnp_loss import PNPLoss
 from .proxy_anchor_loss import ProxyAnchorLoss
 from .proxy_nca_loss import ProxyNCALoss
+from .rank_n_contrast_loss import RankNContrastLoss
 from .ranked_list_loss import RankedListLoss
+from .selectively_contrastive_triplet_loss import SelectivelyContrastiveTripletLoss
 from .self_supervised_loss import SelfSupervisedLoss
 from .signal_to_noise_ratio_contrastive_loss import SignalToNoiseRatioContrastiveLoss
 from .smooth_ap_loss import SmoothAPLoss
@@ -46,13 +53,17 @@ __all__ = [
     "ArcFaceLoss",
     "BaseMetricLossFunction",
     "BaseProxyLoss",
+    "CenterLoss",
+    "CentroidTripletLoss",
     "CircleLoss",
     "ContrastiveLoss",
     "CosFaceLoss",
     "CrossBatchMemory",
+    "DecoupledContrastiveLoss",
     "DynamicArcFaceLoss",
     "DynamicSoftMarginLoss",
     "FastAPLoss",
+    "GE2ELoss",
     "GeneralizedLiftedStructureLoss",
     "GenericPairLoss",
     "HistogramLoss",
@@ -73,7 +84,9 @@ __all__ = [
     "PNPLoss",
     "ProxyAnchorLoss",
     "ProxyNCALoss",
+    "RankNContrastLoss",
     "RankedListLoss",
+    "SelectivelyContrastiveTripletLoss",
     "SelfSupervisedLoss",
     "SignalToNoiseRatioContrastiveLoss",
     "SmoothAPLoss",
@@ -85,4 +98,5 @@ __all__ = [
     "TripletMarginLoss",
     "TupletMarginLoss",
     "VICRegLoss",
+    "anchor_batched_backward",
 ]

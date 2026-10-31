@@ -105,6 +105,21 @@ assert distance(x, y).shape == (5, 5)
 assert torch.allclose(distance.pairwise(x, y), distance(x, y).diagonal(), atol=1e-5)
 ```
 
+A normalized distance has the dtype of its inputs. An unnormalized distance has no upper
+bound, so with float16 or bfloat16 inputs it is computed and returned in float32, even
+under autocast. Squared distances and dot products of ordinary embeddings exceed the
+float16 maximum of 65504, and a loss would then receive `inf`. Losses that use such a
+distance return float32 as a result, as does
+[`anchor_batched_backward`](losses/anchor_batched_backward.md). This applies to
+`normalize_embeddings=False` on every distance, including custom ones, whose
+`compute_mat` then receives float32.
+
+Two limits remain. A gradient is stored on the embedding tensor, so a float16 embedding
+gets `inf` where the true gradient exceeds 65504; use float32 embeddings at that scale.
+Results are also only as precise as float32: scores near `1e10`, such as a squared dot
+product of embeddings around 300, leave too little resolution for margins or softmax
+differences, and float32 inputs give the same result.
+
 ### Custom distances
 
 A subclass implements two hooks on already-normalized embeddings. `forward` and
@@ -138,6 +153,31 @@ assert torch.allclose(distance.pairwise(x, y), distance(x, y).diagonal())
 raises `ValueError`. Call `pairwise`, not `pairwise_distance`, from losses and
 application code, so normalization and `power` apply. Custom similarities set
 `is_inverted = True` on the class.
+
+### Matrices with per-batch metadata
+
+A distance receives only embeddings. When a matrix also depends on per-batch data,
+such as a reward or sample id for each row, compute it in application code and pass
+it to the loss as [`mat`](losses.md#precomputed-distance-matrices). Keep this data
+out of the distance object, where it would be state shared between batches.
+
+```python
+from pytorch_metric_learning import losses
+from pytorch_metric_learning.distances import DotProductSimilarity
+
+embeddings = torch.randn(8, 16, requires_grad=True)
+labels = torch.arange(8) // 2
+rewards = torch.linspace(0.5, 2.0, 8)
+
+distance = DotProductSimilarity()
+mat = distance(embeddings) * rewards.unsqueeze(1) * rewards.unsqueeze(0)
+loss = losses.NTXentLoss(distance=distance)(embeddings, labels, mat=mat)
+loss.backward()
+assert embeddings.grad.any()
+```
+
+The loss's `distance` still sets the orientation of `mat`, so use a distance with
+the same `is_inverted` value.
 
 ## BatchedDistance
 
@@ -207,13 +247,17 @@ distances.LpDistance(*, normalize_embeddings=True, p=2, power=1)
 `mat[i, j]` is the Lp distance between `query_emb[i]` and `ref_emb[j]`. With
 default parameters, this is the Euclidean distance between normalized
 embeddings. For float16 and bfloat16 inputs, the matrix is computed in float32
-with `torch.cdist` using its direct difference kernel and cast back, which keeps
-peak memory at the size of the output matrix on every device and preserves
-distances between nearby rows that the matrix-product formula would cancel to
-zero.
+with `torch.cdist` using its direct difference kernel, which preserves distances
+between nearby rows that the matrix-product formula would cancel to zero. The
+forward pass stays near the size of the output matrix, but the backward pass peaks at
+queries times references times dimensions: about 2.1 GB for 2048 rows of 128 dimensions
+on CUDA, against 52 MiB for float32 inputs. With
+`normalize_embeddings=True` the result is cast back; otherwise it
+[stays in float32](#calling-a-distance).
 
 `pairwise` computes `torch.linalg.vector_norm(x - y, ord=p, dim=-1)`, in float32
-for float16 and bfloat16 inputs. It adds no epsilon, so identical rows give
+for float16 and bfloat16 inputs, with the same result dtype as the matrix. It adds no
+epsilon, so identical rows give
 exactly zero, as in the matrix, and the gradient at identical rows is zero, as
 `torch.cdist` defines it.
 

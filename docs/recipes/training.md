@@ -14,11 +14,13 @@ optimizers, data loading, logging, and checkpoints.
 
 | Task                                                       | Executable source                                                                                                                                          | Command                                                                        |
 | ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| Metric, classifier-assisted, proxy, or two-stream training | [View training.py](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.0rc4/docs/recipes/training.py)                                       | `uv run --frozen --no-sync python -m docs.recipes.training`                    |
-| Progressive mining over embedding slices                   | [View cascaded_mining.py](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.0rc4/docs/recipes/cascaded_mining.py)                         | `uv run --frozen --no-sync python -m docs.recipes.cascaded_mining`             |
-| Alternating adversarial metric learning                    | [View adversarial_metric_learning.py](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.0rc4/docs/recipes/adversarial_metric_learning.py) | `uv run --frozen --no-sync python -m docs.recipes.adversarial_metric_learning` |
-| Mining-weighted dataset sampling                           | [View mining_weights.py](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.0rc4/docs/recipes/mining_weights.py)                           | `uv run --frozen --no-sync python -m docs.recipes.mining_weights`              |
-| Caller-controlled memory warmup                            | [View memory_warmup.py](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.0rc4/docs/recipes/memory_warmup.py)                             | `uv run --frozen --no-sync python -m docs.recipes.memory_warmup`               |
+| Metric, classifier-assisted, proxy, or two-stream training | [View training.py](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.0rc5/docs/recipes/training.py)                                       | `uv run --frozen --no-sync python -m docs.recipes.training`                    |
+| Progressive mining over embedding slices                   | [View cascaded_mining.py](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.0rc5/docs/recipes/cascaded_mining.py)                         | `uv run --frozen --no-sync python -m docs.recipes.cascaded_mining`             |
+| Alternating adversarial metric learning                    | [View adversarial_metric_learning.py](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.0rc5/docs/recipes/adversarial_metric_learning.py) | `uv run --frozen --no-sync python -m docs.recipes.adversarial_metric_learning` |
+| Mining-weighted dataset sampling                           | [View mining_weights.py](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.0rc5/docs/recipes/mining_weights.py)                           | `uv run --frozen --no-sync python -m docs.recipes.mining_weights`              |
+| ProxyNCA++ model and optimizer                             | [View proxy_nca_plus_plus.py](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.0rc5/docs/recipes/proxy_nca_plus_plus.py)                 | `uv run --frozen --no-sync python -m docs.recipes.proxy_nca_plus_plus`         |
+| N-pairs hard negative class mining                         | [View npairs_class_mining.py](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.0rc5/docs/recipes/npairs_class_mining.py)                 | `uv run --frozen --no-sync python -m docs.recipes.npairs_class_mining`         |
+| Caller-controlled memory warmup                            | [View memory_warmup.py](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.0rc5/docs/recipes/memory_warmup.py)                             | `uv run --frozen --no-sync python -m docs.recipes.memory_warmup`               |
 
 The commands import the installed package, so install the checkout as described
 in the [development guide](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/DEVELOPMENT.md#set-up-a-checkout),
@@ -111,6 +113,82 @@ uniform weights within the selected subset. This is sampling with replacement, n
 epoch-coverage guarantee. The recipe uses a local seeded PyTorch generator and
 reports four batches of eight labels. The tests verify exact subset mapping and
 that sampling never selects a zero-weight row.
+
+## ProxyNCA++ contract
+
+[ProxyNCA++](https://arxiv.org/abs/2004.01113) (Teh et al.) is ProxyNCA with six
+enhancements. Two are settings of the loss, and the others belong to the model and the
+training loop, so no separate loss exists:
+
+| Enhancement                     | Where it lives                                                                    |
+| ------------------------------- | --------------------------------------------------------------------------------- |
+| Proxy assignment probability    | `ProxyNCALoss` already sums every proxy, including the target, in its denominator |
+| Low temperature $T = 1/9$       | `ProxyNCALoss(softmax_scale=9)`, because $s = 1 / T$                              |
+| Class balanced sampling         | [`MPerClassSampler`](../samplers.md#mperclasssampler)                             |
+| Layer norm without affine terms | `nn.LayerNorm(embedding_size, elementwise_affine=False)` in the model             |
+| Global max pooling              | `global_k_max_pool(features, k=1)` in the model                                   |
+| Fast-moving proxies             | A separate optimizer parameter group for the loss, from `make_optimizer`          |
+
+`global_k_max_pool` takes `(N, E, H, W)` features and averages the `k` largest values of
+each channel (equation 7 of the paper), so `k=1` is max pooling and `k=H*W` is average
+pooling. `PoolAndEmbed` applies it, a linear embedding, and layer norm. `make_optimizer`
+gives the proxies their own learning rate.
+
+The recipe's numbers only make the integration quick. The paper's proxy learning rates are
+10^4 to 10^5 times its base rates, with 3 or 4 instances per class, a pretrained ResNet-50
+backbone, and learning-rate decay, none of which the recipe reproduces. A rate ratio does
+not transfer between optimizers, so choose rates from validation. Passing the loss's
+parameters to an optimizer is required, as in every proxy loss.
+
+## N-pairs hard negative class mining contract
+
+[NPairsLoss](../losses/n_pairs_loss.md) needs one positive pair from each of $N$ different
+classes. Section 3.2.1 of the paper selects those classes greedily instead of at random,
+which helps when the dataset has many classes. It is a recipe because it runs the model
+to choose a batch, and the application owns inference and data loading. The steps are:
+
+1. `candidate_examples(labels, num_classes, examples_per_class=2, generator=None)` picks
+   `num_classes` random classes with at least two examples, and returns dataset indices
+   for a few examples of each. A larger `num_classes` searches harder and costs more
+   inference.
+2. `select_classes(embeddings, labels, num_pairs, distance, generator=None)` takes those
+   candidates' embeddings. It picks one class at random, then repeatedly adds the class
+   that most violates the triplet constraint with the selected classes, breaking ties
+   at random, until it has `num_pairs` classes.
+3. `draw_pairs(labels, classes, generator=None)` draws two different examples of each
+   selected class from the whole dataset, and returns their indices. These are new
+   draws, not the examples from step 1.
+
+The paper does not define the violation precisely, so `class_violations` uses this
+interpretation of the triplet constraint $a^\top p > a^\top n$. For a selected class $s$
+and a candidate class $c$, the violation is
+$\max_{a \in s,\, n \in c} (a^\top n - a^\top p_a)$, where $p_a$ is the least similar
+other example of $a$'s class. With one example per class, $a^\top p_a$ is 0. A candidate
+class's score is its largest violation against any selected class.
+
+`mined_batch` composes the three steps. It computes candidate embeddings under
+`torch.no_grad()` and leaves the model's mode to the caller. Pass `loss_func.distance` so
+that mining and the loss agree on similarity:
+
+```python
+import torch
+from docs.recipes.npairs_class_mining import mined_batch
+from pytorch_metric_learning import losses
+
+labels = torch.arange(8).repeat_interleave(3)
+data = torch.randn(24, 16)
+model = torch.nn.Linear(16, 4)
+loss_func = losses.NPairsLoss()
+
+batch = mined_batch(model, data, labels, 6, 3, loss_func.distance)
+loss = loss_func(model(data[batch]), labels[batch])
+loss.backward()
+assert len(batch) == 6
+```
+
+`num_candidates` must not exceed the classes with two examples, and `num_pairs` must not
+exceed `num_candidates`; otherwise the functions raise `ValueError`. The recipe's numbers
+only make the integration quick, and do not reproduce the paper's experiments.
 
 ## Memory warmup contract
 

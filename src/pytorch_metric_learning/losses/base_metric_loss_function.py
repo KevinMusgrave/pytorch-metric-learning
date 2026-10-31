@@ -1,5 +1,5 @@
-from collections.abc import Sequence
-from typing import ClassVar
+from collections.abc import Callable, Sequence
+from typing import ClassVar, cast
 
 from torch import Tensor, nn
 
@@ -17,7 +17,9 @@ def _regularization_term(
 
 
 class BaseMetricLossFunction(nn.Module):
-    label_ndim: ClassVar[int] = 1
+    label_ndim: int = 1
+    supports_mat: ClassVar[bool] = False
+    decomposes_by_anchor: bool = False
 
     def __init__(
         self,
@@ -56,9 +58,11 @@ class BaseMetricLossFunction(nn.Module):
         indices_tuple: Sequence[Tensor] | None = None,
         ref_emb: Tensor | None = None,
         ref_labels: Tensor | None = None,
+        *,
+        mat: Tensor | None = None,
     ) -> Tensor:
         terms = self.objective_terms(
-            embeddings, labels, indices_tuple, ref_emb, ref_labels
+            embeddings, labels, indices_tuple, ref_emb, ref_labels, mat
         )
         penalties = _distinct_penalties(self, terms, embeddings)
         loss = self.reducer(terms, embeddings, labels)
@@ -73,9 +77,11 @@ class BaseMetricLossFunction(nn.Module):
         indices_tuple: Sequence[Tensor] | None = None,
         ref_emb: Tensor | None = None,
         ref_labels: Tensor | None = None,
+        *,
+        mat: Tensor | None = None,
     ) -> LossDict:
         terms = self.objective_terms(
-            embeddings, labels, indices_tuple, ref_emb, ref_labels
+            embeddings, labels, indices_tuple, ref_emb, ref_labels, mat
         )
         return {**terms, **_distinct_penalties(self, terms, embeddings)}
 
@@ -86,10 +92,16 @@ class BaseMetricLossFunction(nn.Module):
         indices_tuple: Sequence[Tensor] | None,
         ref_emb: Tensor | None,
         ref_labels: Tensor | None,
+        mat: Tensor | None = None,
     ) -> LossDict:
         _common.prepare_inputs(embeddings, labels, ref_emb, ref_labels, self.label_ndim)
         indices = _common.as_indices_tuple(indices_tuple, embeddings.device)
-        return self.compute_loss(embeddings, labels, indices, ref_emb, ref_labels)
+        if mat is None:
+            return self.compute_loss(embeddings, labels, indices, ref_emb, ref_labels)
+        _common.check_matrix(self, mat, embeddings, ref_emb)
+        _common.check_matrix_gradient(mat, embeddings, ref_emb)
+        compute = cast(Callable[..., LossDict], self.compute_loss)
+        return compute(embeddings, labels, indices, ref_emb, ref_labels, mat=mat)
 
     def regularization_terms(self, embeddings: Tensor) -> LossDict:
         if self.embedding_regularizer is None:

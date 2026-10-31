@@ -25,10 +25,27 @@ weights.
 The `separate-cosine`, `reused-cosine`, `separate-lp`, and `reused-lp` cases run
 `MultiSimilarityMiner`, `MultiSimilarityLoss`, and `ContrastiveLoss` on one batch.
 A `separate` case computes one distance matrix per module. A `reused` case
-computes one matrix with gradients first and gives it to all three, through a
-benchmark-only distance subclass. Compare each pair to measure what repeated
-distance computation costs; their losses are equal for the same seed. These
-cases include no encoder, so they overstate the saving on a whole training step.
+computes one matrix with gradients first and passes it to all three as
+[`mat`](losses.md#precomputed-distance-matrices). Compare each pair to measure what
+repeated distance computation costs; their losses are equal for the same seed.
+These cases include no encoder, so they overstate the saving on a whole training
+step.
+
+The `full-ntxent` and `anchor-batched-ntxent` cases, and the matching triplet pair,
+compare a full-batch `backward()` with
+[`anchor_batched_backward`](losses/anchor_batched_backward.md) in chunks of
+`--anchor-batch-size` anchors. An anchor-batched case does all of its work in
+`forward_ms`, so compare totals, and its backward time is null. The
+`unbounded-mined-triplet` and `bounded-mined-triplet` cases compare a
+`TripletMarginMiner` with and without
+[`tuples_per_anchor=32`](miners.md#bounding-the-output). Peak memory for all of these
+needs `--device cuda`.
+
+The default run includes every case except `distributed`. Timings of a few milliseconds
+vary between processes: the same case differed by up to 122% across four 20-repeat
+runs on a rented GPU, while peak memory was identical. Compare timings from several
+processes with `--repeats 100` or more, and treat a difference as real only when the
+ranges of the two cases do not overlap.
 
 Change `--batch-size`, `--dimensions`, `--samples-per-class`, `--dtype`, and
 `--threads` to describe the intended workload. Batch size must contain at least

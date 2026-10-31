@@ -10,6 +10,8 @@ from .base_metric_loss_function import BaseMetricLossFunction
 
 
 class MarginLoss(BaseMetricLossFunction):
+    supports_mat = True
+
     beta: Tensor
 
     def __init__(
@@ -40,6 +42,8 @@ class MarginLoss(BaseMetricLossFunction):
         indices_tuple: IndicesTuple | None,
         ref_emb: Tensor | None,
         ref_labels: Tensor | None,
+        *,
+        mat: Tensor | None = None,
     ) -> LossDict:
         _common.labels_or_indices_tuple_required(labels, indices_tuple)
         triplets = indexing.convert_to_triplets(
@@ -54,7 +58,7 @@ class MarginLoss(BaseMetricLossFunction):
         else:
             labels = _common.labels_required(labels)
             beta = self.beta[labels[anchor_idx]]
-        mat = self.distance(embeddings, ref_emb)
+        mat = _common.resolve_matrix(self.distance, embeddings, ref_emb, mat)
         d_ap = mat[anchor_idx, positive_idx]
         d_an = mat[anchor_idx, negative_idx]
         pos_loss = torch.relu(self.distance.margin(d_ap, beta) + self.margin)

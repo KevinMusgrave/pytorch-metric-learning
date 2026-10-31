@@ -204,6 +204,24 @@ def _remove_self_comparisons(
     return PairIndices(a1[keep], p[keep], a2, n)
 
 
+def _keep_per_anchor(anchors: Tensor, limit: int) -> Tensor:
+    shuffled = torch.randperm(len(anchors), device=anchors.device)
+    grouped, order = torch.sort(anchors[shuffled], stable=True)
+    first = torch.searchsorted(grouped, grouped, side="left")
+    rank = torch.arange(len(anchors), device=anchors.device) - first
+    return torch.sort(shuffled[order[rank < limit]]).values
+
+
+def _limit_per_anchor(indices_tuple: IndicesTuple, limit: int) -> IndicesTuple:
+    if isinstance(indices_tuple, TripletIndices):
+        keep = _keep_per_anchor(indices_tuple.anchors, limit)
+        return TripletIndices(*(x[keep] for x in indices_tuple))
+    a1, p, a2, n = indices_tuple
+    keep_pos = _keep_per_anchor(a1, limit)
+    keep_neg = _keep_per_anchor(a2, limit)
+    return PairIndices(a1[keep_pos], p[keep_pos], a2[keep_neg], n[keep_neg])
+
+
 def _pair_masks(
     pairs: PairIndices, shape: tuple[int, int], device: torch.device
 ) -> tuple[Tensor, Tensor]:

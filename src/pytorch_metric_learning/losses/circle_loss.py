@@ -11,6 +11,8 @@ from .generic_pair_loss import GenericPairLoss
 
 
 class CircleLoss(GenericPairLoss):
+    decomposes_by_anchor = True
+
     def __init__(
         self, margin: float = 0.4, gamma: float = 80, **options: Unpack[LossOptions]
     ) -> None:

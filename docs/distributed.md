@@ -36,6 +36,25 @@ the encoder and the wrapped loss in one module and wrap that module in DDP.
 Include both sets of parameters in the optimizer. Do not multiply the returned
 loss by world size.
 
+### Unused loss parameters
+
+DDP expects every parameter to take part in every backward pass on every rank. A
+loss with trainable parameters, such as `MarginLoss(learn_beta=True)`, can skip them
+when it has nothing to compute, so pass `find_unused_parameters=True` to
+`DistributedDataParallel` when that can happen. Without it, DDP stops at the next
+forward pass:
+
+| Objective        | Condition on a step                                      | Default DDP                                       |
+| ---------------- | -------------------------------------------------------- | ------------------------------------------------- |
+| `"local_anchor"` | Some rank has no anchors, or anchors but no valid tuples | One rank raises and the other waits for a timeout |
+| Either           | No rank has a valid tuple                                | Every rank raises                                 |
+
+With `"global"`, every rank computes the same loss, so one rank with no rows is safe
+as long as the gathered batch has tuples. This applies to any wrapped loss, including
+through `CrossBatchMemory`. A loss with no trainable parameters needs no change,
+because the encoder always takes part. `find_unused_parameters=True` makes DDP walk the
+graph after each forward pass, so leave it off when these conditions cannot occur.
+
 ## Inputs across ranks
 
 Gathered rows are ordered by rank, then by their original local order. Batch
@@ -101,14 +120,25 @@ row. Losses that take their pairs from `indices_tuple` honor that exclusion.
 `"local_anchor"` it counts each anchor as its own zero-distance positive; use
 `"global"` with `NCALoss`.
 
-`CrossBatchMemory` supports only the `"global"` objective; `"local_anchor"`
-raises `ValueError` at construction. Pass `enqueue_mask` by keyword to select
-the rows to enqueue; unselected rows are anchors. Memory replicas must begin
-with the same state, and their queues receive the same rank-ordered embeddings,
-labels, and masks. Queue embeddings stay detached, while anchor gradients flow
-through the gather. `ref_emb` and `ref_labels` are not supported with
-`CrossBatchMemory`, and `enqueue_mask` is not supported with other losses; both
-combinations raise `ValueError`.
+`CrossBatchMemory` supports both objectives. On every rank, it enqueues the complete
+gathered batch in rank order, so all queues stay identical. Memory replicas must begin
+with the same state. Queue embeddings stay detached. The objectives differ in the anchors:
+
+- With `"global"`, every rank uses the gathered batch as anchors, and gradients flow
+  through the gather.
+- With `"local_anchor"`, each rank uses only its own rows as anchors, and returns world
+  size times that loss. It computes less than `"global"`, because each rank compares
+  only its own anchors with the queue, and a rank with no rows still enqueues the others'.
+  A row is never paired with its own queue slot. A trainable loss then needs
+  [`find_unused_parameters=True`](#unused-loss-parameters).
+
+Pass `enqueue_mask` by keyword to select the rows to enqueue; unselected rows are
+anchors. The mask is per rank and is gathered in the same order. With `"local_anchor"`,
+a rank's anchors are its own unselected rows, and a supplied `indices_tuple` has
+anchors in the local batch and references in the memory. A gathered batch larger than
+`memory_size` raises `ValueError` on every rank. `ref_emb` and `ref_labels` are not
+supported with `CrossBatchMemory`, and `enqueue_mask` is not supported with other
+losses; both combinations raise `ValueError`.
 
 Example usage:
 

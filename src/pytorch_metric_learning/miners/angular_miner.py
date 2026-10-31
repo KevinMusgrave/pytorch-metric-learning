@@ -11,9 +11,13 @@ from .base_miner import BaseMiner
 
 class AngularMiner(BaseMiner):
     def __init__(
-        self, alpha: float = 20, *, distance: BaseDistance | None = None
+        self,
+        alpha: float = 20,
+        *,
+        distance: BaseDistance | None = None,
+        tuples_per_anchor: int | None = None,
     ) -> None:
-        super().__init__(distance=distance)
+        super().__init__(distance=distance, tuples_per_anchor=tuples_per_anchor)
         _common.check_distance_type(
             self, LpDistance, p=2, power=1, normalize_embeddings=True
         )

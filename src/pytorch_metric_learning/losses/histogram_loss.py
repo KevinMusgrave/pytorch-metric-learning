@@ -16,6 +16,8 @@ def _unique_pairs(*tensors: Tensor) -> tuple[Tensor, ...]:
 
 
 class HistogramLoss(BaseMetricLossFunction):
+    supports_mat = True
+
     def __init__(
         self,
         num_bins: int = 100,
@@ -43,6 +45,8 @@ class HistogramLoss(BaseMetricLossFunction):
         indices_tuple: IndicesTuple | None,
         ref_emb: Tensor | None,
         ref_labels: Tensor | None,
+        *,
+        mat: Tensor | None = None,
     ) -> LossDict:
         _common.labels_or_indices_tuple_required(labels, indices_tuple)
         _common.ref_not_supported(ref_emb)
@@ -51,7 +55,7 @@ class HistogramLoss(BaseMetricLossFunction):
         )
         if len(anchor_idx) == 0:
             return {}
-        mat = self.distance(embeddings)
+        mat = _common.resolve_matrix(self.distance, embeddings, None, mat)
         ap_dists = mat[_unique_pairs(anchor_idx, positive_idx)]
         an_dists = mat[_unique_pairs(anchor_idx, negative_idx)]
         p_pos = self.compute_density(ap_dists)

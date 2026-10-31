@@ -240,15 +240,18 @@ class CustomKNN:
                     self.distance(query, reference), k, largest=largest, dim=1
                 )
             else:
-                distances = torch.empty(
-                    len(query), k, device=query.device, dtype=query.dtype
-                )
+                distances = None
                 indices = torch.empty(
                     len(query), k, device=query.device, dtype=torch.long
                 )
                 batched = BatchedDistance(self.distance, batch_size=self.batch_size)
                 for mat, start, end in batched(query, reference):
-                    distances[start:end], indices[start:end] = torch.topk(
+                    values, indices[start:end] = torch.topk(
                         mat, k, largest=largest, dim=1
                     )
+                    if distances is None:
+                        distances = values.new_empty(len(query), k)
+                    distances[start:end] = values
+                if distances is None:
+                    distances = query.new_empty(len(query), k)
             return _return_results(distances, indices, ref_includes_query)

@@ -8,6 +8,8 @@ from .base_miner import BaseMiner
 
 
 class UniformHistogramMiner(BaseMiner):
+    supports_mat = True
+
     def __init__(
         self,
         num_bins: int = 100,
@@ -15,8 +17,9 @@ class UniformHistogramMiner(BaseMiner):
         neg_per_bin: int = 10,
         *,
         distance: BaseDistance | None = None,
+        tuples_per_anchor: int | None = None,
     ) -> None:
-        super().__init__(distance=distance)
+        super().__init__(distance=distance, tuples_per_anchor=tuples_per_anchor)
         self.num_bins = num_bins
         self.pos_per_bin = pos_per_bin
         self.neg_per_bin = neg_per_bin
@@ -28,8 +31,10 @@ class UniformHistogramMiner(BaseMiner):
         indices_tuple: IndicesTuple | None,
         ref_emb: Tensor | None,
         ref_labels: Tensor | None,
+        *,
+        mat: Tensor | None = None,
     ) -> IndicesTuple:
-        mat = self.distance(embeddings, ref_emb)
+        mat = _common.resolve_matrix(self.distance, embeddings, ref_emb, mat)
         a1, p, a2, n = indexing.convert_to_pairs(indices_tuple, labels, ref_labels)
         if len(a1) > 0:
             a1, p = self.uniformly_distributed_pairs(

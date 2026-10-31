@@ -5,6 +5,18 @@
 2. Implement `compute_loss`.
 3. Inside `compute_loss`, return a dictionary of [loss terms](#loss-terms).
 
+To accept a [precomputed distance matrix](../losses.md#precomputed-distance-matrices),
+set the class attribute `supports_mat = True` and add a keyword-only
+`mat: Tensor | None = None` to `compute_loss`. Use `mat` when it is given and call
+`self.distance` otherwise. Without the attribute, passing `mat` raises `ValueError`,
+so a loss cannot ignore it by accident.
+
+[`anchor_batched_backward`](../losses/anchor_batched_backward.md) accepts a loss
+that sets the class attribute `decomposes_by_anchor = True`. Set it only when the
+objective is a sum of per-element terms that each depend on one anchor's row. A
+subclass inherits the attribute, so clear it if an override adds a statistic over
+the whole batch.
+
 ## The simplest possible loss function
 
 ```python

@@ -1,9 +1,15 @@
+from __future__ import annotations
+
 from collections.abc import Sequence
+from typing import TYPE_CHECKING, NamedTuple
 
 import torch
 from torch import Tensor
 
 from ..types import IndicesTuple, PairIndices, TripletIndices
+
+if TYPE_CHECKING:
+    from ..distances import BaseDistance
 
 LOW_PRECISION = (torch.float16, torch.bfloat16)
 
@@ -72,6 +78,73 @@ def check_device(tensor: Tensor | None, embeddings: Tensor, name: str) -> None:
         raise ValueError(
             f"{name} are on {tensor.device}, but embeddings are on "
             f"{embeddings.device}. Move them to the embeddings' device."
+        )
+
+
+class ClassCentroids(NamedTuple):
+    class_index: Tensor
+    means: Tensor
+    leave_one_out: Tensor
+    has_others: Tensor
+
+
+def class_centroids(embeddings: Tensor, labels: Tensor) -> ClassCentroids:
+    _, class_index = torch.unique(labels, return_inverse=True)
+    num_classes = int(class_index.max()) + 1 if len(labels) else 0
+    work = embeddings.to(accumulation_dtype(embeddings.dtype))
+    sums = work.new_zeros(num_classes, work.shape[1]).index_add(0, class_index, work)
+    counts = torch.bincount(class_index, minlength=num_classes).unsqueeze(1)
+    others = counts[class_index] - 1
+    leave_one_out = (sums[class_index] - work) / others.clamp_min(1)
+    return ClassCentroids(
+        class_index,
+        (sums / counts).to(embeddings.dtype),
+        leave_one_out.to(embeddings.dtype),
+        others.squeeze(1) > 0,
+    )
+
+
+def resolve_matrix(
+    distance: BaseDistance,
+    embeddings: Tensor,
+    ref_emb: Tensor | None,
+    mat: Tensor | None,
+) -> Tensor:
+    return distance(embeddings, ref_emb) if mat is None else mat
+
+
+def check_matrix(
+    obj: torch.nn.Module,
+    mat: Tensor,
+    embeddings: Tensor,
+    ref_emb: Tensor | None,
+) -> None:
+    if not getattr(obj, "supports_mat", False):
+        raise ValueError(
+            f"{type(obj).__name__} does not read a batch-by-reference distance "
+            "matrix, so it cannot use mat"
+        )
+    references = len(embeddings if ref_emb is None else ref_emb)
+    if mat.shape != (len(embeddings), references):
+        raise ValueError(
+            f"mat must have shape ({len(embeddings)}, {references}), one row per "
+            f"embedding and one column per reference, but has {tuple(mat.shape)}"
+        )
+    check_device(mat, embeddings, "mat")
+    if not mat.is_floating_point():
+        raise ValueError("mat must be a floating-point tensor")
+
+
+def check_matrix_gradient(
+    mat: Tensor, embeddings: Tensor, ref_emb: Tensor | None
+) -> None:
+    tracked = embeddings.requires_grad or (
+        ref_emb is not None and ref_emb.requires_grad
+    )
+    if torch.is_grad_enabled() and tracked and not mat.requires_grad:
+        raise ValueError(
+            "mat has no autograd graph, so this loss would not train the embeddings. "
+            "Compute it with gradients enabled, outside any miner."
         )
 
 

@@ -182,6 +182,67 @@ class TestDynamicSoftMarginLoss(unittest.TestCase):
                     ):
                         assert_numeric_close(observed, wanted)
 
+    def test_reported_convolutional_training_loop(self) -> None:
+        torch.manual_seed(0)
+        model = torch.nn.Sequential(
+            torch.nn.Conv2d(128, 128, 1),
+            torch.nn.BatchNorm2d(128),
+            torch.nn.AdaptiveAvgPool2d(1),
+            torch.nn.Flatten(),
+            torch.nn.Linear(128, 32),
+        ).to(TEST_DEVICE)
+        self.assertEqual(model[0].weight.shape, (128, 128, 1, 1))
+        loss_func = DynamicSoftMarginLoss().to(TEST_DEVICE)
+        optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+        labels = (torch.arange(16) // 4).to(TEST_DEVICE)
+        for _ in range(4):
+            data = torch.randn(16, 128, 4, 4, device=TEST_DEVICE)
+            optimizer.zero_grad()
+            loss_func(model(data), labels).backward()
+            optimizer.step()
+            self.assertFalse(loss_func.hist.requires_grad)
+            self.assertIsNone(loss_func.hist.grad_fn)
+
+    def test_earlier_graph_stays_out_of_later_steps(self) -> None:
+        loss_func = DynamicSoftMarginLoss(num_bins=5).to(TEST_DEVICE)
+        labels = torch.tensor([0, 0, 1, 1], device=TEST_DEVICE)
+        first = inputs(torch.float32)
+        loss_func(first, labels).backward()
+        first_gradient = first.grad
+        assert first_gradient is not None
+        expected = first_gradient.clone()
+        second = inputs(torch.float32)
+        loss_func(second, labels).backward()
+        self.assertTrue(torch.equal(first_gradient, expected))
+        self.assertIsNotNone(second.grad)
+
+    def test_forwards_before_backward_in_any_order(self) -> None:
+        labels = torch.tensor([0, 0, 1, 1], device=TEST_DEVICE)
+        for order in ((0, 1), (1, 0)):
+            with self.subTest(order=order):
+                loss_func = DynamicSoftMarginLoss(num_bins=5).to(TEST_DEVICE)
+                rows = [inputs(torch.float32), inputs(torch.float32) * 2]
+                values = [loss_func(row, labels) for row in rows]
+                for index in order:
+                    values[index].backward()
+
+    def test_forwards_summed_before_backward_match_separate_backward(self) -> None:
+        labels = torch.tensor([0, 0, 1, 1], device=TEST_DEVICE)
+        results = []
+        for summed in (True, False):
+            loss_func = DynamicSoftMarginLoss(num_bins=5).to(TEST_DEVICE)
+            embeddings = inputs(torch.float64)
+            loss_func = loss_func.to(TEST_DEVICE, torch.float64)
+            values = [loss_func(embeddings * s, labels) for s in (1.0, 0.5)]
+            if summed:
+                (values[0] + values[1]).backward()
+            else:
+                values[0].backward(retain_graph=True)
+                values[1].backward()
+            results.append(embeddings.grad)
+        assert results[0] is not None and results[1] is not None
+        torch.testing.assert_close(results[0], results[1])
+
     def test_histogram_interpolation_endpoints_and_clipping(self) -> None:
         for dtype in TEST_DTYPES:
             with self.subTest(dtype=dtype):

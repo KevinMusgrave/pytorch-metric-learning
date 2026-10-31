@@ -1,9 +1,10 @@
+from contextlib import AbstractContextManager, nullcontext
 from typing import cast
 
 import torch
 from torch import Tensor
 
-from ..utils._common import normalize
+from ..utils._common import accumulation_dtype, normalize
 
 
 class BaseDistance(torch.nn.Module):
@@ -23,15 +24,16 @@ class BaseDistance(torch.nn.Module):
 
     def forward(self, query_emb: Tensor, ref_emb: Tensor | None = None) -> Tensor:
         self.check_shapes(query_emb, ref_emb)
-        query_emb_normalized = self.maybe_normalize(query_emb)
+        query_input = self.prepare_input(query_emb)
         if ref_emb is None:
             ref_emb = query_emb
-            ref_emb_normalized = query_emb_normalized
+            ref_input = query_input
         else:
-            ref_emb_normalized = self.maybe_normalize(ref_emb)
-        mat = self.compute_mat(query_emb_normalized, ref_emb_normalized)
-        if self.power != 1:
-            mat = mat**self.power
+            ref_input = self.prepare_input(ref_emb)
+        with self.value_precision(query_input):
+            mat = self.compute_mat(query_input, ref_input)
+            if self.power != 1:
+                mat = mat**self.power
         if mat.size() != torch.Size((query_emb.size(0), ref_emb.size(0))):
             raise ValueError(
                 "compute_mat must return shape (num_queries, num_references)"
@@ -42,12 +44,26 @@ class BaseDistance(torch.nn.Module):
         self.check_shapes(query_emb, ref_emb)
         if query_emb.shape != ref_emb.shape:
             raise ValueError("pairwise inputs must have the same shape")
-        values = self.pairwise_distance(
-            self.maybe_normalize(query_emb), self.maybe_normalize(ref_emb)
-        )
-        if self.power != 1:
-            values = values**self.power
+        query_input = self.prepare_input(query_emb)
+        ref_input = self.prepare_input(ref_emb)
+        with self.value_precision(query_input):
+            values = self.pairwise_distance(query_input, ref_input)
+            if self.power != 1:
+                values = values**self.power
         return values
+
+    def prepare_input(self, embeddings: Tensor) -> Tensor:
+        if self.normalize_embeddings:
+            return self.normalize(embeddings)
+        return embeddings.to(accumulation_dtype(embeddings.dtype))
+
+    def value_precision(self, prepared: Tensor) -> AbstractContextManager:
+        if (
+            self.normalize_embeddings
+            or not torch.amp.autocast_mode.is_autocast_available(prepared.device.type)
+        ):
+            return nullcontext()
+        return torch.autocast(prepared.device.type, enabled=False)
 
     def compute_mat(self, query_emb: Tensor, ref_emb: Tensor) -> Tensor:
         raise NotImplementedError

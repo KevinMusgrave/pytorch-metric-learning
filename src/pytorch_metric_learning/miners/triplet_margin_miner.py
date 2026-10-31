@@ -2,19 +2,22 @@ from torch import Tensor
 
 from ..distances import BaseDistance
 from ..types import IndicesTuple, MiningStrategy, TripletIndices
-from ..utils import indexing
+from ..utils import _common, indexing
 from .base_miner import BaseMiner
 
 
 class TripletMarginMiner(BaseMiner):
+    supports_mat = True
+
     def __init__(
         self,
         margin: float = 0.2,
         type_of_triplets: MiningStrategy = "all",
         *,
         distance: BaseDistance | None = None,
+        tuples_per_anchor: int | None = None,
     ) -> None:
-        super().__init__(distance=distance)
+        super().__init__(distance=distance, tuples_per_anchor=tuples_per_anchor)
         if type_of_triplets not in ("all", "hard", "semihard", "easy"):
             raise ValueError(
                 'type_of_triplets must be "all", "hard", "semihard" or "easy"'
@@ -29,11 +32,13 @@ class TripletMarginMiner(BaseMiner):
         indices_tuple: IndicesTuple | None,
         ref_emb: Tensor | None,
         ref_labels: Tensor | None,
+        *,
+        mat: Tensor | None = None,
     ) -> IndicesTuple:
         anchor_idx, positive_idx, negative_idx = indexing.convert_to_triplets(
             indices_tuple, labels, ref_labels
         )
-        mat = self.distance(embeddings, ref_emb)
+        mat = _common.resolve_matrix(self.distance, embeddings, ref_emb, mat)
         ap_dist = mat[anchor_idx, positive_idx]
         an_dist = mat[anchor_idx, negative_idx]
         triplet_margin = self.distance.margin(an_dist, ap_dist)

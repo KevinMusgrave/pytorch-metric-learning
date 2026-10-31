@@ -34,7 +34,7 @@ def test_half_precision_values_and_gradients(dtype, p, power, normalize):
 
     distance = LpDistance(normalize_embeddings=normalize, p=p, power=power)
     actual = distance(query, reference)
-    assert actual.dtype == dtype
+    assert actual.dtype == (dtype if normalize else torch.float32)
     assert actual.device == query.device
     weights = query.new_tensor([[0.5, 1.0, 1.5], [2.0, 0.25, 0.75]])
     actual_gradients = torch.autograd.grad(
@@ -89,7 +89,9 @@ def test_pairwise_equals_matrix_diagonal(dtype, p, normalize):
     reference[1] = torch.tensor([-1.0, 1.25, 0.5], dtype=dtype)
     distance = LpDistance(normalize_embeddings=normalize, p=p)
     pairwise = distance.pairwise(query, reference)
-    assert pairwise.dtype == dtype
+    assert pairwise.dtype == (
+        dtype if normalize else torch.promote_types(dtype, torch.float32)
+    )
     diagonal = distance(query, reference).diagonal()
     assert pairwise[0] == diagonal[0] == 0 and pairwise[2] == diagonal[2] == 0
     q, r = query.double(), reference.double()

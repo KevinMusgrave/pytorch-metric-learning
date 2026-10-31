@@ -429,3 +429,19 @@ the norm, while SEC compares norms, with a gradient linear in the deviation. The
 show that neither is a rescaling of the other. SEC computes on the raw row, so it needs
 unnormalized embeddings, which is where the losses' distances leave them. It needs no
 `distance` argument, because equation 17 is defined only on the Euclidean norm.
+
+## Class centroids
+
+`CentroidTripletLoss` was removed in version 2 because classes of different sizes crashed
+it. Its `(class, sample)` padding appended index 0 for missing samples, which put another
+class's row into each padded slot, as pgrosjean found in #451, and reshaping tuples then
+failed whenever the tuple count was not divisible by the classes. Version 3 has no padding.
+`_common.class_centroids` computes class sums with `index_add`, and the leave-one-out mean
+of a row is its class sum minus the row. Cost is linear in the batch, with one
+`(rows, classes)` distance matrix and no per-sample centroid loop.
+
+Singletons are skipped rather than raising, as version 1 did. Batches with an occasional
+singleton are ordinary in long-tailed training, and raising stops a run at a random step
+for a row that simply has no objective. The row still contributes a negative centroid,
+because a centroid of one sample is well defined. `swap` and `triplets_per_anchor` were
+not restored: the paper defines neither, and every anchor-class triplet is cheap here.

@@ -13,6 +13,7 @@ nav:
       - Overview: losses.md
       - Pair and triplet objectives:
         - AngularLoss: losses/angular_loss.md
+        - CentroidTripletLoss: losses/centroid_triplet_loss.md
         - CircleLoss: losses/circle_loss.md
         - ContrastiveLoss: losses/contrastive_loss.md
         - DynamicSoftMarginLoss: losses/dynamic_soft_margin_loss.md

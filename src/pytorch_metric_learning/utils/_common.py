@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NamedTuple
 
 import torch
 from torch import Tensor
@@ -79,6 +79,29 @@ def check_device(tensor: Tensor | None, embeddings: Tensor, name: str) -> None:
             f"{name} are on {tensor.device}, but embeddings are on "
             f"{embeddings.device}. Move them to the embeddings' device."
         )
+
+
+class ClassCentroids(NamedTuple):
+    class_index: Tensor
+    means: Tensor
+    leave_one_out: Tensor
+    has_others: Tensor
+
+
+def class_centroids(embeddings: Tensor, labels: Tensor) -> ClassCentroids:
+    _, class_index = torch.unique(labels, return_inverse=True)
+    num_classes = int(class_index.max()) + 1 if len(labels) else 0
+    work = embeddings.to(accumulation_dtype(embeddings.dtype))
+    sums = work.new_zeros(num_classes, work.shape[1]).index_add(0, class_index, work)
+    counts = torch.bincount(class_index, minlength=num_classes).unsqueeze(1)
+    others = counts[class_index] - 1
+    leave_one_out = (sums[class_index] - work) / others.clamp_min(1)
+    return ClassCentroids(
+        class_index,
+        (sums / counts).to(embeddings.dtype),
+        leave_one_out.to(embeddings.dtype),
+        others.squeeze(1) > 0,
+    )
 
 
 def resolve_matrix(

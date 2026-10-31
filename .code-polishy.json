@@ -230,6 +230,7 @@
         "paths": [
           "tests/reducers/test_mean_reducer.py",
           "tests/miners/test_pair_margin_miner.py",
+          "tests/losses/test_centroid_triplet_loss.py",
           "tests/losses/test_contrastive_loss.py",
           "tests/regularizers/test_center_invariant_regularizer.py",
           "tests/regularizers/test_spherical_embedding_regularizer.py",
@@ -413,6 +414,7 @@
         "paths": [
           "tests/reducers/test_mean_reducer.py",
           "tests/miners/test_pair_margin_miner.py",
+          "tests/losses/test_centroid_triplet_loss.py",
           "tests/losses/test_contrastive_loss.py",
           "tests/regularizers/test_center_invariant_regularizer.py",
           "tests/regularizers/test_spherical_embedding_regularizer.py",
@@ -444,6 +446,7 @@
           "pytest",
           "tests/reducers/test_mean_reducer.py",
           "tests/miners/test_pair_margin_miner.py",
+          "tests/losses/test_centroid_triplet_loss.py",
           "tests/losses/test_contrastive_loss.py",
           "tests/regularizers/test_center_invariant_regularizer.py",
           "tests/regularizers/test_spherical_embedding_regularizer.py",

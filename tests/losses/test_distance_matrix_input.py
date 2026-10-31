@@ -63,6 +63,7 @@ MINERS = {
 UNSUPPORTED_LOSSES = {
     "AngularLoss": lambda: losses.AngularLoss(),
     "ArcFaceLoss": lambda: losses.ArcFaceLoss(num_classes=3, embedding_size=8),
+    "CentroidTripletLoss": lambda: losses.CentroidTripletLoss(),
     "CosFaceLoss": lambda: losses.CosFaceLoss(num_classes=3, embedding_size=8),
     "DynamicArcFaceLoss": lambda: losses.DynamicArcFaceLoss(
         class_counts=torch.tensor([3, 4, 5]), embedding_size=8

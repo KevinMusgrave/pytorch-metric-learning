@@ -58,6 +58,7 @@ LOSSES = {
     "LiftedStructureLoss": lambda: losses.LiftedStructureLoss(
         distance=LpDistance(normalize_embeddings=False)
     ),
+    "ManifoldLoss": lambda: losses.ManifoldLoss(2, 2, distance=DotProductSimilarity()),
     "MarginLoss": lambda: losses.MarginLoss(distance=squared()),
     "MultiSimilarityLoss": lambda: losses.MultiSimilarityLoss(
         distance=DotProductSimilarity()
@@ -109,7 +110,6 @@ OTHER_INPUTS_OR_NOT_LOSSES = {
     "BaseProxyLoss",
     "CrossBatchMemory",
     "GenericPairLoss",
-    "ManifoldLoss",
     "MultiSupConLoss",
     "MultipleLosses",
     "RankNContrastLoss",

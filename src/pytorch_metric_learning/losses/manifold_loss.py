@@ -28,6 +28,10 @@ class ManifoldLoss(BaseMetricLossFunction):
             embedding_regularizer=embedding_regularizer,
             embedding_reg_weight=embedding_reg_weight,
         )
+        if not self.distance.is_inverted:
+            raise TypeError(
+                "ManifoldLoss requires a similarity such as CosineSimilarity"
+            )
         if lambda_c < 0:
             raise ValueError(f"lambda_c must be non-negative; got {lambda_c}")
         self.num_proxies = num_proxies
@@ -72,12 +76,11 @@ class ManifoldLoss(BaseMetricLossFunction):
         rows = torch.arange(N, device=device)
 
         embs_and_proxies = torch.cat([embeddings, self.proxies], dim=0)
-        S = self.distance(embs_and_proxies, embs_and_proxies).clamp(0, math.inf)
-        S = torch.exp(S / 0.5)
-        Y = torch.eye(N + self.num_proxies, device=S.device, dtype=S.dtype)
-        S = S - S * Y
-        D_inv_half = torch.pow(torch.sum(S, dim=1), -1 / 2).diag()
-        S_bar = D_inv_half.mm(S).mm(D_inv_half)
+        log_S = self.distance(embs_and_proxies, embs_and_proxies).clamp_min(0) / 0.5
+        Y = torch.eye(N + self.num_proxies, device=log_S.device, dtype=log_S.dtype)
+        log_S = log_S.masked_fill(Y.bool(), -math.inf)
+        log_D = torch.logsumexp(log_S, dim=1)
+        S_bar = torch.exp(log_S - (log_D.unsqueeze(0) + log_D.unsqueeze(1)) / 2)
         L = torch.inverse(Y.float() - self.alpha * S_bar.float()).to(S_bar.dtype)
         F = (1 - self.alpha) * L
         F_p = F[N:, :]

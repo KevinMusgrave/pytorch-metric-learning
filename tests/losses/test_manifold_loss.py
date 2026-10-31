@@ -7,6 +7,7 @@ import torch.nn.functional as F
 from torch import nn
 from torch.nn.modules.module import Module
 
+from pytorch_metric_learning.distances import DotProductSimilarity, LpDistance
 from pytorch_metric_learning.losses import ManifoldLoss
 
 from .. import TEST_DEVICE, TEST_DTYPES, helpers
@@ -190,6 +191,87 @@ class TestManifoldLoss(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def direct_dot_product_loss(embeddings, proxies, labels, alpha, margin):
+    nodes = torch.cat((embeddings, proxies))
+    N, identity = len(embeddings), torch.eye(len(nodes), dtype=nodes.dtype).to(nodes)
+    W = torch.exp((nodes @ nodes.T).clamp_min(0) / 0.5) * (1 - identity)
+    scale = W.sum(dim=1) ** -0.5
+    S = scale[:, None] * W * scale[None, :]
+    manifold = (1 - alpha) * torch.inverse(identity - alpha * S)
+    context = F.cosine_similarity(manifold[:N, None, :], manifold[None, N:, :], dim=-1)
+    total = torch.zeros((), dtype=nodes.dtype, device=nodes.device)
+    for scores in (manifold[:N, N:], context):
+        for row, label in enumerate(labels.tolist()):
+            exponentials = [
+                torch.exp(scores[row, j] - scores[row, label] + margin)
+                for j in range(len(proxies))
+                if j != label and scores[row, j] - scores[row, label] + margin >= 0
+            ]
+            total = (
+                total + torch.log(1 + sum(exponentials, torch.zeros_like(total))) / N
+            )
+    return total
+
+
+class TestManifoldLossScale(unittest.TestCase):
+    def test_similarities_past_the_float32_exponential_range(self):
+        torch.manual_seed(5)
+        wide = (torch.randn(12, 8, device=TEST_DEVICE, dtype=torch.float64) * 4).round()
+        labels = torch.arange(12, device=TEST_DEVICE) % 3
+        proxies = nn.Parameter(
+            torch.randn(3, 8, device=TEST_DEVICE, dtype=torch.float64) * 4
+        )
+        scores = wide @ wide.T
+        self.assertGreater(scores.max().item() / 0.5, 89)
+        self.assertLess(scores.max().item() / 0.5, 700)
+        reference_input = wide.clone().requires_grad_()
+        reference = direct_dot_product_loss(
+            reference_input, proxies.detach(), labels, 0.8, 5e-4
+        )
+        reference.backward()
+        assert reference_input.grad is not None
+        for dtype in (torch.float32, torch.float64):
+            with self.subTest(dtype=dtype):
+                embeddings = wide.to(dtype).requires_grad_()
+                loss_func = ManifoldLoss(8, 3, distance=DotProductSimilarity())
+                loss_func.to(TEST_DEVICE, dtype)
+                with torch.no_grad():
+                    loss_func.proxies.copy_(proxies.to(dtype))
+                loss = loss_func(embeddings, labels)
+                loss.backward()
+                assert embeddings.grad is not None
+                torch.testing.assert_close(
+                    loss.double(), reference, rtol=1e-5, atol=1e-5
+                )
+                torch.testing.assert_close(
+                    embeddings.grad.double(),
+                    reference_input.grad,
+                    rtol=2e-3,
+                    atol=2e-3,
+                )
+
+    def test_similarities_past_the_float64_exponential_range(self):
+        for dtype in (torch.float32, torch.float64):
+            with self.subTest(dtype=dtype):
+                embeddings = torch.tensor(
+                    [[-150.0, 0.0], [150.0, 0.0], [-150.0, 225.0], [150.0, 225.0]],
+                    device=TEST_DEVICE,
+                    dtype=dtype,
+                    requires_grad=True,
+                )
+                labels = torch.tensor([0, 0, 1, 1], device=TEST_DEVICE)
+                loss_func = ManifoldLoss(2, 2, distance=DotProductSimilarity())
+                loss = loss_func.to(TEST_DEVICE, dtype)(embeddings, labels)
+                loss.backward()
+                assert embeddings.grad is not None
+                self.assertTrue(loss.isfinite())
+                self.assertTrue(embeddings.grad.isfinite().all())
+
+    def test_distance_must_be_a_similarity(self):
+        with self.assertRaisesRegex(TypeError, "similarity"):
+            ManifoldLoss(2, 2, distance=LpDistance(normalize_embeddings=False))
 
 
 class TestManifoldLossOptions(unittest.TestCase):

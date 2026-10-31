@@ -244,8 +244,10 @@ their gradients. Default reductions avoid data-dependent shapes:
 dtype; converting through the default dtype first turned a float64 divisor of
 `1e-50` into zero.
 
-`ManifoldLoss` inverts its random-walk matrix in float32 and masks excluded
-terms with $-\infty$ before log-sum-exp. `DistanceWeightedMiner` clamps
+`ManifoldLoss` normalizes its graph in log space, because $e^{2s}$ overflows float32 at
+$s \approx 44$, a dot product of embeddings with norm around 7, while $\bar{S}$ only needs
+the ratio $S_{ij} / \sqrt{D_i D_j}$. It then inverts its random-walk matrix in float32
+and masks excluded terms with $-\infty$ before log-sum-exp. `DistanceWeightedMiner` clamps
 distances at `cutoff` and works in log space following Section 4 of Wu et al.,
 masking ineligible pairs before subtracting each anchor's maximum log weight.
 `RankedListLoss` computes its weighted means as softmax-weighted averages over

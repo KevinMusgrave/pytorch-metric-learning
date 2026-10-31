@@ -26,6 +26,7 @@ nav:
         - NPairsLoss: losses/n_pairs_loss.md
         - RankedListLoss: losses/ranked_list_loss.md
         - SignalToNoiseRatioContrastiveLoss: losses/signal_to_noise_ratio_contrastive_loss.md
+        - SelectivelyContrastiveTripletLoss: losses/selectively_contrastive_triplet_loss.md
         - TripletMarginLoss: losses/triplet_margin_loss.md
         - TupletMarginLoss: losses/tuplet_margin_loss.md
       - Classification and proxy objectives:

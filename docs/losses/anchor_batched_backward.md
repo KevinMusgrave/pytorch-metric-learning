@@ -88,6 +88,7 @@ anchor's row:
 - `GeneralizedLiftedStructureLoss`
 - `MultiSimilarityLoss`
 - `NTXentLoss`
+- `SelectivelyContrastiveTripletLoss`
 - `SignalToNoiseRatioContrastiveLoss`
 - `SupConLoss`
 - `TripletMarginLoss`

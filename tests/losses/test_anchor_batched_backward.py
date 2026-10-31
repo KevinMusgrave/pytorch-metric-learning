@@ -19,6 +19,9 @@ SUPPORTED = {
     "GeneralizedLiftedStructureLoss": lambda: losses.GeneralizedLiftedStructureLoss(),
     "MultiSimilarityLoss": lambda: losses.MultiSimilarityLoss(),
     "NTXentLoss": lambda: losses.NTXentLoss(),
+    "SelectivelyContrastiveTripletLoss": lambda: (
+        losses.SelectivelyContrastiveTripletLoss()
+    ),
     "SignalToNoiseRatioContrastiveLoss": lambda: (
         losses.SignalToNoiseRatioContrastiveLoss()
     ),

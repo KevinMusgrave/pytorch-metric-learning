@@ -406,3 +406,17 @@ objective can take.
 `decomposes_by_anchor` is set per instance for this loss. Equation 7 normalizes DCLW's
 weights by a mean over all positive pairs, which is a batch statistic, while equation 6
 has none. The weights stay in the graph because the paper writes no stop-gradient.
+
+## Selectively contrastive triplet loss
+
+The paper's equation and the authors' code differ, so the defaults follow a stated
+rule: the equation decides behavior unless it leaves a setting open. Equation 1 omits a
+temperature, but cosine similarities in `[-1, 1]` at a unit temperature give weak
+gradients, so the default is the code's 0.1, with `temperature=1` recovering the
+equation. The code's extra `Neg > 0.8` hard rule changes which case applies, so it is an
+opt-in `hard_threshold`. Mining stays a separate miner rather than a built-in selection,
+so the loss composes with any tuple source. The loss rejects non-inverted distances,
+because the hard case minimizes the value directly, and minimizing a distance would pull
+the negative closer without any error. The authors' repository has no license file, so
+the implementation comes from the paper; their code served only as a numerical
+cross-check outside this repository.

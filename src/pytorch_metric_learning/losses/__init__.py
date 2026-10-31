@@ -31,6 +31,7 @@ from .pnp_loss import PNPLoss
 from .proxy_anchor_loss import ProxyAnchorLoss
 from .proxy_nca_loss import ProxyNCALoss
 from .ranked_list_loss import RankedListLoss
+from .selectively_contrastive_triplet_loss import SelectivelyContrastiveTripletLoss
 from .self_supervised_loss import SelfSupervisedLoss
 from .signal_to_noise_ratio_contrastive_loss import SignalToNoiseRatioContrastiveLoss
 from .smooth_ap_loss import SmoothAPLoss
@@ -77,6 +78,7 @@ __all__ = [
     "ProxyAnchorLoss",
     "ProxyNCALoss",
     "RankedListLoss",
+    "SelectivelyContrastiveTripletLoss",
     "SelfSupervisedLoss",
     "SignalToNoiseRatioContrastiveLoss",
     "SmoothAPLoss",

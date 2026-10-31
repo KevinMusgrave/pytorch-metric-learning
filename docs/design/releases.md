@@ -66,7 +66,8 @@ release time. Further jobs run the CPU suite under Python 3.13 and 3.14 and on
 macOS and Windows, so the published Python range and the supported CPU
 platforms are exercised without a second policy installation. The shared test
 session fails skipped and expected-failure cases and prints why; CUDA-only
-tests are deselected on CPU runs instead of returning early.
+tests are deselected on CPU runs instead of returning early. MPS tests are
+deselected the same way on hosts without MPS, including CUDA hosts.
 
 The build job also builds the tagged MkDocs site with the pinned development
 environment, adds the final version 2 documentation (tag `v2.9.0`) under `/v2/`

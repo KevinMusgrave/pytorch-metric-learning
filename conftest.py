@@ -13,7 +13,8 @@ from tests import TEST_DEVICE, TEST_DTYPES
 SKIPPED = pytest.StashKey[bool]()
 SKIP_FAILURE = (
     "Skipped or expected-failure tests fail this suite: every collected test must "
-    "run. CUDA-only tests are deselected on CPU; optional dependencies come from "
+    "run. Device-specific tests are deselected elsewhere; optional dependencies "
+    "come from "
     "`uv sync --frozen --all-extras`."
 )
 
@@ -23,12 +24,18 @@ def seed_torch():
     torch.manual_seed(0)
 
 
+def device_unavailable(item: pytest.Item) -> bool:
+    if item.get_closest_marker("cuda") and TEST_DEVICE.type != "cuda":
+        return True
+    return (
+        bool(item.get_closest_marker("mps")) and not torch.backends.mps.is_available()
+    )
+
+
 @pytest.hookimpl
 def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]):
-    if TEST_DEVICE.type == "cuda":
-        return
-    selected = [item for item in items if item.get_closest_marker("cuda") is None]
-    deselected = [item for item in items if item.get_closest_marker("cuda")]
+    selected = [item for item in items if not device_unavailable(item)]
+    deselected = [item for item in items if device_unavailable(item)]
     if deselected:
         config.hook.pytest_deselected(items=deselected)
         items[:] = selected

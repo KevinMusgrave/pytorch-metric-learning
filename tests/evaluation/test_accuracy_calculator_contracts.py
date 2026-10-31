@@ -3,6 +3,7 @@ import unittest
 from typing import Any
 
 import numpy as np
+import pytest
 import torch
 
 from pytorch_metric_learning.distances import LpDistance
@@ -23,7 +24,7 @@ class TestMetricDevice(unittest.TestCase):
             torch.device("cpu"),
         )
 
-    @unittest.skipUnless(torch.backends.mps.is_available(), "requires MPS")
+    @pytest.mark.mps
     def test_metrics_run_with_mps_inputs(self):
         embeddings = torch.tensor([[0.0], [0.1], [5.0], [5.1], [9.0]])
         labels = torch.tensor([0, 0, 1, 1, 1])

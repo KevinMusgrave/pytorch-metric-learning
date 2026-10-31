@@ -64,9 +64,35 @@ def scale_of(loss_func):
     return cast(LearnedCosine, loss_func.distance).scale
 
 
+def nearby_rows(dtype):
+    step = {torch.float16: 0.5, torch.bfloat16: 4.0}[dtype]
+    rows = torch.full((32, 128), 1000.0, dtype=dtype, device=TEST_DEVICE)
+    rows[:, 0] += torch.arange(32, dtype=dtype, device=TEST_DEVICE) * step
+    return rows
+
+
+def rows_below_float16_eps(dtype):
+    generator = torch.Generator().manual_seed(42)
+    rows = torch.randn(32, 8, generator=generator) * 1e-5
+    return rows.to(TEST_DEVICE, dtype)
+
+
+def full_and_batched(loss_func, rows, labels, batch_size):
+    full_rows = rows.clone().requires_grad_()
+    full = loss_func(full_rows, labels)
+    full.backward()
+    batched_rows = rows.clone().requires_grad_()
+    value = anchor_batched_backward(loss_func, batched_rows, labels, batch_size)
+    return full, full_rows.grad, value, batched_rows.grad
+
+
 class TestAnchorBatchedBackward(unittest.TestCase):
     def assert_matches(self, actual, expected, dtype):
-        tolerance = {torch.float16: 2e-3, torch.float32: 1e-5}.get(dtype, 1e-11)
+        tolerance = {
+            torch.bfloat16: 2e-2,
+            torch.float16: 2e-3,
+            torch.float32: 1e-5,
+        }.get(dtype, 1e-11)
         scale = expected.abs().max().item()
         torch.testing.assert_close(
             actual.double(), expected.double(), rtol=0, atol=tolerance * scale
@@ -254,6 +280,65 @@ class TestAnchorBatchedBackward(unittest.TestCase):
                 torch.testing.assert_close(
                     gradient.double(), expected, rtol=4e-3, atol=0
                 )
+
+    def test_nearby_low_precision_rows_keep_their_distances(self):
+        labels = (torch.arange(32) // 4).to(TEST_DEVICE)
+        for dtype in (torch.float16, torch.bfloat16):
+            for power in (1, 2):
+                for name, factory in (
+                    ("triplet", losses.TripletMarginLoss),
+                    ("contrastive", losses.ContrastiveLoss),
+                ):
+                    with self.subTest(dtype=dtype, power=power, loss=name):
+                        loss_func = factory(
+                            distance=distances.LpDistance(
+                                normalize_embeddings=False, power=power
+                            ),
+                            reducer=reducers.MeanReducer(),
+                        )
+                        rows = nearby_rows(dtype)
+                        full, full_grad, value, grad = full_and_batched(
+                            loss_func, rows, labels, 8
+                        )
+                        wide = rows.double().requires_grad_()
+                        reference = loss_func(wide, labels)
+                        reference.backward()
+                        self.assert_matches(value, full.detach(), torch.float32)
+                        self.assert_matches(value, reference.detach(), torch.float32)
+                        self.assert_matches(grad, full_grad, dtype)
+                        self.assert_matches(grad, wide.grad, dtype)
+                        self.assertTrue(grad.any())
+
+    def test_rows_below_float16_eps_normalize_like_the_full_loss(self):
+        labels = (torch.arange(32) // 4).to(TEST_DEVICE)
+        for dtype in (torch.float16, torch.bfloat16):
+            for chunk in (1, 8, 32):
+                with self.subTest(dtype=dtype, chunk=chunk):
+                    full, full_grad, value, grad = full_and_batched(
+                        losses.NTXentLoss(),
+                        rows_below_float16_eps(dtype),
+                        labels,
+                        chunk,
+                    )
+                    self.assertEqual(value.dtype, dtype)
+                    self.assert_matches(value, full.detach(), dtype)
+                    self.assert_matches(grad, full_grad, dtype)
+                    self.assertTrue(grad.isfinite().all())
+
+    def test_low_precision_handling_ends_with_the_call(self):
+        rows = nearby_rows(torch.float16).float()
+        distance = distances.LpDistance(normalize_embeddings=False)
+        expected = torch.cdist(rows, rows)
+
+        class Failing(losses.TripletMarginLoss):
+            def loss_terms(self, *args, **kwargs):
+                raise RuntimeError("chunk failed")
+
+        embeddings, labels = batch(torch.float16)
+        with self.assertRaises(RuntimeError):
+            anchor_batched_backward(Failing(), embeddings, labels, 5)
+        anchor_batched_backward(losses.NTXentLoss(), embeddings, labels, 5)
+        torch.testing.assert_close(distance(rows), expected)
 
     def test_parameter_hook_sees_the_final_gradient_once(self):
         embeddings, labels = batch()

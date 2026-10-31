@@ -400,6 +400,28 @@ a chunk raises, and the final `backward` delivers the normalized gradient to the
 parameter once, cast to its dtype. Rejecting hooked or low-precision parameters would
 have been simpler, but both are ordinary PyTorch usage that a full `backward` handles.
 
+Widening must not change what the input dtype selects. `torch.cdist` picks a different
+kernel for low-precision rows, and normalization uses a larger `eps` for float16, so
+float32 copies once changed the objective: entries near 1000 gave a triplet loss of 0.113
+against 0.0177, and default NT-Xent on rows of norm `2e-5` gave 9.23 against 3.81.
+`_common.treat_inputs_as` tells those two sites the original dtype for the duration of
+a chunk. A context variable rather than a distance attribute covers every distance a
+loss holds, and it does not extend the thread restriction chunks already carry.
+
+Running chunks in the original dtype would match the forward pass by construction, and
+was rejected on measurements. Gradients of a chunk's sum overflow float16, and dividing
+by the chunk's count still overflows when the full gradient is finite, because that
+gradient can be many chunks' share. Dividing by the count times the number of chunks
+stays finite, but the per-tuple seed `1/scale` then rounds to a float16 subnormal: at 512
+rows, triplet gradients were 5% from float64 against 1.5% for the full loss, and past
+`2**24` tuples the seed is zero. The large batches this function exists for would have
+paid for that. Float32 chunks keep the normalization and kernel, and leave out float16
+rounding of the normalized matrix. In a sweep of the supported losses over distances,
+row scales, and both low-precision dtypes, 503 of 592 cases matched the full loss within
+tolerance, and 82 of the other 89 were closer to float64 than the full loss was. The
+last 7 are cosine losses on rows too similar for float32 to resolve, where a full loss
+on float32 input has the same kind of error.
+
 Other memory is untouched: the encoder graph and the gradient remain whole, and each
 term holds one `(N, D)` gradient buffer.
 

@@ -67,11 +67,12 @@ def anchor_batched_backward(
         pairs = indexing.get_all_pairs_indices(labels[rows], reference_labels)
         if ref_emb is None:
             pairs = indexing._remove_self_comparisons(pairs, rows)
-        chunk = functional_call(
-            chunk_terms,
-            replacements,
-            (query[rows], labels[rows], pairs, reference, reference_labels),
-        )
+        with _common.treat_inputs_as(embeddings.dtype):
+            chunk = functional_call(
+                chunk_terms,
+                replacements,
+                (query[rows], labels[rows], pairs, reference, reference_labels),
+            )
         _accumulate(terms, chunk, loss_func.reducer, leaves)
         del chunk
     gradients = [_reduced_gradient(terms, i) for i in range(len(leaves))]

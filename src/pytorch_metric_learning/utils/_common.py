@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
+from contextlib import contextmanager
+from contextvars import ContextVar
 from typing import TYPE_CHECKING, NamedTuple
 
 import torch
@@ -12,6 +14,7 @@ if TYPE_CHECKING:
     from ..distances import BaseDistance
 
 LOW_PRECISION = (torch.float16, torch.bfloat16)
+_input_dtype: ContextVar[torch.dtype | None] = ContextVar("input_dtype", default=None)
 
 
 def pos_inf(dtype: torch.dtype) -> float:
@@ -30,13 +33,26 @@ def accumulation_dtype(dtype: torch.dtype) -> torch.dtype:
     return torch.float32 if dtype in LOW_PRECISION else dtype
 
 
+def input_dtype(tensor: Tensor) -> torch.dtype:
+    return _input_dtype.get() or tensor.dtype
+
+
+@contextmanager
+def treat_inputs_as(dtype: torch.dtype) -> Iterator[None]:
+    token = _input_dtype.set(dtype)
+    try:
+        yield
+    finally:
+        _input_dtype.reset(token)
+
+
 def normalization_eps(dtype: torch.dtype) -> float:
     return max(1e-12, torch.finfo(dtype).tiny)
 
 
 def normalize(embeddings: Tensor, p: float = 2, dim: int = 1) -> Tensor:
     work = embeddings.to(accumulation_dtype(embeddings.dtype))
-    eps = normalization_eps(embeddings.dtype)
+    eps = normalization_eps(input_dtype(embeddings))
     normalized = torch.nn.functional.normalize(work, p=p, dim=dim, eps=eps)
     return normalized.to(embeddings.dtype)
 

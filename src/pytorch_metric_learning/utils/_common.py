@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-from collections.abc import Iterator, Sequence
-from contextlib import contextmanager
-from contextvars import ContextVar
-from typing import TYPE_CHECKING, NamedTuple
+from collections.abc import Sequence
+from typing import TYPE_CHECKING, ClassVar, NamedTuple
 
 import torch
 from torch import Tensor
@@ -14,7 +12,14 @@ if TYPE_CHECKING:
     from ..distances import BaseDistance
 
 LOW_PRECISION = (torch.float16, torch.bfloat16)
-_input_dtype: ContextVar[torch.dtype | None] = ContextVar("input_dtype", default=None)
+
+
+class _WidenedFloat16(Tensor):
+    source_dtype: ClassVar[torch.dtype] = torch.float16
+
+
+class _WidenedBfloat16(_WidenedFloat16):
+    source_dtype: ClassVar[torch.dtype] = torch.bfloat16
 
 
 def pos_inf(dtype: torch.dtype) -> float:
@@ -33,17 +38,16 @@ def accumulation_dtype(dtype: torch.dtype) -> torch.dtype:
     return torch.float32 if dtype in LOW_PRECISION else dtype
 
 
+def widened(x: Tensor) -> Tensor:
+    if x.dtype == torch.float16:
+        return x.float().as_subclass(_WidenedFloat16)
+    if x.dtype == torch.bfloat16:
+        return x.float().as_subclass(_WidenedBfloat16)
+    return x
+
+
 def input_dtype(tensor: Tensor) -> torch.dtype:
-    return _input_dtype.get() or tensor.dtype
-
-
-@contextmanager
-def treat_inputs_as(dtype: torch.dtype) -> Iterator[None]:
-    token = _input_dtype.set(dtype)
-    try:
-        yield
-    finally:
-        _input_dtype.reset(token)
+    return getattr(tensor, "source_dtype", tensor.dtype)
 
 
 def normalization_eps(dtype: torch.dtype) -> float:

@@ -325,20 +325,85 @@ class TestAnchorBatchedBackward(unittest.TestCase):
                     self.assert_matches(grad, full_grad, dtype)
                     self.assertTrue(grad.isfinite().all())
 
-    def test_low_precision_handling_ends_with_the_call(self):
-        rows = nearby_rows(torch.float16).float()
-        distance = distances.LpDistance(normalize_embeddings=False)
-        expected = torch.cdist(rows, rows)
+    def test_results_are_plain_tensors(self):
+        distances_by_case = {
+            "normalized": distances.CosineSimilarity,
+            "unnormalized": lambda: distances.LpDistance(normalize_embeddings=False),
+        }
+        for dtype in (torch.float16, torch.bfloat16):
+            for name, factory in distances_by_case.items():
+                for tuples in (True, False):
+                    with self.subTest(dtype=dtype, distance=name, tuples=tuples):
+                        embeddings, labels = batch(dtype)
+                        if not tuples:
+                            labels = torch.arange(len(labels), device=TEST_DEVICE)
+                        seen = []
+                        embeddings.register_hook(
+                            lambda g, out=seen: out.append(type(g))
+                        )
+                        loss_func = losses.ContrastiveLoss(distance=factory())
+                        value = anchor_batched_backward(
+                            loss_func, embeddings, labels, 5
+                        )
+                        self.assertIs(type(value), torch.Tensor)
+                        self.assertIs(type(embeddings.grad), torch.Tensor)
+                        self.assertEqual(seen, [torch.Tensor])
 
-        class Failing(losses.TripletMarginLoss):
-            def loss_terms(self, *args, **kwargs):
-                raise RuntimeError("chunk failed")
+    def test_mixed_dtype_references_keep_their_own_normalization(self):
+        labels = torch.tensor([0, 1], device=TEST_DEVICE)
+        cases = [
+            (torch.float16, torch.float32),
+            (torch.float16, torch.float64),
+            (torch.bfloat16, torch.float32),
+            (torch.float16, torch.bfloat16),
+            (torch.bfloat16, torch.float16),
+        ]
+        for query_dtype, ref_dtype in cases:
+            for reducer in (reducers.MeanReducer, reducers.AvgNonZeroReducer):
+                with self.subTest(query=query_dtype, ref=ref_dtype, reducer=reducer):
+                    rows = torch.eye(2, dtype=query_dtype, device=TEST_DEVICE)
+                    refs = torch.eye(2, dtype=ref_dtype, device=TEST_DEVICE) * 1e-5
+                    loss_func = losses.ContrastiveLoss(
+                        distance=distances.LpDistance(), reducer=reducer()
+                    )
+                    query = rows.clone().requires_grad_()
+                    ref = refs.clone().requires_grad_()
+                    full = loss_func(query, labels, ref_emb=ref, ref_labels=labels)
+                    full.backward()
+                    batched_query = rows.clone().requires_grad_()
+                    batched_ref = refs.clone().requires_grad_()
+                    value = anchor_batched_backward(
+                        loss_func,
+                        batched_query,
+                        labels,
+                        1,
+                        ref_emb=batched_ref,
+                        ref_labels=labels,
+                    )
+                    torch.testing.assert_close(value, full)
+                    torch.testing.assert_close(batched_query.grad, query.grad)
+                    torch.testing.assert_close(batched_ref.grad, ref.grad)
 
-        embeddings, labels = batch(torch.float16)
-        with self.assertRaises(RuntimeError):
-            anchor_batched_backward(Failing(), embeddings, labels, 5)
-        anchor_batched_backward(losses.NTXentLoss(), embeddings, labels, 5)
-        torch.testing.assert_close(distance(rows), expected)
+    def test_swap_normalizes_references_with_their_own_dtype(self):
+        labels = (torch.arange(32) // 4).to(TEST_DEVICE)
+        loss_func = losses.TripletMarginLoss(
+            distance=distances.LpDistance(), swap=True, reducer=reducers.MeanReducer()
+        )
+        generator = torch.Generator().manual_seed(5)
+        rows = rows_below_float16_eps(torch.float16)
+        refs = (torch.randn(32, 8, generator=generator) * 1e-5).to(TEST_DEVICE)
+        query = rows.clone().requires_grad_()
+        ref = refs.clone().requires_grad_()
+        full = loss_func(query, labels, ref_emb=ref, ref_labels=labels)
+        full.backward()
+        batched_query = rows.clone().requires_grad_()
+        batched_ref = refs.clone().requires_grad_()
+        value = anchor_batched_backward(
+            loss_func, batched_query, labels, 8, ref_emb=batched_ref, ref_labels=labels
+        )
+        self.assert_matches(value, full.detach(), torch.float16)
+        self.assert_matches(batched_query.grad, query.grad, torch.bfloat16)
+        self.assert_matches(batched_ref.grad, ref.grad, torch.bfloat16)
 
     def test_parameter_hook_sees_the_final_gradient_once(self):
         embeddings, labels = batch()

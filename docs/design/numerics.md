@@ -405,9 +405,16 @@ Widening must not change what the input dtype selects. `torch.cdist` picks a dif
 kernel for low-precision rows, and normalization uses a larger `eps` for float16, so
 float32 copies once changed the objective: entries near 1000 gave a triplet loss of 0.113
 against 0.0177, and default NT-Xent on rows of norm `2e-5` gave 9.23 against 3.81.
-`_common.treat_inputs_as` tells those two sites the original dtype for the duration of
-a chunk. A context variable rather than a distance attribute covers every distance a
-loss holds, and it does not extend the thread restriction chunks already carry.
+`_common.widened` therefore returns a `Tensor` subclass that records the source dtype,
+and both sites read it through `input_dtype`. The dtype has to belong to the tensor.
+Widened float16 queries and float32 references look the same, so a dtype held for the
+call gave references the query's `eps`: small float32 references lost their full-loss
+value of 0 and gained a gradient of -8192. Identity would not work either, because
+`swap` reads indexed copies of the references, while PyTorch carries a subclass through
+slicing, indexing, and normalization. The bfloat16 class derives from the float16 one,
+because PyTorch refuses to combine unrelated subclasses and a full loss accepts those
+two dtypes together. The tags end at the function's return, so callers and tensor hooks
+receive plain tensors.
 
 Running chunks in the original dtype would match the forward pass by construction, and
 was rejected on measurements. Gradients of a chunk's sum overflow float16, and dividing

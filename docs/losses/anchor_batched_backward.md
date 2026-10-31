@@ -66,9 +66,10 @@ denominators are those of the whole batch and not a mean of chunk means. Float16
 bfloat16 embeddings and parameters are computed and accumulated in float32, then cast
 back when the gradient is delivered.
 
-A chunk keeps what the input dtype selects in a full loss: the normalization `eps` and
-the direct [`LpDistance`](../distances.md#lpdistance) kernel for low-precision rows. It
-does not reproduce float16 rounding inside a normalized loss, so a low-precision result
+A chunk keeps what each input's dtype selects in a full loss: the normalization `eps`
+and the direct [`LpDistance`](../distances.md#lpdistance) kernel for low-precision rows,
+so `embeddings` and `ref_emb` of different dtypes each keep their own. It does not
+reproduce float16 rounding inside a normalized loss, so a low-precision result
 can differ from the full loss by that rounding, and is then usually closer to float64.
 
 Tensor hooks on `embeddings`, `ref_emb`, and learnable parameters run once, on the

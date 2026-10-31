@@ -36,7 +36,7 @@ class _ChunkTerms(torch.nn.Module):
 
 
 def _working_copy(x: Tensor) -> Tensor:
-    return x.detach().to(_common.accumulation_dtype(x.dtype)).requires_grad_()
+    return _common.widened(x.detach()).requires_grad_()
 
 
 def anchor_batched_backward(
@@ -67,19 +67,18 @@ def anchor_batched_backward(
         pairs = indexing.get_all_pairs_indices(labels[rows], reference_labels)
         if ref_emb is None:
             pairs = indexing._remove_self_comparisons(pairs, rows)
-        with _common.treat_inputs_as(embeddings.dtype):
-            chunk = functional_call(
-                chunk_terms,
-                replacements,
-                (query[rows], labels[rows], pairs, reference, reference_labels),
-            )
+        chunk = functional_call(
+            chunk_terms,
+            replacements,
+            (query[rows], labels[rows], pairs, reference, reference_labels),
+        )
         _accumulate(terms, chunk, loss_func.reducer, leaves)
         del chunk
     gradients = [_reduced_gradient(terms, i) for i in range(len(leaves))]
     if gradients[0] is None:
         gradients[0] = torch.zeros_like(query)
     tracked = [
-        (x, g.to(x.dtype))
+        (x, g.as_subclass(Tensor).to(x.dtype))
         for x, g in zip((*inputs, *named.values()), gradients, strict=True)
         if x.requires_grad and g is not None
     ]
@@ -88,8 +87,8 @@ def anchor_batched_backward(
         (t.total / max(t.count, 1) for t in terms.values()), start=query.new_zeros(())
     )
     if loss_func.distance.normalize_embeddings:
-        return total.to(embeddings.dtype)
-    return total
+        return total.as_subclass(Tensor).to(embeddings.dtype)
+    return total.as_subclass(Tensor)
 
 
 def _reduced_gradient(terms: dict[str, _Term], index: int) -> Tensor | None:

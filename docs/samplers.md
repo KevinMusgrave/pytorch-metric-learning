@@ -1,14 +1,15 @@
 # Samplers
 
-Samplers decide which dataset indices form each batch. `MPerClassSampler` and
-`HierarchicalSampler` yield whole batches; pass them as
+Samplers decide which dataset indices form each batch. `MPerClassSampler`,
+`HierarchicalSampler`, and `FixedSetOfPairs` yield whole batches; pass them as
 `DataLoader(..., batch_sampler=...)` and omit `batch_size` and `shuffle`.
 `FixedSetOfTriplets` yields one dataset index at a time; pass it to
 `DataLoader(..., sampler=...)`.
 
 Labels describe the whole dataset: `labels[i]` is the label of dataset item `i`.
-`MPerClassSampler` and `FixedSetOfTriplets` accept a one-dimensional tensor, a
-NumPy array, or any iterable of hashable labels, such as a list of strings
+`MPerClassSampler`, `FixedSetOfPairs`, and `FixedSetOfTriplets` accept a
+one-dimensional tensor, a NumPy array, or any iterable of hashable labels, such
+as a list of strings
 ([`types.DatasetLabels`](types.md#datasetlabels)).
 The examples on this page use this dataset of 64 items in 16 classes:
 
@@ -162,6 +163,73 @@ To sample examples in proportion to how often a miner selects them, pass
 `utils.indexing.convert_to_weights` output to PyTorch's `WeightedRandomSampler`.
 The [executable recipe](recipes/training.md#mining-weighted-sampling-contract)
 shows embedding extraction, subset-index mapping, and seeded sampling.
+
+## FixedSetOfPairs
+
+Creates a fixed set of positive and negative pairs at construction. Use it when
+training or evaluating on the same pairs every epoch.
+
+```python {.signature}
+samplers.FixedSetOfPairs(
+    labels: Tensor | np.ndarray | Iterable[Hashable],
+    num_pairs: int,
+    batch_size: int,
+    *,
+    generator: torch.Generator | None = None,
+)
+```
+
+**Parameters**:
+
+- **labels**: The dataset labels.
+- **num_pairs**: The number of pairs to create. It must be positive. Half are
+  positive and half negative, with the extra pair positive when the number is odd.
+- **batch_size**: The number of indices per batch, so `batch_size // 2` pairs. It
+  must be positive and even.
+- **generator**: Optional `torch.Generator` used for creation and ordering.
+
+A positive pair draws a class with at least two examples, then two different
+examples of it. A negative pair draws two different classes, then one example of
+each. Pairs are drawn independently, so a pair can repeat. Construction raises
+`ValueError` for an invalid `num_pairs` or `batch_size`, for fewer than two
+classes, and when no class has two examples.
+
+The pairs are drawn once, in `sampler.fixed_set_of_pairs`, a `(num_pairs, 2)`
+index tensor. Each iterator yields them in a new random order. Each batch is a
+list `[first_0, second_0, first_1, second_1, ...]`, so a pair is never split, and
+batches can hold any mix of positive and negative pairs. The last batch has
+fewer pairs when `batch_size // 2` does not divide `num_pairs`.
+`len(sampler)` is `ceil(num_pairs / (batch_size // 2))`.
+
+Recover `PairIndices` from each embedding batch, using the labels to tell
+positive pairs from negative ones:
+
+```python
+from pytorch_metric_learning import losses
+
+sampler = samplers.FixedSetOfPairs(labels, num_pairs=30, batch_size=8)
+loader = torch.utils.data.DataLoader(dataset, batch_sampler=sampler)
+model = torch.nn.Linear(8, 4)
+loss_func = losses.ContrastiveLoss()
+optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
+
+for data, batch_labels in loader:
+    embeddings = model(data)
+    rows = torch.arange(len(embeddings), device=embeddings.device)
+    first, second = rows.reshape(-1, 2).unbind(1)
+    positive = batch_labels[first] == batch_labels[second]
+    indices_tuple = (
+        first[positive],
+        second[positive],
+        first[~positive],
+        second[~positive],
+    )
+    loss = loss_func(embeddings, batch_labels, indices_tuple=indices_tuple)
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+assert len(loader) == 8
+```
 
 ## FixedSetOfTriplets
 

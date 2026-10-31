@@ -5,6 +5,7 @@ import torch
 from torch.utils.data import DataLoader, TensorDataset
 
 from pytorch_metric_learning.samplers import (
+    FixedSetOfPairs,
     FixedSetOfTriplets,
     HierarchicalSampler,
     MPerClassSampler,
@@ -20,6 +21,7 @@ def make_samplers(generator):
     labels = torch.arange(10).repeat_interleave(4)
     return [
         MPerClassSampler(labels, 2, batch_size=8, num_batches=8, generator=generator),
+        FixedSetOfPairs(labels, 20, batch_size=8, generator=generator),
         FixedSetOfTriplets(labels, 20, generator=generator),
         HierarchicalSampler(hierarchical_labels(), 12, 3, generator=generator),
     ]

@@ -29,7 +29,13 @@ independent of a training framework. Fixed triplets preserve the
 anchor/positive/negative label relation.
 Their consecutive triples map directly to an `indices_tuple` through
 `torch.arange(batch_size).reshape(-1, 3).unbind(1)` on the embeddings' device;
-there is no miner class for recovering already supplied triplets.
+there is no miner class for recovering already supplied triplets. Fixed pairs
+are a batch sampler because their guarantee is a batch's composition: an odd
+batch size would split a pair and shift every later pair onto wrong partners.
+Positive pairs need two different examples, because a pair of an example with
+itself has zero distance and teaches nothing. The caller derives positive and
+negative rows from batch labels, so no pair-specific miner or label-free dataset
+format is added.
 
 Mining-weighted sampling belongs to the executable recipe in
 `docs/recipes/mining_weights.py`: callers compute embeddings, the numerical

@@ -357,6 +357,7 @@
       {
         "paths": [
           "tests/samplers/__init__.py",
+          "tests/samplers/test_fixed_set_of_pairs.py",
           "tests/samplers/test_fixed_set_of_triplets.py",
           "tests/samplers/test_hierarchical_sampler.py"
         ],

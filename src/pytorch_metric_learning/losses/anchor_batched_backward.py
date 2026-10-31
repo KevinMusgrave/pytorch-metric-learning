@@ -36,7 +36,7 @@ class _ChunkTerms(torch.nn.Module):
 
 
 def _working_copy(x: Tensor) -> Tensor:
-    return x.detach().to(_common.accumulation_dtype(x.dtype)).requires_grad_()
+    return _common.widened(x.detach()).requires_grad_()
 
 
 def anchor_batched_backward(
@@ -53,6 +53,20 @@ def anchor_batched_backward(
     outputs = [x for x in (embeddings, ref_emb) if x is not None and x.requires_grad]
     if not outputs or not torch.is_grad_enabled():
         raise ValueError("anchor_batched_backward needs inputs tracking gradients")
+    with _common.without_autocast(embeddings):
+        return _backward_in_chunks(
+            loss_func, embeddings, labels, batch_size, ref_emb, ref_labels
+        )
+
+
+def _backward_in_chunks(
+    loss_func: BaseMetricLossFunction,
+    embeddings: Tensor,
+    labels: Tensor,
+    batch_size: int,
+    ref_emb: Tensor | None,
+    ref_labels: Tensor | None,
+) -> Tensor:
     query = _working_copy(embeddings)
     reference = query if ref_emb is None else _working_copy(ref_emb)
     reference_labels = labels if ref_labels is None else ref_labels
@@ -78,7 +92,7 @@ def anchor_batched_backward(
     if gradients[0] is None:
         gradients[0] = torch.zeros_like(query)
     tracked = [
-        (x, g.to(x.dtype))
+        (x, g.as_subclass(Tensor).to(x.dtype))
         for x, g in zip((*inputs, *named.values()), gradients, strict=True)
         if x.requires_grad and g is not None
     ]
@@ -87,8 +101,8 @@ def anchor_batched_backward(
         (t.total / max(t.count, 1) for t in terms.values()), start=query.new_zeros(())
     )
     if loss_func.distance.normalize_embeddings:
-        return total.to(embeddings.dtype)
-    return total
+        return total.as_subclass(Tensor).to(embeddings.dtype)
+    return total.as_subclass(Tensor)
 
 
 def _reduced_gradient(terms: dict[str, _Term], index: int) -> Tensor | None:

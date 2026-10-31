@@ -26,7 +26,10 @@ losses.anchor_batched_backward(
 
 It returns the loss as a detached scalar tensor with the dtype of the full loss: that of
 `embeddings`, or float32 for float16 and bfloat16 embeddings with an
-[unnormalized distance](../distances.md#calling-a-distance). It
+[unnormalized distance](../distances.md#calling-a-distance). The exception is autocast,
+which this function leaves for its whole duration, so float32 embeddings return float32
+where a full loss would return float16, and `embeddings` and `ref_emb` must be usable
+together without autocast. It
 has already called `backward`, so gradients have accumulated in the model, and in
 any learnable parameters of `loss_func` such as those of a custom distance, the same
 way as after `loss.backward()`. Do not call `backward` again.
@@ -66,6 +69,12 @@ denominators are those of the whole batch and not a mean of chunk means. Float16
 bfloat16 embeddings and parameters are computed and accumulated in float32, then cast
 back when the gradient is delivered.
 
+A chunk keeps what each input's dtype selects in a full loss: the normalization `eps`
+and the direct [`LpDistance`](../distances.md#lpdistance) kernel for low-precision rows,
+so `embeddings` and `ref_emb` of different dtypes each keep their own. It does not
+reproduce float16 rounding inside a normalized loss, so a low-precision result
+can differ from the full loss by that rounding, and is then usually closer to float64.
+
 Tensor hooks on `embeddings`, `ref_emb`, and learnable parameters run once, on the
 final gradient. Module hooks are different: a forward hook on a loss's `distance`
 runs for each chunk. While a chunk runs, `loss_func` holds working copies of its
@@ -74,10 +83,11 @@ chunk ends, so do not share `loss_func` with another thread during a call.
 
 Only one chunk's matrix and tuples exist at a time, which is the memory this
 function targets. The encoder's own graph is unchanged, and each loss term holds a
-`(N, D)` gradient buffer, plus one for each learnable parameter of the loss. Peak memory has not been measured yet. Time goes up: with
-256 embeddings, chunks of 32, and one CPU thread, NTXentLoss took 4.8 ms rather than
-2.6 ms and TripletMarginLoss took 10.5 ms rather than 7.1 ms. Use this function for a
-batch that does not fit in memory, not for speed.
+`(N, D)` gradient buffer, plus one for each learnable parameter of the loss. On an
+NVIDIA A40 with 2048 embeddings of 128 dimensions and chunks of 16, peak memory fell
+from 291 MiB to 7.7 MiB for NTXentLoss and from 997 MiB to 11 MiB for
+TripletMarginLoss. Time goes up, from 11 ms to 1044 ms and from 32 ms to 971 ms. Use
+this function for a batch that does not fit in memory, not for speed.
 
 ## Supported losses
 

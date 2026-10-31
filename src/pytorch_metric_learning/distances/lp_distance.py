@@ -1,13 +1,13 @@
 import torch
 from torch import Tensor
 
-from ..utils._common import LOW_PRECISION, accumulation_dtype
+from ..utils._common import LOW_PRECISION, accumulation_dtype, input_dtype
 from .base_distance import BaseDistance
 
 
 class LpDistance(BaseDistance):
     def compute_mat(self, query_emb: Tensor, ref_emb: Tensor) -> Tensor:
-        if query_emb.dtype in LOW_PRECISION:
+        if input_dtype(query_emb) in LOW_PRECISION:
             mat = torch.cdist(
                 query_emb.float(),
                 ref_emb.float(),

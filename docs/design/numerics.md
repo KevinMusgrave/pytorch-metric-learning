@@ -344,8 +344,9 @@ because mask construction and pair selection dominate. A whole training step wit
 an encoder would save a smaller share. #697 is the stronger reason for the API,
 because it had no alternative besides mutating the distance object before each call.
 
-GPU time and peak memory have not been measured for this path. The `separate` and
-`reused` benchmark cases are ready for that run with `--device cuda`.
+On an NVIDIA A40 at 128 dimensions and batches of 128, 512, and 2048, one reused matrix
+took 0.83 to 0.87 of the separate time for cosine similarity and 0.79 to 0.97 for
+Euclidean distance, where the ranges overlap at 512. Peak memory was 0.3% to 8% lower.
 
 ## Bounded mining output
 
@@ -400,15 +401,60 @@ a chunk raises, and the final `backward` delivers the normalized gradient to the
 parameter once, cast to its dtype. Rejecting hooked or low-precision parameters would
 have been simpler, but both are ordinary PyTorch usage that a full `backward` handles.
 
+Widening must not change what the input dtype selects. `torch.cdist` picks a different
+kernel for low-precision rows, and normalization uses a larger `eps` for float16, so
+float32 copies once changed the objective: entries near 1000 gave a triplet loss of 0.113
+against 0.0177, and default NT-Xent on rows of norm `2e-5` gave 9.23 against 3.81.
+`_common.widened` therefore returns a `Tensor` subclass that records the source dtype,
+and both sites read it through `input_dtype`. The dtype has to belong to the tensor.
+Widened float16 queries and float32 references look the same, so a dtype held for the
+call gave references the query's `eps`: small float32 references lost their full-loss
+value of 0 and gained a gradient of -8192. Identity would not work either, because
+`swap` reads indexed copies of the references, while PyTorch carries a subclass through
+slicing, indexing, and normalization. The bfloat16 class derives from the float16 one,
+because PyTorch refuses to combine unrelated subclasses and a full loss accepts those
+two dtypes together. The tags end at the function's return, so callers and tensor hooks
+receive plain tensors.
+
+Both behaviors cost something, and only for low-precision inputs. On an NVIDIA A40 with
+float16 rows of 128 dimensions and chunks of 16, the direct kernel raised the peak memory
+of anchor-batched triplets from 12 MiB to 55 MiB at 2048 rows, against 2118 MiB for a
+full `backward()`. Python dispatch on tagged tensors raised NT-Xent's time by about a
+third, from 1061 ms to 1403 ms at 2048 rows, and triplet ranges overlapped. Float32 and
+float64 inputs carry no tag.
+
+The function also leaves autocast. Under ambient float16 autocast, `matmul` narrowed the
+matrix, so the loss terms were float16 and their running sum became `inf` for an NT-Xent
+loss of 6.36 at 256 rows. Summing in float32 alone fixed that value, but kept float16
+rounding in the chunk graph: the loss stayed up to 0.03% from float64. Leaving autocast
+has to cover `autograd.grad` as well as the forward pass, because backward formulas run
+in the caller's thread and autocast narrowed them too, which left float32 gradients 0.4%
+off. A full loss under autocast keeps its own rounding, so the two differ by that
+rounding. Inputs that only autocast could combine, such as float32 queries with float64
+references, raise instead of being promoted, because that mix has no demonstrated use.
+
+Running chunks in the original dtype would match the forward pass by construction, and
+was rejected on measurements. Gradients of a chunk's sum overflow float16, and dividing
+by the chunk's count still overflows when the full gradient is finite, because that
+gradient can be many chunks' share. Dividing by the count times the number of chunks
+stays finite, but the per-tuple seed `1/scale` then rounds to a float16 subnormal: at 512
+rows, triplet gradients were 5% from float64 against 1.5% for the full loss, and past
+`2**24` tuples the seed is zero. The large batches this function exists for would have
+paid for that. Float32 chunks keep the normalization and kernel, and leave out float16
+rounding of the normalized matrix. In a sweep of the supported losses over distances,
+row scales, and both low-precision dtypes, 503 of 592 cases matched the full loss within
+tolerance, and 82 of the other 89 were closer to float64 than the full loss was. The
+last 7 are cosine losses on rows too similar for float32 to resolve, where a full loss
+on float32 input has the same kind of error.
+
 Other memory is untouched: the encoder graph and the gradient remain whole, and each
 term holds one `(N, D)` gradient buffer.
 
-These two memory features have CPU timings and no memory measurements. At 256
-embeddings, 128 dimensions, and one thread, chunks of 32 anchors cost 4.8 ms against
-2.6 ms for NTXentLoss and 10.5 ms against 7.1 ms for TripletMarginLoss, and
-`tuples_per_anchor=32` cost 22.7 ms against 10.0 ms for a mined triplet step. Peak
-memory needs `--device cuda`, which the benchmark cases support, so the memory
-benefit of both features remains a design expectation.
+Measured on an NVIDIA A40 at 128 dimensions and batches of 128, 512, and 2048, chunks
+of 16 anchors lowered peak memory by 59% to 99% and took 10 to 92 times as long, so the
+function trades time for memory and is not a default. `tuples_per_anchor=32` lowered
+peak memory by only 3% to 6% for a mined triplet step, with no consistent time saving,
+because it bounds what a loss receives and not the miner's candidate enumeration.
 
 ## Decoupled contrastive loss
 

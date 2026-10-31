@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, NamedTuple
+from contextlib import AbstractContextManager, nullcontext
+from typing import TYPE_CHECKING, ClassVar, NamedTuple
 
 import torch
 from torch import Tensor
@@ -12,6 +13,14 @@ if TYPE_CHECKING:
     from ..distances import BaseDistance
 
 LOW_PRECISION = (torch.float16, torch.bfloat16)
+
+
+class _WidenedFloat16(Tensor):
+    source_dtype: ClassVar[torch.dtype] = torch.float16
+
+
+class _WidenedBfloat16(_WidenedFloat16):
+    source_dtype: ClassVar[torch.dtype] = torch.bfloat16
 
 
 def pos_inf(dtype: torch.dtype) -> float:
@@ -30,13 +39,31 @@ def accumulation_dtype(dtype: torch.dtype) -> torch.dtype:
     return torch.float32 if dtype in LOW_PRECISION else dtype
 
 
+def widened(x: Tensor) -> Tensor:
+    if x.dtype == torch.float16:
+        return x.float().as_subclass(_WidenedFloat16)
+    if x.dtype == torch.bfloat16:
+        return x.float().as_subclass(_WidenedBfloat16)
+    return x
+
+
+def input_dtype(tensor: Tensor) -> torch.dtype:
+    return getattr(tensor, "source_dtype", tensor.dtype)
+
+
+def without_autocast(tensor: Tensor) -> AbstractContextManager:
+    if not torch.amp.autocast_mode.is_autocast_available(tensor.device.type):
+        return nullcontext()
+    return torch.autocast(tensor.device.type, enabled=False)
+
+
 def normalization_eps(dtype: torch.dtype) -> float:
     return max(1e-12, torch.finfo(dtype).tiny)
 
 
 def normalize(embeddings: Tensor, p: float = 2, dim: int = 1) -> Tensor:
     work = embeddings.to(accumulation_dtype(embeddings.dtype))
-    eps = normalization_eps(embeddings.dtype)
+    eps = normalization_eps(input_dtype(embeddings))
     normalized = torch.nn.functional.normalize(work, p=p, dim=dim, eps=eps)
     return normalized.to(embeddings.dtype)
 

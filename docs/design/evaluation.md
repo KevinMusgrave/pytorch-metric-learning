@@ -24,7 +24,7 @@ relevance matrix, relevant counts, and query and neighbor labels) to one value
 per query, NaN where undefined; `ClusteringMetric(function)` maps query and
 cluster labels to one float. The record's type declares which backend the
 metric needs, and `neighbors` declares how much ranking it reads. The calculator
-owns lone-query exclusion and every reduction (pooled mean, mean of class means,
+owns lone-query exclusion, unless a metric opts out, and every reduction (pooled mean, mean of class means,
 per-class means), so a metric cannot return a type that depends on how it is
 reduced. The earlier contract required three parallel method overrides
 (`metric_functions`, `requires_knn`, `requires_clustering`), passed every
@@ -107,7 +107,13 @@ custom comparator, so the cost is `(classes, references)` label comparisons
 rather than `(queries, references)`. Binary metrics keep `label_comparison_fn`;
 `relevance_fn` is a separate argument of the metric so one calculator can report
 both from the same multi-column labels, which is what #339 asked for without
-adding per-metric label columns to the calculator.
+adding per-metric label columns to the calculator. Lone-query exclusion is a
+property of relevance under `label_comparison_fn`, so it cannot define NDCG's
+eligibility: a query with no same-class reference may still have same-parent
+references, and dropping it biases the score upward. A metric therefore declares
+`exclude_lone_queries`, and `ndcg_metric` clears it so that NaN from a zero ideal
+is the only exclusion. The registration is built by a function because a caller
+who forgot the flag would get a plausible, wrong number.
 
 Threshold selection takes scores and labels rather than a model or embeddings,
 so inference, splits, and pair construction stay with the application and any

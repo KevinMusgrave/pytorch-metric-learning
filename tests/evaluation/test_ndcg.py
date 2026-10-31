@@ -1,14 +1,13 @@
 import math
 import unittest
-from functools import partial
 
 import torch
 
 from pytorch_metric_learning.evaluation import (
     AccuracyCalculator,
     RetrievalInputs,
-    RetrievalMetric,
     ndcg,
+    ndcg_metric,
 )
 
 from .. import TEST_DEVICE
@@ -129,12 +128,8 @@ class TestNDCG(unittest.TestCase):
         query_labels = torch.stack([classes, classes // 2], dim=1).to(TEST_DEVICE)
         calculator = AccuracyCalculator(
             include=("ndcg_at_5",),
-            label_comparison_fn=lambda x, y: graded(x, y) > 0,
-            custom_metrics={
-                "ndcg_at_5": RetrievalMetric(
-                    partial(ndcg, relevance_fn=graded, k=5), neighbors=5
-                )
-            },
+            label_comparison_fn=same_class,
+            custom_metrics={"ndcg_at_5": ndcg_metric(graded, k=5)},
         )
         result = calculator.get_accuracy(
             query, query_labels, reference, reference_labels
@@ -154,9 +149,7 @@ class TestNDCG(unittest.TestCase):
         values = labels(0, 1, 0, 1)
         calculator = AccuracyCalculator(
             include=("ndcg", "precision_at_1"),
-            custom_metrics={
-                "ndcg": RetrievalMetric(partial(ndcg, relevance_fn=equal_relevance))
-            },
+            custom_metrics={"ndcg": ndcg_metric(equal_relevance)},
         )
         result = calculator.get_accuracy(embeddings, values)
         expected = (dcg([0, 1, 0]) + dcg([0, 0, 1])) / (2 * dcg([1, 0, 0]))
@@ -169,9 +162,7 @@ class TestNDCG(unittest.TestCase):
         calculator = AccuracyCalculator(
             include=("ndcg",),
             k=2,
-            custom_metrics={
-                "ndcg": RetrievalMetric(partial(ndcg, relevance_fn=equal_relevance))
-            },
+            custom_metrics={"ndcg": ndcg_metric(equal_relevance)},
         )
         result = calculator.get_accuracy(
             embeddings[:1], values[:1], embeddings, values, True
@@ -188,9 +179,7 @@ class TestNDCG(unittest.TestCase):
             k=3,
             label_comparison_fn=same_class,
             custom_metrics={
-                "ndcg_at_3": RetrievalMetric(
-                    partial(ndcg, relevance_fn=graded, k=3), neighbors=3
-                ),
+                "ndcg_at_3": ndcg_metric(graded, k=3),
             },
         )
         binary_only = AccuracyCalculator(
@@ -205,3 +194,74 @@ class TestNDCG(unittest.TestCase):
         )
         self.assertGreater(both["ndcg_at_3"], 0)
         self.assertLess(both["ndcg_at_3"], 1)
+
+    def test_query_without_same_class_reference_counts_for_ndcg_only(self):
+        reference = torch.tensor([[0.0], [10.0], [100.0]], device=TEST_DEVICE)
+        reference_labels = labels([0, 0], [1, 1], [2, 1])
+        query = torch.tensor([[0.0], [1.0]], device=TEST_DEVICE)
+        query_labels = labels([0, 0], [9, 1])
+        calculator = AccuracyCalculator(
+            include=("precision_at_1", "ndcg_at_1"),
+            label_comparison_fn=same_class,
+            custom_metrics={"ndcg_at_1": ndcg_metric(graded, k=1)},
+        )
+        result = calculator.get_accuracy(
+            query, query_labels, reference, reference_labels
+        )
+        self.assertEqual(result["precision_at_1"], 1.0)
+        self.assertEqual(result["ndcg_at_1"], 0.5)
+        per_class = calculator.get_accuracy_per_class(
+            query, query_labels, reference, reference_labels
+        )
+        self.assertEqual(per_class["ndcg_at_1"], {(0, 0): 1.0, (9, 1): 0.0})
+        self.assertTrue(math.isnan(per_class["precision_at_1"][(9, 1)]))
+
+    def test_query_with_no_gain_stays_excluded(self):
+        reference = torch.tensor([[0.0], [1.0]], device=TEST_DEVICE)
+        reference_labels = labels([0, 0], [1, 0])
+        query = torch.tensor([[0.0], [0.0]], device=TEST_DEVICE)
+        query_labels = labels([0, 0], [9, 1])
+        calculator = AccuracyCalculator(
+            include=("ndcg",),
+            label_comparison_fn=same_class,
+            custom_metrics={"ndcg": ndcg_metric(graded)},
+        )
+        result = calculator.get_accuracy(
+            query, query_labels, reference, reference_labels
+        )
+        self.assertEqual(result["ndcg"], 1.0)
+
+    def test_avg_of_avgs_weights_graded_classes_equally(self):
+        reference = torch.tensor([[0.0], [0.5], [10.0]], device=TEST_DEVICE)
+        reference_labels = labels([0, 0], [0, 0], [1, 1])
+        query = torch.tensor([[0.0], [0.0], [1.0]], device=TEST_DEVICE)
+        query_labels = labels([0, 0], [0, 0], [9, 1])
+        calculator = AccuracyCalculator(
+            include=("ndcg",),
+            avg_of_avgs=True,
+            label_comparison_fn=same_class,
+            custom_metrics={"ndcg": ndcg_metric(graded, k=1)},
+        )
+        result = calculator.get_accuracy(
+            query, query_labels, reference, reference_labels
+        )
+        self.assertEqual(result["ndcg"], 0.5)
+
+    def test_all_lone_queries_do_not_warn_for_graded_metrics(self):
+        reference = torch.tensor([[0.0]], device=TEST_DEVICE)
+        calculator = AccuracyCalculator(
+            include=("ndcg",),
+            label_comparison_fn=same_class,
+            custom_metrics={"ndcg": ndcg_metric(graded)},
+        )
+        with self.assertNoLogs("pytorch_metric_learning", level="WARNING"):
+            result = calculator.get_accuracy(
+                reference, labels([9, 0]), reference, labels([0, 0])
+            )
+        self.assertEqual(result["ndcg"], 1.0)
+
+    def test_registration_declares_depth(self):
+        self.assertEqual(ndcg_metric(graded, k=4).neighbors, 4)
+        self.assertEqual(ndcg_metric(graded).neighbors, "all")
+        with self.assertRaisesRegex(ValueError, "neighbors must be"):
+            ndcg_metric(graded, k=0)

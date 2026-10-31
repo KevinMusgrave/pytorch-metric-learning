@@ -2,6 +2,7 @@ import importlib
 import logging
 from collections.abc import Callable, Hashable, Mapping, Sequence
 from dataclasses import dataclass
+from functools import partial
 from types import MappingProxyType
 from typing import Any
 
@@ -30,6 +31,7 @@ __all__ = [
     "mean_average_precision_at_r",
     "mean_reciprocal_rank",
     "ndcg",
+    "ndcg_metric",
     "precision_at_1",
     "precision_at_k",
     "r_precision",
@@ -57,6 +59,7 @@ class RetrievalInputs:
 class RetrievalMetric:
     function: Callable[[RetrievalInputs], Tensor]
     neighbors: MetricNeighbors = "all"
+    exclude_lone_queries: bool = True
 
     def __post_init__(self) -> None:
         valid_count = (
@@ -209,6 +212,14 @@ def ndcg(
     return (gains * discounts).sum(dim=1) / ideal[class_index]
 
 
+def ndcg_metric(relevance_fn: GradedRelevance, k: int | None = None) -> RetrievalMetric:
+    return RetrievalMetric(
+        partial(ndcg, relevance_fn=relevance_fn, k=k),
+        neighbors="all" if k is None else k,
+        exclude_lone_queries=False,
+    )
+
+
 def _normalized_mutual_information(
     query_labels: Tensor, cluster_labels: Tensor
 ) -> float:
@@ -261,7 +272,10 @@ class _QueryGroups:
                 f"{tuple(self.has_relevant.shape)}, one value per query"
             )
         values = values.to(torch.float64)
-        return values, self.has_relevant & ~torch.isnan(values)
+        defined = ~torch.isnan(values)
+        if metric.exclude_lone_queries:
+            defined = defined & self.has_relevant
+        return values, defined
 
     def class_means(self, values: Tensor, defined: Tensor) -> Tensor:
         num_classes = len(self.classes)
@@ -533,7 +547,8 @@ class AccuracyCalculator:
         )
         counts_per_query = counts[class_index]
         has_relevant = counts_per_query > 0
-        if not torch.any(has_relevant):
+        filters_lone = any(metric.exclude_lone_queries for metric in metrics.values())
+        if filters_lone and not torch.any(has_relevant):
             _LOGGER.warning("None of the query labels are in the reference set.")
         num_k = self.determine_k(counts, len(reference), ref_includes_query, metrics)
         _, knn_indices = self.knn_func(query, num_k, reference, ref_includes_query)

@@ -344,8 +344,9 @@ because mask construction and pair selection dominate. A whole training step wit
 an encoder would save a smaller share. #697 is the stronger reason for the API,
 because it had no alternative besides mutating the distance object before each call.
 
-GPU time and peak memory have not been measured for this path. The `separate` and
-`reused` benchmark cases are ready for that run with `--device cuda`.
+On an NVIDIA A40 at 128 dimensions and batches of 128, 512, and 2048, one reused matrix
+took 0.83 to 0.87 of the separate time for cosine similarity and 0.79 to 0.97 for
+Euclidean distance, where the ranges overlap at 512. Peak memory was 0.3% to 8% lower.
 
 ## Bounded mining output
 
@@ -425,12 +426,11 @@ on float32 input has the same kind of error.
 Other memory is untouched: the encoder graph and the gradient remain whole, and each
 term holds one `(N, D)` gradient buffer.
 
-These two memory features have CPU timings and no memory measurements. At 256
-embeddings, 128 dimensions, and one thread, chunks of 32 anchors cost 4.8 ms against
-2.6 ms for NTXentLoss and 10.5 ms against 7.1 ms for TripletMarginLoss, and
-`tuples_per_anchor=32` cost 22.7 ms against 10.0 ms for a mined triplet step. Peak
-memory needs `--device cuda`, which the benchmark cases support, so the memory
-benefit of both features remains a design expectation.
+Measured on an NVIDIA A40 at 128 dimensions and batches of 128, 512, and 2048, chunks
+of 16 anchors lowered peak memory by 59% to 99% and took 10 to 92 times as long, so the
+function trades time for memory and is not a default. `tuples_per_anchor=32` lowered
+peak memory by only 3% to 6% for a mined triplet step, with no consistent time saving,
+because it bounds what a loss receives and not the miner's candidate enumeration.
 
 ## Decoupled contrastive loss
 

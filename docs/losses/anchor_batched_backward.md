@@ -79,10 +79,11 @@ chunk ends, so do not share `loss_func` with another thread during a call.
 
 Only one chunk's matrix and tuples exist at a time, which is the memory this
 function targets. The encoder's own graph is unchanged, and each loss term holds a
-`(N, D)` gradient buffer, plus one for each learnable parameter of the loss. Peak memory has not been measured yet. Time goes up: with
-256 embeddings, chunks of 32, and one CPU thread, NTXentLoss took 4.8 ms rather than
-2.6 ms and TripletMarginLoss took 10.5 ms rather than 7.1 ms. Use this function for a
-batch that does not fit in memory, not for speed.
+`(N, D)` gradient buffer, plus one for each learnable parameter of the loss. On an
+NVIDIA A40 with 2048 embeddings of 128 dimensions and chunks of 16, peak memory fell
+from 291 MiB to 7.7 MiB for NTXentLoss and from 997 MiB to 11 MiB for
+TripletMarginLoss. Time goes up, from 11 ms to 1044 ms and from 32 ms to 971 ms. Use
+this function for a batch that does not fit in memory, not for speed.
 
 ## Supported losses
 

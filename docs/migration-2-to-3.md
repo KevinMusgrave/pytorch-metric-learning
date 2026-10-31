@@ -4,7 +4,7 @@ Find the version 2 import, class, method, argument, or behavior in the table.
 Rows are sorted alphabetically. Names are relative to `pytorch_metric_learning`
 unless another package is named. A removed class's direct module import follows
 the same replacement as its package export. Version 3 has no compatibility
-aliases. The [release notes](release-notes/3.0.0rc1.md) explain the changes and
+aliases. The [release notes](release-notes/3.0.0.md) explain the changes and
 corrected numerical behavior; the examples below run in the test suite.
 
 | v2 symbol or call                                                                                                                 | v3 replacement                                                                                                                                                             | Note                                                                                                                                                                                                                         |

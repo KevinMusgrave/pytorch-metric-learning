@@ -8,9 +8,9 @@ completes in under a second on CPU, and performs no downloads. The Python file
 in `docs/recipes` is the canonical executable source; it is not an installed
 library API.
 
-| Task                                                                                   | Executable source                                                                                                        | Command                                                       |
-| -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------- |
-| Extract embeddings and evaluate split, two-stream, centroid, or hierarchical retrieval | [View evaluation.py](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.0rc5/docs/recipes/evaluation.py) | `uv run --frozen --no-sync python -m docs.recipes.evaluation` |
+| Task                                                                                   | Executable source                                                                                                     | Command                                                       |
+| -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Extract embeddings and evaluate split, two-stream, centroid, or hierarchical retrieval | [View evaluation.py](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.0/docs/recipes/evaluation.py) | `uv run --frozen --no-sync python -m docs.recipes.evaluation` |
 
 The command imports the installed package, so install the checkout as
 described in the [development guide](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/DEVELOPMENT.md#set-up-a-checkout),

@@ -12,7 +12,7 @@ from .base_metric_loss_function import BaseMetricLossFunction
 class _Term:
     total: Tensor
     count: int
-    gradients: list[Tensor]
+    gradients: list[Tensor | None]
 
 
 def anchor_batched_backward(
@@ -35,7 +35,10 @@ def anchor_batched_backward(
         query if ref_emb is None else ref_emb.detach().to(dtype).requires_grad_()
     )
     reference_labels = labels if ref_labels is None else ref_labels
-    leaves = (query,) if ref_emb is None else (query, reference)
+    parameters = [p for p in loss_func.parameters() if p.requires_grad]
+    inputs = (embeddings,) if ref_emb is None else (embeddings, ref_emb)
+    copies = (query,) if ref_emb is None else (query, reference)
+    leaves = (*copies, *parameters)
     terms: dict[str, _Term] = {}
     for rows in torch.arange(len(query), device=query.device).split(batch_size):
         pairs = indexing.get_all_pairs_indices(labels[rows], reference_labels)
@@ -46,20 +49,28 @@ def anchor_batched_backward(
         )
         _accumulate(terms, chunk, loss_func.reducer, leaves)
         del chunk
-    if not terms:
-        return _common.zero_loss(embeddings).detach()
-    gradients = [
-        sum((t.gradients[i] / t.count for t in terms.values()), start=leaf.new_zeros(1))
-        for i, leaf in enumerate(leaves)
-    ]
+    gradients = [_reduced_gradient(terms, i) for i in range(len(leaves))]
+    if gradients[0] is None:
+        gradients[0] = torch.zeros_like(query)
     tracked = [
         (x, g.to(x.dtype))
-        for x, g in zip((embeddings, ref_emb), gradients, strict=False)
-        if x is not None and x.requires_grad
+        for x, g in zip((*inputs, *parameters), gradients, strict=True)
+        if x.requires_grad and g is not None
     ]
     torch.autograd.backward([x for x, _ in tracked], [g for _, g in tracked])
-    total = sum((t.total / t.count for t in terms.values()), start=query.new_zeros(()))
+    total = sum(
+        (t.total / max(t.count, 1) for t in terms.values()), start=query.new_zeros(())
+    )
     return total.to(embeddings.dtype)
+
+
+def _reduced_gradient(terms: dict[str, _Term], index: int) -> Tensor | None:
+    reduced = [
+        gradient / max(term.count, 1)
+        for term in terms.values()
+        if (gradient := term.gradients[index]) is not None
+    ]
+    return sum(reduced[1:], start=reduced[0]) if reduced else None
 
 
 def _check_supported(loss_func: BaseMetricLossFunction, batch_size: int) -> None:
@@ -89,19 +100,21 @@ def _accumulate(
 ) -> None:
     for name, term in chunk.items():
         losses = term["losses"]
-        kept = losses if isinstance(reducer, MeanReducer) else losses[losses > 0]
-        if kept.numel() == 0:
+        if losses.numel() == 0:
             continue
+        kept = losses if isinstance(reducer, MeanReducer) else losses[losses > 0]
         total = kept.sum()
         gradients = torch.autograd.grad(
-            total, leaves, retain_graph=True, materialize_grads=True
+            total, leaves, retain_graph=True, allow_unused=True
         )
+        count = kept.numel()
         if name not in terms:
-            terms[name] = _Term(total.detach(), kept.numel(), list(gradients))
+            terms[name] = _Term(total.detach(), count, list(gradients))
             continue
         stored = terms[name]
         stored.total = stored.total + total.detach()
-        stored.count += kept.numel()
+        stored.count += count
         stored.gradients = [
-            x + y for x, y in zip(stored.gradients, gradients, strict=True)
+            x if y is None else y if x is None else x + y
+            for x, y in zip(stored.gradients, gradients, strict=True)
         ]

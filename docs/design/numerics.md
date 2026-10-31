@@ -365,6 +365,15 @@ and batching it changed values by 28% and gradients by 47% in the probe that sel
 the supported set. Losses are admitted only after matching a full batch; reducers are
 admitted by exact type, because a subclass could change the denominator.
 
+Gradient state is part of the contract, because optimizers read it. Autograd reaches
+more than the embeddings: the loss's learnable parameters, such as a custom distance's,
+get accumulated and delivered the same way, or they would silently stop training. A
+term whose elements are all filtered out still backpropagates, which yields zeros and
+not `None`, because `AdamW` applies weight decay to a zero gradient and skips a `None`
+one. A term with no elements at all is skipped, as `BaseReducer` does, and a parameter
+that no term reaches stays `None`. The embeddings always receive at least zeros, as
+they do from the reducer's `zero_loss` start value.
+
 Other memory is untouched: the encoder graph and the gradient remain whole, and each
 term holds one `(N, D)` gradient buffer.
 

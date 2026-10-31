@@ -1,4 +1,6 @@
+import copy
 import unittest
+from typing import cast
 
 import torch
 
@@ -41,6 +43,21 @@ def references(dtype=torch.float64):
     return ref_emb.to(TEST_DEVICE).requires_grad_(), (torch.arange(11) % 5).to(
         TEST_DEVICE
     )
+
+
+class LearnedCosine(distances.CosineSimilarity):
+    scale: torch.nn.Parameter
+
+    def __init__(self):
+        super().__init__()
+        self.scale = torch.nn.Parameter(torch.tensor(1.0, dtype=torch.float64))
+
+    def compute_mat(self, query_emb, ref_emb):
+        return self.scale * super().compute_mat(query_emb, ref_emb)
+
+
+def scale_of(loss_func):
+    return cast(LearnedCosine, loss_func.distance).scale
 
 
 class TestAnchorBatchedBackward(unittest.TestCase):
@@ -163,18 +180,151 @@ class TestAnchorBatchedBackward(unittest.TestCase):
                 value = anchor_batched_backward(loss_func, embeddings, labels, 2)
                 self.assertEqual(value.item(), full.item())
 
-    def test_loss_with_no_nonzero_elements(self):
-        embeddings = torch.tensor(
+    def assert_same_gradient(self, actual, expected):
+        self.assertEqual(actual is None, expected is None)
+        if expected is not None:
+            self.assert_matches(actual, expected, torch.float64)
+
+    def test_learnable_distance_trains_like_a_full_batch(self):
+        for batch_size in (1, 3, 18):
+            for use_reference in (False, True):
+                with self.subTest(batch_size=batch_size, reference=use_reference):
+                    embeddings, labels = batch()
+                    full_x = embeddings.detach().clone().requires_grad_()
+                    options = {}
+                    if use_reference:
+                        ref_emb, ref_labels = references()
+                        options = {"ref_emb": ref_emb, "ref_labels": ref_labels}
+                    full = losses.NTXentLoss(distance=LearnedCosine()).to(TEST_DEVICE)
+                    batched = copy.deepcopy(full)
+                    full_optimizer = torch.optim.AdamW(full.parameters(), lr=0.1)
+                    optimizer = torch.optim.AdamW(batched.parameters(), lr=0.1)
+                    expected = full(full_x, labels, **options)
+                    expected.backward()
+                    value = anchor_batched_backward(
+                        batched, embeddings, labels, batch_size, **options
+                    )
+                    self.assert_matches(value, expected.detach(), torch.float64)
+                    self.assertTrue(scale_of(full).grad.abs() > 0)
+                    self.assert_same_gradient(
+                        scale_of(batched).grad, scale_of(full).grad
+                    )
+                    full_optimizer.step()
+                    optimizer.step()
+                    self.assert_matches(
+                        scale_of(batched).detach(),
+                        scale_of(full).detach(),
+                        torch.float64,
+                    )
+
+    def test_parameters_full_backward_skips_keep_no_gradient(self):
+        embeddings, labels = batch()
+        full_x = embeddings.detach().clone().requires_grad_()
+        full = losses.NTXentLoss(distance=LearnedCosine()).to(TEST_DEVICE)
+        unused = torch.nn.Parameter(torch.ones(1, dtype=torch.float64))
+        frozen = torch.nn.Parameter(
+            torch.ones(1, dtype=torch.float64), requires_grad=False
+        )
+        full.distance.register_parameter("unused", unused)
+        full.distance.register_parameter("frozen", frozen)
+        batched = copy.deepcopy(full)
+        full(full_x, labels).backward()
+        anchor_batched_backward(batched, embeddings, labels, 5)
+        parameters = dict(batched.named_parameters())
+        self.assertIsNone(unused.grad)
+        self.assertIsNone(parameters["distance.unused"].grad)
+        self.assertIsNone(parameters["distance.frozen"].grad)
+
+    def test_satisfied_batch_matches_full_backward_state(self):
+        separated = torch.tensor(
             [[1.0, 0], [1, 0], [-1, 0], [-1, 0]],
+            dtype=torch.float64,
             device=TEST_DEVICE,
-            requires_grad=True,
         )
         labels = torch.tensor([0, 0, 1, 1], device=TEST_DEVICE)
-        value = anchor_batched_backward(
-            losses.ContrastiveLoss(pos_margin=0, neg_margin=1), embeddings, labels, 2
+        cases = {
+            "all-zero-terms": (
+                losses.ContrastiveLoss(pos_margin=0, neg_margin=1),
+                labels,
+            ),
+            "no-tuples": (losses.TripletMarginLoss(), torch.arange(4).to(TEST_DEVICE)),
+        }
+        for name, (loss_func, targets) in cases.items():
+            with self.subTest(case=name):
+                full_model = torch.nn.Linear(2, 2, bias=False, dtype=torch.float64)
+                torch.nn.init.eye_(full_model.weight)
+                full_model = full_model.to(TEST_DEVICE)
+                model = copy.deepcopy(full_model)
+                full_optimizer = torch.optim.AdamW(
+                    full_model.parameters(), lr=0.1, weight_decay=0.1
+                )
+                optimizer = torch.optim.AdamW(
+                    model.parameters(), lr=0.1, weight_decay=0.1
+                )
+                expected = loss_func(full_model(separated), targets)
+                expected.backward()
+                value = anchor_batched_backward(loss_func, model(separated), targets, 2)
+                self.assertEqual(value.item(), expected.item())
+                assert model.weight.grad is not None
+                assert full_model.weight.grad is not None
+                self.assertTrue(torch.equal(model.weight.grad, full_model.weight.grad))
+                full_optimizer.step()
+                optimizer.step()
+                self.assertTrue(torch.equal(model.weight, full_model.weight))
+                self.assertFalse(
+                    torch.equal(model.weight, torch.eye(2, device=TEST_DEVICE).double())
+                )
+
+    def test_zero_terms_reach_learnable_distances(self):
+        separated = torch.tensor(
+            [[1.0, 0], [1, 0], [-1, 0], [-1, 0]],
+            dtype=torch.float64,
+            device=TEST_DEVICE,
         )
-        self.assertEqual(value.item(), 0.0)
-        self.assertIsNone(embeddings.grad)
+        labels = torch.tensor([0, 0, 1, 1], device=TEST_DEVICE)
+        full = losses.ContrastiveLoss(
+            pos_margin=0.5, neg_margin=0.5, distance=LearnedCosine()
+        ).to(TEST_DEVICE)
+        batched = copy.deepcopy(full)
+        full_x = separated.clone().requires_grad_()
+        x = separated.clone().requires_grad_()
+        full(full_x, labels).backward()
+        anchor_batched_backward(batched, x, labels, 2)
+        assert full_x.grad is not None and x.grad is not None
+        self.assertEqual(full_x.grad.abs().sum().item(), 0)
+        self.assertEqual(x.grad.abs().sum().item(), 0)
+        self.assert_same_gradient(scale_of(batched).grad, scale_of(full).grad)
+
+    def test_empty_term_leaves_learnable_distance_untouched(self):
+        embeddings, _ = batch()
+        labels = torch.arange(len(embeddings), device=TEST_DEVICE)
+        full_x = embeddings.detach().clone().requires_grad_()
+        full = losses.NTXentLoss(distance=LearnedCosine()).to(TEST_DEVICE)
+        batched = copy.deepcopy(full)
+        full(full_x, labels).backward()
+        anchor_batched_backward(batched, embeddings, labels, 5)
+        self.assertIsNone(scale_of(full).grad)
+        self.assertIsNone(scale_of(batched).grad)
+        self.assert_same_gradient(embeddings.grad, full_x.grad)
+
+    def test_reference_gradient_state_matches_without_tuples(self):
+        embeddings = torch.randn(
+            4, 2, dtype=torch.float64, device=TEST_DEVICE, requires_grad=True
+        )
+        ref_emb = torch.randn(
+            3, 2, dtype=torch.float64, device=TEST_DEVICE, requires_grad=True
+        )
+        labels = torch.arange(4, device=TEST_DEVICE)
+        ref_labels = torch.arange(10, 13, device=TEST_DEVICE)
+        loss_func = losses.TripletMarginLoss()
+        full_x = embeddings.detach().clone().requires_grad_()
+        full_ref = ref_emb.detach().clone().requires_grad_()
+        loss_func(full_x, labels, ref_emb=full_ref, ref_labels=ref_labels).backward()
+        anchor_batched_backward(
+            loss_func, embeddings, labels, 2, ref_emb=ref_emb, ref_labels=ref_labels
+        )
+        self.assert_same_gradient(embeddings.grad, full_x.grad)
+        self.assert_same_gradient(ref_emb.grad, full_ref.grad)
 
     def test_inputs_are_not_changed(self):
         embeddings, labels = batch()

@@ -25,8 +25,14 @@ losses.anchor_batched_backward(
   that tracks gradients receives them; a detached one does not.
 
 It returns the loss as a detached scalar tensor with the dtype of `embeddings`. It
-has already called `backward`, so gradients have accumulated in the model the same
+has already called `backward`, so gradients have accumulated in the model, and in
+any learnable parameters of `loss_func` such as those of a custom distance, the same
 way as after `loss.backward()`. Do not call `backward` again.
+
+Gradient state matches as well as values. When every tuple is already satisfied, or
+the batch has no tuples, the encoder receives zero gradients rather than `None`, so an
+optimizer with weight decay steps as it would after `loss.backward()`. A parameter
+the objective never reaches keeps `grad=None`.
 
 **Example**:
 
@@ -50,15 +56,16 @@ assert loss.ndim == 0 and not loss.requires_grad
 
 A loss's graph holds its matrix and every tuple until `backward()`, so its size
 follows the whole batch. Here each chunk compares up to `batch_size` anchors with the
-whole reference set, backpropagates to a detached copy of the embeddings, and frees
-its graph. The summed gradient then passes once through the encoder. Each term keeps
+whole reference set, backpropagates to a detached copy of the embeddings and to the
+loss's learnable parameters, and frees its graph. The summed gradient then passes once
+through the encoder. Each term keeps
 a running sum and count over all chunks, and the division happens at the end, so the
 denominators are those of the whole batch and not a mean of chunk means. Float16 and
 bfloat16 embeddings accumulate in float32.
 
 Only one chunk's matrix and tuples exist at a time, which is the memory this
 function targets. The encoder's own graph is unchanged, and each loss term holds a
-`(N, D)` gradient buffer. Peak memory has not been measured yet. Time goes up: with
+`(N, D)` gradient buffer, plus one for each learnable parameter of the loss. Peak memory has not been measured yet. Time goes up: with
 256 embeddings, chunks of 32, and one CPU thread, NTXentLoss took 4.8 ms rather than
 2.6 ms and TripletMarginLoss took 10.5 ms rather than 7.1 ms. Use this function for a
 batch that does not fit in memory, not for speed.

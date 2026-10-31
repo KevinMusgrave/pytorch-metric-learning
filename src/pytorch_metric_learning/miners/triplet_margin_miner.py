@@ -15,8 +15,9 @@ class TripletMarginMiner(BaseMiner):
         type_of_triplets: MiningStrategy = "all",
         *,
         distance: BaseDistance | None = None,
+        tuples_per_anchor: int | None = None,
     ) -> None:
-        super().__init__(distance=distance)
+        super().__init__(distance=distance, tuples_per_anchor=tuples_per_anchor)
         if type_of_triplets not in ("all", "hard", "semihard", "easy"):
             raise ValueError(
                 'type_of_triplets must be "all", "hard", "semihard" or "easy"'

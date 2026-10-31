@@ -13,9 +13,13 @@ class HDCMiner(BaseMiner):
     supports_mat = True
 
     def __init__(
-        self, filter_percentage: float = 0.5, *, distance: BaseDistance | None = None
+        self,
+        filter_percentage: float = 0.5,
+        *,
+        distance: BaseDistance | None = None,
+        tuples_per_anchor: int | None = None,
     ) -> None:
-        super().__init__(distance=distance)
+        super().__init__(distance=distance, tuples_per_anchor=tuples_per_anchor)
         if not 0 < filter_percentage <= 1:
             raise ValueError("filter_percentage must be in (0, 1]")
         self.filter_percentage = filter_percentage

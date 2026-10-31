@@ -17,8 +17,9 @@ class UniformHistogramMiner(BaseMiner):
         neg_per_bin: int = 10,
         *,
         distance: BaseDistance | None = None,
+        tuples_per_anchor: int | None = None,
     ) -> None:
-        super().__init__(distance=distance)
+        super().__init__(distance=distance, tuples_per_anchor=tuples_per_anchor)
         self.num_bins = num_bins
         self.pos_per_bin = pos_per_bin
         self.neg_per_bin = neg_per_bin

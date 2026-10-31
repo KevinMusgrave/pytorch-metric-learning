@@ -22,8 +22,9 @@ class BatchEasyHardMiner(BaseMiner):
         allowed_neg_range: Sequence[float] | None = None,
         *,
         distance: BaseDistance | None = None,
+        tuples_per_anchor: int | None = None,
     ) -> None:
-        super().__init__(distance=distance)
+        super().__init__(distance=distance, tuples_per_anchor=tuples_per_anchor)
         if pos_strategy not in _STRATEGIES or neg_strategy not in _STRATEGIES:
             choices = '" or "'.join(_STRATEGIES)
             raise ValueError(

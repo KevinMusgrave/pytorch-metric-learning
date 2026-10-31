@@ -11,9 +11,13 @@ class MultiSimilarityMiner(BaseMiner):
     supports_mat = True
 
     def __init__(
-        self, epsilon: float = 0.1, *, distance: BaseDistance | None = None
+        self,
+        epsilon: float = 0.1,
+        *,
+        distance: BaseDistance | None = None,
+        tuples_per_anchor: int | None = None,
     ) -> None:
-        super().__init__(distance=distance)
+        super().__init__(distance=distance, tuples_per_anchor=tuples_per_anchor)
         self.epsilon = epsilon
 
     def mine(

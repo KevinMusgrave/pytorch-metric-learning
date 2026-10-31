@@ -6,8 +6,18 @@ from .batch_easy_hard_miner import BatchEasyHardMiner
 
 
 class BatchHardMiner(BatchEasyHardMiner):
-    def __init__(self, *, distance: BaseDistance | None = None) -> None:
-        super().__init__(pos_strategy="hard", neg_strategy="hard", distance=distance)
+    def __init__(
+        self,
+        *,
+        distance: BaseDistance | None = None,
+        tuples_per_anchor: int | None = None,
+    ) -> None:
+        super().__init__(
+            pos_strategy="hard",
+            neg_strategy="hard",
+            distance=distance,
+            tuples_per_anchor=tuples_per_anchor,
+        )
 
     def mine(
         self,

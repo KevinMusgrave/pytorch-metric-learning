@@ -34,16 +34,19 @@ assert torch.equal(labels[pairs.pos_anchors], labels[pairs.positives])
 
 ## BaseMiner
 
-All miners extend this class and accept its keyword-only `distance` option.
+All miners extend this class and accept its keyword-only `distance` and
+`tuples_per_anchor` options.
 
 ```python {.signature}
-miners.BaseMiner(*, distance=None)
+miners.BaseMiner(*, distance=None, tuples_per_anchor=None)
 ```
 
 **Parameters**:
 
 - **distance**: A [distance](distances.md) object. If `None`, the miner's
   default distance is used.
+- **tuples_per_anchor**: The most tuples an anchor keeps. If `None`, every mined
+  tuple is returned. See [bounding the output](#bounding-the-output).
 
 **Default distance**:
 
@@ -83,6 +86,37 @@ Pass `indices_tuple`, `ref_emb`, and `ref_labels` by keyword. `labels`,
 `ref_emb`, `ref_labels`, and candidate tensors must be on the embeddings'
 device; otherwise the miner raises `ValueError`. Mining runs under
 `torch.no_grad()`, so the returned indices carry no autograd graph.
+
+### Bounding the output
+
+Hard-pair counts can grow quadratically with the batch, and triplet counts faster.
+`tuples_per_anchor` caps what a loss receives, which bounds the tuple-indexed values
+that loss computes and backpropagates through.
+
+```python
+import torch
+from pytorch_metric_learning import miners
+
+embeddings = torch.randn(64, 16)
+labels = torch.arange(64) // 8
+miner = miners.TripletMarginMiner(margin=2, tuples_per_anchor=4)
+anchors, _, _ = miner(embeddings, labels)
+assert torch.bincount(anchors, minlength=64).max() <= 4
+```
+
+Selection happens after mining, so the miner's own rule decides which tuples are
+eligible. Each anchor then keeps a uniformly random subset of its mined tuples,
+without replacement, and an anchor with few enough tuples keeps them all. Kept
+tuples stay in mined order. A triplet miner keeps at most `tuples_per_anchor`
+triplets per anchor. A pair miner keeps at most that many positive pairs and that
+many negative pairs per anchor. Values other than `None` must be positive; otherwise
+construction raises `ValueError`. Sampling uses the global PyTorch random number
+generator, so `torch.manual_seed` makes it repeatable.
+
+A miner's own peak memory does not change, because it still evaluates every
+candidate. Unlike `triplets_per_anchor` on `TripletMarginLoss` and `MarginLoss`,
+which draws random triplets with replacement before any mining, this option applies
+to tuples a miner has already selected and never repeats one.
 
 ### Candidates
 
@@ -132,7 +166,7 @@ Returns triplets whose angle at the negative, as defined in
 greater than `alpha`.
 
 ```python {.signature}
-miners.AngularMiner(alpha=20, *, distance=None)
+miners.AngularMiner(alpha=20, *, distance=None, tuples_per_anchor=None)
 ```
 
 **Parameters**
@@ -164,6 +198,7 @@ miners.BatchEasyHardMiner(
     allowed_neg_range=None,
     *,
     distance=None,
+    tuples_per_anchor=None,
 )
 ```
 
@@ -216,7 +251,7 @@ This miner equals `BatchEasyHardMiner(pos_strategy="hard", neg_strategy="hard")`
 with its pairs combined into triplets.
 
 ```python {.signature}
-miners.BatchHardMiner(*, distance=None)
+miners.BatchHardMiner(*, distance=None, tuples_per_anchor=None)
 ```
 
 **Default distance**:
@@ -228,7 +263,7 @@ miners.BatchHardMiner(*, distance=None)
 Implementation of the miner from [Sampling Matters in Deep Embedding Learning](https://arxiv.org/pdf/1706.07567.pdf).
 
 ```python {.signature}
-miners.DistanceWeightedMiner(cutoff=0.5, nonzero_loss_cutoff=1.4, *, distance=None)
+miners.DistanceWeightedMiner(cutoff=0.5, nonzero_loss_cutoff=1.4, *, distance=None, tuples_per_anchor=None)
 ```
 
 **Parameters**
@@ -257,7 +292,7 @@ distance range with any dimensionality and any distance.
 [Hard-Aware Deeply Cascaded Embedding](http://openaccess.thecvf.com/content_ICCV_2017/papers/Yuan_Hard-Aware_Deeply_Cascaded_ICCV_2017_paper.pdf)
 
 ```python {.signature}
-miners.HDCMiner(filter_percentage=0.5, *, distance=None)
+miners.HDCMiner(filter_percentage=0.5, *, distance=None, tuples_per_anchor=None)
 ```
 
 **Parameters**:
@@ -281,7 +316,7 @@ they are the given [candidates](#candidates). Chaining HDC miners through
 [Multi-Similarity Loss with General Pair Weighting for Deep Metric Learning](http://openaccess.thecvf.com/content_CVPR_2019/papers/Wang_Multi-Similarity_Loss_With_General_Pair_Weighting_for_Deep_Metric_Learning_CVPR_2019_paper.pdf)
 
 ```python {.signature}
-miners.MultiSimilarityMiner(epsilon=0.1, *, distance=None)
+miners.MultiSimilarityMiner(epsilon=0.1, *, distance=None, tuples_per_anchor=None)
 ```
 
 **Parameters**
@@ -303,7 +338,7 @@ With a distance instead of a similarity, the comparisons are reversed.
 Returns positive and negative pairs that violate the specified margins.
 
 ```python {.signature}
-miners.PairMarginMiner(pos_margin=0.2, neg_margin=0.8, *, distance=None)
+miners.PairMarginMiner(pos_margin=0.2, neg_margin=0.8, *, distance=None, tuples_per_anchor=None)
 ```
 
 **Parameters**
@@ -322,7 +357,7 @@ miners.PairMarginMiner(pos_margin=0.2, neg_margin=0.8, *, distance=None)
 Returns hard, semihard, easy, or all margin-violating triplets.
 
 ```python {.signature}
-miners.TripletMarginMiner(margin=0.2, type_of_triplets="all", *, distance=None)
+miners.TripletMarginMiner(margin=0.2, type_of_triplets="all", *, distance=None, tuples_per_anchor=None)
 ```
 
 **Parameters**
@@ -356,6 +391,7 @@ miners.UniformHistogramMiner(
     neg_per_bin=10,
     *,
     distance=None,
+    tuples_per_anchor=None,
 )
 ```
 

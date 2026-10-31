@@ -306,6 +306,7 @@
           "tests/miners/test_empty_inputs.py",
           "tests/miners/test_multi_similarity_miner.py",
           "tests/miners/test_triplet_margin_miner.py",
+          "tests/miners/test_tuples_per_anchor.py",
           "tests/miners/test_uniform_histogram_miner.py",
           "tests/reducers/__init__.py",
           "tests/reducers/test_avg_non_zero_reducer.py",

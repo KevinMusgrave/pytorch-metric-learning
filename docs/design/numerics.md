@@ -326,3 +326,16 @@ Repeated distance computation is a minor CPU cost that shrinks as batches grow,
 because mask construction and pair selection dominate. A whole training step with
 an encoder would save a smaller share. #697 is the stronger reason for the API,
 because it had no alternative besides mutating the distance object before each call.
+
+## Bounded mining output
+
+Issue #193 asked miners to limit how many tuples they return. `tuples_per_anchor`
+lives on `BaseMiner`, so every miner gains it, including custom miners that forward
+the keyword. It applies after `mine`, because the miner's selection rule is the
+contract; sampling candidates first would change which tuples are hard. Per-anchor
+sampling keeps anchors represented, which a global `num_tuples` would not: a global
+cap draws mostly from the anchors with the most hard tuples. It samples without
+replacement, since a repeated tuple only reweights the loss. The option bounds what
+a loss receives, not the miner's own candidate enumeration. `triplets_per_anchor` on
+triplet losses stays, because it draws from labels without a miner and has different
+semantics.

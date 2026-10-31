@@ -15,8 +15,9 @@ class PairMarginMiner(BaseMiner):
         neg_margin: float = 0.8,
         *,
         distance: BaseDistance | None = None,
+        tuples_per_anchor: int | None = None,
     ) -> None:
-        super().__init__(distance=distance)
+        super().__init__(distance=distance, tuples_per_anchor=tuples_per_anchor)
         self.pos_margin = pos_margin
         self.neg_margin = neg_margin
 

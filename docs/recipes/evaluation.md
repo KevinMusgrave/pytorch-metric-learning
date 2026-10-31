@@ -85,7 +85,9 @@ assert accuracy["precision_at_1"] == 2 / 3
 The calculator's `knn_func` sets the geometry, `avg_of_avgs` sets the weighting
 of classes, and a query whose class has no reference is a
 [lone query](../accuracy_calculation.md#lone-queries), excluded from the result.
-The centroids are arithmetic means. For cosine geometry, normalize embeddings
+The centroids are arithmetic means with the reference's dtype and device. Class
+sums accumulate in float64, or float32 on MPS, so a large low-precision gallery
+does not overflow before the division. For cosine geometry, normalize embeddings
 before calling the function, and use a `knn_func` with `CosineSimilarity`, which
 normalizes each centroid before comparing. Other metrics in the calculator would
 rank against one reference per class, so they are not meaningful here.

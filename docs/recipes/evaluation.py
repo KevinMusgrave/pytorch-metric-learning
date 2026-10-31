@@ -36,11 +36,14 @@ def nearest_centroid_accuracy(
     query: tuple[Tensor, Tensor],
     reference: tuple[Tensor, Tensor],
 ) -> dict[str, float]:
+    embeddings = reference[0]
+    wide = torch.float32 if embeddings.device.type == "mps" else torch.float64
     classes, positions = torch.unique(reference[1], return_inverse=True)
-    totals = torch.zeros(len(classes), reference[0].shape[1]).to(reference[0])
-    totals.index_add_(0, positions, reference[0])
+    totals = embeddings.new_zeros(len(classes), embeddings.shape[1], dtype=wide)
+    totals.index_add_(0, positions, embeddings.to(wide))
     sizes = torch.bincount(positions, minlength=len(classes)).unsqueeze(1)
-    return calculator.get_accuracy(query[0], query[1], totals / sizes, classes, False)
+    centroids = (totals / sizes).to(embeddings.dtype)
+    return calculator.get_accuracy(query[0], query[1], centroids, classes, False)
 
 
 def two_stream_accuracy(

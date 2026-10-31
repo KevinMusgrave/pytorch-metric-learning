@@ -48,6 +48,12 @@ replace the reference set, and `precision_at_1` over one reference per class
 already computes it with the caller's search backend. Published dataset splits
 are documentation, not code.
 
+ProxyNCA++ is a recipe and not a loss, because its objective is `ProxyNCALoss` with
+`softmax_scale=9`: the assignment-probability enhancement matches the denominator this
+loss already uses. A test pins that to equation 6. Global k-max pooling is the one
+enhancement with its own formula, so the recipe carries it; pooling, layer norm, and
+optimizer groups are model and training choices that the library does not own.
+
 Reference tests verify objective values and gradients, candidate-set nesting,
 gradient ownership, parameter updates, subset mapping, and queue progression.
 Runnable commands and paper citations belong in `docs/recipes/training.md`.

@@ -12,6 +12,12 @@ from docs.recipes.adversarial_metric_learning import (
 from docs.recipes.cascaded_mining import cascaded_loss
 from docs.recipes.memory_warmup import train_with_memory
 from docs.recipes.mining_weights import subset_weights
+from docs.recipes.proxy_nca_plus_plus import (
+    PoolAndEmbed,
+    global_k_max_pool,
+    make_optimizer,
+    train,
+)
 from docs.recipes.training import train_metric, train_proxy, train_two_stream
 from pytorch_metric_learning import losses, miners
 from pytorch_metric_learning.utils import indexing
@@ -218,3 +224,68 @@ class TestTrainingRecipes(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestProxyNCAPlusPlusRecipe(unittest.TestCase):
+    def test_global_k_max_pool_follows_equation_7(self):
+        features = torch.tensor(
+            [[[[1.0, 9.0], [3.0, 4.0]], [[8.0, 2.0], [7.0, 0.0]]]],
+            device=TEST_DEVICE,
+        )
+        for k, expected in (
+            (1, [9.0, 8.0]),
+            (2, [6.5, 7.5]),
+            (4, [17 / 4, 17 / 4]),
+        ):
+            with self.subTest(k=k):
+                torch.testing.assert_close(
+                    global_k_max_pool(features, k),
+                    torch.tensor([expected], device=TEST_DEVICE),
+                )
+
+    def test_pool_limits_match_max_and_average_pooling(self):
+        features = torch.randn(3, 5, 4, 4, device=TEST_DEVICE)
+        torch.testing.assert_close(
+            global_k_max_pool(features, 1), features.amax(dim=(2, 3))
+        )
+        torch.testing.assert_close(
+            global_k_max_pool(features, 16), features.mean(dim=(2, 3))
+        )
+
+    def test_layer_norm_has_no_parameters(self):
+        model = PoolAndEmbed(channels=5, embedding_size=4).to(TEST_DEVICE)
+        self.assertEqual(list(model.norm.parameters()), [])
+        output = model(torch.randn(3, 5, 2, 2, device=TEST_DEVICE))
+        torch.testing.assert_close(
+            output.mean(dim=1), torch.zeros(3, device=TEST_DEVICE), atol=1e-6, rtol=0
+        )
+
+    def test_proxies_use_their_own_learning_rate(self):
+        model = PoolAndEmbed(channels=5, embedding_size=4).to(TEST_DEVICE)
+        loss_func = losses.ProxyNCALoss(3, 4, softmax_scale=9).to(TEST_DEVICE)
+        optimizer = make_optimizer(model, loss_func, lr=0.01, proxy_lr=2.0)
+        data = torch.randn(6, 5, 2, 2, device=TEST_DEVICE)
+        labels = torch.arange(3, device=TEST_DEVICE).repeat(2)
+        before = loss_func.weight.detach().clone()
+        linear_before = model.linear.weight.detach().clone()
+        loss_func(model(data), labels).backward()
+        assert loss_func.weight.grad is not None
+        assert model.linear.weight.grad is not None
+        proxy_gradient = loss_func.weight.grad.clone()
+        linear_gradient = model.linear.weight.grad.clone()
+        optimizer.step()
+        torch.testing.assert_close(loss_func.weight, before - 2.0 * proxy_gradient)
+        torch.testing.assert_close(
+            model.linear.weight, linear_before - 0.01 * linear_gradient
+        )
+
+    def test_training_reduces_the_objective(self):
+        torch.manual_seed(17)
+        labels = torch.arange(4, device=TEST_DEVICE).repeat_interleave(4)
+        centers = torch.randn(4, 6, 1, 1, device=TEST_DEVICE) * 3
+        data = centers[labels] + 0.3 * torch.randn(16, 6, 3, 3, device=TEST_DEVICE)
+        model = PoolAndEmbed(channels=6, embedding_size=4).to(TEST_DEVICE)
+        loss_func = losses.ProxyNCALoss(4, 4, softmax_scale=9).to(TEST_DEVICE)
+        optimizer = make_optimizer(model, loss_func, lr=0.1, proxy_lr=1.0)
+        history = train(model, loss_func, optimizer, data, labels)
+        self.assertLess(history[-1], history[0])

@@ -18,6 +18,7 @@ optimizers, data loading, logging, and checkpoints.
 | Progressive mining over embedding slices                   | [View cascaded_mining.py](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.0rc4/docs/recipes/cascaded_mining.py)                         | `uv run --frozen --no-sync python -m docs.recipes.cascaded_mining`             |
 | Alternating adversarial metric learning                    | [View adversarial_metric_learning.py](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.0rc4/docs/recipes/adversarial_metric_learning.py) | `uv run --frozen --no-sync python -m docs.recipes.adversarial_metric_learning` |
 | Mining-weighted dataset sampling                           | [View mining_weights.py](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.0rc4/docs/recipes/mining_weights.py)                           | `uv run --frozen --no-sync python -m docs.recipes.mining_weights`              |
+| ProxyNCA++ model and optimizer                             | [View proxy_nca_plus_plus.py](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.0rc4/docs/recipes/proxy_nca_plus_plus.py)                 | `uv run --frozen --no-sync python -m docs.recipes.proxy_nca_plus_plus`         |
 | Caller-controlled memory warmup                            | [View memory_warmup.py](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.0rc4/docs/recipes/memory_warmup.py)                             | `uv run --frozen --no-sync python -m docs.recipes.memory_warmup`               |
 
 The commands import the installed package, so install the checkout as described
@@ -111,6 +112,32 @@ uniform weights within the selected subset. This is sampling with replacement, n
 epoch-coverage guarantee. The recipe uses a local seeded PyTorch generator and
 reports four batches of eight labels. The tests verify exact subset mapping and
 that sampling never selects a zero-weight row.
+
+## ProxyNCA++ contract
+
+[ProxyNCA++](https://arxiv.org/abs/2004.01113) (Teh et al.) is ProxyNCA with six
+enhancements. Two are settings of the loss, and the others belong to the model and the
+training loop, so no separate loss exists:
+
+| Enhancement                     | Where it lives                                                                    |
+| ------------------------------- | --------------------------------------------------------------------------------- |
+| Proxy assignment probability    | `ProxyNCALoss` already sums every proxy, including the target, in its denominator |
+| Low temperature $T = 1/9$       | `ProxyNCALoss(softmax_scale=9)`, because $s = 1 / T$                              |
+| Class balanced sampling         | [`MPerClassSampler`](../samplers.md#mperclasssampler)                             |
+| Layer norm without affine terms | `nn.LayerNorm(embedding_size, elementwise_affine=False)` in the model             |
+| Global max pooling              | `global_k_max_pool(features, k=1)` in the model                                   |
+| Fast-moving proxies             | A separate optimizer parameter group for the loss, from `make_optimizer`          |
+
+`global_k_max_pool` takes `(N, E, H, W)` features and averages the `k` largest values of
+each channel (equation 7 of the paper), so `k=1` is max pooling and `k=H*W` is average
+pooling. `PoolAndEmbed` applies it, a linear embedding, and layer norm. `make_optimizer`
+gives the proxies their own learning rate.
+
+The recipe's numbers only make the integration quick. The paper's proxy learning rates are
+10^4 to 10^5 times its base rates, with 3 or 4 instances per class, a pretrained ResNet-50
+backbone, and learning-rate decay, none of which the recipe reproduces. A rate ratio does
+not transfer between optimizers, so choose rates from validation. Passing the loss's
+parameters to an optimizer is required, as in every proxy loss.
 
 ## Memory warmup contract
 

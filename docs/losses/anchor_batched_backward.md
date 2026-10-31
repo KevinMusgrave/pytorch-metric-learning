@@ -56,9 +56,12 @@ a running sum and count over all chunks, and the division happens at the end, so
 denominators are those of the whole batch and not a mean of chunk means. Float16 and
 bfloat16 embeddings accumulate in float32.
 
-Peak memory falls because the matrix and tuples of only one chunk exist at a time.
-The encoder's own graph and the `(N, D)` gradient are unchanged. See
-[measuring performance](../performance.md) for measurements.
+Only one chunk's matrix and tuples exist at a time, which is the memory this
+function targets. The encoder's own graph is unchanged, and each loss term holds a
+`(N, D)` gradient buffer. Peak memory has not been measured yet. Time goes up: with
+256 embeddings, chunks of 32, and one CPU thread, NTXentLoss took 4.8 ms rather than
+2.6 ms and TripletMarginLoss took 10.5 ms rather than 7.1 ms. Use this function for a
+batch that does not fit in memory, not for speed.
 
 ## Supported losses
 

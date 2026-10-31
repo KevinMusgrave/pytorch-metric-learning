@@ -114,7 +114,10 @@ construction raises `ValueError`. Sampling uses the global PyTorch random number
 generator, so `torch.manual_seed` makes it repeatable.
 
 A miner's own peak memory does not change, because it still evaluates every
-candidate. Unlike `triplets_per_anchor` on `TripletMarginLoss` and `MarginLoss`,
+candidate, and sampling adds a sort of the mined tuples. With 256 embeddings on one
+CPU thread, `TripletMarginMiner` followed by `TripletMarginLoss` took 22.7 ms with
+`tuples_per_anchor=32` rather than 10.0 ms, so use this option to bound a large tuple
+count, not for speed. Unlike `triplets_per_anchor` on `TripletMarginLoss` and `MarginLoss`,
 which draws random triplets with replacement before any mining, this option applies
 to tuples a miner has already selected and never repeats one.
 

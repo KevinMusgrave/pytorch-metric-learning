@@ -2,8 +2,10 @@ from dataclasses import dataclass
 
 import torch
 from torch import Tensor
+from torch.func import functional_call
 
 from ..reducers import AvgNonZeroReducer, BaseReducer, MeanReducer
+from ..types import LossDict, PairIndices
 from ..utils import _common, indexing
 from .base_metric_loss_function import BaseMetricLossFunction
 
@@ -13,6 +15,28 @@ class _Term:
     total: Tensor
     count: int
     gradients: list[Tensor | None]
+
+
+class _ChunkTerms(torch.nn.Module):
+    def __init__(self, loss_func: BaseMetricLossFunction) -> None:
+        super().__init__()
+        self.loss_func = loss_func
+
+    def forward(
+        self,
+        embeddings: Tensor,
+        labels: Tensor,
+        pairs: PairIndices,
+        reference: Tensor,
+        reference_labels: Tensor,
+    ) -> LossDict:
+        return self.loss_func.loss_terms(
+            embeddings, labels, pairs, reference, reference_labels
+        )
+
+
+def _working_copy(x: Tensor) -> Tensor:
+    return x.detach().to(_common.accumulation_dtype(x.dtype)).requires_grad_()
 
 
 def anchor_batched_backward(
@@ -29,23 +53,24 @@ def anchor_batched_backward(
     outputs = [x for x in (embeddings, ref_emb) if x is not None and x.requires_grad]
     if not outputs or not torch.is_grad_enabled():
         raise ValueError("anchor_batched_backward needs inputs tracking gradients")
-    dtype = _common.accumulation_dtype(embeddings.dtype)
-    query = embeddings.detach().to(dtype).requires_grad_()
-    reference = (
-        query if ref_emb is None else ref_emb.detach().to(dtype).requires_grad_()
-    )
+    query = _working_copy(embeddings)
+    reference = query if ref_emb is None else _working_copy(ref_emb)
     reference_labels = labels if ref_labels is None else ref_labels
-    parameters = [p for p in loss_func.parameters() if p.requires_grad]
+    named = {k: p for k, p in loss_func.named_parameters() if p.requires_grad}
+    replacements = {f"loss_func.{k}": _working_copy(p) for k, p in named.items()}
+    chunk_terms = _ChunkTerms(loss_func)
     inputs = (embeddings,) if ref_emb is None else (embeddings, ref_emb)
     copies = (query,) if ref_emb is None else (query, reference)
-    leaves = (*copies, *parameters)
+    leaves = (*copies, *replacements.values())
     terms: dict[str, _Term] = {}
     for rows in torch.arange(len(query), device=query.device).split(batch_size):
         pairs = indexing.get_all_pairs_indices(labels[rows], reference_labels)
         if ref_emb is None:
             pairs = indexing._remove_self_comparisons(pairs, rows)
-        chunk = loss_func.loss_terms(
-            query[rows], labels[rows], pairs, reference, reference_labels
+        chunk = functional_call(
+            chunk_terms,
+            replacements,
+            (query[rows], labels[rows], pairs, reference, reference_labels),
         )
         _accumulate(terms, chunk, loss_func.reducer, leaves)
         del chunk
@@ -54,7 +79,7 @@ def anchor_batched_backward(
         gradients[0] = torch.zeros_like(query)
     tracked = [
         (x, g.to(x.dtype))
-        for x, g in zip((*inputs, *parameters), gradients, strict=True)
+        for x, g in zip((*inputs, *named.values()), gradients, strict=True)
         if x.requires_grad and g is not None
     ]
     torch.autograd.backward([x for x, _ in tracked], [g for _, g in tracked])

@@ -374,6 +374,15 @@ one. A term with no elements at all is skipped, as `BaseReducer` does, and a par
 that no term reaches stays `None`. The embeddings always receive at least zeros, as
 they do from the reducer's `zero_loss` start value.
 
+Chunks differentiate private copies, never the live parameters. A chunk's gradient is
+an intermediate value: it has no denominator yet, so at float16 a sum over tuples
+overflows before normalization even within a single chunk, and a tensor hook on the
+parameter would run on every chunk and again at delivery. `torch.func.functional_call`
+swaps widened, hook-free copies in for each chunk and restores the originals even when
+a chunk raises, and the final `backward` delivers the normalized gradient to the live
+parameter once, cast to its dtype. Rejecting hooked or low-precision parameters would
+have been simpler, but both are ordinary PyTorch usage that a full `backward` handles.
+
 Other memory is untouched: the encoder graph and the gradient remain whole, and each
 term holds one `(N, D)` gradient buffer.
 

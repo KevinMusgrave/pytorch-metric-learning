@@ -217,6 +217,112 @@ class TestAnchorBatchedBackward(unittest.TestCase):
                         torch.float64,
                     )
 
+    def test_low_precision_parameter_gradients_stay_finite(self):
+        cases = [
+            (torch.float16, 128, 64, 16),
+            (torch.float16, 256, 64, 256),
+            (torch.bfloat16, 128, 64, 16),
+            (torch.float32, 128, 64, 16),
+        ]
+        for dtype, size, group, chunk in cases:
+            with self.subTest(dtype=dtype, size=size, chunk=chunk):
+                torch.manual_seed(3)
+                embeddings = torch.randn(
+                    size, 8, dtype=dtype, device=TEST_DEVICE, requires_grad=True
+                )
+                labels = (torch.arange(size) // group).to(TEST_DEVICE)
+                reference = embeddings.detach().double().requires_grad_()
+                full = losses.NTXentLoss(temperature=0.07, distance=LearnedCosine())
+                full = full.to(TEST_DEVICE)
+                full(reference, labels).backward()
+                batched = losses.NTXentLoss(
+                    temperature=0.07, distance=LearnedCosine()
+                ).to(TEST_DEVICE, dtype)
+                anchor_batched_backward(batched, embeddings, labels, chunk)
+                gradient = scale_of(batched).grad
+                assert gradient is not None
+                expected = scale_of(full).grad
+                assert expected is not None
+                self.assertEqual(gradient.dtype, dtype)
+                self.assertEqual(scale_of(batched).dtype, dtype)
+                self.assertTrue(gradient.isfinite())
+                torch.testing.assert_close(
+                    gradient.double(), expected, rtol=4e-3, atol=0
+                )
+
+    def test_parameter_hook_sees_the_final_gradient_once(self):
+        embeddings, labels = batch()
+        full_x = embeddings.detach().clone().requires_grad_()
+        full = losses.NTXentLoss(distance=LearnedCosine()).to(TEST_DEVICE)
+        batched = copy.deepcopy(full)
+        full(full_x, labels).backward()
+        expected = scale_of(full).grad
+        assert expected is not None
+        seen = []
+
+        def halve(gradient):
+            seen.append(gradient.clone())
+            return gradient * 0.5
+
+        scale_of(batched).register_hook(halve)
+        anchor_batched_backward(batched, embeddings, labels, 3)
+        self.assertEqual(len(seen), 1)
+        self.assert_matches(seen[0], expected, torch.float64)
+        gradient = scale_of(batched).grad
+        assert gradient is not None
+        self.assert_matches(gradient, expected * 0.5, torch.float64)
+
+    def test_input_hooks_see_the_final_gradient_once(self):
+        embeddings, labels = batch()
+        ref_emb, ref_labels = references()
+        full_x = embeddings.detach().clone().requires_grad_()
+        full_ref = ref_emb.detach().clone().requires_grad_()
+        loss_func = losses.ContrastiveLoss()
+        loss_func(full_x, labels, ref_emb=full_ref, ref_labels=ref_labels).backward()
+        assert full_x.grad is not None and full_ref.grad is not None
+        seen = {"embeddings": [], "reference": []}
+        embeddings.register_hook(lambda g: seen["embeddings"].append(g.clone()))
+        ref_emb.register_hook(lambda g: seen["reference"].append(g.clone()))
+        anchor_batched_backward(
+            loss_func, embeddings, labels, 3, ref_emb=ref_emb, ref_labels=ref_labels
+        )
+        self.assertEqual([len(x) for x in seen.values()], [1, 1])
+        self.assert_matches(seen["embeddings"][0], full_x.grad, torch.float64)
+        self.assert_matches(seen["reference"][0], full_ref.grad, torch.float64)
+
+    def test_parameter_gradients_accumulate_like_backward(self):
+        embeddings, labels = batch()
+        loss_func = losses.NTXentLoss(distance=LearnedCosine()).to(TEST_DEVICE)
+        anchor_batched_backward(loss_func, embeddings, labels, 5)
+        once = scale_of(loss_func).grad
+        assert once is not None
+        once = once.clone()
+        anchor_batched_backward(loss_func, embeddings, labels, 5)
+        gradient = scale_of(loss_func).grad
+        assert gradient is not None
+        torch.testing.assert_close(gradient, 2 * once)
+
+    def test_parameters_are_restored_after_each_call(self):
+        embeddings, labels = batch()
+        loss_func = losses.NTXentLoss(distance=LearnedCosine()).to(TEST_DEVICE)
+        parameter = scale_of(loss_func)
+        anchor_batched_backward(loss_func, embeddings, labels, 5)
+        self.assertIs(scale_of(loss_func), parameter)
+        self.assertEqual(
+            dict(loss_func.named_parameters())["distance.scale"].numel(), 1
+        )
+
+        class Failing(LearnedCosine):
+            def compute_mat(self, query_emb, ref_emb):
+                raise RuntimeError("chunk failed")
+
+        failing = losses.NTXentLoss(distance=Failing()).to(TEST_DEVICE)
+        parameter = scale_of(failing)
+        with self.assertRaisesRegex(RuntimeError, "chunk failed"):
+            anchor_batched_backward(failing, embeddings, labels, 5)
+        self.assertIs(scale_of(failing), parameter)
+        self.assertIsNone(parameter.grad)
+
     def test_parameters_full_backward_skips_keep_no_gradient(self):
         embeddings, labels = batch()
         full_x = embeddings.detach().clone().requires_grad_()

@@ -61,7 +61,14 @@ loss's learnable parameters, and frees its graph. The summed gradient then passe
 through the encoder. Each term keeps
 a running sum and count over all chunks, and the division happens at the end, so the
 denominators are those of the whole batch and not a mean of chunk means. Float16 and
-bfloat16 embeddings accumulate in float32.
+bfloat16 embeddings and parameters are computed and accumulated in float32, then cast
+back when the gradient is delivered.
+
+Tensor hooks on `embeddings`, `ref_emb`, and learnable parameters run once, on the
+final gradient. Module hooks are different: a forward hook on a loss's `distance`
+runs for each chunk. While a chunk runs, `loss_func` holds working copies of its
+learnable parameters in place of the originals, and the originals return when the
+chunk ends, so do not share `loss_func` with another thread during a call.
 
 Only one chunk's matrix and tuples exist at a time, which is the memory this
 function targets. The encoder's own graph is unchanged, and each loss term holds a

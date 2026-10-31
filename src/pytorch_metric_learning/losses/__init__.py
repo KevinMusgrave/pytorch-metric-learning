@@ -1,3 +1,4 @@
+from .anchor_batched_backward import anchor_batched_backward
 from .angular_loss import AngularLoss
 from .arcface_loss import ArcFaceLoss
 from .base_metric_loss_function import BaseMetricLossFunction
@@ -85,4 +86,5 @@ __all__ = [
     "TripletMarginLoss",
     "TupletMarginLoss",
     "VICRegLoss",
+    "anchor_batched_backward",
 ]

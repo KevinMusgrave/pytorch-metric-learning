@@ -1,3 +1,4 @@
+import inspect
 import re
 import unittest
 from pathlib import Path
@@ -21,6 +22,9 @@ LEARNABLE = {
     "SubCenterArcFaceLoss": (3, 4),
 }
 CONSTRUCTOR_ARGUMENTS = {"RankedListLoss": (0.5, 1.0)}
+LOSS_CLASSES = [
+    name for name in losses.__all__ if inspect.isclass(getattr(losses, name))
+]
 NOT_PROBED = {
     "BaseMetricLossFunction",
     "BaseProxyLoss",
@@ -73,7 +77,7 @@ class TestDocumentedCapabilities(unittest.TestCase):
         )
 
     def probed_losses(self) -> list[str]:
-        return [name for name in losses.__all__ if name not in NOT_PROBED]
+        return [name for name in LOSS_CLASSES if name not in NOT_PROBED]
 
     def test_indices_without_labels_list_matches_behavior(self) -> None:
         documented = documented_list(
@@ -108,7 +112,7 @@ class TestDocumentedCapabilities(unittest.TestCase):
     def test_every_loss_is_documented(self) -> None:
         pages = {path.stem for path in (DOCS / "losses").glob("*.md")}
         overview = (DOCS / "losses.md").read_text()
-        for name in losses.__all__:
+        for name in LOSS_CLASSES:
             with self.subTest(loss=name):
                 self.assertIn(f"[{name}](losses/", overview)
         self.assertEqual(len(pages), len(losses.__all__))

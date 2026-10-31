@@ -10,6 +10,8 @@ from .generic_pair_loss import GenericPairLoss
 
 
 class NTXentLoss(GenericPairLoss):
+    decomposes_by_anchor = True
+
     def __init__(
         self, temperature: float = 0.07, **options: Unpack[LossOptions]
     ) -> None:

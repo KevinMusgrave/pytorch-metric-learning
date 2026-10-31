@@ -49,6 +49,8 @@ class LiftedStructureLoss(GenericPairLoss):
 
 
 class GeneralizedLiftedStructureLoss(GenericPairLoss):
+    decomposes_by_anchor = True
+
     def __init__(
         self,
         pos_margin: float = 0.0,

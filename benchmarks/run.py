@@ -74,6 +74,18 @@ class MinedLosses(nn.Module):
         return first + self.second(embeddings, labels, pairs, mat=mat)
 
 
+class AnchorBatched(nn.Module):
+    def __init__(self, loss: losses.BaseMetricLossFunction, batch_size: int) -> None:
+        super().__init__()
+        self.loss = loss
+        self.batch_size = batch_size
+
+    def forward(self, embeddings: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
+        return losses.anchor_batched_backward(
+            self.loss, embeddings, labels, self.batch_size
+        )
+
+
 def synchronize(device: torch.device) -> None:
     if device.type == "cuda":
         torch.cuda.synchronize(device)
@@ -93,7 +105,7 @@ def step(workload: Workload, device: torch.device) -> tuple[Sample, object]:
     synchronize(device)
     forward_ms = (time.perf_counter() - start) * 1000
     backward_ms = None
-    if isinstance(output, torch.Tensor):
+    if isinstance(output, torch.Tensor) and output.requires_grad:
         start = time.perf_counter()
         output.backward()
         synchronize(device)
@@ -151,6 +163,21 @@ def make_workload(
         "reused-cosine": lambda: MinedLosses(distances.CosineSimilarity(), True),
         "separate-lp": lambda: MinedLosses(distances.LpDistance(), False),
         "reused-lp": lambda: MinedLosses(distances.LpDistance(), True),
+        "full-ntxent": lambda: losses.NTXentLoss(temperature=0.07),
+        "anchor-batched-ntxent": lambda: AnchorBatched(
+            losses.NTXentLoss(temperature=0.07), args.anchor_batch_size
+        ),
+        "full-triplet": lambda: losses.TripletMarginLoss(margin=0.2),
+        "anchor-batched-triplet": lambda: AnchorBatched(
+            losses.TripletMarginLoss(margin=0.2), args.anchor_batch_size
+        ),
+        "unbounded-mined-triplet": lambda: MinedLoss(
+            miners.TripletMarginMiner(margin=0.2), losses.TripletMarginLoss(margin=0.2)
+        ),
+        "bounded-mined-triplet": lambda: MinedLoss(
+            miners.TripletMarginMiner(margin=0.2, tuples_per_anchor=32),
+            losses.TripletMarginLoss(margin=0.2),
+        ),
         "distributed": lambda: DistributedContrastive(args.dimensions),
     }
     module = factories[case]().to(device=device, dtype=dtype)
@@ -285,6 +312,12 @@ def arguments() -> argparse.Namespace:
             "reused-cosine",
             "separate-lp",
             "reused-lp",
+            "full-ntxent",
+            "anchor-batched-ntxent",
+            "full-triplet",
+            "anchor-batched-triplet",
+            "unbounded-mined-triplet",
+            "bounded-mined-triplet",
             "distributed",
         ),
         default="all",
@@ -297,6 +330,7 @@ def arguments() -> argparse.Namespace:
     parser.add_argument("--batch-size", type=int, default=128)
     parser.add_argument("--dimensions", type=int, default=128)
     parser.add_argument("--samples-per-class", type=int, default=4)
+    parser.add_argument("--anchor-batch-size", type=int, default=16)
     parser.add_argument("--warmup", type=int, default=5)
     parser.add_argument("--repeats", type=int, default=20)
     parser.add_argument("--threads", type=int, default=1)
@@ -351,6 +385,8 @@ def main() -> None:
                 "reused-cosine",
                 "separate-lp",
                 "reused-lp",
+                "anchor-batched-ntxent",
+                "bounded-mined-triplet",
             )
             if args.case == "all"
             else (args.case,)

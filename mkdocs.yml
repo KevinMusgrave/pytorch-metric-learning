@@ -53,6 +53,7 @@ nav:
         - SupConLoss: losses/supcon_loss.md
         - VICRegLoss: losses/vicreg_loss.md
       - Composition and extension:
+        - anchor_batched_backward: losses/anchor_batched_backward.md
         - BaseMetricLossFunction: losses/base_metric_loss_function.md
         - BaseProxyLoss: losses/base_proxy_loss.md
         - CrossBatchMemory: losses/cross_batch_memory.md

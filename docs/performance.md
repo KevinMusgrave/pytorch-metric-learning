@@ -31,6 +31,16 @@ repeated distance computation costs; their losses are equal for the same seed.
 These cases include no encoder, so they overstate the saving on a whole training
 step.
 
+The `full-ntxent` and `anchor-batched-ntxent` cases, and the matching triplet pair,
+compare a full-batch `backward()` with
+[`anchor_batched_backward`](losses/anchor_batched_backward.md) in chunks of
+`--anchor-batch-size` anchors. An anchor-batched case does all of its work in
+`forward_ms`, so compare totals, and its backward time is null. The
+`unbounded-mined-triplet` and `bounded-mined-triplet` cases compare a
+`TripletMarginMiner` with and without
+[`tuples_per_anchor=32`](miners.md#bounding-the-output). Peak memory for all of these
+needs `--device cuda`.
+
 Change `--batch-size`, `--dimensions`, `--samples-per-class`, `--dtype`, and
 `--threads` to describe the intended workload. Batch size must contain at least
 two complete classes. Each case uses its own seeded inputs, independent of how

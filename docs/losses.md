@@ -138,6 +138,11 @@ The rules are:
 reads distances between references, which `mat` does not hold. Check
 `type(loss).supports_mat` to test a loss class.
 
+To reduce memory on large batches, supported tuple losses can compute gradients in
+chunks of anchors with
+[`anchor_batched_backward`](losses/anchor_batched_backward.md), and every miner can
+cap its output with [`tuples_per_anchor`](miners.md#bounding-the-output).
+
 ### Index tuples
 
 `indices_tuple` takes one of two forms, matching what [miners](miners.md)

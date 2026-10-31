@@ -11,6 +11,8 @@ from .generic_pair_loss import GenericPairLoss
 
 
 class SupConLoss(GenericPairLoss):
+    decomposes_by_anchor = True
+
     def __init__(
         self, temperature: float = 0.1, **options: Unpack[LossOptions]
     ) -> None:

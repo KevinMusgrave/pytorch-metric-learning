@@ -10,6 +10,7 @@ from .base_metric_loss_function import BaseMetricLossFunction
 
 
 class TripletMarginLoss(BaseMetricLossFunction):
+    decomposes_by_anchor = True
     supports_mat = True
 
     def __init__(

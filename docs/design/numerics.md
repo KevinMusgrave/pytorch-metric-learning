@@ -339,3 +339,28 @@ replacement, since a repeated tuple only reweights the loss. The option bounds w
 a loss receives, not the miner's own candidate enumeration. `triplets_per_anchor` on
 triplet losses stays, because it draws from labels without a miner and has different
 semantics.
+
+## Anchor-batched gradients
+
+Issue #586 asked for loss batching as a utility. A loss cannot do this from inside
+`forward`, which must return one differentiable scalar, so the graph it returns
+holds every chunk at once. `anchor_batched_backward` owns the backward pass instead:
+it backpropagates each chunk to a detached leaf, then passes the summed gradient
+through the encoder once.
+
+Exactness decides the design. The reduced objective is
+`sum(elements) / count` for each term, and both come from the whole batch, so a mean
+of chunk means is wrong whenever chunks differ. Each term therefore accumulates
+its sum, count, and gradient, and the division happens after the last chunk. A term
+needs its own gradient buffer because terms have different denominators. Self-pairs
+are removed through explicit candidates, because a supplied reference set means
+"no self-exclusion" everywhere else.
+
+`decomposes_by_anchor` is declared per class because shape cannot reveal it.
+`IntraPairVarianceLoss` returns per-pair elements yet subtracts a mean over all pairs,
+and batching it changed values by 28% and gradients by 47% in the probe that selected
+the supported set. Losses are admitted only after matching a full batch; reducers are
+admitted by exact type, because a subclass could change the denominator.
+
+Other memory is untouched: the encoder graph and the gradient remain whole, and each
+term holds one `(N, D)` gradient buffer.

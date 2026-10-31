@@ -11,6 +11,8 @@ from .generic_pair_loss import GenericPairLoss
 
 
 class TupletMarginLoss(GenericPairLoss):
+    decomposes_by_anchor = True
+
     def __init__(
         self, margin: float = 5.73, scale: float = 64, **options: Unpack[LossOptions]
     ) -> None:

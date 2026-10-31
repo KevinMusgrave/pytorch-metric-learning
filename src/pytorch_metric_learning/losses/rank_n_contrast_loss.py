@@ -17,6 +17,10 @@ def _check_targets(targets: Tensor, name: str) -> None:
         raise ValueError(f"{name} must be finite")
 
 
+def _rank_device(device: torch.device) -> torch.device:
+    return torch.device("cpu") if device.type == "mps" else device
+
+
 class RankNContrastLoss(BaseMetricLossFunction):
     supports_mat = True
 
@@ -58,16 +62,21 @@ class RankNContrastLoss(BaseMetricLossFunction):
         mat = _common.resolve_matrix(self.distance, embeddings, ref_emb, mat)
         sign = 1 if self.distance.is_inverted else -1
         scores = sign * mat.to(_common.accumulation_dtype(mat.dtype))
-        separation = self.label_distances(labels, references)
+        rank_device = _rank_device(labels.device)
+        separation = self.label_distances(
+            labels.to(rank_device).to(torch.float64),
+            references.to(rank_device).to(torch.float64),
+        )
         if ref_emb is None:
-            others = ~torch.eye(rows, dtype=torch.bool, device=labels.device)
-            scores = scores[others].view(rows, columns)
+            others = ~torch.eye(rows, dtype=torch.bool, device=rank_device)
+            scores = scores[others.to(scores.device)].view(rows, columns)
             separation = separation[others].view(rows, columns)
         separation, order = torch.sort(separation, dim=1)
-        scores = scores.gather(1, order) / self.temperature
-        tail = torch.logcumsumexp(scores.flip(1), dim=1).flip(1)
         first_tied = torch.searchsorted(separation, separation, side="left")
-        losses = (tail.gather(1, first_tied) - scores).mean(dim=1)
+        scores = scores.gather(1, order.to(scores.device)) / self.temperature
+        tail = torch.logcumsumexp(scores.flip(1), dim=1).flip(1)
+        denominators = tail.gather(1, first_tied.to(scores.device))
+        losses = (denominators - scores).mean(dim=1)
         return {
             "loss": {
                 "losses": losses.to(mat.dtype),

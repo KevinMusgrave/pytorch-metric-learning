@@ -1,5 +1,6 @@
 import unittest
 
+import pytest
 import torch
 
 from pytorch_metric_learning import distances, losses, reducers
@@ -131,6 +132,101 @@ class TestRankNContrastLoss(unittest.TestCase):
         self.assertGreater(abs(expected.item() - tied.item()), 1e-3)
         self.assertAlmostEqual(
             loss_func(embeddings, targets).item(), expected.item(), places=5
+        )
+
+    def test_rounded_distances_do_not_create_ties(self):
+        cases = [
+            (torch.bfloat16, [-1.0, 0.0, 1.0, 1.0078125], 0, 2, 3),
+            (torch.float16, [-1.0, 0.0, 1 / 2048, 1 / 512], 0, 2, 1),
+            (torch.float32, [1e8, 1.0, 1.5, 3.0], 0, 1, 2),
+        ]
+        for dtype, values, anchor, first, second in cases:
+            with self.subTest(dtype=dtype):
+                targets = torch.tensor(values, dtype=dtype, device=TEST_DEVICE)
+                gaps = (targets[anchor] - targets).abs()
+                if dtype != torch.float16:
+                    self.assertEqual(gaps[first], gaps[second])
+                stored = targets.tolist()
+                self.assertEqual(len(set(stored)), 4)
+                embeddings = tensor([[0.0], [4.0], [1.0], [2.0]], torch.float32)
+                helpers.assert_matches_float64(
+                    lambda x, y=targets: losses.RankNContrastLoss()(x, y),
+                    lambda x, y=stored: equations_1_to_3(x, y),
+                    (embeddings,),
+                    torch.float32,
+                )
+
+    def test_rounded_sums_do_not_create_ties(self):
+        values = [[0.0, 0.0], [1024.0, 0.25], [1024.0, 0.5], [3.0, 1.0]]
+        targets = tensor(values, torch.float16)
+        native = (targets[0] - targets).abs().sum(dim=1)
+        self.assertEqual(native[1], native[2])
+        embeddings = tensor([[0.0], [4.0], [1.0], [2.0]], torch.float32)
+        gaps = [
+            [
+                sum(abs(a - b) for a, b in zip(row, other, strict=True))
+                for other in values
+            ]
+            for row in values
+        ]
+        self.assertNotEqual(gaps[0][1], gaps[0][2])
+
+        def reference(x):
+            score = torch.linalg.vector_norm(x[:, None] - x[None, :], dim=-1)
+            rows = range(4)
+            anchors = []
+            for i in rows:
+                terms = []
+                for j in rows:
+                    if i != j:
+                        keep = [k for k in rows if k != i and gaps[i][k] >= gaps[i][j]]
+                        denominator = torch.exp(-score[i, keep] / 2).sum()
+                        terms.append(score[i, j] / 2 + torch.log(denominator))
+                anchors.append(torch.stack(terms).mean())
+            return torch.stack(anchors).mean()
+
+        helpers.assert_matches_float64(
+            lambda x, y=targets: losses.RankNContrastLoss(label_ndim=2)(x, y),
+            reference,
+            (embeddings,),
+            torch.float32,
+        )
+
+    def test_float64_targets_keep_their_precision(self):
+        values = [0.0, 1.0, 1.0 + 1e-12, 2.0]
+        embeddings = batch(size=4)
+        self.assertAlmostEqual(
+            losses.RankNContrastLoss()(embeddings, tensor(values)).item(),
+            equations_1_to_3(embeddings, values).item(),
+        )
+
+    def test_custom_label_distance_receives_float64(self):
+        seen = []
+
+        def distance(x, y):
+            seen.append(x.dtype)
+            return (x[:, None] - y[None, :]).abs()
+
+        losses.RankNContrastLoss(label_distance=distance)(
+            batch(size=3), tensor([0.0, 1.0, 2.0], torch.float16)
+        )
+        self.assertEqual(seen, [torch.float64])
+
+    @pytest.mark.mps
+    def test_ranks_stay_exact_on_mps(self):
+        values = [1e8, 1.0, 1.5, 3.0]
+        rows = [[0.0], [4.0], [1.0], [2.0]]
+        embeddings = torch.tensor(rows, device="mps", requires_grad=True)
+        targets = torch.tensor(values, device="mps")
+        loss = losses.RankNContrastLoss()(embeddings, targets)
+        loss.backward()
+        wide = torch.tensor(rows, dtype=torch.float64, requires_grad=True)
+        expected = equations_1_to_3(wide, [float(x) for x in targets.cpu().tolist()])
+        expected.backward()
+        assert embeddings.grad is not None and wide.grad is not None
+        self.assertAlmostEqual(loss.item(), expected.item(), places=5)
+        torch.testing.assert_close(
+            embeddings.grad.cpu().double(), wide.grad, rtol=1e-4, atol=1e-5
         )
 
     def test_multidimensional_targets_use_summed_l1(self):

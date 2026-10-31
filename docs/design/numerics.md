@@ -511,8 +511,15 @@ in `S_ij` requires. Evaluating each denominator separately would cost `O(N^3)`, 
 authors' code does.
 
 Targets are not cast to the embedding dtype, unlike most label handling here, because
-order is the whole objective: rounding two targets to the same float16 value would make
-them tied and change the loss. Integers are rejected rather than converted for the same
+order is the whole objective, and target distances are computed in float64 for the same
+reason. Keeping targets in their own dtype is not enough: `|y_i - y_j|` and the L1 sum
+round too, and two different distances that round to one value become a tie that changes
+the denominators and the gradients. That also affects float32 targets of ordinary size,
+so widening only float16 would leave the defect in place. MPS has no float64, so ranking
+runs on CPU there and only the resulting indices return, since an exact ranking is worth
+one small transfer. The move and the cast are separate calls on purpose: on PyTorch 2.14,
+`tensor.to("cpu", torch.float64)` from MPS silently returns zeros, which would make every
+target tie. Integers are rejected rather than converted for the same
 reason. `label_ndim` is an instance setting because this loss alone accepts either shape,
 and `indices_tuple` is rejected because the set `S_ij` is defined over the whole batch. The
 authors' repository has no license file, so the implementation comes from the paper, and

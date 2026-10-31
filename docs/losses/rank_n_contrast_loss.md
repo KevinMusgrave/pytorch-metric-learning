@@ -30,16 +30,21 @@ Euclidean distance between unnormalized embeddings, and the default target dista
   default target distance sums over `T`. Integer targets raise `TypeError`; convert them
   with `.float()`, choosing a dtype that represents them exactly.
 - NaN or infinite targets raise `ValueError`.
-- Targets keep their own dtype. They are never cast to the embeddings' dtype, because
-  rounding would turn nearby targets into ties.
+- Target values are never rounded to a lower precision, including to the embeddings'
+  dtype. Distances between targets are computed in float64 for every target dtype,
+  because the ranks are the objective: rounding in a subtraction or a sum would make
+  different distances tie. In float32, for example, the distances from `1e8` to `1.0` and
+  to `1.5` are both `1e8`. On MPS, which has no float64, this one step runs on CPU.
 - `label_distance(labels, references)` replaces the target distance, for example with an
-  angular distance. It returns a finite `(len(labels), len(references))` tensor.
+  angular distance. It receives float64 targets, on CPU for MPS inputs, and returns a
+  finite `(len(labels), len(references))` tensor.
 
 **Tie handling**: Ties follow the `≥` in $S_{i,j}$. Samples at exactly the same target
 distance from the anchor are in each other's denominators, so the loss asks for no order
 among them. This includes a sample's second view, and two samples either side of the
-anchor at equal distance. Comparison is exact, so targets that differ by rounding are not
-tied. If every target is equal, each sample's denominator holds all others.
+anchor at equal distance. Distances are compared exactly in float64, so nearby targets are
+not tied unless float64 itself cannot tell them apart. If every target is equal, each
+sample's denominator holds all others.
 
 **Implementation notes**: A row's denominators are suffix sums over the row sorted by
 target distance, computed once with `logcumsumexp`, so one forward pass costs

@@ -152,7 +152,9 @@ same quantity as matrix comparisons. `LpDistance.pairwise` uses
 gave zero. `CosineSimilarity` has no `p` or `power` options: several losses and
 regularizers require it and take `acos` of, or assume signed, unit-L2 cosines,
 which any other setting silently broke. `DotProductSimilarity` keeps both
-options.
+options and is the only distance that does not normalize by default: its name
+promises a plain dot product. `NPairsLoss` and `NormalizedSoftmaxLoss` default
+to a normalized instance because their objectives are bounded cosines.
 
 `MultiSupConLoss` keeps the standard pair tuples and derives Jaccard weights from
 the labels inside the loss. Embedding a similarity matrix in 4- and 5-tuples

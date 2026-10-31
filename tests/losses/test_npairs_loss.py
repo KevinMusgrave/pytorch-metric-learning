@@ -11,6 +11,14 @@ from ..helpers import angle_to_coord
 
 
 class TestNPairsLoss(unittest.TestCase):
+    def test_default_objective_ignores_embedding_scale(self):
+        embeddings = torch.randn(6, 4, device=TEST_DEVICE)
+        labels = torch.tensor([0, 0, 1, 1, 2, 2], device=TEST_DEVICE)
+        loss_func = NPairsLoss()
+        torch.testing.assert_close(
+            loss_func(embeddings * 7, labels), loss_func(embeddings, labels)
+        )
+
     def test_npairs_loss(self):
         loss_funcA = NPairsLoss()
         loss_funcB = NPairsLoss(embedding_regularizer=LpRegularizer(power=2))

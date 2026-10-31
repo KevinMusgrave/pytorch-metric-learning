@@ -191,11 +191,12 @@ with `p` or `power`.
 ## DotProductSimilarity
 
 ```python {.signature}
-distances.DotProductSimilarity(*, normalize_embeddings=True, p=2, power=1)
+distances.DotProductSimilarity(*, normalize_embeddings=False, p=2, power=1)
 ```
 
-`mat[i, j]` equals `torch.sum(query_emb[i] * ref_emb[j])` after optional
-normalization.
+`mat[i, j]` equals `torch.sum(query_emb[i] * ref_emb[j])`. Unlike every other
+distance, embeddings are used as given by default; pass
+`normalize_embeddings=True` to normalize them first.
 
 ## LpDistance
 

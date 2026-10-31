@@ -68,7 +68,7 @@ CASES = {
         True,
     ),
     "dot_l1_squared": (
-        DotProductSimilarity(p=1, power=2),
+        DotProductSimilarity(normalize_embeddings=True, p=1, power=2),
         dot_product(1, 2, True),
         True,
     ),
@@ -138,6 +138,17 @@ def test_cosine_similarity_equals_normalized_dot_product_and_has_no_options():
     options: dict[str, Any] = {"power": 2}
     with pytest.raises(TypeError):
         CosineSimilarity(**options)
+
+
+def test_dot_product_default_uses_embeddings_as_given():
+    query = torch.tensor([[3.0, 4.0]], device=TEST_DEVICE)
+    reference = torch.tensor([[2.0, 0.0], [0.0, -1.0]], device=TEST_DEVICE)
+    distance = DotProductSimilarity()
+    expected = torch.tensor([[6.0, -4.0]], device=TEST_DEVICE)
+    torch.testing.assert_close(distance(query, reference), expected)
+    torch.testing.assert_close(
+        distance.pairwise(query.expand(2, -1), reference), expected[0]
+    )
 
 
 def test_similarities_reject_non_matrix_inputs():

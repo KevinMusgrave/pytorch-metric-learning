@@ -455,5 +455,5 @@ batches with several positives per class.
   over positive and negative pairs.
 - [MultipleLosses](losses/multiple_losses.md): a weighted sum of losses, each
   with an optional miner.
-- [SelfSupervisedLoss](losses/self_supervised_loss.md): two augmented views
+- [SelfSupervisedLoss](losses/self_supervised_loss.md): two or more augmented views
   without labels, with any loss that uses labels.

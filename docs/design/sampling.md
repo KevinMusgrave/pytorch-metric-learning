@@ -7,17 +7,25 @@ sampling must not import evaluation or model traversal.
 Samplers use PyTorch's random number generators: an explicit
 `torch.Generator`, or the global generator when none is given, so seeding is
 the same as for other PyTorch randomness. The library has no global random
-state of its own. Each iterator is an independent draw. Sampling balances
-labels within each batch and samples with replacement across batches; it does
-not promise epoch coverage, which several issue reports expected. `len()`
-equals the number of items an iterator yields. Index samplers go to
-`DataLoader(sampler=...)`; the hierarchical sampler yields index lists for
-`batch_sampler=` and computes its length without materializing batches.
+state of its own. Each iterator is an independent draw. `len()` equals the
+number of items an iterator yields. Samplers whose guarantee is a batch's
+composition yield index lists for `batch_sampler=`: an index sampler would leave
+that guarantee to a matching `DataLoader` batch size, and a mismatch silently
+breaks it. Hierarchical sampling computes its length without materializing
+batches.
 
-An M-per-class sampler preserves its batch label counts and may sample with
-replacement when a class has fewer than M members. Hierarchical sampling uses
-the provided label columns to balance the requested levels. These are behavior
-contracts, independent of a training framework. Fixed triplets preserve the
+An M-per-class sampler preserves its batch label counts in every batch and
+repeats examples within a batch only when a class has fewer than M members.
+Balance and coverage conflict: with unequal class sizes, equal class counts per
+batch cannot visit every example once. Balance wins. Classes and each class's
+examples rotate through shuffled passes, which keeps counts within one of each
+other at every point in an iterator, so a default-length iterator can state a
+provable result: every example at least once, and exactly once for equal class
+sizes that divide evenly. Weighting classes by size would spend fewer batches
+on small classes, but drops the equal class counts callers choose this sampler
+for. Hierarchical sampling uses the provided label columns to balance the
+requested levels and keeps independent draws. These are behavior contracts,
+independent of a training framework. Fixed triplets preserve the
 anchor/positive/negative label relation.
 Their consecutive triples map directly to an `indices_tuple` through
 `torch.arange(batch_size).reshape(-1, 3).unbind(1)` on the embeddings' device;

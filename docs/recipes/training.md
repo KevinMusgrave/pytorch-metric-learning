@@ -2,7 +2,7 @@
 
 Use these executable recipes from the repository root with the frozen
 development environment. They use synthetic tensors, complete in seconds on
-CPU, and perform no downloads. The Python files beside this page are the
+CPU, and perform no downloads. The Python files in `docs/recipes` are the
 canonical executable source; they are not installed as library APIs.
 
 For installation and the public component index, start at [the documentation
@@ -12,13 +12,13 @@ optimizers, data loading, logging, and checkpoints.
 
 ## Choose a recipe
 
-| Task                                                       | Executable source                                                | Command                                                                        |
-| ---------------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| Metric, classifier-assisted, proxy, or two-stream training | [training.py](training.py)                                       | `uv run --frozen --no-sync python -m docs.recipes.training`                    |
-| Progressive mining over embedding slices                   | [cascaded_mining.py](cascaded_mining.py)                         | `uv run --frozen --no-sync python -m docs.recipes.cascaded_mining`             |
-| Alternating adversarial metric learning                    | [adversarial_metric_learning.py](adversarial_metric_learning.py) | `uv run --frozen --no-sync python -m docs.recipes.adversarial_metric_learning` |
-| Mining-weighted dataset sampling                           | [mining_weights.py](mining_weights.py)                           | `uv run --frozen --no-sync python -m docs.recipes.mining_weights`              |
-| Caller-controlled memory warmup                            | [memory_warmup.py](memory_warmup.py)                             | `uv run --frozen --no-sync python -m docs.recipes.memory_warmup`               |
+| Task                                                       | Executable source                                                                                                                                          | Command                                                                        |
+| ---------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Metric, classifier-assisted, proxy, or two-stream training | [View training.py](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.0rc3/docs/recipes/training.py)                                       | `uv run --frozen --no-sync python -m docs.recipes.training`                    |
+| Progressive mining over embedding slices                   | [View cascaded_mining.py](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.0rc3/docs/recipes/cascaded_mining.py)                         | `uv run --frozen --no-sync python -m docs.recipes.cascaded_mining`             |
+| Alternating adversarial metric learning                    | [View adversarial_metric_learning.py](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.0rc3/docs/recipes/adversarial_metric_learning.py) | `uv run --frozen --no-sync python -m docs.recipes.adversarial_metric_learning` |
+| Mining-weighted dataset sampling                           | [View mining_weights.py](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.0rc3/docs/recipes/mining_weights.py)                           | `uv run --frozen --no-sync python -m docs.recipes.mining_weights`              |
+| Caller-controlled memory warmup                            | [View memory_warmup.py](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.0rc3/docs/recipes/memory_warmup.py)                             | `uv run --frozen --no-sync python -m docs.recipes.memory_warmup`               |
 
 The commands import the installed package, so install the checkout as described
 in the [development guide](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/DEVELOPMENT.md#set-up-a-checkout),

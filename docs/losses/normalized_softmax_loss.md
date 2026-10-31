@@ -53,8 +53,8 @@ optimizer.step()
 
 **Default distance**:
 
-- [`DotProductSimilarity()`](../distances.md#dotproductsimilarity), which
-  L2-normalizes the embeddings.
+- [`DotProductSimilarity(normalize_embeddings=True)`](../distances.md#dotproductsimilarity),
+  which L2-normalizes the embeddings.
 
 **Default reducer**:
 

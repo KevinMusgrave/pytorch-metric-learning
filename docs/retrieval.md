@@ -212,6 +212,7 @@ The macOS `faiss-cpu` and PyTorch wheels each bundle an OpenMP runtime, and
 loading both in one process can abort with `OMP: Error #15` or crash in
 multithreaded Faiss calls. Setting both `KMP_DUPLICATE_LIB_OK=TRUE` and
 `OMP_NUM_THREADS=1` before importing either library lets searches and k-means
-complete; Intel documents the duplicate-runtime setting as unsupported. Prefer
+complete, including alongside UMAP in the same process; Intel documents the
+duplicate-runtime setting as unsupported. Prefer
 `CustomKNN` on macOS, or install Faiss and PyTorch from one distribution that
 shares a single OpenMP runtime. The library does not change the environment.

@@ -440,6 +440,12 @@ failed whenever the tuple count was not divisible by the classes. Version 3 has 
 of a row is its class sum minus the row. Cost is linear in the batch, with one
 `(rows, classes)` distance matrix and no per-sample centroid loop.
 
+`CentroidTripletLoss` computes in float32 for low-precision inputs and stays there through
+the reducer. The default squared distance can overflow float16 for valid embeddings even
+when the result fits, and `inf - inf` is a NaN that `AvgNonZeroReducer` filters out, so
+casting back early would silently return zero with zero gradients. It also keeps very small
+`softplus` values from rounding to zero and leaving the reducer's count.
+
 Singletons are skipped rather than raising, as version 1 did. Batches with an occasional
 singleton are ordinary in long-tailed training, and raising stops a run at a random step
 for a row that simply has no objective. The row still contributes a negative centroid,

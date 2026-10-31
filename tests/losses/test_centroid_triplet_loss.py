@@ -64,10 +64,7 @@ class TestCentroidTripletLoss(unittest.TestCase):
                 for smooth in (False, True):
                     with self.subTest(case=name, dtype=dtype, smooth=smooth):
                         y = torch.tensor(labels, device=TEST_DEVICE)
-                        options = {"reducer": reducers.MeanReducer()} if smooth else {}
-                        loss_func = losses.CentroidTripletLoss(
-                            smooth_loss=smooth, **options
-                        )
+                        loss_func = losses.CentroidTripletLoss(smooth_loss=smooth)
                         helpers.assert_matches_float64(
                             lambda x, f=loss_func, y=y: f(x, y),
                             lambda x, y=labels, s=smooth: equation_2(x, y, smooth=s),
@@ -199,6 +196,44 @@ class TestCentroidTripletLoss(unittest.TestCase):
         loss = losses.CentroidTripletLoss(margin=9)(embeddings, y)
         self.assertTrue(loss.isfinite())
         self.assertAlmostEqual(loss.item(), 9 - 4, places=1)
+
+    def test_low_precision_squared_distances_do_not_overflow(self):
+        points = [[-150.0, 0.0], [150.0, 0.0], [-150.0, 225.0], [150.0, 225.0]]
+        y = torch.tensor([0, 0, 1, 1], device=TEST_DEVICE)
+        wide = torch.tensor(
+            points, dtype=torch.float64, device=TEST_DEVICE, requires_grad=True
+        )
+        expected = equation_2(wide, y.tolist())
+        expected.backward()
+        self.assertAlmostEqual(expected.item(), 300.0**2 - (150.0**2 + 225.0**2) + 0.05)
+        assert wide.grad is not None
+        for dtype in (torch.float16, torch.bfloat16):
+            with self.subTest(dtype=dtype):
+                x = torch.tensor(
+                    points, dtype=dtype, device=TEST_DEVICE, requires_grad=True
+                )
+                loss = losses.CentroidTripletLoss()(x, y)
+                loss.backward()
+                self.assertEqual(loss.dtype, torch.float32)
+                self.assertAlmostEqual(loss.item(), expected.item(), places=2)
+                assert x.grad is not None
+                self.assertEqual(x.grad.dtype, dtype)
+                torch.testing.assert_close(x.grad.double(), wide.grad)
+
+    def test_very_small_smooth_terms_stay_in_the_mean(self):
+        y = torch.tensor([0, 0, 1, 1], device=TEST_DEVICE)
+        x = torch.tensor(
+            [[0.0, 0.0], [0.1, 0.0], [5.0, 0.0], [5.1, 0.0]],
+            dtype=torch.float16,
+            device=TEST_DEVICE,
+        )
+        loss_func = losses.CentroidTripletLoss(smooth_loss=True)
+        terms = loss_func.loss_terms(x, y)["loss"]["losses"]
+        self.assertTrue((terms > 0).all())
+        self.assertAlmostEqual(
+            loss_func(x, y).item(),
+            equation_2(x.double(), y.tolist(), smooth=True).item(),
+        )
 
     def test_rejects_unsupported_inputs(self):
         embeddings = rows_for([0, 0, 1, 1])

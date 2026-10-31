@@ -26,7 +26,8 @@ A class with one embedding in the batch has no positive centroid, so that embedd
 an anchor. Its centroid is still a negative for the other classes. If no anchor remains,
 or the batch has one class, the result is a differentiable zero. Centroids are computed
 from the embeddings as passed, before the distance's normalization. float16 and bfloat16
-sums accumulate in float32.
+inputs are computed in float32, and the loss is returned in float32, because a squared
+distance can exceed the float16 range even when the final loss would fit.
 
 The loss takes `labels` only. `indices_tuple` and `ref_emb` raise `ValueError`.
 

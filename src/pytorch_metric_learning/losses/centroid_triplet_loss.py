@@ -32,11 +32,12 @@ class CentroidTripletLoss(BaseMetricLossFunction):
         labels = _common.labels_required(labels)
         _common.indices_tuple_not_supported(indices_tuple)
         _common.ref_not_supported(ref_emb)
-        centroids = _common.class_centroids(embeddings, labels)
+        vectors = embeddings.to(_common.accumulation_dtype(embeddings.dtype))
+        centroids = _common.class_centroids(vectors, labels)
         anchors = torch.where(centroids.has_others)[0]
         if len(anchors) == 0:
             return {}
-        queries = embeddings[anchors]
+        queries = vectors[anchors]
         positive = self.distance.pairwise(queries, centroids.leave_one_out[anchors])
         mat = self.distance(queries, centroids.means)
         rows, classes = torch.where(mat.new_ones(mat.shape, dtype=torch.bool))

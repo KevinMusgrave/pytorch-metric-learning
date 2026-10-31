@@ -493,3 +493,11 @@ optimizer had changed. Running the same training loop on v2.9.0 produces both er
 that order. Version 3 updates the histogram under `torch.no_grad()` into a buffer, and
 `weigh_loss` reads a cumulative sum that is a new tensor, so later updates cannot touch a
 pending graph. The tests pin this, with several forwards before `backward()`.
+
+#723 has not been reproduced. It reported mixed-label pairs on MPS with library 2.6.0 and
+PyTorch 2.2.1 on macOS 14.4, and printing a tensor made the fault disappear. Those same
+library and PyTorch versions gave only valid pairs on MPS here on macOS 26, as did v2.9.0
+and version 3 on PyTorch 2.14, so a cause cannot be named. The reported code path no longer
+exists: version 3 builds masks with out-of-place `masked_fill`, not in-place writes
+to a cloned matrix. The MPS tests use the reporter's matrix through `mat`, so CPU and MPS
+compare identical inputs.

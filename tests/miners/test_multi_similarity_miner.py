@@ -1,5 +1,6 @@
 import unittest
 
+import pytest
 import torch
 
 from pytorch_metric_learning.distances import CosineSimilarity, LpDistance
@@ -7,6 +8,26 @@ from pytorch_metric_learning.miners import MultiSimilarityMiner
 from pytorch_metric_learning.utils import _common as c_f
 
 from .. import TEST_DEVICE, TEST_DTYPES, helpers
+
+REPORTED_LABELS = [15, 15, 15, 15, 169, 169, 169, 169]
+REPORTED_SIMILARITIES = [
+    [1.0000, 0.9996, 0.9975, 0.9994, 0.9948, 0.9836, 0.9968, 0.9975],
+    [0.9996, 1.0000, 0.9952, 0.9981, 0.9919, 0.9798, 0.9950, 0.9963],
+    [0.9975, 0.9952, 1.0000, 0.9991, 0.9977, 0.9879, 0.9993, 0.9980],
+    [0.9994, 0.9981, 0.9991, 1.0000, 0.9974, 0.9876, 0.9979, 0.9975],
+    [0.9948, 0.9919, 0.9977, 0.9974, 1.0000, 0.9960, 0.9947, 0.9917],
+    [0.9836, 0.9798, 0.9879, 0.9876, 0.9960, 1.0000, 0.9823, 0.9767],
+    [0.9968, 0.9950, 0.9993, 0.9979, 0.9947, 0.9823, 1.0000, 0.9992],
+    [0.9975, 0.9963, 0.9980, 0.9975, 0.9917, 0.9767, 0.9992, 1.0000],
+]
+
+
+def mined_pair_sets(miner, mat, labels):
+    embeddings = torch.zeros(len(labels), 2, device=mat.device, dtype=mat.dtype)
+    a1, p, a2, n = miner(embeddings, labels, mat=mat)
+    positives = sorted(zip(a1.tolist(), p.tolist(), strict=True))
+    negatives = sorted(zip(a2.tolist(), n.tolist(), strict=True))
+    return positives, negatives
 
 
 def positive_and_negative_pairs(labels):
@@ -75,6 +96,46 @@ def assert_mined_by_margin(mined, margins, dtype):
 
 
 class TestMultiSimilarityMiner(unittest.TestCase):
+    def test_reported_similarities_select_only_valid_pairs(self):
+        mat = torch.tensor(REPORTED_SIMILARITIES, device=TEST_DEVICE)
+        labels = torch.tensor(REPORTED_LABELS, device=TEST_DEVICE)
+        expected_positives, expected_negatives = positive_and_negative_pairs(
+            REPORTED_LABELS
+        )
+        positives, negatives = mined_pair_sets(MultiSimilarityMiner(), mat, labels)
+        self.assertEqual(positives, sorted(expected_positives))
+        self.assertEqual(negatives, sorted(expected_negatives))
+
+    @pytest.mark.mps
+    def test_reported_similarities_agree_with_cpu_on_mps(self):
+        mat = torch.tensor(REPORTED_SIMILARITIES)
+        labels = torch.tensor(REPORTED_LABELS)
+        miner = MultiSimilarityMiner()
+        self.assertEqual(
+            mined_pair_sets(miner, mat.to("mps"), labels.to("mps")),
+            mined_pair_sets(miner, mat, labels),
+        )
+
+    @pytest.mark.mps
+    def test_miner_agrees_with_cpu_on_mps_for_one_matrix(self):
+        generator = torch.Generator().manual_seed(4)
+        miner = MultiSimilarityMiner()
+        for size, classes in ((8, 2), (16, 4), (64, 8), (256, 32)):
+            for spread in (0.05, 1.0):
+                with self.subTest(size=size, spread=spread):
+                    rows = torch.ones(size, 32) + spread * torch.randn(
+                        size, 32, generator=generator
+                    )
+                    labels = torch.arange(size) % classes
+                    mat = CosineSimilarity()(rows)
+                    on_cpu = mined_pair_sets(miner, mat, labels)
+                    on_mps = mined_pair_sets(miner, mat.to("mps"), labels.to("mps"))
+                    self.assertEqual(on_mps, on_cpu)
+                    for a, p in on_mps[0]:
+                        self.assertEqual(labels[a], labels[p])
+                    for a, n in on_mps[1]:
+                        self.assertNotEqual(labels[a], labels[n])
+
     def test_multi_similarity_miner(self):
         torch.manual_seed(9599)
         epsilon = 0.1

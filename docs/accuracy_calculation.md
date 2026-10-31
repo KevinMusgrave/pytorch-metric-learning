@@ -223,6 +223,9 @@ label counts, so they need no `(classes, len(reference))` comparison matrix. A
 custom `label_comparison_fn` compares each query class with every reference
 label.
 
+Metrics use float64, which MPS lacks, so with MPS inputs the search stays on MPS
+and metric arithmetic runs on CPU. A custom metric then receives CPU tensors.
+
 With [`FaissKNN`](retrieval.md#faissknn), searches run on a CPU copy unless a
 GPU build of Faiss is installed, and on GPU only when `k <= 2048`.
 

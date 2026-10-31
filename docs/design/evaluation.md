@@ -67,6 +67,11 @@ in blocks of 256 so temporary memory is one `(256, references)` block plus the
 contract. The calculator moves inputs only to a device the caller names; it
 never chooses a GPU itself.
 
+Metric values are float64 so that counts stay exact, and MPS has no float64.
+Labels and neighbor indices therefore move to CPU for metric arithmetic on MPS,
+while the search itself stays on the input device. Reducing metrics to float32
+everywhere would lose precision that other devices have.
+
 A positive integer `k` is an upper bound on the available neighbors for each
 evaluation call. The calculator caps it at the reference count minus one when
 self-matches are excluded, before the backend adds its self-search candidate.

@@ -12,6 +12,33 @@ from pytorch_metric_learning.evaluation.retrieval import CustomKNN, FaissKNN
 from .. import TEST_DEVICE
 
 
+class TestMetricDevice(unittest.TestCase):
+    def test_float64_devices_keep_metric_work_on_the_input_device(self):
+        self.assertEqual(
+            accuracy_calculator._metric_device(torch.device("cuda", 1)),
+            torch.device("cuda", 1),
+        )
+        self.assertEqual(
+            accuracy_calculator._metric_device(torch.device("mps")),
+            torch.device("cpu"),
+        )
+
+    @unittest.skipUnless(torch.backends.mps.is_available(), "requires MPS")
+    def test_metrics_run_with_mps_inputs(self):
+        embeddings = torch.tensor([[0.0], [0.1], [5.0], [5.1], [9.0]])
+        labels = torch.tensor([0, 0, 1, 1, 1])
+        calculator = accuracy_calculator.AccuracyCalculator()
+        expected = calculator.get_accuracy(embeddings, labels)
+        result = calculator.get_accuracy(embeddings.to("mps"), labels.to("mps"))
+        self.assertEqual(result, expected)
+        per_class = calculator.get_accuracy_per_class(
+            embeddings.to("mps"), labels.to("mps")
+        )
+        self.assertEqual(
+            per_class, calculator.get_accuracy_per_class(embeddings, labels)
+        )
+
+
 class TestCalculateAccuraciesValidK(unittest.TestCase):
     def test_valid_k(self):
         for k in [-1, 0, 1.5, "max"]:

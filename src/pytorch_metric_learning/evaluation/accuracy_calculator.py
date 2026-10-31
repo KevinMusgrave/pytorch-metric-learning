@@ -524,6 +524,9 @@ class AccuracyCalculator:
         ref_includes_query: bool,
         metrics: Mapping[str, RetrievalMetric],
     ) -> _QueryGroups:
+        metric_device = _metric_device(query.device)
+        query_labels = query_labels.to(metric_device)
+        reference_labels = reference_labels.to(metric_device)
         classes, class_index = torch.unique(query_labels, dim=0, return_inverse=True)
         counts = _relevant_counts(
             classes, reference_labels, ref_includes_query, self.custom_comparison
@@ -535,7 +538,7 @@ class AccuracyCalculator:
         num_k = self.determine_k(counts, len(reference), ref_includes_query, metrics)
         _, knn_indices = self.knn_func(query, num_k, reference, ref_includes_query)
         _check_neighbor_indices(knn_indices, len(query), num_k, len(reference))
-        knn_labels = reference_labels[knn_indices]
+        knn_labels = reference_labels[knn_indices.to(metric_device)]
         matches = self.label_comparison_fn(query_labels.unsqueeze(1), knn_labels)
         inputs = RetrievalInputs(
             query_labels=query_labels,
@@ -590,6 +593,10 @@ class AccuracyCalculator:
             for metric in metrics.values()
         )
         return min(limit, needed, available)
+
+
+def _metric_device(device: torch.device) -> torch.device:
+    return torch.device("cpu") if device.type == "mps" else device
 
 
 def _neighbors_needed(

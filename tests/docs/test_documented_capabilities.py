@@ -10,6 +10,7 @@ from pytorch_metric_learning import losses
 DOCS = Path(__file__).resolve().parents[2] / "docs"
 LEARNABLE = {
     "ArcFaceLoss": (3, 4),
+    "CenterLoss": (3, 4),
     "CosFaceLoss": (3, 4),
     "DynamicArcFaceLoss": ([1, 2, 4], 4),
     "LargeMarginSoftmaxLoss": (3, 4),

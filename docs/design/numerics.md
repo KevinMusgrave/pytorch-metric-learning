@@ -453,3 +453,22 @@ centroids that equation 9 specifies. The own-class score replaces one entry of t
 matrix, so negatives use a single `(rows, classes)` comparison. `w` is clamped in the
 forward pass, not in place, so a step that drives it below zero recovers through the
 clamp without modifying a parameter that an optimizer owns.
+
+## Center loss
+
+Algorithm 1 of Wen et al. updates centers by equation 4, with a `1 + n` denominator, not
+by the gradient of `L_C`, which has no denominator and grows with the class's batch count.
+A `Parameter` would let an optimizer apply that different rule, so `centers` is a buffer
+and no gradient reaches it.
+
+The update is an explicit method rather than a side effect of `forward`. `forward` runs for
+evaluation, for several micro-batches of one step, and under checkpointing, and each of those
+would otherwise move the centers a different number of times. It also avoids the failure in
+#731: writing to a tensor a pending graph has saved raises at `backward()`. The loss
+indexes `centers` into a new tensor, so a later in-place update does not touch the graph,
+and a test confirms that either order works. The cost is that a caller who forgets the
+call trains against random centers, which is why the docs state it first.
+
+The loss stays in float32 for low-precision inputs, unlike most losses, because features in
+this paper's setting reach hundreds, and half a squared distance then exceeds the float16
+range for one row even when the reduced value fits.

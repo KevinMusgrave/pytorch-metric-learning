@@ -3,6 +3,7 @@ from .angular_loss import AngularLoss
 from .arcface_loss import ArcFaceLoss
 from .base_metric_loss_function import BaseMetricLossFunction
 from .base_proxy_loss import BaseProxyLoss
+from .center_loss import CenterLoss
 from .centroid_triplet_loss import CentroidTripletLoss
 from .circle_loss import CircleLoss
 from .contrastive_loss import ContrastiveLoss
@@ -51,6 +52,7 @@ __all__ = [
     "ArcFaceLoss",
     "BaseMetricLossFunction",
     "BaseProxyLoss",
+    "CenterLoss",
     "CentroidTripletLoss",
     "CircleLoss",
     "ContrastiveLoss",

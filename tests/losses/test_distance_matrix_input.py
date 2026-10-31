@@ -131,6 +131,10 @@ def assert_same(test, first, second):
 
 
 class TestLossMatrixInput(unittest.TestCase):
+    def setUp(self):
+        torch.use_deterministic_algorithms(True)
+        self.addCleanup(torch.use_deterministic_algorithms, False)
+
     def test_support_declarations_cover_every_exported_loss(self):
         exported = {
             name

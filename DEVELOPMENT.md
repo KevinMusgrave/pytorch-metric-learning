@@ -109,6 +109,11 @@ two-rank NCCL all-reduce hangs on a host, set `NCCL_P2P_DISABLE=1` and record
 that setting with the results, because it disables direct peer-to-peer
 transport.
 
+`index_add` and `scatter_add` accumulate in a nondeterministic order on CUDA, so
+repeating one computation can differ by rounding. Tests that require exact equality
+between two computations call `torch.use_deterministic_algorithms(True)`, which needs
+the `CUBLAS_WORKSPACE_CONFIG` value the root `conftest.py` sets.
+
 ## Benchmarks
 
 ```sh

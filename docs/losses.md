@@ -131,7 +131,7 @@ The rules are:
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------- |
 | `CircleLoss`, `ContrastiveLoss`, `DecoupledContrastiveLoss`, `DynamicSoftMarginLoss`, `GeneralizedLiftedStructureLoss`, `IntraPairVarianceLoss`, `MarginLoss`, `MultiSimilarityLoss`, `MultiSupConLoss`, `NCALoss`, `NTXentLoss`, `SelectivelyContrastiveTripletLoss`, `SignalToNoiseRatioContrastiveLoss`, `SupConLoss`, `TripletMarginLoss`, `TupletMarginLoss` | Supported    | `(N, N)`, or `(N, M)` with `ref_emb`                                                              |
 | `FastAPLoss`, `HistogramLoss`, `InstanceLoss`, `LiftedStructureLoss`, `PNPLoss`, `RankedListLoss`, `SmoothAPLoss`                                                                                                                                                                                                                                                 | Supported    | `(N, N)`; these losses reject `ref_emb`                                                           |
-| Proxy and classifier losses, `AngularLoss`, `CentroidTripletLoss`, `ManifoldLoss`, `NPairsLoss`, `ThresholdConsistentMarginLoss`                                                                                                                                                                                                                                  | `ValueError` | They compare embeddings with their own weights or subsets, or read embeddings directly            |
+| Proxy and classifier losses, `AngularLoss`, `CentroidTripletLoss`, `GE2ELoss`, `ManifoldLoss`, `NPairsLoss`, `ThresholdConsistentMarginLoss`                                                                                                                                                                                                                      | `ValueError` | They compare embeddings with their own weights or subsets, or read embeddings directly            |
 | `CrossBatchMemory`, `DistributedLossWrapper`, `MultipleLosses`, `SelfSupervisedLoss`, `VICRegLoss`                                                                                                                                                                                                                                                                | `TypeError`  | These wrappers build their own inputs or have no distance matrix, so their `forward` has no `mat` |
 
 `TripletMarginLoss(swap=True)` raises `ValueError` with `mat`, because swapping
@@ -515,6 +515,8 @@ batches with several positives per class.
 
 - [DecoupledContrastiveLoss](losses/decoupled_contrastive_loss.md): InfoNCE without
   the positive in the denominator, which keeps small batches learning.
+- [GE2ELoss](losses/ge2e_loss.md): each embedding against every class centroid in the
+  batch, with its own class's centroid computed without it.
 - [InstanceLoss](losses/instance_loss.md): classification of each instance
   against the batch, as in image-text instance retrieval.
 - [MultiSupConLoss](losses/multi_supcon_loss.md): SupCon for label sets, with

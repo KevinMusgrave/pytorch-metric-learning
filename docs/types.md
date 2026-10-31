@@ -208,6 +208,14 @@ type PairFunction = Callable[[Tensor, Tensor], PairIndices]
 The `pair_function` of [CrossBatchMemory](losses/cross_batch_memory.md): it
 takes labels and reference labels and returns all candidate pairs.
 
+### GE2EVariant
+
+```python {.signature}
+type GE2EVariant = Literal["softmax", "contrast"]
+```
+
+The `variant` of [GE2ELoss](losses/ge2e_loss.md). Another value raises `ValueError`.
+
 ### PNPVariant
 
 ```python {.signature}

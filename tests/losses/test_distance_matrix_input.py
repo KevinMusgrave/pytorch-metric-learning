@@ -68,6 +68,7 @@ UNSUPPORTED_LOSSES = {
     "DynamicArcFaceLoss": lambda: losses.DynamicArcFaceLoss(
         class_counts=torch.tensor([3, 4, 5]), embedding_size=8
     ),
+    "GE2ELoss": lambda: losses.GE2ELoss(),
     "LargeMarginSoftmaxLoss": lambda: losses.LargeMarginSoftmaxLoss(
         num_classes=3, embedding_size=8
     ),

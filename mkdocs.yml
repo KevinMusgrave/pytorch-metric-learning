@@ -50,6 +50,7 @@ nav:
         - ThresholdConsistentMarginLoss: losses/threshold_consistent_margin_loss.md
       - Self-supervised and supervised contrastive objectives:
         - DecoupledContrastiveLoss: losses/decoupled_contrastive_loss.md
+        - GE2ELoss: losses/ge2e_loss.md
         - InstanceLoss: losses/instance_loss.md
         - MultiSupConLoss: losses/multi_supcon_loss.md
         - NTXentLoss: losses/ntxent_loss.md

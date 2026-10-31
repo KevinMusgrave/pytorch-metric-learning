@@ -18,6 +18,7 @@ __all__ = [
     "ArrayLike",
     "DatasetLabels",
     "DistributedObjective",
+    "GE2EVariant",
     "GradedRelevance",
     "IndicesTuple",
     "KMeansFunction",
@@ -59,6 +60,7 @@ type PairFunction = Callable[[Tensor, Tensor], PairIndices]
 type TripletsPerAnchor = int | Literal["all"]
 type MiningStrategy = Literal["hard", "semihard", "easy", "all"]
 type PNPVariant = Literal["Ds", "Dq", "Iu", "Ib", "O"]
+type GE2EVariant = Literal["softmax", "contrast"]
 type AnchorAggregation = Literal["mean", "sum"]
 type DistributedObjective = Literal["global", "local_anchor"]
 

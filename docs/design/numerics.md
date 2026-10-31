@@ -445,3 +445,11 @@ singleton are ordinary in long-tailed training, and raising stops a run at a ran
 for a row that simply has no objective. The row still contributes a negative centroid,
 because a centroid of one sample is well defined. `swap` and `triplets_per_anchor` were
 not restored: the paper defines neither, and every anchor-class triplet is cheap here.
+
+`GE2ELoss` shares that helper but normalizes first, because equation 4 defines centroids
+over unit vectors. Averaging raw embeddings would let large embeddings dominate a class's
+centroid, and leave-one-out on every class would stop scoring negatives against the
+centroids that equation 9 specifies. The own-class score replaces one entry of the
+matrix, so negatives use a single `(rows, classes)` comparison. `w` is clamped in the
+forward pass, not in place, so a step that drives it below zero recovers through the
+clamp without modifying a parameter that an optimizer owns.

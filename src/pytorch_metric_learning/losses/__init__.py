@@ -12,6 +12,7 @@ from .decoupled_contrastive_loss import DecoupledContrastiveLoss
 from .dynamic_arcface_loss import DynamicArcFaceLoss
 from .dynamic_soft_margin_loss import DynamicSoftMarginLoss
 from .fast_ap_loss import FastAPLoss
+from .ge2e_loss import GE2ELoss
 from .generic_pair_loss import GenericPairLoss
 from .histogram_loss import HistogramLoss
 from .instance_loss import InstanceLoss
@@ -59,6 +60,7 @@ __all__ = [
     "DynamicArcFaceLoss",
     "DynamicSoftMarginLoss",
     "FastAPLoss",
+    "GE2ELoss",
     "GeneralizedLiftedStructureLoss",
     "GenericPairLoss",
     "HistogramLoss",

@@ -92,6 +92,20 @@ matrix comparisons and corresponding-row comparisons through
 `BaseDistance.pairwise`, so it needs no quadratic intermediate. Evaluation diagnostics use standard module loggers;
 applications configure the `pytorch_metric_learning` logger hierarchy.
 
+Threshold selection takes scores and labels rather than a model or embeddings,
+so inference, splits, and pair construction stay with the application and any
+source of scores works. The metric is a required callable over confusion counts
+for every candidate, computed in one sorted pass, so constraints such as a
+false-match-rate ceiling need no extra options. `is_inverted` has no default
+because guessing the direction of a score silently inverts every decision. A
+returned threshold is the midpoint of the gap it separates: both neighbors give
+the same validation result, and an observed score would sit on the validation
+data's edge. Comparisons convert a Python threshold to the score dtype, so a
+midpoint that rounds onto the excluded score falls back to the kept score, which
+preserves the reported value under `MatchFinder`. Selection runs on CPU copies
+because float64 counts are unavailable on MPS and a one-dimensional sort is cheap
+relative to the inference that produced the scores.
+
 Faiss and scikit-learn are optional and imported only when a Faiss backend is
 constructed or a mutual-information metric is computed. Missing packages raise
 `ModuleNotFoundError` naming the extra. Clustering metrics run only when named

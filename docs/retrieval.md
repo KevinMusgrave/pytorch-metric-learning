@@ -1,7 +1,7 @@
 # Retrieval backends
 
 `pytorch_metric_learning.evaluation` provides nearest-neighbor search,
-threshold matching, and k-means clustering for
+threshold matching and selection, and k-means clustering for
 [`AccuracyCalculator`](accuracy_calculation.md) and application code. These
 operate on embedding tensors the caller has already computed; the
 [evaluation recipe](recipes/evaluation.md#extract-embeddings) shows an ordinary
@@ -122,6 +122,147 @@ matches = finder.get_match_matrix(query, reference)
 assert matches.tolist() == [[True, False, False], [False, False, False]]
 assert finder.get_match_indices(query, reference).tolist() == [[0, 0]]
 assert finder.is_match(query, reference[:2]).tolist() == [True, False]
+```
+
+## Threshold selection
+
+`select_threshold` chooses the threshold for a match/no-match decision from
+validation scores and labels. Model inference, dataset splits, and pair
+construction stay in application code.
+
+```python {.signature}
+evaluation.select_threshold(
+    scores: ArrayLike,
+    labels: ArrayLike,
+    metric: Callable[[MatchCounts], Tensor],
+    *,
+    is_inverted: bool,
+) -> ThresholdSelection
+```
+
+- **scores**: A one-dimensional floating-point tensor or NumPy array of finite
+  distances or similarities, one per validation pair.
+- **labels**: A boolean tensor or array of the same length, `True` where the
+  pair should match. Both values must be present.
+- **metric**: The quantity to maximize. It receives a `MatchCounts` and returns
+  one value per candidate threshold, NaN where undefined.
+- **is_inverted**: `True` when larger scores mean more alike, as for similarities;
+  pass `distance.is_inverted`.
+
+Invalid inputs, a metric that returns another shape, and a metric that is NaN
+for every candidate raise `ValueError`. The function runs on CPU copies, keeps
+no autograd graph, and returns Python floats.
+
+```python {.signature}
+class ThresholdSelection(NamedTuple):
+    threshold: float
+    value: float
+```
+
+`threshold` follows the [`MatchFinder`](#matchfinder) rule, so the validation
+pairs at or beyond it get exactly the decisions counted in `value`, the metric at
+that threshold. Candidates are every distinct way to separate the sorted scores:
+
+- Between two neighboring scores, the threshold is their midpoint, which leaves
+  the same room on both sides. If the scores are adjacent floating-point values,
+  it is the weaker score of the matching side.
+- If every pair should match, it is the weakest score. New pairs beyond it do
+  not match.
+- If no pair should match, it is `inf` for similarities and `-inf` for distances.
+
+When several candidates tie, the one with the fewest matches wins.
+
+```python {.signature}
+class MatchCounts(NamedTuple):
+    true_positives: Tensor
+    false_positives: Tensor
+    true_negatives: Tensor
+    false_negatives: Tensor
+```
+
+Each field is a one-dimensional float64 CPU tensor with one count per candidate
+threshold, strictest first. The built-in metrics take a `MatchCounts`:
+
+```python {.signature}
+evaluation.match_accuracy(counts: MatchCounts) -> Tensor
+```
+
+```python {.signature}
+evaluation.match_balanced_accuracy(counts: MatchCounts) -> Tensor
+```
+
+```python {.signature}
+evaluation.match_f1(counts: MatchCounts) -> Tensor
+```
+
+`match_accuracy` counts correct decisions, so it favors the majority on
+imbalanced validation pairs. `match_balanced_accuracy` is the mean of recall and
+specificity. `match_f1` is `2 * tp / (2 * tp + fp + fn)`.
+
+For verification, score labeled pairs with `distance.pairwise` and pass the
+threshold to `MatchFinder`:
+
+```python
+import torch
+from pytorch_metric_learning.distances import CosineSimilarity
+from pytorch_metric_learning.evaluation import MatchFinder, match_f1, select_threshold
+
+distance = CosineSimilarity()
+first = torch.tensor([[1.0, 0.0], [1.0, 0.0], [1.0, 0.0], [1.0, 0.0]])
+second = torch.tensor([[1.0, 0.1], [1.0, 0.3], [0.2, 1.0], [-1.0, 0.0]])
+is_same = torch.tensor([True, True, False, False])
+
+selection = select_threshold(
+    distance.pairwise(first, second),
+    is_same,
+    match_f1,
+    is_inverted=distance.is_inverted,
+)
+finder = MatchFinder(distance, threshold=selection.threshold)
+assert selection.value == 1.0
+assert finder.is_match(first, second).tolist() == is_same.tolist()
+```
+
+For one-shot classification, score each query by its nearest reference and label
+it by whether that neighbor has the right class. A query from an unknown class
+is never correct, so the threshold learns to reject it:
+
+```python
+from pytorch_metric_learning.evaluation import CustomKNN
+
+gallery = torch.tensor([[1.0, 0.0], [0.0, 1.0]])
+gallery_labels = torch.tensor([0, 1])
+query = torch.tensor([[1.0, 0.1], [0.1, 1.0], [1.0, 1.0], [-1.0, -0.5]])
+query_labels = torch.tensor([0, 1, 2, 3])
+
+similarities, neighbors = CustomKNN(distance)(query, 1, gallery)
+correct = gallery_labels[neighbors[:, 0]] == query_labels
+selection = select_threshold(
+    similarities[:, 0], correct, match_f1, is_inverted=distance.is_inverted
+)
+accepted = similarities[:, 0] >= selection.threshold
+assert accepted.tolist() == [True, True, False, False]
+```
+
+A custom metric can express a constraint. This one maximizes recall among
+thresholds with a false match rate of at most 1%:
+
+```python
+def recall_at_low_false_match_rate(counts):
+    recall = counts.true_positives / (counts.true_positives + counts.false_negatives)
+    false_match_rate = counts.false_positives / (
+        counts.false_positives + counts.true_negatives
+    )
+    return torch.where(false_match_rate <= 0.01, recall, torch.nan)
+
+
+selection = select_threshold(
+    similarities[:, 0],
+    correct,
+    recall_at_low_false_match_rate,
+    is_inverted=True,
+)
+assert selection.value == 1.0
 ```
 
 ## Logging

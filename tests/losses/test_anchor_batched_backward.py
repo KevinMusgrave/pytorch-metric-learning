@@ -7,7 +7,7 @@ import torch
 from pytorch_metric_learning import distances, losses, reducers, regularizers
 from pytorch_metric_learning.losses import anchor_batched_backward
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 
 SUPPORTED = {
     "CircleLoss": lambda: losses.CircleLoss(),
@@ -173,6 +173,7 @@ class TestAnchorBatchedBackward(unittest.TestCase):
         self.assertEqual(shapes, [5, 5, 5, 3])
 
     def test_labels_without_tuples_return_a_zero(self):
+        helpers.use_deterministic_kernels(self)
         embeddings = torch.randn(6, 4, device=TEST_DEVICE, requires_grad=True)
         labels = torch.arange(6, device=TEST_DEVICE)
         for loss_func in (
@@ -346,6 +347,7 @@ class TestAnchorBatchedBackward(unittest.TestCase):
         self.assertIsNone(parameters["distance.frozen"].grad)
 
     def test_satisfied_batch_matches_full_backward_state(self):
+        helpers.use_deterministic_kernels(self)
         separated = torch.tensor(
             [[1.0, 0], [1, 0], [-1, 0], [-1, 0]],
             dtype=torch.float64,

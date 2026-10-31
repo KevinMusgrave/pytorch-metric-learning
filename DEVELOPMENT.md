@@ -111,8 +111,9 @@ transport.
 
 `index_add` and `scatter_add` accumulate in a nondeterministic order on CUDA, so
 repeating one computation can differ by rounding. Tests that require exact equality
-between two computations call `torch.use_deterministic_algorithms(True)`, which needs
-the `CUBLAS_WORKSPACE_CONFIG` value the root `conftest.py` sets.
+between two computations call `helpers.use_deterministic_kernels`, which needs the
+`CUBLAS_WORKSPACE_CONFIG` value the root `conftest.py` sets. Use it for any new test
+that compares two computed floats exactly.
 
 ## Benchmarks
 

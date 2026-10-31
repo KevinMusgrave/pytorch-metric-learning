@@ -329,6 +329,7 @@ class TestRankNContrastLoss(unittest.TestCase):
         self.assertAlmostEqual(loss.item(), expected.item())
 
     def test_precomputed_matrix(self):
+        helpers.use_deterministic_kernels(self)
         embeddings = batch().requires_grad_()
         targets = tensor(CASES["duplicate-targets"])
         loss_func = losses.RankNContrastLoss()

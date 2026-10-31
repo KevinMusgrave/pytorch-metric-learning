@@ -6,7 +6,7 @@ from pytorch_metric_learning import losses
 from pytorch_metric_learning.miners import MultiSimilarityMiner, TripletMarginMiner
 from pytorch_metric_learning.utils.indexing import get_all_pairs_indices
 
-from .. import TEST_DEVICE
+from .. import TEST_DEVICE, helpers
 
 
 def get_compatible_losses():
@@ -47,6 +47,7 @@ def get_incompatible_losses():
 
 class TestLossesWithoutLabels(unittest.TestCase):
     def test_indices_tuple_without_labels(self):
+        helpers.use_deterministic_kernels(self)
         emb = torch.randn(32, 32, device=TEST_DEVICE)
         labels = torch.randint(0, 10, size=(32,), device=TEST_DEVICE)
         pairs1 = get_all_pairs_indices(labels)

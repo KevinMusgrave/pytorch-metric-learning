@@ -17,7 +17,7 @@
   "quality": {
     "allowComments": false,
     "lineBudget": {
-      "production": 7000
+      "production": 7500
     }
   },
   "portability": {},

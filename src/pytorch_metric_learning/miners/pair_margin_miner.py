@@ -2,11 +2,13 @@ from torch import Tensor
 
 from ..distances import BaseDistance
 from ..types import IndicesTuple, PairIndices
-from ..utils import indexing
+from ..utils import _common, indexing
 from .base_miner import BaseMiner
 
 
 class PairMarginMiner(BaseMiner):
+    supports_mat = True
+
     def __init__(
         self,
         pos_margin: float = 0.2,
@@ -25,8 +27,10 @@ class PairMarginMiner(BaseMiner):
         indices_tuple: IndicesTuple | None,
         ref_emb: Tensor | None,
         ref_labels: Tensor | None,
+        *,
+        mat: Tensor | None = None,
     ) -> IndicesTuple:
-        mat = self.distance(embeddings, ref_emb)
+        mat = _common.resolve_matrix(self.distance, embeddings, ref_emb, mat)
         a1, p, a2, n = indexing.convert_to_pairs(indices_tuple, labels, ref_labels)
         pos_mask = self.distance.margin(mat[a1, p], self.pos_margin) > 0
         neg_mask = self.distance.margin(self.neg_margin, mat[a2, n]) > 0

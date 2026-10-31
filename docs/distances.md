@@ -139,6 +139,31 @@ raises `ValueError`. Call `pairwise`, not `pairwise_distance`, from losses and
 application code, so normalization and `power` apply. Custom similarities set
 `is_inverted = True` on the class.
 
+### Matrices with per-batch metadata
+
+A distance receives only embeddings. When a matrix also depends on per-batch data,
+such as a reward or sample id for each row, compute it in application code and pass
+it to the loss as [`mat`](losses.md#precomputed-distance-matrices). Keep this data
+out of the distance object, where it would be state shared between batches.
+
+```python
+from pytorch_metric_learning import losses
+from pytorch_metric_learning.distances import DotProductSimilarity
+
+embeddings = torch.randn(8, 16, requires_grad=True)
+labels = torch.arange(8) // 2
+rewards = torch.linspace(0.5, 2.0, 8)
+
+distance = DotProductSimilarity()
+mat = distance(embeddings) * rewards.unsqueeze(1) * rewards.unsqueeze(0)
+loss = losses.NTXentLoss(distance=distance)(embeddings, labels, mat=mat)
+loss.backward()
+assert embeddings.grad.any()
+```
+
+The loss's `distance` still sets the orientation of `mat`, so use a distance with
+the same `is_inverted` value.
+
 ## BatchedDistance
 
 Computes a distance matrix in blocks of query rows, so peak memory is one

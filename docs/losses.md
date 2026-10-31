@@ -47,7 +47,15 @@ loss = loss_func(embeddings, labels, ref_emb=ref_emb, ref_labels=ref_labels)
 ## Forward arguments
 
 ```python {.signature}
-loss_func(embeddings, labels=None, indices_tuple=None, ref_emb=None, ref_labels=None)
+loss_func(
+    embeddings,
+    labels=None,
+    indices_tuple=None,
+    ref_emb=None,
+    ref_labels=None,
+    *,
+    mat=None,
+)
 ```
 
 - **embeddings**: A `(N, D)` tensor of query embeddings.
@@ -59,6 +67,8 @@ loss_func(embeddings, labels=None, indices_tuple=None, ref_emb=None, ref_labels=
   device; see [reference embeddings](#reference-embeddings).
 - **ref_labels**: A `(M,)` tensor of reference labels. It requires `ref_emb`;
   passing it alone raises `ValueError`.
+- **mat**: Optional precomputed distance matrix used in place of the loss's
+  distance call; see [precomputed distance matrices](#precomputed-distance-matrices).
 
 The return value is a scalar tensor connected to the embeddings and to the
 loss's parameters. When there are no valid pairs, triplets, or queries, the
@@ -70,6 +80,63 @@ result is a differentiable zero.
 is a separate reference set, even when it is the same tensor. See
 [reference sets](concepts.md#reference-sets) for the indexing rule and the
 `labels`/`ref_labels` combinations that raise `ValueError`.
+
+### Precomputed distance matrices
+
+`mat` lets a caller compute the matrix a loss would otherwise compute. Use it to
+reuse one computation across a miner and several losses, or to build a matrix
+from per-batch metadata such as sample ids, which a
+[distance](distances.md#matrices-with-per-batch-metadata) does not receive.
+
+```python
+import torch
+from pytorch_metric_learning import distances, losses, miners
+
+distance = distances.CosineSimilarity()
+miner = miners.MultiSimilarityMiner(distance=distance)
+first = losses.MultiSimilarityLoss(distance=distance)
+second = losses.ContrastiveLoss(distance=distance)
+
+embeddings = torch.randn(32, 128, requires_grad=True)
+labels = torch.arange(32) // 4
+
+mat = distance(embeddings)
+pairs = miner(embeddings, labels, mat=mat)
+loss = first(embeddings, labels, pairs, mat=mat) + second(
+    embeddings, labels, pairs, mat=mat
+)
+loss.backward()
+```
+
+`mat` has shape `(len(embeddings), len(reference))`, where the reference is
+`ref_emb` when supplied and `embeddings` otherwise. With the same inputs, a
+supported loss returns the same value and gradients as computing the matrix
+itself.
+
+The rules are:
+
+- Compute `mat` once, outside any miner, with gradients enabled. A loss raises
+  `ValueError` if `embeddings` or `ref_emb` require gradients, gradients are
+  enabled, and `mat` has no graph, because the loss would not train anything.
+- Sum the losses and call `backward()` once. They share the graph of `mat`, so a
+  second `backward()` needs `retain_graph=True`, as for any shared subgraph.
+- The loss's `distance` still sets the orientation and margin through
+  `is_inverted` and `margin`, so `mat` must have the same meaning as that
+  distance's output. A loss cannot detect a matrix with the wrong orientation or
+  scale.
+- A wrong shape, an integer dtype, or another device raises `ValueError`.
+- Nothing is cached. Modules neither change `mat` nor keep a reference to it.
+
+| Loss                                                                                                                                                                                                                                                                                             | `mat`        | Shape                                                                                             |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------ | ------------------------------------------------------------------------------------------------- |
+| `CircleLoss`, `ContrastiveLoss`, `DynamicSoftMarginLoss`, `GeneralizedLiftedStructureLoss`, `IntraPairVarianceLoss`, `MarginLoss`, `MultiSimilarityLoss`, `MultiSupConLoss`, `NCALoss`, `NTXentLoss`, `SignalToNoiseRatioContrastiveLoss`, `SupConLoss`, `TripletMarginLoss`, `TupletMarginLoss` | Supported    | `(N, N)`, or `(N, M)` with `ref_emb`                                                              |
+| `FastAPLoss`, `HistogramLoss`, `InstanceLoss`, `LiftedStructureLoss`, `PNPLoss`, `RankedListLoss`, `SmoothAPLoss`                                                                                                                                                                                | Supported    | `(N, N)`; these losses reject `ref_emb`                                                           |
+| Proxy and classifier losses, `AngularLoss`, `ManifoldLoss`, `NPairsLoss`, `ThresholdConsistentMarginLoss`                                                                                                                                                                                        | `ValueError` | They compare embeddings with their own weights or subsets, or read embeddings directly            |
+| `CrossBatchMemory`, `DistributedLossWrapper`, `MultipleLosses`, `SelfSupervisedLoss`, `VICRegLoss`                                                                                                                                                                                               | `TypeError`  | These wrappers build their own inputs or have no distance matrix, so their `forward` has no `mat` |
+
+`TripletMarginLoss(swap=True)` raises `ValueError` with `mat`, because swapping
+reads distances between references, which `mat` does not hold. Check
+`type(loss).supports_mat` to test a loss class.
 
 ### Index tuples
 

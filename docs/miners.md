@@ -52,7 +52,15 @@ miners.BaseMiner(*, distance=None)
 ### Calling a miner
 
 ```python {.signature}
-miner(embeddings, labels, indices_tuple=None, ref_emb=None, ref_labels=None)
+miner(
+    embeddings,
+    labels,
+    indices_tuple=None,
+    ref_emb=None,
+    ref_labels=None,
+    *,
+    mat=None,
+)
 ```
 
 - **embeddings**: `(N, D)` query embeddings. Anchor indices refer to these rows.
@@ -63,6 +71,13 @@ miner(embeddings, labels, indices_tuple=None, ref_emb=None, ref_labels=None)
   `(M,)`, following the [reference-set rule](concepts.md#reference-sets).
   Positive and negative indices refer to these rows. Miners require labels, so
   `ref_labels` is required with `ref_emb`.
+- **mat**: Optional precomputed `(N, N)`, or `(N, M)` with `ref_emb`, distance
+  matrix used in place of the miner's distance call. Every miner supports it except
+  `AngularMiner`, which reads embeddings directly and raises `ValueError`. A wrong
+  shape, an integer dtype, or another device raises `ValueError`. Unlike a loss, a
+  miner needs no graph, so `mat` may be detached. `DistributedMinerWrapper` gathers
+  its own inputs and has no `mat`. See
+  [precomputed distance matrices](losses.md#precomputed-distance-matrices).
 
 Pass `indices_tuple`, `ref_emb`, and `ref_labels` by keyword. `labels`,
 `ref_emb`, `ref_labels`, and candidate tensors must be on the embeddings'

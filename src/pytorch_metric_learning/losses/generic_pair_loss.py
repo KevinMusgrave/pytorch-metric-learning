@@ -6,6 +6,8 @@ from .base_metric_loss_function import BaseMetricLossFunction
 
 
 class GenericPairLoss(BaseMetricLossFunction):
+    supports_mat = True
+
     def compute_loss(
         self,
         embeddings: Tensor,
@@ -13,12 +15,15 @@ class GenericPairLoss(BaseMetricLossFunction):
         indices_tuple: IndicesTuple | None,
         ref_emb: Tensor | None,
         ref_labels: Tensor | None,
+        *,
+        mat: Tensor | None = None,
     ) -> LossDict:
         _common.labels_or_indices_tuple_required(labels, indices_tuple)
         pairs = indexing.convert_to_pairs(indices_tuple, labels, ref_labels)
         if all(len(x) == 0 for x in pairs):
             return {}
-        return self.pair_loss(self.distance(embeddings, ref_emb), pairs)
+        matrix = _common.resolve_matrix(self.distance, embeddings, ref_emb, mat)
+        return self.pair_loss(matrix, pairs)
 
     def pair_loss(self, mat: Tensor, pairs: PairIndices) -> LossDict:
         raise NotImplementedError

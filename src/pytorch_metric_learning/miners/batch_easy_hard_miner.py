@@ -12,6 +12,8 @@ _STRATEGIES = ("hard", "semihard", "easy", "all")
 
 
 class BatchEasyHardMiner(BaseMiner):
+    supports_mat = True
+
     def __init__(
         self,
         pos_strategy: MiningStrategy = "easy",
@@ -46,8 +48,10 @@ class BatchEasyHardMiner(BaseMiner):
         indices_tuple: IndicesTuple | None,
         ref_emb: Tensor | None,
         ref_labels: Tensor | None,
+        *,
+        mat: Tensor | None = None,
     ) -> IndicesTuple:
-        mat = self.distance(embeddings, ref_emb)
+        mat = _common.resolve_matrix(self.distance, embeddings, ref_emb, mat)
         if mat.numel() == 0:
             return _common.empty_pairs(mat.device)
         a1_idx, p_idx, a2_idx, n_idx = indexing.convert_to_pairs(

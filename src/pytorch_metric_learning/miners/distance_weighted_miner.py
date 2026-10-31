@@ -8,6 +8,8 @@ from .base_miner import BaseMiner
 
 
 class DistanceWeightedMiner(BaseMiner):
+    supports_mat = True
+
     def __init__(
         self,
         cutoff: float = 0.5,
@@ -29,9 +31,14 @@ class DistanceWeightedMiner(BaseMiner):
         indices_tuple: IndicesTuple | None,
         ref_emb: Tensor | None,
         ref_labels: Tensor | None,
+        *,
+        mat: Tensor | None = None,
     ) -> IndicesTuple:
         d = float(embeddings.size(1))
-        mat = torch.clamp(self.distance(embeddings, ref_emb), min=self.cutoff)
+        mat = torch.clamp(
+            _common.resolve_matrix(self.distance, embeddings, ref_emb, mat),
+            min=self.cutoff,
+        )
         if mat.numel() == 0:
             return _common.empty_triplets(mat.device)
         log_weights = (2.0 - d) * torch.log(mat) - ((d - 3) / 2) * torch.log(

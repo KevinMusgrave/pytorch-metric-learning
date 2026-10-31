@@ -58,41 +58,20 @@ class MinedLoss(nn.Module):
         return self.loss(embeddings, labels, self.miner(embeddings, labels))
 
 
-class ReusedMatrix(distances.BaseDistance):
-    def __init__(self, distance: distances.BaseDistance) -> None:
-        super().__init__()
-        self.distance = distance
-        self.is_inverted = distance.is_inverted
-        self.mat: torch.Tensor | None = None
-
-    def compute(self, embeddings: torch.Tensor) -> None:
-        self.mat = self.distance(embeddings)
-
-    def forward(
-        self, query_emb: torch.Tensor, ref_emb: torch.Tensor | None = None
-    ) -> torch.Tensor:
-        if self.mat is None:
-            raise ValueError("Compute the reused matrix before reading it")
-        return self.mat
-
-
 class MinedLosses(nn.Module):
-    def __init__(self, distance: distances.BaseDistance) -> None:
+    def __init__(self, distance: distances.BaseDistance, reuse: bool) -> None:
         super().__init__()
         self.distance = distance
+        self.reuse = reuse
         self.miner = miners.MultiSimilarityMiner(distance=distance)
         self.first = losses.MultiSimilarityLoss(distance=distance)
         self.second = losses.ContrastiveLoss(distance=distance)
 
     def forward(self, embeddings: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
-        if isinstance(self.distance, ReusedMatrix):
-            self.distance.compute(embeddings)
-        pairs = self.miner(embeddings, labels)
-        loss = self.first(embeddings, labels, pairs)
-        loss = loss + self.second(embeddings, labels, pairs)
-        if isinstance(self.distance, ReusedMatrix):
-            self.distance.mat = None
-        return loss
+        mat = self.distance(embeddings) if self.reuse else None
+        pairs = self.miner(embeddings, labels, mat=mat)
+        first = self.first(embeddings, labels, pairs, mat=mat)
+        return first + self.second(embeddings, labels, pairs, mat=mat)
 
 
 def synchronize(device: torch.device) -> None:
@@ -168,12 +147,10 @@ def make_workload(
             embedding_size=args.dimensions,
             temperature=0.1,
         ),
-        "separate-cosine": lambda: MinedLosses(distances.CosineSimilarity()),
-        "reused-cosine": lambda: MinedLosses(
-            ReusedMatrix(distances.CosineSimilarity())
-        ),
-        "separate-lp": lambda: MinedLosses(distances.LpDistance()),
-        "reused-lp": lambda: MinedLosses(ReusedMatrix(distances.LpDistance())),
+        "separate-cosine": lambda: MinedLosses(distances.CosineSimilarity(), False),
+        "reused-cosine": lambda: MinedLosses(distances.CosineSimilarity(), True),
+        "separate-lp": lambda: MinedLosses(distances.LpDistance(), False),
+        "reused-lp": lambda: MinedLosses(distances.LpDistance(), True),
         "distributed": lambda: DistributedContrastive(args.dimensions),
     }
     module = factories[case]().to(device=device, dtype=dtype)

@@ -78,6 +78,7 @@ nav:
     - Performance: performance.md
     - Release notes:
       - All releases: release-notes/index.md
+      - 3.0.0rc5 (preview): release-notes/3.0.0rc5.md
       - 3.0.0rc4 (preview): release-notes/3.0.0rc4.md
       - 3.0.0rc3 (preview): release-notes/3.0.0rc3.md
       - 3.0.0rc2 (preview): release-notes/3.0.0rc2.md

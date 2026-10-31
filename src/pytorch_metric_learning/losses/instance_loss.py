@@ -11,6 +11,8 @@ from .base_metric_loss_function import BaseMetricLossFunction
 
 
 class InstanceLoss(BaseMetricLossFunction):
+    supports_mat = True
+
     def __init__(self, gamma: float = 64, **options: Unpack[LossOptions]) -> None:
         super().__init__(**options)
         _common.check_distance_type(self, CosineSimilarity)
@@ -23,11 +25,13 @@ class InstanceLoss(BaseMetricLossFunction):
         indices_tuple: IndicesTuple | None,
         ref_emb: Tensor | None,
         ref_labels: Tensor | None,
+        *,
+        mat: Tensor | None = None,
     ) -> LossDict:
         labels = _common.labels_required(labels)
         _common.indices_tuple_not_supported(indices_tuple)
         _common.ref_not_supported(ref_emb)
-        sim1 = self.distance(embeddings) * self.gamma
+        sim1 = _common.resolve_matrix(self.distance, embeddings, None, mat) * self.gamma
         _, sim_label = torch.unique(labels, return_inverse=True)
         loss = F.cross_entropy(sim1, sim_label, reduction="none")
         return {

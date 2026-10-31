@@ -16,8 +16,10 @@ class BatchHardMiner(BatchEasyHardMiner):
         indices_tuple: IndicesTuple | None,
         ref_emb: Tensor | None,
         ref_labels: Tensor | None,
+        *,
+        mat: Tensor | None = None,
     ) -> IndicesTuple:
         a1, p, _, n = super().mine(
-            embeddings, labels, indices_tuple, ref_emb, ref_labels
+            embeddings, labels, indices_tuple, ref_emb, ref_labels, mat=mat
         )
         return TripletIndices(a1, p, n)

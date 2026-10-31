@@ -11,6 +11,8 @@ from .base_metric_loss_function import BaseMetricLossFunction
 
 
 class SmoothAPLoss(BaseMetricLossFunction):
+    supports_mat = True
+
     def __init__(
         self, temperature: float = 0.01, **options: Unpack[LossOptions]
     ) -> None:
@@ -28,10 +30,12 @@ class SmoothAPLoss(BaseMetricLossFunction):
         indices_tuple: IndicesTuple | None,
         ref_emb: Tensor | None,
         ref_labels: Tensor | None,
+        *,
+        mat: Tensor | None = None,
     ) -> LossDict:
         labels = _common.labels_required(labels)
         _common.ref_not_supported(ref_emb)
-        sims = self.distance(embeddings)
+        sims = _common.resolve_matrix(self.distance, embeddings, None, mat)
         others = ~torch.eye(len(labels), dtype=torch.bool, device=labels.device)
         same = (labels.unsqueeze(0) == labels.unsqueeze(1)).to(sims.dtype)
         differences = sims.unsqueeze(1) - sims.unsqueeze(2)

@@ -10,6 +10,8 @@ from .base_metric_loss_function import BaseMetricLossFunction
 
 
 class RankedListLoss(BaseMetricLossFunction):
+    supports_mat = True
+
     def __init__(
         self,
         margin: float,
@@ -35,11 +37,13 @@ class RankedListLoss(BaseMetricLossFunction):
         indices_tuple: IndicesTuple | None,
         ref_emb: Tensor | None,
         ref_labels: Tensor | None,
+        *,
+        mat: Tensor | None = None,
     ) -> LossDict:
         labels = _common.labels_required(labels)
         _common.ref_not_supported(ref_emb)
         _common.indices_tuple_not_supported(indices_tuple)
-        mat = self.distance(embeddings)
+        mat = _common.resolve_matrix(self.distance, embeddings, None, mat)
         matches, diffs = indexing._get_matches_and_diffs(labels)
         boundary = self.alpha - self.margin
         positive = matches & (mat > boundary)

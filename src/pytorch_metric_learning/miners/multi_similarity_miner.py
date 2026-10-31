@@ -8,6 +8,8 @@ from .base_miner import BaseMiner
 
 
 class MultiSimilarityMiner(BaseMiner):
+    supports_mat = True
+
     def __init__(
         self, epsilon: float = 0.1, *, distance: BaseDistance | None = None
     ) -> None:
@@ -21,8 +23,10 @@ class MultiSimilarityMiner(BaseMiner):
         indices_tuple: IndicesTuple | None,
         ref_emb: Tensor | None,
         ref_labels: Tensor | None,
+        *,
+        mat: Tensor | None = None,
     ) -> IndicesTuple:
-        mat = self.distance(embeddings, ref_emb)
+        mat = _common.resolve_matrix(self.distance, embeddings, ref_emb, mat)
         if mat.numel() == 0:
             return _common.empty_pairs(mat.device)
         pairs = indexing.convert_to_pairs(indices_tuple, labels, ref_labels)

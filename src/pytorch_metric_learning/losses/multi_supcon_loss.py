@@ -30,6 +30,8 @@ def _jaccard(labels: Tensor, ref_labels: Tensor | None, dtype: torch.dtype) -> T
 
 
 class MultiSupConLoss(BaseMetricLossFunction):
+    supports_mat = True
+
     label_ndim: ClassVar[int] = 2
 
     def __init__(
@@ -67,6 +69,8 @@ class MultiSupConLoss(BaseMetricLossFunction):
         indices_tuple: IndicesTuple | None,
         ref_emb: Tensor | None,
         ref_labels: Tensor | None,
+        *,
+        mat: Tensor | None = None,
     ) -> LossDict:
         labels = _common.labels_required(labels)
         dtype = _common.accumulation_dtype(embeddings.dtype)
@@ -79,7 +83,7 @@ class MultiSupConLoss(BaseMetricLossFunction):
                 (similarity.shape[0], similarity.shape[1]),
                 embeddings.device,
             )
-        mat = self.distance(embeddings, ref_emb).to(dtype)
+        mat = _common.resolve_matrix(self.distance, embeddings, ref_emb, mat).to(dtype)
         if not self.distance.is_inverted:
             mat = -mat
         mat = mat / self.temperature

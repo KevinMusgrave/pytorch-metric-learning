@@ -4,6 +4,11 @@
 2. Implement `mine(embeddings, labels, indices_tuple, ref_emb, ref_labels)`.
 3. Return a `PairIndices` or `TripletIndices` from `pytorch_metric_learning.types`.
 
+To accept a [precomputed distance matrix](../losses.md#precomputed-distance-matrices),
+set the class attribute `supports_mat = True` and add a keyword-only
+`mat: Tensor | None = None` to `mine`. Use `mat` when it is given and call
+`self.distance` otherwise. Without the attribute, passing `mat` raises `ValueError`.
+
 `BaseMiner.forward` validates the inputs, calls `mine` under `torch.no_grad()`,
 and [validates its output](../miners.md#output-validation). It passes the
 arguments to `mine` as follows:

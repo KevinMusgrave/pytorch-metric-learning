@@ -10,6 +10,8 @@ from .base_metric_loss_function import BaseMetricLossFunction
 
 
 class FastAPLoss(BaseMetricLossFunction):
+    supports_mat = True
+
     def __init__(self, num_bins: int = 10, **options: Unpack[LossOptions]) -> None:
         super().__init__(**options)
         _common.check_distance_type(self, LpDistance, normalize_embeddings=True, p=2)
@@ -23,6 +25,8 @@ class FastAPLoss(BaseMetricLossFunction):
         indices_tuple: IndicesTuple | None,
         ref_emb: Tensor | None,
         ref_labels: Tensor | None,
+        *,
+        mat: Tensor | None = None,
     ) -> LossDict:
         labels = _common.labels_required(labels)
         _common.ref_not_supported(ref_emb)
@@ -33,7 +37,7 @@ class FastAPLoss(BaseMetricLossFunction):
         I_neg = diffs.to(dtype)
         N_pos = torch.sum(I_pos, dim=1)
         safe_N = N_pos > 0
-        dist_mat = self.distance(embeddings)
+        dist_mat = _common.resolve_matrix(self.distance, embeddings, None, mat)
 
         histogram_max = 2**self.distance.power
         histogram_delta = histogram_max / self.num_bins

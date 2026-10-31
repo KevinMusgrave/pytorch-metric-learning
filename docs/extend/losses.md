@@ -5,6 +5,12 @@
 2. Implement `compute_loss`.
 3. Inside `compute_loss`, return a dictionary of [loss terms](#loss-terms).
 
+To accept a [precomputed distance matrix](../losses.md#precomputed-distance-matrices),
+set the class attribute `supports_mat = True` and add a keyword-only
+`mat: Tensor | None = None` to `compute_loss`. Use `mat` when it is given and call
+`self.distance` otherwise. Without the attribute, passing `mat` raises `ValueError`,
+so a loss cannot ignore it by accident.
+
 ## The simplest possible loss function
 
 ```python

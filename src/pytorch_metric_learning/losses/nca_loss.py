@@ -33,6 +33,8 @@ def _nca_terms(
 
 
 class NCALoss(BaseMetricLossFunction):
+    supports_mat = True
+
     def __init__(
         self, softmax_scale: float = 1, **options: Unpack[LossOptions]
     ) -> None:
@@ -46,6 +48,8 @@ class NCALoss(BaseMetricLossFunction):
         indices_tuple: IndicesTuple | None,
         ref_emb: Tensor | None,
         ref_labels: Tensor | None,
+        *,
+        mat: Tensor | None = None,
     ) -> LossDict:
         labels = _common.labels_required(labels)
         _, reference_labels = _common.resolve_reference(
@@ -58,7 +62,7 @@ class NCALoss(BaseMetricLossFunction):
             using_ref=ref_emb is not None,
         )
         return _nca_terms(
-            self.distance(embeddings, ref_emb),
+            _common.resolve_matrix(self.distance, embeddings, ref_emb, mat),
             labels,
             _common.labels_required(reference_labels),
             weights,

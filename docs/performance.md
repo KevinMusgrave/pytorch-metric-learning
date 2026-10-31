@@ -25,10 +25,11 @@ weights.
 The `separate-cosine`, `reused-cosine`, `separate-lp`, and `reused-lp` cases run
 `MultiSimilarityMiner`, `MultiSimilarityLoss`, and `ContrastiveLoss` on one batch.
 A `separate` case computes one distance matrix per module. A `reused` case
-computes one matrix with gradients first and gives it to all three, through a
-benchmark-only distance subclass. Compare each pair to measure what repeated
-distance computation costs; their losses are equal for the same seed. These
-cases include no encoder, so they overstate the saving on a whole training step.
+computes one matrix with gradients first and passes it to all three as
+[`mat`](losses.md#precomputed-distance-matrices). Compare each pair to measure what
+repeated distance computation costs; their losses are equal for the same seed.
+These cases include no encoder, so they overstate the saving on a whole training
+step.
 
 Change `--batch-size`, `--dimensions`, `--samples-per-class`, `--dtype`, and
 `--threads` to describe the intended workload. Batch size must contain at least

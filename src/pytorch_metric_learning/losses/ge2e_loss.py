@@ -1,3 +1,4 @@
+import math
 from typing import Unpack
 
 import torch
@@ -25,8 +26,14 @@ class GE2ELoss(BaseMetricLossFunction):
         if init_w <= 0:
             raise ValueError("init_w must be positive")
         self.variant = variant
-        self.w = torch.nn.Parameter(torch.tensor(float(init_w)))
+        raw_w = init_w + math.log(-math.expm1(-init_w))
+        self.raw_w = torch.nn.Parameter(torch.tensor(raw_w))
         self.b = torch.nn.Parameter(torch.tensor(float(init_b)))
+
+    @property
+    def w(self) -> Tensor:
+        dtype = _common.accumulation_dtype(self.raw_w.dtype)
+        return torch.nn.functional.softplus(self.raw_w.to(dtype))
 
     def compute_loss(
         self,
@@ -39,14 +46,14 @@ class GE2ELoss(BaseMetricLossFunction):
         labels = _common.labels_required(labels)
         _common.indices_tuple_not_supported(indices_tuple)
         _common.ref_not_supported(ref_emb)
-        _common.check_parameter_placement(self, self.w, embeddings)
+        _common.check_parameter_placement(self, self.raw_w, embeddings)
         vectors = self.distance.maybe_normalize(embeddings)
         centroids = _common.class_centroids(vectors, labels)
         rows = torch.where(centroids.has_others)[0]
         if len(rows) == 0 or len(centroids.means) < 2:
             return {}
         dtype = _common.accumulation_dtype(embeddings.dtype)
-        w = self.w.clamp_min(_common.small_val(self.w.dtype)).to(dtype)
+        w = self.w.to(dtype)
         b = self.b.to(dtype)
         queries = vectors[rows]
         own_class = centroids.class_index[rows].unsqueeze(1)

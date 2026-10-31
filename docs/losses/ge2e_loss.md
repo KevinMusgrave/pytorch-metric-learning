@@ -42,7 +42,11 @@ $c_j^{(-i)}$, so that embedding is not scored, but its centroid still competes a
 negative. If no embedding remains, or the batch has one class, the result is a
 differentiable zero.
 
-$w$ is clamped to a small positive value during the forward pass, which enforces $w > 0$.
+$w > 0$ is enforced by parameterization: the loss trains `raw_w`, and
+$w = \operatorname{softplus}(\text{raw\_w})$, so an optimizer step cannot cross zero and
+$w$ always receives a gradient. At the initial $w = 10$, that gradient differs from
+$\partial L / \partial w$ by a factor of 0.99995. Read the current scale from
+`loss_func.w`.
 $b$ cancels in the softmax variant, so it receives a zero gradient there. float16 and
 bfloat16 sums accumulate in float32.
 

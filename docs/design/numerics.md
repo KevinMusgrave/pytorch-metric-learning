@@ -456,9 +456,13 @@ not restored: the paper defines neither, and every anchor-class triplet is cheap
 over unit vectors. Averaging raw embeddings would let large embeddings dominate a class's
 centroid, and leave-one-out on every class would stop scoring negatives against the
 centroids that equation 9 specifies. The own-class score replaces one entry of the
-matrix, so negatives use a single `(rows, classes)` comparison. `w` is clamped in the
-forward pass, not in place, so a step that drives it below zero recovers through the
-clamp without modifying a parameter that an optimizer owns.
+matrix, so negatives use a single `(rows, classes)` comparison. `w > 0` comes from
+training `raw_w` with `w = softplus(raw_w)`. A forward clamp was tried first and is wrong: its
+derivative is zero below the boundary, so one step past zero left `w` with no gradient and
+embeddings with almost none, and training stopped. Softplus cannot cross zero and always
+has a gradient. It suits this loss better than `exp`, because its chain-rule factor is
+nearly 1 at the paper's scale, so updates there match training `w` directly, while `exp`
+rescales every update by `w`.
 
 ## Center loss
 

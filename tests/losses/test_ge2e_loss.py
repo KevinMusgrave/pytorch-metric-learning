@@ -87,8 +87,11 @@ class TestGE2ELoss(unittest.TestCase):
                 reference = equations_6_to_9(x, labels, w, b, variant)
                 expected_w, expected_b = torch.autograd.grad(reference, (w, b))
                 loss_func(x, y).backward()
-                assert loss_func.w.grad is not None and loss_func.b.grad is not None
-                self.assertAlmostEqual(loss_func.w.grad.item(), expected_w.item())
+                assert loss_func.raw_w.grad is not None and loss_func.b.grad is not None
+                chain = 1 - math.exp(-2.0)
+                self.assertAlmostEqual(
+                    loss_func.raw_w.grad.item(), chain * expected_w.item()
+                )
                 self.assertAlmostEqual(loss_func.b.grad.item(), expected_b.item())
 
     def test_b_cancels_in_softmax_only(self):
@@ -181,20 +184,81 @@ class TestGE2ELoss(unittest.TestCase):
                     self.assertEqual(loss.item(), 0)
                     loss.backward()
 
-    def test_w_stays_positive_without_changing_the_parameter(self):
+    def test_initial_w_is_exact(self):
+        for value in (1e-6, 0.05, 1.0, 10.0, 1000.0):
+            with self.subTest(value=value):
+                loss_func = ge2e(init_w=value)
+                self.assertAlmostEqual(loss_func.w.item() / value, 1.0, places=5)
+
+    def test_paper_scale_gradient_matches_training_w_directly(self):
         labels = CASES["balanced"]
         y = torch.tensor(labels, device=TEST_DEVICE)
-        x = rows_for(labels)
-        loss_func = ge2e("softmax")
-        with torch.no_grad():
-            loss_func.w.fill_(-3.0)
-        loss = loss_func(x, y)
-        self.assertAlmostEqual(loss.item(), math.log(3))
-        self.assertEqual(loss_func.w.item(), -3.0)
+        loss_func = ge2e()
+        w = torch.tensor(10.0, dtype=torch.float64, requires_grad=True)
+        expected = torch.autograd.grad(
+            equations_6_to_9(rows_for(labels), labels, w, -5.0, "softmax"), w
+        )[0]
+        loss_func(rows_for(labels), y).backward()
+        assert loss_func.raw_w.grad is not None
+        self.assertAlmostEqual(
+            loss_func.raw_w.grad.item() / expected.item(), 1.0, places=4
+        )
+
+    def test_step_toward_zero_keeps_training(self):
+        labels = torch.tensor([0, 0, 1, 1], device=TEST_DEVICE)
+        hard = torch.tensor(
+            [[1.0, 0.0], [-0.8, 0.6], [0.0, 1.0], [0.6, -0.8]], device=TEST_DEVICE
+        )
+        good = torch.tensor(
+            [[1.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.0, 1.0]], device=TEST_DEVICE
+        )
+        loss_func = losses.GE2ELoss(init_w=0.05).to(TEST_DEVICE)
+        optimizer = torch.optim.SGD(loss_func.parameters(), lr=0.1)
+
+        def step(batch):
+            x = batch.clone().requires_grad_()
+            optimizer.zero_grad()
+            loss_func(x, labels).backward()
+            gradient = loss_func.raw_w.grad
+            assert gradient is not None and x.grad is not None
+            self.assertNotEqual(gradient.item(), 0)
+            optimizer.step()
+            return x.grad.abs().max().item()
+
+        step(hard)
+        lowered = loss_func.w.item()
+        self.assertGreater(lowered, 0)
+        self.assertLess(lowered, 0.05)
+        embedding_gradients = [step(good) for _ in range(200)]
+        self.assertGreater(loss_func.w.item(), lowered)
+        self.assertGreater(min(embedding_gradients), 1e-3)
+        self.assertGreater(embedding_gradients[-1], embedding_gradients[0])
+
+    def test_large_steps_cannot_make_w_negative(self):
+        labels = torch.tensor([0, 0, 1, 1], device=TEST_DEVICE)
+        hard = torch.tensor(
+            [[1.0, 0.0], [-0.8, 0.6], [0.0, 1.0], [0.6, -0.8]], device=TEST_DEVICE
+        )
+        good = torch.tensor(
+            [[1.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.0, 1.0]], device=TEST_DEVICE
+        )
+        loss_func = losses.GE2ELoss(init_w=1.0).to(TEST_DEVICE)
+        optimizer = torch.optim.SGD(loss_func.parameters(), lr=10.0)
+        for _ in range(5):
+            optimizer.zero_grad()
+            loss_func(hard, labels).backward()
+            optimizer.step()
+            self.assertGreater(loss_func.w.item(), 0)
+        before = loss_func.w.item()
+        for _ in range(50):
+            optimizer.zero_grad()
+            loss_func(good, labels).backward()
+            optimizer.step()
+        self.assertGreater(loss_func.w.item(), before)
 
     def test_parameters_are_saved_and_train(self):
         loss_func = ge2e()
-        self.assertEqual(set(loss_func.state_dict()), {"w", "b"})
+        self.assertEqual(set(loss_func.state_dict()), {"raw_w", "b"})
         self.assertEqual(len(list(loss_func.parameters())), 2)
         labels = CASES["balanced"]
         y = torch.tensor(labels, device=TEST_DEVICE)
@@ -203,6 +267,16 @@ class TestGE2ELoss(unittest.TestCase):
         loss_func(rows_for(labels), y).backward()
         optimizer.step()
         self.assertNotEqual(loss_func.w.item(), before)
+
+    def test_low_precision_scale_is_exact_enough_to_train(self):
+        labels = CASES["balanced"]
+        y = torch.tensor(labels, device=TEST_DEVICE)
+        loss_func = ge2e(dtype=torch.float16, init_w=0.05)
+        x = rows_for(labels, torch.float16).requires_grad_()
+        loss_func(x, y).backward()
+        assert x.grad is not None
+        self.assertGreater(loss_func.w.item(), 0)
+        self.assertTrue(x.grad.isfinite().all())
 
     def test_invalid_arguments(self):
         with self.assertRaisesRegex(ValueError, "variant"):

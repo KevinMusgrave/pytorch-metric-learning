@@ -86,7 +86,9 @@ def anchor_batched_backward(
     total = sum(
         (t.total / max(t.count, 1) for t in terms.values()), start=query.new_zeros(())
     )
-    return total.to(embeddings.dtype)
+    if loss_func.distance.normalize_embeddings:
+        return total.to(embeddings.dtype)
+    return total
 
 
 def _reduced_gradient(terms: dict[str, _Term], index: int) -> Tensor | None:

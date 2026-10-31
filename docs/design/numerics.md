@@ -225,7 +225,11 @@ distance is bounded, but a squared Euclidean distance or dot product of embeddin
 `inf - inf` then gave NaN or a silent zero depending on the reducer. Fixing that in each
 loss cannot work, because the value is already gone. Returning float32 only when a value
 overflows would make the dtype depend on the data, so the rule follows the configuration,
-and bounded distances keep the memory saving. Autocast is disabled around this path,
+and bounded distances keep the memory saving. Every return path follows the distance:
+casting a loss back to the embedding dtype restores the overflow after the matrix has
+avoided it, and `anchor_batched_backward`, which always computes in float32 working
+copies, decides from `normalize_embeddings` because its terms no longer show the
+distance's dtype. Autocast is disabled around this path,
 because `matmul` would otherwise narrow the widened inputs again.
 
 `LpDistance` computes float16 and bfloat16 matrices with `torch.cdist` in

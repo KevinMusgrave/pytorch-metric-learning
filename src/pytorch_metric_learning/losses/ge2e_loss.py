@@ -59,7 +59,8 @@ class GE2ELoss(BaseMetricLossFunction):
         own_class = centroids.class_index[rows].unsqueeze(1)
         own = self.distance.pairwise(queries, centroids.leave_one_out[rows])
         own_scores = w * own.to(dtype) + b
-        scores = w * self.distance(queries, centroids.means).to(dtype) + b
+        mat = self.distance(queries, centroids.means)
+        scores = w * mat.to(dtype) + b
         if self.variant == "softmax":
             scores = scores.scatter(1, own_class, own_scores.unsqueeze(1))
             loss = torch.logsumexp(scores, dim=1) - own_scores
@@ -67,7 +68,7 @@ class GE2ELoss(BaseMetricLossFunction):
             others = scores.scatter(1, own_class, -torch.inf)
             hardest = others.amax(dim=1)
             loss = 1 - torch.sigmoid(own_scores) + torch.sigmoid(hardest)
-        return {"loss": {"losses": loss.to(embeddings.dtype), "indices": rows}}
+        return {"loss": {"losses": loss.to(mat.dtype), "indices": rows}}
 
     def default_distance(self) -> BaseDistance:
         return CosineSimilarity()

@@ -1,3 +1,5 @@
+import copy
+
 import pytest
 import torch
 
@@ -9,6 +11,7 @@ from pytorch_metric_learning.distances import (
     LpDistance,
 )
 from pytorch_metric_learning.evaluation import CustomKNN, MatchFinder
+from pytorch_metric_learning.losses import anchor_batched_backward
 
 from .. import TEST_DEVICE
 
@@ -31,12 +34,29 @@ UNBOUNDED = {
     "dot": DotProductSimilarity,
     "squared-dot": lambda: DotProductSimilarity(power=2),
 }
+
+
+def similarity_margin():
+    return losses.ThresholdConsistentMarginLoss(distance=DotProductSimilarity())
+
+
 LOSSES = {
     "ContrastiveLoss": lambda: losses.ContrastiveLoss(
         distance=squared(), neg_margin=1e5
     ),
+    "DecoupledContrastiveLoss": lambda: losses.DecoupledContrastiveLoss(
+        distance=DotProductSimilarity()
+    ),
+    "GE2ELoss": lambda: losses.GE2ELoss(distance=DotProductSimilarity()),
     "GeneralizedLiftedStructureLoss": lambda: losses.GeneralizedLiftedStructureLoss(
         distance=squared()
+    ),
+    "HistogramLoss": lambda: losses.HistogramLoss(distance=squared()),
+    "IntraPairVarianceLoss": lambda: losses.IntraPairVarianceLoss(
+        distance=LpDistance(normalize_embeddings=False)
+    ),
+    "LiftedStructureLoss": lambda: losses.LiftedStructureLoss(
+        distance=LpDistance(normalize_embeddings=False)
     ),
     "MarginLoss": lambda: losses.MarginLoss(distance=squared()),
     "MultiSimilarityLoss": lambda: losses.MultiSimilarityLoss(
@@ -44,8 +64,72 @@ LOSSES = {
     ),
     "NCALoss": lambda: losses.NCALoss(distance=squared()),
     "NPairsLoss": lambda: losses.NPairsLoss(distance=DotProductSimilarity()),
+    "NTXentLoss": lambda: losses.NTXentLoss(distance=DotProductSimilarity()),
+    "RankedListLoss": lambda: losses.RankedListLoss(1.0, 1.0, distance=squared()),
+    "SelectivelyContrastiveTripletLoss": lambda: (
+        losses.SelectivelyContrastiveTripletLoss(distance=DotProductSimilarity())
+    ),
+    "SupConLoss": lambda: losses.SupConLoss(distance=DotProductSimilarity()),
+    "ThresholdConsistentMarginLoss": similarity_margin,
     "TripletMarginLoss": lambda: losses.TripletMarginLoss(distance=squared()),
 }
+PROXY_LOSSES = {
+    "NormalizedSoftmaxLoss": lambda: losses.NormalizedSoftmaxLoss(
+        2, 2, distance=DotProductSimilarity()
+    ),
+    "ProxyAnchorLoss": lambda: losses.ProxyAnchorLoss(2, 2, distance=squared()),
+    "ProxyNCALoss": lambda: losses.ProxyNCALoss(2, 2, distance=squared()),
+    "SoftTripleLoss": lambda: losses.SoftTripleLoss(
+        2, 2, distance=DotProductSimilarity()
+    ),
+}
+BOUNDED_OR_FIXED_DISTANCE = {
+    "AngularLoss",
+    "ArcFaceLoss",
+    "CenterLoss",
+    "CentroidTripletLoss",
+    "CircleLoss",
+    "CosFaceLoss",
+    "DynamicArcFaceLoss",
+    "DynamicSoftMarginLoss",
+    "FastAPLoss",
+    "InstanceLoss",
+    "LargeMarginSoftmaxLoss",
+    "P2SGradLoss",
+    "PNPLoss",
+    "SignalToNoiseRatioContrastiveLoss",
+    "SmoothAPLoss",
+    "SphereFaceLoss",
+    "SubCenterArcFaceLoss",
+    "TupletMarginLoss",
+    "VICRegLoss",
+}
+OTHER_INPUTS_OR_NOT_LOSSES = {
+    "BaseMetricLossFunction",
+    "BaseProxyLoss",
+    "CrossBatchMemory",
+    "GenericPairLoss",
+    "ManifoldLoss",
+    "MultiSupConLoss",
+    "MultipleLosses",
+    "RankNContrastLoss",
+    "SelfSupervisedLoss",
+}
+
+
+def test_every_exported_loss_is_classified():
+    exported = {
+        name
+        for name in losses.__all__
+        if isinstance(getattr(losses, name), type)
+        and issubclass(getattr(losses, name), torch.nn.Module)
+    }
+    assert exported == (
+        LOSSES.keys()
+        | PROXY_LOSSES.keys()
+        | BOUNDED_OR_FIXED_DISTANCE
+        | OTHER_INPUTS_OR_NOT_LOSSES
+    )
 
 
 @pytest.mark.parametrize("dtype", LOW_PRECISION)
@@ -115,15 +199,16 @@ def test_autocast_does_not_narrow_the_result(name):
 
 
 @pytest.mark.parametrize("dtype", LOW_PRECISION)
-@pytest.mark.parametrize("name", LOSSES)
+@pytest.mark.parametrize("name", [*LOSSES, *PROXY_LOSSES])
 def test_losses_match_float64(name, dtype):
     labels = torch.tensor(LABELS, device=TEST_DEVICE)
     embeddings = points(dtype).requires_grad_()
     wide = embeddings.detach().double().requires_grad_()
-    actual = LOSSES[name]().to(TEST_DEVICE, dtype)
-    expected = LOSSES[name]().to(TEST_DEVICE, torch.float64)
+    actual = {**LOSSES, **PROXY_LOSSES}[name]().to(TEST_DEVICE, dtype)
+    expected = copy.deepcopy(actual).to(TEST_DEVICE, torch.float64)
     loss = actual(embeddings, labels)
     reference = expected(wide, labels)
+    assert loss.dtype == torch.float32
     assert loss.isfinite()
     torch.testing.assert_close(loss.double(), reference, rtol=1e-3, atol=1e-3)
     loss.backward()
@@ -133,6 +218,37 @@ def test_losses_match_float64(name, dtype):
     torch.testing.assert_close(
         embeddings.grad.double(), wide.grad, rtol=1e-2, atol=2e-2
     )
+
+
+@pytest.mark.parametrize("dtype", LOW_PRECISION)
+@pytest.mark.parametrize("name", ["ContrastiveLoss", "TripletMarginLoss"])
+def test_anchor_batching_matches_the_full_loss(name, dtype):
+    labels = torch.tensor(LABELS, device=TEST_DEVICE)
+    loss_func = LOSSES[name]().to(TEST_DEVICE, dtype)
+    embeddings = points(dtype).requires_grad_()
+    full = loss_func(embeddings, labels)
+    full.backward()
+    assert embeddings.grad is not None
+    expected = embeddings.grad.clone()
+    embeddings.grad = None
+    value = anchor_batched_backward(loss_func, embeddings, labels, 2)
+    assert value.dtype == full.dtype == torch.float32
+    torch.testing.assert_close(value, full, rtol=1e-6, atol=1e-3)
+    assert embeddings.grad is not None
+    assert embeddings.grad.isfinite().all()
+    torch.testing.assert_close(embeddings.grad, expected, rtol=2e-2, atol=2e-2)
+
+
+@pytest.mark.parametrize("dtype", LOW_PRECISION)
+@pytest.mark.parametrize(
+    "factory",
+    [losses.GE2ELoss, losses.ThresholdConsistentMarginLoss],
+    ids=["ge2e", "threshold-consistent"],
+)
+def test_normalized_losses_keep_the_embedding_dtype(factory, dtype):
+    labels = torch.tensor(LABELS, device=TEST_DEVICE)
+    loss_func = factory().to(TEST_DEVICE, dtype)
+    assert loss_func(points(dtype), labels).dtype == dtype
 
 
 def test_multilabel_loss_keeps_the_distance_dtype():

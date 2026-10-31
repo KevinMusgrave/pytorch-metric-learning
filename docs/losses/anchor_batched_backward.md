@@ -24,7 +24,9 @@ losses.anchor_batched_backward(
   following the [reference-set rule](../concepts.md#reference-sets). A `ref_emb`
   that tracks gradients receives them; a detached one does not.
 
-It returns the loss as a detached scalar tensor with the dtype of `embeddings`. It
+It returns the loss as a detached scalar tensor with the dtype of the full loss: that of
+`embeddings`, or float32 for float16 and bfloat16 embeddings with an
+[unnormalized distance](../distances.md#calling-a-distance). It
 has already called `backward`, so gradients have accumulated in the model, and in
 any learnable parameters of `loss_func` such as those of a custom distance, the same
 way as after `loss.backward()`. Do not call `backward` again.

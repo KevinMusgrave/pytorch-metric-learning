@@ -109,8 +109,16 @@ A normalized distance has the dtype of its inputs. An unnormalized distance has 
 bound, so with float16 or bfloat16 inputs it is computed and returned in float32, even
 under autocast. Squared distances and dot products of ordinary embeddings exceed the
 float16 maximum of 65504, and a loss would then receive `inf`. Losses that use such a
-distance return float32 as a result. This applies to `normalize_embeddings=False` on
-every distance, including custom ones, whose `compute_mat` then receives float32.
+distance return float32 as a result, as does
+[`anchor_batched_backward`](losses/anchor_batched_backward.md). This applies to
+`normalize_embeddings=False` on every distance, including custom ones, whose
+`compute_mat` then receives float32.
+
+Two limits remain. A gradient is stored on the embedding tensor, so a float16 embedding
+gets `inf` where the true gradient exceeds 65504; use float32 embeddings at that scale.
+Results are also only as precise as float32: scores near `1e10`, such as a squared dot
+product of embeddings around 300, leave too little resolution for margins or softmax
+differences, and float32 inputs give the same result.
 
 ### Custom distances
 

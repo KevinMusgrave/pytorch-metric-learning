@@ -36,6 +36,25 @@ the encoder and the wrapped loss in one module and wrap that module in DDP.
 Include both sets of parameters in the optimizer. Do not multiply the returned
 loss by world size.
 
+### Unused loss parameters
+
+DDP expects every parameter to take part in every backward pass on every rank. A
+loss with trainable parameters, such as `MarginLoss(learn_beta=True)`, can skip them
+when it has nothing to compute, so pass `find_unused_parameters=True` to
+`DistributedDataParallel` when that can happen. Without it, DDP stops at the next
+forward pass:
+
+| Objective        | Condition on a step                                      | Default DDP                                       |
+| ---------------- | -------------------------------------------------------- | ------------------------------------------------- |
+| `"local_anchor"` | Some rank has no anchors, or anchors but no valid tuples | One rank raises and the other waits for a timeout |
+| Either           | No rank has a valid tuple                                | Every rank raises                                 |
+
+With `"global"`, every rank computes the same loss, so one rank with no rows is safe
+as long as the gathered batch has tuples. This applies to any wrapped loss, including
+through `CrossBatchMemory`. A loss with no trainable parameters needs no change,
+because the encoder always takes part. `find_unused_parameters=True` makes DDP walk the
+graph after each forward pass, so leave it off when these conditions cannot occur.
+
 ## Inputs across ranks
 
 Gathered rows are ordered by rank, then by their original local order. Batch
@@ -110,7 +129,8 @@ with the same state. Queue embeddings stay detached. The objectives differ in th
 - With `"local_anchor"`, each rank uses only its own rows as anchors, and returns world
   size times that loss. It computes less than `"global"`, because each rank compares
   only its own anchors with the queue, and a rank with no rows still enqueues the others'.
-  A row is never paired with its own queue slot.
+  A row is never paired with its own queue slot. A trainable loss then needs
+  [`find_unused_parameters=True`](#unused-loss-parameters).
 
 Pass `enqueue_mask` by keyword to select the rows to enqueue; unselected rows are
 anchors. The mask is per rank and is gathered in the same order. With `"local_anchor"`,

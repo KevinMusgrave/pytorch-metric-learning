@@ -18,13 +18,14 @@ from pytorch_metric_learning.distributed import (
 from pytorch_metric_learning.losses import (
     ContrastiveLoss,
     CrossBatchMemory,
+    MarginLoss,
     MultipleLosses,
     NormalizedSoftmaxLoss,
 )
 from pytorch_metric_learning.miners import BatchEasyHardMiner, PairMarginMiner
-from pytorch_metric_learning.types import PairIndices
+from pytorch_metric_learning.types import DistributedObjective, PairIndices
 
-from .. import TEST_DEVICE, TEST_DTYPES
+from .. import TEST_DEVICE, TEST_DTYPES, helpers
 
 
 def assert_close(actual: torch.Tensor, expected: torch.Tensor) -> None:
@@ -415,6 +416,155 @@ def check_local_memory_ddp_gradient(
     assert_close(observed_gradient(model.weight), expected_gradient)
 
 
+class TrainableMarginModel(torch.nn.Module):
+    def __init__(self, memory: bool, objective: DistributedObjective) -> None:
+        super().__init__()
+        self.encoder = torch.nn.Linear(2, 2)
+        self.margin_loss = MarginLoss(margin=0.3, learn_beta=True)
+        wrapped = self.margin_loss
+        if memory:
+            wrapped = CrossBatchMemory(self.margin_loss, 2, memory_size=8)
+        self.objective = DistributedLossWrapper(wrapped, objective=objective)
+
+    def forward(self, inputs: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
+        return self.objective(self.encoder(inputs), labels)
+
+
+def margin_reference(
+    query: torch.Tensor,
+    query_labels: torch.Tensor,
+    reference: torch.Tensor,
+    reference_labels: torch.Tensor,
+    self_indices: torch.Tensor,
+    beta: torch.Tensor,
+) -> torch.Tensor:
+    distances = torch.linalg.vector_norm(
+        F.normalize(query, dim=1)[:, None] - F.normalize(reference, dim=1)[None, :],
+        dim=-1,
+    )
+    terms = []
+    for anchor in range(len(query)):
+        same = reference_labels == query_labels[anchor]
+        for positive in torch.where(same)[0].tolist():
+            if positive == self_indices[anchor]:
+                continue
+            for negative in torch.where(~same)[0].tolist():
+                terms.append(F.relu(distances[anchor, positive] - beta + 0.3))
+                terms.append(F.relu(beta - distances[anchor, negative] + 0.3))
+    if not terms:
+        return beta.new_zeros(1).sum()
+    values = torch.cat([term.reshape(-1) for term in terms])
+    return values.sum() / values.count_nonzero().clamp_min(1)
+
+
+def assert_ranks_agree(tensor: torch.Tensor) -> None:
+    flat = tensor.reshape(-1)
+    first, second = gathered_rows(flat, len(flat))
+    assert torch.equal(first, second)
+
+
+def check_trainable_loss_on_quiet_rank(
+    rank: int,
+    device: torch.device,
+    dtype: torch.dtype,
+    memory: bool,
+    sizes: tuple[int, int],
+    labels_list: list[int],
+) -> None:
+    inputs = torch.tensor(
+        [[1.0, 0.0], [0.9, 0.1], [1.0, 0.4], [0.8, 0.5], [0.2, 1.0]],
+        device=device,
+        dtype=dtype,
+    )[: sum(sizes)]
+    labels = torch.tensor(labels_list, device=device)
+    selected = rank_slice(sizes, rank)
+    torch.manual_seed(12)
+    model = TrainableMarginModel(memory, "local_anchor").to(device=device, dtype=dtype)
+    ddp = DistributedDataParallel(
+        model,
+        device_ids=[rank] if device.type == "cuda" else None,
+        find_unused_parameters=True,
+    )
+    optimizer = torch.optim.SGD(ddp.parameters(), lr=0.01)
+    queue = ExpectedQueue(8, inputs)
+    betas = [model.margin_loss.beta.item()]
+    for step in range(3):
+        batch = inputs + step * 0.05
+        weight = model.encoder.weight.detach().clone().requires_grad_()
+        bias = model.encoder.bias.detach().clone().requires_grad_()
+        beta = model.margin_loss.beta.detach().clone().requires_grad_()
+        embedded = F.linear(batch, weight, bias)
+        slots = torch.arange(len(labels), device=device)
+        reference_labels = labels
+        if memory:
+            slots = queue.enqueue(embedded.detach(), labels)
+            _, reference_labels = queue.visible()
+        total = beta.new_zeros(())
+        for other in range(2):
+            rows = rank_slice(sizes, other)
+            if rows.start == rows.stop:
+                continue
+            if memory:
+                reference = queue.visible()[0]
+            else:
+                remote = embedded.detach()
+                reference = torch.cat(
+                    (remote[: rows.start], embedded[rows], remote[rows.stop :])
+                )
+            total = total + margin_reference(
+                embedded[rows],
+                labels[rows],
+                reference,
+                reference_labels,
+                slots[rows],
+                beta,
+            )
+        expected = torch.autograd.grad(
+            total, (weight, bias, beta), materialize_grads=True
+        )
+        optimizer.zero_grad()
+        ddp(batch[selected], labels[selected]).backward()
+        helpers.assert_close(
+            observed_gradient(model.encoder.weight), expected[0], dtype
+        )
+        helpers.assert_close(observed_gradient(model.encoder.bias), expected[1], dtype)
+        helpers.assert_close(
+            observed_gradient(model.margin_loss.beta), expected[2], dtype
+        )
+        assert expected[2].abs().sum() > 0
+        assert_ranks_agree(observed_gradient(model.margin_loss.beta))
+        optimizer.step()
+        assert_ranks_agree(model.margin_loss.beta.detach())
+        assert_ranks_agree(model.encoder.weight.detach())
+        betas.append(model.margin_loss.beta.item())
+    assert len(set(betas)) == len(betas)
+
+
+def check_trainable_loss_without_tuples(
+    rank: int, device: torch.device, dtype: torch.dtype, memory: bool
+) -> None:
+    inputs, _ = make_inputs(device, dtype)
+    objectives: tuple[DistributedObjective, ...] = ("global", "local_anchor")
+    for objective in objectives:
+        torch.manual_seed(12)
+        model = TrainableMarginModel(memory, objective)
+        model = model.to(device=device, dtype=dtype)
+        ddp = DistributedDataParallel(
+            model,
+            device_ids=[rank] if device.type == "cuda" else None,
+            find_unused_parameters=True,
+        )
+        optimizer = torch.optim.SGD(ddp.parameters(), lr=0.01)
+        labels = torch.tensor([rank * 2, rank * 2 + 1], device=device)
+        for step in range(2):
+            optimizer.zero_grad()
+            loss = ddp(inputs[:2], labels + 4 * step)
+            loss.backward()
+            optimizer.step()
+            assert loss.item() == 0
+        assert model.margin_loss.beta.grad is None
+
+
 def check_local_anchor_case(
     rank: int, device: torch.device, dtype: torch.dtype, sizes: tuple[int, int]
 ) -> None:
@@ -667,6 +817,16 @@ def run_references(rank: int, address: str, backend: str) -> None:
             check_memory(rank, device, dtype)
             check_local_memory_rejects_overflow(rank, device, dtype)
             check_local_memory_ddp_gradient(rank, device, dtype)
+            for memory in (True, False):
+                check_trainable_loss_without_tuples(rank, device, dtype, memory)
+                for sizes, values in (
+                    ((0, 4), [0, 0, 1, 1]),
+                    ((4, 0), [0, 0, 1, 1]),
+                    ((1, 4), [7, 0, 0, 1, 1]),
+                ):
+                    check_trainable_loss_on_quiet_rank(
+                        rank, device, dtype, memory, sizes, values
+                    )
             for sizes in ((2, 3), (0, 5), (5, 0), (0, 0)):
                 check_local_memory(rank, device, dtype, sizes)
             for sizes in ((2, 3), (0, 5), (5, 0)):

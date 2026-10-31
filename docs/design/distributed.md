@@ -75,6 +75,13 @@ equivalent. Self-pair exclusion selects the anchors' slots by the rank's offset.
 mask, anchors are not enqueued, so there is nothing to exclude. Remote rows do not need
 gradients because queue contents are always detached.
 
+A loss returns a zero connected to the embeddings when it has no tuples, so the encoder
+always takes part, but its own parameters do not. Under `local_anchor` that happens per
+rank, which leaves DDP's reducer waiting for a parameter one rank never reports. The
+wrapper does not hide this with a synthetic zero term over the loss's parameters: that
+would reach into arbitrary wrapped modules, and PyTorch's `find_unused_parameters` is the
+standard, documented answer. The cases that need it are listed in `docs/distributed.md`.
+
 Inputs must be on the embeddings' device on every rank; the wrappers never
 copy labels or masks across devices. Ordinary losses are
 `BaseMetricLossFunction` or `MultipleLosses` instances (`types.MetricLoss`),

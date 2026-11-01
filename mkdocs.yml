@@ -89,6 +89,7 @@ nav:
       - Low-precision fix: benchmarks/gpu-3.0.0/low-precision-fix/README.md
     - Release notes:
       - All releases: release-notes/index.md
+      - 3.0.1: release-notes/3.0.1.md
       - 3.0.0: release-notes/3.0.0.md
       - 3.0.0rc5 (preview): release-notes/3.0.0rc5.md
       - 3.0.0rc4 (preview): release-notes/3.0.0rc4.md

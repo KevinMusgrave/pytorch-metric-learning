@@ -123,7 +123,7 @@ Milliseconds per pair at batch 512 in the standard profile. Inputs and parameter
 
 ### BF16 at batch 2,048
 
-Released v3.0.0 has major BF16 time and memory regressions for Contrastive and batch-hard triplet at this size. Their low-precision Euclidean distance uses the direct CUDA kernel to preserve nearby-point accuracy; its backward pass allocates a batch-by-batch-by-dimension buffer. These release measurements retain that behavior. See the [subsequent fix experiment](../../performance.md#low-precision-distance-fix) for a separately measured, unreleased candidate.
+Released v3.0.0 has major BF16 time and memory regressions for Contrastive and batch-hard triplet at this size. Their low-precision Euclidean distance uses the direct CUDA kernel to preserve nearby-point accuracy; its backward pass allocates a batch-by-batch-by-dimension buffer. These release measurements retain that behavior. See the [subsequent fix experiment](../../performance.md#low-precision-distance-fix) for a separately measured correction included in v3.0.1.
 
 Milliseconds per forward/backward pair:
 

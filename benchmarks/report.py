@@ -385,7 +385,7 @@ def write_report(campaigns, output):
             "batch-by-batch-by-dimension buffer. These release measurements "
             "retain that behavior. See the [subsequent fix experiment]"
             "(../../performance.md#low-precision-distance-fix) for a separately "
-            "measured, unreleased candidate."
+            "measured correction included in v3.0.1."
         ),
         "Milliseconds per forward/backward pair:",
         table(

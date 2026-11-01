@@ -26,7 +26,7 @@ Released v3.0.0 also has major BF16 regressions at batch 2,048: batch-hard tripl
 is 2.62–17.2× slower than v2.9.0, and Contrastive is 1.90–5.30× slower across these
 systems. Their peak allocations increase by factors of 13.5–19.5 and 6.12–7.09,
 respectively. The [low-precision distance fix](#low-precision-distance-fix)
-documents an unreleased correction separately from the release measurements.
+documents the correction included in v3.0.1 separately from the v3.0.0 measurements.
 
 ## Development measurements
 
@@ -247,7 +247,8 @@ capacity remain separate measurements in the primary campaign.
 
 The follow-up compares v2.9.0, released v3.0.0, and candidate
 `32bcfa8213a9a48d95153a07a6cf6e0e753e1a18` on an A100 and another RTX 5090.
-The candidate is not part of the released v3.0.0 measurements above.
+That candidate's numerical code is included unchanged in v3.0.1. The tables
+retain its measured commit identity and do not replace the v3.0.0 measurements above.
 The [complete timings](benchmarks/gpu-3.0.0/low-precision-fix/README.md)
 include NT-Xent and ProxyAnchor controls, float32 batches 128, 512, and 2,048,
 and BF16 batches 512 and 2,048. Every successful configuration again averages

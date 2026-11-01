@@ -235,12 +235,29 @@ because `matmul` would otherwise narrow the widened inputs again.
 `LpDistance` computes float16 and bfloat16 matrices with `torch.cdist` in
 float32 and casts the normalized result, because `torch.cdist` lacks CPU kernels for those
 types and expanding every row pair in the forward pass costs memory proportional to
-queries times references times dimensions. The backward pass of the direct kernel still
-expands them, about 40 times the float32 peak at 2048 rows, which is the accepted cost
-of keeping distances between nearby rows. The call fixes `compute_mode` to the direct
-difference kernel: the default switches to $\|x\|^2 + \|y\|^2 - 2 x \cdot y$
-above 25 rows, which cancels to zero for nearby half-precision rows and erases
-their gradients. Default reductions avoid data-dependent shapes:
+queries times references times dimensions. Always using its direct difference kernel
+caused large BF16 time and memory regressions: CUDA backward expands row pairs across
+dimensions. The matrix kernel avoids that buffer, but
+$\|x\|^2 + \|y\|^2 - 2 x \cdot y$ cancels for nearby rows and can erase their gradients.
+
+Large eager Euclidean calls first compute the matrix kernel, then screen its squared
+distances against `8 * dimensions * eps(float32) / eps(input)` times the sum of squared
+row norms. Normalized inputs use the conservative bound `2 * (1 + eps(input))**2` for
+that sum. This gives rounding error margin relative to the input precision. Any risky
+or nonfinite pair sends the whole call through the direct kernel. Recomputing only
+selected pairs would introduce a potentially huge pair-by-dimension graph for clustered
+inputs. The screen deliberately costs one host synchronization; it avoids that large
+graph and retains the existing direct path for numerically difficult batches.
+
+Self comparisons reuse normalized inputs and set their known-zero diagonal explicitly;
+otherwise every ordinary batch would trigger the precise path. Distinct duplicate rows
+still trigger it. Compiled execution and CUDA graph capture keep the direct kernel,
+since they cannot inspect the screen on the host. Reduced float32 matmul precision also
+keeps it: TF32 rounding made identical BF16 rows report a distance of 0.0292. These paths
+preserve their existing numerical behavior and do not change global precision settings.
+Other norms and matrices with at most 25 rows on each side also keep the direct kernel.
+
+Default reductions avoid data-dependent shapes:
 `ThresholdReducer` masks and counts, and `DivisorReducer` selects with
 `torch.where`. `DivisorReducer` builds the divisor directly in the accumulation
 dtype; converting through the default dtype first turned a float64 divisor of

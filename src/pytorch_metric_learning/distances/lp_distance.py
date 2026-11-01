@@ -5,15 +5,58 @@ from ..utils._common import LOW_PRECISION, accumulation_dtype, input_dtype
 from .base_distance import BaseDistance
 
 
+def _euclidean_matrix(
+    query: Tensor, reference: Tensor, normalized: bool, input_epsilon: float
+) -> Tensor:
+    mat = torch.cdist(query, reference)
+    with torch.no_grad():
+        scale = (
+            2 * (1 + input_epsilon) ** 2
+            if normalized
+            else query.square().sum(-1, keepdim=True)
+            + reference.square().sum(-1).unsqueeze(0)
+        )
+        bound = 8 * query.shape[-1] * torch.finfo(query.dtype).eps / input_epsilon
+        risky = (mat.square() <= bound * scale) | ~torch.isfinite(mat)
+        if query is reference:
+            risky.fill_diagonal_(False)
+    if risky.any():
+        return torch.cdist(
+            query, reference, compute_mode="donot_use_mm_for_euclid_dist"
+        )
+    if query is reference:
+        mat = mat.diagonal_scatter(torch.zeros_like(mat.diagonal()))
+    return mat
+
+
 class LpDistance(BaseDistance):
     def compute_mat(self, query_emb: Tensor, ref_emb: Tensor) -> Tensor:
         if input_dtype(query_emb) in LOW_PRECISION:
-            mat = torch.cdist(
-                query_emb.float(),
-                ref_emb.float(),
-                p=self.p,
-                compute_mode="donot_use_mm_for_euclid_dist",
-            )
+            query = query_emb.float()
+            reference = query if query_emb is ref_emb else ref_emb.float()
+            if (
+                self.p == 2
+                and max(query.shape[0], reference.shape[0]) > 25
+                and not torch.compiler.is_compiling()
+                and torch.get_float32_matmul_precision() == "highest"
+                and not (
+                    query.device.type == "cuda"
+                    and torch.cuda.is_current_stream_capturing()
+                )
+            ):
+                mat = _euclidean_matrix(
+                    query,
+                    reference,
+                    self.normalize_embeddings,
+                    torch.finfo(input_dtype(query_emb)).eps,
+                )
+            else:
+                mat = torch.cdist(
+                    query,
+                    reference,
+                    p=self.p,
+                    compute_mode="donot_use_mm_for_euclid_dist",
+                )
             if self.normalize_embeddings:
                 return mat.to(query_emb.dtype)
             return mat

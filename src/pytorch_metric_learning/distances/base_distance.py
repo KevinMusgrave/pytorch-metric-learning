@@ -25,7 +25,7 @@ class BaseDistance(torch.nn.Module):
     def forward(self, query_emb: Tensor, ref_emb: Tensor | None = None) -> Tensor:
         self.check_shapes(query_emb, ref_emb)
         query_input = self.prepare_input(query_emb)
-        if ref_emb is None:
+        if ref_emb is None or ref_emb is query_emb:
             ref_emb = query_emb
             ref_input = query_input
         else:

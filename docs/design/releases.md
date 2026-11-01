@@ -83,6 +83,9 @@ not trigger another workflow or the legacy Pages build.
 The preflight requires `docs/release-notes/VERSION.md`. After publication, a
 job with `contents: write` creates the GitHub release for the tag with those
 notes and the verified distributions attached, marking PEP 440 prereleases as
-prereleases. The version is declared once, in `pyproject.toml`; the package
+prereleases. Relative Markdown links in those notes become published-site URLs;
+both `index.md` and `README.md` map to their directory, matching MkDocs. Keeping
+`README` in the URL produced broken links to the benchmark reports.
+The version is declared once, in `pyproject.toml`; the package
 does not repeat it in `__version__`, because a dynamic version would require
 running the build backend while locking.

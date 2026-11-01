@@ -19,7 +19,9 @@ def site_url(root):
 def absolute_notes(text, base_url, directory):
     def replace(match):
         path = posixpath.normpath(posixpath.join(directory, match.group(1)))
-        target = "" if path == "index" else f"{path.removesuffix('/index')}/"
+        if posixpath.basename(path) in ("index", "README"):
+            path = posixpath.dirname(path)
+        target = f"{path}/" if path else ""
         return f"]({urljoin(base_url, target)}{match.group(2) or ''})"
 
     return LINK.sub(replace, text)

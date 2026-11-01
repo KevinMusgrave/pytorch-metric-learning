@@ -174,14 +174,17 @@ class TestReleaseNotes(unittest.TestCase):
             )
             (root / "docs" / "release-notes" / "1.0.0.md").write_text(
                 "[a](../migration.md) [b](../recipes/training.md#step) "
-                "[c](index.md) [d](#local) [e](https://example.com/page.md)\n"
+                "[c](index.md) [d](#local) [e](https://example.com/page.md) "
+                "[f](../benchmarks/gpu/README.md#timings) [g](../README.md)\n"
             )
             self.assertEqual(
                 self.render(root, "1.0.0"),
                 "[a](https://x.io/pml/migration/) "
                 "[b](https://x.io/pml/recipes/training/#step) "
                 "[c](https://x.io/pml/release-notes/) [d](#local) "
-                "[e](https://example.com/page.md)\n",
+                "[e](https://example.com/page.md) "
+                "[f](https://x.io/pml/benchmarks/gpu/#timings) "
+                "[g](https://x.io/pml/)\n",
             )
 
     def test_current_notes_have_no_relative_markdown_links(self):

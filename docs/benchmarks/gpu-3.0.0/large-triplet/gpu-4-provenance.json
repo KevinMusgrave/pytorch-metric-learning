@@ -1,0 +1,73 @@
+{
+  "gpu": "A100-SXM4-80GB",
+  "environment": {
+    "timestamp_utc": "2026-11-01T05:36:24.200378+00:00",
+    "python": "3.12.13",
+    "pytorch": "2.14.0+cu130",
+    "cuda_runtime": "13.0",
+    "os": "Linux-6.8.0-147-generic-x86_64-with-glibc2.39",
+    "threads": 1,
+    "logical_cpus": 128,
+    "matmul_precision": "highest",
+    "tf32_matmul": false,
+    "tf32_cudnn": false,
+    "cpu": "AMD EPYC 7742 64-Core Processor",
+    "gpu": "NVIDIA A100-SXM4-80GB",
+    "gpu_total_bytes": 85094825984,
+    "compute_capability": [
+      8,
+      0
+    ],
+    "gpu_details": "NVIDIA A100-SXM4-80GB, GPU-a8f49a09-f9d9-cbd8-859f-1d6857ca81ef, 595.91.07, 81920, 400.00, 1410, 1593"
+  },
+  "manifest": {
+    "config": {
+      "name": "pml-3.0.0-large-triplet-10-pairs",
+      "versions": {
+        "2.9.0": "bee27da3af7d1f2914e78e7f27cb755ee779105e",
+        "3.0.0": "e9a1fc04a04cdc0f038d4597318393df4a94f5d7"
+      },
+      "cases": [
+        "triplet"
+      ],
+      "profiles": {
+        "standard": {
+          "dimensions": 128,
+          "samples_per_class": 4,
+          "proxy_classes": 1024
+        }
+      },
+      "batch_sizes": [
+        8192
+      ],
+      "bfloat16_batch_sizes": [],
+      "rounds": 3,
+      "warmup": 10,
+      "repeats": 3,
+      "seed": 17,
+      "threads": 1,
+      "memory_fraction": 0.9,
+      "timeout_seconds": 300,
+      "capacity": {
+        "profile": "standard",
+        "start": 128,
+        "maximum": 1048576,
+        "granularity": 128,
+        "relative_resolution": 0.05,
+        "warmup": 1,
+        "repeats": 3
+      },
+      "steps_per_block": 10,
+      "warmup_seconds": 1
+    },
+    "sources": {
+      "2.9.0": "/workspace/v2",
+      "3.0.0": "/workspace/v3"
+    },
+    "runner_revision": "d20a86b2e5b3db75ddd143b645a2264397e5d71c",
+    "device": "cuda",
+    "gpu_identity": "NVIDIA A100-SXM4-80GB, GPU-a8f49a09-f9d9-cbd8-859f-1d6857ca81ef, 595.91.07"
+  },
+  "checks": [],
+  "capacity": []
+}

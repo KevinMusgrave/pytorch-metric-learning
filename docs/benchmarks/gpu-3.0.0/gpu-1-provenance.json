@@ -1,0 +1,387 @@
+{
+  "gpu": "RTX 4090",
+  "environment": {
+    "timestamp_utc": "2026-11-01T03:11:53.900055+00:00",
+    "python": "3.12.13",
+    "pytorch": "2.14.0+cu130",
+    "cuda_runtime": "13.0",
+    "os": "Linux-6.8.0-147-generic-x86_64-with-glibc2.39",
+    "threads": 1,
+    "logical_cpus": 48,
+    "matmul_precision": "highest",
+    "tf32_matmul": false,
+    "tf32_cudnn": false,
+    "cpu": "AMD EPYC 7352 24-Core Processor",
+    "gpu": "NVIDIA GeForce RTX 4090",
+    "gpu_total_bytes": 25252724736,
+    "compute_capability": [
+      8,
+      9
+    ],
+    "gpu_details": "NVIDIA GeForce RTX 4090, GPU-672bf3c3-e60e-a5a7-7553-db59178fdd1e, 595.91.07, 24564, 450.00, 3135, 10501"
+  },
+  "manifest": {
+    "config": {
+      "name": "pml-3.0.0-gpu-comparison",
+      "versions": {
+        "2.9.0": "bee27da3af7d1f2914e78e7f27cb755ee779105e",
+        "3.0.0": "e9a1fc04a04cdc0f038d4597318393df4a94f5d7"
+      },
+      "cases": [
+        "ntxent",
+        "contrastive",
+        "triplet",
+        "batch-hard-triplet",
+        "arcface",
+        "supcon",
+        "multi-similarity",
+        "proxy-anchor"
+      ],
+      "profiles": {
+        "standard": {
+          "dimensions": 128,
+          "samples_per_class": 4,
+          "proxy_classes": 1024
+        },
+        "wide-dense": {
+          "dimensions": 512,
+          "samples_per_class": 16,
+          "proxy_classes": 10000
+        }
+      },
+      "batch_sizes": [
+        128,
+        512,
+        2048,
+        8192
+      ],
+      "bfloat16_batch_sizes": [
+        512,
+        2048
+      ],
+      "rounds": 3,
+      "warmup": 10,
+      "repeats": 3,
+      "seed": 17,
+      "threads": 1,
+      "memory_fraction": 0.9,
+      "timeout_seconds": 300,
+      "capacity": {
+        "profile": "standard",
+        "start": 128,
+        "maximum": 1048576,
+        "granularity": 128,
+        "relative_resolution": 0.05,
+        "warmup": 1,
+        "repeats": 3
+      },
+      "steps_per_block": 100,
+      "warmup_seconds": 1
+    },
+    "sources": {
+      "2.9.0": "/workspace/v2",
+      "3.0.0": "/workspace/v3"
+    },
+    "runner_revision": "d20a86b2e5b3db75ddd143b645a2264397e5d71c",
+    "device": "cuda",
+    "gpu_identity": "NVIDIA GeForce RTX 4090, GPU-672bf3c3-e60e-a5a7-7553-db59178fdd1e, 595.91.07"
+  },
+  "checks": [
+    {
+      "case": "ntxent",
+      "status": "passed",
+      "comparisons": {
+        "loss": {
+          "max_absolute_difference": 1.430511474609375e-06
+        },
+        "embeddings": {
+          "max_absolute_difference": 9.313225746154785e-09
+        }
+      }
+    },
+    {
+      "case": "contrastive",
+      "status": "passed",
+      "comparisons": {
+        "loss": {
+          "max_absolute_difference": 0.0
+        },
+        "embeddings": {
+          "max_absolute_difference": 1.1641532182693481e-10
+        }
+      }
+    },
+    {
+      "case": "triplet",
+      "status": "passed",
+      "comparisons": {
+        "loss": {
+          "max_absolute_difference": 4.470348358154297e-08
+        },
+        "embeddings": {
+          "max_absolute_difference": 1.1641532182693481e-10
+        }
+      }
+    },
+    {
+      "case": "batch-hard-triplet",
+      "status": "passed",
+      "comparisons": {
+        "loss": {
+          "max_absolute_difference": 0.0
+        },
+        "embeddings": {
+          "max_absolute_difference": 4.656612873077393e-10
+        }
+      }
+    },
+    {
+      "case": "arcface",
+      "status": "passed",
+      "comparisons": {
+        "loss": {
+          "max_absolute_difference": 0.0
+        },
+        "embeddings": {
+          "max_absolute_difference": 1.4528632164001465e-07
+        },
+        "weight": {
+          "max_absolute_difference": 7.82310962677002e-08
+        }
+      }
+    },
+    {
+      "case": "supcon",
+      "status": "passed",
+      "comparisons": {
+        "loss": {
+          "max_absolute_difference": 0.0
+        },
+        "embeddings": {
+          "max_absolute_difference": 3.725290298461914e-09
+        }
+      }
+    },
+    {
+      "case": "multi-similarity",
+      "status": "passed",
+      "comparisons": {
+        "loss": {
+          "max_absolute_difference": 0.0
+        },
+        "embeddings": {
+          "max_absolute_difference": 3.4924596548080444e-10
+        }
+      }
+    },
+    {
+      "case": "proxy-anchor",
+      "status": "passed",
+      "comparisons": {
+        "loss": {
+          "max_absolute_difference": 0.0
+        },
+        "embeddings": {
+          "max_absolute_difference": 1.1175870895385742e-07
+        },
+        "weight": {
+          "max_absolute_difference": 8.195638656616211e-08
+        }
+      }
+    }
+  ],
+  "capacity": [
+    {
+      "case": "ntxent",
+      "version": "2.9.0",
+      "profile": "standard",
+      "largest_verified_batch": 640,
+      "first_failing_batch": 768,
+      "limiting_status": "oom",
+      "confirmation_statuses": [
+        "ok",
+        "ok"
+      ]
+    },
+    {
+      "case": "ntxent",
+      "version": "3.0.0",
+      "profile": "standard",
+      "largest_verified_batch": 17408,
+      "first_failing_batch": 17920,
+      "limiting_status": "oom",
+      "confirmation_statuses": [
+        "ok",
+        "ok"
+      ]
+    },
+    {
+      "case": "contrastive",
+      "version": "2.9.0",
+      "profile": "standard",
+      "largest_verified_batch": 16384,
+      "first_failing_batch": 16896,
+      "limiting_status": "oom",
+      "confirmation_statuses": [
+        "ok",
+        "ok"
+      ]
+    },
+    {
+      "case": "contrastive",
+      "version": "3.0.0",
+      "profile": "standard",
+      "largest_verified_batch": 16384,
+      "first_failing_batch": 16896,
+      "limiting_status": "oom",
+      "confirmation_statuses": [
+        "ok",
+        "ok"
+      ]
+    },
+    {
+      "case": "triplet",
+      "version": "2.9.0",
+      "profile": "standard",
+      "largest_verified_batch": 8960,
+      "first_failing_batch": 9216,
+      "limiting_status": "oom",
+      "confirmation_statuses": [
+        "ok",
+        "ok"
+      ]
+    },
+    {
+      "case": "triplet",
+      "version": "3.0.0",
+      "profile": "standard",
+      "largest_verified_batch": 9216,
+      "first_failing_batch": 9472,
+      "limiting_status": "oom",
+      "confirmation_statuses": [
+        "ok",
+        "ok"
+      ]
+    },
+    {
+      "case": "batch-hard-triplet",
+      "version": "2.9.0",
+      "profile": "standard",
+      "largest_verified_batch": 27648,
+      "first_failing_batch": 28672,
+      "limiting_status": "oom",
+      "confirmation_statuses": [
+        "ok",
+        "ok"
+      ]
+    },
+    {
+      "case": "batch-hard-triplet",
+      "version": "3.0.0",
+      "profile": "standard",
+      "largest_verified_batch": 29696,
+      "first_failing_batch": 30720,
+      "limiting_status": "oom",
+      "confirmation_statuses": [
+        "ok",
+        "ok"
+      ]
+    },
+    {
+      "case": "arcface",
+      "version": "2.9.0",
+      "profile": "standard",
+      "largest_verified_batch": 1048576,
+      "first_failing_batch": null,
+      "limiting_status": "search_cap",
+      "confirmation_statuses": [
+        "ok",
+        "ok"
+      ]
+    },
+    {
+      "case": "arcface",
+      "version": "3.0.0",
+      "profile": "standard",
+      "largest_verified_batch": 1048576,
+      "first_failing_batch": null,
+      "limiting_status": "search_cap",
+      "confirmation_statuses": [
+        "ok",
+        "ok"
+      ]
+    },
+    {
+      "case": "supcon",
+      "version": "2.9.0",
+      "profile": "standard",
+      "largest_verified_batch": 21504,
+      "first_failing_batch": 22528,
+      "limiting_status": "oom",
+      "confirmation_statuses": [
+        "ok",
+        "ok"
+      ]
+    },
+    {
+      "case": "supcon",
+      "version": "3.0.0",
+      "profile": "standard",
+      "largest_verified_batch": 20480,
+      "first_failing_batch": 21504,
+      "limiting_status": "oom",
+      "confirmation_statuses": [
+        "ok",
+        "ok"
+      ]
+    },
+    {
+      "case": "multi-similarity",
+      "version": "2.9.0",
+      "profile": "standard",
+      "largest_verified_batch": 20480,
+      "first_failing_batch": 21504,
+      "limiting_status": "oom",
+      "confirmation_statuses": [
+        "ok",
+        "ok"
+      ]
+    },
+    {
+      "case": "multi-similarity",
+      "version": "3.0.0",
+      "profile": "standard",
+      "largest_verified_batch": 21504,
+      "first_failing_batch": 22528,
+      "limiting_status": "oom",
+      "confirmation_statuses": [
+        "ok",
+        "ok"
+      ]
+    },
+    {
+      "case": "proxy-anchor",
+      "version": "2.9.0",
+      "profile": "standard",
+      "largest_verified_batch": 491520,
+      "first_failing_batch": 507904,
+      "limiting_status": "oom",
+      "confirmation_statuses": [
+        "ok",
+        "ok"
+      ]
+    },
+    {
+      "case": "proxy-anchor",
+      "version": "3.0.0",
+      "profile": "standard",
+      "largest_verified_batch": 720896,
+      "first_failing_batch": 753664,
+      "limiting_status": "oom",
+      "confirmation_statuses": [
+        "ok",
+        "ok"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "gpu": "RTX 5090",
+  "environment": {
+    "timestamp_utc": "2026-11-01T05:59:39.174716+00:00",
+    "python": "3.12.13",
+    "pytorch": "2.14.0+cu130",
+    "cuda_runtime": "13.0",
+    "os": "Linux-6.8.0-147-generic-x86_64-with-glibc2.39",
+    "threads": 1,
+    "logical_cpus": 32,
+    "matmul_precision": "highest",
+    "tf32_matmul": false,
+    "tf32_cudnn": false,
+    "cpu": "AMD Ryzen 9 7950X 16-Core Processor",
+    "gpu": "NVIDIA GeForce RTX 5090",
+    "gpu_total_bytes": 33670758400,
+    "compute_capability": [
+      12,
+      0
+    ],
+    "gpu_details": "NVIDIA GeForce RTX 5090, GPU-3c72b76a-4e14-f126-83d0-8779f6adf954, 595.91.07, 32607, 575.00, 3090, 14001"
+  },
+  "manifest": {
+    "config": {
+      "name": "pml-low-precision-distance-fix",
+      "versions": {
+        "2.9.0": "bee27da3af7d1f2914e78e7f27cb755ee779105e",
+        "3.0.0": "e9a1fc04a04cdc0f038d4597318393df4a94f5d7",
+        "candidate-32bcfa8": "32bcfa8213a9a48d95153a07a6cf6e0e753e1a18"
+      },
+      "cases": [
+        "ntxent",
+        "contrastive",
+        "batch-hard-triplet",
+        "proxy-anchor"
+      ],
+      "profiles": {
+        "standard": {
+          "dimensions": 128,
+          "samples_per_class": 4,
+          "proxy_classes": 1024
+        }
+      },
+      "batch_sizes": [
+        128,
+        512,
+        2048
+      ],
+      "bfloat16_batch_sizes": [
+        512,
+        2048
+      ],
+      "rounds": 3,
+      "warmup": 10,
+      "repeats": 3,
+      "seed": 17,
+      "threads": 1,
+      "memory_fraction": 0.9,
+      "timeout_seconds": 300,
+      "steps_per_block": 100,
+      "warmup_seconds": 1
+    },
+    "sources": {
+      "2.9.0": "/workspace/v2",
+      "3.0.0": "/workspace/v3",
+      "candidate-32bcfa8": "/workspace/fix"
+    },
+    "runner_revision": "d20a86b2e5b3db75ddd143b645a2264397e5d71c",
+    "device": "cuda",
+    "gpu_identity": "NVIDIA GeForce RTX 5090, GPU-3c72b76a-4e14-f126-83d0-8779f6adf954, 595.91.07"
+  },
+  "checks": [],
+  "capacity": []
+}

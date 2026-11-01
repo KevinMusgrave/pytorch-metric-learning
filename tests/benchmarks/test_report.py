@@ -1,10 +1,18 @@
 import csv
 import json
+import xml.etree.ElementTree as ET
 from copy import deepcopy
+from itertools import pairwise
 
 import pytest
 
-from benchmarks.report import load_campaign, ratio, summarize, write_timing_report
+from benchmarks.report import (
+    figures,
+    load_campaign,
+    ratio,
+    summarize,
+    write_timing_report,
+)
 
 
 def record(version, mean, peak, status="ok"):
@@ -137,3 +145,31 @@ def test_timing_only_export_keeps_protocol_and_requires_complete_timings(tmp_pat
     path.write_text(json.dumps(records[0]))
     with pytest.raises(ValueError, match="Incomplete speed matrix"):
         load_campaign(tmp_path, timing_only=True)
+
+
+def test_scaling_chart_spaces_equal_batch_ratios_equally(tmp_path):
+    campaign = {
+        "gpu": "Fixture",
+        "rows": [
+            {
+                "case": "ntxent",
+                "profile": "standard",
+                "dtype": "float32",
+                "batch_size": batch,
+                "version": "3.0.0",
+                "status": "ok",
+                "mean_ms": batch / 128,
+                "peak_incremental_mib": batch / 128,
+            }
+            for batch in (128, 512, 2048, 8192)
+        ],
+    }
+    for filename in figures(campaign, tmp_path, "scaling"):
+        svg = ET.parse(tmp_path / filename)
+        positions = sorted(
+            float(e.attrib["cx"])
+            for e in svg.iter("{http://www.w3.org/2000/svg}circle")
+        )
+        assert len(positions) == 4
+        gaps = [b - a for a, b in pairwise(positions)]
+        assert gaps == pytest.approx([gaps[0]] * 3, abs=0.01)

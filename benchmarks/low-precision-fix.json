@@ -1,0 +1,27 @@
+{
+  "name": "pml-low-precision-distance-fix",
+  "versions": {
+    "2.9.0": "bee27da3af7d1f2914e78e7f27cb755ee779105e",
+    "3.0.0": "e9a1fc04a04cdc0f038d4597318393df4a94f5d7",
+    "candidate-32bcfa8": "32bcfa8213a9a48d95153a07a6cf6e0e753e1a18"
+  },
+  "cases": ["ntxent", "contrastive", "batch-hard-triplet", "proxy-anchor"],
+  "profiles": {
+    "standard": {
+      "dimensions": 128,
+      "samples_per_class": 4,
+      "proxy_classes": 1024
+    }
+  },
+  "batch_sizes": [128, 512, 2048],
+  "bfloat16_batch_sizes": [512, 2048],
+  "rounds": 3,
+  "warmup": 10,
+  "repeats": 3,
+  "seed": 17,
+  "threads": 1,
+  "memory_fraction": 0.9,
+  "timeout_seconds": 300,
+  "steps_per_block": 100,
+  "warmup_seconds": 1
+}

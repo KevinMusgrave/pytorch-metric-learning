@@ -1,5 +1,35 @@
 # Measuring performance
 
+The [GPU release comparison](benchmarks/gpu-3.0.0/README.md) measures released
+v3.0.0 against v2.9.0 on RTX 4090, RTX 5090, L40S, A100, and H100 systems
+on 2026-11-01 UTC.
+It reports absolute v3 forward/backward time, peak memory, verified batch
+capacity, and version ratios for seven common losses plus batch-hard triplet
+mining. [Full measurements](benchmarks/gpu-3.0.0/measurements.csv) retain both
+versions, all shapes, BF16, failures, and process ranges.
+The [large-triplet follow-up](benchmarks/gpu-3.0.0/large-triplet/README.md)
+uses shorter timing blocks where the main protocol exceeds its time limit.
+
+For release announcements, NT-Xent provides the clearest improvement: at batch
+512, 128 dimensions, four samples per class, and float32, v3 is **2.28–33.5×
+faster** and reduces peak PyTorch allocation by a factor of **79.2–186** across
+these five systems. On the RTX 5090, that is 0.733 ms per forward/backward pair and 82.7 MiB
+peak allocation. Under the 90% memory budget, its verified NT-Xent batch limit
+increases from 768 to 19,968; the H100 increases from 1,024 to 31,744.
+
+These are loss-only results. Other losses have smaller gains, overlapping timing
+ranges, or regressions; the report includes all of them. The figures do not
+describe end-to-end training speed or establish one GPU as universally faster
+than another rented system.
+
+Released v3.0.0 also has major BF16 regressions at batch 2,048: batch-hard triplet
+is 2.62–17.2× slower than v2.9.0, and Contrastive is 1.90–5.30× slower across these
+systems. Their peak allocations increase by factors of 13.5–19.5 and 6.12–7.09,
+respectively. The [low-precision distance fix](#low-precision-distance-fix)
+documents an unreleased correction separately from the release measurements.
+
+## Development measurements
+
 Run benchmarks from the repository's frozen development environment. These
 measurements establish a reference for changes; they do not impose a universal
 speed requirement across machines. The runner imports the library from the
@@ -126,6 +156,8 @@ margin translated to the same 0.5 radians. Other settings are explicit in
 `benchmarks/measurement.py`. Before timing, each loss's scalar value and full
 embedding/parameter gradients must match at float32 (`rtol=2e-4`, `atol=2e-6`).
 No model, optimizer, or data-loading work is included.
+The matrix uses ordinary full loss calls and backward passes. Anchor batching,
+compilation, and distributed execution remain separate experiments.
 
 Timing uses three independent process rounds with interleaved version order.
 Each process warms up for at least ten pairs and one second, then measures
@@ -211,6 +243,78 @@ uv run --frozen --no-sync python -m benchmarks.report \
 process ranges, memory, CSV, and raw evidence. Full-gradient agreement and batch
 capacity remain separate measurements in the primary campaign.
 
+## Low-precision distance fix
+
+The follow-up compares v2.9.0, released v3.0.0, and candidate
+`32bcfa8213a9a48d95153a07a6cf6e0e753e1a18` on an A100 and another RTX 5090.
+The candidate is not part of the released v3.0.0 measurements above.
+The [complete timings](benchmarks/gpu-3.0.0/low-precision-fix/README.md)
+include NT-Xent and ProxyAnchor controls, float32 batches 128, 512, and 2,048,
+and BF16 batches 512 and 2,048. Every successful configuration again averages
+900 forward/backward pairs across three fresh processes.
+
+At BF16 batch 2,048, 128 dimensions, and four samples per class:
+
+| GPU      | Loss                 | v2.9 ms | v3.0 ms | Candidate ms | v3.0 → candidate peak MiB |
+| -------- | -------------------- | ------: | ------: | -----------: | ------------------------: |
+| RTX 5090 | Contrastive          |    2.56 |    13.3 |         2.23 |               2,118 → 356 |
+| RTX 5090 | Batch-hard + Triplet |    1.10 |    16.4 |         1.38 |               2,118 → 151 |
+| A100     | Contrastive          |    7.63 |    23.4 |         6.32 |               2,118 → 308 |
+| A100     | Batch-hard + Triplet |    4.93 |    30.0 |         5.47 |               2,118 → 103 |
+
+The candidate removes the severe regression on these workloads. It does not
+win every comparison: RTX 5090 batch-hard triplet remains 25.6% slower than
+v2.9.0, while the A100 process ranges overlap (4.64–5.36 ms for v2.9.0 and
+4.41–6.54 ms for the candidate). Contrastive uses about 3% more peak allocation
+than v2.9.0. The A100 controls did not reproduce the original 53% ProxyAnchor
+slowdown at float32 batch 2,048: the new release comparison measured 16%, and
+the candidate's range overlaps v2.9.0. Small NT-Xent timings also overlap on
+that system; their original mean difference is not a stable regression estimate.
+
+The correction avoids the direct Euclidean-distance backward kernel's
+batch-by-batch-by-dimension allocation when float32 matrix evaluation is
+numerically safe. It screens distances for cancellation and retains the direct
+calculation for nearby or duplicate rows, other norms, small matrices,
+compilation, CUDA graph capture, and reduced float32 matmul precision.
+These measurements use standard-normal inputs and highest float32 matmul
+precision; clustered training embeddings can take the slower direct path.
+
+Values and full gradients were checked against direct-difference references
+for float16 and BF16 random, nearby, duplicate, and mixed-scale inputs. GPU
+tests also cover CUDA graph capture and reduced matmul precision. The four
+follow-up losses passed float32 scalar and full-gradient comparison between
+released v3.0.0 and the candidate before timing.
+The [A100 validation](benchmarks/gpu-3.0.0/low-precision-fix/gpu-1-validation.json)
+and [RTX 5090 validation](benchmarks/gpu-3.0.0/low-precision-fix/gpu-2-validation.json)
+record the errors and archive checks. An additional
+[BF16 comparison at batch 2,048](benchmarks/gpu-3.0.0/low-precision-fix/bf16-gradient-validation.json)
+on the A100 found unchanged Contrastive and batch-hard triplet loss values, with
+maximum embedding-gradient absolute differences of `5.96e-8` and `2.38e-7`.
+
+`benchmarks/low-precision-fix.json` pins all three source commits. To reproduce
+the timing matrix, create a clean worktree for each source and run the generic
+campaign API from a clean, committed benchmark checkout:
+
+```sh
+git worktree add --detach /tmp/pml-fix 32bcfa8213a9a48d95153a07a6cf6e0e753e1a18
+uv run --frozen --no-sync python - <<'PY'
+import json
+from pathlib import Path
+from benchmarks.compare import Campaign, speed_plan
+
+config = json.loads(Path("benchmarks/low-precision-fix.json").read_text())
+sources = dict(zip(config["versions"], map(Path, (
+    "/tmp/pml-v2", "/tmp/pml-v3", "/tmp/pml-fix"
+)), strict=True))
+campaign = Campaign(config, sources, Path("/tmp/pml-fix-results"), "cuda", True)
+for request in speed_plan(config):
+    campaign.run(request)
+PY
+
+uv run --frozen --no-sync python -m benchmarks.report \
+  /tmp/pml-fix-results --timing-only --output /tmp/pml-fix-report
+```
+
 ## Pre-release development reference (2026-10-29)
 
 These historical measurements precede numerical changes in the final v3.0.0
@@ -256,7 +360,7 @@ with peer-to-peer transport disabled (`NCCL_P2P_DISABLE=1`), the slower rank too
 [256 rows](benchmarks/nccl-a40-v3-b256.json)). Disabling peer-to-peer
 transport means these numbers do not measure direct GPU-to-GPU transfers.
 
-## Comparison with version 2.9.0
+### Comparison with version 2.9.0
 
 The same runner measured the v2.9.0 release on the same machines. Losses agree
 to float32 rounding for every case except the proxy loss, whose weights are

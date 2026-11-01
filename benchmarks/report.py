@@ -4,7 +4,6 @@ import gzip
 import json
 import statistics
 from collections import defaultdict
-from math import log2
 from pathlib import Path
 
 from .compare import request_key, speed_plan
@@ -105,7 +104,7 @@ def load_campaign(folder, timing_only=False):
 
 
 def number(value):
-    return f"{value:,.3g}"
+    return f"{value:,.0f}" if abs(value) >= 1000 else f"{value:,.3g}"
 
 
 def table(cases, campaigns, cell):
@@ -145,14 +144,15 @@ def selected(
     )
 
 
-def absolute(case, campaign, metric, dtype="float32"):
-    row = selected(campaign, case, dtype=dtype)
+def absolute(case, campaign, metric, dtype="float32", batch=512):
+    row = selected(campaign, case, dtype=dtype, batch=batch)
     return number(row[metric]) if row["status"] == "ok" else row["status"]
 
 
-def ratio(case, campaign, metric, profile="standard"):
+def ratio(case, campaign, metric, profile="standard", dtype="float32", batch=512):
     old, new = (
-        selected(campaign, case, version=v, profile=profile) for v in ("2.9.0", "3.0.0")
+        selected(campaign, case, version=v, profile=profile, dtype=dtype, batch=batch)
+        for v in ("2.9.0", "3.0.0")
     )
     if old["status"] != "ok" or new["status"] != "ok":
         return f"{old['status']} → {new['status']}"
@@ -208,10 +208,10 @@ def figures(campaign, output, slug):
         ),
     )
     files = []
-    positions = sorted({log2(r["batch_size"]) for r in campaign["rows"]})
+    positions = sorted({r["batch_size"] for r in campaign["rows"]})
     for metric, label in (
-        ("mean_ms", "Loss forward + backward (ms/step)"),
-        ("peak_incremental_mib", "Additional peak allocation (MiB)"),
+        ("mean_ms", "Forward + backward (ms, log scale)"),
+        ("peak_incremental_mib", "Peak extra memory (MiB, log scale)"),
     ):
         chart = pygal.XY(
             style=style,
@@ -220,8 +220,8 @@ def figures(campaign, output, slug):
             logarithmic=True,
             x_title="Batch size (log scale; 4 per class, or 1,024 proxy classes)",
             x_labels=positions,
-            xrange=(positions[0] - 0.4, positions[-1] + 0.4),
-            x_value_formatter=lambda x: f"{2**x:,.0f}",
+            xrange=(positions[0] / 1.25, positions[-1] * 1.25),
+            x_value_formatter=lambda x: f"{x:,.0f}",
             y_title=label,
             title=f"PML v3.0.0 · {campaign['gpu']} · float32 · 128 dimensions",
             legend_at_bottom=True,
@@ -240,9 +240,9 @@ def figures(campaign, output, slug):
                 and r["version"] == "3.0.0"
                 and r["status"] == "ok"
             ]
-            chart.add(name, [(log2(r["batch_size"]), r[metric]) for r in rows])
+            chart.add(name, [(r["batch_size"], r[metric]) for r in rows])
         filename = f"{slug}-{metric}.svg"
-        chart.render_to_file(str(output / filename))
+        (output / filename).write_bytes(chart.render() + b"\n")
         files.append(filename)
     return files
 
@@ -285,8 +285,8 @@ def write_report(campaigns, output):
         (
             "Released v3.0.0 and v2.9.0, measured on the same GPU and software "
             "stack. These are loss/miner forward and backward measurements; "
-            "encoder, optimizer, data loading, and distributed training are "
-            "excluded."
+            "encoder, optimizer, data loading, compilation, anchor batching, "
+            "and distributed training are excluded."
         ),
         (
             "All overview tables use float32, batch 512, and 128-dimensional "
@@ -329,7 +329,8 @@ def write_report(campaigns, output):
         (
             "Largest verified batch under a 90% GPU tensor-allocation budget, "
             "with 128-dimensional float32 embeddings and the standard label/proxy "
-            "configuration. Each successful boundary passed three fresh "
+            "configuration, using ordinary full loss calls and backward passes. "
+            "Each successful boundary passed three fresh "
             "processes. Searches stop within 128 rows or 5% of a failing batch. ≥ "
             "marks the search ceiling, not a hardware limit. Per-GPU provenance "
             "files retain the failing batch and distinguish OOM, indexing, "
@@ -374,6 +375,35 @@ def write_report(campaigns, output):
             config["cases"],
             campaigns,
             lambda case, c: absolute(case, c, "mean_ms", "bfloat16"),
+        ),
+        "### BF16 at batch 2,048",
+        (
+            "Released v3.0.0 has major BF16 time and memory regressions for "
+            "Contrastive and batch-hard triplet at this size. Their "
+            "low-precision Euclidean distance uses the direct CUDA kernel to "
+            "preserve nearby-point accuracy; its backward pass allocates a "
+            "batch-by-batch-by-dimension buffer. These release measurements "
+            "retain that behavior. See the [subsequent fix experiment]"
+            "(../../performance.md#low-precision-distance-fix) for a separately "
+            "measured, unreleased candidate."
+        ),
+        "Milliseconds per forward/backward pair:",
+        table(
+            config["cases"],
+            campaigns,
+            lambda case, c: absolute(case, c, "mean_ms", "bfloat16", 2048),
+        ),
+        "Peak PyTorch allocation in MiB:",
+        table(
+            config["cases"],
+            campaigns,
+            lambda case, c: absolute(case, c, "peak_allocated_mib", "bfloat16", 2048),
+        ),
+        "Time ratio, v2.9 / v3.0; below 1 means v3 is slower:",
+        table(
+            config["cases"],
+            campaigns,
+            lambda case, c: ratio(case, c, "mean_ms", dtype="bfloat16", batch=2048),
         ),
         "## Scaling and raw evidence",
         (

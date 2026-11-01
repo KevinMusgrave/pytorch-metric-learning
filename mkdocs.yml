@@ -82,7 +82,11 @@ nav:
     - Recipes:
       - Training: recipes/training.md
       - Retrieval evaluation: recipes/evaluation.md
-    - Performance: performance.md
+    - Performance:
+      - Methodology: performance.md
+      - GPU release comparison: benchmarks/gpu-3.0.0/README.md
+      - Large-triplet timings: benchmarks/gpu-3.0.0/large-triplet/README.md
+      - Low-precision fix: benchmarks/gpu-3.0.0/low-precision-fix/README.md
     - Release notes:
       - All releases: release-notes/index.md
       - 3.0.0: release-notes/3.0.0.md

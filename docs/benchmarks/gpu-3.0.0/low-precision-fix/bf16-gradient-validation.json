@@ -1,0 +1,52 @@
+{
+  "rtol": 0.03125,
+  "atol": 2e-06,
+  "checks": [
+    {
+      "case": "contrastive",
+      "status": "passed",
+      "differences": {
+        "loss": {
+          "maximum_absolute_difference": 0.0,
+          "unequal_elements": 0,
+          "elements": 1,
+          "reference_maximum_absolute_value": 1.4609375
+        },
+        "embeddings": {
+          "maximum_absolute_difference": 5.960464477539063e-08,
+          "unequal_elements": 225,
+          "elements": 262144,
+          "reference_maximum_absolute_value": 1.4007091522216797e-05
+        }
+      }
+    },
+    {
+      "case": "batch-hard-triplet",
+      "status": "passed",
+      "differences": {
+        "loss": {
+          "maximum_absolute_difference": 0.0,
+          "unequal_elements": 0,
+          "elements": 1,
+          "reference_maximum_absolute_value": 0.478515625
+        },
+        "embeddings": {
+          "maximum_absolute_difference": 2.384185791015625e-07,
+          "unequal_elements": 64636,
+          "elements": 262144,
+          "reference_maximum_absolute_value": 4.029273986816406e-05
+        }
+      }
+    }
+  ],
+  "gpu": "A100-SXM4-80GB",
+  "dtype": "bfloat16",
+  "batch_size": 2048,
+  "dimensions": 128,
+  "samples_per_class": 4,
+  "seed": 17,
+  "versions": {
+    "3.0.0": "e9a1fc04a04cdc0f038d4597318393df4a94f5d7",
+    "candidate-32bcfa8": "32bcfa8213a9a48d95153a07a6cf6e0e753e1a18"
+  }
+}

@@ -89,6 +89,14 @@ configuration and raw records so different sampling protocols remain visible.
 Timing-only exports still require the complete speed matrix. The primary report
 continues to require its full gradient-comparison and capacity evidence.
 
+Regression follow-ups preserve the released sources and pin a separate candidate
+commit. `low-precision-fix.json` measures the affected Euclidean-distance losses
+alongside NT-Xent and ProxyAnchor controls on two GPU types, using the same
+900-pair protocol. Candidate results never replace the original release results.
+The numerical tests cover difficult input distributions separately from the
+standard-normal performance inputs; a faster result on those inputs is not a
+claim about clustered embeddings or every execution mode.
+
 Campaign files bind resume to the complete configuration, source revisions,
 benchmark revision, and GPU identity. Completed raw records are appended after
 each subprocess. A failed worker with an unexpected exception stops the campaign

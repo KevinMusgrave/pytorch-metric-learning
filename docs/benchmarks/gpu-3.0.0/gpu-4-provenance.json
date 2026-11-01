@@ -1,0 +1,387 @@
+{
+  "gpu": "A100-SXM4-80GB",
+  "environment": {
+    "timestamp_utc": "2026-11-01T03:12:07.142552+00:00",
+    "python": "3.12.13",
+    "pytorch": "2.14.0+cu130",
+    "cuda_runtime": "13.0",
+    "os": "Linux-6.8.0-147-generic-x86_64-with-glibc2.39",
+    "threads": 1,
+    "logical_cpus": 128,
+    "matmul_precision": "highest",
+    "tf32_matmul": false,
+    "tf32_cudnn": false,
+    "cpu": "AMD EPYC 7742 64-Core Processor",
+    "gpu": "NVIDIA A100-SXM4-80GB",
+    "gpu_total_bytes": 85094825984,
+    "compute_capability": [
+      8,
+      0
+    ],
+    "gpu_details": "NVIDIA A100-SXM4-80GB, GPU-a8f49a09-f9d9-cbd8-859f-1d6857ca81ef, 595.91.07, 81920, 400.00, 1410, 1593"
+  },
+  "manifest": {
+    "config": {
+      "name": "pml-3.0.0-gpu-comparison",
+      "versions": {
+        "2.9.0": "bee27da3af7d1f2914e78e7f27cb755ee779105e",
+        "3.0.0": "e9a1fc04a04cdc0f038d4597318393df4a94f5d7"
+      },
+      "cases": [
+        "ntxent",
+        "contrastive",
+        "triplet",
+        "batch-hard-triplet",
+        "arcface",
+        "supcon",
+        "multi-similarity",
+        "proxy-anchor"
+      ],
+      "profiles": {
+        "standard": {
+          "dimensions": 128,
+          "samples_per_class": 4,
+          "proxy_classes": 1024
+        },
+        "wide-dense": {
+          "dimensions": 512,
+          "samples_per_class": 16,
+          "proxy_classes": 10000
+        }
+      },
+      "batch_sizes": [
+        128,
+        512,
+        2048,
+        8192
+      ],
+      "bfloat16_batch_sizes": [
+        512,
+        2048
+      ],
+      "rounds": 3,
+      "warmup": 10,
+      "repeats": 3,
+      "seed": 17,
+      "threads": 1,
+      "memory_fraction": 0.9,
+      "timeout_seconds": 300,
+      "capacity": {
+        "profile": "standard",
+        "start": 128,
+        "maximum": 1048576,
+        "granularity": 128,
+        "relative_resolution": 0.05,
+        "warmup": 1,
+        "repeats": 3
+      },
+      "steps_per_block": 100,
+      "warmup_seconds": 1
+    },
+    "sources": {
+      "2.9.0": "/workspace/v2",
+      "3.0.0": "/workspace/v3"
+    },
+    "runner_revision": "d20a86b2e5b3db75ddd143b645a2264397e5d71c",
+    "device": "cuda",
+    "gpu_identity": "NVIDIA A100-SXM4-80GB, GPU-a8f49a09-f9d9-cbd8-859f-1d6857ca81ef, 595.91.07"
+  },
+  "checks": [
+    {
+      "case": "ntxent",
+      "status": "passed",
+      "comparisons": {
+        "loss": {
+          "max_absolute_difference": 0.0
+        },
+        "embeddings": {
+          "max_absolute_difference": 7.450580596923828e-09
+        }
+      }
+    },
+    {
+      "case": "contrastive",
+      "status": "passed",
+      "comparisons": {
+        "loss": {
+          "max_absolute_difference": 0.0
+        },
+        "embeddings": {
+          "max_absolute_difference": 1.1641532182693481e-10
+        }
+      }
+    },
+    {
+      "case": "triplet",
+      "status": "passed",
+      "comparisons": {
+        "loss": {
+          "max_absolute_difference": 1.4901161193847656e-08
+        },
+        "embeddings": {
+          "max_absolute_difference": 2.3283064365386963e-10
+        }
+      }
+    },
+    {
+      "case": "batch-hard-triplet",
+      "status": "passed",
+      "comparisons": {
+        "loss": {
+          "max_absolute_difference": 0.0
+        },
+        "embeddings": {
+          "max_absolute_difference": 4.656612873077393e-10
+        }
+      }
+    },
+    {
+      "case": "arcface",
+      "status": "passed",
+      "comparisons": {
+        "loss": {
+          "max_absolute_difference": 0.0
+        },
+        "embeddings": {
+          "max_absolute_difference": 7.078051567077637e-08
+        },
+        "weight": {
+          "max_absolute_difference": 7.450580596923828e-08
+        }
+      }
+    },
+    {
+      "case": "supcon",
+      "status": "passed",
+      "comparisons": {
+        "loss": {
+          "max_absolute_difference": 0.0
+        },
+        "embeddings": {
+          "max_absolute_difference": 4.6566128730773926e-09
+        }
+      }
+    },
+    {
+      "case": "multi-similarity",
+      "status": "passed",
+      "comparisons": {
+        "loss": {
+          "max_absolute_difference": 0.0
+        },
+        "embeddings": {
+          "max_absolute_difference": 6.984919309616089e-10
+        }
+      }
+    },
+    {
+      "case": "proxy-anchor",
+      "status": "passed",
+      "comparisons": {
+        "loss": {
+          "max_absolute_difference": 0.0
+        },
+        "embeddings": {
+          "max_absolute_difference": 5.960464477539063e-08
+        },
+        "weight": {
+          "max_absolute_difference": 8.195638656616211e-08
+        }
+      }
+    }
+  ],
+  "capacity": [
+    {
+      "case": "ntxent",
+      "version": "2.9.0",
+      "profile": "standard",
+      "largest_verified_batch": 1024,
+      "first_failing_batch": 1152,
+      "limiting_status": "oom",
+      "confirmation_statuses": [
+        "ok",
+        "ok"
+      ]
+    },
+    {
+      "case": "ntxent",
+      "version": "3.0.0",
+      "profile": "standard",
+      "largest_verified_batch": 31744,
+      "first_failing_batch": 32768,
+      "limiting_status": "oom",
+      "confirmation_statuses": [
+        "ok",
+        "ok"
+      ]
+    },
+    {
+      "case": "contrastive",
+      "version": "2.9.0",
+      "profile": "standard",
+      "largest_verified_batch": 30720,
+      "first_failing_batch": 31744,
+      "limiting_status": "oom",
+      "confirmation_statuses": [
+        "ok",
+        "ok"
+      ]
+    },
+    {
+      "case": "contrastive",
+      "version": "3.0.0",
+      "profile": "standard",
+      "largest_verified_batch": 30720,
+      "first_failing_batch": 31744,
+      "limiting_status": "oom",
+      "confirmation_statuses": [
+        "ok",
+        "ok"
+      ]
+    },
+    {
+      "case": "triplet",
+      "version": "2.9.0",
+      "profile": "standard",
+      "largest_verified_batch": 16384,
+      "first_failing_batch": 16896,
+      "limiting_status": "oom",
+      "confirmation_statuses": [
+        "ok",
+        "ok"
+      ]
+    },
+    {
+      "case": "triplet",
+      "version": "3.0.0",
+      "profile": "standard",
+      "largest_verified_batch": 16896,
+      "first_failing_batch": 17408,
+      "limiting_status": "oom",
+      "confirmation_statuses": [
+        "ok",
+        "ok"
+      ]
+    },
+    {
+      "case": "batch-hard-triplet",
+      "version": "2.9.0",
+      "profile": "standard",
+      "largest_verified_batch": 51200,
+      "first_failing_batch": 53248,
+      "limiting_status": "oom",
+      "confirmation_statuses": [
+        "ok",
+        "ok"
+      ]
+    },
+    {
+      "case": "batch-hard-triplet",
+      "version": "3.0.0",
+      "profile": "standard",
+      "largest_verified_batch": 55296,
+      "first_failing_batch": 57344,
+      "limiting_status": "oom",
+      "confirmation_statuses": [
+        "ok",
+        "ok"
+      ]
+    },
+    {
+      "case": "arcface",
+      "version": "2.9.0",
+      "profile": "standard",
+      "largest_verified_batch": 1048576,
+      "first_failing_batch": null,
+      "limiting_status": "search_cap",
+      "confirmation_statuses": [
+        "ok",
+        "ok"
+      ]
+    },
+    {
+      "case": "arcface",
+      "version": "3.0.0",
+      "profile": "standard",
+      "largest_verified_batch": 1048576,
+      "first_failing_batch": null,
+      "limiting_status": "search_cap",
+      "confirmation_statuses": [
+        "ok",
+        "ok"
+      ]
+    },
+    {
+      "case": "supcon",
+      "version": "2.9.0",
+      "profile": "standard",
+      "largest_verified_batch": 38912,
+      "first_failing_batch": 39936,
+      "limiting_status": "oom",
+      "confirmation_statuses": [
+        "ok",
+        "ok"
+      ]
+    },
+    {
+      "case": "supcon",
+      "version": "3.0.0",
+      "profile": "standard",
+      "largest_verified_batch": 40960,
+      "first_failing_batch": 43008,
+      "limiting_status": "oom",
+      "confirmation_statuses": [
+        "ok",
+        "ok"
+      ]
+    },
+    {
+      "case": "multi-similarity",
+      "version": "2.9.0",
+      "profile": "standard",
+      "largest_verified_batch": 37888,
+      "first_failing_batch": 38912,
+      "limiting_status": "oom",
+      "confirmation_statuses": [
+        "ok",
+        "ok"
+      ]
+    },
+    {
+      "case": "multi-similarity",
+      "version": "3.0.0",
+      "profile": "standard",
+      "largest_verified_batch": 40960,
+      "first_failing_batch": 43008,
+      "limiting_status": "oom",
+      "confirmation_statuses": [
+        "ok",
+        "ok"
+      ]
+    },
+    {
+      "case": "proxy-anchor",
+      "version": "2.9.0",
+      "profile": "standard",
+      "largest_verified_batch": 1048576,
+      "first_failing_batch": null,
+      "limiting_status": "search_cap",
+      "confirmation_statuses": [
+        "ok",
+        "ok"
+      ]
+    },
+    {
+      "case": "proxy-anchor",
+      "version": "3.0.0",
+      "profile": "standard",
+      "largest_verified_batch": 1048576,
+      "first_failing_batch": null,
+      "limiting_status": "search_cap",
+      "confirmation_statuses": [
+        "ok",
+        "ok"
+      ]
+    }
+  ]
+}

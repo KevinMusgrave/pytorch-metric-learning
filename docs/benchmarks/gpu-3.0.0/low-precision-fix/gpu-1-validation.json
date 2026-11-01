@@ -1,0 +1,52 @@
+{
+  "gpu": "A100-SXM4-80GB",
+  "verified_utc": "2026-11-01T06:20:36.695353+00:00",
+  "source_revisions": {
+    "2.9.0": "bee27da3af7d1f2914e78e7f27cb755ee779105e",
+    "3.0.0": "e9a1fc04a04cdc0f038d4597318393df4a94f5d7",
+    "candidate-32bcfa8": "32bcfa8213a9a48d95153a07a6cf6e0e753e1a18"
+  },
+  "records": 188,
+  "statuses": {
+    "ok": 182,
+    "oom": 6
+  },
+  "speed_runs": 180,
+  "paired_float32_loss_comparisons": 36,
+  "maximum_paired_loss_difference": 0.0,
+  "tensor_checks": [
+    {
+      "case": "ntxent",
+      "max_absolute_differences": {
+        "loss": 0.0,
+        "embeddings": 3.725290298461914e-09
+      }
+    },
+    {
+      "case": "contrastive",
+      "max_absolute_differences": {
+        "loss": 0.0,
+        "embeddings": 0.0
+      }
+    },
+    {
+      "case": "batch-hard-triplet",
+      "max_absolute_differences": {
+        "loss": 0.0,
+        "embeddings": 0.0
+      }
+    },
+    {
+      "case": "proxy-anchor",
+      "max_absolute_differences": {
+        "loss": 0.0,
+        "embeddings": 0.0,
+        "weight": 0.0
+      }
+    }
+  ],
+  "float32_gradient_tolerances": {
+    "rtol": 0.0002,
+    "atol": 2e-06
+  }
+}

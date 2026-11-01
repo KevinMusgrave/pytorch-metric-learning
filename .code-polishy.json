@@ -17,7 +17,7 @@
   "quality": {
     "allowComments": false,
     "lineBudget": {
-      "production": 7500
+      "production": 8500
     }
   },
   "portability": {},
@@ -405,6 +405,13 @@
         ],
         "module": "release",
         "focusedSuite": "release-focused"
+      },
+      {
+        "paths": [
+          "tests/benchmarks/**"
+        ],
+        "module": "benchmarks",
+        "focusedSuite": "benchmarks-focused"
       }
     ],
     "suites": [
@@ -604,7 +611,8 @@
           "benchmarks"
         ],
         "paths": [
-          "benchmarks/**"
+          "benchmarks/**",
+          "tests/benchmarks/**"
         ],
         "argv": [
           ".venv/bin/uv",
@@ -613,17 +621,8 @@
           "--no-sync",
           "python",
           "-m",
-          "benchmarks.run",
-          "--batch-size",
-          "8",
-          "--dimensions",
-          "4",
-          "--warmup",
-          "1",
-          "--repeats",
-          "2",
-          "--output",
-          ".code-polishy-artifacts/benchmarks/smoke.json"
+          "pytest",
+          "tests/benchmarks"
         ],
         "timeoutSeconds": 120
       },

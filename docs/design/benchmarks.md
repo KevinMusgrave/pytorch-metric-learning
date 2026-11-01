@@ -37,3 +37,47 @@ Short runs execute small real workloads and checks finite
 losses, gradients, and valid miner indices before reporting measurements. It
 does not assert machine-dependent timing thresholds. Longer measurements and
 GPU runs are deliberate experiments, not an implicit part of ordinary tests.
+
+## Release comparison
+
+`benchmarks.compare` runs the exact released 2.9.0 and 3.0.0 source checkouts in
+fresh subprocesses sharing one frozen Python environment. `release.json` fixes
+the source commits and experimental matrix. The subprocess boundary prevents
+imports, allocator history, and out-of-memory failures from leaking between
+versions or batch sizes. The existing runner remains useful for development,
+compilation, and distributed experiments.
+
+The comparison covers seven common losses and the composition of batch-hard
+mining with triplet loss. It explicitly translates ArcFace's degrees to radians
+and transposes its old weight layout. Both versions receive identical CPU-seeded
+embeddings and proxy weights; proxy class counts stay fixed as batch size grows.
+Loss and full embedding/parameter gradients are compared before the performance
+matrix. BF16 runs use BF16 inputs and parameters directly, without autocast;
+nonfinite values are reported as failures rather than speedups.
+
+Three fresh-process rounds interleave the versions for each shape. After warmup,
+each process times three blocks of 100 forward/backward pairs with a fresh graph
+and cleared gradients for every pair. Synchronization occurs at block boundaries,
+not between the measured forwards and backwards. The primary time is the block's
+wall time divided by 100. Preinitialized CUDA events record the forward/backward
+breakdown, averaged across the same pairs. Event instrumentation and ordinary
+dispatch/gradient-clearing costs remain in the wall time. CPU diagnostics use host
+timers for that breakdown. All block averages are retained, and summaries report
+the process means and their range. An out-of-memory result is never a timing.
+
+Memory reporting includes baseline allocation, peak total allocated tensors,
+peak incremental allocation, and peak allocator reservation. The batch search
+uses the same full forward/backward workload with an explicit 90% allocator
+budget, leaving 10% of device memory outside that budget. It doubles batches,
+then refines the successful/failing bracket to 128 rows or 5%, whichever is
+larger. The successful endpoint is confirmed in two additional fresh processes.
+An OOM, indexing limit, nonfinite result, timeout, or configured search ceiling
+remains a distinct outcome. This is loss-only capacity, not a claim about a
+complete encoder, optimizer, or training pipeline.
+
+Campaign files bind resume to the complete configuration, source revisions,
+benchmark revision, and GPU identity. Completed raw records are appended after
+each subprocess. A failed worker with an unexpected exception stops the campaign
+instead of being labeled as insufficient memory. The benchmark boundary suite
+executes real small workloads and checks matched inputs, resume isolation,
+capacity bracketing, and failure classification without timing thresholds.

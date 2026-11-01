@@ -108,7 +108,89 @@ memory or total device usage. CPU peak tensor memory is reported as null.
 The runner verifies finite losses/gradients or valid miner indices before
 sampling; mathematical correctness is established by the reference tests.
 
-## Version 3.0.0 reference
+## Systematic release comparison
+
+`benchmarks/release.json` defines a matched comparison of the exact released
+v2.9.0 and v3.0.0 commits. The matrix covers NT-Xent, Contrastive, all-triplet
+margin, batch-hard mining plus triplet margin, ArcFace, SupCon, MultiSimilarity,
+and ProxyAnchor. Batch sizes are 128, 512, 2,048, and 8,192. The standard profile
+uses 128-dimensional embeddings and four samples per class; the wide/dense
+profile uses 512 dimensions and sixteen per class. Proxy losses instead use
+cyclic labels and fixed class counts of 1,024 and 10,000 respectively. Those
+class counts do not grow with the batch.
+
+Both releases run in separate processes in the same frozen environment on each
+GPU. The inputs are CPU-seeded standard-normal embeddings. Proxy weights are
+identical, with ArcFace's old weight layout transposed and its old degree-based
+margin translated to the same 0.5 radians. Other settings are explicit in
+`benchmarks/measurement.py`. Before timing, each loss's scalar value and full
+embedding/parameter gradients must match at float32 (`rtol=2e-4`, `atol=2e-6`).
+No model, optimizer, or data-loading work is included.
+
+Timing uses three independent process rounds with interleaved version order.
+Each process warms up for at least ten pairs and one second, then measures
+three blocks of 100 forward/backward pairs. Each pair builds a fresh graph and
+clears gradients. CUDA synchronizes only at block boundaries. The primary time
+is elapsed block wall time divided by 100; CUDA events provide averaged
+forward/backward breakdowns. The event objects are initialized before timing.
+Normal dispatch, event-recording, and gradient-clearing overhead remains in the
+wall time. Report the mean of process means and their range; overlapping ranges
+are not evidence of a reliable speed difference.
+
+Peak total allocated tensor memory, incremental peak above the input/parameter
+baseline, and allocator reservation are distinct metrics. Capacity probes use
+90% of device memory as the tensor allocator budget, leaving 10% outside it.
+They double batches and refine a success/failure bracket to 128 rows or 5%,
+whichever is larger. Each successful endpoint is confirmed in two more fresh
+processes, each with a first step, one warmup, and three measured steps. OOM,
+indexing limits, nonfinite results, a five-minute subprocess timeout, and the
+1,048,576-row search ceiling remain distinct outcomes. A search ceiling is a
+lower bound, never a measured hardware limit. Actual encoder/optimizer training
+needs additional memory beyond these loss-only limits.
+
+Float32 is the main comparison. BF16 inputs and parameters are also measured at
+batches 512 and 2,048 in the standard profile, without autocast. Finite losses
+and gradients are required, but the full cross-version gradient equivalence
+check is float32. BF16 results do not establish mixed-precision training quality.
+
+Run from a clean, committed benchmark checkout:
+
+```sh
+uv sync --frozen --no-build --no-install-project --all-extras
+
+git worktree add --detach /tmp/pml-v2 v2.9.0
+git worktree add --detach /tmp/pml-v3 v3.0.0
+uv run --frozen --no-sync python -m benchmarks.compare \
+  --source-2 /tmp/pml-v2 --source-3 /tmp/pml-v3 \
+  --output /tmp/pml-gpu-results
+```
+
+Use `--resume` with the same output directory after an interruption. Resume
+requires the same complete configuration, source and benchmark revisions, and
+GPU identity. Completed records are retained; unexpected worker errors stop the
+campaign for investigation. The source revisions are checked against the JSON
+matrix and dirty library source is rejected. The existing runner above remains
+available for distributed, compilation, and other development experiments.
+
+After collecting completed campaign directories from each GPU:
+
+```sh
+uv run --frozen --no-sync python -m benchmarks.report \
+  /tmp/rtx4090 /tmp/rtx5090 /tmp/l40s /tmp/a100 /tmp/h100 \
+  --output docs/benchmarks/gpu-3.0.0
+```
+
+The report generator requires complete timing, correctness, and capacity
+records. It produces Markdown tables, CSV measurements, standalone SVG scaling
+charts, compressed raw block measurements, and hardware/source provenance.
+GPU and host CPU both affect the result, especially on small eager workloads;
+measure the target training setup before setting a performance budget.
+
+## Pre-release development reference (2026-10-29)
+
+These historical measurements precede numerical changes in the final v3.0.0
+release. They document development progress and should not be used as final
+release performance claims.
 
 Measured on 2026-10-29 UTC with Python 3.12.13, PyTorch 2.14.0, float32, 128
 dimensions, seed 17, and one CPU thread per rank. CPU rows ran on an Apple M1

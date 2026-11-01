@@ -47,11 +47,13 @@ dev = [
     "mkdocs-material==9.7.7",
     "numpy==2.5.3",
     "packaging==26.3",
+    "pygal==3.0.5",
     "pytest==9.1.1",
     "ruff==0.16.0",
     "scikit-learn==1.9.1",
     "setuptools==84.0.0",
     "torch==2.14.0",
+    "tqdm==4.67.1",
     "ty==0.0.65",
     "uv==0.13.4",
 ]

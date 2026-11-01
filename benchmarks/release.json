@@ -1,0 +1,57 @@
+{
+  "name": "pml-3.0.0-gpu-comparison",
+  "versions": {
+    "2.9.0": "bee27da3af7d1f2914e78e7f27cb755ee779105e",
+    "3.0.0": "e9a1fc04a04cdc0f038d4597318393df4a94f5d7"
+  },
+  "cases": [
+    "ntxent",
+    "contrastive",
+    "triplet",
+    "batch-hard-triplet",
+    "arcface",
+    "supcon",
+    "multi-similarity",
+    "proxy-anchor"
+  ],
+  "profiles": {
+    "standard": {
+      "dimensions": 128,
+      "samples_per_class": 4,
+      "proxy_classes": 1024
+    },
+    "wide-dense": {
+      "dimensions": 512,
+      "samples_per_class": 16,
+      "proxy_classes": 10000
+    }
+  },
+  "batch_sizes": [
+    128,
+    512,
+    2048,
+    8192
+  ],
+  "bfloat16_batch_sizes": [
+    512,
+    2048
+  ],
+  "rounds": 3,
+  "warmup": 10,
+  "repeats": 3,
+  "seed": 17,
+  "threads": 1,
+  "memory_fraction": 0.9,
+  "timeout_seconds": 300,
+  "capacity": {
+    "profile": "standard",
+    "start": 128,
+    "maximum": 1048576,
+    "granularity": 128,
+    "relative_resolution": 0.05,
+    "warmup": 1,
+    "repeats": 3
+  },
+  "steps_per_block": 100,
+  "warmup_seconds": 1
+}

@@ -1,5 +1,7 @@
 # PML 3.0.0 GPU benchmarks
 
+For the current release, see the [3.0.1 timings and memory measurements](low-precision-fix/README.md) and [performance overview](../../performance.md). The measurements below compare the original v3.0.0 release with v2.9.0.
+
 Released v3.0.0 and v2.9.0, measured on the same GPU and software stack. These are loss/miner forward and backward measurements; encoder, optimizer, data loading, compilation, anchor batching, and distributed training are excluded.
 
 All overview tables use float32, batch 512, and 128-dimensional seeded standard-normal embeddings. Pair/triplet objectives use four samples per class. ArcFace and ProxyAnchor have 1,024 fixed proxy classes and cyclic class labels. [Full measurements](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/measurements.csv) include the 512-dimensional, sixteen-per-class profile with 10,000 proxy classes, all batch sizes, BF16, and process ranges.
@@ -16,7 +18,7 @@ All overview tables use float32, batch 512, and 128-dimensional seeded standard-
 
 Memory is the total exposed by PyTorch, before the 90% capacity budget. Small eager workloads also depend on the host CPU; these results compare complete rented systems, not GPU silicon alone. Per-GPU provenance below includes Python, driver, power limits, clocks, timestamps, and precision settings.
 
-## Version 3 speed
+## Version 3.0.0 speed
 
 Milliseconds per forward/backward pair. Three process means, each averaging three blocks of 100 pairs after warmup; synchronization occurs only at block boundaries. Lower is better.
 
@@ -31,7 +33,7 @@ Milliseconds per forward/backward pair. Three process means, each averaging thre
 | MultiSimilarity      |     4.44 |    0.793 | 2.08 |           3.28 |           6.26 |
 | ProxyAnchor          |     4.99 |    0.771 | 2.78 |           4.99 |           6.86 |
 
-## Version 3 memory
+## Version 3.0.0 memory
 
 Steady-state peak PyTorch allocation in MiB, including inputs, parameters, retained workspaces, and temporary tensors. Lower is better. Incremental allocation and allocator reservation are separate columns in the CSV; this is not total device usage.
 
@@ -106,7 +108,7 @@ Time ratios at batch 512, 512 dimensions, sixteen samples per class (10,000 clas
 | MultiSimilarity      |  0.982×† |   1.08×† | 0.932×† |        0.943×† |         0.946× |
 | ProxyAnchor          |   0.957× |    1.08× |  0.844× |         1.06×† |        0.966×† |
 
-## Version 3 BF16
+## Version 3.0.0 BF16
 
 Milliseconds per pair at batch 512 in the standard profile. Inputs and parameters are BF16 directly; this is not an autocast or end-to-end mixed-precision training benchmark. Finite checks are required, but the cross-version full-gradient agreement check is float32.
 

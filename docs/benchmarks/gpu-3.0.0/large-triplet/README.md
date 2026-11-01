@@ -1,4 +1,6 @@
-# Additional GPU timing measurements
+# PML 3.0.0 large-triplet timings
+
+These measurements compare v3.0.0 with v2.9.0. For the current release, see the [3.0.1 performance overview](../../../performance.md) and [3.0.1 timings and memory measurements](../low-precision-fix/README.md).
 
 3 fresh processes per configuration, each averaging 3 blocks of 10 forward/backward pairs after warmup. Times are milliseconds per pair; peak memory is total PyTorch allocation in MiB. Encoder, optimizer, and data loading are excluded. This campaign measures timing and memory; full-gradient agreement and capacity require separate evidence.
 

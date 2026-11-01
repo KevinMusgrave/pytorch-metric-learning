@@ -1,17 +1,80 @@
-# Measuring performance
+# Performance in version 3.0.1
+
+Version 3.0.1 fixes the large BF16 time and memory regression in Euclidean
+distances used by Contrastive and batch-hard TripletMargin losses. The A100
+and RTX 5090 measurements below show the improvement, comparisons with v2.9.0,
+and remaining limitations.
+
+## Low-precision distance fix
+
+The version 3.0.1 fix was measured at
+[`32bcfa8`](https://github.com/KevinMusgrave/pytorch-metric-learning/commit/32bcfa8213a9a48d95153a07a6cf6e0e753e1a18),
+whose numerical code is identical to the released v3.0.1 code. These results
+compare that code with released v2.9.0 and v3.0.0 on an A100 and RTX 5090.
+Tables label it **3.0.1 code**; CSV and raw records retain
+`candidate-32bcfa8` to identify the measured commit.
+The [complete 3.0.1 code timings and memory measurements](benchmarks/gpu-3.0.0/low-precision-fix/README.md)
+include NT-Xent and ProxyAnchor controls, float32 batches 128, 512, and 2,048,
+and BF16 batches 512 and 2,048. Every successful configuration averages
+900 forward/backward pairs across three fresh processes.
+
+At BF16 batch 2,048, 128 dimensions, and four samples per class:
+
+| GPU      | Loss                 | v2.9.0 ms | v3.0.0 ms | 3.0.1 code ms | v3.0.0 → 3.0.1 code peak MiB |
+| -------- | -------------------- | --------: | --------: | ------------: | ---------------------------: |
+| RTX 5090 | Contrastive          |      2.56 |      13.3 |          2.23 |                  2,118 → 356 |
+| RTX 5090 | Batch-hard + Triplet |      1.10 |      16.4 |          1.38 |                  2,118 → 151 |
+| A100     | Contrastive          |      7.63 |      23.4 |          6.32 |                  2,118 → 308 |
+| A100     | Batch-hard + Triplet |      4.93 |      30.0 |          5.47 |                  2,118 → 103 |
+
+Version 3.0.1 removes the severe regression on these workloads. It does not
+win every comparison: RTX 5090 batch-hard triplet remains 25.6% slower than
+v2.9.0, while the A100 process ranges overlap (4.64–5.36 ms for v2.9.0 and
+4.41–6.54 ms for the 3.0.1 code). Contrastive uses about 3% more peak allocation
+than v2.9.0. The A100 controls did not reproduce the original 53% ProxyAnchor
+slowdown at float32 batch 2,048: the new release comparison measured 16%, and
+the 3.0.1 range overlaps v2.9.0. Small NT-Xent timings also overlap on
+that system; their original mean difference is not a stable regression estimate.
+
+The correction avoids the direct Euclidean-distance backward kernel's
+batch-by-batch-by-dimension allocation when float32 matrix evaluation is
+numerically safe. It screens distances for cancellation and retains the direct
+calculation for nearby or duplicate rows, other norms, small matrices,
+compilation, CUDA graph capture, and reduced float32 matmul precision.
+These measurements use standard-normal inputs and highest float32 matmul
+precision; clustered training embeddings can take the slower direct path.
+
+Values and full gradients were checked against direct-difference references
+for float16 and BF16 random, nearby, duplicate, and mixed-scale inputs. GPU
+tests also cover CUDA graph capture and reduced matmul precision. The four
+follow-up losses passed float32 scalar and full-gradient comparison between
+released v3.0.0 and `32bcfa8` before timing.
+The [A100 validation](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/low-precision-fix/gpu-1-validation.json)
+and [RTX 5090 validation](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/low-precision-fix/gpu-2-validation.json)
+record the errors and archive checks. An additional
+[BF16 comparison at batch 2,048](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/low-precision-fix/bf16-gradient-validation.json)
+on the A100 found unchanged Contrastive and batch-hard triplet loss values, with
+maximum embedding-gradient absolute differences of `5.96e-8` and `2.38e-7`.
+
+## Batch capacity and wider GPU coverage
+
+The five-GPU benchmark and its maximum-batch searches measured **v3.0.0**.
+Version 3.0.1 has a separate two-GPU timing and memory comparison above;
+maximum batch sizes have not been remeasured for 3.0.1. Use the v3.0.0 capacity
+results as the measured baseline when planning memory for larger batches.
 
 The [GPU release comparison](benchmarks/gpu-3.0.0/README.md) measures released
 v3.0.0 against v2.9.0 on RTX 4090, RTX 5090, L40S, A100, and H100 systems
 on 2026-11-01 UTC.
-It reports absolute v3 forward/backward time, peak memory, verified batch
+It reports absolute v3.0.0 forward/backward time, peak memory, verified batch
 capacity, and version ratios for seven common losses plus batch-hard triplet
 mining. [Full measurements](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/measurements.csv) retain both
 versions, all shapes, BF16, failures, and process ranges.
 The [large-triplet follow-up](benchmarks/gpu-3.0.0/large-triplet/README.md)
 uses shorter timing blocks where the main protocol exceeds its time limit.
 
-For release announcements, NT-Xent provides the clearest improvement: at batch
-512, 128 dimensions, four samples per class, and float32, v3 is **2.28–33.5×
+In the v3.0.0 comparison, NT-Xent provides the clearest improvement: at batch
+512, 128 dimensions, four samples per class, and float32, v3.0.0 is **2.28–33.5×
 faster** and reduces peak PyTorch allocation by a factor of **79.2–186** across
 these five systems. On the RTX 5090, that is 0.733 ms per forward/backward pair and 82.7 MiB
 peak allocation. Under the 90% memory budget, its verified NT-Xent batch limit
@@ -21,12 +84,6 @@ These are loss-only results. Other losses have smaller gains, overlapping timing
 ranges, or regressions; the report includes all of them. The figures do not
 describe end-to-end training speed or establish one GPU as universally faster
 than another rented system.
-
-Released v3.0.0 also has major BF16 regressions at batch 2,048: batch-hard triplet
-is 2.62–17.2× slower than v2.9.0, and Contrastive is 1.90–5.30× slower across these
-systems. Their peak allocations increase by factors of 13.5–19.5 and 6.12–7.09,
-respectively. The [low-precision distance fix](#low-precision-distance-fix)
-documents the correction included in v3.0.1 separately from the v3.0.0 measurements.
 
 ## Development measurements
 
@@ -243,54 +300,7 @@ uv run --frozen --no-sync python -m benchmarks.report \
 process ranges, memory, CSV, and raw evidence. Full-gradient agreement and batch
 capacity remain separate measurements in the primary campaign.
 
-## Low-precision distance fix
-
-The follow-up compares v2.9.0, released v3.0.0, and candidate
-`32bcfa8213a9a48d95153a07a6cf6e0e753e1a18` on an A100 and another RTX 5090.
-That candidate's numerical code is included unchanged in v3.0.1. The tables
-retain its measured commit identity and do not replace the v3.0.0 measurements above.
-The [complete timings](benchmarks/gpu-3.0.0/low-precision-fix/README.md)
-include NT-Xent and ProxyAnchor controls, float32 batches 128, 512, and 2,048,
-and BF16 batches 512 and 2,048. Every successful configuration again averages
-900 forward/backward pairs across three fresh processes.
-
-At BF16 batch 2,048, 128 dimensions, and four samples per class:
-
-| GPU      | Loss                 | v2.9 ms | v3.0 ms | Candidate ms | v3.0 → candidate peak MiB |
-| -------- | -------------------- | ------: | ------: | -----------: | ------------------------: |
-| RTX 5090 | Contrastive          |    2.56 |    13.3 |         2.23 |               2,118 → 356 |
-| RTX 5090 | Batch-hard + Triplet |    1.10 |    16.4 |         1.38 |               2,118 → 151 |
-| A100     | Contrastive          |    7.63 |    23.4 |         6.32 |               2,118 → 308 |
-| A100     | Batch-hard + Triplet |    4.93 |    30.0 |         5.47 |               2,118 → 103 |
-
-The candidate removes the severe regression on these workloads. It does not
-win every comparison: RTX 5090 batch-hard triplet remains 25.6% slower than
-v2.9.0, while the A100 process ranges overlap (4.64–5.36 ms for v2.9.0 and
-4.41–6.54 ms for the candidate). Contrastive uses about 3% more peak allocation
-than v2.9.0. The A100 controls did not reproduce the original 53% ProxyAnchor
-slowdown at float32 batch 2,048: the new release comparison measured 16%, and
-the candidate's range overlaps v2.9.0. Small NT-Xent timings also overlap on
-that system; their original mean difference is not a stable regression estimate.
-
-The correction avoids the direct Euclidean-distance backward kernel's
-batch-by-batch-by-dimension allocation when float32 matrix evaluation is
-numerically safe. It screens distances for cancellation and retains the direct
-calculation for nearby or duplicate rows, other norms, small matrices,
-compilation, CUDA graph capture, and reduced float32 matmul precision.
-These measurements use standard-normal inputs and highest float32 matmul
-precision; clustered training embeddings can take the slower direct path.
-
-Values and full gradients were checked against direct-difference references
-for float16 and BF16 random, nearby, duplicate, and mixed-scale inputs. GPU
-tests also cover CUDA graph capture and reduced matmul precision. The four
-follow-up losses passed float32 scalar and full-gradient comparison between
-released v3.0.0 and the candidate before timing.
-The [A100 validation](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/low-precision-fix/gpu-1-validation.json)
-and [RTX 5090 validation](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/low-precision-fix/gpu-2-validation.json)
-record the errors and archive checks. An additional
-[BF16 comparison at batch 2,048](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/low-precision-fix/bf16-gradient-validation.json)
-on the A100 found unchanged Contrastive and batch-hard triplet loss values, with
-maximum embedding-gradient absolute differences of `5.96e-8` and `2.38e-7`.
+## Reproduce the 3.0.1 code measurements
 
 `benchmarks/low-precision-fix.json` pins all three source commits. To reproduce
 the timing matrix, create a clean worktree for each source and run the generic

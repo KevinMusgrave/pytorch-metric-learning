@@ -137,8 +137,12 @@ Normal dispatch, event-recording, and gradient-clearing overhead remains in the
 wall time. Report the mean of process means and their range; overlapping ranges
 are not evidence of a reliable speed difference.
 
-Peak total allocated tensor memory, incremental peak above the input/parameter
-baseline, and allocator reservation are distinct metrics. Capacity probes use
+Peak total PyTorch allocation, incremental peak above the warmed pre-forward
+allocation, and allocator reservation are distinct metrics. The warmed baseline
+contains inputs, parameters, and any retained workspaces. The main report uses
+total allocated memory for memory ratios; incremental allocation excludes the
+warmed baseline and is useful for understanding additional loss costs. Neither
+metric includes all device usage, such as CUDA context memory. Capacity probes use
 90% of device memory as the tensor allocator budget, leaving 10% outside it.
 They double batches and refine a success/failure bracket to 128 rows or 5%,
 whichever is larger. Each successful endpoint is confirmed in two more fresh
@@ -156,7 +160,7 @@ check is float32. BF16 results do not establish mixed-precision training quality
 Run from a clean, committed benchmark checkout:
 
 ```sh
-uv sync --frozen --no-build --no-install-project --all-extras
+uv sync --frozen --no-build --no-install-project --all-extras --python 3.12.13
 
 git worktree add --detach /tmp/pml-v2 v2.9.0
 git worktree add --detach /tmp/pml-v3 v3.0.0
@@ -185,6 +189,27 @@ records. It produces Markdown tables, CSV measurements, standalone SVG scaling
 charts, compressed raw block measurements, and hardware/source provenance.
 GPU and host CPU both affect the result, especially on small eager workloads;
 measure the target training setup before setting a performance budget.
+
+Large all-triplet batches can fit in memory but exceed the five-minute limit
+when timing 300 pairs per process. The separate `benchmarks/large-triplet.json`
+experiment measures batch 8,192 using three blocks of ten pairs in each of three
+fresh processes, with the same warmup and input settings. It preserves the
+primary experiment's timeouts and gives the shorter protocol its own records:
+
+```sh
+uv run --frozen --no-sync python -m benchmarks.compare \
+  --config benchmarks/large-triplet.json --phases speed \
+  --source-2 /tmp/pml-v2 --source-3 /tmp/pml-v3 \
+  --output /tmp/pml-large-triplet
+
+uv run --frozen --no-sync python -m benchmarks.report \
+  /tmp/pml-large-triplet --timing-only \
+  --output /tmp/pml-large-triplet-report
+```
+
+`--timing-only` requires the complete timing matrix and exports the block count,
+process ranges, memory, CSV, and raw evidence. Full-gradient agreement and batch
+capacity remain separate measurements in the primary campaign.
 
 ## Pre-release development reference (2026-10-29)
 

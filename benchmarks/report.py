@@ -67,7 +67,7 @@ def summarize(records):
     return rows
 
 
-def load_campaign(folder):
+def load_campaign(folder, timing_only=False):
     manifest = json.loads((folder / "campaign.json").read_text())
     config = manifest["config"]
     records = [
@@ -79,14 +79,18 @@ def load_campaign(folder):
         raise ValueError(
             f"Incomplete speed matrix in {folder}: missing {len(expected - actual)}"
         )
-    checks = json.loads((folder / "correctness.json").read_text())
-    if {r["case"] for r in checks if r["status"] == "passed"} != set(config["cases"]):
-        raise ValueError(f"Incomplete correctness evidence in {folder}")
-    capacity = json.loads((folder / "capacity.json").read_text())
-    if {(r["case"], r["version"]) for r in capacity} != {
-        (c, v) for c in config["cases"] for v in config["versions"]
-    }:
-        raise ValueError(f"Incomplete capacity search in {folder}")
+    checks, capacity = [], []
+    if not timing_only:
+        checks = json.loads((folder / "correctness.json").read_text())
+        if {r["case"] for r in checks if r["status"] == "passed"} != set(
+            config["cases"]
+        ):
+            raise ValueError(f"Incomplete correctness evidence in {folder}")
+        capacity = json.loads((folder / "capacity.json").read_text())
+        if {(r["case"], r["version"]) for r in capacity} != {
+            (c, v) for c in config["cases"] for v in config["versions"]
+        }:
+            raise ValueError(f"Incomplete capacity search in {folder}")
     environment = next(r["environment"] for r in records if "environment" in r)
     gpu = environment["gpu"].removeprefix("NVIDIA ").removeprefix("GeForce ")
     return {
@@ -113,6 +117,20 @@ def table(cases, campaigns, cell):
         "| " + NAMES[case] + " | " + " | ".join(cell(case, c) for c in campaigns) + " |"
         for case in cases
     )
+    return "\n".join(lines)
+
+
+def hardware_table(campaigns):
+    lines = [
+        "| GPU | GPU memory (GiB) | Host CPU | PyTorch | CUDA |",
+        "| --- | ---: | --- | --- | --- |",
+    ]
+    for campaign in campaigns:
+        e = campaign["environment"]
+        lines.append(
+            f"| {campaign['gpu']} | {e['gpu_total_bytes'] / 2**30:.2f} | "
+            f"{e['cpu']} | {e['pytorch']} | {e['cuda_runtime']} |"
+        )
     return "\n".join(lines)
 
 
@@ -173,6 +191,10 @@ def figures(campaign, output, slug):
         foreground="#273343",
         foreground_strong="#142031",
         foreground_subtle="#dce1e7",
+        guide_stroke_color="#e7ebef",
+        major_guide_stroke_color="#cbd3dc",
+        guide_stroke_dasharray="0",
+        major_guide_stroke_dasharray="0",
         font_family="sans-serif",
         colors=(
             "#ec512c",
@@ -189,19 +211,19 @@ def figures(campaign, output, slug):
     positions = sorted({log2(r["batch_size"]) for r in campaign["rows"]})
     for metric, label in (
         ("mean_ms", "Loss forward + backward (ms/step)"),
-        ("peak_incremental_mib", "Additional peak tensor memory (MiB)"),
+        ("peak_incremental_mib", "Additional peak allocation (MiB)"),
     ):
         chart = pygal.XY(
             style=style,
             width=1000,
             height=560,
             logarithmic=True,
-            x_title="Batch size (log scale)",
+            x_title="Batch size (log scale; 4 per class, or 1,024 proxy classes)",
             x_labels=positions,
             xrange=(positions[0] - 0.4, positions[-1] + 0.4),
             x_value_formatter=lambda x: f"{2**x:,.0f}",
             y_title=label,
-            title=f"PML v3.0.0 · {campaign['gpu']}",
+            title=f"PML v3.0.0 · {campaign['gpu']} · float32 · 128 dimensions",
             legend_at_bottom=True,
             legend_at_bottom_columns=4,
             show_dots=True,
@@ -225,12 +247,12 @@ def figures(campaign, output, slug):
     return files
 
 
-def write_report(campaigns, output):
+def write_artifacts(campaigns, output):
     output.mkdir(parents=True, exist_ok=True)
     config = campaigns[0]["manifest"]["config"]
     if any(c["manifest"]["config"] != config for c in campaigns):
         raise ValueError("GPU campaigns must use the same configuration")
-    all_rows, artifacts = [], []
+    all_rows = []
     for index, campaign in enumerate(campaigns):
         slug = f"gpu-{index + 1}"
         for row in campaign["rows"]:
@@ -244,12 +266,20 @@ def write_report(campaigns, output):
         (output / f"{slug}-provenance.json").write_text(
             json.dumps(detail, indent=2) + "\n"
         )
-        artifacts.append((slug, figures(campaign, output, slug)))
     fields = list(dict.fromkeys(key for row in all_rows for key in row))
     with (output / "measurements.csv").open("w", newline="") as stream:
         writer = csv.DictWriter(stream, fieldnames=fields)
         writer.writeheader()
         writer.writerows(all_rows)
+
+
+def write_report(campaigns, output):
+    write_artifacts(campaigns, output)
+    config = campaigns[0]["manifest"]["config"]
+    artifacts = []
+    for index, campaign in enumerate(campaigns):
+        slug = f"gpu-{index + 1}"
+        artifacts.append((slug, figures(campaign, output, slug)))
     sections = [
         "# PML 3.0.0 GPU benchmarks",
         (
@@ -260,11 +290,21 @@ def write_report(campaigns, output):
         ),
         (
             "All overview tables use float32, batch 512, and 128-dimensional "
-            "embeddings. Pair/triplet objectives use four samples per class. "
+            "seeded standard-normal embeddings. Pair/triplet objectives use "
+            "four samples per class. "
             "ArcFace and ProxyAnchor have 1,024 fixed proxy classes and cyclic "
             "class labels. [Full measurements](measurements.csv) include the "
             "512-dimensional, sixteen-per-class profile with 10,000 proxy "
             "classes, all batch sizes, BF16, and process ranges."
+        ),
+        "## Hardware and software",
+        hardware_table(campaigns),
+        (
+            "Memory is the total exposed by PyTorch, before the 90% capacity "
+            "budget. Small eager workloads also depend on the host CPU; these "
+            "results compare complete rented systems, not GPU silicon alone. "
+            "Per-GPU provenance below includes Python, driver, power limits, "
+            "clocks, timestamps, and precision settings."
         ),
         "## Version 3 speed",
         (
@@ -275,14 +315,15 @@ def write_report(campaigns, output):
         table(config["cases"], campaigns, lambda case, c: absolute(case, c, "mean_ms")),
         "## Version 3 memory",
         (
-            "Additional peak allocated tensor memory in MiB above the "
-            "inputs/parameters baseline. Lower is better. Total allocation and "
-            "allocator reservation are separate columns in the CSV."
+            "Steady-state peak PyTorch allocation in MiB, including inputs, "
+            "parameters, retained workspaces, and temporary tensors. Lower is "
+            "better. Incremental allocation and allocator reservation are "
+            "separate columns in the CSV; this is not total device usage."
         ),
         table(
             config["cases"],
             campaigns,
-            lambda case, c: absolute(case, c, "peak_incremental_mib"),
+            lambda case, c: absolute(case, c, "peak_allocated_mib"),
         ),
         "## Batch capacity: v2.9 → v3.0",
         (
@@ -304,11 +345,11 @@ def write_report(campaigns, output):
         ),
         table(config["cases"], campaigns, lambda case, c: ratio(case, c, "mean_ms")),
         "## Memory ratio: v2.9 / v3.0",
-        "Ratio of additional peak allocated memory. Above 1 means v3 uses less memory.",
+        "Ratio of peak PyTorch allocation. Above 1 means v3 uses less memory.",
         table(
             config["cases"],
             campaigns,
-            lambda case, c: ratio(case, c, "peak_incremental_mib"),
+            lambda case, c: ratio(case, c, "peak_allocated_mib"),
         ),
         "## Larger embeddings and more positives",
         (
@@ -337,7 +378,10 @@ def write_report(campaigns, output):
         "## Scaling and raw evidence",
         (
             "The charts show successful v3 float32 points in the standard "
-            "profile. A missing point is a failed run, not zero cost; consult the "
+            "profile. Memory charts show additional peak allocation above the "
+            "warmed pre-forward allocation, excluding inputs, parameters, and "
+            "workspaces already resident at that point. A missing point is a "
+            "failed run, not zero cost; consult the "
             "CSV for its status. GPU and host CPU both affect small eager "
             "workloads. These rented machines were not isolated from host "
             "contention; process ranges quantify observed variation, not a "
@@ -368,12 +412,89 @@ def write_report(campaigns, output):
     (output / "README.md").write_text("\n\n".join(sections) + "\n")
 
 
+def write_timing_report(campaigns, output):
+    write_artifacts(campaigns, output)
+    config = campaigns[0]["manifest"]["config"]
+    sections = [
+        "# Additional GPU timing measurements",
+        f"{config['rounds']} fresh processes per configuration, each averaging "
+        f"{config['repeats']} blocks of {config['steps_per_block']} forward/backward "
+        "pairs after warmup. Times are milliseconds per pair; peak memory is "
+        "total PyTorch allocation in MiB. Encoder, optimizer, and data loading "
+        "are excluded. This campaign measures timing and memory; full-gradient "
+        "agreement and capacity require separate evidence.",
+        hardware_table(campaigns),
+        "[CSV measurements](measurements.csv) retain full precision and statuses.",
+    ]
+    for name, profile in config["profiles"].items():
+        sections.append(
+            f"{name}: {profile['dimensions']} dimensions, "
+            f"{profile['samples_per_class']} samples per class for pair/triplet "
+            f"losses, {profile['proxy_classes']:,} classes for proxy losses."
+        )
+    keys = ("case", "profile", "dtype", "batch_size")
+    groups = sorted({tuple(r[k] for k in keys) for r in campaigns[0]["rows"]})
+    for group in groups:
+        case, profile, dtype, batch = group
+        lines = [
+            "| GPU | Version | Status | Total | Forward | Backward | "
+            "Process range | Peak MiB |",
+            "| --- | --- | --- | ---: | ---: | ---: | --- | ---: |",
+        ]
+        for campaign in campaigns:
+            for row in campaign["rows"]:
+                if tuple(row[k] for k in keys) != group:
+                    continue
+                ok = row["status"] == "ok"
+                values = [
+                    number(row[k]) if ok else "—"
+                    for k in (
+                        "mean_ms",
+                        "forward_ms",
+                        "backward_ms",
+                        "peak_allocated_mib",
+                    )
+                ]
+                span = (
+                    f"{number(row['min_process_ms'])}\N{EN DASH}"
+                    f"{number(row['max_process_ms'])}"
+                    if ok
+                    else "—"
+                )
+                cells = [
+                    campaign["gpu"],
+                    row["version"],
+                    row["status"],
+                    *values[:3],
+                    span,
+                    values[3],
+                ]
+                lines.append("| " + " | ".join(cells) + " |")
+        sections.extend(
+            [
+                f"## {NAMES[case]} · {profile} · {dtype} · batch {batch:,}",
+                "\n".join(lines),
+            ]
+        )
+    sections.append("## Raw evidence")
+    for index, campaign in enumerate(campaigns, 1):
+        sections.append(
+            f"{campaign['gpu']}: [raw records](gpu-{index}-raw.jsonl.gz) · "
+            f"[configuration and hardware](gpu-{index}-provenance.json)"
+        )
+    (output / "README.md").write_text("\n\n".join(sections) + "\n")
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("campaigns", type=Path, nargs="+")
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--timing-only", action="store_true")
     args = parser.parse_args()
-    write_report([load_campaign(path) for path in args.campaigns], args.output)
+    writer = write_timing_report if args.timing_only else write_report
+    writer(
+        [load_campaign(path, args.timing_only) for path in args.campaigns], args.output
+    )
 
 
 if __name__ == "__main__":

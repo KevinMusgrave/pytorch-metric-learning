@@ -1,9 +1,10 @@
+import csv
 import json
 from copy import deepcopy
 
 import pytest
 
-from benchmarks.report import load_campaign, ratio, summarize
+from benchmarks.report import load_campaign, ratio, summarize, write_timing_report
 
 
 def record(version, mean, peak, status="ok"):
@@ -82,3 +83,57 @@ def test_incomplete_matrix_cannot_be_published(tmp_path):
     (tmp_path / "results.jsonl").write_text("")
     with pytest.raises(ValueError, match="Incomplete speed matrix"):
         load_campaign(tmp_path)
+
+
+def test_timing_only_export_keeps_protocol_and_requires_complete_timings(tmp_path):
+    config = {
+        "cases": ["ntxent"],
+        "profiles": {
+            "standard": {
+                "dimensions": 128,
+                "samples_per_class": 4,
+                "proxy_classes": 1024,
+            }
+        },
+        "batch_sizes": [512],
+        "bfloat16_batch_sizes": [],
+        "versions": {"2.9.0": "a", "3.0.0": "b"},
+        "rounds": 1,
+        "seed": 17,
+        "warmup": 1,
+        "repeats": 3,
+        "steps_per_block": 10,
+    }
+    (tmp_path / "campaign.json").write_text(json.dumps({"config": config}))
+    records = []
+    for version in config["versions"]:
+        r = record(version, 2, 4 * 2**20)
+        r["key"] = f"speed-ntxent-standard-float32-512-{version}-0"
+        r["environment"] = {
+            "gpu": "NVIDIA Fixture",
+            "gpu_total_bytes": 2**30,
+            "cpu": "CPU",
+            "pytorch": "2.14.0",
+            "cuda_runtime": "13.0",
+        }
+        records.append(r)
+    path = tmp_path / "results.jsonl"
+    path.write_text("\n".join(json.dumps(r) for r in records))
+    with pytest.raises(FileNotFoundError):
+        load_campaign(tmp_path)
+    campaign = load_campaign(tmp_path, timing_only=True)
+    output = tmp_path / "report"
+    write_timing_report([campaign], output)
+    with (output / "measurements.csv").open() as stream:
+        rows = list(csv.DictReader(stream))
+    assert [(r["version"], r["mean_ms"]) for r in rows] == [
+        ("2.9.0", "2"),
+        ("3.0.0", "2"),
+    ]
+    assert "3 blocks of 10" in (output / "README.md").read_text()
+    evidence = json.loads((output / "gpu-1-provenance.json").read_text())
+    assert evidence["checks"] == []
+    assert evidence["capacity"] == []
+    path.write_text(json.dumps(records[0]))
+    with pytest.raises(ValueError, match="Incomplete speed matrix"):
+        load_campaign(tmp_path, timing_only=True)

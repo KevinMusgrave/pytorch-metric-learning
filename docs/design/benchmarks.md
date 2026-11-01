@@ -75,6 +75,20 @@ An OOM, indexing limit, nonfinite result, timeout, or configured search ceiling
 remains a distinct outcome. This is loss-only capacity, not a claim about a
 complete encoder, optimizer, or training pipeline.
 
+The release report's memory comparison uses total PyTorch allocation. The
+incremental metric subtracts the warmed pre-forward allocation, which includes
+retained workspaces as well as inputs and parameters. For example, the RTX 5090
+measurements retain about 64 MiB beyond inputs and parameters after warmup.
+Calling that baseline only input/parameter storage would overstate the meaning
+of incremental ratios.
+
+A slow configuration can exceed the timing deadline while still fitting in
+memory. Preserve that timeout in the primary matrix. A separate campaign can
+use shorter blocks on both versions to obtain timings, with its own complete
+configuration and raw records so different sampling protocols remain visible.
+Timing-only exports still require the complete speed matrix. The primary report
+continues to require its full gradient-comparison and capacity evidence.
+
 Campaign files bind resume to the complete configuration, source revisions,
 benchmark revision, and GPU identity. Completed raw records are appended after
 each subprocess. A failed worker with an unexpected exception stops the campaign

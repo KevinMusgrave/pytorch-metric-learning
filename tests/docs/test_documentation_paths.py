@@ -28,11 +28,12 @@ def anchor(heading):
 
 
 def anchors(path):
-    return {anchor(h) for h in HEADING.findall(FENCE.sub("", path.read_text()))}
+    text = FENCE.sub("", path.read_text(encoding="utf-8"))
+    return {anchor(h) for h in HEADING.findall(text)}
 
 
 def relative_links(path):
-    text = FENCE.sub("", path.read_text())
+    text = FENCE.sub("", path.read_text(encoding="utf-8"))
     for match in LINK.finditer(text):
         target = match.group(1) or match.group(2)
         if not re.match(r"^[a-z]+:", target):
@@ -42,12 +43,14 @@ def relative_links(path):
 class TestDocumentationPaths(unittest.TestCase):
     def test_readme_example_trains_one_step(self):
         blocks = re.findall(
-            r"```python\n(.*?)```", (ROOT / "README.md").read_text(), re.DOTALL
+            r"```python\n(.*?)```",
+            (ROOT / "README.md").read_text(encoding="utf-8"),
+            re.DOTALL,
         )
         self.assertEqual(len(blocks), 1)
         with tempfile.TemporaryDirectory() as directory:
             script = Path(directory) / "readme_example.py"
-            script.write_text(blocks[0])
+            script.write_text(blocks[0], encoding="utf-8")
             namespace = runpy.run_path(str(script))
         self.assertTrue(math.isfinite(namespace["loss"].item()))
         self.assertIsNotNone(namespace["model"].weight.grad)
@@ -71,12 +74,12 @@ class TestDocumentationPaths(unittest.TestCase):
         self.assertGreater(checked, 100)
 
     def test_recipe_pages_link_to_release_source(self):
-        version = tomllib.loads((ROOT / "pyproject.toml").read_text())["project"][
-            "version"
-        ]
+        version = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))[
+            "project"
+        ]["version"]
         expected = {path.name for path in (ROOT / "docs/recipes").glob("[!_]*.py")}
         pages = (ROOT / "docs/recipes").glob("*.md")
-        text = "".join(page.read_text() for page in pages)
+        text = "".join(page.read_text(encoding="utf-8") for page in pages)
         source = rf"{re.escape(REPOSITORY)}/blob/v{re.escape(version)}/docs/recipes/"
         linked = re.findall(rf"\]\({source}([a-z_]+\.py)\)", text)
         self.assertEqual(set(linked), expected)

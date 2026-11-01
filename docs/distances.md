@@ -247,13 +247,23 @@ distances.LpDistance(*, normalize_embeddings=True, p=2, power=1)
 `mat[i, j]` is the Lp distance between `query_emb[i]` and `ref_emb[j]`. With
 default parameters, this is the Euclidean distance between normalized
 embeddings. For float16 and bfloat16 inputs, the matrix is computed in float32
-with `torch.cdist` using its direct difference kernel, which preserves distances
-between nearby rows that the matrix-product formula would cancel to zero. The
-forward pass stays near the size of the output matrix, but the backward pass peaks at
-queries times references times dimensions: about 2.1 GB for 2048 rows of 128 dimensions
-on CUDA, against 52 MiB for float32 inputs. With
-`normalize_embeddings=True` the result is cast back; otherwise it
+with `torch.cdist`. With `normalize_embeddings=True` the result is cast back;
+otherwise it
 [stays in float32](#calling-a-distance).
+
+Since version 3.0.1, eager Euclidean calls (`p=2`) with more than 25 query or
+reference rows first use the matrix-product calculation when float32 matmul
+precision is `"highest"`. A numerical screen checks for cancellation or
+nonfinite distances. If any pair is unsafe, the whole call uses the direct
+difference kernel, preserving distances and gradients for nearby or duplicate
+rows. Self comparisons reuse prepared inputs and keep the diagonal exactly zero.
+
+Other norms, smaller matrices, compiled execution, CUDA graph capture, and
+reduced float32 matmul precision use the direct calculation. Global precision
+settings are unchanged. The matrix path avoids the direct CUDA backward kernel's
+temporary allocation proportional to queries × references × dimensions.
+Clustered embeddings can still require that direct path; see the
+[performance measurements and limitations](performance.md#low-precision-distance-fix).
 
 `pairwise` computes `torch.linalg.vector_norm(x - y, ord=p, dim=-1)`, in float32
 for float16 and bfloat16 inputs, with the same result dtype as the matrix. It adds no

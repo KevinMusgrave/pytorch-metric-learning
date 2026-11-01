@@ -154,6 +154,22 @@ conflicting contents. Documentation and GitHub release jobs can be rerun
 independently. Source changes require a new version and tag; never move a
 release tag.
 
+### Documentation corrections
+
+For corrections to the released documentation, commit and push the changes to
+`master`, wait for that commit's CI to pass, then run:
+
+```sh
+gh workflow run docs.yml --ref master
+```
+
+The workflow requires `src`, `pyproject.toml`, and `uv.lock` to match the
+published version's tag. It rebuilds the site and the `/v2/` archive without
+publishing a package or changing release tags. Use rendered documentation URLs
+for navigation and GitHub `blob` URLs for source files, CSVs, JSON, and archives;
+direct file links can start downloads in the browser. Preserve the measured
+version when linking benchmark evidence.
+
 ### One-time publishing setup
 
 1. Create a GitHub environment named `pypi` in the
@@ -164,7 +180,7 @@ release tag.
    owner `KevinMusgrave`, repository `pytorch-metric-learning`, workflow
    `release.yml`, environment `pypi`.
 3. In Settings → Pages, set the source to **GitHub Actions** and allow tags
-   matching `v*.*.*` in the `github-pages` environment.
+   matching `v*.*.*` and the `master` branch in the `github-pages` environment.
 4. Enable private vulnerability reporting under Settings → Security, which
    [SECURITY.md](SECURITY.md) relies on.
 

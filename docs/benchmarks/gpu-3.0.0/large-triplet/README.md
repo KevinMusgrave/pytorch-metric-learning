@@ -10,7 +10,7 @@
 | A100-SXM4-80GB |            79.25 | AMD EPYC 7742 64-Core Processor     | 2.14.0+cu130 | 13.0 |
 | H100 80GB HBM3 |            79.18 | Intel(R) Xeon(R) Platinum 8470      | 2.14.0+cu130 | 13.0 |
 
-[CSV measurements](measurements.csv) retain full precision and statuses.
+[CSV measurements](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/large-triplet/measurements.csv) retain full precision and statuses.
 
 standard: 128 dimensions, 4 samples per class for pair/triplet losses, 1,024 classes for proxy losses.
 
@@ -31,12 +31,12 @@ standard: 128 dimensions, 4 samples per class for pair/triplet losses, 1,024 cla
 
 ## Raw evidence
 
-RTX 4090: [raw records](gpu-1-raw.jsonl.gz) · [configuration and hardware](gpu-1-provenance.json)
+RTX 4090: [raw records](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/large-triplet/gpu-1-raw.jsonl.gz) · [configuration and hardware](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/large-triplet/gpu-1-provenance.json)
 
-RTX 5090: [raw records](gpu-2-raw.jsonl.gz) · [configuration and hardware](gpu-2-provenance.json)
+RTX 5090: [raw records](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/large-triplet/gpu-2-raw.jsonl.gz) · [configuration and hardware](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/large-triplet/gpu-2-provenance.json)
 
-L40S: [raw records](gpu-3-raw.jsonl.gz) · [configuration and hardware](gpu-3-provenance.json)
+L40S: [raw records](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/large-triplet/gpu-3-raw.jsonl.gz) · [configuration and hardware](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/large-triplet/gpu-3-provenance.json)
 
-A100-SXM4-80GB: [raw records](gpu-4-raw.jsonl.gz) · [configuration and hardware](gpu-4-provenance.json)
+A100-SXM4-80GB: [raw records](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/large-triplet/gpu-4-raw.jsonl.gz) · [configuration and hardware](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/large-triplet/gpu-4-provenance.json)
 
-H100 80GB HBM3: [raw records](gpu-5-raw.jsonl.gz) · [configuration and hardware](gpu-5-provenance.json)
+H100 80GB HBM3: [raw records](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/large-triplet/gpu-5-raw.jsonl.gz) · [configuration and hardware](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/large-triplet/gpu-5-provenance.json)

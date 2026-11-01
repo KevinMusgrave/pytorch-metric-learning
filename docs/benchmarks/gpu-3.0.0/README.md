@@ -2,7 +2,7 @@
 
 Released v3.0.0 and v2.9.0, measured on the same GPU and software stack. These are loss/miner forward and backward measurements; encoder, optimizer, data loading, compilation, anchor batching, and distributed training are excluded.
 
-All overview tables use float32, batch 512, and 128-dimensional seeded standard-normal embeddings. Pair/triplet objectives use four samples per class. ArcFace and ProxyAnchor have 1,024 fixed proxy classes and cyclic class labels. [Full measurements](measurements.csv) include the 512-dimensional, sixteen-per-class profile with 10,000 proxy classes, all batch sizes, BF16, and process ranges.
+All overview tables use float32, batch 512, and 128-dimensional seeded standard-normal embeddings. Pair/triplet objectives use four samples per class. ArcFace and ProxyAnchor have 1,024 fixed proxy classes and cyclic class labels. [Full measurements](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/measurements.csv) include the 512-dimensional, sixteen-per-class profile with 10,000 proxy classes, all batch sizes, BF16, and process ranges.
 
 ## Hardware and software
 
@@ -170,7 +170,7 @@ The charts show successful v3 float32 points in the standard profile. Memory cha
 
 ### RTX 4090
 
-[Raw measurements](gpu-1-raw.jsonl.gz) · [Hardware and validation evidence](gpu-1-provenance.json)
+[Raw measurements](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/gpu-1-raw.jsonl.gz) · [Hardware and validation evidence](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/gpu-1-provenance.json)
 
 ![RTX 4090 scaling](gpu-1-mean_ms.svg)
 
@@ -178,7 +178,7 @@ The charts show successful v3 float32 points in the standard profile. Memory cha
 
 ### RTX 5090
 
-[Raw measurements](gpu-2-raw.jsonl.gz) · [Hardware and validation evidence](gpu-2-provenance.json)
+[Raw measurements](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/gpu-2-raw.jsonl.gz) · [Hardware and validation evidence](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/gpu-2-provenance.json)
 
 ![RTX 5090 scaling](gpu-2-mean_ms.svg)
 
@@ -186,7 +186,7 @@ The charts show successful v3 float32 points in the standard profile. Memory cha
 
 ### L40S
 
-[Raw measurements](gpu-3-raw.jsonl.gz) · [Hardware and validation evidence](gpu-3-provenance.json)
+[Raw measurements](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/gpu-3-raw.jsonl.gz) · [Hardware and validation evidence](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/gpu-3-provenance.json)
 
 ![L40S scaling](gpu-3-mean_ms.svg)
 
@@ -194,7 +194,7 @@ The charts show successful v3 float32 points in the standard profile. Memory cha
 
 ### A100-SXM4-80GB
 
-[Raw measurements](gpu-4-raw.jsonl.gz) · [Hardware and validation evidence](gpu-4-provenance.json)
+[Raw measurements](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/gpu-4-raw.jsonl.gz) · [Hardware and validation evidence](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/gpu-4-provenance.json)
 
 ![A100-SXM4-80GB scaling](gpu-4-mean_ms.svg)
 
@@ -202,7 +202,7 @@ The charts show successful v3 float32 points in the standard profile. Memory cha
 
 ### H100 80GB HBM3
 
-[Raw measurements](gpu-5-raw.jsonl.gz) · [Hardware and validation evidence](gpu-5-provenance.json)
+[Raw measurements](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/gpu-5-raw.jsonl.gz) · [Hardware and validation evidence](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/gpu-5-provenance.json)
 
 ![H100 80GB HBM3 scaling](gpu-5-mean_ms.svg)
 

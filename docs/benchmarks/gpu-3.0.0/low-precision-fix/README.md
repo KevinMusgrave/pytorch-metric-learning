@@ -7,7 +7,7 @@
 | A100-SXM4-80GB |            79.25 | AMD EPYC 7742 64-Core Processor     | 2.14.0+cu130 | 13.0 |
 | RTX 5090       |            31.36 | AMD Ryzen 9 7950X 16-Core Processor | 2.14.0+cu130 | 13.0 |
 
-[CSV measurements](measurements.csv) retain full precision and statuses.
+[CSV measurements](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/low-precision-fix/measurements.csv) retain full precision and statuses.
 
 standard: 128 dimensions, 4 samples per class for pair/triplet losses, 1,024 classes for proxy losses.
 
@@ -233,6 +233,6 @@ standard: 128 dimensions, 4 samples per class for pair/triplet losses, 1,024 cla
 
 ## Raw evidence
 
-A100-SXM4-80GB: [raw records](gpu-1-raw.jsonl.gz) · [configuration and hardware](gpu-1-provenance.json)
+A100-SXM4-80GB: [raw records](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/low-precision-fix/gpu-1-raw.jsonl.gz) · [configuration and hardware](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/low-precision-fix/gpu-1-provenance.json)
 
-RTX 5090: [raw records](gpu-2-raw.jsonl.gz) · [configuration and hardware](gpu-2-provenance.json)
+RTX 5090: [raw records](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/low-precision-fix/gpu-2-raw.jsonl.gz) · [configuration and hardware](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/low-precision-fix/gpu-2-provenance.json)

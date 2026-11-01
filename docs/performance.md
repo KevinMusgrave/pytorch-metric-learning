@@ -5,7 +5,7 @@ v3.0.0 against v2.9.0 on RTX 4090, RTX 5090, L40S, A100, and H100 systems
 on 2026-11-01 UTC.
 It reports absolute v3 forward/backward time, peak memory, verified batch
 capacity, and version ratios for seven common losses plus batch-hard triplet
-mining. [Full measurements](benchmarks/gpu-3.0.0/measurements.csv) retain both
+mining. [Full measurements](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/measurements.csv) retain both
 versions, all shapes, BF16, failures, and process ranges.
 The [large-triplet follow-up](benchmarks/gpu-3.0.0/large-triplet/README.md)
 uses shorter timing blocks where the main protocol exceeds its time limit.
@@ -285,10 +285,10 @@ for float16 and BF16 random, nearby, duplicate, and mixed-scale inputs. GPU
 tests also cover CUDA graph capture and reduced matmul precision. The four
 follow-up losses passed float32 scalar and full-gradient comparison between
 released v3.0.0 and the candidate before timing.
-The [A100 validation](benchmarks/gpu-3.0.0/low-precision-fix/gpu-1-validation.json)
-and [RTX 5090 validation](benchmarks/gpu-3.0.0/low-precision-fix/gpu-2-validation.json)
+The [A100 validation](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/low-precision-fix/gpu-1-validation.json)
+and [RTX 5090 validation](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/low-precision-fix/gpu-2-validation.json)
 record the errors and archive checks. An additional
-[BF16 comparison at batch 2,048](benchmarks/gpu-3.0.0/low-precision-fix/bf16-gradient-validation.json)
+[BF16 comparison at batch 2,048](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gpu-3.0.0/low-precision-fix/bf16-gradient-validation.json)
 on the A100 found unchanged Contrastive and batch-hard triplet loss values, with
 maximum embedding-gradient absolute differences of `5.96e-8` and `2.38e-7`.
 
@@ -338,27 +338,27 @@ sample spread and repeat on the target hardware before setting a budget.
 | Pair miner    |             0.361 / — |             4.635 / — |          0.857 / — |          0.832 / — |           7.7 |
 | Proxy         |         0.073 / 0.136 |         0.184 / 0.342 |      1.538 / 3.152 |      1.517 / 3.142 |           1.6 |
 
-Raw results: M1 Pro [batch 128](benchmarks/cpu-m1-pro-v3-b128.json) and
-[batch 512](benchmarks/cpu-m1-pro-v3-b512.json); A40
-[batch 128](benchmarks/cuda-a40-v3-b128.json) and
-[batch 512](benchmarks/cuda-a40-v3-b512.json). The A40 timings at these sizes
+Raw results: M1 Pro [batch 128](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/cpu-m1-pro-v3-b128.json) and
+[batch 512](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/cpu-m1-pro-v3-b512.json); A40
+[batch 128](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/cuda-a40-v3-b128.json) and
+[batch 512](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/cuda-a40-v3-b512.json). The A40 timings at these sizes
 are dominated by kernel launches, so they barely change with batch size.
 
 The full-graph compiled proxy at batch 128 took 0.064 ms forward and 0.067 ms
 backward on the M1 Pro and 0.331 ms and 0.576 ms on the A40, after first steps
 of 3.3 s and 9.9 s
-([M1 Pro](benchmarks/compiled-proxy-m1-pro-v3-b128.json),
-[A40](benchmarks/compiled-proxy-a40-v3-b128.json)). This workload does not
+([M1 Pro](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/compiled-proxy-m1-pro-v3-b128.json),
+[A40](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/compiled-proxy-a40-v3-b128.json)). This workload does not
 justify compiling by default.
 
 The distributed case, a linear encoder with the global-objective contrastive
 loss and DDP, took 1.315 ms forward and 0.980 ms backward on the slower of two
 Gloo ranks on the M1 Pro with 64 rows per rank
-([raw](benchmarks/gloo-m1-pro-v3-b64.json)). With two A40s and NCCL
+([raw](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/gloo-m1-pro-v3-b64.json)). With two A40s and NCCL
 with peer-to-peer transport disabled (`NCCL_P2P_DISABLE=1`), the slower rank took 5.360 ms and
 4.849 ms with 64 rows per rank and 5.104 ms and 4.623 ms with 256
-([64 rows](benchmarks/nccl-a40-v3-b64.json),
-[256 rows](benchmarks/nccl-a40-v3-b256.json)). Disabling peer-to-peer
+([64 rows](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/nccl-a40-v3-b64.json),
+[256 rows](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/nccl-a40-v3-b256.json)). Disabling peer-to-peer
 transport means these numbers do not measure direct GPU-to-GPU transfers.
 
 ### Comparison with version 2.9.0
@@ -379,18 +379,18 @@ those Cartesian intermediates are largest.
 With four samples per class, all-triplet enumeration at batch 512 took 331.6 ms
 forward on the M1 Pro in v2.9.0 and 19.5 ms in v3, and its A40 peak fell from
 148 MiB to 63 MiB; NT-Xent's A40 peak fell from 6,485 MiB to 18.5 MiB. Raw
-results: v2.9.0 on the M1 Pro [batch 128](benchmarks/cpu-m1-pro-v2-b128.json),
-[batch 512](benchmarks/cpu-m1-pro-v2-b512.json),
-[NT-Xent](benchmarks/cpu-m1-pro-v2-ntxent-b512-spc16.json), and
-[mined triplet](benchmarks/cpu-m1-pro-v2-mined-triplet-b512-spc16.json); v3 on
-the M1 Pro [NT-Xent](benchmarks/cpu-m1-pro-v3-ntxent-b512-spc16.json) and
-[mined triplet](benchmarks/cpu-m1-pro-v3-mined-triplet-b512-spc16.json);
-v2.9.0 on the A40 [batch 128](benchmarks/cuda-a40-v2-b128.json),
-[batch 512](benchmarks/cuda-a40-v2-b512.json),
-[NT-Xent](benchmarks/cuda-a40-v2-ntxent-b512-spc16.json), and
-[mined triplet](benchmarks/cuda-a40-v2-mined-triplet-b512-spc16.json); v3 on the
-A40 [NT-Xent](benchmarks/cuda-a40-v3-ntxent-b512-spc16.json) and
-[mined triplet](benchmarks/cuda-a40-v3-mined-triplet-b512-spc16.json).
+results: v2.9.0 on the M1 Pro [batch 128](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/cpu-m1-pro-v2-b128.json),
+[batch 512](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/cpu-m1-pro-v2-b512.json),
+[NT-Xent](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/cpu-m1-pro-v2-ntxent-b512-spc16.json), and
+[mined triplet](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/cpu-m1-pro-v2-mined-triplet-b512-spc16.json); v3 on
+the M1 Pro [NT-Xent](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/cpu-m1-pro-v3-ntxent-b512-spc16.json) and
+[mined triplet](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/cpu-m1-pro-v3-mined-triplet-b512-spc16.json);
+v2.9.0 on the A40 [batch 128](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/cuda-a40-v2-b128.json),
+[batch 512](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/cuda-a40-v2-b512.json),
+[NT-Xent](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/cuda-a40-v2-ntxent-b512-spc16.json), and
+[mined triplet](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/cuda-a40-v2-mined-triplet-b512-spc16.json); v3 on the
+A40 [NT-Xent](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/cuda-a40-v3-ntxent-b512-spc16.json) and
+[mined triplet](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.1/docs/benchmarks/cuda-a40-v3-mined-triplet-b512-spc16.json).
 
 ## Large batches and tuple memory
 

@@ -80,6 +80,20 @@ the released API; a deployment failure can be retried independently. The Pages
 source must be GitHub Actions because a `GITHUB_TOKEN` push to a branch does
 not trigger another workflow or the legacy Pages build.
 
+Documentation corrections can also publish through the manually dispatched
+`docs.yml` workflow on `master`. It requires successful CI for the exact commit
+and an existing GitHub release for the declared version. The release tag must
+be an ancestor, and `src`, `pyproject.toml`, and `uv.lock` must match that tag,
+so a prose correction cannot publish documentation for unreleased library code.
+The workflow uses the same pinned build tools, preserves `/v2/`, and shares the
+Pages concurrency group with release deployments. Only its deployment job has
+Pages write permission; it does not build or publish Python distributions.
+
+Human-facing navigation uses rendered documentation and GitHub file pages.
+Benchmark CSVs, JSON evidence, and compressed raw records link to the file page
+at their published version, so following a link opens a page instead of
+starting a download. Embedded images retain their image URLs.
+
 The preflight requires `docs/release-notes/VERSION.md`. After publication, a
 job with `contents: write` creates the GitHub release for the tag with those
 notes and the verified distributions attached, marking PEP 440 prereleases as

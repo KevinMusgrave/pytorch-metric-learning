@@ -1,5 +1,6 @@
 import unittest
 
+import pytest
 import torch
 
 from pytorch_metric_learning.reducers import ClassWeightedReducer
@@ -44,7 +45,9 @@ class TestClassWeightedReducer(unittest.TestCase):
                     }
                 }
                 output = reducer(loss_dict, embeddings, labels)
-                correct_output = torch.zeros((), dtype=dtype, device=TEST_DEVICE)
+                correct_output = torch.zeros(
+                    (), dtype=torch.float64, device=TEST_DEVICE
+                )
                 for i in range(len(losses)):
                     if reduction_type == "element":
                         batch_idx = indices[i]
@@ -52,9 +55,55 @@ class TestClassWeightedReducer(unittest.TestCase):
                         batch_idx = indices[0][i]
                     class_label = labels[batch_idx]
                     correct_output += (
-                        losses[i]
-                        * class_weights.type(dtype).to(TEST_DEVICE)[class_label]
+                        losses[i].double()
+                        * class_weights.double().to(TEST_DEVICE)[class_label]
                     )
                 correct_output /= len(losses)
-                rtol = helpers.rtol(dtype)
-                self.assertTrue(torch.isclose(output, correct_output, rtol=rtol))
+                helpers.assert_close(output, correct_output, dtype)
+
+
+@pytest.mark.parametrize("dtype", TEST_DTYPES)
+@pytest.mark.parametrize("case", ["ordinary", "large", "small_weight"])
+def test_class_weighted_reduction_matches_wide_value_and_gradient(dtype, case):
+    if case == "large":
+        data, coefficients = [40000.0, 0.0, 0.0, 0.0], [2.0, 2.0, 2.0, 2.0]
+    elif case == "small_weight":
+        data, coefficients = [10000.0], [1e-8]
+    else:
+        data = [17.25, -3.5, 1.125, 7.75]
+        coefficients = [1.123, 0.517, 1.99, 0.123]
+    losses = torch.tensor(data, dtype=dtype, device=TEST_DEVICE, requires_grad=True)
+    weights = torch.tensor(coefficients, dtype=torch.float64, device=TEST_DEVICE)
+    labels = torch.arange(len(data), device=TEST_DEVICE)
+    anchors = torch.arange(len(data), device=TEST_DEVICE).flip(0)
+    reducer = ClassWeightedReducer(weights)
+    reference_losses = losses.detach().double().requires_grad_()
+    expected = sum(
+        reference_losses[i] * weights[labels[anchors[i]]] for i in range(len(data))
+    ) / len(data)
+    assert isinstance(expected, torch.Tensor)
+
+    actual = reducer(
+        {"loss": {"losses": losses, "indices": anchors}},
+        torch.zeros(len(data), 2, dtype=dtype, device=TEST_DEVICE),
+        labels,
+    )
+
+    torch.testing.assert_close(
+        actual,
+        expected.detach().to(dtype),
+        rtol=1e-6 if dtype == torch.float32 else 0,
+        atol=0,
+    )
+    actual.backward()
+    expected.backward()
+    assert losses.grad is not None
+    assert reference_losses.grad is not None
+    torch.testing.assert_close(
+        losses.grad,
+        reference_losses.grad.to(dtype),
+        rtol=1e-6 if dtype == torch.float32 else 0,
+        atol=0,
+    )
+    assert reducer.weights.dtype == torch.float64
+    torch.testing.assert_close(reducer.weights, weights)

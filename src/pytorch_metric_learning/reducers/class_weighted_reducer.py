@@ -1,6 +1,7 @@
 import torch
 from torch import Tensor
 
+from ..utils import _common
 from .base_reducer import BaseReducer
 
 
@@ -25,5 +26,6 @@ class ClassWeightedReducer(BaseReducer):
                 f"ClassWeightedReducer weights are on {self.weights.device}, but "
                 f"losses are on {losses.device}. Move the reducer with .to(device)."
             )
-        weights = self.weights.to(dtype=losses.dtype)
-        return torch.mean(losses * weights[labels[anchors]])
+        dtype = _common.accumulation_dtype(losses.dtype)
+        weights = self.weights.to(dtype=dtype)
+        return torch.mean(losses.to(dtype) * weights[labels[anchors]]).to(losses.dtype)

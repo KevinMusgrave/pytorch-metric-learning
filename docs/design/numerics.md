@@ -604,3 +604,13 @@ reason. `label_ndim` is an instance setting because this loss alone accepts eith
 and `indices_tuple` is rejected because the set `S_ij` is defined over the whole batch. The
 authors' repository has no license file, so the implementation comes from the paper, and
 their code served only as a numerical cross-check outside this repository.
+
+## Class-weighted reduction
+
+`ClassWeightedReducer` multiplies and averages float16 and bfloat16 losses in
+float32, then returns the scalar in the losses' dtype. Weights are converted
+directly from their stored dtype to the accumulation dtype. Converting them to
+the losses' dtype first can round a nonzero coefficient to zero before a large
+loss makes its product representable. Multiplying before widening also makes
+`40000 * 2` overflow float16 even when the final batch mean fits. The buffer
+keeps its original precision, and float32 and float64 reductions are unchanged.

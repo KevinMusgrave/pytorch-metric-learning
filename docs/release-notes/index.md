@@ -1,5 +1,13 @@
 # Release notes
 
+## Unreleased
+
+- `CenterInvariantRegularizer` now computes float16 and bfloat16 inputs in
+  float32 and retains that dtype through reduction, preventing premature
+  overflow and reducing rounding error in squared norm deviations.
+
+## Releases
+
 - [3.0.1](3.0.1.md)
 - [3.0.0](3.0.0.md)
 - [3.0.0rc5 (preview)](3.0.0rc5.md)

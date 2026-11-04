@@ -604,3 +604,13 @@ reason. `label_ndim` is an instance setting because this loss alone accepts eith
 and `indices_tuple` is rejected because the set `S_ij` is defined over the whole batch. The
 authors' repository has no license file, so the implementation comes from the paper, and
 their code served only as a numerical cross-check outside this repository.
+
+## RegularFace without another center
+
+`RegularFaceRegularizer` emits no loss term when the similarity matrix has
+fewer than two columns. An empty batch has no argmax; a singleton has no
+non-self neighbor and must not penalize its own similarity. Returning an empty
+loss dictionary uses the reducer's differentiable-zero contract, so backward
+still produces an empty or zero input gradient. The distance runs first to
+preserve its input validation. Two or more centers retain the existing
+nearest-neighbor objective, including negative similarities.

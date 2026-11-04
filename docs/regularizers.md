@@ -55,6 +55,9 @@ Subclasses implement `compute_loss(x)` and return a
 [Deep Face Recognition with Center Invariant Loss](http://www1.ece.neu.edu/~yuewu/files/2017/twu024.pdf)
 
 This encourages unnormalized embeddings or weights to all have the same Lp norm.
+For float16 and bfloat16 inputs, norms, squared deviations, and reduction are
+computed in float32 and the loss remains float32. Float32 and float64 inputs
+retain their dtype. Gradients reach the original input tensor.
 
 ```python {.signature}
 regularizers.CenterInvariantRegularizer(**options)

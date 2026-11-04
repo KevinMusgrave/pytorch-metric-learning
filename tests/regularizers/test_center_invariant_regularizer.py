@@ -1,5 +1,6 @@
 import unittest
 
+import pytest
 import torch
 
 from pytorch_metric_learning.losses import NormalizedSoftmaxLoss
@@ -43,17 +44,44 @@ class TestCenterInvariantRegularizer(unittest.TestCase):
             average_squared_weight_norms = 0
             for i in range(num_classes):
                 average_squared_weight_norms += (
-                    torch.norm(loss_func.weight[i], p=2) ** 2
+                    torch.norm(loss_func.weight[i].double(), p=2) ** 2
                 )
             average_squared_weight_norms /= num_classes
             for i in range(num_classes):
                 deviation = (
-                    torch.norm(loss_func.weight[i], p=2) ** 2
+                    torch.norm(loss_func.weight[i].double(), p=2) ** 2
                     - average_squared_weight_norms
                 )
                 correct_reg_loss += (deviation**2) / 4
             correct_reg_loss /= num_classes
 
             correct_total_loss = correct_class_loss + (correct_reg_loss * reg_weight)
-            rtol = helpers.rtol(dtype)
-            self.assertTrue(torch.isclose(loss, correct_total_loss, rtol=rtol))
+            helpers.assert_close(loss, correct_total_loss, dtype)
+
+
+@pytest.mark.parametrize("dtype", TEST_DTYPES)
+@pytest.mark.parametrize(
+    "data",
+    [
+        [[16.0, 0.0], [17.0, 0.0]],
+        [[300.0, 0.0], [301.0, 0.0]],
+        [[2.0, 3.0], [4.0, 5.0]],
+    ],
+)
+def test_center_invariant_matches_squared_norm_variance(dtype, data):
+    centers = torch.tensor(data, dtype=dtype, device=TEST_DEVICE, requires_grad=True)
+    reference = centers.detach().double()
+    squared_norms = reference.square().sum(dim=1)
+    deviations = squared_norms - squared_norms.mean()
+    expected = deviations.square().mean() / 4
+    expected_gradient = deviations[:, None] * reference / len(data)
+
+    loss = CenterInvariantRegularizer()(centers)
+
+    expected_dtype = (
+        torch.float32 if dtype in (torch.float16, torch.bfloat16) else dtype
+    )
+    assert loss.dtype == expected_dtype
+    torch.testing.assert_close(loss, expected.to(expected_dtype))
+    loss.backward()
+    torch.testing.assert_close(centers.grad, expected_gradient.to(dtype))

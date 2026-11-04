@@ -17,7 +17,8 @@ class CenterInvariantRegularizer(BaseRegularizer):
         )
 
     def compute_loss(self, x: Tensor) -> LossDict:
-        squared_weight_norms = self.distance.get_norm(x) ** 2
+        accumulation_x = x.to(_common.accumulation_dtype(x.dtype))
+        squared_weight_norms = self.distance.get_norm(accumulation_x) ** 2
         deviations_from_mean = squared_weight_norms - torch.mean(squared_weight_norms)
         return {
             "loss": {

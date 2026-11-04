@@ -604,3 +604,14 @@ reason. `label_ndim` is an instance setting because this loss alone accepts eith
 and `indices_tuple` is rejected because the set `S_ij` is defined over the whole batch. The
 authors' repository has no license file, so the implementation comes from the paper, and
 their code served only as a numerical cross-check outside this repository.
+
+## Center-invariant accumulation
+
+`CenterInvariantRegularizer` widens float16 and bfloat16 inputs before taking
+norms, squaring, and subtracting their mean, and retains float32 through the
+reducer. Low-precision norm rounding otherwise changes the objective: centers
+`[16, 0]` and `[17, 0]` in bfloat16 produce 64 instead of 68.0625. Norms around
+300 also have squares outside the float16 range even when the final loss fits.
+Casting the already-computed norms would keep their rounding; casting the loss
+back before reduction would reintroduce overflow. Float32 and float64 behavior
+and the configurable Lp norm are preserved.

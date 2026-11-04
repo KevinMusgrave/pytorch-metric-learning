@@ -81,6 +81,7 @@ def test_class_weighted_reduction_matches_wide_value_and_gradient(dtype, case):
     expected = sum(
         reference_losses[i] * weights[labels[anchors[i]]] for i in range(len(data))
     ) / len(data)
+    assert isinstance(expected, torch.Tensor)
 
     actual = reducer(
         {"loss": {"losses": losses, "indices": anchors}},
@@ -96,6 +97,8 @@ def test_class_weighted_reduction_matches_wide_value_and_gradient(dtype, case):
     )
     actual.backward()
     expected.backward()
+    assert losses.grad is not None
+    assert reference_losses.grad is not None
     torch.testing.assert_close(
         losses.grad,
         reference_losses.grad.to(dtype),

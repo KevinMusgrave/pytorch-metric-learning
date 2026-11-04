@@ -99,7 +99,8 @@ regularizers.LpRegularizer(p=2, power=1, *, reducer=None)
 
 This should be applied as a weight regularizer. It penalizes class vectors that
 are very close together: the loss for class `i` is its largest similarity to
-another class vector.
+another class vector. With fewer than two vectors, it returns a differentiable
+zero connected to the input, since there is no other class vector to penalize.
 
 ```python {.signature}
 regularizers.RegularFaceRegularizer(**options)

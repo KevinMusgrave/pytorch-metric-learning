@@ -1,5 +1,13 @@
 # Release notes
 
+## Unreleased
+
+- `RegularFaceRegularizer` now returns a differentiable zero for empty and
+  singleton inputs instead of failing to select a neighbor or penalizing
+  self-similarity.
+
+## Releases
+
 - [3.0.1](3.0.1.md)
 - [3.0.0](3.0.0.md)
 - [3.0.0rc5 (preview)](3.0.0rc5.md)

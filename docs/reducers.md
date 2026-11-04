@@ -89,8 +89,10 @@ reducers.ClassWeightedReducer(weights)
 **Parameters**:
 
 - **weights**: A tensor where `weights[c]` is the weight of class `c`. It is
-  stored as a buffer and moves with the reducer; it is cast to the losses'
-  dtype when applied.
+  stored as a buffer and moves with the reducer. For float16 and bfloat16
+  losses, weights are converted directly to float32 and multiplication and
+  averaging use float32; the result returns in the losses' dtype. Other
+  losses use their own dtype throughout. The stored buffer is unchanged.
 
 Labels must be class indices into `weights`. Without labels, as in a
 regularizer, the reducer raises `ValueError`. If `weights` is on a different

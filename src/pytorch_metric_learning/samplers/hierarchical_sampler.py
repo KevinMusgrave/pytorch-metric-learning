@@ -11,6 +11,18 @@ from torch.utils.data.sampler import Sampler
 from ._sampling import choose, shuffled
 
 
+def _label_columns(
+    labels: Tensor | np.ndarray | Sequence[Sequence[int]], outer: int, inner: int
+) -> tuple[list[int], list[int]]:
+    label_matrix = labels if isinstance(labels, Tensor) else np.asarray(labels)
+    if label_matrix.ndim != 2:
+        raise ValueError("hierarchical labels must be two-dimensional")
+    columns = label_matrix.shape[1]
+    if not all(-columns <= index < columns for index in (inner, outer)):
+        raise ValueError("inner_label and outer_label must select existing columns")
+    return label_matrix[:, outer].tolist(), label_matrix[:, inner].tolist()
+
+
 class HierarchicalSampler(Sampler[list[int]]):
     def __init__(
         self,
@@ -24,7 +36,6 @@ class HierarchicalSampler(Sampler[list[int]]):
         *,
         generator: torch.Generator | None = None,
     ) -> None:
-        labels = torch.as_tensor(labels)
         self.batch_size = batch_size
         self.batches_per_super_tuple = batches_per_super_tuple
         self.samples_per_class = samples_per_class
@@ -49,13 +60,8 @@ class HierarchicalSampler(Sampler[list[int]]):
                 raise ValueError("batch_size not a multiple of samples_per_class")
 
         groups = defaultdict(lambda: defaultdict(list))
-        for idx, (super_label, label) in enumerate(
-            zip(
-                labels[:, outer_label].tolist(),
-                labels[:, inner_label].tolist(),
-                strict=True,
-            )
-        ):
+        outer, inner = _label_columns(labels, outer_label, inner_label)
+        for idx, (super_label, label) in enumerate(zip(outer, inner, strict=True)):
             groups[super_label][label].append(idx)
         self.super_image_lists = {
             super_label: {label: torch.tensor(v) for label, v in classes.items()}

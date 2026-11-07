@@ -11,6 +11,11 @@ Labels describe the whole dataset: `labels[i]` is the label of dataset item `i`.
 one-dimensional tensor, a NumPy array, or any iterable of hashable labels, such
 as a list of strings
 ([`types.DatasetLabels`](types.md#datasetlabels)).
+NumPy labels retain their Python values, including strings and hashable objects.
+Reversed views and non-native byte order are supported. Flat label arrays must
+have one dimension. Hierarchical label matrices must have two, and both column
+indices must refer to existing columns. Negative column indices count from the end.
+
 The examples on this page use this dataset of 64 items in 16 classes:
 
 ```python

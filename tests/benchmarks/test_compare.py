@@ -142,3 +142,13 @@ def test_original_runner_executes_small_real_workloads(tmp_path):
     rows = json.loads(output.read_text())["results_by_rank"][0]
     assert {"ntxent", "triplet", "anchor-batched-ntxent"} <= {r["case"] for r in rows}
     assert all(len(row["samples"]) == 2 for row in rows)
+
+
+def test_capacity_no_verified_batch_and_unaligned_start():
+    settings = {"start": 9, "maximum": 64, "granularity": 4, "relative_resolution": 0.01}
+    empty = capacity_search(lambda *_: {"status": "oom"}, settings)
+    assert empty["largest_verified_batch"] is None
+    result = capacity_search(lambda batch, _: {"status": "ok" if batch <= 12 else "oom"}, settings)
+    assert result["largest_verified_batch"] == 12
+    with pytest.raises(ValueError, match="positive"):
+        capacity_search(lambda *_: pytest.fail("unexpected probe"), {**settings, "start": 0})

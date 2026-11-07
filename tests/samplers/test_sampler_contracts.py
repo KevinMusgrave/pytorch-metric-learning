@@ -1,6 +1,7 @@
 import unittest
 from typing import Any
 
+import numpy as np
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 
@@ -28,6 +29,51 @@ def make_samplers(generator):
 
 
 class TestSamplerContracts(unittest.TestCase):
+    def test_numpy_labels_match_python_labels(self):
+        cases = [
+            np.array(["a", "a", "b", "b"]),
+            np.array([1, 1, 2, 2], dtype=">i4")[::-1],
+        ]
+        objects = np.empty(4, dtype=object)
+        objects[:] = [("cat", 1), ("cat", 1), ("dog", 2), ("dog", 2)]
+        for labels in [*cases, objects]:
+
+            def draws(values):
+                rng = torch.Generator().manual_seed(42)
+                return (
+                    list(MPerClassSampler(values, 2, 4, generator=rng)),
+                    list(FixedSetOfPairs(values, 6, 4, generator=rng)),
+                    list(FixedSetOfTriplets(values, 4, generator=rng)),
+                )
+
+            self.assertEqual(draws(labels), draws(labels.tolist()))
+
+    def test_numpy_hierarchy_uses_logical_row_order(self):
+        labels = hierarchical_labels().numpy()[::-1]
+
+        def draw(values):
+            return list(
+                HierarchicalSampler(
+                    values,
+                    12,
+                    3,
+                    outer_label=-1,
+                    generator=torch.Generator().manual_seed(42),
+                )
+            )
+
+        self.assertEqual(draw(labels), draw(labels.tolist()))
+
+    def test_sampler_label_shapes(self):
+        for invalid in [np.array(1), torch.zeros(3, 1)]:
+            with self.assertRaisesRegex(ValueError, "one-dimensional"):
+                MPerClassSampler(invalid, 2, 4)
+        with self.assertRaisesRegex(ValueError, "two-dimensional"):
+            HierarchicalSampler(torch.arange(3), 12, 3)
+        for column in [-3, 2]:
+            with self.assertRaisesRegex(ValueError, "existing columns"):
+                HierarchicalSampler(hierarchical_labels(), 12, 3, outer_label=column)
+
     def test_samplers_reject_impossible_batches(self):
         with self.assertRaisesRegex(ValueError, "m must be positive"):
             MPerClassSampler([0, 0, 1, 1], m=0, batch_size=2)

@@ -1,5 +1,13 @@
 # Release notes
 
+## Unreleased
+
+- `ClassWeightedReducer` now multiplies and averages low-precision losses in
+  float32 before returning the scalar in the input dtype. This preserves
+  representable weighted means and avoids prematurely rounding stored weights.
+
+## Releases
+
 - [3.0.1](3.0.1.md)
 - [3.0.0](3.0.0.md)
 - [3.0.0rc5 (preview)](3.0.0rc5.md)

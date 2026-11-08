@@ -66,6 +66,8 @@ class TestCenterInvariantRegularizer(unittest.TestCase):
         [[16.0, 0.0], [17.0, 0.0]],
         [[300.0, 0.0], [301.0, 0.0]],
         [[2.0, 3.0], [4.0, 5.0]],
+        [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0], [20.0, 20.0]],
+        [[0.0, 0.0], [50.0, 0.0]],
     ],
 )
 def test_center_invariant_matches_squared_norm_variance(dtype, data):

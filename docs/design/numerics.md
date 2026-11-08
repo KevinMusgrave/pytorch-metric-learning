@@ -615,3 +615,8 @@ reducer. Low-precision norm rounding otherwise changes the objective: centers
 Casting the already-computed norms would keep their rounding; casting the loss
 back before reduction would reintroduce overflow. Float32 and float64 behavior
 and the configurable Lp norm are preserved.
+
+Both individual penalties and the reduced scalar can exceed float16's range.
+For centers `[0, 0]` and `[50, 0]`, the loss is 390625 while its input gradients
+remain representable. Keeping the scalar in float32 lets a later regularization
+weight scale it without first turning it into infinity.

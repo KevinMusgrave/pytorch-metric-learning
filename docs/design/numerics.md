@@ -614,3 +614,19 @@ the losses' dtype first can round a nonzero coefficient to zero before a large
 loss makes its product representable. Multiplying before widening also makes
 `40000 * 2` overflow float16 even when the final batch mean fits. The buffer
 keeps its original precision, and float32 and float64 reductions are unchanged.
+
+## Center-invariant accumulation
+
+`CenterInvariantRegularizer` widens float16 and bfloat16 inputs before taking
+norms, squaring, and subtracting their mean, and retains float32 through the
+reducer. Low-precision norm rounding otherwise changes the objective: centers
+`[16, 0]` and `[17, 0]` in bfloat16 produce 64 instead of 68.0625. Norms around
+300 also have squares outside the float16 range even when the final loss fits.
+Casting the already-computed norms would keep their rounding; casting the loss
+back before reduction would reintroduce overflow. Float32 and float64 behavior
+and the configurable Lp norm are preserved.
+
+Both individual penalties and the reduced scalar can exceed float16's range.
+For centers `[0, 0]` and `[50, 0]`, the loss is 390625 while its input gradients
+remain representable. Keeping the scalar in float32 lets a later regularization
+weight scale it without first turning it into infinity.

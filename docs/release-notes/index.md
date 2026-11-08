@@ -5,6 +5,9 @@
 - `ClassWeightedReducer` now multiplies and averages low-precision losses in
   float32 before returning the scalar in the input dtype. This preserves
   representable weighted means and avoids prematurely rounding stored weights.
+- `CenterInvariantRegularizer` now computes float16 and bfloat16 inputs in
+  float32 and retains that dtype through reduction, preventing premature
+  overflow and reducing rounding error in squared norm deviations.
 
 ## Releases
 

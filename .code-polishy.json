@@ -783,12 +783,12 @@
         "severity": "critical",
         "status": "not-affected",
         "basis": "unreachable",
-        "reason": "MkDocs Material uses Requests only in its info, privacy, and social plugins, none enabled in mkdocs.yml. The library makes no network requests and acquisition uses patched uv. See docs/security/dependency-assessments.md#retained-aged-dependencies.",
-        "impact": "No enabled HTTPS client uses the affected certifi trust bundle. Review before enabling a Requests caller or these plugins; update once the fix ages in.",
+        "reason": "The installed MkDocs Material 9.7.7 uses Requests only in its info, privacy, and social plugins. The resolved MkDocs configuration enables only material/search. Repository Python callers do not use Requests, urllib3, or certifi for HTTPS, and acquisition uses patched uv 0.13.4. See docs/security/dependency-assessments.md#certificate-trust-reassessment-2026-11-08.",
+        "impact": "No enabled HTTPS verification uses the affected certifi roots, so an on-path attacker with a compromised intermediate key cannot reach this trust decision. Reassess before enabling a Requests caller or the info, privacy, or social plugins. Review again by 2026-11-15; update to certifi 2026.10.19 once its 2026-10-20 upload reaches 30 days on 2026-11-19.",
         "evidence": "https://github.com/certifi/python-certifi/security/advisories/GHSA-6q48-6c7w-9gw2",
-        "owner": "Claude",
-        "reviewed": "2026-10-29",
-        "expires": "2026-11-05"
+        "owner": "Codex",
+        "reviewed": "2026-11-08",
+        "expires": "2026-11-15"
       },
       {
         "id": "ghsa-6627-m3xw-93mp",

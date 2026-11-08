@@ -10,7 +10,11 @@ from ..types import DatasetLabels
 
 def as_label_list(labels: DatasetLabels) -> list[Hashable]:
     if isinstance(labels, (Tensor, np.ndarray)):
-        return torch.as_tensor(labels).tolist()
+        if labels.ndim != 1:
+            raise ValueError("labels must be one-dimensional")
+        if isinstance(labels, Tensor):
+            return labels.tolist()
+        return np.asarray(labels).tolist()
     return list(labels)
 
 

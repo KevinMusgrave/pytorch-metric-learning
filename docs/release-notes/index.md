@@ -11,6 +11,9 @@
 - `RegularFaceRegularizer` now returns a differentiable zero for empty and
   singleton inputs instead of failing to select a neighbor or penalizing
   self-similarity.
+- Samplers accept categorical NumPy labels and views with negative strides or
+  non-native byte order. Invalid label dimensions and hierarchy columns now
+  produce a descriptive error at construction.
 
 ## Releases
 

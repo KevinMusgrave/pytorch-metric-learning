@@ -1,8 +1,13 @@
 import unittest
 
+import pytest
 import torch
 
-from pytorch_metric_learning.distances import LpDistance
+from pytorch_metric_learning.distances import (
+    CosineSimilarity,
+    DotProductSimilarity,
+    LpDistance,
+)
 from pytorch_metric_learning.losses import NormalizedSoftmaxLoss
 from pytorch_metric_learning.regularizers import RegularFaceRegularizer
 from pytorch_metric_learning.utils import _common as c_f
@@ -55,3 +60,27 @@ class TestRegularFaceRegularizer(unittest.TestCase):
     def test_distance_must_be_a_similarity(self):
         with self.assertRaises(TypeError):
             RegularFaceRegularizer(distance=LpDistance())
+
+
+@pytest.mark.parametrize("dtype", TEST_DTYPES)
+@pytest.mark.parametrize("size", [0, 1])
+@pytest.mark.parametrize("distance_type", [CosineSimilarity, DotProductSimilarity])
+def test_regular_face_without_other_centers_has_zero_loss(dtype, size, distance_type):
+    centers = torch.tensor([[2.0, 3.0]], dtype=dtype, device=TEST_DEVICE)[
+        :size
+    ].requires_grad_()
+    result = RegularFaceRegularizer(distance=distance_type())(centers)
+    torch.testing.assert_close(result, centers.new_zeros(()))
+    result.backward()
+    torch.testing.assert_close(centers.grad, torch.zeros_like(centers))
+
+
+@pytest.mark.parametrize("dtype", TEST_DTYPES)
+def test_regular_face_two_centers_keeps_negative_similarity(dtype):
+    centers = torch.tensor(
+        [[1.0, 0.0], [-1.0, 0.0]], dtype=dtype, device=TEST_DEVICE, requires_grad=True
+    )
+    result = RegularFaceRegularizer()(centers)
+    torch.testing.assert_close(result, centers.new_tensor(-1.0))
+    result.backward()
+    torch.testing.assert_close(centers.grad, torch.zeros_like(centers))

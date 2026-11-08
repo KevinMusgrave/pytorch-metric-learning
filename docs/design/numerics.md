@@ -630,3 +630,13 @@ Both individual penalties and the reduced scalar can exceed float16's range.
 For centers `[0, 0]` and `[50, 0]`, the loss is 390625 while its input gradients
 remain representable. Keeping the scalar in float32 lets a later regularization
 weight scale it without first turning it into infinity.
+
+## RegularFace without another center
+
+`RegularFaceRegularizer` emits no loss term when the similarity matrix has
+fewer than two columns. An empty batch has no argmax; a singleton has no
+non-self neighbor and must not penalize its own similarity. Returning an empty
+loss dictionary uses the reducer's differentiable-zero contract, so backward
+still produces an empty or zero input gradient. The distance runs first to
+preserve its input validation. Two or more centers retain the existing
+nearest-neighbor objective, including negative similarities.

@@ -17,6 +17,8 @@ class RegularFaceRegularizer(BaseRegularizer):
 
     def compute_loss(self, x: Tensor) -> LossDict:
         cos = self.distance(x)
+        if cos.shape[1] < 2:
+            return {}
         with torch.no_grad():
             others = cos.detach().clone().fill_diagonal_(_common.neg_inf(x.dtype))
             nearest = others.argmax(dim=1, keepdim=True)

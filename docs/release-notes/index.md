@@ -8,6 +8,9 @@
 - `CenterInvariantRegularizer` now computes float16 and bfloat16 inputs in
   float32 and retains that dtype through reduction, preventing premature
   overflow and reducing rounding error in squared norm deviations.
+- `RegularFaceRegularizer` now returns a differentiable zero for empty and
+  singleton inputs instead of failing to select a neighbor or penalizing
+  self-similarity.
 
 ## Releases
 

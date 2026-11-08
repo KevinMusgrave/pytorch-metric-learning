@@ -48,7 +48,7 @@ Steady-state peak PyTorch allocation in MiB, including inputs, parameters, retai
 | MultiSimilarity      |     27.8 |     75.5 | 27.8 |           27.8 |           75.5 |
 | ProxyAnchor          |     31.8 |     79.5 | 31.8 |           31.8 |           79.5 |
 
-## Batch capacity: v2.9 → v3.0
+## Batch capacity: v2.9 → v3.0 {#batch-capacity-v29-v30}
 
 Largest verified batch under a 90% GPU tensor-allocation budget, with 128-dimensional float32 embeddings and the standard label/proxy configuration, using ordinary full loss calls and backward passes. Each successful boundary passed three fresh processes. Searches stop within 128 rows or 5% of a failing batch. ≥ marks the search ceiling, not a hardware limit. Per-GPU provenance files retain the failing batch and distinguish OOM, indexing, nonfinite, and timeout limits. This is loss-only capacity; a training model needs additional memory.
 

@@ -75,6 +75,14 @@ An OOM, indexing limit, nonfinite result, timeout, or configured search ceiling
 remains a distinct outcome. This is loss-only capacity, not a claim about a
 complete encoder, optimizer, or training pipeline.
 
+A verified batch must be positive and pass both confirmation processes. If
+every attempted batch fails, or either confirmation fails, report null rather
+than an unverified size. A confirmation failure supplies the limiting status,
+including when the initial search reached its ceiling. Refinement after an
+unaligned successful batch advances to the next aligned candidate while the
+bracket exceeds the requested resolution. Invalid bounds and resolution
+settings fail before launching a worker.
+
 The release report's memory comparison uses total PyTorch allocation. The
 incremental metric subtracts the warmed pre-forward allocation, which includes
 retained workspaces as well as inputs and parameters. For example, the RTX 5090

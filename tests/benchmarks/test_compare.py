@@ -49,17 +49,28 @@ def test_capacity_keeps_observed_failure_and_confirms_success(failure):
     assert calls[-2:] == [(1280, 1), (1280, 2)]
 
 
-def test_capacity_reports_lower_bound_and_unstable_confirmation():
+@pytest.mark.parametrize(
+    "statuses, expected_status",
+    [(("oom", "ok"), "oom"), (("ok", "timeout"), "timeout")],
+)
+def test_capacity_reports_lower_bound_and_unstable_confirmation(
+    statuses, expected_status
+):
     settings = {**configuration()["capacity"], "maximum": 512}
     result = capacity_search(lambda batch, repetition: {"status": "ok"}, settings)
     assert result["largest_verified_batch"] == 512
     assert result["first_failing_batch"] is None
     assert result["limiting_status"] == "search_cap"
     result = capacity_search(
-        lambda batch, repetition: {"status": "ok" if repetition == 0 else "oom"},
+        lambda batch, repetition: {
+            "status": "ok" if repetition == 0 else statuses[repetition - 1]
+        },
         settings,
     )
     assert result["largest_verified_batch"] is None
+    assert result["first_failing_batch"] is None
+    assert result["limiting_status"] == expected_status
+    assert result["confirmation_statuses"] == list(statuses)
 
 
 def test_proxy_initialization_and_labels_are_independent_of_batch_composition():
@@ -142,3 +153,48 @@ def test_original_runner_executes_small_real_workloads(tmp_path):
     rows = json.loads(output.read_text())["results_by_rank"][0]
     assert {"ntxent", "triplet", "anchor-batched-ntxent"} <= {r["case"] for r in rows}
     assert all(len(row["samples"]) == 2 for row in rows)
+
+
+def test_capacity_no_verified_batch_and_unaligned_start():
+    settings = {
+        "start": 9,
+        "maximum": 64,
+        "granularity": 4,
+        "relative_resolution": 0.01,
+    }
+    empty = capacity_search(lambda *_: {"status": "oom"}, settings)
+    assert empty["largest_verified_batch"] is None
+    assert empty["limiting_status"] == "oom"
+    assert empty["confirmation_statuses"] == []
+    result = capacity_search(
+        lambda batch, _: {"status": "ok" if batch <= 16 else "oom"}, settings
+    )
+    assert result["largest_verified_batch"] == 16
+    assert result["first_failing_batch"] == 18
+
+
+@pytest.mark.parametrize(
+    "invalid",
+    [
+        {"start": 0},
+        {"start": 65},
+        {"maximum": 8},
+        {"granularity": 0},
+        {"granularity": -1},
+        {"relative_resolution": -0.1},
+        {"relative_resolution": 1.0},
+        {"relative_resolution": float("nan")},
+    ],
+)
+def test_capacity_rejects_invalid_settings_before_running_a_probe(invalid):
+    settings = {
+        "start": 9,
+        "maximum": 64,
+        "granularity": 4,
+        "relative_resolution": 0.01,
+    }
+    with pytest.raises(ValueError):
+        capacity_search(
+            lambda *_: pytest.fail("invalid settings must not launch a probe"),
+            {**settings, **invalid},
+        )

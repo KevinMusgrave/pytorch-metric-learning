@@ -1,6 +1,7 @@
 # Development dependency assessments
 
-Assessors: Codex (2026-10-26 and 2026-10-28) and Claude (2026-10-29 re-review).
+Assessors: Codex (2026-10-26, 2026-10-28, and the 2026-11-08 certifi re-review)
+and Claude (2026-10-29 re-review).
 Scope: the exact versions in `uv.lock`.
 These assessments do not authorize publication or establish CUDA acceptance.
 
@@ -35,10 +36,12 @@ executable dependencies is the greater risk during the remaining 24 days.
 The following advisories remain visible under exact `not-affected` assessments.
 Claude re-verified every row on 2026-10-29 against the unchanged lock: no
 repository source calls filelock, Requests, or setuptools' egg installer;
-`mkdocs.yml` enables no plugins; PyTorch 2.14.0 callers are unchanged. Expiry
+`mkdocs.yml` enables none of the Requests-using plugins; PyTorch 2.14.0 callers
+are unchanged. Expiry
 follows the policy's severity limits from that review: low findings 2027-01-27,
 moderate and high findings 2026-11-28, and certifi's critical finding
-2026-11-05. Repeat the certifi check weekly, and within seven days before a
+2026-11-05. The certifi reassessment below renews only that finding through
+2026-11-15. Repeat the certifi check weekly, and within seven days before a
 release tag, until 2026-11-19. On that date the fixed certifi release and uv
 0.13.4 both reach 30 days: update the lock to certifi 2026.10.19 and remove the
 certifi and uv assessments, because unused assessments fail the policy check.
@@ -64,6 +67,31 @@ Root CA - G3. Because the affected client is not enabled here, retain the aged
 release until then instead of admitting a fresh package unnecessarily. Enabling
 any of the named MkDocs plugins or adding a Requests caller invalidates this
 assessment and requires review before use.
+
+## Certificate trust reassessment (2026-11-08)
+
+Codex re-reviewed the exact locked certifi 2026.7.22 against
+[GHSA-6q48-6c7w-9gw2](https://github.com/advisories/GHSA-6q48-6c7w-9gw2).
+The attack requires an on-path adversary with a compromised intermediate key
+and an enabled HTTPS client that verifies its peer with certifi's affected roots.
+The lock reaches certifi through Requests 2.34.2 and MkDocs Material 9.7.7.
+
+The installed Material source calls `requests.get` only from the info, privacy,
+and social plugins. Loading this repository's MkDocs configuration resolves
+only `material/search`; those three callers remain disabled. The library,
+tests, scripts, benchmark tools, and executable documentation recipes contain
+no Requests, urllib3, or certifi HTTPS caller. Dependency acquisition uses the
+separately patched uv 0.13.4. Thus no enabled client reaches the affected trust
+decision, and the exact finding remains `not-affected` through 2026-11-15 UTC.
+
+The official
+[certifi 2026.10.19 metadata](https://pypi.org/pypi/certifi/2026.10.19/json)
+places its wheel upload on 2026-10-20. It remains younger than the 30-day
+admission window. With the vulnerable caller disabled, retaining the aged
+dependency avoids admitting fresh code without a reachable security benefit.
+Review again by November 15 and update once the fix reaches 30 days on
+November 19. Enabling any of those plugins or another certifi-backed HTTPS
+client invalidates this assessment. Other advisory assessments are unchanged.
 
 ## Filelock local filesystem advisories
 

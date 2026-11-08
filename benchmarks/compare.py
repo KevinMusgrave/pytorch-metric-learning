@@ -54,7 +54,9 @@ def capacity_search(probe, settings):
     if not 0 < settings["start"] <= settings["maximum"]:
         raise ValueError("capacity start must be positive and no larger than maximum")
     if settings["granularity"] <= 0 or not 0 <= settings["relative_resolution"] < 1:
-        raise ValueError("expected positive granularity and relative_resolution in [0, 1)")
+        raise ValueError(
+            "expected positive granularity and relative_resolution in [0, 1)"
+        )
     low, high = 0, settings["start"]
     failure = None
     while high <= settings["maximum"]:
@@ -69,7 +71,10 @@ def capacity_search(probe, settings):
     if failure:
         quantum = settings["granularity"]
         while high - low > max(quantum, low * settings["relative_resolution"]):
-            middle = max((low // quantum + 1) * quantum, ((low + high) // (2 * quantum)) * quantum)
+            middle = max(
+                (low // quantum + 1) * quantum,
+                ((low + high) // (2 * quantum)) * quantum,
+            )
             result = probe(middle, 0)
             if result["status"] == "ok":
                 low = middle
@@ -81,7 +86,9 @@ def capacity_search(probe, settings):
         if confirmations and all(s == "ok" for s in confirmations)
         else None,
         "first_failing_batch": high if failure else None,
-        "limiting_status": next((s for s in confirmations if s != "ok"), failure or "search_cap"),
+        "limiting_status": next(
+            (s for s in confirmations if s != "ok"), failure or "search_cap"
+        ),
         "confirmation_statuses": confirmations,
     }
 

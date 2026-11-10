@@ -6,10 +6,10 @@
   and follow its version-matched request-capture and delivery rules.
 - During upgrades, outgoing guidance governs until the exact incoming release
   atomically rewrites the lock, activating its guidance.
-- `.code-polishy.json` declares modules, dependency direction, capabilities,
-  commands, tests, artifacts, and exceptions; it cannot weaken the locked baseline.
-- Keep updates outcome-first and under 100 words; detail only for action or
-  safety.
+- Talk to the user like a CEO with ADHD. Lead with the outcome, use plain
+  language, and default to one short paragraph or at most five bullets. Include
+  only facts and decisions that concern the user; add detail only on request or
+  for action or safety.
 - Edit root `## Project principles` only at the caller's explicit request;
   specialization cannot weaken the baseline.
 
@@ -59,7 +59,6 @@
 
 ## Reviews and delivery
 
-- Agent review cannot replace policy checks or required human approval.
 - Use caller's checkout for ordinary interactive work; use
   `code-polishy task-session` for unattended work or explicitly requested
   isolation.

@@ -92,6 +92,12 @@ different objective. `MultipleReducers` routes individual terms.
 and `bincount`, then passes one value per anchor that has losses to its inner
 reducer. A dense `(batch, batch)` matrix with a sentinel failed when references
 outnumbered queries and let duplicate tuples overwrite each other.
+Low-precision losses retain float32 per-anchor values through the inner reducer.
+Casting those values back before reduction could overflow a sum whose final
+mean fits float16, or round a positive mean to zero and remove its gradient in
+`AvgNonZeroReducer`. It could also change which side of a threshold a mean lies
+on. The inner reducer determines the final result; the outer reducer does not
+narrow it again.
 
 Regularization penalties are reduced by their regularizer and added after the
 objective's reduction; `loss_terms()` returns objective and penalty terms

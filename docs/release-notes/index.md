@@ -1,5 +1,14 @@
 # Release notes
 
+## Unreleased
+
+- `ManifoldLoss` preserves float64 precision in its random-walk matrix inverse,
+  correcting double-precision gradients and avoiding false singularities for
+  valid propagation weights close to one. Low-precision inputs still use a
+  float32 inverse.
+
+## Published versions
+
 - [3.0.2](3.0.2.md)
 - [3.0.1](3.0.1.md)
 - [3.0.0](3.0.0.md)

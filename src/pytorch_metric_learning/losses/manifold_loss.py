@@ -81,7 +81,8 @@ class ManifoldLoss(BaseMetricLossFunction):
         log_S = log_S.masked_fill(Y.bool(), -math.inf)
         log_D = torch.logsumexp(log_S, dim=1)
         S_bar = torch.exp(log_S - (log_D.unsqueeze(0) + log_D.unsqueeze(1)) / 2)
-        L = torch.inverse(Y.float() - self.alpha * S_bar.float()).to(S_bar.dtype)
+        dtype = _common.accumulation_dtype(S_bar.dtype)
+        L = torch.inverse(Y.to(dtype) - self.alpha * S_bar.to(dtype)).to(S_bar.dtype)
         F = (1 - self.alpha) * L
         F_p = F[N:, :]
         F_e = F[:N, :]

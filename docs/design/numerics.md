@@ -265,8 +265,12 @@ dtype; converting through the default dtype first turned a float64 divisor of
 
 `ManifoldLoss` normalizes its graph in log space, because $e^{2s}$ overflows float32 at
 $s \approx 44$, a dot product of embeddings with norm around 7, while $\bar{S}$ only needs
-the ratio $S_{ij} / \sqrt{D_i D_j}$. It then inverts its random-walk matrix in float32
-and masks excluded terms with $-\infty$ before log-sum-exp. `DistanceWeightedMiner` clamps
+the ratio $S_{ij} / \sqrt{D_i D_j}$. It then inverts its random-walk matrix in the
+accumulation dtype: float64 inputs retain their precision, while float16 and
+bfloat16 inputs use the supported float32 inverse. Narrowing float64 to float32
+changed gradients and could round a valid random-walk system to a singular matrix
+when $\alpha$ was close to 1. It masks excluded terms with $-\infty$ before
+log-sum-exp. `DistanceWeightedMiner` clamps
 distances at `cutoff` and works in log space following Section 4 of Wu et al.,
 masking ineligible pairs before subtracting each anchor's maximum log weight.
 `RankedListLoss` computes its weighted means as softmax-weighted averages over

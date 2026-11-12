@@ -42,7 +42,8 @@ embeddings; a smaller unlabeled batch raises `ValueError`. Labels must lie in
 `[0, num_proxies)`. An empty labeled batch gives a differentiable zero.
 `indices_tuple`, `ref_emb`, and `ref_labels` raise `ValueError`,
 as does an embedding dimension other than `embedding_size`. The matrix inverse
-is computed in float32.
+is computed in float64 for float64 inputs and in float32 otherwise, preserving
+double-precision values and gradients while supporting low-precision inputs.
 
 The proxies are the parameter `proxies`, shaped `(num_proxies, embedding_size)`
 and initialized with `torch.randn`. Unlike the class weights that other losses

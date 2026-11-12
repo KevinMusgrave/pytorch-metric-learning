@@ -312,6 +312,10 @@ indices past its reference set raise `ValueError`.
 
 To keep a persistent index, disable both resets:
 
+`train` and `add` accept non-contiguous tensor views, including transposed and
+strided rows. They pass a contiguous float32 CPU representation to the index
+without changing the caller's tensor.
+
 ```python
 import os
 import tempfile

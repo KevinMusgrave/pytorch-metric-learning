@@ -1,5 +1,14 @@
 # Release notes
 
+## Unreleased
+
+- `FaissKNN.train` and `FaissKNN.add` accept non-contiguous tensor views when
+  building and extending persistent indices, matching the search path's input
+  support. Strided and transposed views no longer fail Faiss's contiguous-input
+  assertion.
+
+## Published versions
+
 - [3.0.2](3.0.2.md)
 - [3.0.1](3.0.1.md)
 - [3.0.0](3.0.0.md)

@@ -150,6 +150,10 @@ on another GPU receive CPU copies. It binds the stream of
 and their input conversion run inside `torch.cuda.device` of that tensor;
 otherwise Faiss work on one GPU is not ordered against the PyTorch stream
 producing its input.
+Persistent `FaissKNN.train` and `add` also make their float32 CPU input
+contiguous. Dtype conversion may preserve a transposed layout, and an input
+already in float32 needs no conversion at all, so conversion alone does not
+meet `faiss.contrib.torch_utils`'s contiguous-pointer requirement.
 The Faiss GPU path is limited to `k <= 2048`, the maximum
 in Faiss's [`DeviceDefs.cuh`](https://github.com/facebookresearch/faiss/blob/main/faiss/gpu/utils/DeviceDefs.cuh).
 

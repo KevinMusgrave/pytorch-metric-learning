@@ -155,7 +155,7 @@ class FaissKNN:
     def add(self, embeddings: Tensor) -> None:
         if self.index is None:
             raise ValueError("Call train before adding embeddings to FaissKNN")
-        self.index.add(torch.as_tensor(embeddings).float().cpu())
+        self.index.add(torch.as_tensor(embeddings).float().cpu().contiguous())
 
     def save(self, filename: str) -> None:
         self.faiss.write_index(self.to_cpu_index(self.index), filename)

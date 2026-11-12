@@ -543,6 +543,12 @@ embeddings with almost none, and training stopped. Softplus cannot cross zero an
 has a gradient. It suits this loss better than `exp`, because its chain-rule factor is
 nearly 1 at the paper's scale, so updates there match training `w` directly, while `exp`
 rescales every update by `w`.
+The softmax variant cancels the common bias before forming logits, since adding
+it can round away class differences before log-sum-exp sees them. Cross entropy
+subtracts the row maximum before evaluating log probabilities, retaining the
+loss even when a large scale gives every class the same large score. A zero
+multiple of `b` retains its documented zero gradient and optimizer connection.
+The contrast variant keeps the bias because it changes both sigmoid terms.
 
 ## Center loss
 

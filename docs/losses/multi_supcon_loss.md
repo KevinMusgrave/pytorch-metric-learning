@@ -43,6 +43,8 @@ An anchor without positives has no loss term. The loss is computed in float32
 for float16 and bfloat16 embeddings and returned in the embeddings' dtype.
 The weights are computed with one matrix product over the labels, so
 references cost no intermediate tensor proportional to the number of classes.
+Label intersections retain float32 or float64 precision under autocast, so
+mixed-precision training preserves Jaccard weights and thresholded pairs.
 
 **Supported combinations**: Reducers other than
 [ClassWeightedReducer](../reducers.md#classweightedreducer), `indices_tuple`,

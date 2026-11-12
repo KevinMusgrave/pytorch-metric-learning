@@ -165,6 +165,10 @@ values, at roughly 2 ms against 450 ms for 512 queries, 4096 references, and
 to avoid an 8 GiB intermediate, with no demonstrated need. Two empty sets have
 similarity 1, so a row's self-comparison is always positive and the existing
 self-comparison removal applies, and `threshold=1` recovers SupCon.
+The label matrix product disables autocast: converting labels to float32 alone
+does not prevent autocast from rounding an intersection of 257 in bfloat16 or
+2049 in float16. Those rounded counts change Jaccard weights and can remove all
+positives at `threshold=1`. Embedding computations retain their autocast scope.
 `CrossBatchMemory` stores label sets through `label_shape` and takes candidate
 pairs from an explicit `pair_function`, instead of inspecting the wrapped loss
 or duplicating the queue.

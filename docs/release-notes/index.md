@@ -1,5 +1,13 @@
 # Release notes
 
+## Unreleased
+
+- `MultiSupConLoss` preserves label intersection precision under autocast,
+  keeping Jaccard weights, thresholded positive pairs, and label-set
+  `CrossBatchMemory` training consistent with full-precision label arithmetic.
+
+## Published versions
+
 - [3.0.2](3.0.2.md)
 - [3.0.1](3.0.1.md)
 - [3.0.0](3.0.0.md)

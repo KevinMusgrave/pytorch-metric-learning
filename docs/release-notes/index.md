@@ -1,5 +1,11 @@
 # Release notes
 
+## Unreleased
+
+- Empty query batches return `(0, k)` results from `CustomKNN` and `FaissKNN`
+  when excluding self-matches. Batched `CustomKNN` also preserves the distance's
+  result dtype and validates the neighbor count for empty queries.
+
 - [3.0.2](3.0.2.md)
 - [3.0.1](3.0.1.md)
 - [3.0.0](3.0.0.md)

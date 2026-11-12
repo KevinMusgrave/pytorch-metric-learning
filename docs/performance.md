@@ -87,6 +87,33 @@ than another rented system.
 
 ## Development measurements
 
+### Unreleased fixed-sampler construction
+
+Fixed pair and triplet construction now draws distinct class pairs in bounded
+blocks instead of generating a full class permutation for every tuple. On a
+Linux x86_64 CPU with Python 3.12.14, PyTorch 2.14.0+cpu and one Torch thread,
+constructing 10,000 tuples from 20,000 classes with two examples per class gave
+the following median wall times:
+
+| Sampler | Master at `94c440d` | Updated implementation | Ratio |
+| --- | ---: | ---: | ---: |
+| FixedSetOfTriplets | 731.44 ms | 139.11 ms | 5.26x faster |
+| FixedSetOfPairs, batch size 64 | 419.96 ms | 115.93 ms | 3.62x faster |
+
+The measurement includes label grouping and tuple construction, with three
+alternating runs of each implementation in the same process and fresh generators
+seeded with 100, 101 and 102. The baseline source is exactly
+`94c440d4a8b627281b7bad297325ffa5316cdb63`.
+[Raw timings and parameters](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/docs/benchmarks/fixed-sampler-class-draws-cpu.json)
+retain every run. These are construction timings on one host; they do not
+measure DataLoader iteration, peak memory or model-training throughput.
+
+Exact seeded tuples change because the random-draw algorithm changes. Class
+uniformity, tuple label relations, fixed-set iteration and reproducibility with
+the new algorithm are checked separately.
+
+### General runner
+
 Run benchmarks from the repository's frozen development environment. These
 measurements establish a reference for changes; they do not impose a universal
 speed requirement across machines. The runner imports the library from the

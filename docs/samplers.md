@@ -199,6 +199,10 @@ each. Pairs are drawn independently, so a pair can repeat. Construction raises
 `ValueError` for an invalid `num_pairs` or `batch_size`, for fewer than two
 classes, and when no class has two examples.
 
+Negative class pairs are drawn uniformly without constructing a permutation of
+every class for each pair. The generator still controls all sampling, but the
+exact seeded sequence differs from the earlier permutation-based algorithm.
+
 The pairs are drawn once, in `sampler.fixed_set_of_pairs`, a `(num_pairs, 2)`
 index tensor. Each iterator yields them in a new random order. Each batch is a
 list `[first_0, second_0, first_1, second_1, ...]`, so a pair is never split, and
@@ -254,6 +258,10 @@ Each triplet draws two different classes, then an anchor and a positive from the
 first class and a negative from the second. A class with one sample yields an
 anchor equal to its positive. Construction raises `ValueError` when
 `num_triplets` is not positive or `labels` has fewer than two classes.
+
+The two classes are drawn uniformly without constructing a full class
+permutation for every triplet. The generator still controls all sampling, but
+the exact seeded sequence differs from the earlier permutation-based algorithm.
 
 The triplets are drawn once, when the sampler is created; each iterator yields
 them in a new random order as consecutive `(anchor, positive, negative)` index

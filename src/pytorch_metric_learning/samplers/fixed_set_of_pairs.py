@@ -6,7 +6,7 @@ from torch import Tensor
 from torch.utils.data.sampler import Sampler
 
 from ..types import DatasetLabels
-from ._sampling import as_label_list, choose, indices_by_label
+from ._sampling import _distinct_class_pairs, as_label_list, choose, indices_by_label
 
 
 class FixedSetOfPairs(Sampler[list[int]]):
@@ -47,8 +47,10 @@ class FixedSetOfPairs(Sampler[list[int]]):
         for i in range(num_positive):
             group = int(torch.randint(len(repeated), (1,), generator=self.generator))
             pairs[i] = choose(repeated[group], 2, self.generator)
-        for i in range(num_positive, num_pairs):
-            first, second = torch.randperm(len(groups), generator=self.generator)[:2]
+        classes = _distinct_class_pairs(
+            len(groups), num_pairs - num_positive, self.generator
+        )
+        for i, (first, second) in enumerate(classes, start=num_positive):
             pairs[i, 0] = choose(groups[first], 1, self.generator)[0]
             pairs[i, 1] = choose(groups[second], 1, self.generator)[0]
         return pairs

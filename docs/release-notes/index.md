@@ -1,5 +1,15 @@
 # Release notes
 
+## Unreleased
+
+- `FixedSetOfPairs` and `FixedSetOfTriplets` draw distinct negative classes
+  without permuting every class for every tuple, reducing construction work
+  for datasets with many classes. Label relations, class-uniform sampling,
+  and seeded reproducibility are preserved; exact seeded tuples change with
+  the new random-draw algorithm.
+
+## Published versions
+
 - [3.0.2](3.0.2.md)
 - [3.0.1](3.0.1.md)
 - [3.0.0](3.0.0.md)

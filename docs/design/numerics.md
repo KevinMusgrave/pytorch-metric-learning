@@ -269,6 +269,12 @@ the ratio $S_{ij} / \sqrt{D_i D_j}$. It then inverts its random-walk matrix in f
 and masks excluded terms with $-\infty$ before log-sum-exp. `DistanceWeightedMiner` clamps
 distances at `cutoff` and works in log space following Section 4 of Wu et al.,
 masking ineligible pairs before subtracting each anchor's maximum log weight.
+`UniformHistogramMiner` computes low-precision bin positions in float32 and
+substitutes a unit range only when all candidate distances are equal. Clamping
+every range to the smallest normal value collapsed distinct subnormal values
+into one bin, while low-precision multiplication rounded values across bin
+boundaries before integer conversion. Sampling still uses the original pair
+indices and the existing occupied-bin multinomial draw.
 `RankedListLoss` computes its weighted means as softmax-weighted averages over
 each anchor's violating set, which cannot overflow. ProxyAnchor applies miner
 weights by adding their logarithm inside the log-sum-exp, so a weight

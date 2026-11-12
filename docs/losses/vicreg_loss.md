@@ -48,6 +48,12 @@ pseudocode and the authors' implementation. The variance term is
 $\frac{\mu}{2}\left[v(Z) + v(Z')\right]$, also following the authors'
 implementation; $\gamma$ is fixed at 1.
 
+Float16 and bfloat16 views are promoted to float32 for the loss statistics and
+the returned scalar. Float64 views retain float64, including when paired with a
+lower-precision view. Autocast is disabled inside these statistics so the
+covariance matrix product cannot narrow them again. Gradients still reach both
+input views in their original dtypes.
+
 **Paper settings**: The defaults $\lambda = 25$, $\mu = 25$, $\nu = 1$ are the
 paper's.
 

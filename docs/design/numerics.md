@@ -276,6 +276,13 @@ multiplies its exponential term and a zero weight excludes the sample; the
 paper defines no miner weighting, and version 2's `w - 1` offset scaled terms
 by $e^{w-1}$.
 
+`VICRegLoss` computes its statistics in the promoted input dtype, widened to
+float32 for float16 or bfloat16. Squared covariances can exceed the half-precision
+range even for inputs around 20, so the result retains the working dtype rather
+than casting back. Autocast is disabled over the statistics: widening the inputs
+alone still allows the covariance matrix product to narrow again. Mixed-dtype
+views retain the wider precision, and the casts preserve gradients to each view.
+
 ## Stateful modules
 
 Cross-batch memory stores detached reference embeddings. Each forward validates

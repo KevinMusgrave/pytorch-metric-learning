@@ -2,6 +2,8 @@ import torch
 import torch.nn.functional as F
 from torch import Tensor
 
+from ..utils import _common
+
 
 class VICRegLoss(torch.nn.Module):
     def __init__(
@@ -24,11 +26,16 @@ class VICRegLoss(torch.nn.Module):
             raise ValueError(
                 "VICRegLoss needs at least 2 rows to estimate variance and covariance"
             )
-        return (
-            self.invariance_lambda * self.invariance_loss(embeddings, ref_emb)
-            + self.variance_mu * self.variance_loss(embeddings, ref_emb)
-            + self.covariance_v * self.covariance_loss(embeddings, ref_emb)
+        dtype = _common.accumulation_dtype(
+            torch.promote_types(embeddings.dtype, ref_emb.dtype)
         )
+        embeddings, ref_emb = embeddings.to(dtype), ref_emb.to(dtype)
+        with _common.without_autocast(embeddings):
+            return (
+                self.invariance_lambda * self.invariance_loss(embeddings, ref_emb)
+                + self.variance_mu * self.variance_loss(embeddings, ref_emb)
+                + self.covariance_v * self.covariance_loss(embeddings, ref_emb)
+            )
 
     @staticmethod
     def invariance_loss(emb: Tensor, ref_emb: Tensor) -> Tensor:

@@ -307,6 +307,7 @@
           "tests/losses/test_triplet_margin_loss.py",
           "tests/losses/test_tuplet_margin_loss.py",
           "tests/losses/test_vicreg_loss.py",
+          "tests/losses/test_vicreg_precision.py",
           "tests/losses/utils.py",
           "tests/miners/__init__.py",
           "tests/miners/test_angular_miner.py",

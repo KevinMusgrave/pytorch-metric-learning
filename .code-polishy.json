@@ -356,6 +356,7 @@
           "tests/evaluation/__init__.py",
           "tests/evaluation/test_calculate_accuracies.py",
           "tests/evaluation/test_calculate_accuracies_large_k.py",
+          "tests/evaluation/test_empty_knn_queries.py",
           "tests/evaluation/test_accuracy_calculator_contracts.py",
           "tests/evaluation/test_faiss_persistent_inputs.py",
           "tests/evaluation/test_ndcg.py",

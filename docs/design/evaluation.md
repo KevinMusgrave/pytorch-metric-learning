@@ -92,6 +92,12 @@ an `IndexError` from label lookup.
 With `k=None`, those outputs are quadratic in the reference count, so retaining
 them between evaluation and training would consume substantial GPU memory.
 
+Empty query batches follow the same search contract as nonempty ones. Removing
+self-matches uses the known output width instead of inferring it from zero
+elements. When a batched search yields no blocks, the backend evaluates the
+empty distance matrix and applies `topk`, preserving the distance's dtype and
+neighbor-count validation without allocating a nonempty pairwise matrix.
+
 Threshold matching applies the same distance normalization and power for
 matrix comparisons and corresponding-row comparisons through
 `BaseDistance.pairwise`, so it needs no quadratic intermediate. Evaluation diagnostics use standard module loggers;

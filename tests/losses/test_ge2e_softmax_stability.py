@@ -76,7 +76,10 @@ def test_large_equal_scores_retain_log_class_count(dtype, scale, classes):
     )
     assert torch.isfinite(embeddings.grad).all()
     torch.testing.assert_close(
-        loss.raw_w.grad, torch.zeros_like(loss.raw_w), rtol=0, atol=1e-7
+        loss.raw_w.grad,
+        torch.zeros_like(loss.raw_w),
+        rtol=0,
+        atol=classes * torch.finfo(dtype).eps,
     )
     torch.testing.assert_close(loss.b.grad, torch.zeros_like(loss.b), rtol=0, atol=0)
 

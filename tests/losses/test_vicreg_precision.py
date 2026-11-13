@@ -3,10 +3,16 @@ import torch
 
 from pytorch_metric_learning.losses import VICRegLoss
 
+from .. import TEST_DEVICE
+
 
 def views(dtype, scale):
     first = (
-        torch.tensor([[2.0, 2.0], [-2.0, -2.0], [1.0, 1.0], [-1.0, -1.0]], dtype=dtype)
+        torch.tensor(
+            [[2.0, 2.0], [-2.0, -2.0], [1.0, 1.0], [-1.0, -1.0]],
+            dtype=dtype,
+            device=TEST_DEVICE,
+        )
         * scale
     )
     second = (first * 0.75 + 0.125).to(dtype)
@@ -58,9 +64,9 @@ def test_autocast_does_not_narrow_covariance_statistics(dtype):
     ref_second = second.detach().double().requires_grad_()
     expected = reference_loss(ref_first, ref_second, (25, 25, 1))
     expected_gradients = torch.autograd.grad(expected, (ref_first, ref_second))
-    with torch.autocast("cpu", dtype=dtype):
+    with torch.autocast(TEST_DEVICE.type, dtype=dtype):
         actual = VICRegLoss()(first, second)
-        assert torch.is_autocast_enabled("cpu")
+        assert torch.is_autocast_enabled(TEST_DEVICE.type)
     gradients = torch.autograd.grad(actual, (first, second))
     torch.testing.assert_close(actual.double(), expected, rtol=1e-6, atol=1e-6)
     for gradient, reference in zip(gradients, expected_gradients, strict=True):

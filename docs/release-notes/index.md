@@ -1,14 +1,5 @@
 # Release notes
 
-## Unreleased
-
-- `VICRegLoss` computes low-precision input statistics and returns its scalar
-  in float32, with autocast disabled over the covariance computation. This
-  prevents half-precision overflow and improves value and gradient accuracy.
-  Float64 views retain their precision, including mixed-dtype view pairs.
-
-## Published versions
-
 - [3.0.2](3.0.2.md)
 - [3.0.1](3.0.1.md)
 - [3.0.0](3.0.0.md)

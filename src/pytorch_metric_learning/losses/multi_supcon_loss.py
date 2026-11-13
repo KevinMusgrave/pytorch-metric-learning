@@ -24,7 +24,8 @@ def _jaccard(labels: Tensor, ref_labels: Tensor | None, dtype: torch.dtype) -> T
     _check_label_sets(labels, ref_labels)
     query = labels.to(dtype)
     reference = query if ref_labels is None else ref_labels.to(dtype)
-    intersection = query @ reference.T
+    with _common.without_autocast(labels):
+        intersection = query @ reference.T
     union = query.sum(dim=1, keepdim=True) + reference.sum(dim=1) - intersection
     return torch.where(union > 0, intersection / union, 1)
 

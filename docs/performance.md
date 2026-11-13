@@ -95,10 +95,10 @@ Linux x86_64 CPU with Python 3.12.14, PyTorch 2.14.0+cpu and one Torch thread,
 constructing 10,000 tuples from 20,000 classes with two examples per class gave
 the following median wall times:
 
-| Sampler | Master at `94c440d` | Updated implementation | Ratio |
-| --- | ---: | ---: | ---: |
-| FixedSetOfTriplets | 731.44 ms | 139.11 ms | 5.26x faster |
-| FixedSetOfPairs, batch size 64 | 419.96 ms | 115.93 ms | 3.62x faster |
+| Sampler                        | Master at `94c440d` | Updated implementation |        Ratio |
+| ------------------------------ | ------------------: | ---------------------: | -----------: |
+| FixedSetOfTriplets             |           731.44 ms |              139.11 ms | 5.26x faster |
+| FixedSetOfPairs, batch size 64 |           419.96 ms |              115.93 ms | 3.62x faster |
 
 The measurement includes label grouping and tuple construction, with three
 alternating runs of each implementation in the same process and fresh generators

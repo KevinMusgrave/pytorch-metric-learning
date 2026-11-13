@@ -4,6 +4,8 @@ import torch
 from pytorch_metric_learning.distances import LpDistance
 from pytorch_metric_learning.evaluation import CustomKNN, FaissKNN
 
+from .. import TEST_DEVICE
+
 
 @pytest.mark.parametrize(
     "dtype", [torch.float16, torch.bfloat16, torch.float32, torch.float64]
@@ -15,8 +17,8 @@ from pytorch_metric_learning.evaluation import CustomKNN, FaissKNN
 def test_empty_custom_queries_keep_shape_dtype_and_no_grad(
     dtype, normalize, batch_size, exclude_self, k
 ):
-    query = torch.empty(0, 3, dtype=dtype, requires_grad=True)
-    reference = torch.arange(12, dtype=dtype).reshape(4, 3)
+    query = torch.empty(0, 3, dtype=dtype, requires_grad=True, device=TEST_DEVICE)
+    reference = torch.arange(12, dtype=dtype, device=TEST_DEVICE).reshape(4, 3)
     knn = CustomKNN(LpDistance(normalize_embeddings=normalize), batch_size)
     distances, indices = knn(query, k, reference, exclude_self)
     expected_dtype = (
@@ -37,8 +39,8 @@ def test_empty_custom_queries_keep_shape_dtype_and_no_grad(
 @pytest.mark.parametrize("exclude_self", [False, True])
 @pytest.mark.parametrize("k", [1, 3])
 def test_empty_faiss_queries_keep_shape_and_index_state(dtype, exclude_self, k):
-    query = torch.empty(0, 3, dtype=dtype)
-    reference = torch.arange(12, dtype=dtype).reshape(4, 3)
+    query = torch.empty(0, 3, dtype=dtype, device=TEST_DEVICE)
+    reference = torch.arange(12, dtype=dtype, device=TEST_DEVICE).reshape(4, 3)
     knn = FaissKNN()
     distances, indices = knn(query, k, reference, exclude_self)
     assert distances.shape == indices.shape == (0, k)
@@ -51,8 +53,8 @@ def test_empty_faiss_queries_keep_shape_and_index_state(dtype, exclude_self, k):
 @pytest.mark.parametrize("batch_size", [None, 2])
 @pytest.mark.parametrize("exclude_self", [False, True])
 def test_empty_custom_queries_still_validate_neighbor_count(batch_size, exclude_self):
-    query = torch.empty(0, 3)
-    reference = torch.ones(4, 3)
+    query = torch.empty(0, 3, device=TEST_DEVICE)
+    reference = torch.ones(4, 3, device=TEST_DEVICE)
     knn = CustomKNN(LpDistance(), batch_size)
     with pytest.raises(RuntimeError):
         knn(query, 5, reference, exclude_self)

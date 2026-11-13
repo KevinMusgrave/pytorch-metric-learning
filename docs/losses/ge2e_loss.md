@@ -49,6 +49,9 @@ $\partial L / \partial w$ by a factor of 0.99995. Read the current scale from
 `loss_func.w`.
 $b$ cancels in the softmax variant, so it receives a zero gradient there. float16 and
 bfloat16 sums accumulate in float32.
+The softmax variant omits the shared bias from its logits and uses stable cross
+entropy, preserving the loss and gradients even when the bias or common score is
+large. The contrast variant retains its dependence on the bias.
 
 The loss takes `labels` only. `indices_tuple` and `ref_emb` raise `ValueError`.
 

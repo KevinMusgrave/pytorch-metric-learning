@@ -1,14 +1,5 @@
 # Release notes
 
-## Unreleased
-
-- `GE2ELoss` uses stable cross entropy for the softmax variant and cancels its
-  shared bias before computing logits. Large biases and common scores no longer
-  erase the loss or corrupt embedding, scale, and bias gradients. The contrast
-  variant retains its bias dependence.
-
-## Published versions
-
 - [3.0.2](3.0.2.md)
 - [3.0.1](3.0.1.md)
 - [3.0.0](3.0.0.md)

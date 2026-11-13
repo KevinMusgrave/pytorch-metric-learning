@@ -320,6 +320,7 @@
           "tests/miners/test_triplet_margin_miner.py",
           "tests/miners/test_tuples_per_anchor.py",
           "tests/miners/test_uniform_histogram_miner.py",
+          "tests/miners/test_uniform_histogram_precision.py",
           "tests/reducers/__init__.py",
           "tests/reducers/test_avg_non_zero_reducer.py",
           "tests/reducers/test_class_weighted_reducer.py",

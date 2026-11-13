@@ -1,15 +1,5 @@
 # Release notes
 
-## Unreleased
-
-- `PerAnchorReducer` keeps float16 and bfloat16 aggregates in float32 through
-  its inner reducer, preventing overflow, lost positive gradients, and rounded
-  threshold decisions. For nonempty terms, the default result for these
-  low-precision inputs is now float32; float32 and float64 inputs retain their
-  precision. Empty terms keep their existing dtype.
-
-## Published versions
-
 - [3.0.2](3.0.2.md)
 - [3.0.1](3.0.1.md)
 - [3.0.0](3.0.0.md)

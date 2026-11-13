@@ -323,6 +323,7 @@
           "tests/reducers/test_divisor_reducer.py",
           "tests/reducers/test_multiple_reducers.py",
           "tests/reducers/test_per_anchor_reducer.py",
+          "tests/reducers/test_per_anchor_precision.py",
           "tests/reducers/test_setting_reducers.py",
           "tests/reducers/test_threshold_reducer.py",
           "tests/regularizers/__init__.py",

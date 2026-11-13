@@ -58,13 +58,20 @@ class GE2ELoss(BaseMetricLossFunction):
         queries = vectors[rows]
         own_class = centroids.class_index[rows].unsqueeze(1)
         own = self.distance.pairwise(queries, centroids.leave_one_out[rows])
-        own_scores = w * own.to(dtype) + b
+        own_scores = w * own.to(dtype)
         mat = self.distance(queries, centroids.means)
-        scores = w * mat.to(dtype) + b
+        scores = w * mat.to(dtype)
         if self.variant == "softmax":
             scores = scores.scatter(1, own_class, own_scores.unsqueeze(1))
-            loss = torch.logsumexp(scores, dim=1) - own_scores
+            loss = (
+                torch.nn.functional.cross_entropy(
+                    scores, own_class.squeeze(1), reduction="none"
+                )
+                + b * 0
+            )
         else:
+            own_scores = own_scores + b
+            scores = scores + b
             others = scores.scatter(1, own_class, -torch.inf)
             hardest = others.amax(dim=1)
             loss = 1 - torch.sigmoid(own_scores) + torch.sigmoid(hardest)

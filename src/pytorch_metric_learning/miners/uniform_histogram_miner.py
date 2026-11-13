@@ -49,8 +49,10 @@ class UniformHistogramMiner(BaseMiner):
     def uniformly_distributed_pairs(
         self, distances: Tensor, anchors: Tensor, others: Tensor, num_pairs: int
     ) -> tuple[Tensor, Tensor]:
+        distances = distances.to(_common.accumulation_dtype(distances.dtype))
         low, high = distances.min(), distances.max()
-        width = (high - low).clamp_min(_common.small_val(distances.dtype))
+        width = high - low
+        width = torch.where(width == 0, torch.ones_like(width), width)
         bins = ((distances - low) / width * self.num_bins).long()
         bins = bins.clamp_(max=self.num_bins - 1)
         occupied = torch.unique(bins)

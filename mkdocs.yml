@@ -89,6 +89,7 @@ nav:
       - 3.0.0 large-triplet timings: benchmarks/gpu-3.0.0/large-triplet/README.md
     - Release notes:
       - All releases: release-notes/index.md
+      - 3.0.3: release-notes/3.0.3.md
       - 3.0.2: release-notes/3.0.2.md
       - 3.0.1: release-notes/3.0.1.md
       - 3.0.0: release-notes/3.0.0.md

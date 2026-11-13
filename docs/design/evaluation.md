@@ -92,6 +92,12 @@ an `IndexError` from label lookup.
 With `k=None`, those outputs are quadratic in the reference count, so retaining
 them between evaluation and training would consume substantial GPU memory.
 
+Empty query batches follow the same search contract as nonempty ones. Removing
+self-matches uses the known output width instead of inferring it from zero
+elements. When a batched search yields no blocks, the backend evaluates the
+empty distance matrix and applies `topk`, preserving the distance's dtype and
+neighbor-count validation without allocating a nonempty pairwise matrix.
+
 Threshold matching applies the same distance normalization and power for
 matrix comparisons and corresponding-row comparisons through
 `BaseDistance.pairwise`, so it needs no quadratic intermediate. Evaluation diagnostics use standard module loggers;
@@ -150,6 +156,10 @@ on another GPU receive CPU copies. It binds the stream of
 and their input conversion run inside `torch.cuda.device` of that tensor;
 otherwise Faiss work on one GPU is not ordered against the PyTorch stream
 producing its input.
+Persistent `FaissKNN.train` and `add` also make their float32 CPU input
+contiguous. Dtype conversion may preserve a transposed layout, and an input
+already in float32 needs no conversion at all, so conversion alone does not
+meet `faiss.contrib.torch_utils`'s contiguous-pointer requirement.
 The Faiss GPU path is limited to `k <= 2048`, the maximum
 in Faiss's [`DeviceDefs.cuh`](https://github.com/facebookresearch/faiss/blob/main/faiss/gpu/utils/DeviceDefs.cuh).
 

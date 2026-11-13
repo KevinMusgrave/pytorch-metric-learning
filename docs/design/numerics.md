@@ -92,6 +92,12 @@ different objective. `MultipleReducers` routes individual terms.
 and `bincount`, then passes one value per anchor that has losses to its inner
 reducer. A dense `(batch, batch)` matrix with a sentinel failed when references
 outnumbered queries and let duplicate tuples overwrite each other.
+Low-precision losses retain float32 per-anchor values through the inner reducer.
+Casting those values back before reduction could overflow a sum whose final
+mean fits float16, or round a positive mean to zero and remove its gradient in
+`AvgNonZeroReducer`. It could also change which side of a threshold a mean lies
+on. The inner reducer determines the final result; the outer reducer does not
+narrow it again.
 
 Regularization penalties are reduced by their regularizer and added after the
 objective's reduction; `loss_terms()` returns objective and penalty terms
@@ -165,6 +171,10 @@ values, at roughly 2 ms against 450 ms for 512 queries, 4096 references, and
 to avoid an 8 GiB intermediate, with no demonstrated need. Two empty sets have
 similarity 1, so a row's self-comparison is always positive and the existing
 self-comparison removal applies, and `threshold=1` recovers SupCon.
+The label matrix product disables autocast: converting labels to float32 alone
+does not prevent autocast from rounding an intersection of 257 in bfloat16 or
+2049 in float16. Those rounded counts change Jaccard weights and can remove all
+positives at `threshold=1`. Embedding computations retain their autocast scope.
 `CrossBatchMemory` stores label sets through `label_shape` and takes candidate
 pairs from an explicit `pair_function`, instead of inspecting the wrapped loss
 or duplicating the queue.
@@ -265,16 +275,33 @@ dtype; converting through the default dtype first turned a float64 divisor of
 
 `ManifoldLoss` normalizes its graph in log space, because $e^{2s}$ overflows float32 at
 $s \approx 44$, a dot product of embeddings with norm around 7, while $\bar{S}$ only needs
-the ratio $S_{ij} / \sqrt{D_i D_j}$. It then inverts its random-walk matrix in float32
-and masks excluded terms with $-\infty$ before log-sum-exp. `DistanceWeightedMiner` clamps
+the ratio $S_{ij} / \sqrt{D_i D_j}$. It then inverts its random-walk matrix in the
+accumulation dtype: float64 inputs retain their precision, while float16 and
+bfloat16 inputs use the supported float32 inverse. Narrowing float64 to float32
+changed gradients and could round a valid random-walk system to a singular matrix
+when $\alpha$ was close to 1. It masks excluded terms with $-\infty$ before
+log-sum-exp. `DistanceWeightedMiner` clamps
 distances at `cutoff` and works in log space following Section 4 of Wu et al.,
 masking ineligible pairs before subtracting each anchor's maximum log weight.
+`UniformHistogramMiner` computes low-precision bin positions in float32 and
+substitutes a unit range only when all candidate distances are equal. Clamping
+every range to the smallest normal value collapsed distinct subnormal values
+into one bin, while low-precision multiplication rounded values across bin
+boundaries before integer conversion. Sampling still uses the original pair
+indices and the existing occupied-bin multinomial draw.
 `RankedListLoss` computes its weighted means as softmax-weighted averages over
 each anchor's violating set, which cannot overflow. ProxyAnchor applies miner
 weights by adding their logarithm inside the log-sum-exp, so a weight
 multiplies its exponential term and a zero weight excludes the sample; the
 paper defines no miner weighting, and version 2's `w - 1` offset scaled terms
 by $e^{w-1}$.
+
+`VICRegLoss` computes its statistics in the promoted input dtype, widened to
+float32 for float16 or bfloat16. Squared covariances can exceed the half-precision
+range even for inputs around 20, so the result retains the working dtype rather
+than casting back. Autocast is disabled over the statistics: widening the inputs
+alone still allows the covariance matrix product to narrow again. Mixed-dtype
+views retain the wider precision, and the casts preserve gradients to each view.
 
 ## Stateful modules
 
@@ -543,6 +570,12 @@ embeddings with almost none, and training stopped. Softplus cannot cross zero an
 has a gradient. It suits this loss better than `exp`, because its chain-rule factor is
 nearly 1 at the paper's scale, so updates there match training `w` directly, while `exp`
 rescales every update by `w`.
+The softmax variant cancels the common bias before forming logits, since adding
+it can round away class differences before log-sum-exp sees them. Cross entropy
+subtracts the row maximum before evaluating log probabilities, retaining the
+loss even when a large scale gives every class the same large score. A zero
+multiple of `b` retains its documented zero gradient and optimizer connection.
+The contrast variant keeps the bias because it changes both sigmoid terms.
 
 ## Center loss
 

@@ -35,7 +35,7 @@ class PerAnchorReducer(BaseReducer):
         if self.aggregation == "mean":
             totals = totals / counts.clamp_min(1)
         present = torch.where(counts > 0)[0]
-        per_anchor = totals[present].to(losses.dtype)
+        per_anchor = totals[present]
         return self.reducer.reduce(
             {"losses": per_anchor, "indices": present}, embeddings, labels
         )

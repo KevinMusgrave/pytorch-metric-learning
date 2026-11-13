@@ -61,7 +61,9 @@ class TestVICRegLoss(unittest.TestCase):
 
                     rtol = helpers.rtol(dtype)
 
-                    self.assertTrue(torch.isclose(loss, correct_loss, rtol=rtol))
+                    self.assertTrue(
+                        torch.isclose(loss.double(), correct_loss.double(), rtol=rtol)
+                    )
 
     def test_batches_smaller_than_two_rows_are_rejected(self):
         for rows in (0, 1):

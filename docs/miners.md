@@ -406,7 +406,11 @@ miners.UniformHistogramMiner(
 - **pos_per_bin**: The number of positive pairs drawn from each occupied bin.
 - **neg_per_bin**: The number of negative pairs drawn from each occupied bin.
 
-Positive and negative candidates are binned separately. Draws within a bin are
+Positive and negative candidates are binned separately. Bin positions use the
+observed range without a minimum positive range width;
+constant candidates occupy one bin. Float16 and bfloat16 bin calculations use
+float32 so rounding at a bin boundary does not merge adjacent occupied bins.
+Draws within each occupied bin are
 uniform with replacement, so a bin with fewer pairs than requested contributes
 duplicates, and empty bins contribute nothing.
 

@@ -42,6 +42,11 @@ Every index must address a row of the `reference` passed to that call.
 outside the reference set. It calls `knn_func` under `torch.no_grad()` with the
 [number of neighbors its selected metrics need](accuracy_calculation.md#neighbors-retrieved).
 
+An empty query batch returns tensors shaped `(0, k)`, including when self-matches
+are excluded. The normal backend requirements on `k` and the reference set still
+apply. `CustomKNN` uses the distance's result dtype even when batching produces
+no query blocks.
+
 ## CustomKNN
 
 ```python {.signature}
@@ -311,6 +316,10 @@ reference set, so give it a `FaissKNN` with `reset_before=True`, the default;
 indices past its reference set raise `ValueError`.
 
 To keep a persistent index, disable both resets:
+
+`train` and `add` accept non-contiguous tensor views, including transposed and
+strided rows. They pass a contiguous float32 CPU representation to the index
+without changing the caller's tensor.
 
 ```python
 import os

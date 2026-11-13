@@ -87,7 +87,7 @@ than another rented system.
 
 ## Development measurements
 
-### Unreleased fixed-sampler construction
+### Version 3.0.3 fixed-sampler construction
 
 Fixed pair and triplet construction now draws distinct class pairs in bounded
 blocks instead of generating a full class permutation for every tuple. On a
@@ -104,7 +104,7 @@ The measurement includes label grouping and tuple construction, with three
 alternating runs of each implementation in the same process and fresh generators
 seeded with 100, 101 and 102. The baseline source is exactly
 `94c440d4a8b627281b7bad297325ffa5316cdb63`.
-[Raw timings and parameters](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/master/docs/benchmarks/fixed-sampler-class-draws-cpu.json)
+[Raw timings and parameters](https://github.com/KevinMusgrave/pytorch-metric-learning/blob/v3.0.3/docs/benchmarks/fixed-sampler-class-draws-cpu.json)
 retain every run. These are construction timings on one host; they do not
 measure DataLoader iteration, peak memory or model-training throughput.
 

@@ -37,6 +37,15 @@ itself has zero distance and teaches nothing. The caller derives positive and
 negative rows from batch labels, so no pair-specific miner or label-free dataset
 format is added.
 
+Fixed tuples draw ordered distinct class pairs with two bounded integer draws:
+the first is uniform over all C classes, and the second is uniform over C - 1
+positions with the first position skipped. Every ordered distinct pair has
+probability 1 / (C * (C - 1)), independent of class size. Drawing in blocks of
+at most 1024 avoids a full C-element permutation for each tuple without
+materializing all class-pair choices at once. Member selection and tuple
+ordering keep their existing rules; the random stream is reproducible with the
+new algorithm but is not the same stream as the prior implementation.
+
 Mining-weighted sampling belongs to the executable recipe in
 `docs/recipes/mining_weights.py`: callers compute embeddings, the numerical
 tuple utility derives weights, and PyTorch's WeightedRandomSampler draws

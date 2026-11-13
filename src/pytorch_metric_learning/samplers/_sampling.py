@@ -1,5 +1,5 @@
 from collections import defaultdict
-from collections.abc import Hashable, Sequence
+from collections.abc import Hashable, Iterator, Sequence
 
 import numpy as np
 import torch
@@ -53,3 +53,14 @@ def choose(indices: Tensor, size: int, generator: torch.Generator | None) -> Ten
     if len(indices) >= size:
         return indices[torch.randperm(len(indices), generator=generator)[:size]]
     return indices[torch.randint(len(indices), (size,), generator=generator)]
+
+
+def _distinct_class_pairs(
+    classes: int, size: int, generator: torch.Generator | None
+) -> Iterator[tuple[int, int]]:
+    for start in range(0, size, 1024):
+        count = min(1024, size - start)
+        first = torch.randint(classes, (count,), generator=generator)
+        second = torch.randint(classes - 1, (count,), generator=generator)
+        second = second + (second >= first)
+        yield from zip(first.tolist(), second.tolist(), strict=True)

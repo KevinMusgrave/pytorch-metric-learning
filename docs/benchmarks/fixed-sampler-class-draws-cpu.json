@@ -1,0 +1,64 @@
+{
+  "base_commit": "94c440d4a8b627281b7bad297325ffa5316cdb63",
+  "python": "3.12.14",
+  "torch": "2.14.0+cpu",
+  "platform": "Linux x86_64",
+  "threads": 1,
+  "classes": 20000,
+  "examples": 40000,
+  "seeds": [
+    100,
+    101,
+    102
+  ],
+  "measurement": "Full sampler construction including label grouping; three alternating runs in one process; no DataLoader or model training.",
+  "results": [
+    {
+      "sampler": "FixedSetOfTriplets",
+      "parameters": {
+        "num_triplets": 10000
+      },
+      "seconds": {
+        "baseline": [
+          0.7314412020004966,
+          0.7436990740006877,
+          0.7280454640003882
+        ],
+        "patched": [
+          0.13910595800007286,
+          0.13690334600141796,
+          0.14177456600009464
+        ]
+      },
+      "median_seconds": {
+        "baseline": 0.7314412020004966,
+        "patched": 0.13910595800007286
+      },
+      "speedup": 5.258158690802542
+    },
+    {
+      "sampler": "FixedSetOfPairs",
+      "parameters": {
+        "num_pairs": 10000,
+        "batch_size": 64
+      },
+      "seconds": {
+        "baseline": [
+          0.4303043459985929,
+          0.419956177000131,
+          0.407217487001617
+        ],
+        "patched": [
+          0.1159258139996382,
+          0.11343474599925685,
+          0.11888668000028701
+        ]
+      },
+      "median_seconds": {
+        "baseline": 0.419956177000131,
+        "patched": 0.1159258139996382
+      },
+      "speedup": 3.6226286666526377
+    }
+  ]
+}

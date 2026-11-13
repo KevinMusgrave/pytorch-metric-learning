@@ -5,9 +5,8 @@ import torch
 
 from pytorch_metric_learning.losses import GE2ELoss
 
-from .test_ge2e_loss import equations_6_to_9
-
 from .. import TEST_DEVICE
+from .test_ge2e_loss import equations_6_to_9
 
 
 @pytest.mark.parametrize(

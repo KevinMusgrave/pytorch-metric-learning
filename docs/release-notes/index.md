@@ -1,14 +1,5 @@
 # Release notes
 
-## Unreleased
-
-- `UniformHistogramMiner` keeps distinct occupied bins for tiny distance
-  ranges and uses float32 bin calculations for float16 and bfloat16 inputs.
-  Positive and negative sampling now follows the actual observed range instead
-  of merging bins through range clamping or low-precision rounding.
-
-## Published versions
-
 - [3.0.2](3.0.2.md)
 - [3.0.1](3.0.1.md)
 - [3.0.0](3.0.0.md)

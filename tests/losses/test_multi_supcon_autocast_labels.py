@@ -3,11 +3,12 @@ import torch
 
 from pytorch_metric_learning.losses import CrossBatchMemory, MultiSupConLoss
 
+from .. import TEST_DEVICE
 from .test_multi_supcon_loss import reference_loss
 
 
 def label_sets(cardinality):
-    labels = torch.zeros(4, 2 * cardinality, dtype=torch.bool)
+    labels = torch.zeros(4, 2 * cardinality, dtype=torch.bool, device=TEST_DEVICE)
     labels[:2, :cardinality] = True
     labels[2:, cardinality:] = True
     return labels
@@ -31,7 +32,7 @@ def test_autocast_preserves_label_set_pairs(dtype, cardinality, separate):
             second_set = {k for k, present in enumerate(second) if present}
             target = expected_positive if first_set == second_set else expected_negative
             target.append((i, j))
-    with torch.autocast("cpu", dtype=dtype):
+    with torch.autocast(TEST_DEVICE.type, dtype=dtype):
         a, p, b, n = MultiSupConLoss(threshold=1).pair_indices(query, reference)
     assert list(zip(a.tolist(), p.tolist(), strict=True)) == expected_positive
     assert list(zip(b.tolist(), n.tolist(), strict=True)) == expected_negative
@@ -46,7 +47,9 @@ def test_autocast_label_weights_preserve_loss_and_gradients(
 ):
     labels = label_sets(cardinality)
     embeddings = torch.tensor(
-        [[1.0, 0.0], [0.8, 0.6], [0.0, 1.0], [-0.6, 0.8]], requires_grad=True
+        [[1.0, 0.0], [0.8, 0.6], [0.0, 1.0], [-0.6, 0.8]],
+        device=TEST_DEVICE,
+        requires_grad=True,
     )
     loss = MultiSupConLoss(threshold=1)
     pairs = loss.pair_indices(labels) if supplied_pairs else None
@@ -54,7 +57,7 @@ def test_autocast_label_weights_preserve_loss_and_gradients(
     reference = embeddings.detach().double().requires_grad_()
     expected = reference_loss(reference, labels.tolist(), threshold=1)
     expected_gradient = torch.autograd.grad(expected, reference)[0]
-    with torch.autocast("cpu", dtype=dtype):
+    with torch.autocast(TEST_DEVICE.type, dtype=dtype):
         actual = loss(embeddings, labels, pairs, mat=matrix)
     gradient = torch.autograd.grad(actual, embeddings)[0]
     torch.testing.assert_close(actual.double(), expected, rtol=2e-5, atol=1e-7)
@@ -66,7 +69,9 @@ def test_autocast_label_weights_preserve_loss_and_gradients(
 def test_autocast_label_sets_keep_memory_training_active():
     labels = label_sets(257)
     embeddings = torch.tensor(
-        [[1.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.0, 1.0]], requires_grad=True
+        [[1.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.0, 1.0]],
+        device=TEST_DEVICE,
+        requires_grad=True,
     )
     loss = MultiSupConLoss(temperature=0.5, threshold=1)
     memory = CrossBatchMemory(
@@ -76,9 +81,9 @@ def test_autocast_label_sets_keep_memory_training_active():
         label_dtype=torch.bool,
         label_shape=(514,),
         pair_function=loss.pair_indices,
-    )
+    ).to(TEST_DEVICE)
     expected = loss(embeddings, labels)
-    with torch.autocast("cpu", dtype=torch.bfloat16):
+    with torch.autocast(TEST_DEVICE.type, dtype=torch.bfloat16):
         actual = memory(embeddings, labels)
     torch.testing.assert_close(actual.float(), expected, rtol=0.01, atol=1e-5)
     actual.backward()
@@ -91,9 +96,10 @@ def test_autocast_label_sets_keep_memory_training_active():
 @pytest.mark.parametrize("dtype", [torch.bfloat16, torch.float16])
 def test_autocast_keeps_empty_and_disjoint_label_set_contract(dtype):
     labels = torch.tensor(
-        [[False, False], [False, False], [True, False], [False, True]]
+        [[False, False], [False, False], [True, False], [False, True]],
+        device=TEST_DEVICE,
     )
-    with torch.autocast("cpu", dtype=dtype):
+    with torch.autocast(TEST_DEVICE.type, dtype=dtype):
         a, p, _, _ = MultiSupConLoss(threshold=1).pair_indices(labels)
         empty = MultiSupConLoss().pair_indices(labels[:0])
     assert list(zip(a.tolist(), p.tolist(), strict=True)) == [(0, 1), (1, 0)]
@@ -101,7 +107,9 @@ def test_autocast_keeps_empty_and_disjoint_label_set_contract(dtype):
 
 
 def test_label_counting_restores_the_callers_autocast_scope():
-    with torch.autocast("cpu", dtype=torch.bfloat16):
+    with torch.autocast(TEST_DEVICE.type, dtype=torch.bfloat16):
         MultiSupConLoss().pair_indices(label_sets(257))
-        assert torch.is_autocast_enabled("cpu")
-        assert (torch.ones(2, 2) @ torch.ones(2, 2)).dtype == torch.bfloat16
+        assert torch.is_autocast_enabled(TEST_DEVICE.type)
+        assert (
+            torch.ones(2, 2, device=TEST_DEVICE) @ torch.ones(2, 2, device=TEST_DEVICE)
+        ).dtype == torch.bfloat16

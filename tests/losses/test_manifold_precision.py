@@ -6,21 +6,27 @@ import torch.nn.functional as F
 
 from pytorch_metric_learning.losses import ManifoldLoss
 
+from .. import TEST_DEVICE
+
 
 def inputs(dtype=torch.float64):
-    generator = torch.Generator().manual_seed(4)
-    embeddings = torch.randn(4, 3, generator=generator, dtype=torch.float64).to(dtype)
-    proxies = torch.tensor([[1.0, 1.0, 0.0], [0.0, 1.0, 1.0]], dtype=dtype)
+    generator = torch.Generator(device=TEST_DEVICE).manual_seed(4)
+    embeddings = torch.randn(
+        4, 3, generator=generator, dtype=torch.float64, device=TEST_DEVICE
+    ).to(dtype)
+    proxies = torch.tensor(
+        [[1.0, 1.0, 0.0], [0.0, 1.0, 1.0]], dtype=dtype, device=TEST_DEVICE
+    )
     return (
         embeddings.requires_grad_(),
         proxies.requires_grad_(),
-        torch.tensor([0, 1, 0, 1]),
+        torch.tensor([0, 1, 0, 1], device=TEST_DEVICE),
     )
 
 
 def reference_loss(embeddings, proxies, labels, alpha, lambda_c, margin=5e-4):
     nodes = F.normalize(torch.cat((embeddings, proxies)), dim=1)
-    identity = torch.eye(len(nodes), dtype=nodes.dtype)
+    identity = torch.eye(len(nodes), dtype=nodes.dtype, device=TEST_DEVICE)
     graph = (nodes @ nodes.T).clamp_min(0).div(0.5).exp() * (1 - identity)
     inverse_degree = graph.sum(dim=1).rsqrt()
     normalized = inverse_degree[:, None] * graph * inverse_degree[None, :]
@@ -57,7 +63,7 @@ def evaluate(loss, embeddings, proxies, labels):
 @pytest.mark.parametrize("lambda_c", [0.0, 1.0, math.inf])
 def test_float64_manifold_values_and_gradients(alpha, lambda_c):
     embeddings, proxies, labels = inputs()
-    loss = ManifoldLoss(3, 2, alpha=alpha, lambda_c=lambda_c).double()
+    loss = ManifoldLoss(3, 2, alpha=alpha, lambda_c=lambda_c).to(TEST_DEVICE).double()
     actual = evaluate(loss, embeddings, proxies, labels)
     expected = reference_loss(embeddings, proxies, labels, alpha, lambda_c)
     actual_gradients = torch.autograd.grad(actual, (embeddings, proxies))
@@ -74,7 +80,7 @@ def test_float64_manifold_values_and_gradients(alpha, lambda_c):
 @pytest.mark.parametrize("alpha", [0.8, 0.99])
 def test_float64_manifold_passes_numerical_gradient_check(alpha):
     embeddings, proxies, labels = inputs()
-    loss = ManifoldLoss(3, 2, alpha=alpha).double()
+    loss = ManifoldLoss(3, 2, alpha=alpha).to(TEST_DEVICE).double()
     assert torch.autograd.gradcheck(
         lambda x, p: evaluate(loss, x, p, labels), (embeddings, proxies)
     )
@@ -84,7 +90,7 @@ def test_float64_manifold_passes_numerical_gradient_check(alpha):
 def test_valid_alpha_near_one_keeps_a_nonsingular_double_system(lambda_c):
     embeddings, proxies, labels = inputs()
     alpha = 0.99999999
-    loss = ManifoldLoss(3, 2, alpha=alpha, lambda_c=lambda_c).double()
+    loss = ManifoldLoss(3, 2, alpha=alpha, lambda_c=lambda_c).to(TEST_DEVICE).double()
     actual = evaluate(loss, embeddings, proxies, labels)
     expected = reference_loss(embeddings, proxies, labels, alpha, lambda_c)
     torch.testing.assert_close(actual, expected, rtol=1e-7, atol=1e-9)
@@ -95,7 +101,7 @@ def test_valid_alpha_near_one_keeps_a_nonsingular_double_system(lambda_c):
 @pytest.mark.parametrize("dtype", [torch.float16, torch.bfloat16, torch.float32])
 def test_lower_precision_manifold_still_supports_inverse_and_backward(dtype):
     embeddings, proxies, labels = inputs(dtype)
-    loss = ManifoldLoss(3, 2).to(dtype)
+    loss = ManifoldLoss(3, 2).to(TEST_DEVICE).to(dtype)
     actual = evaluate(loss, embeddings, proxies, labels)
     expected = reference_loss(embeddings.double(), proxies.double(), labels, 0.8, 1.0)
     torch.testing.assert_close(actual.double(), expected, rtol=0.03, atol=0.005)

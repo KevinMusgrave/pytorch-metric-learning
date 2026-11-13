@@ -281,6 +281,7 @@
           "tests/losses/test_lifted_structure_loss.py",
           "tests/losses/test_losses_without_labels.py",
           "tests/losses/test_manifold_loss.py",
+          "tests/losses/test_manifold_precision.py",
           "tests/losses/test_margin_loss.py",
           "tests/losses/test_multi_similarity_loss.py",
           "tests/losses/test_multiple_losses.py",

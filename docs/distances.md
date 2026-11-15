@@ -293,3 +293,10 @@ i, j = 1, 4
 expected = torch.var(query_emb[i] - ref_emb[j]) / torch.var(query_emb[i])
 assert torch.allclose(mat[i, j], expected)
 ```
+
+For float16 and bfloat16 inputs, differences, variances, and their ratio are
+computed in float32. This prevents small nonzero variances from underflowing
+before division, even when the ratio itself fits the input dtype. Normalized
+results retain the input dtype; unnormalized results remain float32. Float32
+and float64 inputs retain their precision. A truly zero query variance is
+still undefined, and a ratio outside the result dtype's range can still overflow.

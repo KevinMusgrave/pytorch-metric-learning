@@ -20,6 +20,11 @@ replaces the Euclidean distance. The paper pairs it with
 [ZeroMeanRegularizer](../regularizers.md#zeromeanregularizer) as the
 `embedding_regularizer`.
 
+For low-precision embeddings, the distance computes its variances and ratio
+in float32 before returning its usual result dtype. Small nonzero variances
+therefore remain usable instead of producing NaN distances that the default
+reducer would discard. Rows with truly zero variance remain undefined.
+
 **Paper settings**: The paper adds the zero-mean regularizer, which is not
 enabled by default. Pass
 `embedding_regularizer=regularizers.ZeroMeanRegularizer()` for the paper's

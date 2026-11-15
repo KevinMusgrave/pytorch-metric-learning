@@ -78,7 +78,8 @@ class TestSNRContrastiveLoss(unittest.TestCase):
             if num_non_zero > 0:
                 correct_neg_loss /= num_non_zero
 
-            reg_loss = torch.mean(torch.abs(torch.sum(embeddings, dim=1)))
+            stats_dtype = torch.float64 if dtype == torch.float64 else torch.float32
+            reg_loss = embeddings.double().sum(dim=1).abs().mean().to(stats_dtype)
 
             correct_total = (
                 correct_pos_loss + correct_neg_loss + embedding_reg_weight * reg_loss
@@ -102,8 +103,9 @@ class TestSNRContrastiveLoss(unittest.TestCase):
                 dtype=dtype,
             ).to(TEST_DEVICE)
             labels = torch.tensor([0], dtype=torch.long).to(TEST_DEVICE)
+            stats_dtype = torch.float64 if dtype == torch.float64 else torch.float32
             reg_loss = (
-                torch.mean(torch.abs(torch.sum(embeddings, dim=1)))
+                embeddings.double().sum(dim=1).abs().mean().to(stats_dtype)
                 * embedding_reg_weight
             )
             loss = loss_func(embeddings, labels)

@@ -1,9 +1,11 @@
 import itertools
+import math
 
 import pytest
 import torch
 
 from pytorch_metric_learning.distances import DotProductSimilarity, LpDistance
+from pytorch_metric_learning.losses import ContrastiveLoss
 from pytorch_metric_learning.reducers import MeanReducer, SumReducer
 from pytorch_metric_learning.regularizers import (
     LpRegularizer,
@@ -12,7 +14,7 @@ from pytorch_metric_learning.regularizers import (
 )
 
 from .. import TEST_DEVICE, TEST_DTYPES
-from ..helpers import assert_matches_float64
+from ..helpers import assert_close, assert_matches_float64
 
 ROWS = torch.tensor(
     [
@@ -106,3 +108,111 @@ def test_distance_free_regularizers_reject_distance(regularizer_class):
     summed = regularizer_class(reducer=SumReducer())(rows)
     averaged = regularizer_class()(rows)
     torch.testing.assert_close(summed, averaged * len(rows))
+
+
+def unbounded_regularizer(kind, reducer=None):
+    if kind == "squared_l2":
+        return LpRegularizer(power=2, reducer=reducer)
+    if kind == "l1":
+        return LpRegularizer(p=1, reducer=reducer)
+    return ZeroMeanRegularizer(reducer=reducer)
+
+
+def unbounded_reference(x, kind, average):
+    rows = x.detach().double().cpu().tolist()
+    values = []
+    gradients = []
+    for row in rows:
+        if kind == "squared_l2":
+            values.append(math.fsum(value * value for value in row))
+            gradients.append([2 * value for value in row])
+        elif kind == "l1":
+            values.append(math.fsum(abs(value) for value in row))
+            gradients.append([(value > 0) - (value < 0) for value in row])
+        else:
+            total = math.fsum(row)
+            values.append(abs(total))
+            gradients.append([(total > 0) - (total < 0)] * len(row))
+    divisor = len(rows) if average else 1
+    gradient = torch.tensor(gradients, dtype=torch.float64, device=x.device)
+    return math.fsum(values) / divisor, gradient / divisor
+
+
+@pytest.mark.parametrize("kind", ["squared_l2", "l1", "zero_mean"])
+@pytest.mark.parametrize(
+    "dtype", [torch.float16, torch.bfloat16, torch.float32, torch.float64]
+)
+@pytest.mark.parametrize("average", [False, True])
+def test_unbounded_regularizers_keep_large_terms_until_reduction(kind, dtype, average):
+    first = [300.0, 0.0] if kind == "squared_l2" else [40000.0, 40000.0]
+    x = torch.tensor(
+        [first, [3.0, -1.0], [0.0, 0.0]],
+        dtype=dtype,
+        device=TEST_DEVICE,
+        requires_grad=True,
+    )
+    reducer = MeanReducer() if average else SumReducer()
+    actual = unbounded_regularizer(kind, reducer)(x)
+    value, gradient = unbounded_reference(x, kind, average)
+    expected_dtype = torch.float64 if dtype == torch.float64 else torch.float32
+    assert actual.isfinite()
+    assert_close(actual, value, expected_dtype)
+    assert actual.dtype == expected_dtype
+    actual.backward()
+    assert x.grad is not None and x.grad.isfinite().all()
+    assert_close(x.grad, gradient, dtype)
+
+
+@pytest.mark.parametrize("kind", ["squared_l2", "l1", "zero_mean"])
+@pytest.mark.parametrize(
+    "dtype", [torch.float16, torch.bfloat16, torch.float32, torch.float64]
+)
+def test_regularizer_weight_keeps_representable_loss_and_gradient(kind, dtype):
+    x = torch.tensor(
+        [[40000.0, 40000.0]], dtype=dtype, device=TEST_DEVICE, requires_grad=True
+    )
+    weight = 1e-5 if kind == "squared_l2" else 0.25
+    loss = ContrastiveLoss(
+        embedding_regularizer=unbounded_regularizer(kind), embedding_reg_weight=weight
+    )
+    actual = loss(x, torch.tensor([0], device=TEST_DEVICE))
+    value, gradient = unbounded_reference(x, kind, True)
+    expected_dtype = torch.float64 if dtype == torch.float64 else torch.float32
+    assert actual.isfinite()
+    assert_close(actual, value * weight, expected_dtype)
+    actual.backward()
+    assert x.grad is not None and x.grad.isfinite().all()
+    assert_close(x.grad, gradient * weight, dtype)
+
+
+@pytest.mark.parametrize("kind", ["squared_l2", "l1", "zero_mean"])
+@pytest.mark.parametrize("dtype", [torch.float16, torch.bfloat16])
+@pytest.mark.parametrize("size", [0, 2])
+def test_unbounded_regularizers_keep_empty_and_zero_gradients(kind, dtype, size):
+    x = torch.zeros(size, 3, dtype=dtype, device=TEST_DEVICE, requires_grad=True)
+    actual = unbounded_regularizer(kind)(x)
+    assert actual.item() == 0
+    if size == 0:
+        assert actual.dtype == dtype
+    actual.backward()
+    assert x.grad is not None
+    assert torch.count_nonzero(x.grad) == 0
+
+
+@pytest.mark.parametrize("kind", ["squared_l2", "l1", "zero_mean"])
+@pytest.mark.parametrize("dtype", [torch.float16, torch.bfloat16])
+def test_regularizer_statistics_stay_float32_under_autocast(kind, dtype):
+    x = torch.tensor(
+        [[300.0, -300.0], [3.0, -1.0]],
+        dtype=torch.float32,
+        device=TEST_DEVICE,
+        requires_grad=True,
+    )
+    value, gradient = unbounded_reference(x, kind, True)
+    with torch.autocast(TEST_DEVICE.type, dtype=dtype):
+        actual = unbounded_regularizer(kind)(x)
+    assert actual.dtype == torch.float32
+    assert_close(actual, value, torch.float32)
+    actual.backward()
+    assert x.grad is not None and x.grad.isfinite().all()
+    assert_close(x.grad, gradient, torch.float32)

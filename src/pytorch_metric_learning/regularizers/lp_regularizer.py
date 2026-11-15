@@ -3,7 +3,7 @@ from torch import Tensor
 
 from ..reducers import BaseReducer
 from ..types import LossDict
-from ..utils._common import arange_like
+from ..utils._common import accumulation_dtype, arange_like
 from .base_regularizer import BaseRegularizer
 
 
@@ -16,6 +16,7 @@ class LpRegularizer(BaseRegularizer):
         self.power = power
 
     def compute_loss(self, x: Tensor) -> LossDict:
+        x = x.to(accumulation_dtype(x.dtype))
         reg = torch.norm(x, p=self.p, dim=1)
         if self.power != 1:
             reg = reg**self.power

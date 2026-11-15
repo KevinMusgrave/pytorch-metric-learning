@@ -117,7 +117,10 @@ class LargeMarginSoftmaxLoss(_CosineMarginSoftmaxLoss):
         return ((-1) ** k) * cos_with_margin - (2 * k)
 
     def scale_logits(self, logits: Tensor, embeddings: Tensor) -> Tensor:
-        embedding_norms = self.distance.get_norm(embeddings)
-        weight_norms = self.distance.get_norm(self.weight)
+        dtype = torch.promote_types(embeddings.dtype, self.weight.dtype)
+        dtype = torch.promote_types(dtype, logits.dtype)
+        work_dtype = _common.accumulation_dtype(dtype)
+        embedding_norms = self.distance.get_norm(embeddings.to(work_dtype))
+        weight_norms = self.distance.get_norm(self.weight.to(work_dtype))
         product_of_magnitudes = weight_norms.unsqueeze(0) * embedding_norms.unsqueeze(1)
-        return logits * product_of_magnitudes * self.scale
+        return (logits.to(work_dtype) * product_of_magnitudes * self.scale).to(dtype)

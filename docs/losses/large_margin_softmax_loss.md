@@ -34,6 +34,14 @@ the logits with $\cos\theta_j$ in place of $\psi$; see
 [classification logits](../losses.md#classification-logits). This loss derives
 from [BaseProxyLoss](base_proxy_loss.md).
 
+For float16 and bfloat16 inputs, embedding and weight norms and magnitude
+scaling use float32, including the final `scale` multiplication. The completed
+logits keep their usual result dtype and autocast promotion. This preserves
+representable scaled logits when an intermediate norm or product would
+overflow or underflow in float16. Float64 inputs retain float64. The final
+logits still follow their result dtype's range, while cosine and angular-margin
+calculations retain their existing precision.
+
 **Example**:
 
 ```python

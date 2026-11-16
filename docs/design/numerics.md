@@ -673,3 +673,14 @@ loss dictionary uses the reducer's differentiable-zero contract, so backward
 still produces an empty or zero input gradient. The distance runs first to
 preserve its input validation. Two or more centers retain the existing
 nearest-neighbor objective, including negative similarities.
+
+## RankedList temperature scaling
+
+Softmax cannot repair logits that already overflowed during temperature
+multiplication. Float16 violations of 0.7 and temperature 100000 produced NaN
+losses and gradients, although the weighted average remains 0.7. Widening the
+matrix before computing violations and centering eligible scores before
+multiplication prevents this intermediate overflow. Negative temperatures use
+the opposite score direction; empty eligible sets keep a finite zero offset and
+retain their zero contribution. Low-precision losses retain float32 through the
+reducer rather than narrowing their weighted averages prematurely.

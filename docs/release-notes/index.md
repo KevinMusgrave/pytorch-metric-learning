@@ -1,5 +1,13 @@
 # Release notes
 
+## Unreleased
+
+- Keep the reduced spherical embedding penalty in float32 for float16 and
+  bfloat16 inputs, so later loss weighting cannot inherit premature overflow
+  or underflow. Float32 and float64 output dtypes remain unchanged.
+
+## Published releases
+
 - [3.0.3](3.0.3.md)
 - [3.0.2](3.0.2.md)
 - [3.0.1](3.0.1.md)

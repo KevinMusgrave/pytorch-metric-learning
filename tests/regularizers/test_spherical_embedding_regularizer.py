@@ -135,7 +135,7 @@ class TestSphericalEmbeddingRegularizer(unittest.TestCase):
             torch.finfo(torch.float16).max,
         )
         loss = SphericalEmbeddingRegularizer()(x)
-        self.assertEqual(loss.dtype, torch.float16)
+        self.assertEqual(loss.dtype, torch.float32)
         self.assertTrue(loss.isfinite())
         torch.testing.assert_close(
             loss.double(), equation_17(x.double()), rtol=2e-3, atol=0

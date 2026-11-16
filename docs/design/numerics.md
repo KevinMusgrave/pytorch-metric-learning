@@ -673,3 +673,15 @@ loss dictionary uses the reducer's differentiable-zero contract, so backward
 still produces an empty or zero input gradient. The distance runs first to
 preserve its input validation. Two or more centers retain the existing
 nearest-neighbor objective, including negative similarities.
+
+## Weighted triplet sampling range
+
+Negative-sampling weights define relative probabilities. Casting finite double
+weights directly to float32 made rows of weights 1e-50 or 1e50 produce no
+triplets: the first underflowed to zero, while the second introduced infinities
+and `0 * inf` in masked positions. Masking first and dividing each row by its
+largest eligible weight preserves the distribution before the sampling cast.
+An all-zero eligible row stays empty, and empty comparison axes avoid a maximum
+over an empty dimension. No additional host synchronization is needed. Exact
+seeded weighted draws can differ from earlier versions because the multinomial
+inputs are now rescaled; the relative sampling probabilities are unchanged.

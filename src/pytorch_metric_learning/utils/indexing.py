@@ -111,8 +111,10 @@ def _sample_triplets(
 ) -> TripletIndices:
     pos_probs = pos_mask.to(torch.float32)
     neg_probs = neg_mask.to(torch.float32)
-    if weights is not None:
-        neg_probs = neg_probs * weights.to(torch.float32)
+    if weights is not None and weights.numel() > 0:
+        weights = weights.masked_fill(~neg_mask, 0)
+        scale = weights.amax(dim=1, keepdim=True)
+        neg_probs = (weights / torch.where(scale > 0, scale, 1)).to(torch.float32)
     pos_count = pos_mask.sum(dim=1)
     valid = (pos_count > 0) & (neg_probs.sum(dim=1) > 0)
     per_anchor = (

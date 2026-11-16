@@ -197,3 +197,26 @@ MathJax runs in readers' browsers over documentation authored in this
 repository; no build or test step executes it. The uv lock and Code Polishy
 supply-chain checks do not cover this browser asset, so update it by repeating
 this verification.
+
+## Certificate trust reassessment (2026-11-16)
+
+Codex re-reviewed the exact locked certifi 2026.7.22 against
+[GHSA-6q48-6c7w-9gw2](https://github.com/advisories/GHSA-6q48-6c7w-9gw2).
+The prerequisite remains an enabled HTTPS verifier using the affected root,
+together with an on-path attacker holding a compromised intermediate key.
+
+The [source-only inspection](https://github.com/Afloat16/geoopt/actions/runs/43827559598)
+downloaded the exact Material 9.7.7 wheel named in `uv.lock`, verified its
+SHA-256, and read its source without installing or executing it. The only
+Requests callers are still `material/plugins/info/plugin.py`,
+`material/plugins/privacy/plugin.py`, and `material/plugins/social/plugin.py`.
+The current `mkdocs.yml` enables none of these plugins and has no inherited
+configuration or custom Python hook. Python imports in `src`, `tests`,
+`scripts`, `benchmarks`, and `docs/recipes` include no Requests, urllib3,
+or certifi client. Package acquisition continues to use patched uv 0.13.4.
+
+Retain the exact `not-affected/unreachable` assessment through November 19.
+The documented 2026.10.19 fix reaches the 30-day admission window then;
+enabling an affected client before that date invalidates this assessment.
+The affected roots remain in the installed development dependency, so this
+finding is not a claim about arbitrary consumer applications.

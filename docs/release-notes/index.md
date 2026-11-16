@@ -1,5 +1,13 @@
 # Release notes
 
+## Unreleased
+
+- Rescale eligible negative weights before weighted triplet sampling so
+  finite double weights cannot erase all triplets when converted to float32.
+  Exact seeded weighted draws may change; relative probabilities are retained.
+
+## Published releases
+
 - [3.0.3](3.0.3.md)
 - [3.0.2](3.0.2.md)
 - [3.0.1](3.0.1.md)

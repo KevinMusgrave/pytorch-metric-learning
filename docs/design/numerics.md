@@ -673,3 +673,13 @@ loss dictionary uses the reducer's differentiable-zero contract, so backward
 still produces an empty or zero input gradient. The distance runs first to
 preserve its input validation. Two or more centers retain the existing
 nearest-neighbor objective, including negative similarities.
+
+## Batch miner boundary masks
+
+BatchEasyHardMiner previously filled excluded entries with the largest or
+smallest finite value of the matrix dtype. A valid candidate at that value tied
+the exclusion sentinel, so argmin or argmax could select a self-comparison,
+wrong-label pair, or pair absent from the supplied candidates. Infinite mask
+sentinels separate excluded entries from every finite candidate. Rows without
+candidates still use the existing eligibility mask, so their sentinel values
+never become returned pairs. BatchHardMiner inherits the same selection fix.

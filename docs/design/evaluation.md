@@ -165,3 +165,13 @@ in Faiss's [`DeviceDefs.cuh`](https://github.com/facebookresearch/faiss/blob/mai
 
 Metric definitions and examples live in `docs/accuracy_calculation.md`;
 backend contracts live in `docs/retrieval.md`.
+
+## NDCG gain range
+
+Finite individual gains do not guarantee a finite raw discounted sum. Scale
+both actual and ideal gains by the largest retained ideal gain before their
+weighted sums; the scale cancels from the NDCG ratio. Select it after removing
+the query's own reference and applying the ranking depth. A zero ideal ranking
+uses scale one and remains undefined. A Decimal logarithmic-discount reference
+checks extreme and subnormal gain values, truncated rankings, self exclusion,
+and calculator pooling without relying on the production scale selection.

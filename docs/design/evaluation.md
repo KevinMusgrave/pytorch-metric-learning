@@ -165,3 +165,14 @@ in Faiss's [`DeviceDefs.cuh`](https://github.com/facebookresearch/faiss/blob/mai
 
 Metric definitions and examples live in `docs/accuracy_calculation.md`;
 backend contracts live in `docs/retrieval.md`.
+
+## Empty retrieval queries
+
+An empty query collection has no label groups or ideal rankings to stack.
+Relevant counts and NDCG return empty vectors, and the normal metric reducers
+produce NaN or empty per-class mappings. An empty self-reference has zero
+available neighbors, not negative one; no self candidate is requested when
+there are no queries. The calculator constructs the correctly shaped empty
+neighbor index matrix without calling a backend. These paths stay after input
+validation and before the existing metric output validation, preserving both
+contracts. Clustering behavior is unchanged.

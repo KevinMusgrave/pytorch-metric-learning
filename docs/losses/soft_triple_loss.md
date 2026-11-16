@@ -87,3 +87,9 @@ optimizer.step()
 **Reducer input**:
 
 - **loss**: One loss per embedding, indexed by embedding position.
+
+Center similarities are widened to float32 for float16/bfloat16 inputs before
+temperature scaling and weighted reduction. The center softmax removes a common
+within-class offset before division, preventing intermediate overflow at small
+positive temperatures. `get_logits` casts only the completed class scores back
+to the similarity dtype, preserving the existing output dtype.

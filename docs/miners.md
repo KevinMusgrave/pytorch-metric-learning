@@ -284,6 +284,11 @@ weighting is most informative for low-dimensional embeddings, such as 64
 dimensions. [UniformHistogramMiner](#uniformhistogramminer) samples across the
 distance range with any dimensionality and any distance.
 
+Float16/bfloat16 distances are widened before evaluating the density logarithm,
+so a finite eligible distance cannot be discarded merely because its
+dimension-scaled log weight overflows in half precision. Cutoffs and candidate
+restrictions are unchanged.
+
 **Default distance**:
 
 - [`LpDistance(normalize_embeddings=True, p=2, power=1)`](distances.md#lpdistance)

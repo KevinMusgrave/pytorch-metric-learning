@@ -74,7 +74,10 @@ class MultiSupConLoss(BaseMetricLossFunction):
         mat: Tensor | None = None,
     ) -> LossDict:
         labels = _common.labels_required(labels)
-        dtype = _common.accumulation_dtype(embeddings.dtype)
+        mat = _common.resolve_matrix(self.distance, embeddings, ref_emb, mat)
+        dtype = _common.accumulation_dtype(
+            torch.promote_types(embeddings.dtype, mat.dtype)
+        )
         similarity = _jaccard(labels, ref_labels, dtype)
         if indices_tuple is None:
             pos_mask, neg_mask = self._threshold_masks(similarity, ref_labels is None)
@@ -84,7 +87,6 @@ class MultiSupConLoss(BaseMetricLossFunction):
                 (similarity.shape[0], similarity.shape[1]),
                 embeddings.device,
             )
-        mat = _common.resolve_matrix(self.distance, embeddings, ref_emb, mat)
         result_dtype = mat.dtype
         mat = mat.to(dtype)
         if not self.distance.is_inverted:

@@ -1,3 +1,4 @@
+import math
 from collections.abc import Sequence
 from typing import Unpack
 
@@ -28,11 +29,18 @@ def _class_margins(
     lower, upper = margin_bounds
     if not 0 <= lower < upper:
         raise ValueError("margin_bounds must satisfy 0 <= lower < upper")
-    if not power > 0:
-        raise ValueError("power must be positive")
-    decay = counts.to(torch.float64) ** -power
-    largest, smallest = decay.max(), decay.min()
-    return lower + (upper - lower) * (decay - smallest) / (largest - smallest)
+    if not math.isfinite(power) or power <= 0:
+        raise ValueError("power must be finite and positive")
+    minimum = counts.min()
+    log_ratio = torch.log1p((counts - minimum).to(torch.float64) / minimum)
+    scaled = power * log_ratio
+    span = scaled.max()
+    if span < 1e-8:
+        fractions = (1 - log_ratio / log_ratio.max()) * (1 - scaled / 2)
+    else:
+        gap = torch.where(torch.isfinite(scaled), scaled - span, -torch.inf)
+        fractions = torch.exp(-scaled) * torch.expm1(gap) / torch.expm1(-span)
+    return lower + (upper - lower) * fractions
 
 
 class DynamicArcFaceLoss(SubCenterArcFaceLoss):

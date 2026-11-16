@@ -673,3 +673,15 @@ loss dictionary uses the reducer's differentiable-zero contract, so backward
 still produces an empty or zero input gradient. The distance runs first to
 preserve its input validation. Two or more centers retain the existing
 nearest-neighbor objective, including negative similarities.
+
+## NCA score offsets
+
+NCA and ProxyNCA share one normalization path. Two independently computed
+log-sum-exp values can round to the same large score even when their difference
+is nonzero. Four equidistant float32 simplex vertices of magnitude 10000 give
+zero loss and incorrect gradients instead of log(3). Removing the eligible-row
+score maximum before scaling preserves that difference and prevents a common
+offset from overflowing the scaling step. Positive-free rows are removed before
+using infinite masks, so no all-masked reduction contributes an undefined
+gradient. The proxy objective uses the same fix and is covered by closed-form
+embedding and center-gradient references.

@@ -77,3 +77,7 @@ optimizer.step()
 **Reducer input**:
 
 - **loss**: One loss per embedding, indexed by embedding position.
+
+Valid rows share one score offset before scaling and both log-sum-exp reductions.
+This keeps the log probability and its gradients invariant to large finite row
+offsets. Rows without positive references remain excluded.

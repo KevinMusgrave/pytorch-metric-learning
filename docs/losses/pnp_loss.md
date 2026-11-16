@@ -80,3 +80,10 @@ loss.backward()
 
 - **loss**: The average of the selected variant over anchors that have another
   positive, with `indices=None`.
+
+Variant transforms use `log1p` and `expm1` to preserve small ranking penalties.
+The Ib transform uses its convergent small-argument series near zero, where
+subtracting two nearly equal values would erase the value and its gradient.
+Low-precision similarities use float32 arithmetic; the returned scalar retains
+the similarity matrix's dtype. The sigmoid temperature and each mathematical
+objective are unchanged.

@@ -71,3 +71,10 @@ optimizer.step()
 **Loss terms**:
 
 - **loss**: The value of $L$, with `indices=None`.
+
+Low-precision embedding normalization, cosine multiplication, and squared
+residuals are evaluated in float32 before returning the original scalar dtype.
+Autocast does not round the cosine matrix back to low precision, and its
+float32 mean-squared-error output is retained. This preserves nonzero learning
+signals near a class center. The original dtype-specific normalization epsilon
+and in-place, no-grad weight normalization remain unchanged.

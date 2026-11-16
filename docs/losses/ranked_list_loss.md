@@ -27,8 +27,11 @@ $$
 Here $d$ is the Euclidean distance between normalized embeddings, $P^*_i$ holds the positives of $\mathbf{x}_i$ with $d_{ij} > \alpha - m$, $N^*_i$ holds the negatives with $d_{ik} < \alpha$, $\lambda$ is `imbalance`, $m$ is `margin`, and $T_p$ and $T_n$ are `pos_temperature` and `neg_temperature`.
 
 **Implementation notes**: $L_P$ and $L_N$ are exact weighted averages,
-computed as softmax-weighted sums over the violating pairs, so large
-temperatures do not overflow. An anchor without violating positives or without
+computed as softmax-weighted sums over the violating pairs. Scores are
+centered before temperature multiplication, with the appropriate direction for
+positive and negative temperatures. Float16 and bfloat16 matrices use float32
+for violations, weights, and the returned loss, preserving finite gradients at
+large temperatures. An anchor without violating positives or without
 violating negatives contributes 0 for that part. Each embedding is an anchor
 against the rest of the batch. Labels are required; `indices_tuple` and
 `ref_emb` raise `ValueError`.

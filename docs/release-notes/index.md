@@ -1,5 +1,13 @@
 # Release notes
 
+## Unreleased
+
+- Preserve higher-precision distance matrices in MultiSupConLoss when
+  embeddings use a lower precision, retaining score differences, loss values,
+  and matrix gradients.
+
+## Published releases
+
 - [3.0.3](3.0.3.md)
 - [3.0.2](3.0.2.md)
 - [3.0.1](3.0.1.md)

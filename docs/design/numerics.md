@@ -673,3 +673,15 @@ loss dictionary uses the reducer's differentiable-zero contract, so backward
 still produces an empty or zero input gradient. The distance runs first to
 preserve its input validation. Two or more centers retain the existing
 nearest-neighbor objective, including negative similarities.
+
+## MultiSupCon matrix precision
+
+The caller-owned distance matrix can have greater precision than the embeddings.
+MultiSupCon must preserve that precision when selecting its working dtype for
+label overlaps and log probabilities. Choosing solely from the embeddings cast
+a double matrix to float32; with scores near 1e8, ordinary subunit differences
+disappeared and a nonzero loss became zero with zero matrix gradients. The working
+dtype now promotes the embeddings and resolved matrix together before widening
+low-precision arithmetic. The output still follows the matrix dtype. Independent
+row-wise log-softmax references cover square and rectangular matrices, distance
+and similarity orientation, restricted pairs, and fractional Jaccard weights.

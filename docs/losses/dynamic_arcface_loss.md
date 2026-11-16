@@ -87,3 +87,9 @@ optimizer.step()
 **Reducer input**:
 
 - **loss**: One loss per embedding, indexed by embedding position.
+
+`power` must be finite and positive. The normalized power-law margins are
+evaluated from relative class counts in the log domain. Integer differences are
+formed before conversion to float64, so distinct large integer counts remain
+distinct. Very small and very large finite powers retain finite margins and
+the configured endpoints instead of a zero normalization denominator.

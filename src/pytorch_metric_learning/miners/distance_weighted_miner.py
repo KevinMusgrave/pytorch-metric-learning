@@ -42,6 +42,7 @@ class DistanceWeightedMiner(BaseMiner):
         )
         if mat.numel() == 0:
             return _common.empty_triplets(mat.device)
+        mat = mat.to(_common.accumulation_dtype(mat.dtype))
         log_weights = (2.0 - d) * torch.log(mat) - ((d - 3) / 2) * torch.log(
             1.0 - 0.25 * (mat**2.0)
         )

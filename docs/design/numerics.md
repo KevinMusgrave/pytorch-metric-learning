@@ -673,3 +673,14 @@ loss dictionary uses the reducer's differentiable-zero contract, so backward
 still produces an empty or zero input gradient. The distance runs first to
 preserve its input validation. Two or more centers retain the existing
 nearest-neighbor objective, including negative similarities.
+
+## Distance-weighted density arithmetic
+
+Per-anchor normalization happens after the inverse-density log weight is
+formed. With float16 distances, dimension factors could overflow that earlier
+calculation; filtering nonfinite log weights then silently discarded eligible
+anchors. Distances at the 0.5 cutoff in 131072 dimensions reproduced four valid
+anchors becoming an empty result. Widening the distance before the density
+formula retains those candidates. This is independent of the existing row
+normalization and strict-cutoff corrections; neither can recover a candidate
+already lost to a nonfinite density value.

@@ -1,5 +1,11 @@
 # Release notes
 
+## Unreleased
+
+Preserve valid high-dimensional mining anchors by widening low-precision distances before the density logarithm is evaluated.
+
+## Published releases
+
 - [3.0.3](3.0.3.md)
 - [3.0.2](3.0.2.md)
 - [3.0.1](3.0.1.md)

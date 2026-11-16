@@ -673,3 +673,14 @@ loss dictionary uses the reducer's differentiable-zero contract, so backward
 still produces an empty or zero input gradient. The distance runs first to
 preserve its input validation. Two or more centers retain the existing
 nearest-neighbor objective, including negative similarities.
+
+## P2SGrad near-center residuals
+
+A low-precision cosine can round to one before its one-hot residual is formed.
+For embedding [1, 0.02] and center [1, 0], both the parameter and embedding
+gradients vanished despite being representable. Widen normalization and matrix
+multiplication, disable autocast for that multiplication, and form the residual
+before returning the original scalar dtype. Keep the original normalization
+epsilon for zero/tiny inputs and retain the weight clone needed by accumulated
+forwards. Independent float64 equations verify values and both gradients;
+a parameter update and CPU autocast cases demonstrate a retained learning signal.

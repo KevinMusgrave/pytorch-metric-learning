@@ -1,5 +1,11 @@
 # Release notes
 
+## Unreleased
+
+Compute NDCG with shared gain scaling so finite large or subnormal relevance gains retain their ranking ratio.
+
+## Published releases
+
 - [3.0.3](3.0.3.md)
 - [3.0.2](3.0.2.md)
 - [3.0.1](3.0.1.md)

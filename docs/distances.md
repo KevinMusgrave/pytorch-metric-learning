@@ -293,3 +293,14 @@ i, j = 1, 4
 expected = torch.var(query_emb[i] - ref_emb[j]) / torch.var(query_emb[i])
 assert torch.allclose(mat[i, j], expected)
 ```
+
+## Large finite vector normalization
+
+Embedding normalization removes a detached row scale before computing the
+vector norm. Finite float32/bfloat16 rows around 1e20 and float64 rows around
+1e200 therefore retain their directions and gradients instead of collapsing
+to zero when powers inside the norm overflow. The original dtype, normalization
+axis, and dtype-specific epsilon remain unchanged; zero and tiny rows keep
+their existing linear epsilon behavior.
+
+Large-vector range protection is applied per vector only when its largest component exceeds the accumulation dtype's safe power-sum bound for the selected norm order. Vectors within that bound retain the existing values and gradients exactly, including within a batch that also contains large vectors. Norm orders below one and the infinity norm retain the existing path.

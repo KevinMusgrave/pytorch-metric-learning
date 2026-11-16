@@ -1,5 +1,11 @@
 # Release notes
 
+## Unreleased
+
+Normalize finite large embeddings without overflowing intermediate p-norm calculations or losing training gradients.
+
+## Published releases
+
 - [3.0.3](3.0.3.md)
 - [3.0.2](3.0.2.md)
 - [3.0.1](3.0.1.md)

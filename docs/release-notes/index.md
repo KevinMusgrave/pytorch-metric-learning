@@ -1,5 +1,13 @@
 # Release notes
 
+## Unreleased
+
+- Preserve ArcFace target-cosine derivatives in the monotonic continuation
+  and at zero margin, including SubCenterArcFace and DynamicArcFace training
+  inputs whose target cosines round to an endpoint.
+
+## Published releases
+
 - [3.0.3](3.0.3.md)
 - [3.0.2](3.0.2.md)
 - [3.0.1](3.0.1.md)

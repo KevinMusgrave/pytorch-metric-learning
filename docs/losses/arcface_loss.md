@@ -23,6 +23,10 @@ $s \cos\theta_j$ without the margin; see
 [classification logits](../losses.md#classification-logits). This loss derives
 from [BaseProxyLoss](base_proxy_loss.md).
 
+The monotonic continuation uses the target cosine directly, preserving its
+linear derivative even when rounding puts the cosine at an endpoint. A zero
+margin also preserves the cosine and its derivative directly.
+
 **Example**:
 
 ```python

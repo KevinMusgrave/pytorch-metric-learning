@@ -673,3 +673,13 @@ loss dictionary uses the reducer's differentiable-zero contract, so backward
 still produces an empty or zero input gradient. The distance runs first to
 preserve its input validation. Two or more centers retain the existing
 nearest-neighbor objective, including negative similarities.
+
+## Intra-pair variance precision
+
+Rounding a pair mean to float16/bfloat16 before subtraction changes which
+squared hinge is active. Two adjacent half-precision scores near 0.5 produced
+zero positive variance or four times the negative variance, with zero or doubled
+gradients. Widen only the selected pairs before forming their mean and retain
+that dtype through epsilon adjustments, squaring, and reduction. Independent
+float64 pair equations cover both distance polarities and both term types,
+including nonzero reducers and large finite pair differences.

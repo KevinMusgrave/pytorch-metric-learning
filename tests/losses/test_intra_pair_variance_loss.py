@@ -77,7 +77,9 @@ class TestIntraPairVarianceLoss(unittest.TestCase):
             neg_total /= len(neg_pairs)
             correct_total = pos_total + neg_total
             rtol = helpers.rtol(dtype)
-            self.assertTrue(torch.isclose(loss, correct_total, rtol=rtol))
+            self.assertTrue(
+                torch.isclose(loss, correct_total.to(loss.dtype), rtol=rtol)
+            )
 
     def test_with_no_valid_pairs(self):
         loss_func = IntraPairVarianceLoss(0.01, 0.01)

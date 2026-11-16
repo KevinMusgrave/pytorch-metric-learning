@@ -72,3 +72,10 @@ loss.backward()
 **Default reducer**:
 
 - [MeanReducer](../reducers.md#meanreducer)
+
+The negative partition and positive attraction share a per-anchor score offset
+before temperature scaling. This preserves small finite objectives when raw
+scores have a large common magnitude. DCLW retains its absolute positive-score
+correction; its weighting is not treated as invariant to independent row shifts.
+The mathematical objective, exclusion of anchors without negatives, reducers,
+and returned dtype are unchanged.

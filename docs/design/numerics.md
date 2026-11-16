@@ -673,3 +673,14 @@ loss dictionary uses the reducer's differentiable-zero contract, so backward
 still produces an empty or zero input gradient. The distance runs first to
 preserve its input validation. Two or more centers retain the existing
 nearest-neighbor objective, including negative similarities.
+
+## Normalization before norm overflow
+
+A finite vector can have an overflowing intermediate norm even when its unit
+direction and derivatives are representable. Divide by a detached maximum
+magnitude before evaluating the configured p-norm, and express the original
+epsilon in those coordinates. Detachment does not change the derivative of
+normalization because the scale cancels algebraically. Preserve p=0 count
+normalization and empty feature axes separately. A 100-digit Decimal norm and
+analytic Jacobian verify values and gradients without using the production
+rescaling formula; existing zero/tiny-row tests retain the epsilon contract.

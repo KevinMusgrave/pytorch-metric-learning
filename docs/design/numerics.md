@@ -673,3 +673,14 @@ loss dictionary uses the reducer's differentiable-zero contract, so backward
 still produces an empty or zero input gradient. The distance runs first to
 preserve its input validation. Two or more centers retain the existing
 nearest-neighbor objective, including negative similarities.
+
+## NormalizedSoftmax temperature scaling
+
+A finite cosine similarity can exceed float16 range after division by a small
+temperature, even when the cross-entropy and its gradients are representable.
+Equal cosine scores near 0.707 at temperature 1e-5 must yield log(2) for two
+classes rather than NaN. Widening the distance output before division preserves
+that objective while keeping the public get_logits values at their documented
+absolute scale. The loss does not subtract an unreported offset from public
+logits. Closed-form equal-class gradients, an independent squared-distance
+objective, and optimizer updates cover the embedding and class-weight paths.

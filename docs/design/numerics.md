@@ -673,3 +673,16 @@ loss dictionary uses the reducer's differentiable-zero contract, so backward
 still produces an empty or zero input gradient. The distance runs first to
 preserve its input validation. Two or more centers retain the existing
 nearest-neighbor objective, including negative similarities.
+
+## Decoupled contrastive score offsets
+
+Subtracting an absolute positive score from an absolute log partition can erase
+a nonzero DCL objective: four equal raw float32 scores at 1e8 produced zero
+instead of log(2). A negative maximum is removed from every score in an anchor
+before dividing by temperature. The centered log partition and attraction then
+preserve their difference without reintroducing that offset. DCLW adds back the
+exact weighted-positive correction (weight - 1) times the uncentered positive
+score, so its original objective and cross-positive gradients remain intact.
+One hundred decimal digits independently verify values and analytic derivatives
+for both similarity polarities, multiple positives, rectangular references,
+weighted variants, and both mean and sum reducers.

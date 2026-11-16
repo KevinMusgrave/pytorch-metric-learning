@@ -196,8 +196,10 @@ triplet loss reports its best recall at 0.5, among 0, 0.1, 0.5, 1.0, and 1.5.
 $\mu$ stays in the graph, which does not change the gradient, because the deviations
 from the mean sum to zero. The gradient for row `i` under the default reducer is
 equation 18 of the paper, $\frac{2}{N}(\lVert f_i \rVert_2 - \mu) \hat{f}_i$. A zero row
-receives a zero gradient. float16 and bfloat16 inputs stay in float32 until the
-reducer has finished, so one large deviation cannot overflow the mean.
+receives a zero gradient. For float16 and bfloat16 inputs, SEC computes and
+returns float32, including the reduced scalar. A subsequent
+`embedding_reg_weight` therefore applies before any caller-selected narrowing
+can overflow or erase the penalty. Float32 and float64 retain their dtype.
 
 SEC differs from [CenterInvariantRegularizer](#centerinvariantregularizer), which
 penalizes $(\lVert x_i \rVert^2 - \overline{\lVert x \rVert^2})^2 / 4$, the deviation of

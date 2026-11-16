@@ -19,6 +19,3 @@ class SphericalEmbeddingRegularizer(BaseRegularizer):
                 "indices": arange_like(x),
             }
         }
-
-    def forward(self, x: Tensor) -> Tensor:
-        return super().forward(x).to(x.dtype)

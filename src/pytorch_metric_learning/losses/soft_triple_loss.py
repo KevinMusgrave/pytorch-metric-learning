@@ -64,8 +64,13 @@ class SoftTripleLoss(BaseProxyLoss):
 
     def get_logits(self, embeddings: Tensor) -> Tensor:
         sim_to_centers = self.distance(embeddings, self.weight)
+        output_dtype = sim_to_centers.dtype
+        sim_to_centers = sim_to_centers.to(
+            _common.accumulation_dtype(sim_to_centers.dtype)
+        )
         sim_to_centers = sim_to_centers.view(
             -1, self.num_classes, self.centers_per_class
         )
-        prob = F.softmax(sim_to_centers / self.gamma, dim=2)
-        return torch.sum(prob * sim_to_centers, dim=2)
+        centered = sim_to_centers - sim_to_centers.amax(dim=2, keepdim=True)
+        prob = F.softmax(centered / self.gamma, dim=2)
+        return torch.sum(prob * sim_to_centers, dim=2).to(output_dtype)

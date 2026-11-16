@@ -1,5 +1,11 @@
 # Release notes
 
+## Unreleased
+
+Widen CircleLoss adaptive-weight arithmetic so finite logits and gradients survive intermediate half-precision overflow.
+
+## Published releases
+
 - [3.0.3](3.0.3.md)
 - [3.0.2](3.0.2.md)
 - [3.0.1](3.0.1.md)

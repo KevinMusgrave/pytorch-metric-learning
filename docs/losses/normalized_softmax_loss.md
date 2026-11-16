@@ -63,3 +63,11 @@ optimizer.step()
 **Reducer input**:
 
 - **loss**: One loss per embedding, indexed by embedding position.
+
+Temperature division uses float32 for float16/bfloat16 distance outputs.
+`get_logits` returns these unshifted, temperature-scaled logits in the accumulation
+dtype, and cross-entropy retains it internally. Only the completed per-embedding
+losses return to the original distance dtype, preserving the existing reduction
+and regularizer composition contract. Autocast retains the accumulation dtype.
+Custom wider distances and float32/float64 distances retain their precision.
+Gradients still accumulate in the embedding and parameter dtypes.

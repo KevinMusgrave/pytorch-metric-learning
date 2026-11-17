@@ -60,6 +60,18 @@ class BatchEasyHardMiner(BaseMiner):
         )
         a = torch.arange(mat.size(0), device=mat.device)
         pos_all, neg_all = self.pos_strategy == "all", self.neg_strategy == "all"
+        if pos_all and self.allowed_pos_range is not None:
+            values = mat[a1_idx, p_idx]
+            keep = (values >= self.allowed_pos_range[0]) & (
+                values <= self.allowed_pos_range[1]
+            )
+            a1_idx, p_idx = a1_idx[keep], p_idx[keep]
+        if neg_all and self.allowed_neg_range is not None:
+            values = mat[a2_idx, n_idx]
+            keep = (values >= self.allowed_neg_range[0]) & (
+                values <= self.allowed_neg_range[1]
+            )
+            a2_idx, n_idx = a2_idx[keep], n_idx[keep]
 
         if self.pos_strategy == "semihard":
             (negative_dists, negative_indices), a2n_keep = self.get_negatives(

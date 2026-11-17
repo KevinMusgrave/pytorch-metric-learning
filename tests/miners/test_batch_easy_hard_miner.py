@@ -341,6 +341,25 @@ class TestBatchEasyHardMiner(unittest.TestCase):
             lambda: BatchEasyHardMiner(pos_strategy="semihard", neg_strategy="all"),
         )
 
+    def test_all_strategy_respects_inclusive_distance_ranges(self):
+        embeddings = torch.tensor([[0.0], [0.25], [0.5], [2.0]], device=TEST_DEVICE)
+        labels = torch.tensor([0, 0, 1, 1], device=TEST_DEVICE)
+        miner = BatchEasyHardMiner(
+            pos_strategy="all",
+            neg_strategy="all",
+            allowed_pos_range=(0.25, 0.5),
+            allowed_neg_range=(1.75, 2.0),
+            distance=LpDistance(normalize_embeddings=False),
+        )
+
+        actual = miner(embeddings, labels)
+
+        expected = ([0, 1], [1, 0], [0, 1, 3, 3], [3, 3, 0, 1])
+        for indices, values in zip(actual, expected, strict=True):
+            torch.testing.assert_close(
+                indices, torch.tensor(values, device=TEST_DEVICE)
+            )
+
     def helper(self, a1, p, a2, n, gt):
         if "correct_a" in gt:
             self.assertTrue(torch.equal(a1, gt["correct_a"]))

@@ -66,6 +66,12 @@ Preserve the PNP variant objectives and gradients when well-separated examples h
 
 ## Published releases
 
+## Unreleased
+
+Handle empty retrieval queries consistently across self-search, custom label comparisons, NDCG, and per-class reductions.
+
+## Published releases
+
 - [3.0.3](3.0.3.md)
 - [3.0.2](3.0.2.md)
 - [3.0.1](3.0.1.md)

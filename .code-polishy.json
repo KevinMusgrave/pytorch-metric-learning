@@ -354,7 +354,8 @@
       },
       {
         "paths": [
-          "tests/evaluation/test_retrieval_backends.py"
+          "tests/evaluation/test_retrieval_backends.py",
+          "tests/evaluation/test_empty_accuracy_queries.py"
         ],
         "module": "evaluation",
         "focusedSuite": "evaluation-focused"
@@ -532,7 +533,8 @@
           "tests/__init__.py",
           "tests/helpers.py",
           "tests/losses/utils.py",
-          "conftest.py"
+          "conftest.py",
+          "tests/evaluation/test_empty_accuracy_queries.py"
         ],
         "argv": [
           ".venv/bin/uv",
@@ -544,7 +546,8 @@
           "python",
           "-m",
           "pytest",
-          "tests/evaluation/test_retrieval_backends.py"
+          "tests/evaluation/test_retrieval_backends.py",
+          "tests/evaluation/test_empty_accuracy_queries.py"
         ],
         "timeoutSeconds": 120
       },

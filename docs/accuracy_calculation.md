@@ -568,3 +568,12 @@ def label_comparison_fn(x, y):
 
 labels = torch.tensor([10.0, 0.03, 0.04, 0.05])
 ```
+
+### Empty query sets
+
+Retrieval evaluation accepts an empty query set with self-search, an empty
+gallery, or a nonempty gallery. Aggregate results are NaN because there are no
+eligible query values; each per-class result is an empty dictionary. Custom
+label comparison and registered NDCG follow the same contract. No nearest-neighbor
+backend runs without queries. Input validation and custom metric output-shape
+validation still apply, and direct `ndcg` calls return an empty float64 vector.

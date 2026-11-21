@@ -263,7 +263,8 @@
           "tests/losses/test_ranked_list_temperature_precision.py",
           "tests/losses/test_pnp_small_penalties.py",
           "tests/losses/test_soft_triple_temperature.py",
-          "tests/losses/test_normalized_softmax_temperature.py"
+          "tests/losses/test_normalized_softmax_temperature.py",
+          "tests/losses/test_dynamic_arcface_margin_range.py"
         ],
         "module": "numerics",
         "focusedSuite": "numerics-focused"
@@ -477,7 +478,8 @@
           "tests/losses/test_ranked_list_temperature_precision.py",
           "tests/losses/test_pnp_small_penalties.py",
           "tests/losses/test_soft_triple_temperature.py",
-          "tests/losses/test_normalized_softmax_temperature.py"
+          "tests/losses/test_normalized_softmax_temperature.py",
+          "tests/losses/test_dynamic_arcface_margin_range.py"
         ],
         "argv": [
           ".venv/bin/uv",
@@ -523,7 +525,8 @@
           "tests/losses/test_ranked_list_temperature_precision.py",
           "tests/losses/test_pnp_small_penalties.py",
           "tests/losses/test_soft_triple_temperature.py",
-          "tests/losses/test_normalized_softmax_temperature.py"
+          "tests/losses/test_normalized_softmax_temperature.py",
+          "tests/losses/test_dynamic_arcface_margin_range.py"
         ],
         "timeoutSeconds": 120
       },

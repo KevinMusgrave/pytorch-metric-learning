@@ -833,3 +833,16 @@ that objective while keeping the public get_logits values at their documented
 absolute scale. The loss does not subtract an unreported offset from public
 logits. Closed-form equal-class gradients, an independent squared-distance
 objective, and optimizer updates cover the embedding and class-weight paths.
+
+## DynamicArcFace margin normalization
+
+Absolute inverse powers can underflow together or round to the same value,
+making the margin range zero even for distinct positive class counts. Relative
+logarithms preserve count ratios without an irrelevant absolute scale; forming
+the integer difference first also preserves adjacent int64 counts above 2^53.
+The normalized fraction is exp(-a) * expm1(a - A) / expm1(-A), where a is the
+scaled log ratio and A its maximum. Nonfinite scaled exponents represent zero
+relative weight. Below A=1e-8, the first-order expression
+(1 - log_ratio / max_log_ratio) * (1 - a / 2) avoids subnormal division with
+second-order error below double-precision rounding. A 400-digit decimal
+reference verifies the power law and endpoints before margins enter training.

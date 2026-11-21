@@ -907,3 +907,14 @@ logit of 9000 with two equal candidates gave unequal-to-half softmax factors
 after backward subtracted the rounded log partition. Center each selected
 partition first, then combine its detached offsets before the centered sums.
 The closed-form derivative check remains at its original precision tolerance.
+
+## Normalization before norm overflow
+
+A finite vector can have an overflowing intermediate norm even when its unit
+direction and derivatives are representable. Divide by a detached maximum
+magnitude before evaluating the configured p-norm, and express the original
+epsilon in those coordinates. Detachment does not change the derivative of
+normalization because the scale cancels algebraically. Preserve p=0 count
+normalization and empty feature axes separately. A 100-digit Decimal norm and
+analytic Jacobian verify values and gradients without using the production
+rescaling formula; existing zero/tiny-row tests retain the epsilon contract.

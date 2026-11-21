@@ -64,7 +64,15 @@ def normalization_eps(dtype: torch.dtype) -> float:
 def normalize(embeddings: Tensor, p: float = 2, dim: int = 1) -> Tensor:
     work = embeddings.to(accumulation_dtype(embeddings.dtype))
     eps = normalization_eps(input_dtype(embeddings))
-    normalized = torch.nn.functional.normalize(work, p=p, dim=dim, eps=eps)
+    if p < 1 or p == float("inf") or work.shape[dim] == 0:
+        normalized = torch.nn.functional.normalize(work, p=p, dim=dim, eps=eps)
+    else:
+        scale = work.detach().abs().amax(dim=dim, keepdim=True)
+        limit = (torch.finfo(work.dtype).max / work.shape[dim]) ** (1 / p)
+        scale = torch.where(scale > limit, scale, 1)
+        scaled = work / scale
+        norm = torch.linalg.vector_norm(scaled, ord=p, dim=dim, keepdim=True)
+        normalized = scaled / norm.clamp_min(eps / scale)
     return normalized.to(embeddings.dtype)
 
 

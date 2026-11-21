@@ -269,7 +269,8 @@
           "tests/losses/test_decoupled_score_offsets.py",
           "tests/losses/test_intra_pair_variance_precision.py",
           "tests/losses/test_p2s_center_precision.py",
-          "tests/losses/test_circle_weight_precision.py"
+          "tests/losses/test_circle_weight_precision.py",
+          "tests/distances/test_large_normalization.py"
         ],
         "module": "numerics",
         "focusedSuite": "numerics-focused"
@@ -490,7 +491,8 @@
           "tests/losses/test_decoupled_score_offsets.py",
           "tests/losses/test_intra_pair_variance_precision.py",
           "tests/losses/test_p2s_center_precision.py",
-          "tests/losses/test_circle_weight_precision.py"
+          "tests/losses/test_circle_weight_precision.py",
+          "tests/distances/test_large_normalization.py"
         ],
         "argv": [
           ".venv/bin/uv",
@@ -542,7 +544,8 @@
           "tests/losses/test_decoupled_score_offsets.py",
           "tests/losses/test_intra_pair_variance_precision.py",
           "tests/losses/test_p2s_center_precision.py",
-          "tests/losses/test_circle_weight_precision.py"
+          "tests/losses/test_circle_weight_precision.py",
+          "tests/distances/test_large_normalization.py"
         ],
         "timeoutSeconds": 120
       },

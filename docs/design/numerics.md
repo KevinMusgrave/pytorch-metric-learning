@@ -787,3 +787,14 @@ offset from overflowing the scaling step. Positive-free rows are removed before
 using infinite masks, so no all-masked reduction contributes an undefined
 gradient. The proxy objective uses the same fix and is covered by closed-form
 embedding and center-gradient references.
+
+## RankedList temperature scaling
+
+Softmax cannot repair logits that already overflowed during temperature
+multiplication. Float16 violations of 0.7 and temperature 100000 produced NaN
+losses and gradients, although the weighted average remains 0.7. Widening the
+matrix before computing violations and centering eligible scores before
+multiplication prevents this intermediate overflow. Negative temperatures use
+the opposite score direction; empty eligible sets keep a finite zero offset and
+retain their zero contribution. Low-precision losses retain float32 through the
+reducer rather than narrowing their weighted averages prematurely.

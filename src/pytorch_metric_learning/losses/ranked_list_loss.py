@@ -44,6 +44,9 @@ class RankedListLoss(BaseMetricLossFunction):
         _common.ref_not_supported(ref_emb)
         _common.indices_tuple_not_supported(indices_tuple)
         mat = _common.resolve_matrix(self.distance, embeddings, None, mat)
+        if mat.numel() == 0:
+            return {}
+        mat = mat.to(_common.accumulation_dtype(mat.dtype))
         matches, diffs = indexing._get_matches_and_diffs(labels)
         boundary = self.alpha - self.margin
         positive = matches & (mat > boundary)
@@ -58,7 +61,10 @@ class RankedListLoss(BaseMetricLossFunction):
 
 
 def _weighted_mean(violations: Tensor, mask: Tensor, temperature: float) -> Tensor:
-    logits = (temperature * violations).masked_fill(
+    scores = violations if temperature >= 0 else -violations
+    offset = scores.masked_fill(~mask, -torch.inf).amax(dim=1, keepdim=True)
+    offset = torch.where(mask.any(dim=1, keepdim=True), offset, 0)
+    logits = ((scores - offset) * abs(temperature)).masked_fill(
         ~mask, _common.neg_inf(violations.dtype)
     )
     weights = torch.softmax(logits, dim=1) * mask

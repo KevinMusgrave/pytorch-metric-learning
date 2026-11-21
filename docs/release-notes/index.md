@@ -54,6 +54,12 @@ Preserve NCA and ProxyNCA losses and gradients when finite distances or similari
 
 ## Published releases
 
+## Unreleased
+
+Keep RankedList weighted averages and gradients finite at large positive and negative temperatures, including low-precision inputs.
+
+## Published releases
+
 - [3.0.3](3.0.3.md)
 - [3.0.2](3.0.2.md)
 - [3.0.1](3.0.1.md)

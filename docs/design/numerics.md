@@ -846,3 +846,14 @@ relative weight. Below A=1e-8, the first-order expression
 (1 - log_ratio / max_log_ratio) * (1 - a / 2) avoids subnormal division with
 second-order error below double-precision rounding. A 400-digit decimal
 reference verifies the power law and endpoints before margins enter training.
+
+## Distance-weighted density arithmetic
+
+Per-anchor normalization happens after the inverse-density log weight is
+formed. With float16 distances, dimension factors could overflow that earlier
+calculation; filtering nonfinite log weights then silently discarded eligible
+anchors. Distances at the 0.5 cutoff in 131072 dimensions reproduced four valid
+anchors becoming an empty result. Widening the distance before the density
+formula retains those candidates. This is independent of the existing row
+normalization and strict-cutoff corrections; neither can recover a candidate
+already lost to a nonfinite density value.

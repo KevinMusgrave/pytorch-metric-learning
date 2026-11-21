@@ -568,6 +568,13 @@ show that neither is a rescaling of the other. SEC computes on the raw row, so i
 unnormalized embeddings, which is where the losses' distances leave them. It needs no
 `distance` argument, because equation 17 is defined only on the Euclidean norm.
 
+SEC also retains its accumulation dtype after reduction. Casting the scalar
+back to float16 made the variance of norms 1 and 1001 infinite before a
+regularization weight of 0.0001 could produce the finite penalty 25. Small
+variances could likewise round to zero before a large weight restored their
+range. Returning the reducer's result preserves both cases and follows the
+same widened-scalar contract as the center-invariant regularizer.
+
 ## Class centroids
 
 `CentroidTripletLoss` was removed in version 2 because classes of different sizes crashed

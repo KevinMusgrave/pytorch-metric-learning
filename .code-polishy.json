@@ -254,7 +254,8 @@
           "tests/distances/test_low_precision_range.py",
           "tests/distances/test_lp_distance.py",
           "tests/docs/test_documented_examples.py",
-          "tests/docs/test_public_surface.py"
+          "tests/docs/test_public_surface.py",
+          "tests/regularizers/test_spherical_embedding_precision.py"
         ],
         "module": "numerics",
         "focusedSuite": "numerics-focused"
@@ -458,7 +459,8 @@
           "tests/utils/test_validation.py",
           "conftest.py",
           "tests/distances/test_low_precision_range.py",
-          "tests/distances/test_lp_distance.py"
+          "tests/distances/test_lp_distance.py",
+          "tests/regularizers/test_spherical_embedding_precision.py"
         ],
         "argv": [
           ".venv/bin/uv",
@@ -495,7 +497,8 @@
           "tests/distances/test_low_precision_range.py",
           "tests/distances/test_lp_distance.py",
           "tests/docs/test_documented_examples.py",
-          "tests/docs/test_public_surface.py"
+          "tests/docs/test_public_surface.py",
+          "tests/regularizers/test_spherical_embedding_precision.py"
         ],
         "timeoutSeconds": 120
       },

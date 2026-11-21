@@ -134,3 +134,23 @@ def test_nca_without_eligible_positive_rows_remains_differentiable_zero(dtype, s
     actual.backward()
     assert actual.item() == 0
     torch.testing.assert_close(query.grad, torch.zeros_like(query))
+
+
+@pytest.mark.parametrize("scale", [1e-38, -1e-38, 0.0])
+def test_nca_scales_opposite_finite_extremes_without_losing_candidates(scale):
+    matrix = torch.tensor([[-2e38, 2e38, 0.0]], device=TEST_DEVICE, requires_grad=True)
+    model = losses.NCALoss(
+        softmax_scale=scale,
+        distance=distances.DotProductSimilarity(normalize_embeddings=False),
+    )
+    actual = model(
+        torch.zeros(1, 2, device=TEST_DEVICE),
+        torch.tensor([0], device=TEST_DEVICE),
+        ref_emb=torch.zeros(3, 2, device=TEST_DEVICE),
+        ref_labels=torch.tensor([0, 1, 1], device=TEST_DEVICE),
+        mat=matrix,
+    )
+    expected = -torch.log_softmax(matrix.detach().double() * scale, dim=1)[0, 0]
+    torch.testing.assert_close(actual.double(), expected, rtol=2e-6, atol=1e-7)
+    gradient = torch.autograd.grad(actual, matrix)[0]
+    assert torch.isfinite(gradient).all()

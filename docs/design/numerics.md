@@ -775,6 +775,8 @@ wrong-label pair, or pair absent from the supplied candidates. Infinite mask
 sentinels separate excluded entries from every finite candidate. Rows without
 candidates still use the existing eligibility mask, so their sentinel values
 never become returned pairs. BatchHardMiner inherits the same selection fix.
+The all-pairs strategies share one inclusive range filter, keeping positive and
+negative selection consistent without duplicating range branches in the miner.
 
 ## NCA score offsets
 
@@ -830,7 +832,9 @@ temperature, even when the cross-entropy and its gradients are representable.
 Equal cosine scores near 0.707 at temperature 1e-5 must yield log(2) for two
 classes rather than NaN. Widening the distance output before division preserves
 that objective while keeping the public get_logits values at their documented
-absolute scale. The loss does not subtract an unreported offset from public
+absolute scale. Per-example cross-entropies remain in the accumulation dtype through the
+reducer. Training uses the public get_logits method so overrides and inference
+share the same logits. The loss does not subtract an unreported offset from public
 logits. Closed-form equal-class gradients, an independent squared-distance
 objective, and optimizer updates cover the embedding and class-weight paths.
 
@@ -900,7 +904,9 @@ but a half-precision intermediate coefficient overflowed before multiplication
 by zero. The default nonzero reducer returned zero while backward produced NaN.
 Closed-form boundary values and derivatives, ordinary-scale controls, and
 independent rectangular pair equations cover this calculation without altering
-the detached-weight objective or the returned loss dtype.
+the detached-weight objective. Per-anchor terms and their reduction retain the
+accumulation dtype, because narrowing a large anchor term before averaging can
+still overflow an otherwise representable batch loss.
 
 Large absolute float32 logits also degraded log-sum-exp gradients: a negative
 logit of 9000 with two equal candidates gave unequal-to-half softmax factors
@@ -918,3 +924,22 @@ normalization because the scale cancels algebraically. Preserve p=0 count
 normalization and empty feature axes separately. A 100-digit Decimal norm and
 analytic Jacobian verify values and gradients without using the production
 rescaling formula; existing zero/tiny-row tests retain the epsilon contract.
+
+## Scaling and normalization boundaries
+
+Centering before temperature scaling preserves small differences beside a large
+common offset. Opposite finite extremes can instead overflow the subtraction
+itself. For a temperature with magnitude above one, `shifted_division` uses
+individually divided operands only where the raw difference is nonfinite; all
+finite differences retain centering before division. NCA applies the same rule
+for multipliers below one. These paths preserve both offset cancellation and a
+representable scaled span without promoting every float32 matrix to float64 or
+reading device values on the host. SoftTriple selects its offset direction from
+the temperature sign.
+
+Shared normalization owns both overflow scaling and the input-specific epsilon.
+Its optional output dtype lets P2SGrad retain accumulation precision without
+reimplementing normalization or losing the half-precision epsilon. Distances
+continue to request their ordinary result dtype. Low-precision per-example loss
+terms whose batch mean can be finite remain wide through reduction; this also
+keeps reducer thresholds from seeing prematurely rounded values.

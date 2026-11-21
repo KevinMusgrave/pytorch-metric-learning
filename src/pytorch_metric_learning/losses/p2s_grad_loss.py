@@ -45,11 +45,7 @@ class P2SGradLoss(BaseMetricLossFunction):
         weight = self.weight.clone()
         dtype = _common.accumulation_dtype(embeddings.dtype)
         with _common.without_autocast(embeddings):
-            normalized = F.normalize(
-                embeddings.to(dtype),
-                dim=1,
-                eps=_common.normalization_eps(_common.input_dtype(embeddings)),
-            )
+            normalized = _common.normalize(embeddings, output_dtype=dtype)
             cos_theta = normalized @ weight.to(dtype).t()
         cos_theta = cos_theta.clamp(-1, 1)
         target = F.one_hot(labels, self.num_classes).to(cos_theta.dtype)

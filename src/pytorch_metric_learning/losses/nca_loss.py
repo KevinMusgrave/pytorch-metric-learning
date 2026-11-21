@@ -28,8 +28,16 @@ def _nca_terms(
     if len(valid) == 0:
         return {}
     logits, candidates, same = logits[valid], candidates[valid], same[valid]
-    offset = logits.masked_fill(~candidates, -torch.inf).amax(dim=1, keepdim=True)
-    logits = (logits - offset) * scale
+    scores = logits if scale >= 0 else -logits
+    offset = scores.masked_fill(~candidates, -torch.inf).amax(dim=1, keepdim=True)
+    difference = scores - offset
+    logits = difference * abs(scale)
+    if abs(scale) < 1:
+        logits = torch.where(
+            torch.isfinite(difference),
+            logits,
+            scores * abs(scale) - offset * abs(scale),
+        )
     all_lse = torch.logsumexp(logits.masked_fill(~candidates, -torch.inf), dim=1)
     pos_lse = torch.logsumexp(logits.masked_fill(~same, -torch.inf), dim=1)
     losses = (all_lse - pos_lse) * weights[valid]

@@ -66,8 +66,8 @@ optimizer.step()
 
 Temperature division uses float32 for float16/bfloat16 distance outputs.
 `get_logits` returns these unshifted, temperature-scaled logits in the accumulation
-dtype, and cross-entropy retains it internally. Only the completed per-embedding
-losses return to the original distance dtype, preserving the existing reduction
-and regularizer composition contract. Autocast retains the accumulation dtype.
+dtype, and cross-entropy retains it internally. Per-embedding terms and the reduced nonempty loss retain the accumulation dtype,
+so a representable batch mean cannot inherit an overflowing float16 term.
+Training calls the public `get_logits` method, including subclass overrides.
 Custom wider distances and float32/float64 distances retain their precision.
 Gradients still accumulate in the embedding and parameter dtypes.

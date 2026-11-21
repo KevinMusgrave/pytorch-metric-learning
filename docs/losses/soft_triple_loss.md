@@ -90,6 +90,7 @@ optimizer.step()
 
 Center similarities are widened to float32 for float16/bfloat16 inputs before
 temperature scaling and weighted reduction. The center softmax removes a common
-within-class offset before division, preventing intermediate overflow at small
-positive temperatures. `get_logits` casts only the completed class scores back
+within-class offset before division, choosing the direction from the temperature
+sign. Large temperatures also scale opposite extreme scores before subtracting
+when their raw span would overflow. `get_logits` casts only the completed class scores back
 to the similarity dtype, preserving the existing output dtype.

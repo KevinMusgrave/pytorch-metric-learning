@@ -39,13 +39,18 @@ class DecoupledContrastiveLoss(GenericPairLoss):
         )
         keep = torch.isfinite(shift[a1])
         neg_lse = _common.segment_logsumexp(
-            (neg_scores - shift[a2]) / self.temperature, a2, mat.shape[0]
+            _common.shifted_division(neg_scores, shift[a2], self.temperature),
+            a2,
+            mat.shape[0],
         )[a1[keep]]
         pos_scores = pos_scores[keep]
-        losses = neg_lse - (pos_scores - shift[a1[keep]]) / self.temperature
+        losses = neg_lse - _common.shifted_division(
+            pos_scores, shift[a1[keep]], self.temperature
+        )
         if self.sigma is not None and len(pos_scores):
             weights = torch.softmax(
-                (pos_scores - pos_scores.max()) / self.sigma, dim=0
+                _common.shifted_division(pos_scores, pos_scores.max(), self.sigma),
+                dim=0,
             ) * len(pos_scores)
             losses = losses + (weights - 1) * pos_scores / self.temperature
         return {

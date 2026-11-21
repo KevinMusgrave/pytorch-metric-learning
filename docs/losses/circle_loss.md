@@ -73,8 +73,8 @@ loss.backward()
 
 Float16/bfloat16 pair scores are widened before adaptive-weight multiplication
 and log-sum-exp. This prevents an intermediate `gamma * alpha` overflow from
-turning finite pair logits into infinities or NaNs. Completed per-anchor losses
-retain the input score dtype, and adaptive weights remain detached for gradients.
+turning finite pair logits into infinities or NaNs. Per-anchor losses retain the accumulation dtype through the reducer, including
+the nonempty scalar result; adaptive weights remain detached for gradients.
 
 Each selected logit partition is centered before log-sum-exp, preserving its
 softmax gradients when gamma makes the absolute logits large. The two detached

@@ -76,3 +76,19 @@ def test_p2s_half_precision_tiny_rows_retain_original_epsilon():
     expected_gradient = torch.autograd.grad(expected, reference)[0]
     torch.testing.assert_close(actual, expected.half())
     torch.testing.assert_close(gradient, expected_gradient.half())
+
+
+@pytest.mark.parametrize("dtype,scale", [(torch.float32, 1e20), (torch.float64, 1e200)])
+def test_p2s_shared_normalization_preserves_large_finite_directions(dtype, scale):
+    model = losses.P2SGradLoss(1, 2).to(TEST_DEVICE, dtype)
+    with torch.no_grad():
+        model.weight.copy_(model.weight.new_tensor([[1.0, 0.0]]))
+    query = torch.tensor(
+        [[3 * scale, 4 * scale]], device=TEST_DEVICE, dtype=dtype, requires_grad=True
+    )
+    actual = model(query, torch.tensor([0], device=TEST_DEVICE))
+    gradient = torch.autograd.grad(actual, query)[0]
+    torch.testing.assert_close(actual, actual.new_tensor(0.16))
+    torch.testing.assert_close(
+        gradient * scale, query.new_tensor([[-0.1024, 0.0768]]), rtol=3e-6, atol=0
+    )

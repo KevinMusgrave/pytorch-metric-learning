@@ -220,3 +220,21 @@ The documented 2026.10.19 fix reaches the 30-day admission window then;
 enabling an affected client before that date invalidates this assessment.
 The affected roots remain in the installed development dependency, so this
 finding is not a claim about arbitrary consumer applications.
+
+## Certificate trust resolution (2026-11-21)
+
+The frozen development environment now uses certifi 2026.10.18, the first fixed
+version listed by [GHSA-6q48-6c7w-9gw2](https://github.com/advisories/GHSA-6q48-6c7w-9gw2).
+[PyPI metadata](https://pypi.org/pypi/certifi/2026.10.18/json) records the wheel
+upload on 2026-10-18, beyond the normal 30-day admission window. The
+[upstream comparison](https://github.com/certifi/python-certifi/compare/2026.07.22...2026.10.18)
+removes 104 lines from the certificate bundle; the package version and packaging
+metadata changes introduce no runtime dependency. The exact frozen lock admits
+this one package update. Earlier disabled-client assessments above are historical
+and no longer needed; the expired certifi assessment is removed.
+
+The retained uv 0.13.4 wheels were uploaded on 2026-10-20 according to
+[PyPI metadata](https://pypi.org/pypi/uv/0.13.4/json). They now satisfy the normal
+admission window, so the expired `uv-compromised-root` release-age assessment
+is removed without changing the uv pin. Dependency review validates the aged
+inputs and the remaining exact advisory assessments before frozen installation.

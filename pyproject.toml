@@ -87,4 +87,5 @@ required-version = "==0.13.4"
 exclude-newer = "2026-09-26T00:00:00Z"
 
 [tool.uv.exclude-newer-package]
+certifi = "2026-10-19T00:00:00Z"
 uv = "2026-10-26T00:00:00Z"

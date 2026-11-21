@@ -199,3 +199,23 @@ def test_decoupled_positive_pairs_without_negatives_keep_differentiable_zero(sig
     actual.backward()
     assert actual.item() == 0
     torch.testing.assert_close(query.grad, torch.zeros_like(query))
+
+
+def test_decoupled_scales_opposite_finite_extremes_before_they_overflow():
+    temperature = 1e38
+    matrix = torch.tensor([[-2e38, 2e38, 0.0]], device=TEST_DEVICE, requires_grad=True)
+    model = losses.DecoupledContrastiveLoss(
+        temperature=temperature,
+        distance=distances.DotProductSimilarity(normalize_embeddings=False),
+    )
+    actual = model(
+        torch.zeros(1, 2, device=TEST_DEVICE),
+        torch.tensor([0], device=TEST_DEVICE),
+        ref_emb=torch.zeros(3, 2, device=TEST_DEVICE),
+        ref_labels=torch.tensor([0, 1, 1], device=TEST_DEVICE),
+        mat=matrix,
+    )
+    logits = matrix.detach().double()[0] / temperature
+    expected = torch.logsumexp(logits[1:], dim=0) - logits[0]
+    torch.testing.assert_close(actual.double(), expected, rtol=2e-6, atol=1e-7)
+    assert torch.isfinite(torch.autograd.grad(actual, matrix)[0]).all()

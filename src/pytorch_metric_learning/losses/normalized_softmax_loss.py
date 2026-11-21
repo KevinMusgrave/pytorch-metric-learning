@@ -1,6 +1,5 @@
 from typing import Unpack
 
-import torch
 import torch.nn.functional as F
 from torch import Tensor
 
@@ -32,14 +31,12 @@ class NormalizedSoftmaxLoss(BaseProxyLoss):
         labels = _common.labels_required(labels)
         _common.ref_not_supported(ref_emb)
         _common.check_parameter_placement(self, self.weight, embeddings)
-        logits, dtype = self._get_logits(embeddings)
-        if torch.is_autocast_enabled(embeddings.device.type):
-            dtype = logits.dtype
+        logits = self.get_logits(embeddings)
         weights = indexing.convert_to_weights(indices_tuple, labels, dtype=logits.dtype)
         loss = F.cross_entropy(logits, labels, reduction="none") * weights
         return {
             "loss": {
-                "losses": loss.to(dtype),
+                "losses": loss,
                 "indices": _common.arange_like(embeddings),
             }
         }
@@ -48,13 +45,9 @@ class NormalizedSoftmaxLoss(BaseProxyLoss):
         return DotProductSimilarity(normalize_embeddings=True)
 
     def get_logits(self, embeddings: Tensor) -> Tensor:
-        return self._get_logits(embeddings)[0]
-
-    def _get_logits(self, embeddings: Tensor) -> tuple[Tensor, torch.dtype]:
         normalized_weight = self.distance.normalize(self.weight, dim=1)
         logits = self.distance(embeddings, normalized_weight)
-        dtype = logits.dtype
         logits = logits.to(_common.accumulation_dtype(logits.dtype)) / self.temperature
         if not self.distance.is_inverted:
             logits = -logits
-        return logits, dtype
+        return logits

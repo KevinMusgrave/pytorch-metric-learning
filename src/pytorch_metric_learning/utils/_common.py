@@ -61,7 +61,13 @@ def normalization_eps(dtype: torch.dtype) -> float:
     return max(1e-12, torch.finfo(dtype).tiny)
 
 
-def normalize(embeddings: Tensor, p: float = 2, dim: int = 1) -> Tensor:
+def normalize(
+    embeddings: Tensor,
+    p: float = 2,
+    dim: int = 1,
+    *,
+    output_dtype: torch.dtype | None = None,
+) -> Tensor:
     work = embeddings.to(accumulation_dtype(embeddings.dtype))
     eps = normalization_eps(input_dtype(embeddings))
     if p < 1 or p == float("inf") or work.shape[dim] == 0:
@@ -73,7 +79,17 @@ def normalize(embeddings: Tensor, p: float = 2, dim: int = 1) -> Tensor:
         scaled = work / scale
         norm = torch.linalg.vector_norm(scaled, ord=p, dim=dim, keepdim=True)
         normalized = scaled / norm.clamp_min(eps / scale)
-    return normalized.to(embeddings.dtype)
+    return normalized.to(embeddings.dtype if output_dtype is None else output_dtype)
+
+
+def shifted_division(values: Tensor, shift: Tensor, divisor: float) -> Tensor:
+    difference = values - shift
+    result = difference / divisor
+    if abs(divisor) > 1:
+        result = torch.where(
+            torch.isfinite(difference), result, values / divisor - shift / divisor
+        )
+    return result
 
 
 INDEX_DTYPES = (torch.int64, torch.int32)

@@ -119,3 +119,23 @@ def test_soft_triple_empty_logits_keep_class_shape():
     model = losses.SoftTripleLoss(2, 3).to(TEST_DEVICE)
     logits = model.get_logits(torch.empty(0, 3, device=TEST_DEVICE))
     assert logits.shape == (0, 2)
+
+
+@pytest.mark.parametrize("temperature", [1.0, -1.0, 1e38, -1e38])
+def test_soft_triple_opposite_extremes_keep_center_probabilities(temperature):
+    model = losses.SoftTripleLoss(
+        1,
+        1,
+        centers_per_class=2,
+        gamma=temperature,
+        distance=distances.DotProductSimilarity(normalize_embeddings=False),
+    ).to(TEST_DEVICE)
+    with torch.no_grad():
+        model.weight.copy_(model.weight.new_tensor([[2e38], [-2e38]]))
+    query = torch.ones(1, 1, device=TEST_DEVICE, requires_grad=True)
+    actual = model.get_logits(query)
+    scores = model.weight.detach().double().flatten()
+    expected = (torch.softmax(scores / temperature, dim=0) * scores).sum()
+    torch.testing.assert_close(actual.double().squeeze(), expected, rtol=2e-6, atol=0)
+    gradients = torch.autograd.grad((actual / 1e38).sum(), (query, model.weight))
+    assert all(torch.isfinite(value).all() for value in gradients)

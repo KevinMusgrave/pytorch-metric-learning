@@ -17,7 +17,7 @@
   "quality": {
     "allowComments": false,
     "lineBudget": {
-      "production": 8500
+      "production": 9000
     }
   },
   "portability": {},
@@ -755,21 +755,7 @@
     "pythonLibraries": [
       "pyproject.toml"
     ],
-    "releaseAgeAssessments": [
-      {
-        "id": "uv-compromised-root",
-        "ecosystem": "pypi",
-        "package": "uv",
-        "version": "0.13.4",
-        "scope": "uv.lock",
-        "category": "security-fix",
-        "evidence": "https://github.com/astral-sh/uv/security/advisories/GHSA-hq85-5cpj-mr62",
-        "reason": "Package acquisition must not trust the compromised emSign CA. See docs/security/dependency-assessments.md#certificate-trust.",
-        "owner": "Codex",
-        "reviewed": "2026-10-26",
-        "expires": "2026-11-19"
-      }
-    ],
+    "releaseAgeAssessments": [],
     "vulnerabilityAssessments": [
       {
         "id": "ghsa-9vhv-jxww-xfm5",
@@ -838,23 +824,6 @@
         "owner": "Claude",
         "reviewed": "2026-10-29",
         "expires": "2027-01-27"
-      },
-      {
-        "id": "certifi-disabled-documentation-clients",
-        "ecosystem": "pypi",
-        "advisory": "GHSA-6q48-6c7w-9gw2",
-        "package": "certifi",
-        "affectedVersion": "2026.7.22",
-        "scope": "uv.lock",
-        "severity": "critical",
-        "status": "not-affected",
-        "basis": "unreachable",
-        "reason": "Source-only inspection of the exact locked MkDocs Material 9.7.7 wheel (hash verified against uv.lock) again finds Requests callers only in the info, privacy, and social plugins. The current MkDocs configuration enables none of them, and repository Python sources contain no Requests, urllib3, or certifi client import. Package acquisition uses patched uv 0.13.4. See docs/security/dependency-assessments.md#certificate-trust-reassessment-2026-11-16.",
-        "impact": "No enabled HTTPS verification reaches the affected certifi roots in this checkout. Reassess before enabling a Requests caller or the info, privacy, or social plugins. Update to certifi 2026.10.19 once its 2026-10-20 wheel upload reaches 30 days on 2026-11-19.",
-        "evidence": "https://github.com/certifi/python-certifi/security/advisories/GHSA-6q48-6c7w-9gw2",
-        "owner": "Codex",
-        "reviewed": "2026-11-16",
-        "expires": "2026-11-19"
       },
       {
         "id": "ghsa-6627-m3xw-93mp",

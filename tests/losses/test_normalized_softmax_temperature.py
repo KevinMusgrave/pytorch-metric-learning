@@ -148,3 +148,34 @@ def test_normalized_softmax_preserves_custom_distance_precision():
     assert value.dtype == torch.float64
     value.backward()
     assert query.grad is not None and torch.isfinite(query.grad).all()
+
+
+def test_normalized_softmax_retains_large_terms_until_batch_reduction():
+    model = losses.NormalizedSoftmaxLoss(2, 2, temperature=1e-5).to(
+        TEST_DEVICE, torch.float16
+    )
+    with torch.no_grad():
+        model.weight.copy_(torch.eye(2, device=TEST_DEVICE))
+    query = torch.eye(2, device=TEST_DEVICE, dtype=torch.float16, requires_grad=True)
+    labels = torch.tensor([1, 1], device=TEST_DEVICE)
+    actual = model(query, labels)
+    expected = F.cross_entropy(query.detach().double() / 1e-5, labels)
+    assert actual.dtype == torch.float32
+    torch.testing.assert_close(actual.double(), expected, rtol=2e-6, atol=0)
+    assert torch.isfinite(torch.autograd.grad(actual, query)[0]).all()
+
+
+def test_normalized_softmax_training_uses_public_logit_override():
+    class CustomLogits(losses.NormalizedSoftmaxLoss):
+        def get_logits(self, embeddings):
+            return embeddings * 2
+
+    model = CustomLogits(2, 2, temperature=1).to(TEST_DEVICE)
+    query = torch.tensor([[1.0, 0.0]], device=TEST_DEVICE, requires_grad=True)
+    labels = torch.tensor([0], device=TEST_DEVICE)
+    actual = model(query, labels)
+    expected = F.cross_entropy(query * 2, labels)
+    torch.testing.assert_close(actual, expected)
+    torch.testing.assert_close(
+        torch.autograd.grad(actual, query)[0], torch.autograd.grad(expected, query)[0]
+    )

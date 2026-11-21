@@ -28,7 +28,6 @@ class CircleLoss(GenericPairLoss):
         self.gamma = gamma
 
     def pair_loss(self, mat: Tensor, pairs: PairIndices) -> LossDict:
-        result_dtype = mat.dtype
         mat = mat.to(_common.accumulation_dtype(mat.dtype))
         pos_mask, neg_mask = self.pair_masks(mat, pairs)
         m = self.margin
@@ -47,7 +46,7 @@ class CircleLoss(GenericPairLoss):
         logits = (pos_shift + neg_shift) + logsumexp_pos + logsumexp_neg
         losses = torch.nn.functional.softplus(logits).squeeze(1)
         rows = torch.where(pos_mask.any(dim=1) & neg_mask.any(dim=1))[0]
-        return {"loss": {"losses": losses[rows].to(result_dtype), "indices": rows}}
+        return {"loss": {"losses": losses[rows], "indices": rows}}
 
     def default_reducer(self) -> BaseReducer:
         return AvgNonZeroReducer()

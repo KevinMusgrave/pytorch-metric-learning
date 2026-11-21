@@ -71,6 +71,9 @@ class SoftTripleLoss(BaseProxyLoss):
         sim_to_centers = sim_to_centers.view(
             -1, self.num_classes, self.centers_per_class
         )
-        centered = sim_to_centers - sim_to_centers.amax(dim=2, keepdim=True)
-        prob = F.softmax(centered / self.gamma, dim=2)
+        scores = sim_to_centers if self.gamma >= 0 else -sim_to_centers
+        shift = scores.amax(dim=2, keepdim=True)
+        prob = F.softmax(
+            _common.shifted_division(scores, shift, abs(self.gamma)), dim=2
+        )
         return torch.sum(prob * sim_to_centers, dim=2).to(output_dtype)

@@ -42,7 +42,7 @@ def test_circle_finite_adaptive_weights_preserve_values_and_gradients(
         actual, actual.new_tensor(expected), rtol=tolerance, atol=0
     )
     torch.testing.assert_close(gradient, expected_gradient, rtol=tolerance, atol=0)
-    assert actual.dtype == dtype
+    assert actual.dtype == (torch.float64 if dtype == torch.float64 else torch.float32)
 
 
 @pytest.mark.parametrize(
@@ -76,7 +76,9 @@ def test_circle_rectangular_references_match_independent_pair_equations(dtype):
     expected = torch.stack(values).mean()
     expected_gradient = torch.autograd.grad(expected, reference)[0]
     tolerance = 5e-3 if dtype in (torch.float16, torch.bfloat16) else 3e-6
-    torch.testing.assert_close(actual, expected.to(dtype), rtol=tolerance, atol=1e-6)
+    torch.testing.assert_close(
+        actual, expected.to(actual.dtype), rtol=tolerance, atol=1e-6
+    )
     torch.testing.assert_close(
         gradient, expected_gradient.to(dtype), rtol=tolerance, atol=1e-6
     )
@@ -114,3 +116,17 @@ def test_circle_opposing_large_partitions_retain_small_objective(dtype):
         actual, actual.new_tensor(math.log(3)), rtol=3e-6, atol=0
     )
     torch.testing.assert_close(gradient, expected_gradient, rtol=3e-6, atol=0)
+
+
+def test_circle_keeps_large_anchor_penalty_until_reduction():
+    matrix = torch.full((4, 4), 0.5, device=TEST_DEVICE, dtype=torch.float16)
+    matrix[0, 1] = -0.5
+    matrix.requires_grad_()
+    labels = torch.tensor([0, 0, 1, 1], device=TEST_DEVICE)
+    actual = losses.CircleLoss(margin=0.5, gamma=1e5)(
+        torch.zeros(4, 2, device=TEST_DEVICE, dtype=torch.float16), labels, mat=matrix
+    )
+    expected = (200000 + math.log(2) + 3 * math.log(3)) / 4
+    assert actual.dtype == torch.float32
+    torch.testing.assert_close(actual, actual.new_tensor(expected), rtol=2e-6, atol=0)
+    assert torch.isfinite(torch.autograd.grad(actual, matrix)[0]).all()

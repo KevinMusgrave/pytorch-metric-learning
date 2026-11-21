@@ -880,3 +880,14 @@ gradients. Widen only the selected pairs before forming their mean and retain
 that dtype through epsilon adjustments, squaring, and reduction. Independent
 float64 pair equations cover both distance polarities and both term types,
 including nonzero reducers and large finite pair differences.
+
+## P2SGrad near-center residuals
+
+A low-precision cosine can round to one before its one-hot residual is formed.
+For embedding [1, 0.02] and center [1, 0], both the parameter and embedding
+gradients vanished despite being representable. Widen normalization and matrix
+multiplication, disable autocast for that multiplication, and form the residual
+before returning the original scalar dtype. Keep the original normalization
+epsilon for zero/tiny inputs and retain the weight clone needed by accumulated
+forwards. Independent float64 equations verify values and both gradients;
+a parameter update and CPU autocast cases demonstrate a retained learning signal.

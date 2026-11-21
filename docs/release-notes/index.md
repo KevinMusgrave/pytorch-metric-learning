@@ -114,6 +114,12 @@ Compute NDCG with shared gain scaling so finite large or subnormal relevance gai
 
 ## Published releases
 
+## Unreleased
+
+Form P2SGrad cosine residuals before low-precision rounding can erase otherwise representable embedding and parameter gradients.
+
+## Published releases
+
 - [3.0.3](3.0.3.md)
 - [3.0.2](3.0.2.md)
 - [3.0.1](3.0.1.md)

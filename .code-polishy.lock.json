@@ -1,41 +1,42 @@
 {
   "lockVersion": 2,
-  "codePolishyVersion": "0.33.2",
-  "releaseDigest": "9c96f373c8d42c7fe65afff7d62c209afd5870fd30ed2e1fee5ac1e3a6bac568",
+  "codePolishyVersion": "0.34.1",
+  "releaseDigest": "10b5fbff120a213b291868c84277f9576e5f49302e089c93da09f849d0e68da4",
+  "scanner": {"payload":"ewogICJjb250cmFjdCI6ICJjb2RlLXBvbGlzaHktdHJpdnkvdjEiLAogICJzb3VyY2VJbWFnZSI6ICJkb2NrZXIuaW8vYXF1YXNlYy90cml2eUBzaGEyNTY6NzkwZmQ2NmQxNjk3Mzk1ZDg2OTNkMWFjYWExZWE3MDI0MDZhMjBmMTA5YjZmYzdiYWM4ZGI2MjNlY2E2YzA2YyIsCiAgInJlYXNzZXNzQnkiOiAiMjAyNi0xMi0wN1QwMDowMDowMFoiLAogICJvcGVuVmV4IjogewogICAgIkBjb250ZXh0IjogImh0dHBzOi8vb3BlbnZleC5kZXYvbnMvdjAuMi4wIiwKICAgICJAaWQiOiAiaHR0cHM6Ly9naXRodWIuY29tL3JpdGVvZnN0cmluZy9jb2RlLXBvbGlzaHkvcmVsZWFzZXMvdGFnL3NjYW5uZXItdjEuMC4yI29wZW52ZXgiLAogICAgImF1dGhvciI6ICJDb2RleCIsCiAgICAidGltZXN0YW1wIjogIjIwMjYtMTEtMjBUMDU6MDE6MzVaIiwKICAgICJ2ZXJzaW9uIjogNywKICAgICJzdGF0ZW1lbnRzIjogWwogICAgICB7CiAgICAgICAgInZ1bG5lcmFiaWxpdHkiOiB7CiAgICAgICAgICAibmFtZSI6ICJDVkUtMjAyNi0xMTY1ODciCiAgICAgICAgfSwKICAgICAgICAicHJvZHVjdHMiOiBbCiAgICAgICAgICB7CiAgICAgICAgICAgICJAaWQiOiAicGtnOmdvbGFuZy9naXRodWIuY29tL2dvLWpvc2UvZ28tam9zZS92NEB2NC4xLjUiCiAgICAgICAgICB9CiAgICAgICAgXSwKICAgICAgICAic3RhdHVzIjogIm5vdF9hZmZlY3RlZCIsCiAgICAgICAgImp1c3RpZmljYXRpb24iOiAidnVsbmVyYWJsZV9jb2RlX25vdF9pbl9leGVjdXRlX3BhdGgiLAogICAgICAgICJpbXBhY3Rfc3RhdGVtZW50IjogIkNvZGV4IHJlY2hlY2tlZCB0aGUgcGlubmVkIFRyaXZ5IDAuNzYuMSBleGVjdXRpb24gcGF0aHMgYW5kIGN1cnJlbnQgYWR2aXNvcnkgb24gMjAyNi0xMS0xNi4gQ29kZSBQb2xpc2h5IGVuYWJsZXMgdmVyc2lvbiwgYW5vbnltb3VzIE9DSSBkYXRhYmFzZSBkb3dubG9hZCB0aHJvdWdoIGdvLWNvbnRhaW5lcnJlZ2lzdHJ5L25ldC9odHRwLCBhbmQgb2ZmbGluZSBhcmNoaXZlIHNjYW5zLiBJbnB1dHMgY2Fubm90IGNvbmZpZ3VyZSBTUElGRkUveERTIGNyZWRlbnRpYWxzIG9yIFNpZ3N0b3JlIE9JREM7IGltYWdlLWNvbmZpZ3VyYXRpb24gSldUIGFuYWx5c2lzIHVzZXMgYSBzZXBhcmF0ZSBKV0sgaW1wbGVtZW50YXRpb24uIE5vIGVuYWJsZWQgaW5wdXQgcmVhY2hlcyBnby1qb3NlIFJTQSBwcml2YXRlLWtleSB2YWxpZGF0aW9uLiBSZWFzc2VzcyBieSAyMDI2LTEyLTA3IFVUQyBhbmQgd2hlbmV2ZXIgdGhlIGltYWdlLCBleGVjdXRpb24gY29udHJhY3QsIGlucHV0cyBvciBhZHZpc29yeSBjaGFuZ2VzLiIKICAgICAgfSwKICAgICAgewogICAgICAgICJ2dWxuZXJhYmlsaXR5IjogewogICAgICAgICAgIm5hbWUiOiAiQ1ZFLTIwMjYtNzg2NjEiCiAgICAgICAgfSwKICAgICAgICAicHJvZHVjdHMiOiBbCiAgICAgICAgICB7CiAgICAgICAgICAgICJAaWQiOiAicGtnOmdvbGFuZy9nb2xhbmcub3JnL3gvbmV0QHYwLjYwLjAiCiAgICAgICAgICB9CiAgICAgICAgXSwKICAgICAgICAic3RhdHVzIjogIm5vdF9hZmZlY3RlZCIsCiAgICAgICAgImp1c3RpZmljYXRpb24iOiAidnVsbmVyYWJsZV9jb2RlX25vdF9wcmVzZW50IiwKICAgICAgICAiaW1wYWN0X3N0YXRlbWVudCI6ICJDb2RleCByZWNoZWNrZWQgR08tMjAyNi02ODYwIG9uIDIwMjYtMTEtMTYgYWdhaW5zdCB0aGUgdW5jaGFuZ2VkIGltYWdlIGFuZCBOb3ZlbWJlciA4IGJpbmFyeSBldmlkZW5jZSBmb3IgYm90aCBwaW5uZWQgTGludXggYW1kNjQgYW5kIGFybTY0IGV4ZWN1dGFibGVzLiBWYWxpZGF0ZWQgR28gcnVudGltZSBmdW5jdGlvbi1uYW1lIHRhYmxlcywgaW5jbHVkaW5nIGlubGluZWQgZnVuY3Rpb25zLCBjb250YWluIGh0bWwuaW5pdCBhbmQgY2hhcnNldCByb3V0aW5lcyBidXQgbm9uZSBvZiB0aGUgYWZmZWN0ZWQgSFRNTCBQYXJzZSBlbnRyeSBwb2ludHMgb3IgcGFyc2VyIG1ldGhvZHMuIFRoZSB2dWxuZXJhYmxlIHRleHQtbm9kZSBjb2FsZXNjaW5nIGNvZGUgaXMgYWJzZW50IGZyb20gYm90aCBiaW5hcmllczsgeC9uZXQgdjAuNjAuMCByZW1haW5zIHByZXNlbnQuIEV4YWN0IHBsYXRmb3JtIGFuZCBleGVjdXRhYmxlIGRpZ2VzdHMsIHBvc2l0aXZlIGNvbnRyb2xzIGFuZCByZXByb2R1Y2libGUgaW5zcGVjdGlvbiBhcmUgaW4gdGhlIGltbXV0YWJsZSBldmlkZW5jZS4gUmVhc3Nlc3MgYnkgMjAyNi0xMi0wNyBVVEMgYW5kIG9uIGltYWdlLCBidWlsZCwgZXhlY3V0aW9uLWNvbnRyYWN0IG9yIGFkdmlzb3J5IGNoYW5nZXMuIgogICAgICB9LAogICAgICB7CiAgICAgICAgInZ1bG5lcmFiaWxpdHkiOiB7CiAgICAgICAgICAibmFtZSI6ICJDVkUtMjAyNi05NzA1NCIKICAgICAgICB9LAogICAgICAgICJwcm9kdWN0cyI6IFsKICAgICAgICAgIHsKICAgICAgICAgICAgIkBpZCI6ICJwa2c6Z29sYW5nL3N0ZGxpYkB2MS4yNy4zIgogICAgICAgICAgfQogICAgICAgIF0sCiAgICAgICAgInN0YXR1cyI6ICJub3RfYWZmZWN0ZWQiLAogICAgICAgICJqdXN0aWZpY2F0aW9uIjogInZ1bG5lcmFibGVfY29kZV9ub3RfaW5fZXhlY3V0ZV9wYXRoIiwKICAgICAgICAiaW1wYWN0X3N0YXRlbWVudCI6ICJDb2RleCByZXZpZXdlZCBHTy0yMDI2LTY4NTkgb24gMjAyNi0xMS0yMC4gVGhlIHJhY2UgcmVxdWlyZXMgYW4gSFRUUC8xIHNlcnZlciByZXNwb25zZSB3cml0ZXIgYW5kIGNvbmN1cnJlbnQgYm9keS1saW1pdCBoYW5kbGluZy4gRW5hYmxlZCB2ZXJzaW9uLCByZWdpc3RyeS1jbGllbnQgZGF0YWJhc2UgZG93bmxvYWQgYW5kIHN0YW5kYWxvbmUgYXJjaGl2ZSBzY2FucyBjcmVhdGUgbm8gSFRUUCBzZXJ2ZXIgb3IgaGFuZGxlci4gSW5wdXRzIGNhbm5vdCBlbmFibGUgc2VydmVyIG1vZGUuIFJlYXNzZXNzIGJ5IDIwMjYtMTItMDcgb3Igb24gaW1hZ2UsIGNvbnRyYWN0LCBpbnB1dCBvciBhZHZpc29yeSBjaGFuZ2VzLiIKICAgICAgfSwKICAgICAgewogICAgICAgICJ2dWxuZXJhYmlsaXR5IjogewogICAgICAgICAgIm5hbWUiOiAiQ1ZFLTIwMjYtOTU4MzkiCiAgICAgICAgfSwKICAgICAgICAicHJvZHVjdHMiOiBbCiAgICAgICAgICB7CiAgICAgICAgICAgICJAaWQiOiAicGtnOmdvbGFuZy9naXRodWIuY29tL2NvbnRhaW5lcmQvY29udGFpbmVyZC92MkB2Mi40LjEiCiAgICAgICAgICB9CiAgICAgICAgXSwKICAgICAgICAic3RhdHVzIjogIm5vdF9hZmZlY3RlZCIsCiAgICAgICAgImp1c3RpZmljYXRpb24iOiAidnVsbmVyYWJsZV9jb2RlX25vdF9pbl9leGVjdXRlX3BhdGgiLAogICAgICAgICJpbXBhY3Rfc3RhdGVtZW50IjogIkNvZGV4IHJldmlld2VkIEdIU0EtdndocC04cDY2LW1xNGYgb24gMjAyNi0xMS0yMC4gQXJjaGl2ZSByZWFkZXJzIGFuZCBPQ0kgZGF0YWJhc2UgZG93bmxvYWQgdXNlIGdvLWNvbnRhaW5lcnJlZ2lzdHJ5LCBub3QgY29udGFpbmVyZCB0cmFuc2ZlciBvciBTZXRDaGlsZHJlbk1hcHBlZExhYmVscy4gSW5wdXRzIGNhbm5vdCBlbmFibGUgYSBjb250YWluZXJkIHNlcnZpY2Ugb3IgY29udGVudC1zdG9yZSBsYWJlbGluZy4gVGhpcyBleGNsdWRlcyB0aGUgc2VwYXJhdGUgaG9zdCBkYWVtb24uIFJlYXNzZXNzIGJ5IDIwMjYtMTItMDcgb3Igb24gaW1hZ2UsIGNvbnRyYWN0LCBpbnB1dCBvciBhZHZpc29yeSBjaGFuZ2VzLiIKICAgICAgfQogICAgXQogIH0sCiAgImV2aWRlbmNlIjogIkV4ZWN1dGlvbi1wYXRoIGFuZCBiaW5hcnkgZXZpZGVuY2U6IGh0dHBzOi8vZ2l0aHViLmNvbS9yaXRlb2ZzdHJpbmcvY29kZS1wb2xpc2h5L2Jsb2IvYmFjYWYyZTMyZTAyZGFjYzk3MmRhYzlhNzBmNTJiNTNiYjc0NGIzYy9kb2NzL2Rlc2lnbi90cml2eS1zY2FubmVyLWFzc2Vzc21lbnRzLm1kIC4gQWxsIHN0YXRlbWVudHMgYmluZCB0aGlzIGltYWdlIGFuZCBjb2RlLXBvbGlzaHktdHJpdnkvdjEuIiwKICAicGFja2FnZVZlcnNpb24iOiAiMS4wLjIiLAogICJ2ZXJzaW9uIjogIjAuNzYuMSIKfQo=","signature":"HnSiqUCzpdvPNtqr1V24Vy98e936s4CYvKrxTu1RgCMIupZ544uLdUs1bJpB1XuzX0TiBQ0yc5qsloeQ61NyBw=="},
   "features": ["javascript-bundle"],
   "publication": {
-    "indexUrl": "https://github.com/riteofstring/code-polishy/releases/download/v0.33.2/code-polishy-release-index.json",
-    "indexSha256": "c0da2d60f5464bd2c3dfdc27571822b6a0631d4e02a703da307c867e373cf3a8",
+    "indexUrl": "https://github.com/riteofstring/code-polishy/releases/download/v0.34.1/code-polishy-release-index.json",
+    "indexSha256": "fa23a78d121c608f3ca036459f304ca4110dc9191a83a064047de8fda287b7d7",
     "archives": [
       {
         "host": "darwin-arm64",
-        "url": "https://github.com/riteofstring/code-polishy/releases/download/v0.33.2/code-polishy-0.33.2-darwin-arm64.zip",
-        "sha256": "b3abc2903d64dd8abd1eee592bc27055b6d82e0b5a00ed0241bb4516a4cd086e",
-        "size": 279291208
+        "url": "https://github.com/riteofstring/code-polishy/releases/download/v0.34.1/code-polishy-0.34.1-darwin-arm64.zip",
+        "sha256": "13dbb171b5516f03aed06469146ad1b1c5fc70613b3c4436e6e40da2665c51ac",
+        "size": 279358532
       },
       {
         "host": "darwin-x64",
-        "url": "https://github.com/riteofstring/code-polishy/releases/download/v0.33.2/code-polishy-0.33.2-darwin-x64.zip",
-        "sha256": "8d30193227e6940c95f6e2eb7a8fbd5054cae01cf73037799c469edf07bf9360",
-        "size": 283955226
+        "url": "https://github.com/riteofstring/code-polishy/releases/download/v0.34.1/code-polishy-0.34.1-darwin-x64.zip",
+        "sha256": "85a9fac6502f7d5d247f3b4f53ea90fe1ae479cba73a86abe509592d7af2a528",
+        "size": 284032927
       },
       {
         "host": "linux-arm64",
-        "url": "https://github.com/riteofstring/code-polishy/releases/download/v0.33.2/code-polishy-0.33.2-linux-arm64.zip",
-        "sha256": "7a653135c0a27b541f7cb6247e190af7f668f1c65a22d6fc26cac27334f56e75",
-        "size": 344309100
+        "url": "https://github.com/riteofstring/code-polishy/releases/download/v0.34.1/code-polishy-0.34.1-linux-arm64.zip",
+        "sha256": "61fdc3fcdaedb0d3daaf53eb2eae85afad56b5c612f02bb006b134b3f23a70ce",
+        "size": 344374822
       },
       {
         "host": "linux-x64",
-        "url": "https://github.com/riteofstring/code-polishy/releases/download/v0.33.2/code-polishy-0.33.2-linux-x64.zip",
-        "sha256": "29203246c6bb7dfd0284408f20332efc26897a650817021384744a24f88c4105",
-        "size": 372768043
+        "url": "https://github.com/riteofstring/code-polishy/releases/download/v0.34.1/code-polishy-0.34.1-linux-x64.zip",
+        "sha256": "b3b232281c4e109eebdbe86ca7b1d7271fc9ebdb2774dfaa82ffc85a5203cca0",
+        "size": 372847263
       },
       {
         "host": "windows-x64",
-        "url": "https://github.com/riteofstring/code-polishy/releases/download/v0.33.2/code-polishy-0.33.2-windows-x64.zip",
-        "sha256": "2e75f0bd54b2f2efa3181f0bb548d55d0fd6df08eb1132a2f8168f11a5e78f93",
-        "size": 287184830
+        "url": "https://github.com/riteofstring/code-polishy/releases/download/v0.34.1/code-polishy-0.34.1-windows-x64.zip",
+        "sha256": "9ccb3021c61a90530a3812cebcb63dc19bfe3f6816fef964b447b0d529182d31",
+        "size": 287263511
       }
     ]
   }

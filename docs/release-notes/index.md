@@ -1,6 +1,6 @@
 # Release notes
 
-- [Unreleased](unreleased.md)
+- [3.0.4](3.0.4.md)
 - [3.0.3](3.0.3.md)
 - [3.0.2](3.0.2.md)
 - [3.0.1](3.0.1.md)

@@ -811,3 +811,14 @@ averaging instead of subtracting the final mean from 1. For abs(b * rank) below
 3e-16. Its input is masked before evaluation so an unused high-order polynomial
 cannot overflow and contaminate backward. One hundred decimal digits provide
 an independent reference for every variant's values and analytic gradients.
+
+## SoftTriple center temperatures
+
+The softmax over centers must normalize before a temperature division can
+overflow. Equal cosine similarities near 0.707 with gamma 1e-5 previously
+produced infinite float16 logits and NaN class scores, losses, and gradients.
+Widening low-precision similarities preserves the weighted sum, while subtracting
+a class-wise maximum before division also handles finite float32 similarities
+whose scaled values overflow. The returned class scores still represent the
+weighted raw similarities. Independent per-class float64 formulas and closed-form
+equal-center gradients verify the objective and the trainable center updates.

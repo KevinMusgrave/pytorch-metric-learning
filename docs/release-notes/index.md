@@ -72,6 +72,12 @@ Handle empty retrieval queries consistently across self-search, custom label com
 
 ## Published releases
 
+## Unreleased
+
+Keep SoftTriple center weights, class scores, and training gradients finite when temperature scaling would overflow before softmax.
+
+## Published releases
+
 - [3.0.3](3.0.3.md)
 - [3.0.2](3.0.2.md)
 - [3.0.1](3.0.1.md)

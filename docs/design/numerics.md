@@ -822,3 +822,14 @@ a class-wise maximum before division also handles finite float32 similarities
 whose scaled values overflow. The returned class scores still represent the
 weighted raw similarities. Independent per-class float64 formulas and closed-form
 equal-center gradients verify the objective and the trainable center updates.
+
+## NormalizedSoftmax temperature scaling
+
+A finite cosine similarity can exceed float16 range after division by a small
+temperature, even when the cross-entropy and its gradients are representable.
+Equal cosine scores near 0.707 at temperature 1e-5 must yield log(2) for two
+classes rather than NaN. Widening the distance output before division preserves
+that objective while keeping the public get_logits values at their documented
+absolute scale. The loss does not subtract an unreported offset from public
+logits. Closed-form equal-class gradients, an independent squared-distance
+objective, and optimizer updates cover the embedding and class-weight paths.

@@ -78,6 +78,12 @@ Keep SoftTriple center weights, class scores, and training gradients finite when
 
 ## Published releases
 
+## Unreleased
+
+Avoid premature half-precision overflow in NormalizedSoftmax logits while retaining their public absolute scale and trainable class gradients.
+
+## Published releases
+
 - [3.0.3](3.0.3.md)
 - [3.0.2](3.0.2.md)
 - [3.0.1](3.0.1.md)

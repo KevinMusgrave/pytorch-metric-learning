@@ -70,3 +70,13 @@ loss.backward()
 
 - **loss**: One loss per anchor that has a positive and a negative, indexed by
   anchor position in `embeddings`.
+
+Float16/bfloat16 pair scores are widened before adaptive-weight multiplication
+and log-sum-exp. This prevents an intermediate `gamma * alpha` overflow from
+turning finite pair logits into infinities or NaNs. Completed per-anchor losses
+retain the input score dtype, and adaptive weights remain detached for gradients.
+
+Each selected logit partition is centered before log-sum-exp, preserving its
+softmax gradients when gamma makes the absolute logits large. The two detached
+offsets are combined before the centered partitions, retaining cancellation
+between attraction and repulsion without erasing the smaller partition terms.

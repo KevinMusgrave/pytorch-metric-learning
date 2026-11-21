@@ -268,7 +268,8 @@
           "tests/miners/test_distance_weighted_density_precision.py",
           "tests/losses/test_decoupled_score_offsets.py",
           "tests/losses/test_intra_pair_variance_precision.py",
-          "tests/losses/test_p2s_center_precision.py"
+          "tests/losses/test_p2s_center_precision.py",
+          "tests/losses/test_circle_weight_precision.py"
         ],
         "module": "numerics",
         "focusedSuite": "numerics-focused"
@@ -488,7 +489,8 @@
           "tests/miners/test_distance_weighted_density_precision.py",
           "tests/losses/test_decoupled_score_offsets.py",
           "tests/losses/test_intra_pair_variance_precision.py",
-          "tests/losses/test_p2s_center_precision.py"
+          "tests/losses/test_p2s_center_precision.py",
+          "tests/losses/test_circle_weight_precision.py"
         ],
         "argv": [
           ".venv/bin/uv",
@@ -539,7 +541,8 @@
           "tests/miners/test_distance_weighted_density_precision.py",
           "tests/losses/test_decoupled_score_offsets.py",
           "tests/losses/test_intra_pair_variance_precision.py",
-          "tests/losses/test_p2s_center_precision.py"
+          "tests/losses/test_p2s_center_precision.py",
+          "tests/losses/test_circle_weight_precision.py"
         ],
         "timeoutSeconds": 120
       },

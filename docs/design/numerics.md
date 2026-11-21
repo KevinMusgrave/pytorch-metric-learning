@@ -891,3 +891,19 @@ before returning the original scalar dtype. Keep the original normalization
 epsilon for zero/tiny inputs and retain the weight clone needed by accumulated
 forwards. Independent float64 equations verify values and both gradients;
 a parameter update and CPU autocast cases demonstrate a retained learning signal.
+
+## Circle adaptive-weight multiplication
+
+Widen low-precision pair scores before forming adaptive weights and logits.
+At margin 0.5, gamma 1e5, and similarity 0.5, both mathematical logits are zero
+but a half-precision intermediate coefficient overflowed before multiplication
+by zero. The default nonzero reducer returned zero while backward produced NaN.
+Closed-form boundary values and derivatives, ordinary-scale controls, and
+independent rectangular pair equations cover this calculation without altering
+the detached-weight objective or the returned loss dtype.
+
+Large absolute float32 logits also degraded log-sum-exp gradients: a negative
+logit of 9000 with two equal candidates gave unequal-to-half softmax factors
+after backward subtracted the rounded log partition. Center each selected
+partition first, then combine its detached offsets before the centered sums.
+The closed-form derivative check remains at its original precision tolerance.

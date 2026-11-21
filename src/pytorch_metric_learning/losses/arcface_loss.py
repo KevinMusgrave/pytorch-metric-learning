@@ -27,8 +27,9 @@ class ArcFaceLoss(_CosineMarginSoftmaxLoss):
     ) -> Tensor:
         margins = self.target_margins(cosine_of_target_classes, labels)
         angles = self.get_angles(cosine_of_target_classes)
-        return torch.where(
+        modified = torch.where(
             angles <= math.pi - margins,
             torch.cos(angles + margins),
-            torch.cos(angles) - margins * torch.sin(margins),
+            cosine_of_target_classes - margins * torch.sin(margins),
         )
+        return torch.where(margins == 0, cosine_of_target_classes, modified)

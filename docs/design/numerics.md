@@ -721,3 +721,16 @@ loss dictionary uses the reducer's differentiable-zero contract, so backward
 still produces an empty or zero input gradient. The distance runs first to
 preserve its input validation. Two or more centers retain the existing
 nearest-neighbor objective, including negative similarities.
+
+## ArcFace linear-branch gradients
+
+ArcFace's monotonic continuation is linear in the target cosine. Reconstructing
+that cosine with `cos(acos(clamp(cosine)))` discarded its derivative at rounded
+endpoints. For the float16 embedding `[1, 0.01]` and target center `[-1, 0]`,
+the target center received no gradient and the embedding's directional gradient
+was halved, although both were finite. Using the original cosine in this branch
+retains the intended derivative. Zero margins use the same direct identity,
+including class-specific zero margins in DynamicArcFaceLoss. The angular branch
+and the existing monotonic switch remain unchanged. Tests compare both embedding
+and proxy gradients with an independent cosine cross-entropy objective at rounded
+endpoints, in addition to checking target-logit values and derivatives.

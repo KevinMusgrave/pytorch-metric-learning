@@ -102,6 +102,12 @@ Preserve DCL and DCLW objectives when a common score offset would erase the nega
 
 ## Published releases
 
+## Unreleased
+
+Compute low-precision intra-pair variance means and squared hinges in float32 so rounding cannot erase or amplify training gradients.
+
+## Published releases
+
 - [3.0.3](3.0.3.md)
 - [3.0.2](3.0.2.md)
 - [3.0.1](3.0.1.md)

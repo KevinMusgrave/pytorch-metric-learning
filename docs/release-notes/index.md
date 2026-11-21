@@ -60,6 +60,12 @@ Keep RankedList weighted averages and gradients finite at large positive and neg
 
 ## Published releases
 
+## Unreleased
+
+Preserve the PNP variant objectives and gradients when well-separated examples have very small soft negative ranks.
+
+## Published releases
+
 - [3.0.3](3.0.3.md)
 - [3.0.2](3.0.2.md)
 - [3.0.1](3.0.1.md)

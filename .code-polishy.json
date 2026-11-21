@@ -260,7 +260,8 @@
           "tests/losses/test_multi_supcon_matrix_precision.py",
           "tests/miners/test_batch_miner_finite_boundaries.py",
           "tests/losses/test_nca_score_offsets.py",
-          "tests/losses/test_ranked_list_temperature_precision.py"
+          "tests/losses/test_ranked_list_temperature_precision.py",
+          "tests/losses/test_pnp_small_penalties.py"
         ],
         "module": "numerics",
         "focusedSuite": "numerics-focused"
@@ -470,7 +471,8 @@
           "tests/losses/test_multi_supcon_matrix_precision.py",
           "tests/miners/test_batch_miner_finite_boundaries.py",
           "tests/losses/test_nca_score_offsets.py",
-          "tests/losses/test_ranked_list_temperature_precision.py"
+          "tests/losses/test_ranked_list_temperature_precision.py",
+          "tests/losses/test_pnp_small_penalties.py"
         ],
         "argv": [
           ".venv/bin/uv",
@@ -513,7 +515,8 @@
           "tests/losses/test_multi_supcon_matrix_precision.py",
           "tests/miners/test_batch_miner_finite_boundaries.py",
           "tests/losses/test_nca_score_offsets.py",
-          "tests/losses/test_ranked_list_temperature_precision.py"
+          "tests/losses/test_ranked_list_temperature_precision.py",
+          "tests/losses/test_pnp_small_penalties.py"
         ],
         "timeoutSeconds": 120
       },

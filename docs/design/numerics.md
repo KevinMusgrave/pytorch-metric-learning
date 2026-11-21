@@ -798,3 +798,16 @@ multiplication prevents this intermediate overflow. Negative temperatures use
 the opposite score direction; empty eligible sets keep a finite zero offset and
 retain their zero contribution. Low-precision losses retain float32 through the
 reducer rather than narrowing their weighted averages prematurely.
+
+## PNP penalties near zero
+
+Well-separated positives naturally produce very small soft negative ranks at
+the paper's temperature 0.01. Adding these ranks to 1 erased Ds, Dq, and Iu
+losses. Ib additionally subtracted nearly equal values and could replace a
+penalty near 8.76e-27 by 4.71e-14 in float32, with a zero gradient. Log1p keeps
+the logarithmic increments; negative expm1 computes each Dq penalty before
+averaging instead of subtracting the final mean from 1. For abs(b * rank) below
+0.001, the Ib series through degree six has relative truncation error below
+3e-16. Its input is masked before evaluation so an unused high-order polynomial
+cannot overflow and contaminate backward. One hundred decimal digits provide
+an independent reference for every variant's values and analytic gradients.

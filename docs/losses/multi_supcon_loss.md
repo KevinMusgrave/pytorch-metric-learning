@@ -39,8 +39,11 @@ only when `ref_emb` is `None` and `indices_tuple` is `None`.
 `loss_func.pair_indices(labels, ref_labels=None)` returns the thresholded
 [`PairIndices`](../types.md#pairindices).
 
-An anchor without positives has no loss term. The loss is computed in float32
-for float16 and bfloat16 embeddings and returned in the embeddings' dtype.
+An anchor without positives has no loss term. Computation preserves the
+precision of both the embeddings and the distance matrix, widening float16
+and bfloat16 arithmetic to float32. The result uses the matrix's dtype, so a
+caller-supplied float64 `mat` retains its precision with lower-precision
+embeddings.
 The weights are computed with one matrix product over the labels, so
 references cost no intermediate tensor proportional to the number of classes.
 Label intersections retain float32 or float64 precision under autocast, so

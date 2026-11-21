@@ -4,6 +4,7 @@ from functools import partial
 from typing import Any
 
 import numpy as np
+import pytest
 import torch
 import torch.nn.functional as F
 
@@ -163,3 +164,148 @@ def angular_margin_reference(embeddings, weight, labels, margin, scale, weight_n
     if weight_norms:
         magnitudes = magnitudes * weight.norm(dim=1)
     return F.cross_entropy(scale * magnitudes * modified, labels)
+
+
+SCALED_NORM_CASES = {
+    "norm_overflow": ([60000.0, 60000.0], [[0.5, 0.0], [0.0, 0.5]], 1, 1),
+    "product_overflow": (
+        [40000.0, 40000.0],
+        [[-0.517578125, 1.931640625], [1.931640625, -0.517578125]],
+        1,
+        0.5,
+    ),
+    "angular_margin": (
+        [40000.0, 40000.0],
+        [[-0.517578125, 1.931640625], [1.931640625, -0.517578125]],
+        4,
+        1 / 64,
+    ),
+    "product_underflow": ([1e-4, 1e-4], [[1e-4, 0.0], [0.0, 1e-4]], 1, 1024),
+}
+
+
+def scaled_norm_fixture(case, dtype, loss_class):
+    row, weights, margin, scale = SCALED_NORM_CASES[case]
+    x = torch.tensor([row], dtype=dtype, device=TEST_DEVICE, requires_grad=True)
+    loss = loss_class(2, 2, margin=margin, scale=scale).to(
+        device=TEST_DEVICE, dtype=dtype
+    )
+    with torch.no_grad():
+        loss.weight.copy_(torch.tensor(weights, dtype=dtype, device=TEST_DEVICE))
+    return x, loss
+
+
+@pytest.mark.parametrize("case", SCALED_NORM_CASES)
+@pytest.mark.parametrize("loss_class", [LargeMarginSoftmaxLoss, SphereFaceLoss])
+@pytest.mark.parametrize(
+    "dtype", [torch.float16, torch.bfloat16, torch.float32, torch.float64]
+)
+@pytest.mark.parametrize("label", [0, 1])
+def test_finite_scaled_logits_and_training_gradients(case, loss_class, dtype, label):
+    x, loss = scaled_norm_fixture(case, dtype, loss_class)
+    labels = torch.tensor([label], device=TEST_DEVICE)
+    exact_x = x.detach().double().requires_grad_()
+    exact_weight = loss.weight.detach().double().requires_grad_()
+    expected_weight = (
+        F.normalize(exact_weight, dim=1)
+        if loss_class is SphereFaceLoss
+        else exact_weight
+    )
+    expected_logits = exact_x @ expected_weight.T * loss.scale
+    logits = loss.get_logits(x)
+    assert logits.dtype == dtype
+    assert logits.isfinite().all()
+    torch.testing.assert_close(
+        logits.double(), expected_logits, rtol=helpers.rtol(dtype), atol=1e-8
+    )
+    actual = loss(x, labels)
+    expected = (
+        F.cross_entropy(expected_logits, labels)
+        if loss.margin == 1
+        else angular_margin_reference(
+            exact_x,
+            exact_weight,
+            labels,
+            loss.margin,
+            loss.scale,
+            loss_class is LargeMarginSoftmaxLoss,
+        )
+    )
+    assert actual.dtype == dtype and actual.isfinite()
+    helpers.assert_close(actual, expected, dtype)
+    actual.backward()
+    expected.backward()
+    for actual_leaf, exact_leaf in [(x, exact_x), (loss.weight, exact_weight)]:
+        assert actual_leaf.grad is not None and exact_leaf.grad is not None
+        assert actual_leaf.grad.isfinite().all()
+        helpers.assert_close(actual_leaf.grad, exact_leaf.grad, dtype)
+
+
+@pytest.mark.parametrize(
+    ("input_dtype", "autocast_dtype", "result_dtype"),
+    [
+        (torch.float32, torch.float16, torch.float32),
+        (torch.float32, torch.bfloat16, torch.float32),
+        (torch.float16, torch.float16, torch.float16),
+        (torch.float16, torch.bfloat16, torch.float32),
+        (torch.bfloat16, torch.float16, torch.float32),
+    ],
+)
+@pytest.mark.parametrize("loss_class", [LargeMarginSoftmaxLoss, SphereFaceLoss])
+def test_norm_scaling_keeps_autocast_result_promotion(
+    input_dtype, autocast_dtype, result_dtype, loss_class
+):
+    x, loss = scaled_norm_fixture("norm_overflow", input_dtype, loss_class)
+    labels = torch.tensor([0], device=TEST_DEVICE)
+    exact_x = x.detach().double().requires_grad_()
+    exact_weight = loss.weight.detach().double().requires_grad_()
+    expected_weight = (
+        F.normalize(exact_weight, dim=1)
+        if loss_class is SphereFaceLoss
+        else exact_weight
+    )
+    expected = F.cross_entropy(exact_x @ expected_weight.T, labels)
+    with torch.autocast(TEST_DEVICE.type, dtype=autocast_dtype):
+        logits = loss.get_logits(x)
+        actual = loss(x, labels)
+    assert logits.dtype == result_dtype and logits.isfinite().all()
+    assert actual.dtype == torch.float32 and actual.isfinite()
+    helpers.assert_close(actual, expected, autocast_dtype)
+    actual.backward()
+    expected.backward()
+    for actual_leaf, exact_leaf in [(x, exact_x), (loss.weight, exact_weight)]:
+        assert actual_leaf.grad is not None and exact_leaf.grad is not None
+        assert actual_leaf.grad.isfinite().all()
+        helpers.assert_close(actual_leaf.grad, exact_leaf.grad, autocast_dtype)
+
+
+@pytest.mark.parametrize("dtype", [torch.float16, torch.float32])
+@pytest.mark.parametrize("size", [0, 1])
+@pytest.mark.parametrize("loss_class", [LargeMarginSoftmaxLoss, SphereFaceLoss])
+def test_norm_scaling_keeps_empty_and_zero_inputs(dtype, size, loss_class):
+    loss = loss_class(2, 2, margin=1).to(TEST_DEVICE, dtype)
+    x = torch.zeros(size, 2, dtype=dtype, device=TEST_DEVICE, requires_grad=True)
+    logits = loss.get_logits(x)
+    assert logits.shape == (size, 2) and logits.dtype == dtype
+    assert torch.count_nonzero(logits) == 0
+    actual = loss(x, torch.zeros(size, dtype=torch.long, device=TEST_DEVICE))
+    helpers.assert_close(actual, math.log(2) if size else 0, dtype)
+    actual.backward()
+    assert x.grad is not None and torch.count_nonzero(x.grad) == 0
+
+
+@pytest.mark.parametrize("loss_class", [LargeMarginSoftmaxLoss, SphereFaceLoss])
+def test_final_logits_keep_float16_range(loss_class):
+    value = 60000.0 if loss_class is SphereFaceLoss else 40000.0
+    x = torch.full((1, 2), value, dtype=torch.float16, device=TEST_DEVICE)
+    loss = loss_class(2, 2, margin=1).to(TEST_DEVICE, torch.float16)
+    with torch.no_grad():
+        weight = (
+            torch.ones(2, 2, device=TEST_DEVICE, dtype=torch.float16)
+            if loss_class is SphereFaceLoss
+            else 2 * torch.eye(2, device=TEST_DEVICE, dtype=torch.float16)
+        )
+        loss.weight.copy_(weight)
+    logits = loss.get_logits(x)
+    assert logits.dtype == torch.float16
+    assert logits.isinf().all()

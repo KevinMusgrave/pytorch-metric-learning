@@ -277,6 +277,22 @@ keeps it: TF32 rounding made identical BF16 rows report a distance of 0.0292. Th
 preserve their existing numerical behavior and do not change global precision settings.
 Other norms and matrices with at most 25 rows on each side also keep the direct kernel.
 
+`LargeMarginSoftmaxLoss` and `SphereFaceLoss` widen low-precision inputs before
+taking magnitude norms, and keep magnitude products and scaling in float32
+until the completed logits are converted to their existing result dtype.
+An embedding norm can exceed float16 even when its cosine-scaled logit fits:
+`[60000, 60000]` has norm about 84853, but comparison with `[0.5, 0]` gives a
+LargeMarginSoftmax logit of 30000. Casting an already-computed norm cannot
+recover it. Conversely, tiny norm products can round to zero before `scale`
+restores their representable range, erasing directional training gradients.
+
+The result dtype follows the original operand promotion, including autocast.
+Using the cosine tensor's dtype alone would narrow existing float32 results
+under autocast, because the original magnitude factors remain float32. This
+changes neither normalization nor the angular polynomial; those calculations
+retain their existing rounding and intermediate-gradient range. The final
+logit dtype also keeps its existing representable range.
+
 Default reductions avoid data-dependent shapes:
 `ThresholdReducer` masks and counts, and `DivisorReducer` selects with
 `torch.where`. `DivisorReducer` builds the divisor directly in the accumulation

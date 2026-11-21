@@ -78,8 +78,10 @@ def normalize(
     if torch.finfo(embeddings.dtype).max <= limit:
         normalized = torch.nn.functional.normalize(work, p=p, dim=dim, eps=eps)
     else:
-        scale = work.detach().abs().amax(dim=dim, keepdim=True)
-        scale = torch.where(scale > limit, scale, 1)
+        scale = torch.linalg.vector_norm(
+            work.detach(), ord=float("inf"), dim=dim, keepdim=True
+        )
+        scale = torch.nn.functional.threshold(scale, limit, 1)
         scaled = work / scale
         norm = torch.linalg.vector_norm(scaled, ord=p, dim=dim, keepdim=True)
         normalized = scaled / norm.clamp_min(eps / scale)

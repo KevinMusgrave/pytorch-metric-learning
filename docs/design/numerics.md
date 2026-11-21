@@ -674,6 +674,23 @@ For centers `[0, 0]` and `[50, 0]`, the loss is 390625 while its input gradients
 remain representable. Keeping the scalar in float32 lets a later regularization
 weight scale it without first turning it into infinity.
 
+## Distance-free regularizer statistics
+
+`LpRegularizer` and `ZeroMeanRegularizer` widen float16 and bfloat16 inputs
+before computing norms, powers, or row sums, and retain float32 through the
+reducer and returned scalar. Their penalties are unbounded: an individual
+row can overflow float16 even when the mean fits. The loss applies a
+regularization weight only after calling the regularizer, so narrowing the
+scalar before returning would also discard a representable weighted penalty.
+
+The norm power can corrupt gradients as well as values. For one row
+`[40000, 40000]`, squared L2 regularization with weight `1e-5` should contribute
+32000 with gradient `[0.8, 0.8]`. In float16, the intermediate derivative of
+the power already overflows before the weight can scale it. Widening before
+the norm keeps that chain representable. Float64 inputs are not narrowed,
+custom reducers receive the wider terms, and empty reductions keep the
+existing differentiable zero in the input dtype.
+
 ## RegularFace without another center
 
 `RegularFaceRegularizer` emits no loss term when the similarity matrix has

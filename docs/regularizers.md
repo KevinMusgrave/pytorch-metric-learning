@@ -79,6 +79,12 @@ regularizers.CenterInvariantRegularizer(**options)
 This encourages embeddings or weights to have a small Lp norm. The loss for
 row `i` is `torch.norm(x[i], p=p) ** power`.
 
+For float16 and bfloat16 inputs, norms, powers, and reduction use float32,
+and the nonempty loss remains float32. This prevents an individual penalty
+from overflowing before averaging or before a loss applies its regularization
+weight. Float32 and float64 inputs retain their dtype, and gradients reach
+the original input tensor.
+
 ```python {.signature}
 regularizers.LpRegularizer(p=2, power=1, *, reducer=None)
 ```
@@ -228,6 +234,11 @@ L_r = \frac{1}{N} \sum_{i=1}^{N} \left| \sum_{m=1}^{M} h_{im} \right|
 $$
 
 Here $h_{im}$ is the $m$-th component of the $i$-th embedding. The loss that applies the regularizer multiplies $L_r$ by its `embedding_reg_weight` or `weight_reg_weight`, which is $\lambda$ in the paper.
+
+For float16 and bfloat16 inputs, row sums, absolute values, and reduction use
+float32, and the nonempty loss remains float32. A row sum can exceed float16's
+range even when the batch mean or weighted penalty fits. Float32 and float64
+inputs retain their dtype, and gradients reach the original input tensor.
 
 **Distance**: None. The regularizer takes no `distance` argument.
 

@@ -3,7 +3,7 @@ from torch import Tensor
 
 from ..reducers import BaseReducer
 from ..types import LossDict
-from ..utils._common import arange_like
+from ..utils._common import accumulation_dtype, arange_like
 from .base_regularizer import BaseRegularizer
 
 
@@ -12,6 +12,7 @@ class ZeroMeanRegularizer(BaseRegularizer):
         super().__init__(reducer=reducer)
 
     def compute_loss(self, x: Tensor) -> LossDict:
+        x = x.to(accumulation_dtype(x.dtype))
         return {
             "loss": {
                 "losses": torch.abs(torch.sum(x, dim=1)),

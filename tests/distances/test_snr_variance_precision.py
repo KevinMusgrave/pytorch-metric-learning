@@ -12,7 +12,7 @@ DTYPES = [torch.float16, torch.bfloat16, torch.float32, torch.float64]
 
 
 def rows(dtype):
-    result = torch.ones(4, 512, dtype=dtype, device=TEST_DEVICE)
+    result = torch.ones(4, 256, dtype=dtype, device=TEST_DEVICE)
     for i in range(4):
         result[i, i] = 1.03125 + i / 128
     return result

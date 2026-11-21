@@ -130,7 +130,7 @@ class BatchEasyHardMiner(BaseMiner):
         semihard_thresholds: Tensor | None,
     ) -> tuple[tuple[Tensor, Tensor], Tensor]:
         use_max = farthest != self.distance.is_inverted
-        inf = _common.neg_inf(mat.dtype) if use_max else _common.pos_inf(mat.dtype)
+        inf = -torch.inf if use_max else torch.inf
         candidate = torch.zeros_like(mat, dtype=torch.bool)
         candidate[anchor_idx, other_idx] = True
         if semihard_thresholds is not None:

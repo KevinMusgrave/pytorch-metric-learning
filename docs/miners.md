@@ -228,7 +228,8 @@ miners.BatchEasyHardMiner(
 
 When neither strategy is `"all"`, the miner returns one positive pair and one
 negative pair for each anchor that has both a selected positive and a selected
-negative.
+negative. Finite values at the dtype limits remain eligible, and masked
+entries cannot win a minimum or maximum by tying those limits.
 
 **Restrictions**
 

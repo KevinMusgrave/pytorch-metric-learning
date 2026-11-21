@@ -257,7 +257,8 @@
           "tests/docs/test_public_surface.py",
           "tests/regularizers/test_spherical_embedding_precision.py",
           "tests/utils/test_weighted_triplet_precision.py",
-          "tests/losses/test_multi_supcon_matrix_precision.py"
+          "tests/losses/test_multi_supcon_matrix_precision.py",
+          "tests/miners/test_batch_miner_finite_boundaries.py"
         ],
         "module": "numerics",
         "focusedSuite": "numerics-focused"
@@ -464,7 +465,8 @@
           "tests/distances/test_lp_distance.py",
           "tests/regularizers/test_spherical_embedding_precision.py",
           "tests/utils/test_weighted_triplet_precision.py",
-          "tests/losses/test_multi_supcon_matrix_precision.py"
+          "tests/losses/test_multi_supcon_matrix_precision.py",
+          "tests/miners/test_batch_miner_finite_boundaries.py"
         ],
         "argv": [
           ".venv/bin/uv",
@@ -504,7 +506,8 @@
           "tests/docs/test_public_surface.py",
           "tests/regularizers/test_spherical_embedding_precision.py",
           "tests/utils/test_weighted_triplet_precision.py",
-          "tests/losses/test_multi_supcon_matrix_precision.py"
+          "tests/losses/test_multi_supcon_matrix_precision.py",
+          "tests/miners/test_batch_miner_finite_boundaries.py"
         ],
         "timeoutSeconds": 120
       },

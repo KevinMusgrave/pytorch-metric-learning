@@ -765,3 +765,13 @@ dtype now promotes the embeddings and resolved matrix together before widening
 low-precision arithmetic. The output still follows the matrix dtype. Independent
 row-wise log-softmax references cover square and rectangular matrices, distance
 and similarity orientation, restricted pairs, and fractional Jaccard weights.
+
+## Batch miner boundary masks
+
+BatchEasyHardMiner previously filled excluded entries with the largest or
+smallest finite value of the matrix dtype. A valid candidate at that value tied
+the exclusion sentinel, so argmin or argmax could select a self-comparison,
+wrong-label pair, or pair absent from the supplied candidates. Infinite mask
+sentinels separate excluded entries from every finite candidate. Rows without
+candidates still use the existing eligibility mask, so their sentinel values
+never become returned pairs. BatchHardMiner inherits the same selection fix.

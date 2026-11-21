@@ -40,6 +40,14 @@
 
 ## Published releases
 
+## Unreleased
+
+- Keep BatchEasyHardMiner and BatchHardMiner selections inside their candidate
+  sets when finite scores reach a dtype limit, instead of selecting a masked
+  self-comparison or wrong-label pair on a sentinel tie.
+
+## Published releases
+
 - [3.0.3](3.0.3.md)
 - [3.0.2](3.0.2.md)
 - [3.0.1](3.0.1.md)

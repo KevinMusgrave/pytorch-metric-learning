@@ -775,3 +775,15 @@ wrong-label pair, or pair absent from the supplied candidates. Infinite mask
 sentinels separate excluded entries from every finite candidate. Rows without
 candidates still use the existing eligibility mask, so their sentinel values
 never become returned pairs. BatchHardMiner inherits the same selection fix.
+
+## NCA score offsets
+
+NCA and ProxyNCA share one normalization path. Two independently computed
+log-sum-exp values can round to the same large score even when their difference
+is nonzero. Four equidistant float32 simplex vertices of magnitude 10000 give
+zero loss and incorrect gradients instead of log(3). Removing the eligible-row
+score maximum before scaling preserves that difference and prevents a common
+offset from overflowing the scaling step. Positive-free rows are removed before
+using infinite masks, so no all-masked reduction contributes an undefined
+gradient. The proxy objective uses the same fix and is covered by closed-form
+embedding and center-gradient references.

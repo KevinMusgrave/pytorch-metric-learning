@@ -19,16 +19,20 @@ def _nca_terms(
     exclude_self: bool,
 ) -> LossDict:
     dtype = _common.accumulation_dtype(mat.dtype)
-    logits = mat.to(dtype) * (scale if is_inverted else -scale)
+    logits = mat.to(dtype) * (1 if is_inverted else -1)
     candidates = torch.ones_like(logits, dtype=torch.bool)
     if exclude_self:
         candidates.fill_diagonal_(False)
     same = (labels.unsqueeze(1) == reference_labels.unsqueeze(0)) & candidates
-    masked = _common.neg_inf(dtype)
-    all_lse = torch.logsumexp(logits.masked_fill(~candidates, masked), dim=1)
-    pos_lse = torch.logsumexp(logits.masked_fill(~same, masked), dim=1)
     valid = torch.where(same.any(dim=1))[0]
-    losses = (all_lse - pos_lse)[valid] * weights[valid]
+    if len(valid) == 0:
+        return {}
+    logits, candidates, same = logits[valid], candidates[valid], same[valid]
+    offset = logits.masked_fill(~candidates, -torch.inf).amax(dim=1, keepdim=True)
+    logits = (logits - offset) * scale
+    all_lse = torch.logsumexp(logits.masked_fill(~candidates, -torch.inf), dim=1)
+    pos_lse = torch.logsumexp(logits.masked_fill(~same, -torch.inf), dim=1)
+    losses = (all_lse - pos_lse) * weights[valid]
     return {"loss": {"losses": losses.to(mat.dtype), "indices": valid}}
 
 

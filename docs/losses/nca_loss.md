@@ -64,3 +64,7 @@ loss.backward()
 
 - **loss**: One loss per valid query, indexed by the query's position in
   `embeddings`.
+
+Valid rows share one score offset before scaling and both log-sum-exp reductions.
+This keeps the log probability and its gradients invariant to large finite row
+offsets. Rows without positive references remain excluded.

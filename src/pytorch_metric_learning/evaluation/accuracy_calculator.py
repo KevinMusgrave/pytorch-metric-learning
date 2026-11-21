@@ -192,7 +192,10 @@ def _ideal_dcg(
         own = torch.nonzero(gains == _gains(relevance_fn, query, query))[0, 0]
         gains = torch.cat([gains[:own], gains[own + 1 :]])
     gains = gains[: len(discounts)]
-    return (gains * discounts[: len(gains)]).sum()
+    scale = gains.max() if len(gains) else gains.new_tensor(1)
+    scale = torch.where(scale > 0, scale, 1)
+    value = ((gains / scale) * discounts[: len(gains)]).sum()
+    return torch.stack((value, scale))
 
 
 def ndcg(
@@ -213,7 +216,8 @@ def ndcg(
     ideal = torch.stack(
         [_ideal_dcg(label, inputs, relevance_fn, discounts) for label in classes]
     )
-    return (gains * discounts).sum(dim=1) / ideal[class_index]
+    gains = gains / ideal[class_index, 1, None]
+    return (gains * discounts).sum(dim=1) / ideal[class_index, 0]
 
 
 def ndcg_metric(relevance_fn: GradedRelevance, k: int | None = None) -> RetrievalMetric:

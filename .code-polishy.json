@@ -361,7 +361,8 @@
       {
         "paths": [
           "tests/evaluation/test_retrieval_backends.py",
-          "tests/evaluation/test_empty_accuracy_queries.py"
+          "tests/evaluation/test_empty_accuracy_queries.py",
+          "tests/evaluation/test_ndcg_gain_range.py"
         ],
         "module": "evaluation",
         "focusedSuite": "evaluation-focused"
@@ -552,7 +553,8 @@
           "tests/helpers.py",
           "tests/losses/utils.py",
           "conftest.py",
-          "tests/evaluation/test_empty_accuracy_queries.py"
+          "tests/evaluation/test_empty_accuracy_queries.py",
+          "tests/evaluation/test_ndcg_gain_range.py"
         ],
         "argv": [
           ".venv/bin/uv",
@@ -565,7 +567,8 @@
           "-m",
           "pytest",
           "tests/evaluation/test_retrieval_backends.py",
-          "tests/evaluation/test_empty_accuracy_queries.py"
+          "tests/evaluation/test_empty_accuracy_queries.py",
+          "tests/evaluation/test_ndcg_gain_range.py"
         ],
         "timeoutSeconds": 120
       },

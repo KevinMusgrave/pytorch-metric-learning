@@ -464,7 +464,10 @@ NDCG@k = DCG@k / IDCG@k
 
 The result is a `(Nq,)` float64 tensor with values from 0 to 1. Gains are used as
 returned, so linear gain is `relevance` and exponential gain is
-`2**relevance - 1`. The rules below keep the normalization correct:
+`2**relevance - 1`. Both discounted sums are evaluated in a shared
+per-query gain scale, preserving their ratio for very large or subnormal
+finite gains without changing the relevance function. The rules below keep
+the normalization correct:
 
 - The ideal ranking draws from every reference, not only the retrieved neighbors,
   so a query that retrieved no relevant reference in its `k` neighbors scores 0

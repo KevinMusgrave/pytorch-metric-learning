@@ -85,8 +85,10 @@ Samples triplets at random with PyTorch's global random number generator.
   triplet per positive of each anchor. A positive integer draws that many,
   sampling positives and negatives with replacement. Zero draws none.
 - **weights**: Optional nonnegative `(N, M)` tensor of negative-sampling
-  weights for each anchor and reference row. `None` samples negatives
-  uniformly.
+  finite weights for each anchor and reference row. `None` samples negatives
+  uniformly. Each row is rescaled using its eligible negative weights before
+  conversion to the sampling dtype, so a common positive factor does not
+  remove valid triplets or let masked positive/self weights affect the draw.
 
 Anchors without a positive, or without a negative of positive weight, get no
 triplets. The draw synchronizes the device once to size its output.

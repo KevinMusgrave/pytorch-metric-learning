@@ -105,7 +105,8 @@ class ManifoldLoss(BaseMetricLossFunction):
         excluded = torch.zeros_like(violations, dtype=torch.bool)
         excluded[rows, meta_classes] = True
         violations = violations.masked_fill(excluded | (violations < 0), -math.inf)
-        return torch.log(1 + torch.sum(torch.exp(violations), dim=1)).mean()
+        baseline = torch.zeros_like(violations[:, :1])
+        return torch.logsumexp(torch.cat((baseline, violations), dim=1), dim=1).mean()
 
     def default_distance(self) -> BaseDistance:
         return CosineSimilarity()

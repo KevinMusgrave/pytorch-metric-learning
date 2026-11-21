@@ -34,14 +34,22 @@ class NormalizedSoftmaxLoss(BaseProxyLoss):
         logits = self.get_logits(embeddings)
         weights = indexing.convert_to_weights(indices_tuple, labels, dtype=logits.dtype)
         loss = F.cross_entropy(logits, labels, reduction="none") * weights
-        return {"loss": {"losses": loss, "indices": _common.arange_like(embeddings)}}
+        return {
+            "loss": {
+                "losses": loss,
+                "indices": _common.arange_like(embeddings),
+            }
+        }
 
     def default_distance(self) -> BaseDistance:
         return DotProductSimilarity(normalize_embeddings=True)
 
     def get_logits(self, embeddings: Tensor) -> Tensor:
-        normalized_weight = self.distance.normalize(self.weight, dim=1)
-        logits = self.distance(embeddings, normalized_weight) / self.temperature
+        weight = self.weight
+        if not self.distance.normalize_embeddings:
+            weight = self.distance.normalize(weight, dim=1)
+        logits = self.distance(embeddings, weight)
+        logits = logits.to(_common.accumulation_dtype(logits.dtype)) / self.temperature
         if not self.distance.is_inverted:
             logits = -logits
         return logits

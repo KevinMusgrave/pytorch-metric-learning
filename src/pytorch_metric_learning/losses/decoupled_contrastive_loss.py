@@ -34,16 +34,25 @@ class DecoupledContrastiveLoss(GenericPairLoss):
         sign = 1 if self.distance.is_inverted else -1
         pos_scores = sign * pos_pairs.to(dtype)
         neg_scores = sign * neg_pairs.to(dtype)
+        shift = neg_scores.new_full((mat.shape[0],), -torch.inf).scatter_reduce(
+            0, a2, neg_scores.detach(), reduce="amax"
+        )
+        keep = torch.isfinite(shift[a1])
         neg_lse = _common.segment_logsumexp(
-            neg_scores / self.temperature, a2, mat.shape[0]
-        )[a1]
-        keep = torch.isfinite(neg_lse)
+            _common.shifted_division(neg_scores, shift[a2], self.temperature),
+            a2,
+            mat.shape[0],
+        )[a1[keep]]
         pos_scores = pos_scores[keep]
-        attraction = pos_scores / self.temperature
-        if self.sigma is not None:
-            weights = torch.softmax(pos_scores / self.sigma, dim=0) * len(pos_scores)
-            attraction = (2 - weights) * attraction
-        losses = neg_lse[keep] - attraction
+        losses = neg_lse - _common.shifted_division(
+            pos_scores, shift[a1[keep]], self.temperature
+        )
+        if self.sigma is not None and len(pos_scores):
+            weights = torch.softmax(
+                _common.shifted_division(pos_scores, pos_scores.max(), self.sigma),
+                dim=0,
+            ) * len(pos_scores)
+            losses = losses + (weights - 1) * pos_scores / self.temperature
         return {
             "loss": {"losses": losses.to(mat.dtype), "indices": (a1[keep], p[keep])}
         }

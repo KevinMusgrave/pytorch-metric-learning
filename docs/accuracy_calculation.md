@@ -464,7 +464,10 @@ NDCG@k = DCG@k / IDCG@k
 
 The result is a `(Nq,)` float64 tensor with values from 0 to 1. Gains are used as
 returned, so linear gain is `relevance` and exponential gain is
-`2**relevance - 1`. The rules below keep the normalization correct:
+`2**relevance - 1`. Both discounted sums are evaluated in a shared
+per-query gain scale, preserving their ratio for very large or subnormal
+finite gains without changing the relevance function. The rules below keep
+the normalization correct:
 
 - The ideal ranking draws from every reference, not only the retrieved neighbors,
   so a query that retrieved no relevant reference in its `k` neighbors scores 0
@@ -568,3 +571,12 @@ def label_comparison_fn(x, y):
 
 labels = torch.tensor([10.0, 0.03, 0.04, 0.05])
 ```
+
+### Empty query sets
+
+Retrieval evaluation accepts an empty query set with self-search, an empty
+gallery, or a nonempty gallery. Aggregate results are NaN because there are no
+eligible query values; each per-class result is an empty dictionary. Custom
+label comparison and registered NDCG follow the same contract. No nearest-neighbor
+backend runs without queries. Input validation and custom metric output-shape
+validation still apply, and direct `ndcg` calls return an empty float64 vector.

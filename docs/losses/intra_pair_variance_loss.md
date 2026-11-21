@@ -59,3 +59,8 @@ loss.backward()
 
 - **pos_loss**: One loss per (anchor, positive) pair, indexed by `(anchors, positives)`.
 - **neg_loss**: One loss per (anchor, negative) pair, indexed by `(anchors, negatives)`.
+
+Float16/bfloat16 selected pair values are widened to float32 before the mean,
+epsilon adjustment, and squared hinge. Terms stay in float32 through the
+configured reducer, preserving small nonzero penalties and avoiding premature
+square overflow. Float32 and float64 pair values retain their dtype.

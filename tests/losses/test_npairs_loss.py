@@ -57,11 +57,14 @@ class TestNPairsLoss(unittest.TestCase):
 
             total_loss /= len(pos_pairs[0])
             self.assertTrue(torch.isclose(lossA, total_loss))
+            stats_dtype = torch.float64 if dtype == torch.float64 else torch.float32
+            regularization = (
+                embeddings_for_loss_fn.double().square().sum(dim=1).mean()
+            ).to(stats_dtype)
             self.assertTrue(
                 torch.isclose(
                     lossB,
-                    total_loss
-                    + torch.mean(torch.norm(embeddings_for_loss_fn, dim=1) ** 2),
+                    total_loss + regularization,
                 )
             )
 

@@ -115,10 +115,10 @@ class TestLossComposition(unittest.TestCase):
                     embedding_regularizer=LpRegularizer(), embedding_reg_weight=0.3
                 )
                 actual = loss_func(embeddings, labels)
-                expected = (
-                    contrastive_reference(embeddings, labels)
-                    + 0.3 * embeddings.norm(dim=1).mean()
-                )
+                stats_dtype = torch.float64 if dtype == torch.float64 else torch.float32
+                expected = contrastive_reference(embeddings, labels).to(
+                    stats_dtype
+                ) + 0.3 * embeddings.double().norm(dim=1).mean().to(stats_dtype)
                 torch.testing.assert_close(actual, expected, **tolerances(dtype))
                 torch.testing.assert_close(
                     torch.autograd.grad(actual, embeddings)[0],
@@ -141,10 +141,14 @@ class TestLossComposition(unittest.TestCase):
                 ).to(TEST_DEVICE, dtype)
                 actual = loss_func(embeddings, labels)
                 weights = loss_func.weight
+                stats_dtype = torch.float64 if dtype == torch.float64 else torch.float32
                 expected = (
-                    normalized_softmax_reference(embeddings, labels, weights, 0.5)
-                    + 0.2 * weights.norm(dim=1).mean()
-                    + 0.1 * embeddings.square().sum(dim=1).mean()
+                    normalized_softmax_reference(embeddings, labels, weights, 0.5).to(
+                        stats_dtype
+                    )
+                    + 0.2 * weights.double().norm(dim=1).mean().to(stats_dtype)
+                    + 0.1
+                    * embeddings.double().square().sum(dim=1).mean().to(stats_dtype)
                 )
                 torch.testing.assert_close(actual, expected, **tolerances(dtype))
                 actual_grads = torch.autograd.grad(actual, [embeddings, weights])

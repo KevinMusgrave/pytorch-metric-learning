@@ -226,9 +226,13 @@ miners.BatchEasyHardMiner(
 - **allowed_neg_range**: Optional inclusive `(low, high)` bounds on
   anchor-negative values. `None` applies no bound.
 
+Both ranges apply to every strategy, including `"all"`, which returns every
+candidate within the corresponding range.
+
 When neither strategy is `"all"`, the miner returns one positive pair and one
 negative pair for each anchor that has both a selected positive and a selected
-negative.
+negative. Finite values at the dtype limits remain eligible, and masked
+entries cannot win a minimum or maximum by tying those limits.
 
 **Restrictions**
 
@@ -283,6 +287,11 @@ concentrates on a narrow distance band as dimensionality grows, so the
 weighting is most informative for low-dimensional embeddings, such as 64
 dimensions. [UniformHistogramMiner](#uniformhistogramminer) samples across the
 distance range with any dimensionality and any distance.
+
+Float16/bfloat16 distances are widened before evaluating the density logarithm,
+so a finite eligible distance cannot be discarded merely because its
+dimension-scaled log weight overflows in half precision. Cutoffs and candidate
+restrictions are unchanged.
 
 **Default distance**:
 

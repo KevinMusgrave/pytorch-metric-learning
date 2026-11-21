@@ -17,7 +17,7 @@
   "quality": {
     "allowComments": false,
     "lineBudget": {
-      "production": 8500
+      "production": 9000
     }
   },
   "portability": {},
@@ -254,7 +254,23 @@
           "tests/distances/test_low_precision_range.py",
           "tests/distances/test_lp_distance.py",
           "tests/docs/test_documented_examples.py",
-          "tests/docs/test_public_surface.py"
+          "tests/docs/test_public_surface.py",
+          "tests/regularizers/test_spherical_embedding_precision.py",
+          "tests/utils/test_weighted_triplet_precision.py",
+          "tests/losses/test_multi_supcon_matrix_precision.py",
+          "tests/miners/test_batch_miner_finite_boundaries.py",
+          "tests/losses/test_nca_score_offsets.py",
+          "tests/losses/test_ranked_list_temperature_precision.py",
+          "tests/losses/test_pnp_small_penalties.py",
+          "tests/losses/test_soft_triple_temperature.py",
+          "tests/losses/test_normalized_softmax_temperature.py",
+          "tests/losses/test_dynamic_arcface_margin_range.py",
+          "tests/miners/test_distance_weighted_density_precision.py",
+          "tests/losses/test_decoupled_score_offsets.py",
+          "tests/losses/test_intra_pair_variance_precision.py",
+          "tests/losses/test_p2s_center_precision.py",
+          "tests/losses/test_circle_weight_precision.py",
+          "tests/distances/test_large_normalization.py"
         ],
         "module": "numerics",
         "focusedSuite": "numerics-focused"
@@ -266,6 +282,7 @@
           "tests/distances/test_batched_distance.py",
           "tests/distances/test_custom_check_shape.py",
           "tests/distances/test_similarities.py",
+          "tests/distances/test_snr_variance_precision.py",
           "tests/distances/test_normalization.py",
           "tests/losses/__init__.py",
           "tests/losses/test_angular_loss.py",
@@ -346,7 +363,9 @@
       },
       {
         "paths": [
-          "tests/evaluation/test_retrieval_backends.py"
+          "tests/evaluation/test_retrieval_backends.py",
+          "tests/evaluation/test_empty_accuracy_queries.py",
+          "tests/evaluation/test_ndcg_gain_range.py"
         ],
         "module": "evaluation",
         "focusedSuite": "evaluation-focused"
@@ -457,7 +476,23 @@
           "tests/utils/test_validation.py",
           "conftest.py",
           "tests/distances/test_low_precision_range.py",
-          "tests/distances/test_lp_distance.py"
+          "tests/distances/test_lp_distance.py",
+          "tests/regularizers/test_spherical_embedding_precision.py",
+          "tests/utils/test_weighted_triplet_precision.py",
+          "tests/losses/test_multi_supcon_matrix_precision.py",
+          "tests/miners/test_batch_miner_finite_boundaries.py",
+          "tests/losses/test_nca_score_offsets.py",
+          "tests/losses/test_ranked_list_temperature_precision.py",
+          "tests/losses/test_pnp_small_penalties.py",
+          "tests/losses/test_soft_triple_temperature.py",
+          "tests/losses/test_normalized_softmax_temperature.py",
+          "tests/losses/test_dynamic_arcface_margin_range.py",
+          "tests/miners/test_distance_weighted_density_precision.py",
+          "tests/losses/test_decoupled_score_offsets.py",
+          "tests/losses/test_intra_pair_variance_precision.py",
+          "tests/losses/test_p2s_center_precision.py",
+          "tests/losses/test_circle_weight_precision.py",
+          "tests/distances/test_large_normalization.py"
         ],
         "argv": [
           ".venv/bin/uv",
@@ -494,7 +529,23 @@
           "tests/distances/test_low_precision_range.py",
           "tests/distances/test_lp_distance.py",
           "tests/docs/test_documented_examples.py",
-          "tests/docs/test_public_surface.py"
+          "tests/docs/test_public_surface.py",
+          "tests/regularizers/test_spherical_embedding_precision.py",
+          "tests/utils/test_weighted_triplet_precision.py",
+          "tests/losses/test_multi_supcon_matrix_precision.py",
+          "tests/miners/test_batch_miner_finite_boundaries.py",
+          "tests/losses/test_nca_score_offsets.py",
+          "tests/losses/test_ranked_list_temperature_precision.py",
+          "tests/losses/test_pnp_small_penalties.py",
+          "tests/losses/test_soft_triple_temperature.py",
+          "tests/losses/test_normalized_softmax_temperature.py",
+          "tests/losses/test_dynamic_arcface_margin_range.py",
+          "tests/miners/test_distance_weighted_density_precision.py",
+          "tests/losses/test_decoupled_score_offsets.py",
+          "tests/losses/test_intra_pair_variance_precision.py",
+          "tests/losses/test_p2s_center_precision.py",
+          "tests/losses/test_circle_weight_precision.py",
+          "tests/distances/test_large_normalization.py"
         ],
         "timeoutSeconds": 120
       },
@@ -510,7 +561,9 @@
           "tests/__init__.py",
           "tests/helpers.py",
           "tests/losses/utils.py",
-          "conftest.py"
+          "conftest.py",
+          "tests/evaluation/test_empty_accuracy_queries.py",
+          "tests/evaluation/test_ndcg_gain_range.py"
         ],
         "argv": [
           ".venv/bin/uv",
@@ -522,7 +575,9 @@
           "python",
           "-m",
           "pytest",
-          "tests/evaluation/test_retrieval_backends.py"
+          "tests/evaluation/test_retrieval_backends.py",
+          "tests/evaluation/test_empty_accuracy_queries.py",
+          "tests/evaluation/test_ndcg_gain_range.py"
         ],
         "timeoutSeconds": 120
       },
@@ -700,21 +755,7 @@
     "pythonLibraries": [
       "pyproject.toml"
     ],
-    "releaseAgeAssessments": [
-      {
-        "id": "uv-compromised-root",
-        "ecosystem": "pypi",
-        "package": "uv",
-        "version": "0.13.4",
-        "scope": "uv.lock",
-        "category": "security-fix",
-        "evidence": "https://github.com/astral-sh/uv/security/advisories/GHSA-hq85-5cpj-mr62",
-        "reason": "Package acquisition must not trust the compromised emSign CA. See docs/security/dependency-assessments.md#certificate-trust.",
-        "owner": "Codex",
-        "reviewed": "2026-10-26",
-        "expires": "2026-11-19"
-      }
-    ],
+    "releaseAgeAssessments": [],
     "vulnerabilityAssessments": [
       {
         "id": "ghsa-9vhv-jxww-xfm5",
@@ -783,23 +824,6 @@
         "owner": "Claude",
         "reviewed": "2026-10-29",
         "expires": "2027-01-27"
-      },
-      {
-        "id": "certifi-disabled-documentation-clients",
-        "ecosystem": "pypi",
-        "advisory": "GHSA-6q48-6c7w-9gw2",
-        "package": "certifi",
-        "affectedVersion": "2026.7.22",
-        "scope": "uv.lock",
-        "severity": "critical",
-        "status": "not-affected",
-        "basis": "unreachable",
-        "reason": "The installed MkDocs Material 9.7.7 uses Requests only in its info, privacy, and social plugins. The resolved MkDocs configuration enables only material/search. Repository Python callers do not use Requests, urllib3, or certifi for HTTPS, and acquisition uses patched uv 0.13.4. See docs/security/dependency-assessments.md#certificate-trust-reassessment-2026-11-08.",
-        "impact": "No enabled HTTPS verification uses the affected certifi roots, so an on-path attacker with a compromised intermediate key cannot reach this trust decision. Reassess before enabling a Requests caller or the info, privacy, or social plugins. Review again by 2026-11-15; update to certifi 2026.10.19 once its 2026-10-20 upload reaches 30 days on 2026-11-19.",
-        "evidence": "https://github.com/certifi/python-certifi/security/advisories/GHSA-6q48-6c7w-9gw2",
-        "owner": "Codex",
-        "reviewed": "2026-11-08",
-        "expires": "2026-11-15"
       },
       {
         "id": "ghsa-6627-m3xw-93mp",

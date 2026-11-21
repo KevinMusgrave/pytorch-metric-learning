@@ -61,23 +61,24 @@ class PNPLoss(BaseMetricLossFunction):
         N_pos = torch.sum(I_pos, dim=1)
         sim_all = _common.resolve_matrix(self.distance, embeddings, None, mat)
 
+        output_dtype = sim_all.dtype
+        sim_all = sim_all.to(_common.accumulation_dtype(output_dtype))
         sim_diff = sim_all.unsqueeze(1) - sim_all.unsqueeze(2)
         sim_sg = torch.sigmoid(sim_diff / self.anneal) * I_neg.unsqueeze(0)
         sim_all_rk = torch.sum(sim_sg, dim=-1)
 
         if self.variant == "Ds":
-            sim_all_rk = torch.log(1 + sim_all_rk)
+            sim_all_rk = torch.log1p(sim_all_rk)
         elif self.variant == "Dq":
-            sim_all_rk = 1 / (1 + sim_all_rk) ** (self.alpha)
+            sim_all_rk = -torch.expm1(-self.alpha * torch.log1p(sim_all_rk))
         elif self.variant == "Iu":
-            sim_all_rk = (1 + sim_all_rk) * torch.log(1 + sim_all_rk)
+            sim_all_rk = (1 + sim_all_rk) * torch.log1p(sim_all_rk)
         elif self.variant == "Ib":
             b = self.b
-            sim_all_rk = 1 / b**2 * (b * sim_all_rk - torch.log(1 + b * sim_all_rk))
+            sim_all_rk = 1 / b**2 * _x_minus_log1p(b * sim_all_rk)
 
         loss = (torch.sum(sim_all_rk * I_pos, dim=-1) / N_pos)[rows].mean()
-        if self.variant == "Dq":
-            loss = 1 - loss
+        loss = loss.to(output_dtype)
         return {
             "loss": {
                 "losses": loss,
@@ -87,3 +88,10 @@ class PNPLoss(BaseMetricLossFunction):
 
     def default_distance(self) -> BaseDistance:
         return CosineSimilarity()
+
+
+def _x_minus_log1p(value: Tensor) -> Tensor:
+    small = value.abs() < 1e-3
+    x = torch.where(small, value, 0)
+    series = x.square() * (0.5 + x * (-1 / 3 + x * (0.25 + x * (-0.2 + x / 6))))
+    return torch.where(small, series, value - torch.log1p(value))

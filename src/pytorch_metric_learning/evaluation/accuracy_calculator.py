@@ -109,6 +109,8 @@ def _relevant_counts(
     ref_includes_query: bool,
     label_comparison_fn: LabelComparison | None,
 ) -> Tensor:
+    if len(unique_labels) == 0:
+        return unique_labels.new_empty((0,), dtype=torch.long)
     if label_comparison_fn is None:
         counts = _equal_label_counts(unique_labels, reference_labels)
     else:
@@ -190,12 +192,17 @@ def _ideal_dcg(
         own = torch.nonzero(gains == _gains(relevance_fn, query, query))[0, 0]
         gains = torch.cat([gains[:own], gains[own + 1 :]])
     gains = gains[: len(discounts)]
-    return (gains * discounts[: len(gains)]).sum()
+    scale = gains.max() if len(gains) else gains.new_tensor(1)
+    scale = torch.where(scale > 0, scale, 1)
+    value = ((gains / scale) * discounts[: len(gains)]).sum()
+    return torch.stack((value, scale))
 
 
 def ndcg(
     inputs: RetrievalInputs, relevance_fn: GradedRelevance, k: int | None = None
 ) -> Tensor:
+    if len(inputs.query_labels) == 0:
+        return inputs.matches.new_empty((0,), dtype=torch.float64)
     available = inputs.knn_labels.shape[1]
     depth = available if k is None else min(k, available)
     positions = torch.arange(
@@ -209,7 +216,8 @@ def ndcg(
     ideal = torch.stack(
         [_ideal_dcg(label, inputs, relevance_fn, discounts) for label in classes]
     )
-    return (gains * discounts).sum(dim=1) / ideal[class_index]
+    gains = gains / ideal[class_index, 1, None]
+    return (gains * discounts).sum(dim=1) / ideal[class_index, 0]
 
 
 def ndcg_metric(relevance_fn: GradedRelevance, k: int | None = None) -> RetrievalMetric:
@@ -551,7 +559,10 @@ class AccuracyCalculator:
         if filters_lone and not torch.any(has_relevant):
             _LOGGER.warning("None of the query labels are in the reference set.")
         num_k = self.determine_k(counts, len(reference), ref_includes_query, metrics)
-        _, knn_indices = self.knn_func(query, num_k, reference, ref_includes_query)
+        if len(query) == 0:
+            knn_indices = torch.empty((0, num_k), dtype=torch.long, device=query.device)
+        else:
+            _, knn_indices = self.knn_func(query, num_k, reference, ref_includes_query)
         _check_neighbor_indices(knn_indices, len(query), num_k, len(reference))
         knn_labels = reference_labels[knn_indices.to(metric_device)]
         matches = self.label_comparison_fn(query_labels.unsqueeze(1), knn_labels)
@@ -582,7 +593,7 @@ class AccuracyCalculator:
         ref_includes_query: bool,
         metrics: Mapping[str, RetrievalMetric],
     ) -> int:
-        available = num_reference_embeddings - int(ref_includes_query)
+        available = max(num_reference_embeddings - int(ref_includes_query), 0)
         max_relevant = int(counts.max().item()) if len(counts) else 0
         if self.k == "max_bin_count":
             limit = max(max_relevant, 1)

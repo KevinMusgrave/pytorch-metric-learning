@@ -5,6 +5,7 @@ from torch import Tensor
 
 from ..distances import BaseDistance, CosineSimilarity
 from ..types import LossDict, LossOptions, PairIndices
+from ..utils import _common
 from .generic_pair_loss import GenericPairLoss
 
 
@@ -42,6 +43,7 @@ class IntraPairVarianceLoss(GenericPairLoss):
     ) -> Tensor:
         if len(pairs) == 0:
             return pairs
+        pairs = pairs.to(_common.accumulation_dtype(pairs.dtype))
         mean = torch.mean(pairs)
         if incentivize_increase:
             return (1 - eps) * mean - pairs

@@ -293,3 +293,21 @@ i, j = 1, 4
 expected = torch.var(query_emb[i] - ref_emb[j]) / torch.var(query_emb[i])
 assert torch.allclose(mat[i, j], expected)
 ```
+
+For float16 and bfloat16 inputs, differences, variances, and their ratio are
+computed in float32. This prevents small nonzero variances from underflowing
+before division, even when the ratio itself fits the input dtype. Normalized
+results retain the input dtype; unnormalized results remain float32. Float32
+and float64 inputs retain their precision. A truly zero query variance is
+still undefined, and a ratio outside the result dtype's range can still overflow.
+
+## Large finite vector normalization
+
+Embedding normalization removes a detached row scale before computing the
+vector norm. Finite float32/bfloat16 rows around 1e20 and float64 rows around
+1e200 therefore retain their directions and gradients instead of collapsing
+to zero when powers inside the norm overflow. The original dtype, normalization
+axis, and dtype-specific epsilon remain unchanged; zero and tiny rows keep
+their existing linear epsilon behavior.
+
+Large-vector range protection is applied per vector only when its largest component exceeds the accumulation dtype's safe power-sum bound for the selected norm order. Vectors within that bound retain the existing values and gradients exactly, including within a batch that also contains large vectors. Norm orders below one and the infinity norm retain the existing path.

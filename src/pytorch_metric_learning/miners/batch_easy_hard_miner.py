@@ -60,7 +60,6 @@ class BatchEasyHardMiner(BaseMiner):
         )
         a = torch.arange(mat.size(0), device=mat.device)
         pos_all, neg_all = self.pos_strategy == "all", self.neg_strategy == "all"
-
         if self.pos_strategy == "semihard":
             (negative_dists, negative_indices), a2n_keep = self.get_negatives(
                 mat, a2_idx, n_idx
@@ -90,10 +89,14 @@ class BatchEasyHardMiner(BaseMiner):
             return PairIndices(
                 a[keep], positive_indices[keep], a[keep], negative_indices[keep]
             )
-        if pos_all and not neg_all:
-            return PairIndices(a1_idx, p_idx, a[a2n_keep], negative_indices[a2n_keep])
-        if not pos_all and neg_all:
-            return PairIndices(a[a1p_keep], positive_indices[a1p_keep], a2_idx, n_idx)
+        if pos_all:
+            a1_idx, p_idx = _filter_range(mat, a1_idx, p_idx, self.allowed_pos_range)
+        else:
+            a1_idx, p_idx = a[a1p_keep], positive_indices[a1p_keep]
+        if neg_all:
+            a2_idx, n_idx = _filter_range(mat, a2_idx, n_idx, self.allowed_neg_range)
+        else:
+            a2_idx, n_idx = a[a2n_keep], negative_indices[a2n_keep]
         return PairIndices(a1_idx, p_idx, a2_idx, n_idx)
 
     def get_positives(
@@ -130,7 +133,7 @@ class BatchEasyHardMiner(BaseMiner):
         semihard_thresholds: Tensor | None,
     ) -> tuple[tuple[Tensor, Tensor], Tensor]:
         use_max = farthest != self.distance.is_inverted
-        inf = _common.neg_inf(mat.dtype) if use_max else _common.pos_inf(mat.dtype)
+        inf = -torch.inf if use_max else torch.inf
         candidate = torch.zeros_like(mat, dtype=torch.bool)
         candidate[anchor_idx, other_idx] = True
         if semihard_thresholds is not None:
@@ -142,3 +145,13 @@ class BatchEasyHardMiner(BaseMiner):
         masked = torch.where(candidate, mat, inf)
         selected = torch.max(masked, dim=1) if use_max else torch.min(masked, dim=1)
         return (selected.values, selected.indices), non_inf_rows
+
+
+def _filter_range(
+    mat: Tensor, anchors: Tensor, others: Tensor, val_range: Sequence[float] | None
+) -> tuple[Tensor, Tensor]:
+    if val_range is None:
+        return anchors, others
+    values = mat[anchors, others]
+    keep = (values >= val_range[0]) & (values <= val_range[1])
+    return anchors[keep], others[keep]

@@ -108,3 +108,71 @@ def test_lower_precision_manifold_still_supports_inverse_and_backward(dtype):
     assert actual.dtype == dtype
     gradients = torch.autograd.grad(actual, (embeddings, proxies))
     assert all(torch.isfinite(gradient).all() for gradient in gradients)
+
+
+@pytest.mark.parametrize(
+    ("dtype", "margin"),
+    [
+        (torch.float16, 12.0),
+        (torch.bfloat16, 90.0),
+        (torch.float32, 90.0),
+        (torch.float64, 90.0),
+    ],
+)
+@pytest.mark.parametrize("lambda_c", [0.0, 1.0, math.inf])
+def test_large_manifold_margin_has_finite_values_and_gradients(dtype, margin, lambda_c):
+    embeddings, proxies, labels = inputs(dtype)
+    loss = ManifoldLoss(3, 2, alpha=0.8, lambda_c=lambda_c, margin=margin).to(
+        TEST_DEVICE, dtype
+    )
+    actual = evaluate(loss, embeddings, proxies, labels)
+    expected = reference_loss(
+        embeddings.double(), proxies.double(), labels, 0.8, lambda_c, margin
+    )
+    actual_gradients = torch.autograd.grad(
+        actual, (embeddings, proxies), retain_graph=True
+    )
+    expected_gradients = torch.autograd.grad(expected, (embeddings, proxies))
+    assert torch.isfinite(actual)
+    assert actual.dtype == dtype
+    tolerance = 0.05 if dtype in (torch.float16, torch.bfloat16) else 1e-5
+    absolute = 0.003 if dtype in (torch.float16, torch.bfloat16) else 1e-5
+    torch.testing.assert_close(
+        actual.double(), expected, rtol=tolerance, atol=tolerance
+    )
+    for actual_gradient, expected_gradient in zip(
+        actual_gradients, expected_gradients, strict=True
+    ):
+        assert torch.isfinite(actual_gradient).all()
+        torch.testing.assert_close(
+            actual_gradient, expected_gradient, rtol=tolerance, atol=absolute
+        )
+
+
+@pytest.mark.parametrize("dtype", [torch.float32, torch.float64])
+def test_ranking_past_double_exponential_range_has_closed_form_gradient(dtype):
+    scores = torch.zeros((2, 4), dtype=dtype, device=TEST_DEVICE, requires_grad=True)
+    rows = torch.arange(2, device=TEST_DEVICE)
+    labels = torch.tensor([0, 2], device=TEST_DEVICE)
+    loss = ManifoldLoss(3, 4, margin=750.0).to(TEST_DEVICE, dtype)
+    actual = loss.ranking_term(scores, rows, labels)
+    expected = torch.tensor(750.0 + math.log(3), dtype=dtype, device=TEST_DEVICE)
+    gradient = torch.autograd.grad(actual, scores)[0]
+    expected_gradient = torch.full_like(scores, 1 / 6)
+    expected_gradient[rows, labels] = -0.5
+    torch.testing.assert_close(actual, expected)
+    torch.testing.assert_close(gradient, expected_gradient, rtol=5e-5, atol=1e-6)
+
+
+@pytest.mark.parametrize(
+    "dtype", [torch.float16, torch.bfloat16, torch.float32, torch.float64]
+)
+def test_single_proxy_keeps_zero_ranking_and_gradients(dtype):
+    embeddings, _, labels = inputs(dtype)
+    labels = torch.zeros_like(labels)
+    loss = ManifoldLoss(3, 1, margin=90.0).to(TEST_DEVICE, dtype)
+    actual = loss(embeddings, labels)
+    gradients = torch.autograd.grad(actual, (embeddings, loss.proxies))
+    torch.testing.assert_close(actual, torch.zeros_like(actual))
+    for gradient in gradients:
+        torch.testing.assert_close(gradient, torch.zeros_like(gradient))

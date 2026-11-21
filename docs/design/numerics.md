@@ -242,6 +242,16 @@ copies, decides from `normalize_embeddings` because its terms no longer show the
 distance's dtype. Autocast is disabled around this path,
 because `matmul` would otherwise narrow the widened inputs again.
 
+`SNRDistance` widens low-precision differences and variances before dividing,
+then returns the ratio in the existing distance result dtype. Normalized rows
+can have a nonzero variance below float16's range even when their variance
+ratio is near two. Dividing two rounded zeros then gives NaN, and the default
+contrastive reducer filters out the term while its backward pass propagates
+NaN. Casting an already-computed variance cannot recover it. The matrix and
+pairwise paths share the same calculation; float64 inputs keep float64. This
+does not change normalization rounding, define ratios with a truly zero
+denominator, or extend the final result dtype's range.
+
 `LpDistance` computes float16 and bfloat16 matrices with `torch.cdist` in
 float32 and casts the normalized result, because `torch.cdist` lacks CPU kernels for those
 types and expanding every row pair in the forward pass costs memory proportional to
@@ -267,6 +277,22 @@ keeps it: TF32 rounding made identical BF16 rows report a distance of 0.0292. Th
 preserve their existing numerical behavior and do not change global precision settings.
 Other norms and matrices with at most 25 rows on each side also keep the direct kernel.
 
+`LargeMarginSoftmaxLoss` and `SphereFaceLoss` widen low-precision inputs before
+taking magnitude norms, and keep magnitude products and scaling in float32
+until the completed logits are converted to their existing result dtype.
+An embedding norm can exceed float16 even when its cosine-scaled logit fits:
+`[60000, 60000]` has norm about 84853, but comparison with `[0.5, 0]` gives a
+LargeMarginSoftmax logit of 30000. Casting an already-computed norm cannot
+recover it. Conversely, tiny norm products can round to zero before `scale`
+restores their representable range, erasing directional training gradients.
+
+The result dtype follows the original operand promotion, including autocast.
+Using the cosine tensor's dtype alone would narrow existing float32 results
+under autocast, because the original magnitude factors remain float32. This
+changes neither normalization nor the angular polynomial; those calculations
+retain their existing rounding and intermediate-gradient range. The final
+logit dtype also keeps its existing representable range.
+
 Default reductions avoid data-dependent shapes:
 `ThresholdReducer` masks and counts, and `DivisorReducer` selects with
 `torch.where`. `DivisorReducer` builds the divisor directly in the accumulation
@@ -280,6 +306,11 @@ accumulation dtype: float64 inputs retain their precision, while float16 and
 bfloat16 inputs use the supported float32 inverse. Narrowing float64 to float32
 changed gradients and could round a valid random-walk system to a singular matrix
 when $\alpha$ was close to 1. It masks excluded terms with $-\infty$ before
+log-sum-exp.
+Its intrinsic and context ranking reductions include the constant one as a
+zero logit. This keeps the paper's objective and violation mask while avoiding
+an explicit exponential followed by a logarithm. An all-excluded row has only
+the constant term, retaining zero value and gradient without an all-infinite
 log-sum-exp. `DistanceWeightedMiner` clamps
 distances at `cutoff` and works in log space following Section 4 of Wu et al.,
 masking ineligible pairs before subtracting each anchor's maximum log weight.
@@ -537,6 +568,13 @@ show that neither is a rescaling of the other. SEC computes on the raw row, so i
 unnormalized embeddings, which is where the losses' distances leave them. It needs no
 `distance` argument, because equation 17 is defined only on the Euclidean norm.
 
+SEC also retains its accumulation dtype after reduction. Casting the scalar
+back to float16 made the variance of norms 1 and 1001 infinite before a
+regularization weight of 0.0001 could produce the finite penalty 25. Small
+variances could likewise round to zero before a large weight restored their
+range. Returning the reducer's result preserves both cases and follows the
+same widened-scalar contract as the center-invariant regularizer.
+
 ## Class centroids
 
 `CentroidTripletLoss` was removed in version 2 because classes of different sizes crashed
@@ -664,6 +702,23 @@ For centers `[0, 0]` and `[50, 0]`, the loss is 390625 while its input gradients
 remain representable. Keeping the scalar in float32 lets a later regularization
 weight scale it without first turning it into infinity.
 
+## Distance-free regularizer statistics
+
+`LpRegularizer` and `ZeroMeanRegularizer` widen float16 and bfloat16 inputs
+before computing norms, powers, or row sums, and retain float32 through the
+reducer and returned scalar. Their penalties are unbounded: an individual
+row can overflow float16 even when the mean fits. The loss applies a
+regularization weight only after calling the regularizer, so narrowing the
+scalar before returning would also discard a representable weighted penalty.
+
+The norm power can corrupt gradients as well as values. For one row
+`[40000, 40000]`, squared L2 regularization with weight `1e-5` should contribute
+32000 with gradient `[0.8, 0.8]`. In float16, the intermediate derivative of
+the power already overflows before the weight can scale it. Widening before
+the norm keeps that chain representable. Float64 inputs are not narrowed,
+custom reducers receive the wider terms, and empty reductions keep the
+existing differentiable zero in the input dtype.
+
 ## RegularFace without another center
 
 `RegularFaceRegularizer` emits no loss term when the similarity matrix has
@@ -673,3 +728,231 @@ loss dictionary uses the reducer's differentiable-zero contract, so backward
 still produces an empty or zero input gradient. The distance runs first to
 preserve its input validation. Two or more centers retain the existing
 nearest-neighbor objective, including negative similarities.
+
+## ArcFace linear-branch gradients
+
+ArcFace's monotonic continuation is linear in the target cosine. Reconstructing
+that cosine with `cos(acos(clamp(cosine)))` discarded its derivative at rounded
+endpoints. For the float16 embedding `[1, 0.01]` and target center `[-1, 0]`,
+the target center received no gradient and the embedding's directional gradient
+was halved, although both were finite. Using the original cosine in this branch
+retains the intended derivative. Zero margins use the same direct identity,
+including class-specific zero margins in DynamicArcFaceLoss. The angular branch
+and the existing monotonic switch remain unchanged. Tests compare both embedding
+and proxy gradients with an independent cosine cross-entropy objective at rounded
+endpoints, in addition to checking target-logit values and derivatives.
+
+## Weighted triplet sampling range
+
+Negative-sampling weights define relative probabilities. Casting finite double
+weights directly to float32 made rows of weights 1e-50 or 1e50 produce no
+triplets: the first underflowed to zero, while the second introduced infinities
+and `0 * inf` in masked positions. Masking first and dividing each row by its
+largest eligible weight preserves the distribution before the sampling cast.
+An all-zero eligible row stays empty, and empty comparison axes avoid a maximum
+over an empty dimension. No additional host synchronization is needed. Exact
+seeded weighted draws can differ from earlier versions because the multinomial
+inputs are now rescaled; the relative sampling probabilities are unchanged.
+
+## MultiSupCon matrix precision
+
+The caller-owned distance matrix can have greater precision than the embeddings.
+MultiSupCon must preserve that precision when selecting its working dtype for
+label overlaps and log probabilities. Choosing solely from the embeddings cast
+a double matrix to float32; with scores near 1e8, ordinary subunit differences
+disappeared and a nonzero loss became zero with zero matrix gradients. The working
+dtype now promotes the embeddings and resolved matrix together before widening
+low-precision arithmetic. The output still follows the matrix dtype. Independent
+row-wise log-softmax references cover square and rectangular matrices, distance
+and similarity orientation, restricted pairs, and fractional Jaccard weights.
+
+## Batch miner boundary masks
+
+BatchEasyHardMiner previously filled excluded entries with the largest or
+smallest finite value of the matrix dtype. A valid candidate at that value tied
+the exclusion sentinel, so argmin or argmax could select a self-comparison,
+wrong-label pair, or pair absent from the supplied candidates. Infinite mask
+sentinels separate excluded entries from every finite candidate. Rows without
+candidates still use the existing eligibility mask, so their sentinel values
+never become returned pairs. BatchHardMiner inherits the same selection fix.
+The all-pairs strategies share one inclusive range filter, keeping positive and
+negative selection consistent without duplicating range branches in the miner.
+
+## NCA score offsets
+
+NCA and ProxyNCA share one normalization path. Two independently computed
+log-sum-exp values can round to the same large score even when their difference
+is nonzero. Four equidistant float32 simplex vertices of magnitude 10000 give
+zero loss and incorrect gradients instead of log(3). Removing the eligible-row
+score maximum before scaling preserves that difference and prevents a common
+offset from overflowing the scaling step. Positive-free rows are removed before
+using infinite masks, so no all-masked reduction contributes an undefined
+gradient. The proxy objective uses the same fix and is covered by closed-form
+embedding and center-gradient references.
+
+## RankedList temperature scaling
+
+Softmax cannot repair logits that already overflowed during temperature
+multiplication. Float16 violations of 0.7 and temperature 100000 produced NaN
+losses and gradients, although the weighted average remains 0.7. Widening the
+matrix before computing violations and centering eligible scores before
+multiplication prevents this intermediate overflow. Negative temperatures use
+the opposite score direction; empty eligible sets keep a finite zero offset and
+retain their zero contribution. Low-precision losses retain float32 through the
+reducer rather than narrowing their weighted averages prematurely.
+
+## PNP penalties near zero
+
+Well-separated positives naturally produce very small soft negative ranks at
+the paper's temperature 0.01. Adding these ranks to 1 erased Ds, Dq, and Iu
+losses. Ib additionally subtracted nearly equal values and could replace a
+penalty near 8.76e-27 by 4.71e-14 in float32, with a zero gradient. Log1p keeps
+the logarithmic increments; negative expm1 computes each Dq penalty before
+averaging instead of subtracting the final mean from 1. For abs(b * rank) below
+0.001, the Ib series through degree six has relative truncation error below
+3e-16. Its input is masked before evaluation so an unused high-order polynomial
+cannot overflow and contaminate backward. One hundred decimal digits provide
+an independent reference for every variant's values and analytic gradients.
+
+## SoftTriple center temperatures
+
+The softmax over centers must normalize before a temperature division can
+overflow. Equal cosine similarities near 0.707 with gamma 1e-5 previously
+produced infinite float16 logits and NaN class scores, losses, and gradients.
+Widening low-precision similarities preserves the weighted sum, while subtracting
+a class-wise maximum before division also handles finite float32 similarities
+whose scaled values overflow. The returned class scores still represent the
+weighted raw similarities. Independent per-class float64 formulas and closed-form
+equal-center gradients verify the objective and the trainable center updates.
+
+## NormalizedSoftmax temperature scaling
+
+A finite cosine similarity can exceed float16 range after division by a small
+temperature, even when the cross-entropy and its gradients are representable.
+Equal cosine scores near 0.707 at temperature 1e-5 must yield log(2) for two
+classes rather than NaN. Widening the distance output before division preserves
+that objective while keeping the public get_logits values at their documented
+absolute scale. Per-example cross-entropies remain in the accumulation dtype through the
+reducer. Training uses the public get_logits method so overrides and inference
+share the same logits. The loss does not subtract an unreported offset from public
+logits. Closed-form equal-class gradients, an independent squared-distance
+objective, and optimizer updates cover the embedding and class-weight paths.
+
+## DynamicArcFace margin normalization
+
+Absolute inverse powers can underflow together or round to the same value,
+making the margin range zero even for distinct positive class counts. Relative
+logarithms preserve count ratios without an irrelevant absolute scale; forming
+the integer difference first also preserves adjacent int64 counts above 2^53.
+The normalized fraction is exp(-a) * expm1(a - A) / expm1(-A), where a is the
+scaled log ratio and A its maximum. Nonfinite scaled exponents represent zero
+relative weight. Below A=1e-8, the first-order expression
+(1 - log_ratio / max_log_ratio) * (1 - a / 2) avoids subnormal division with
+second-order error below double-precision rounding. A 400-digit decimal
+reference verifies the power law and endpoints before margins enter training.
+
+## Distance-weighted density arithmetic
+
+Per-anchor normalization happens after the inverse-density log weight is
+formed. With float16 distances, dimension factors could overflow that earlier
+calculation; filtering nonfinite log weights then silently discarded eligible
+anchors. Distances at the 0.5 cutoff in 131072 dimensions reproduced four valid
+anchors becoming an empty result. Widening the distance before the density
+formula retains those candidates. This is independent of the existing row
+normalization and strict-cutoff corrections; neither can recover a candidate
+already lost to a nonfinite density value.
+
+## Decoupled contrastive score offsets
+
+Subtracting an absolute positive score from an absolute log partition can erase
+a nonzero DCL objective: four equal raw float32 scores at 1e8 produced zero
+instead of log(2). A negative maximum is removed from every score in an anchor
+before dividing by temperature. The centered log partition and attraction then
+preserve their difference without reintroducing that offset. DCLW adds back the
+exact weighted-positive correction (weight - 1) times the uncentered positive
+score, so its original objective and cross-positive gradients remain intact.
+One hundred decimal digits independently verify values and analytic derivatives
+for both similarity polarities, multiple positives, rectangular references,
+weighted variants, and both mean and sum reducers.
+
+## Intra-pair variance precision
+
+Rounding a pair mean to float16/bfloat16 before subtraction changes which
+squared hinge is active. Two adjacent half-precision scores near 0.5 produced
+zero positive variance or four times the negative variance, with zero or doubled
+gradients. Widen only the selected pairs before forming their mean and retain
+that dtype through epsilon adjustments, squaring, and reduction. Independent
+float64 pair equations cover both distance polarities and both term types,
+including nonzero reducers and large finite pair differences.
+
+## P2SGrad near-center residuals
+
+A low-precision cosine can round to one before its one-hot residual is formed.
+For embedding [1, 0.02] and center [1, 0], both the parameter and embedding
+gradients vanished despite being representable. Widen normalization and matrix
+multiplication, disable autocast for that multiplication, and form the residual
+before returning the original scalar dtype. Keep the original normalization
+epsilon for zero/tiny inputs and retain the weight clone needed by accumulated
+forwards. Independent float64 equations verify values and both gradients;
+a parameter update and CPU autocast cases demonstrate a retained learning signal.
+
+## Circle adaptive-weight multiplication
+
+Widen low-precision pair scores before forming adaptive weights and logits.
+At margin 0.5, gamma 1e5, and similarity 0.5, both mathematical logits are zero
+but a half-precision intermediate coefficient overflowed before multiplication
+by zero. The default nonzero reducer returned zero while backward produced NaN.
+Closed-form boundary values and derivatives, ordinary-scale controls, and
+independent rectangular pair equations cover this calculation without altering
+the detached-weight objective. Per-anchor terms and their reduction retain the
+accumulation dtype, because narrowing a large anchor term before averaging can
+still overflow an otherwise representable batch loss.
+
+Large absolute float32 logits also degraded log-sum-exp gradients: a negative
+logit of 9000 with two equal candidates gave unequal-to-half softmax factors
+after backward subtracted the rounded log partition. Center each selected
+partition first, then combine its detached offsets before the centered sums.
+The closed-form derivative check remains at its original precision tolerance.
+
+## Normalization before norm overflow
+
+A finite vector can have an overflowing intermediate norm even when its unit
+direction and derivatives are representable. Divide by a detached maximum
+magnitude before evaluating the configured p-norm, and express the original
+epsilon in those coordinates. Detachment does not change the derivative of
+normalization because the scale cancels algebraically. Preserve p=0 count
+normalization and empty feature axes separately. A 100-digit Decimal norm and
+analytic Jacobian verify values and gradients without using the production
+rescaling formula; existing zero/tiny-row tests retain the epsilon contract.
+
+## Scaling and normalization boundaries
+
+Centering before temperature scaling preserves small differences beside a large
+common offset. Opposite finite extremes can instead overflow the subtraction
+itself. For a temperature with magnitude above one, `shifted_division` uses
+individually divided operands only where the raw difference is nonfinite; all
+finite differences retain centering before division. NCA applies the same rule
+for multipliers below one. These paths preserve both offset cancellation and a
+representable scaled span without promoting every float32 matrix to float64 or
+reading device values on the host. SoftTriple selects its offset direction from
+the temperature sign.
+
+Shared normalization owns both overflow scaling and the input-specific epsilon.
+Its optional output dtype lets P2SGrad retain accumulation precision without
+reimplementing normalization or losing the half-precision epsilon. Distances
+continue to request their ordinary result dtype. Low-precision per-example loss
+terms whose batch mean can be finite remain wide through reduction; this also
+keeps reducer thresholds from seeing prematurely rounded values.
+
+## Normalization work
+
+A dtype-and-shape bound establishes when the accumulation norm cannot overflow:
+`input_max <= (accumulation_max / dimensions) ** (1 / p)`. Those inputs use the
+ordinary PyTorch normalization directly. This includes practical float16 L2
+workloads accumulated in float32 and avoids extra reductions without inspecting
+device values. Other finite positive norm orders retain the shared scaling path.
+
+NormalizedSoftmax delegates class-weight normalization to a distance that already
+normalizes its inputs. It normalizes weights explicitly only when that distance
+leaves inputs unnormalized. This removes a duplicate reduction and applies the
+documented epsilon once, including weights whose norms are below epsilon.

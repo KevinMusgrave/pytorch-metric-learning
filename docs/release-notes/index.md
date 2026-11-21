@@ -1,6 +1,13 @@
 # Release notes
 
 - [Unreleased](unreleased.md)
+## Unreleased
+
+- Keep ManifoldLoss values and gradients finite for large finite margins by
+  evaluating both ranking terms in log space.
+
+## Published releases
+
 - [3.0.3](3.0.3.md)
 - [3.0.2](3.0.2.md)
 - [3.0.1](3.0.1.md)

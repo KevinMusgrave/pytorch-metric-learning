@@ -306,6 +306,11 @@ accumulation dtype: float64 inputs retain their precision, while float16 and
 bfloat16 inputs use the supported float32 inverse. Narrowing float64 to float32
 changed gradients and could round a valid random-walk system to a singular matrix
 when $\alpha$ was close to 1. It masks excluded terms with $-\infty$ before
+log-sum-exp.
+Its intrinsic and context ranking reductions include the constant one as a
+zero logit. This keeps the paper's objective and violation mask while avoiding
+an explicit exponential followed by a logarithm. An all-excluded row has only
+the constant term, retaining zero value and gradient without an all-infinite
 log-sum-exp. `DistanceWeightedMiner` clamps
 distances at `cutoff` and works in log space following Section 4 of Wu et al.,
 masking ineligible pairs before subtracting each anchor's maximum log weight.

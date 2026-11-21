@@ -44,6 +44,9 @@ embeddings; a smaller unlabeled batch raises `ValueError`. Labels must lie in
 as does an embedding dimension other than `embedding_size`. The matrix inverse
 is computed in float64 for float64 inputs and in float32 otherwise, preserving
 double-precision values and gradients while supporting low-precision inputs.
+The ranking terms evaluate the logarithm and exponential sum together, so a
+finite margin does not overflow an intermediate exponential when the loss and
+its gradients remain representable.
 
 The proxies are the parameter `proxies`, shaped `(num_proxies, embedding_size)`
 and initialized with `torch.randn`. Unlike the class weights that other losses

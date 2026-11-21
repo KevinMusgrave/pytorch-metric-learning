@@ -226,6 +226,9 @@ miners.BatchEasyHardMiner(
 - **allowed_neg_range**: Optional inclusive `(low, high)` bounds on
   anchor-negative values. `None` applies no bound.
 
+Both ranges apply to every strategy, including `"all"`, which returns every
+candidate within the corresponding range.
+
 When neither strategy is `"all"`, the miner returns one positive pair and one
 negative pair for each anchor that has both a selected positive and a selected
 negative. Finite values at the dtype limits remain eligible, and masked

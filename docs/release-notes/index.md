@@ -132,6 +132,14 @@ Normalize finite large embeddings without overflowing intermediate p-norm calcul
 
 ## Published releases
 
+## Unreleased
+
+- `BatchEasyHardMiner` now applies `allowed_pos_range` and `allowed_neg_range`
+  when the corresponding strategy is `"all"`, preserving the inclusive bounds
+  used by the other strategies.
+
+## Published releases
+
 - [3.0.3](3.0.3.md)
 - [3.0.2](3.0.2.md)
 - [3.0.1](3.0.1.md)

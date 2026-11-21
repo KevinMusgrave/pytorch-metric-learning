@@ -242,6 +242,16 @@ copies, decides from `normalize_embeddings` because its terms no longer show the
 distance's dtype. Autocast is disabled around this path,
 because `matmul` would otherwise narrow the widened inputs again.
 
+`SNRDistance` widens low-precision differences and variances before dividing,
+then returns the ratio in the existing distance result dtype. Normalized rows
+can have a nonzero variance below float16's range even when their variance
+ratio is near two. Dividing two rounded zeros then gives NaN, and the default
+contrastive reducer filters out the term while its backward pass propagates
+NaN. Casting an already-computed variance cannot recover it. The matrix and
+pairwise paths share the same calculation; float64 inputs keep float64. This
+does not change normalization rounding, define ratios with a truly zero
+denominator, or extend the final result dtype's range.
+
 `LpDistance` computes float16 and bfloat16 matrices with `torch.cdist` in
 float32 and casts the normalized result, because `torch.cdist` lacks CPU kernels for those
 types and expanding every row pair in the forward pass costs memory proportional to

@@ -266,6 +266,7 @@
           "tests/distances/test_batched_distance.py",
           "tests/distances/test_custom_check_shape.py",
           "tests/distances/test_similarities.py",
+          "tests/distances/test_snr_variance_precision.py",
           "tests/distances/test_normalization.py",
           "tests/losses/__init__.py",
           "tests/losses/test_angular_loss.py",

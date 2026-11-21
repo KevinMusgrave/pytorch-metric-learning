@@ -96,6 +96,12 @@ Preserve valid high-dimensional mining anchors by widening low-precision distanc
 
 ## Published releases
 
+## Unreleased
+
+Preserve DCL and DCLW objectives when a common score offset would erase the negative partition difference or overflow before normalization.
+
+## Published releases
+
 - [3.0.3](3.0.3.md)
 - [3.0.2](3.0.2.md)
 - [3.0.1](3.0.1.md)

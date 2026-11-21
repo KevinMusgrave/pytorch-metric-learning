@@ -63,6 +63,10 @@
   dtype through reduction. Half-precision inputs therefore return float32
   nonempty losses, preserving finite means of large terms.
 - Preserve the public NormalizedSoftmax `get_logits` extension path in training.
+  Normalize class weights once; tiny class weights now follow the distance's
+  documented epsilon without a second normalization.
+- Avoid overflow-rescaling work when dtype and shape bounds prove the norm safe,
+  including practical float16 L2 normalization accumulated in float32.
 - Center score calculations without overflowing a finite span before a smaller
   multiplier or larger temperature restores its range. SoftTriple handles both
   temperature signs.

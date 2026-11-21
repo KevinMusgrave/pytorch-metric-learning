@@ -943,3 +943,16 @@ reimplementing normalization or losing the half-precision epsilon. Distances
 continue to request their ordinary result dtype. Low-precision per-example loss
 terms whose batch mean can be finite remain wide through reduction; this also
 keeps reducer thresholds from seeing prematurely rounded values.
+
+## Normalization work
+
+A dtype-and-shape bound establishes when the accumulation norm cannot overflow:
+`input_max <= (accumulation_max / dimensions) ** (1 / p)`. Those inputs use the
+ordinary PyTorch normalization directly. This includes practical float16 L2
+workloads accumulated in float32 and avoids extra reductions without inspecting
+device values. Other finite positive norm orders retain the shared scaling path.
+
+NormalizedSoftmax delegates class-weight normalization to a distance that already
+normalizes its inputs. It normalizes weights explicitly only when that distance
+leaves inputs unnormalized. This removes a duplicate reduction and applies the
+documented epsilon once, including weights whose norms are below epsilon.

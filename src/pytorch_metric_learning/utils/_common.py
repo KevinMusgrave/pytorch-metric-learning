@@ -70,11 +70,15 @@ def normalize(
 ) -> Tensor:
     work = embeddings.to(accumulation_dtype(embeddings.dtype))
     eps = normalization_eps(input_dtype(embeddings))
-    if p < 1 or p == float("inf") or work.shape[dim] == 0:
+    limit = (
+        (torch.finfo(work.dtype).max / work.shape[dim]) ** (1 / p)
+        if 1 <= p < float("inf") and work.shape[dim]
+        else float("inf")
+    )
+    if torch.finfo(embeddings.dtype).max <= limit:
         normalized = torch.nn.functional.normalize(work, p=p, dim=dim, eps=eps)
     else:
         scale = work.detach().abs().amax(dim=dim, keepdim=True)
-        limit = (torch.finfo(work.dtype).max / work.shape[dim]) ** (1 / p)
         scale = torch.where(scale > limit, scale, 1)
         scaled = work / scale
         norm = torch.linalg.vector_norm(scaled, ord=p, dim=dim, keepdim=True)

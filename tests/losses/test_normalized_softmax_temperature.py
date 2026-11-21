@@ -179,3 +179,26 @@ def test_normalized_softmax_training_uses_public_logit_override():
     torch.testing.assert_close(
         torch.autograd.grad(actual, query)[0], torch.autograd.grad(expected, query)[0]
     )
+
+
+@pytest.mark.parametrize("normalize_embeddings", [False, True])
+def test_normalized_softmax_tiny_weights_use_one_normalization(normalize_embeddings):
+    query = torch.tensor([[1.0, 0.0], [0.0, 1.0]], device=TEST_DEVICE)
+    objective = losses.NormalizedSoftmaxLoss(
+        2,
+        2,
+        temperature=1,
+        distance=distances.DotProductSimilarity(
+            normalize_embeddings=normalize_embeddings
+        ),
+    ).to(TEST_DEVICE)
+    with torch.no_grad():
+        objective.weight.copy_(
+            torch.tensor([[1e-20, 0.0], [0.0, 1e-20]], device=TEST_DEVICE)
+        )
+    logits = objective.get_logits(query)
+    torch.testing.assert_close(logits, torch.eye(2, device=TEST_DEVICE) * 1e-8)
+    logits.sum().backward()
+    torch.testing.assert_close(
+        objective.weight.grad, torch.full_like(objective.weight, 1e12)
+    )

@@ -45,8 +45,10 @@ class NormalizedSoftmaxLoss(BaseProxyLoss):
         return DotProductSimilarity(normalize_embeddings=True)
 
     def get_logits(self, embeddings: Tensor) -> Tensor:
-        normalized_weight = self.distance.normalize(self.weight, dim=1)
-        logits = self.distance(embeddings, normalized_weight)
+        weight = self.weight
+        if not self.distance.normalize_embeddings:
+            weight = self.distance.normalize(weight, dim=1)
+        logits = self.distance(embeddings, weight)
         logits = logits.to(_common.accumulation_dtype(logits.dtype)) / self.temperature
         if not self.distance.is_inverted:
             logits = -logits

@@ -16,7 +16,8 @@ $$
 Here $x$ is the L2-normalized embedding with label $y$, $p_z$ is the L2-normalized weight vector of class $z$, and $Z$ is the set of all classes.
 
 **Implementation notes**: The class weights are L2-normalized at every forward
-pass; the embeddings are normalized by the default distance. With a distance
+pass, exactly once, using the distance normalization and its epsilon. The
+embeddings are normalized by the default distance. With a distance
 where smaller means closer, the logits are negated distances. With an
 `indices_tuple`, each embedding's loss is multiplied by its
 [miner weight](../losses.md#miner-weights). `get_logits(embeddings)` returns
